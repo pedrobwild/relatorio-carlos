@@ -117,6 +117,32 @@ const NONE = '__none__';
 const fmtDate = (iso: string | null) =>
   iso ? format(parseISO(iso), 'dd/MM/yy', { locale: ptBR }) : '—';
 
+/**
+ * Normaliza nomes recebidos em CAPS LOCK (ex: "FELIPE ABRANTES DALMAGRO") para
+ * Title Case ("Felipe Abrantes Dalmagro"), preservando partículas usuais (de,
+ * da, do, dos, das, e). Quando o nome já tem capitalização mista, devolve
+ * inalterado para respeitar a grafia original.
+ */
+const PARTICULAS = new Set(['de', 'da', 'do', 'dos', 'das', 'e', 'di', 'du']);
+const formatNomePessoa = (raw: string | null | undefined): string => {
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  // Heurística: só converter se >70% das letras estão em CAPS
+  const letters = trimmed.replace(/[^A-Za-zÀ-ÿ]/g, '');
+  if (!letters) return trimmed;
+  const upperRatio = letters.split('').filter((c) => c === c.toUpperCase() && c !== c.toLowerCase()).length / letters.length;
+  if (upperRatio < 0.7) return trimmed;
+  return trimmed
+    .toLocaleLowerCase('pt-BR')
+    .split(/\s+/)
+    .map((w, i) => {
+      if (i > 0 && PARTICULAS.has(w)) return w;
+      return w.charAt(0).toLocaleUpperCase('pt-BR') + w.slice(1);
+    })
+    .join(' ');
+};
+
 
 const toIsoDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
 
