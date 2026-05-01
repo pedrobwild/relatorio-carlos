@@ -1838,9 +1838,14 @@ function KanbanView({
             return (
               <div
                 key={`${groupBy}-${key}`}
+                onDragOver={(e) => handleColumnDragOver(e, key)}
+                onDragLeave={(e) => handleColumnDragLeave(e, key)}
+                onDrop={(e) => handleColumnDrop(e, key)}
+                aria-dropeffect={draggingId ? 'move' : undefined}
                 className={cn(
                   'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border overflow-hidden transition-colors',
                   isActive ? 'border-primary ring-2 ring-primary/30' : 'border-border-subtle',
+                  dragOverKey === key && 'border-primary ring-2 ring-primary/40 bg-primary/5',
                 )}
               >
                 {/* Faixa colorida estilo Monday no topo da coluna */}
