@@ -902,7 +902,7 @@ export default function PainelObras() {
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
-                    <Table className="w-full text-sm [&_th]:h-10 [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
+                    <Table className="w-full text-sm [&_th]:h-9 [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:py-1.5 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
@@ -2364,7 +2364,7 @@ function BoardView({
                 onScroll={(e) => handleScrollerScroll(e.currentTarget)}
                 className="overflow-x-auto border-t border-border-subtle"
               >
-                <Table className="w-full text-sm [&_th]:h-10 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
+                <Table className="w-full text-sm [&_th]:h-9 [&_td]:py-1.5 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border-subtle">
                       <TableHead className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
