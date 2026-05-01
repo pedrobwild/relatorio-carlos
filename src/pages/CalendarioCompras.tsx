@@ -1283,6 +1283,40 @@ export default function CalendarioCompras() {
     };
   };
 
+  // Mapa de criadores das requisições (created_by → nome de exibição).
+  // Busca apenas profiles dos IDs efetivamente referenciados em allPurchases,
+  // evitando carregar a tabela inteira quando há poucos solicitantes.
+  const { data: creatorMap = new Map<string, { name: string; email: string | null }>() } = useQuery({
+    queryKey: [
+      'purchase-creators',
+      [...new Set(allPurchases.map((p) => (p as any).created_by).filter(Boolean) as string[])].sort().join(','),
+    ],
+    enabled: allPurchases.length > 0,
+    queryFn: async () => {
+      const ids = [...new Set(allPurchases.map((p) => (p as any).created_by).filter(Boolean) as string[])];
+      const map = new Map<string, { name: string; email: string | null }>();
+      if (ids.length === 0) return map;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email')
+        .in('user_id', ids);
+      if (error) throw error;
+      (data || []).forEach((row: { user_id: string; display_name: string | null; email: string | null }) => {
+        const name = (row.display_name?.trim() || row.email?.split('@')[0] || 'Usuário').trim();
+        map.set(row.user_id, { name, email: row.email });
+      });
+      return map;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  /** Retorna o nome de exibição do solicitante (ou null se não houver). */
+  const getCreatorName = (p: PurchaseWithProject): string | null => {
+    const id = (p as any).created_by as string | null | undefined;
+    if (!id) return null;
+    return creatorMap.get(id)?.name ?? null;
+  };
+
   // Fetch all projects for the New Purchase dialog (not just the ones with purchases)
   const { data: allProjects = [] } = useQuery({
     queryKey: ['all-projects-for-select'],
