@@ -802,8 +802,9 @@ export default function PainelObras() {
                   onGroupByChange={handleGroupByChange}
                   selectedEtapa={filterEtapa}
                   onSelectEtapa={setFilterEtapa}
-                  selectedStatus={filterStatus}
-                  onSelectStatus={setFilterStatus}
+                  filterStatuses={filterStatuses}
+                  onToggleStatusFilter={toggleStatusFilter}
+                  onClearStatusFilter={clearStatusFilter}
                   sortKey={sortKey}
                   sortDir={sortDir}
                   onOpen={(id) => navigate(`/obra/${id}`)}
