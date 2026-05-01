@@ -90,6 +90,7 @@ import {
 import { EmptyState } from '@/components/ui/states';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
+import { DadosClienteDialog } from '@/components/admin/obras/DadosClienteDialog';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
