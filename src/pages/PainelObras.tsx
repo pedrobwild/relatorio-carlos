@@ -508,6 +508,15 @@ export default function PainelObras() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Popup "Dados do cliente" — feature completa em dialog (Contratante / Imóvel / Info). */}
+        <DadosClienteDialog
+          open={!!dadosTarget}
+          onOpenChange={(o) => { if (!o) setDadosTarget(null); }}
+          projectId={dadosTarget?.id ?? null}
+          projectName={dadosTarget?.nome ?? null}
+          customerName={dadosTarget?.customer_name ?? null}
+        />
+
         <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-6">
           <TabsList className="bg-surface-sunken border border-border-subtle">
             <TabsTrigger value="obras" className="text-xs data-[state=active]:bg-card">Obras</TabsTrigger>
