@@ -896,6 +896,20 @@ export default function PainelObras() {
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                   onUpdateStatus={(id, status) => updateObra(id, { status })}
                 />
+              ) : activeView === 'board' ? (
+                <BoardView
+                  obras={filtered}
+                  staffUsers={staffUsers}
+                  expandedIds={expandedIds}
+                  onToggleExpanded={toggleExpanded}
+                  onUpdate={updateObra}
+                  onOpen={(id) => navigate(`/obra/${id}`)}
+                  onDeleteRequest={(o) => setDeleteTarget(o)}
+                  onOpenDados={(o) => setDadosTarget(o)}
+                  renderSortableHeader={(label, key) => (
+                    <SortableHeader label={label} sortKey={key} />
+                  )}
+                />
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
