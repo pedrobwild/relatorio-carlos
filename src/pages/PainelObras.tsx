@@ -15,6 +15,8 @@ import {
   ShieldOff,
   ExternalLink,
   ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
   ChevronRight,
   ChevronLeft,
   Search,
@@ -560,17 +562,32 @@ export default function PainelObras() {
     );
   }
 
-  const SortableHeader = ({ label, sortKey: k }: { label: string; sortKey: NonNullable<SortKey> }) => (
-    <button type="button" onClick={() => toggleSort(k)}
-      className="flex items-center gap-1 hover:text-foreground transition-colors uppercase tracking-wide">
-      {label}
-      {sortKey === k ? (
-        <span className="text-[10px]">{sortDir === 'asc' ? '↑' : '↓'}</span>
-      ) : (
-        <ChevronDown className="h-3 w-3 opacity-30" />
-      )}
-    </button>
-  );
+  const SortableHeader = ({ label, sortKey: k }: { label: string; sortKey: NonNullable<SortKey> }) => {
+    const isActive = sortKey === k;
+    const Icon = !isActive ? ChevronsUpDown : sortDir === 'asc' ? ChevronUp : ChevronDown;
+    return (
+      <button
+        type="button"
+        onClick={() => toggleSort(k)}
+        aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+        aria-label={`Ordenar por ${label}${isActive ? (sortDir === 'asc' ? ' (crescente)' : ' (decrescente)') : ''}`}
+        className={cn(
+          'group/sort inline-flex items-center gap-1 rounded uppercase tracking-wide transition-colors',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+          isActive ? 'text-foreground' : 'hover:text-foreground',
+        )}
+      >
+        <span>{label}</span>
+        <Icon
+          aria-hidden="true"
+          className={cn(
+            'h-3 w-3 shrink-0 transition-opacity',
+            isActive ? 'opacity-100' : 'opacity-30 group-hover/sort:opacity-70',
+          )}
+        />
+      </button>
+    );
+  };
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -903,9 +920,22 @@ export default function PainelObras() {
                 <Skeleton className="h-96 w-full rounded-xl" />
               ) : filtered.length === 0 ? (
                 <SectionCard>
-                  <EmptyState icon={Table2}
+                  <EmptyState
+                    icon={Table2}
                     title={obras.length === 0 ? 'Nenhuma obra cadastrada' : 'Nenhum resultado'}
-                    description={obras.length === 0 ? 'Crie uma nova obra a partir do botão acima.' : 'Tente ajustar ou limpar os filtros.'} />
+                    description={
+                      obras.length === 0
+                        ? 'Crie sua primeira obra para começar a monitorar status, prazos e relacionamento da equipe.'
+                        : 'Nenhuma obra corresponde aos filtros atuais. Ajuste os filtros ou limpe-os para ver todas as obras.'
+                    }
+                    action={
+                      obras.length === 0
+                        ? { label: 'Nova obra', onClick: () => navigate('/gestao/nova-obra'), icon: Plus }
+                        : hasFilters
+                          ? { label: 'Limpar filtros', onClick: clearFilters, icon: RotateCcw }
+                          : undefined
+                    }
+                  />
                 </SectionCard>
               ) : activeView === 'kanban' ? (
                 <KanbanView
@@ -1024,7 +1054,7 @@ interface ObraRowProps {
 }
 
 function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest, onOpenDados }: ObraRowProps) {
-  const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
+  const stickyBase = 'bg-card group-hover:bg-muted/50 transition-colors';
 
   return (
     <>
