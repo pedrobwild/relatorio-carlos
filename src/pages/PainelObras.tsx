@@ -316,14 +316,6 @@ export default function PainelObras() {
   const queryClient = useQueryClient();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const tabParam = searchParams.get('tab');
-  const activeTab = tabParam === 'fornecedores' ? 'fornecedores' : 'obras';
-  const handleTabChange = (value: string) => {
-    const next = new URLSearchParams(searchParams);
-    if (value === 'obras') next.delete('tab');
-    else next.set('tab', value);
-    setSearchParams(next, { replace: true });
-  };
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
