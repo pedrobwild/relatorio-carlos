@@ -1939,6 +1939,10 @@ interface KanbanCardProps {
   /** Há ao menos um card selecionado em qualquer coluna — mantém o
    *  checkbox visível mesmo sem hover, para reforçar o modo "seleção". */
   anySelected: boolean;
+  /** Card está sendo arrastado — usado para reduzir opacidade. */
+  dragging: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
   onToggleSelect: () => void;
   onOpen: () => void;
   onChangeEtapa: (etapa: PainelEtapa | null) => void;
@@ -1950,6 +1954,9 @@ function KanbanCard({
   groupBy,
   selected,
   anySelected,
+  dragging,
+  onDragStart,
+  onDragEnd,
   onToggleSelect,
   onOpen,
   onChangeEtapa,
