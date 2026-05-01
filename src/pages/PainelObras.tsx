@@ -697,6 +697,8 @@ export default function PainelObras() {
               ) : activeView === 'kanban' ? (
                 <KanbanView
                   obras={filtered}
+                  selectedEtapa={filterEtapa}
+                  onSelectEtapa={setFilterEtapa}
                   onOpen={(id) => navigate(`/obra/${id}`)}
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                 />
