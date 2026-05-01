@@ -1119,12 +1119,38 @@ function ExpandedRowContent({ projectId }: { projectId: string }) {
 
 // ----- Kanban view -----
 // Colunas do kanban: mesmas opções de etapa do select inline + bucket
-// "(sem etapa)" para obras ainda não classificadas. Manter a ordem alinhada
-// ao fluxo operacional (Medição → Finalizada) facilita leitura por varredura.
-const KANBAN_COLUMNS: Array<{ key: PainelEtapa | 'none'; label: string }> = [
-  { key: 'none',                label: 'Sem etapa' },
-  ...ETAPA_OPTIONS.map((e) => ({ key: e, label: e })),
+// "(sem etapa)" para obras ainda não classificadas. A ordem padrão segue
+// o fluxo operacional (Sem etapa → Medição → … → Finalizada) mas o usuário
+// pode reordenar manualmente; a preferência é persistida em localStorage
+// por usuário (chave estável) para sobreviver a reloads.
+type KanbanColKey = PainelEtapa | 'none';
+const KANBAN_DEFAULT_ORDER: KanbanColKey[] = [
+  'none',
+  ...(ETAPA_OPTIONS as readonly PainelEtapa[]),
 ];
+const KANBAN_LABELS: Record<KanbanColKey, string> = {
+  none: 'Sem etapa',
+  ...(Object.fromEntries(ETAPA_OPTIONS.map((e) => [e, e])) as Record<PainelEtapa, string>),
+};
+const KANBAN_ORDER_STORAGE_KEY = 'painelObras:kanbanColumnOrder:v1';
+
+function loadKanbanOrder(): KanbanColKey[] {
+  if (typeof window === 'undefined') return KANBAN_DEFAULT_ORDER;
+  try {
+    const raw = window.localStorage.getItem(KANBAN_ORDER_STORAGE_KEY);
+    if (!raw) return KANBAN_DEFAULT_ORDER;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return KANBAN_DEFAULT_ORDER;
+    const valid = parsed.filter((k): k is KanbanColKey =>
+      typeof k === 'string' && (KANBAN_DEFAULT_ORDER as string[]).includes(k),
+    );
+    // Acrescenta etapas novas (ainda não vistas) ao final, preservando ordem do usuário.
+    const missing = KANBAN_DEFAULT_ORDER.filter((k) => !valid.includes(k));
+    return [...valid, ...missing];
+  } catch {
+    return KANBAN_DEFAULT_ORDER;
+  }
+}
 
 interface KanbanViewProps {
   obras: PainelObra[];
@@ -1133,36 +1159,109 @@ interface KanbanViewProps {
 }
 
 function KanbanView({ obras, onOpen, onUpdateEtapa }: KanbanViewProps) {
+  const [order, setOrder] = useState<KanbanColKey[]>(() => loadKanbanOrder());
+
+  // Persiste a ordem sempre que o usuário reordena.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(KANBAN_ORDER_STORAGE_KEY, JSON.stringify(order));
+    } catch {
+      /* ignore (modo privado, quota etc.) */
+    }
+  }, [order]);
+
+  const moveColumn = (key: KanbanColKey, dir: -1 | 1) => {
+    setOrder((prev) => {
+      const idx = prev.indexOf(key);
+      if (idx < 0) return prev;
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
+  };
+
+  const resetOrder = () => setOrder(KANBAN_DEFAULT_ORDER);
+  const isCustomOrder = useMemo(
+    () => order.some((k, i) => k !== KANBAN_DEFAULT_ORDER[i]),
+    [order],
+  );
+
   // Agrupamento O(n) por etapa para renderização das colunas.
   const grouped = useMemo(() => {
-    const map = new Map<PainelEtapa | 'none', PainelObra[]>();
-    KANBAN_COLUMNS.forEach((c) => map.set(c.key, []));
+    const map = new Map<KanbanColKey, PainelObra[]>();
+    order.forEach((k) => map.set(k, []));
     for (const o of obras) {
-      const key: PainelEtapa | 'none' = (o.etapa as PainelEtapa | null) ?? 'none';
+      const key: KanbanColKey = (o.etapa as PainelEtapa | null) ?? 'none';
       const arr = map.get(key);
       if (arr) arr.push(o);
       // Etapas inválidas/legadas caem em "Sem etapa" para não sumir do painel.
       else map.get('none')?.push(o);
     }
     return map;
-  }, [obras]);
+  }, [obras, order]);
 
   return (
     <SectionCard flush>
+      {isCustomOrder && (
+        <div className="flex items-center justify-end gap-2 px-3 pt-2">
+          <span className="text-[11px] text-muted-foreground">Ordem personalizada</span>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={resetOrder}
+            className="h-7 px-2 text-xs"
+          >
+            <RotateCcw className="h-3.5 w-3.5 mr-1" />
+            Restaurar padrão
+          </Button>
+        </div>
+      )}
       <div className="overflow-x-auto p-3">
         <div className="flex gap-3 min-w-max items-start">
-          {KANBAN_COLUMNS.map((col) => {
-            const items = grouped.get(col.key) ?? [];
+          {order.map((key, idx) => {
+            const items = grouped.get(key) ?? [];
+            const label = KANBAN_LABELS[key] ?? key;
+            const canMoveLeft = idx > 0;
+            const canMoveRight = idx < order.length - 1;
             return (
               <div
-                key={col.key}
+                key={key}
                 className="flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border border-border-subtle"
               >
-                <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">
-                    {col.label}
+                <div className="flex items-center justify-between gap-1 px-2 py-2 border-b border-border-subtle">
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6"
+                      disabled={!canMoveLeft}
+                      onClick={() => moveColumn(key, -1)}
+                      aria-label={`Mover coluna ${label} para a esquerda`}
+                      title="Mover para a esquerda"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6"
+                      disabled={!canMoveRight}
+                      onClick={() => moveColumn(key, 1)}
+                      aria-label={`Mover coluna ${label} para a direita`}
+                      title="Mover para a direita"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate flex-1 text-center">
+                    {label}
                   </span>
-                  <span className="text-[11px] tabular-nums text-muted-foreground bg-card border border-border-subtle rounded-full px-1.5 min-w-[20px] text-center">
+                  <span className="text-[11px] tabular-nums text-muted-foreground bg-card border border-border-subtle rounded-full px-1.5 min-w-[20px] text-center shrink-0">
                     {items.length}
                   </span>
                 </div>
