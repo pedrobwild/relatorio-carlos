@@ -1563,16 +1563,6 @@ function KanbanView({
     void onBulkUpdate(Array.from(selectedIds), { status: next });
   };
 
-  // Bulk action handlers — recebem o novo valor e disparam onBulkUpdate.
-  const handleBulkChangeEtapa = (value: string) => {
-    const next = value === NONE ? null : (value as PainelEtapa);
-    void onBulkUpdate(Array.from(selectedIds), { etapa: next });
-  };
-  const handleBulkChangeStatus = (value: string) => {
-    const next = value === NONE ? null : (value as PainelStatus);
-    void onBulkUpdate(Array.from(selectedIds), { status: next });
-  };
-
   return (
     <SectionCard flush>
       {/* Barra de ações em lote — visível só quando há seleção. Sticky no topo
