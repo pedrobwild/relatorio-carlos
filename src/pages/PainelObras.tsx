@@ -25,6 +25,7 @@ import {
   Trash2,
   User,
   LayoutGrid,
+  Rows3,
   Clock,
   FileText,
   RotateCcw,
@@ -328,8 +329,9 @@ export default function PainelObras() {
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
   const viewParam = searchParams.get('view');
-  const activeView: 'table' | 'kanban' = viewParam === 'kanban' ? 'kanban' : 'table';
-  const handleViewChange = (next: 'table' | 'kanban') => {
+  const activeView: 'table' | 'kanban' | 'board' =
+    viewParam === 'kanban' ? 'kanban' : viewParam === 'board' ? 'board' : 'table';
+  const handleViewChange = (next: 'table' | 'kanban' | 'board') => {
     const params = new URLSearchParams(searchParams);
     if (next === 'table') params.delete('view');
     else params.set('view', next);
