@@ -708,10 +708,10 @@ export default function PainelObras() {
 // ----- row component -----
 // Total de colunas da tabela do Painel de Obras. Mantenha em sincronia com o
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
-// 1) Cliente / Obra · 2) Status · 3) Etapa · 4) Progresso · 5) Início Of. ·
-// 6) Entrega Of. · 7) Início Real · 8) Entrega Real · 9) Relacionamento ·
-// 10) Responsável · 11) Atraso · 12) Ações
-const PAINEL_COLUMN_COUNT = 12;
+// 1) Cliente / Obra · 2) Dados · 3) Status · 4) Etapa · 5) Progresso ·
+// 6) Início Of. · 7) Entrega Of. · 8) Início Real · 9) Entrega Real ·
+// 10) Relacionamento · 11) Responsável · 12) Atraso · 13) Ações
+const PAINEL_COLUMN_COUNT = 13;
 
 interface ObraRowProps {
   obra: PainelObra;
