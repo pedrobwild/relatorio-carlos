@@ -661,12 +661,6 @@ export default function PainelObras() {
             - view switcher e densidade agrupados à direita, alinhados em h-8
             - chip "Limpar" só aparece quando há filtros ativos
           */}
-              Toolbar redesenhada — referência híbrida (Linear + Notion):
-              - linha única densa (h-9), divisores verticais entre grupos
-              - search compacto, filtros como chips com label inline + contador
-              - view switcher e densidade agrupados à direita, alinhados em h-8
-              - chip "Limpar" só aparece quando há filtros ativos
-            */}
             {(() => {
               const activeFilterCount =
                 (search.trim() ? 1 : 0) +
