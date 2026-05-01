@@ -1331,21 +1331,63 @@ function KanbanView({
           </Button>
         )}
       </div>
-      {isCustomOrder && (
-        <div className="flex items-center justify-end gap-2 px-3 pt-2">
-          <span className="text-[11px] text-muted-foreground">Ordem personalizada</span>
+      <div className="flex items-center justify-between gap-2 px-3 pt-2 flex-wrap">
+        {/* Toggle de layout das colunas: manual vs automático (segue ordenação). */}
+        <div
+          role="group"
+          aria-label="Layout das colunas"
+          className="inline-flex items-center rounded-md border border-border-subtle bg-surface p-0.5"
+        >
           <Button
             type="button"
             size="sm"
-            variant="ghost"
-            onClick={resetOrder}
-            className="h-7 px-2 text-xs"
+            variant={!isAuto ? 'secondary' : 'ghost'}
+            aria-pressed={!isAuto}
+            onClick={() => setLayoutMode('manual')}
+            className="h-7 gap-1.5 px-2 text-xs"
+            title="Definir a ordem manualmente"
           >
-            <RotateCcw className="h-3.5 w-3.5 mr-1" />
-            Restaurar padrão
+            Manual
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={isAuto ? 'secondary' : 'ghost'}
+            aria-pressed={isAuto}
+            disabled={!autoAvailable}
+            onClick={() => setLayoutMode('auto')}
+            className="h-7 gap-1.5 px-2 text-xs"
+            title={autoAvailable
+              ? 'Reordenar pelas etapas conforme o critério de ordenação ativo'
+              : 'Selecione um critério de ordenação para usar o modo automático'}
+          >
+            Automático
           </Button>
         </div>
-      )}
+
+        <div className="flex items-center gap-2">
+          {isAuto && (
+            <span className="text-[11px] text-muted-foreground">
+              Ordem automática pelo critério da tabela
+            </span>
+          )}
+          {!isAuto && isCustomOrder && (
+            <>
+              <span className="text-[11px] text-muted-foreground">Ordem personalizada</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={resetOrder}
+                className="h-7 px-2 text-xs"
+              >
+                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                Restaurar padrão
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
       <div className="overflow-x-auto p-3">
         <div className="flex gap-3 min-w-max items-start">
           {order.map((key, idx) => {
