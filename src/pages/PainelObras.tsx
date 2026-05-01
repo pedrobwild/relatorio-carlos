@@ -386,10 +386,11 @@ export default function PainelObras() {
     }
     if (filterEtapa !== ALL)
       rows = rows.filter((o) => (filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa));
-    if (filterStatus !== ALL)
+    if (filterStatuses.size > 0)
       rows = rows.filter((o) => {
         const display = computeDisplayStatus(o);
-        return filterStatus === NONE ? !display : display === filterStatus;
+        const key = display ?? NONE;
+        return filterStatuses.has(key);
       });
     if (filterRelacionamento !== ALL)
       rows = rows.filter((o) =>
