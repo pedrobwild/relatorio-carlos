@@ -1256,18 +1256,24 @@ export default function CalendarioCompras() {
         .from('purchase_payment_schedule')
         .select('purchase_id, amount, paid_at');
       if (error) throw error;
-      const map = new Map<string, PaidAggregate>();
+      // Retorna como array de tuplas para sobreviver à serialização no
+      // localStorage (PersistQueryClient não preserva instâncias de Map).
+      const acc = new Map<string, PaidAggregate>();
       (data || []).forEach((row) => {
-        const cur = map.get(row.purchase_id) ?? { paidSum: 0, firstPaidAt: null, hasInstallments: false };
+        const cur = acc.get(row.purchase_id) ?? { paidSum: 0, firstPaidAt: null, hasInstallments: false };
         cur.hasInstallments = true;
         if (row.paid_at) {
           cur.paidSum += Number(row.amount) || 0;
           if (!cur.firstPaidAt || row.paid_at < cur.firstPaidAt) cur.firstPaidAt = row.paid_at;
         }
-        map.set(row.purchase_id, cur);
+        acc.set(row.purchase_id, cur);
       });
-      return map;
+      return Array.from(acc.entries());
     },
+    select: (entries) =>
+      entries instanceof Map
+        ? entries
+        : new Map<string, PaidAggregate>(entries as Array<[string, PaidAggregate]>),
     staleTime: 60_000,
   });
 
