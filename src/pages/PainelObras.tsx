@@ -1059,6 +1059,151 @@ interface ObraRowProps {
   onOpenDados: () => void;
 }
 
+// ─── Skeletons ───────────────────────────────────────────────────────────────
+// Espelham a estrutura visual real da tela (tabela / board / kanban) para
+// reduzir layout shift quando os dados chegam. Usam tokens neutros (Skeleton
+// shadcn) e respeitam a densidade selecionada para alinhar com a tabela final.
+
+const TABLE_COLS: { width: string; align?: 'right' | 'center' }[] = [
+  { width: 'w-[240px] min-w-[240px] max-w-[240px]' }, // Cliente / Obra (sticky)
+  { width: 'w-[60px]', align: 'center' },              // Dados
+  { width: 'min-w-[120px]' },                          // Status
+  { width: 'min-w-[140px]' },                          // Etapa
+  { width: 'min-w-[120px]', align: 'right' },          // Progresso
+  { width: 'min-w-[100px]' },                          // Início Of.
+  { width: 'min-w-[100px]' },                          // Entrega Of.
+  { width: 'min-w-[100px]' },                          // Início Real
+  { width: 'min-w-[100px]' },                          // Entrega Real
+  { width: 'min-w-[130px]' },                          // Relacionamento
+  { width: 'min-w-[150px]' },                          // Responsável
+  { width: 'min-w-[110px]', align: 'right' },          // Atraso
+  { width: 'w-16' },                                    // Ações
+];
+
+function TableSkeleton({ densityTableClass, rows = 8 }: { densityTableClass: string; rows?: number }) {
+  return (
+    <SectionCard flush>
+      <div className="overflow-x-auto" aria-busy="true" aria-live="polite" aria-label="Carregando obras">
+        <Table className={cn('w-full text-sm [&_th]:px-3 [&_td]:px-3 [&_tr]:border-border-subtle', densityTableClass)}>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border-subtle">
+              {TABLE_COLS.map((c, i) => (
+                <TableHead
+                  key={i}
+                  className={cn(
+                    c.width,
+                    'bg-surface-sunken text-[11px] uppercase tracking-[0.04em] text-muted-foreground',
+                    i === 0 && 'sticky left-0 z-table-header-corner-left border-r border-border-subtle',
+                  )}
+                >
+                  <Skeleton className="h-3 w-16" />
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: rows }).map((_, rIdx) => (
+              <TableRow key={rIdx} className="group hover:bg-transparent">
+                {TABLE_COLS.map((c, cIdx) => (
+                  <TableCell
+                    key={cIdx}
+                    className={cn(
+                      c.width,
+                      cIdx === 0 && 'sticky left-0 bg-card border-r border-border',
+                    )}
+                  >
+                    {cIdx === 0 ? (
+                      // Cliente / Obra: 2 linhas (nome + endereço)
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-3.5 w-[80%]" />
+                        <Skeleton className="h-3 w-[60%]" />
+                      </div>
+                    ) : cIdx === 4 ? (
+                      // Progresso: barra + número
+                      <div className="flex items-center justify-end gap-2">
+                        <Skeleton className="h-1.5 w-14 rounded-full" />
+                        <Skeleton className="h-3 w-7" />
+                      </div>
+                    ) : c.align === 'center' ? (
+                      <div className="flex justify-center">
+                        <Skeleton className="h-4 w-4 rounded" />
+                      </div>
+                    ) : c.align === 'right' ? (
+                      <div className="flex justify-end">
+                        <Skeleton className="h-3 w-10" />
+                      </div>
+                    ) : (
+                      <Skeleton className="h-5 w-[70%] rounded-md" />
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </SectionCard>
+  );
+}
+
+function BoardSkeleton({ densityTableClass }: { densityTableClass: string }) {
+  // Board agrupa por status — simulamos 3 grupos com cabeçalho + tabela compacta
+  const groups = [
+    { color: 'bg-success/30', count: 4 },
+    { color: 'bg-info/30', count: 3 },
+    { color: 'bg-destructive/30', count: 2 },
+  ];
+  return (
+    <div className="space-y-3" aria-busy="true" aria-live="polite" aria-label="Carregando obras">
+      {groups.map((g, gi) => (
+        <SectionCard key={gi} flush>
+          {/* Group header */}
+          <div className="flex items-center gap-3 px-3 py-2 border-b border-border-subtle bg-surface-sunken/50">
+            <span className={cn('h-2 w-2 rounded-full', g.color)} aria-hidden="true" />
+            <Skeleton className="h-3.5 w-32" />
+            <Skeleton className="h-3 w-8 ml-auto" />
+          </div>
+          <TableSkeleton densityTableClass={densityTableClass} rows={g.count} />
+        </SectionCard>
+      ))}
+    </div>
+  );
+}
+
+function KanbanSkeleton() {
+  // Kanban: 4 colunas com 2-4 cartões cada
+  const cols = [3, 4, 2, 3];
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-2" aria-busy="true" aria-live="polite" aria-label="Carregando obras">
+      {cols.map((cards, ci) => (
+        <div
+          key={ci}
+          className="shrink-0 w-72 rounded-xl border border-border-subtle bg-surface-sunken/40 p-3 space-y-2"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Skeleton className="h-2 w-2 rounded-full" />
+            <Skeleton className="h-3.5 w-24" />
+            <Skeleton className="h-3 w-6 ml-auto" />
+          </div>
+          {Array.from({ length: cards }).map((_, idx) => (
+            <div
+              key={idx}
+              className="rounded-lg border border-border-subtle bg-card p-3 space-y-2"
+            >
+              <Skeleton className="h-3.5 w-[80%]" />
+              <Skeleton className="h-3 w-[60%]" />
+              <div className="flex items-center gap-2 pt-1">
+                <Skeleton className="h-4 w-12 rounded-full" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest, onOpenDados }: ObraRowProps) {
   const stickyBase = 'bg-card group-hover:bg-muted/50 transition-colors';
 
