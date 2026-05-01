@@ -3,7 +3,7 @@
  * UX densa tipo planilha (Airtable/Monday): cabeçalho leve, linhas compactas,
  * colunas prioritárias fixas à esquerda, edição inline com affordance visual.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -102,14 +102,9 @@ import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
 import { DadosClienteDialog } from '@/components/admin/obras/DadosClienteDialog';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
-
-// Lazy: a aba Fornecedores carrega o módulo completo só quando ativada.
-const Fornecedores = lazy(() => import('@/pages/gestao/Fornecedores'));
 
 // ----- helpers -----
 const ALL = '__all__';
@@ -321,14 +316,6 @@ export default function PainelObras() {
   const queryClient = useQueryClient();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const tabParam = searchParams.get('tab');
-  const activeTab = tabParam === 'fornecedores' ? 'fornecedores' : 'obras';
-  const handleTabChange = (value: string) => {
-    const next = new URLSearchParams(searchParams);
-    if (value === 'obras') next.delete('tab');
-    else next.set('tab', value);
-    setSearchParams(next, { replace: true });
-  };
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
@@ -658,20 +645,14 @@ export default function PainelObras() {
           customerName={dadosTarget?.customer_name ?? null}
         />
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-3">
-          <TabsList className="h-8 bg-surface-sunken border border-border-subtle">
-            <TabsTrigger value="obras" className="h-7 text-xs data-[state=active]:bg-card">Obras</TabsTrigger>
-            <TabsTrigger value="fornecedores" className="h-7 text-xs data-[state=active]:bg-card">Fornecedores</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="obras" className="mt-2 focus-visible:outline-none">
-            {/*
-              Toolbar redesenhada — referência híbrida (Linear + Notion):
-              - linha única densa (h-9), divisores verticais entre grupos
-              - search compacto, filtros como chips com label inline + contador
-              - view switcher e densidade agrupados à direita, alinhados em h-8
-              - chip "Limpar" só aparece quando há filtros ativos
-            */}
+        <div className="mt-3">
+          {/*
+            Toolbar redesenhada — referência híbrida (Linear + Notion):
+            - linha única densa (h-9), divisores verticais entre grupos
+            - search compacto, filtros como chips com label inline + contador
+            - view switcher e densidade agrupados à direita, alinhados em h-8
+            - chip "Limpar" só aparece quando há filtros ativos
+          */}
             {(() => {
               const activeFilterCount =
                 (search.trim() ? 1 : 0) +
@@ -1084,7 +1065,7 @@ export default function PainelObras() {
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
-                    <Table className={cn('w-full text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle', densityTableClass)}>
+                    <Table className={cn('w-full text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
@@ -1122,20 +1103,7 @@ export default function PainelObras() {
                 </SectionCard>
               )}
             </div>
-          </TabsContent>
-
-          <TabsContent value="fornecedores" className="mt-2 focus-visible:outline-none">
-            <Suspense fallback={
-              <div className="space-y-3 p-4" aria-busy="true" aria-label="Carregando fornecedores">
-                <PageSkeleton className="h-10 w-64" />
-                <PageSkeleton className="h-32 w-full" />
-                <PageSkeleton className="h-96 w-full" />
-              </div>
-            }>
-              <Fornecedores />
-            </Suspense>
-          </TabsContent>
-        </Tabs>
+        </div>
       </PageContainer>
     </TooltipProvider>
   );
@@ -2693,7 +2661,7 @@ function BoardView({
                 onScroll={(e) => handleScrollerScroll(e.currentTarget)}
                 className="overflow-x-auto border-t border-border-subtle"
               >
-                <Table className={cn('w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle', densityTableClass)}>
+                <Table className={cn('w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border-subtle">
                       <TableHead className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
