@@ -34,6 +34,7 @@ import {
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -341,6 +342,45 @@ export default function PainelObras() {
     });
   };
   const clearStatusFilter = () => setFilterStatuses(new Set());
+
+  /**
+   * Seleção múltipla de obras no Kanban — Set de ids selecionados.
+   * Vazio = nenhuma seleção (oculta a barra de ações em lote).
+   * Mantida no nível da página para sobreviver a re-renders do Kanban.
+   */
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const toggleSelectId = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  const bulkUpdate = async (
+    ids: string[],
+    patch: { etapa?: PainelEtapa | null; status?: PainelStatus | null },
+  ) => {
+    if (ids.length === 0) return;
+    setBulkUpdating(true);
+    try {
+      // Atualiza em paralelo; cada chamada é uma mutation independente.
+      const results = await Promise.allSettled(ids.map((id) => updateObra(id, patch)));
+      const ok = results.filter((r) => r.status === 'fulfilled').length;
+      const fail = results.length - ok;
+      if (fail === 0) {
+        toast.success(`${ok} ${ok === 1 ? 'obra atualizada' : 'obras atualizadas'}.`);
+      } else if (ok === 0) {
+        toast.error('Não foi possível atualizar as obras selecionadas.');
+      } else {
+        toast.warning(`${ok} atualizadas, ${fail} com falha.`);
+      }
+      clearSelection();
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
 
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -807,6 +847,11 @@ export default function PainelObras() {
                   onClearStatusFilter={clearStatusFilter}
                   sortKey={sortKey}
                   sortDir={sortDir}
+                  selectedIds={selectedIds}
+                  onToggleSelect={toggleSelectId}
+                  onClearSelection={clearSelection}
+                  onBulkUpdate={bulkUpdate}
+                  bulkUpdating={bulkUpdating}
                   onOpen={(id) => navigate(`/obra/${id}`)}
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                   onUpdateStatus={(id, status) => updateObra(id, { status })}
@@ -1324,6 +1369,15 @@ interface KanbanViewProps {
   /** Critério atual de ordenação da tabela (compartilhado com o Kanban). */
   sortKey: SortKey;
   sortDir: 'asc' | 'desc';
+  /** Seleção múltipla: ids de obras marcadas para ação em lote. */
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onClearSelection: () => void;
+  onBulkUpdate: (
+    ids: string[],
+    patch: { etapa?: PainelEtapa | null; status?: PainelStatus | null },
+  ) => Promise<void>;
+  bulkUpdating: boolean;
   onOpen: (id: string) => void;
   onUpdateEtapa: (id: string, etapa: PainelEtapa | null) => void;
   onUpdateStatus: (id: string, status: PainelStatus | null) => void;
@@ -1340,6 +1394,11 @@ function KanbanView({
   onClearStatusFilter,
   sortKey,
   sortDir,
+  selectedIds,
+  onToggleSelect,
+  onClearSelection,
+  onBulkUpdate,
+  bulkUpdating,
   onOpen,
   onUpdateEtapa,
   onUpdateStatus,
@@ -1494,8 +1553,75 @@ function KanbanView({
   const autoAvailable = !!sortKey;
   const isAuto = layoutMode === 'auto' && autoAvailable;
 
+  // Bulk action handlers — recebem o novo valor e disparam onBulkUpdate.
+  const handleBulkChangeEtapa = (value: string) => {
+    const next = value === NONE ? null : (value as PainelEtapa);
+    void onBulkUpdate(Array.from(selectedIds), { etapa: next });
+  };
+  const handleBulkChangeStatus = (value: string) => {
+    const next = value === NONE ? null : (value as PainelStatus);
+    void onBulkUpdate(Array.from(selectedIds), { status: next });
+  };
+
   return (
     <SectionCard flush>
+      {/* Barra de ações em lote — visível só quando há seleção. Sticky no topo
+          do quadro para permanecer acessível durante o scroll horizontal. */}
+      {selectedIds.size > 0 && (
+        <div
+          role="region"
+          aria-label="Ações em lote"
+          className="sticky top-0 z-sticky flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border-subtle bg-primary/10 backdrop-blur"
+        >
+          <span className="text-xs font-medium text-foreground">
+            {selectedIds.size} {selectedIds.size === 1 ? 'obra selecionada' : 'obras selecionadas'}
+          </span>
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <Select
+              value=""
+              onValueChange={handleBulkChangeEtapa}
+              disabled={bulkUpdating}
+            >
+              <SelectTrigger className="h-8 w-[180px] text-xs bg-surface" aria-label="Mudar etapa em lote">
+                <SelectValue placeholder="Mudar etapa…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>(sem etapa)</SelectItem>
+                {ETAPA_OPTIONS.map((e) => (
+                  <SelectItem key={e} value={e}>{e}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value=""
+              onValueChange={handleBulkChangeStatus}
+              disabled={bulkUpdating}
+            >
+              <SelectTrigger className="h-8 w-[180px] text-xs bg-surface" aria-label="Mudar status em lote">
+                <SelectValue placeholder="Mudar status…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>(sem status)</SelectItem>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2 text-xs"
+              onClick={onClearSelection}
+              disabled={bulkUpdating}
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Limpar seleção
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Toggle do critério de agrupamento (estilo Monday). */}
       <div className="flex items-center justify-between gap-2 px-3 pt-3 flex-wrap">
         <div
@@ -1704,6 +1830,9 @@ function KanbanView({
                         key={o.id}
                         obra={o}
                         groupBy={groupBy}
+                        selected={selectedIds.has(o.id)}
+                        anySelected={selectedIds.size > 0}
+                        onToggleSelect={() => onToggleSelect(o.id)}
                         onOpen={() => onOpen(o.id)}
                         onChangeEtapa={(e) => onUpdateEtapa(o.id, e)}
                         onChangeStatus={(s) => onUpdateStatus(o.id, s)}
@@ -1724,12 +1853,27 @@ interface KanbanCardProps {
   obra: PainelObra;
   /** Define qual Select inline aparece no rodapé do card (etapa ou status). */
   groupBy: KanbanGroupBy;
+  /** Marcado para ação em lote. */
+  selected: boolean;
+  /** Há ao menos um card selecionado em qualquer coluna — mantém o
+   *  checkbox visível mesmo sem hover, para reforçar o modo "seleção". */
+  anySelected: boolean;
+  onToggleSelect: () => void;
   onOpen: () => void;
   onChangeEtapa: (etapa: PainelEtapa | null) => void;
   onChangeStatus: (status: PainelStatus | null) => void;
 }
 
-function KanbanCard({ obra, groupBy, onOpen, onChangeEtapa, onChangeStatus }: KanbanCardProps) {
+function KanbanCard({
+  obra,
+  groupBy,
+  selected,
+  anySelected,
+  onToggleSelect,
+  onOpen,
+  onChangeEtapa,
+  onChangeStatus,
+}: KanbanCardProps) {
   const displayStatus = computeDisplayStatus(obra);
   const overdueDays = computeOverdueDays(obra);
 
@@ -1747,13 +1891,33 @@ function KanbanCard({ obra, groupBy, onOpen, onChangeEtapa, onChangeStatus }: Ka
         }
       }}
       aria-label={`Abrir obra ${obra.nome}`}
+      aria-selected={selected}
       className={cn(
-        'group rounded-md bg-card border border-border-subtle p-2.5 text-left',
+        'group relative rounded-md bg-card border p-2.5 text-left',
         'hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        selected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border-subtle',
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
+        {/* Checkbox de seleção em lote — visível em hover, focus ou quando
+            já há seleção ativa. Para o clique no card de navegar. */}
+        <div
+          className={cn(
+            'shrink-0 pt-0.5 transition-opacity',
+            selected || anySelected
+              ? 'opacity-100'
+              : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+          )}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <Checkbox
+            checked={selected}
+            onCheckedChange={onToggleSelect}
+            aria-label={selected ? `Desmarcar ${obra.nome}` : `Selecionar ${obra.nome}`}
+          />
+        </div>
         <div className="min-w-0 flex-1">
           {obra.customer_name && (
             <p className="text-[11px] text-muted-foreground truncate" title={obra.customer_name}>
