@@ -1306,6 +1306,37 @@ const STATUS_COL_LABELS: Record<string, string> = {
 function getDefaultOrderFor(groupBy: KanbanGroupBy): KanbanColKey[] {
   return groupBy === 'status' ? STATUS_COL_ORDER : ETAPA_COL_ORDER;
 }
+
+/**
+ * Cor de acento (faixa do header da coluna) — referencial visual estilo Monday.
+ * Para `groupBy=status` usamos a paleta semântica já existente; para `etapa`
+ * mapeamos cores frias (preparação) → quentes (execução) → verde (entrega).
+ */
+function getColumnAccent(groupBy: KanbanGroupBy, key: KanbanColKey): string {
+  if (key === 'none') return 'bg-muted-foreground/30';
+  if (groupBy === 'status') {
+    switch (key as PainelStatus) {
+      case 'Aguardando': return 'bg-info';
+      case 'Em dia':     return 'bg-success';
+      case 'Atrasado':   return 'bg-destructive';
+      case 'Paralisada': return 'bg-muted-foreground';
+      default:           return 'bg-muted-foreground/30';
+    }
+  }
+  switch (key as PainelEtapa) {
+    case 'Medição':            return 'bg-sky-400';
+    case 'Executivo':          return 'bg-indigo-400';
+    case 'Emissão RRT':        return 'bg-violet-400';
+    case 'Condomínio':         return 'bg-purple-400';
+    case 'Planejamento':       return 'bg-blue-400';
+    case 'Mobilização':        return 'bg-amber-400';
+    case 'Execução':           return 'bg-orange-400';
+    case 'Vistoria':           return 'bg-teal-400';
+    case 'Vistoria reprovada': return 'bg-destructive';
+    case 'Finalizada':         return 'bg-success';
+    default:                   return 'bg-muted-foreground/30';
+  }
+}
 function getLabelsFor(groupBy: KanbanGroupBy): Record<string, string> {
   return groupBy === 'status' ? STATUS_COL_LABELS : ETAPA_COL_LABELS;
 }
