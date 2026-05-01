@@ -1289,7 +1289,7 @@ function KanbanView({
           A etapa atualmente filtrada aparece destacada (variant default).
           Clicar de novo no chip ativo limpa o filtro de etapa. */}
       <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3">
-        {order.map((key) => {
+        {displayedOrder.map((key) => {
           const count = (grouped.get(key) ?? []).length;
           const filterValue = key === 'none' ? NONE : key;
           const isActive = selectedEtapa === filterValue;
