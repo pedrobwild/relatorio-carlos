@@ -665,255 +665,357 @@ export default function PainelObras() {
           </TabsList>
 
           <TabsContent value="obras" className="mt-2 focus-visible:outline-none">
-            <PageToolbar
-              sticky={false}
-              search={
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <Input value={search} onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Buscar por obra, cliente ou responsável…"
-                    className="h-9 pl-8 text-sm bg-surface border-border-subtle" />
-                </div>
-              }
-              filters={
-                <>
-                  {/* Filtro de status: multi-seleção via popover. Independe da
-                      seleção visual da coluna no Kanban (que destaca um status
-                      por vez). Permite refinar quais cards aparecem mantendo
-                      múltiplas colunas/status visíveis simultaneamente. */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
+            {/*
+              Toolbar redesenhada — referência híbrida (Linear + Notion):
+              - linha única densa (h-9), divisores verticais entre grupos
+              - search compacto, filtros como chips com label inline + contador
+              - view switcher e densidade agrupados à direita, alinhados em h-8
+              - chip "Limpar" só aparece quando há filtros ativos
+            */}
+            {(() => {
+              const activeFilterCount =
+                (search.trim() ? 1 : 0) +
+                (filterEtapa !== ALL ? 1 : 0) +
+                filterStatuses.size +
+                (filterRelacionamento !== ALL ? 1 : 0) +
+                (filterResponsavel !== ALL ? 1 : 0);
+
+              const chipBase =
+                'h-8 inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface px-2.5 text-xs font-normal text-foreground/80 hover:bg-accent/60 hover:text-foreground transition-colors';
+              const chipActive =
+                'border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10';
+
+              const triggerClass = (active: boolean) =>
+                cn(
+                  'h-8 w-auto min-w-0 gap-1.5 px-2.5 text-xs font-normal border-border-subtle bg-surface',
+                  '[&>svg:last-child]:opacity-50',
+                  active && 'border-primary/40 bg-primary/5 text-foreground',
+                );
+
+              const Divider = () => (
+                <span aria-hidden className="hidden md:block h-5 w-px bg-border-subtle/80 mx-0.5" />
+              );
+
+              return (
+                <div className="flex flex-wrap items-center gap-2 py-2.5 border-b border-border-subtle">
+                  {/* Search — compacto, com atalho visual */}
+                  <div className="relative flex-1 min-w-[220px] max-w-sm">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Buscar obra, cliente ou responsável"
+                      aria-label="Buscar"
+                      className="h-8 pl-8 pr-7 text-xs bg-surface border-border-subtle focus-visible:ring-1 focus-visible:ring-ring/40"
+                    />
+                    {search && (
+                      <button
                         type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-[160px] justify-between text-xs border-border-subtle bg-surface px-3 font-normal"
-                        aria-label="Filtrar por status"
+                        onClick={() => setSearch('')}
+                        aria-label="Limpar busca"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-5 w-5 inline-flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent"
                       >
-                        <span className="flex items-center gap-1.5 truncate">
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  <Divider />
+
+                  {/* Grupo de filtros — chips com label + valor/contador */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* Status — multi-seleção via popover */}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={cn(chipBase, filterStatuses.size > 0 && chipActive)}
+                          aria-label="Filtrar por status"
+                        >
                           <Filter className="h-3.5 w-3.5 opacity-60" />
-                          {filterStatuses.size === 0
-                            ? 'Status'
-                            : filterStatuses.size === 1
-                              ? (() => {
-                                  const only = [...filterStatuses][0];
-                                  return only === NONE ? '(sem status)' : only;
-                                })()
-                              : `${filterStatuses.size} status`}
-                        </span>
-                        <ChevronDown className="h-3.5 w-3.5 opacity-60 shrink-0" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-[220px] p-1">
-                      <div className="flex items-center justify-between px-2 py-1.5">
-                        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                          Filtrar status
-                        </span>
-                        {filterStatuses.size > 0 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={clearStatusFilter}
-                            className="h-6 px-1.5 text-[11px] text-muted-foreground"
-                          >
-                            Limpar
-                          </Button>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        {[NONE, ...STATUS_OPTIONS].map((s) => {
-                          const checked = filterStatuses.has(s);
-                          const label = s === NONE ? '(sem status)' : s;
-                          return (
-                            <button
+                          <span className="text-muted-foreground">Status</span>
+                          {filterStatuses.size > 0 && (
+                            <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground px-1 tabular-nums">
+                              {filterStatuses.size}
+                            </span>
+                          )}
+                          <ChevronDown className="h-3 w-3 opacity-50 ml-0.5" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-[220px] p-1">
+                        <div className="flex items-center justify-between px-2 py-1.5">
+                          <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                            Filtrar status
+                          </span>
+                          {filterStatuses.size > 0 && (
+                            <Button
                               type="button"
-                              key={`statusfilter-${s}`}
-                              onClick={() => toggleStatusFilter(s)}
-                              role="menuitemcheckbox"
-                              aria-checked={checked}
-                              className={cn(
-                                'flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs text-left',
-                                'hover:bg-accent hover:text-accent-foreground',
-                                'focus:outline-none focus:bg-accent',
-                              )}
+                              variant="ghost"
+                              size="sm"
+                              onClick={clearStatusFilter}
+                              className="h-6 px-1.5 text-[11px] text-muted-foreground"
                             >
-                              <span
+                              Limpar
+                            </Button>
+                          )}
+                        </div>
+                        <div className="flex flex-col">
+                          {[NONE, ...STATUS_OPTIONS].map((s) => {
+                            const checked = filterStatuses.has(s);
+                            const label = s === NONE ? '(sem status)' : s;
+                            return (
+                              <button
+                                type="button"
+                                key={`statusfilter-${s}`}
+                                onClick={() => toggleStatusFilter(s)}
+                                role="menuitemcheckbox"
+                                aria-checked={checked}
                                 className={cn(
-                                  'flex h-4 w-4 items-center justify-center rounded border',
-                                  checked
-                                    ? 'bg-primary border-primary text-primary-foreground'
-                                    : 'border-border bg-surface',
+                                  'flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs text-left',
+                                  'hover:bg-accent hover:text-accent-foreground',
+                                  'focus:outline-none focus:bg-accent',
                                 )}
                               >
-                                {checked && <Check className="h-3 w-3" />}
-                              </span>
-                              {s !== NONE && (
                                 <span
-                                  className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(s as PainelStatus))}
-                                  aria-hidden
-                                />
-                              )}
-                              <span className="truncate flex-1">{label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <p className="px-2 pt-1.5 pb-1 text-[10px] text-muted-foreground leading-snug">
-                        Vazio mostra todos. Refina cards mesmo no Kanban agrupado por status.
-                      </p>
-                    </PopoverContent>
-                  </Popover>
+                                  className={cn(
+                                    'flex h-4 w-4 items-center justify-center rounded border',
+                                    checked
+                                      ? 'bg-primary border-primary text-primary-foreground'
+                                      : 'border-border bg-surface',
+                                  )}
+                                >
+                                  {checked && <Check className="h-3 w-3" />}
+                                </span>
+                                {s !== NONE && (
+                                  <span
+                                    className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(s as PainelStatus))}
+                                    aria-hidden
+                                  />
+                                )}
+                                <span className="truncate flex-1">{label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="px-2 pt-1.5 pb-1 text-[10px] text-muted-foreground leading-snug">
+                          Vazio mostra todos. Refina cards mesmo no Kanban agrupado por status.
+                        </p>
+                      </PopoverContent>
+                    </Popover>
 
-                  <Select value={filterEtapa} onValueChange={setFilterEtapa}>
-                    <SelectTrigger className="h-8 w-[150px] text-xs border-border-subtle bg-surface">
-                      <SelectValue placeholder="Etapa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ALL}>Todas etapas</SelectItem>
-                      <SelectItem value={NONE}>(sem etapa)</SelectItem>
-                      {ETAPA_OPTIONS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                    {/* Etapa */}
+                    <Select value={filterEtapa} onValueChange={setFilterEtapa}>
+                      <SelectTrigger className={triggerClass(filterEtapa !== ALL)} aria-label="Filtrar por etapa">
+                        <span className="text-muted-foreground">Etapa</span>
+                        <span className="text-foreground/90 truncate max-w-[110px]">
+                          {filterEtapa === ALL ? 'todas' : filterEtapa === NONE ? '(sem)' : filterEtapa}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL}>Todas etapas</SelectItem>
+                        <SelectItem value={NONE}>(sem etapa)</SelectItem>
+                        {ETAPA_OPTIONS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
 
-                  <Select value={filterRelacionamento} onValueChange={setFilterRelacionamento}>
-                    <SelectTrigger className="h-8 w-[160px] text-xs border-border-subtle bg-surface">
-                      <SelectValue placeholder="Relacionamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ALL}>Todos relacionamentos</SelectItem>
-                      <SelectItem value={NONE}>(sem relacionamento)</SelectItem>
-                      {RELACIONAMENTO_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                    {/* Relacionamento */}
+                    <Select value={filterRelacionamento} onValueChange={setFilterRelacionamento}>
+                      <SelectTrigger className={triggerClass(filterRelacionamento !== ALL)} aria-label="Filtrar por relacionamento">
+                        <span className="text-muted-foreground">Relac.</span>
+                        <span className="text-foreground/90 truncate max-w-[110px]">
+                          {filterRelacionamento === ALL ? 'todos' : filterRelacionamento === NONE ? '(sem)' : filterRelacionamento}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL}>Todos relacionamentos</SelectItem>
+                        <SelectItem value={NONE}>(sem relacionamento)</SelectItem>
+                        {RELACIONAMENTO_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
 
-                  <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
-                    <SelectTrigger className="h-8 w-[170px] text-xs border-border-subtle bg-surface">
-                      <SelectValue placeholder="Responsável" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ALL}>Todos responsáveis</SelectItem>
-                      <SelectItem value={NONE}>(sem responsável)</SelectItem>
-                      {staffUsers.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    {/* Responsável */}
+                    <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
+                      <SelectTrigger className={triggerClass(filterResponsavel !== ALL)} aria-label="Filtrar por responsável">
+                        <span className="text-muted-foreground">Resp.</span>
+                        <span className="text-foreground/90 truncate max-w-[120px]">
+                          {filterResponsavel === ALL
+                            ? 'todos'
+                            : filterResponsavel === NONE
+                              ? '(sem)'
+                              : staffUsers.find((u) => u.id === filterResponsavel)?.nome ?? 'selecionado'}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL}>Todos responsáveis</SelectItem>
+                        <SelectItem value={NONE}>(sem responsável)</SelectItem>
+                        {staffUsers.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                  {hasFilters && (
-                    <Button size="sm" variant="ghost" onClick={clearFilters}
-                      className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground">
-                      <X className="h-3.5 w-3.5 mr-1" />Limpar
-                    </Button>
-                  )}
-                </>
-              }
-              meta={
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    <span className="font-semibold text-foreground">{filtered.length}</span>
-                    <span className="opacity-60"> / {obras.length} obras</span>
-                  </span>
-                  {/* Ordenação visível no Kanban (no modo Tabela é feita pelos cabeçalhos) */}
-                  {activeView === 'kanban' && (
-                    <div className="flex items-center gap-1.5">
-                      <Select
-                        value={sortKey ?? 'default'}
-                        onValueChange={(v) => {
-                          if (v === 'default') { setSortKey(null); setSortDir('asc'); }
-                          else { setSortKey(v as NonNullable<SortKey>); }
-                        }}
+                    {hasFilters && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={clearFilters}
+                        className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                        aria-label={`Limpar ${activeFilterCount} filtro${activeFilterCount > 1 ? 's' : ''}`}
+                        title="Limpar todos os filtros"
                       >
-                        <SelectTrigger className="h-8 w-[170px] text-xs" aria-label="Ordenar cards">
-                          <SelectValue placeholder="Ordenar por" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="default">Entrega + próxima (padrão)</SelectItem>
-                          <SelectItem value="entrega_oficial">Entrega oficial</SelectItem>
-                          <SelectItem value="inicio_oficial">Início oficial</SelectItem>
-                          <SelectItem value="entrega_real">Entrega real</SelectItem>
-                          <SelectItem value="inicio_real">Início real</SelectItem>
-                          <SelectItem value="responsavel_nome">Responsável</SelectItem>
-                          <SelectItem value="atraso">Atraso</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <X className="h-3.5 w-3.5" />
+                        Limpar
+                        <span className="tabular-nums opacity-60">({activeFilterCount})</span>
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Lado direito: contador + ordenação (kanban) + view switcher + densidade */}
+                  <div className="flex items-center gap-2 ml-auto flex-wrap">
+                    <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                      <span className="font-semibold text-foreground">{filtered.length}</span>
+                      <span className="opacity-60"> de {obras.length}</span>
+                    </span>
+
+                    {activeView === 'kanban' && (
+                      <>
+                        <Divider />
+                        <div className="flex items-center gap-1">
+                          <Select
+                            value={sortKey ?? 'default'}
+                            onValueChange={(v) => {
+                              if (v === 'default') { setSortKey(null); setSortDir('asc'); }
+                              else { setSortKey(v as NonNullable<SortKey>); }
+                            }}
+                          >
+                            <SelectTrigger className={triggerClass(!!sortKey)} aria-label="Ordenar cards">
+                              <span className="text-muted-foreground">Ordenar</span>
+                              <span className="text-foreground/90 truncate max-w-[120px]">
+                                {sortKey
+                                  ? ({
+                                      entrega_oficial: 'entrega oficial',
+                                      inicio_oficial: 'início oficial',
+                                      entrega_real: 'entrega real',
+                                      inicio_real: 'início real',
+                                      responsavel_nome: 'responsável',
+                                      atraso: 'atraso',
+                                    } as Record<string, string>)[sortKey] ?? 'custom'
+                                  : 'padrão'}
+                              </span>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="default">Entrega + próxima (padrão)</SelectItem>
+                              <SelectItem value="entrega_oficial">Entrega oficial</SelectItem>
+                              <SelectItem value="inicio_oficial">Início oficial</SelectItem>
+                              <SelectItem value="entrega_real">Entrega real</SelectItem>
+                              <SelectItem value="inicio_real">Início real</SelectItem>
+                              <SelectItem value="responsavel_nome">Responsável</SelectItem>
+                              <SelectItem value="atraso">Atraso</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+                            disabled={!sortKey}
+                            className="h-8 w-8 p-0 text-xs border border-border-subtle bg-surface"
+                            aria-label={`Direção: ${sortDir === 'asc' ? 'crescente' : 'decrescente'}`}
+                            title={sortDir === 'asc' ? 'Crescente' : 'Decrescente'}
+                          >
+                            {sortDir === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+
+                    <Divider />
+
+                    {/* Segmented view switcher */}
+                    <div
+                      role="group"
+                      aria-label="Modo de visualização"
+                      className="inline-flex items-center rounded-md border border-border-subtle bg-surface p-0.5 h-8"
+                    >
                       <Button
                         type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-                        disabled={!sortKey}
-                        className="h-8 px-2 text-xs"
-                        aria-label={`Direção: ${sortDir === 'asc' ? 'crescente' : 'decrescente'}`}
-                        title={sortDir === 'asc' ? 'Crescente' : 'Decrescente'}
+                        aria-pressed={activeView === 'table'}
+                        onClick={() => handleViewChange('table')}
+                        className={cn(
+                          'h-7 gap-1.5 px-2 text-xs font-normal',
+                          activeView === 'table'
+                            ? 'bg-accent text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                        title="Tabela"
                       >
-                        {sortDir === 'asc' ? '↑' : '↓'}
+                        <Table2 className="h-3.5 w-3.5" />
+                        <span className="hidden md:inline">Tabela</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        aria-pressed={activeView === 'board'}
+                        onClick={() => handleViewChange('board')}
+                        className={cn(
+                          'h-7 gap-1.5 px-2 text-xs font-normal',
+                          activeView === 'board'
+                            ? 'bg-accent text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                        title="Board agrupado por etapa"
+                      >
+                        <Rows3 className="h-3.5 w-3.5" />
+                        <span className="hidden md:inline">Board</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        aria-pressed={activeView === 'kanban'}
+                        onClick={() => handleViewChange('kanban')}
+                        className={cn(
+                          'h-7 gap-1.5 px-2 text-xs font-normal',
+                          activeView === 'kanban'
+                            ? 'bg-accent text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                        title="Kanban"
+                      >
+                        <LayoutGrid className="h-3.5 w-3.5" />
+                        <span className="hidden md:inline">Kanban</span>
                       </Button>
                     </div>
-                  )}
-                  {/* Toggle de visualização: Tabela (densa), Board (estilo Monday) ou Kanban */}
-                  <div
-                    role="group"
-                    aria-label="Modo de visualização"
-                    className="inline-flex items-center rounded-md border border-border-subtle bg-surface p-0.5"
-                  >
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={activeView === 'table' ? 'secondary' : 'ghost'}
-                      aria-pressed={activeView === 'table'}
-                      onClick={() => handleViewChange('table')}
-                      className="h-7 gap-1.5 px-2 text-xs"
-                    >
-                      <Table2 className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Tabela</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={activeView === 'board' ? 'secondary' : 'ghost'}
-                      aria-pressed={activeView === 'board'}
-                      onClick={() => handleViewChange('board')}
-                      className="h-7 gap-1.5 px-2 text-xs"
-                      title="Board agrupado por etapa (estilo Monday)"
-                    >
-                      <Rows3 className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Board</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={activeView === 'kanban' ? 'secondary' : 'ghost'}
-                      aria-pressed={activeView === 'kanban'}
-                      onClick={() => handleViewChange('kanban')}
-                      className="h-7 gap-1.5 px-2 text-xs"
-                    >
-                      <LayoutGrid className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Kanban</span>
-                    </Button>
+
+                    {/* Densidade — ícone-only, alinhado ao switcher */}
+                    {activeView !== 'kanban' && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
+                        className="h-8 w-8 p-0 border border-border-subtle bg-surface text-muted-foreground hover:text-foreground"
+                        aria-pressed={density === 'compact'}
+                        aria-label={density === 'compact' ? 'Densidade compacta — alternar para confortável' : 'Densidade confortável — alternar para compacta'}
+                        title={density === 'compact' ? 'Compacta (clique p/ confortável)' : 'Confortável (clique p/ compacta)'}
+                      >
+                        {density === 'compact' ? (
+                          <Maximize2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <Minimize2 className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    )}
                   </div>
-                  {/* Toggle de densidade — afeta Tabela e Board */}
-                  {activeView !== 'kanban' && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
-                      className="h-7 gap-1.5 px-2 text-xs border border-border-subtle bg-surface"
-                      aria-pressed={density === 'compact'}
-                      title={density === 'compact' ? 'Densidade compacta (clique para confortável)' : 'Densidade confortável (clique para compacta)'}
-                    >
-                      {density === 'compact' ? (
-                        <Maximize2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <Minimize2 className="h-3.5 w-3.5" />
-                      )}
-                      <span className="hidden sm:inline">{density === 'compact' ? 'Compacta' : 'Confortável'}</span>
-                    </Button>
-                  )}
                 </div>
-              }
-            />
+              );
+            })()}
+
 
             <div className="mt-2">
               {isLoading ? (
