@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -14,25 +14,74 @@ import {
   Database,
   ChevronRight,
   ChevronDown,
+  TrendingUp,
+  BarChart3,
+  PieChart as PieIcon,
+  LineChart as LineIcon,
+  Lightbulb,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+// ---------------------------------------------------------------------------
+// Tipos
+// ---------------------------------------------------------------------------
+
+interface NumericStats {
+  column: string;
+  count: number;
+  sum: number;
+  avg: number;
+  min: number;
+  max: number;
+}
+
+export interface DataSummary {
+  total_rows: number;
+  numeric: NumericStats[];
+  top_categories?: {
+    column: string;
+    values: { key: string; count: number; pct: number }[];
+  };
+  date_range?: { column: string; from: string; to: string };
+}
+
+export interface AssistantResultData {
+  rows?: unknown[];
+  rows_returned?: number;
+  sql?: string;
+  domain?: string;
+  intent?: string;
+  analysis_type?: string;
+  chart_hint?: string;
+  key_columns?: { label?: string; value?: string; secondary?: string } | null;
+  summary?: DataSummary;
+  status?: string;
+  phase?: string;
+  statusMessage?: string;
+}
 
 export interface AssistantMessage {
   id?: string;
   role: "user" | "assistant";
   content: string;
-  result_data?: {
-    rows?: unknown[];
-    rows_returned?: number;
-    sql?: string;
-    domain?: string;
-    status?: string;
-    phase?: string;
-    statusMessage?: string;
-  } | null;
+  result_data?: AssistantResultData | null;
   pending?: boolean;
 }
 
@@ -52,6 +101,56 @@ const DEFAULT_SUGGESTIONS = [
   "Quais atividades estão atrasadas esta semana?",
   "Quanto recebemos de pagamentos este mês?",
 ];
+
+// ---------------------------------------------------------------------------
+// Helpers de formatação
+// ---------------------------------------------------------------------------
+
+const currencyFmt = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 2,
+});
+const numberFmt = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
+
+function isMonetaryColumn(name: string): boolean {
+  return /(amount|cost|total|valor|preco|price|budget)/i.test(name);
+}
+
+function formatStat(value: number, column: string): string {
+  if (!Number.isFinite(value)) return "—";
+  if (isMonetaryColumn(column)) return currencyFmt.format(value);
+  return numberFmt.format(value);
+}
+
+const CHART_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--chart-2, 215 80% 55%))",
+  "hsl(var(--chart-3, 142 70% 45%))",
+  "hsl(var(--chart-4, 32 95% 55%))",
+  "hsl(var(--chart-5, 0 75% 60%))",
+  "hsl(var(--chart-6, 280 70% 60%))",
+];
+
+// Extrai a seção "Perguntas relacionadas" do markdown e devolve as sugestões.
+function extractFollowUps(markdown: string): { content: string; followUps: string[] } {
+  const headingRegex =
+    /\n+\s*(?:\*\*|##\s*)?Perguntas relacionadas[:\s]*(?:\*\*)?\s*\n+([\s\S]*)$/i;
+  const match = markdown.match(headingRegex);
+  if (!match) return { content: markdown, followUps: [] };
+  const tail = match[1] ?? "";
+  const followUps = tail
+    .split("\n")
+    .map((l) => l.replace(/^\s*[-*]\s*/, "").trim())
+    .filter((l) => l.length > 0 && !/^perguntas/i.test(l))
+    .slice(0, 5);
+  const content = markdown.slice(0, match.index ?? 0).trimEnd();
+  return { content, followUps };
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function AssistantChat({
   conversationId: externalConvId,
@@ -75,7 +174,6 @@ export function AssistantChat({
   }, [externalConvId]);
 
   useEffect(() => {
-    // Auto-scroll to bottom
     requestAnimationFrame(() => {
       const el = scrollRef.current;
       if (el) el.scrollTop = el.scrollHeight;
@@ -109,11 +207,6 @@ export function AssistantChat({
 
     let localConvId = convId;
     let accumulated = "";
-    let finalRows: unknown[] | undefined;
-    let rowsReturned: number | undefined;
-    let sqlText: string | undefined;
-    let domainText: string | undefined;
-    let finalStatus: string | undefined;
 
     try {
       const { data: sess } = await supabase.auth.getSession();
@@ -145,13 +238,11 @@ export function AssistantChat({
       const decoder = new TextDecoder();
       let buffer = "";
 
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        // SSE messages separated by blank line
         const blocks = buffer.split("\n\n");
         buffer = blocks.pop() ?? "";
 
@@ -187,25 +278,39 @@ export function AssistantChat({
                 ...m,
                 pending: !accumulated,
                 content: accumulated,
-                result_data: { ...(m.result_data ?? {}), status: "streaming", phase: payload.phase as string, statusMessage: message },
+                result_data: {
+                  ...(m.result_data ?? {}),
+                  status: "streaming",
+                  phase: payload.phase as string,
+                  statusMessage: message,
+                },
               }));
               break;
             }
             case "sql": {
-              sqlText = payload.sql as string;
-              domainText = payload.domain as string;
               updateLastAssistant((m) => ({
                 ...m,
-                result_data: { ...(m.result_data ?? {}), sql: sqlText, domain: domainText },
+                result_data: {
+                  ...(m.result_data ?? {}),
+                  sql: payload.sql as string,
+                  domain: payload.domain as string,
+                  intent: payload.intent as string,
+                  analysis_type: payload.analysis_type as string,
+                  chart_hint: payload.chart_hint as string,
+                  key_columns: payload.key_columns as AssistantResultData["key_columns"],
+                },
               }));
               break;
             }
             case "rows": {
-              rowsReturned = payload.rows_returned as number;
-              finalRows = payload.preview as unknown[];
               updateLastAssistant((m) => ({
                 ...m,
-                result_data: { ...(m.result_data ?? {}), rows: finalRows, rows_returned: rowsReturned },
+                result_data: {
+                  ...(m.result_data ?? {}),
+                  rows: payload.preview as unknown[],
+                  rows_returned: payload.rows_returned as number,
+                  summary: payload.summary as DataSummary,
+                },
               }));
               break;
             }
@@ -218,7 +323,7 @@ export function AssistantChat({
               break;
             }
             case "done": {
-              finalStatus = payload.status as string;
+              const finalStatus = payload.status as string;
               updateLastAssistant((m) => ({
                 ...m,
                 pending: false,
@@ -228,6 +333,11 @@ export function AssistantChat({
                   rows_returned: payload.rows_returned as number,
                   sql: payload.sql as string,
                   domain: payload.domain as string,
+                  intent: payload.intent as string,
+                  analysis_type: payload.analysis_type as string,
+                  chart_hint: payload.chart_hint as string,
+                  key_columns: payload.key_columns as AssistantResultData["key_columns"],
+                  summary: payload.summary as DataSummary,
                   status: finalStatus,
                 },
               }));
@@ -265,12 +375,11 @@ export function AssistantChat({
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold text-foreground mb-1">
-                Assistente BWild
-              </h3>
+              <h3 className="font-semibold text-foreground mb-1">Assistente BWild</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Pergunte sobre pagamentos, compras, cronogramas, NCs e
-                pendências. As respostas respeitam suas permissões.
+                Pergunte sobre pagamentos, compras, cronogramas, NCs, vistorias e
+                pendências. As respostas são analíticas, com KPIs, gráficos e
+                sugestões — e respeitam suas permissões.
               </p>
             </div>
           )}
@@ -296,7 +405,7 @@ export function AssistantChat({
           )}
 
           {messages.map((m, i) => (
-            <MessageBubble key={i} message={m} />
+            <MessageBubble key={i} message={m} onAskFollowUp={send} disabled={isLoading} />
           ))}
         </div>
       </ScrollArea>
@@ -328,8 +437,27 @@ export function AssistantChat({
   );
 }
 
-function MessageBubble({ message }: { message: AssistantMessage }) {
+// ---------------------------------------------------------------------------
+// Bolha de mensagem (usuário ou assistente)
+// ---------------------------------------------------------------------------
+
+function MessageBubble({
+  message,
+  onAskFollowUp,
+  disabled,
+}: {
+  message: AssistantMessage;
+  onAskFollowUp: (q: string) => void;
+  disabled: boolean;
+}) {
   const [showSql, setShowSql] = useState(false);
+
+  const { content: cleanedContent, followUps } = useMemo(() => {
+    if (message.role !== "assistant" || !message.content) {
+      return { content: message.content, followUps: [] as string[] };
+    }
+    return extractFollowUps(message.content);
+  }, [message.content, message.role]);
 
   if (message.role === "user") {
     return (
@@ -345,16 +473,26 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
   const isStreaming = status === "streaming";
   const isError = status && status !== "success" && status !== "streaming";
   const phaseMessage = message.result_data?.statusMessage;
+  const summary = message.result_data?.summary;
+  const rows = message.result_data?.rows;
+  const chartHint = message.result_data?.chart_hint;
+  const keyColumns = message.result_data?.key_columns ?? null;
+  const analysisType = message.result_data?.analysis_type;
 
   return (
     <div className="flex justify-start">
       <div className="max-w-[92%] w-full">
-        <div className="flex items-center gap-1.5 mb-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5 mb-1.5 text-xs text-muted-foreground flex-wrap">
           <Sparkles className="h-3 w-3" />
           <span>Assistente</span>
           {message.result_data?.domain && (
             <Badge variant="secondary" className="h-5 text-[10px] px-1.5">
               {message.result_data.domain}
+            </Badge>
+          )}
+          {analysisType && (
+            <Badge variant="outline" className="h-5 text-[10px] px-1.5">
+              {analysisType}
             </Badge>
           )}
           {typeof message.result_data?.rows_returned === "number" && (
@@ -364,10 +502,8 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
 
         <div
           className={cn(
-            "rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm",
-            isError
-              ? "bg-destructive/10 border border-destructive/30"
-              : "bg-muted"
+            "rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm space-y-3",
+            isError ? "bg-destructive/10 border border-destructive/30" : "bg-muted",
           )}
         >
           {message.pending ? (
@@ -376,14 +512,28 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
               <span className="text-xs">{phaseMessage ?? "Consultando dados..."}</span>
             </div>
           ) : (
-            <div className="prose prose-sm max-w-none dark:prose-invert prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message.content || "_Sem resposta_"}
-              </ReactMarkdown>
-              {isStreaming && (
-                <span className="inline-block w-1.5 h-4 -mb-0.5 ml-0.5 bg-primary/70 animate-pulse rounded-sm align-middle" />
+            <>
+              {summary && summary.numeric.length > 0 && (
+                <KPICards summary={summary} />
               )}
-            </div>
+
+              <div className="prose prose-sm max-w-none dark:prose-invert prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {cleanedContent || "_Sem resposta_"}
+                </ReactMarkdown>
+                {isStreaming && (
+                  <span className="inline-block w-1.5 h-4 -mb-0.5 ml-0.5 bg-primary/70 animate-pulse rounded-sm align-middle" />
+                )}
+              </div>
+
+              {!isStreaming && rows && rows.length > 1 && chartHint && chartHint !== "none" && (
+                <ChartView
+                  rows={rows as Record<string, unknown>[]}
+                  chartHint={chartHint}
+                  keyColumns={keyColumns}
+                />
+              )}
+            </>
           )}
 
           {isError && (
@@ -394,10 +544,32 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
           )}
         </div>
 
+        {!isStreaming && followUps.length > 0 && (
+          <div className="mt-2 space-y-1.5">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Lightbulb className="h-3 w-3" />
+              <span className="font-medium">Perguntas relacionadas</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {followUps.map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => onAskFollowUp(q)}
+                  className="text-xs px-2.5 py-1 rounded-full border border-border bg-background hover:bg-accent hover:border-primary/40 transition-colors disabled:opacity-50 text-left"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {message.result_data?.sql && (
           <button
             onClick={() => setShowSql((v) => !v)}
-            className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             {showSql ? (
               <ChevronDown className="h-3 w-3" />
@@ -413,6 +585,137 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
             <code>{message.result_data.sql}</code>
           </pre>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// KPICards: cards de estatística numérica acima da resposta
+// ---------------------------------------------------------------------------
+
+function KPICards({ summary }: { summary: DataSummary }) {
+  // Mostrar até 4 KPIs: priorizar colunas monetárias, depois quantidades.
+  const ranked = [...summary.numeric].sort((a, b) => {
+    const am = isMonetaryColumn(a.column) ? 1 : 0;
+    const bm = isMonetaryColumn(b.column) ? 1 : 0;
+    return bm - am;
+  });
+  const top = ranked.slice(0, 4);
+  if (top.length === 0) return null;
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      {top.map((s) => {
+        const showSum =
+          isMonetaryColumn(s.column) || s.column.toLowerCase().includes("count") || s.count > 1;
+        const value = showSum ? s.sum : s.avg;
+        const label = showSum ? "Soma" : "Média";
+        return (
+          <div
+            key={s.column}
+            className="rounded-md border border-border bg-background/60 px-3 py-2"
+          >
+            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <TrendingUp className="h-3 w-3" />
+              <span className="truncate">{s.column}</span>
+            </div>
+            <div className="font-semibold text-sm mt-0.5 truncate">
+              {formatStat(value, s.column)}
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {label} · {s.count} val.
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ChartView: bar/line/pie a partir das linhas + key_columns
+// ---------------------------------------------------------------------------
+
+function ChartView({
+  rows,
+  chartHint,
+  keyColumns,
+}: {
+  rows: Record<string, unknown>[];
+  chartHint: string;
+  keyColumns: { label?: string; value?: string; secondary?: string } | null;
+}) {
+  const sample = rows[0] ?? {};
+  const cols = Object.keys(sample);
+
+  // Se o LLM não passou key_columns, inferimos: 1ª string como label, 1ª numérica como value.
+  let labelKey = keyColumns?.label;
+  let valueKey = keyColumns?.value;
+  if (!labelKey || !cols.includes(labelKey)) {
+    labelKey = cols.find((c) => typeof sample[c] === "string");
+  }
+  if (!valueKey || !cols.includes(valueKey)) {
+    valueKey = cols.find(
+      (c) => c !== labelKey && typeof sample[c] === "number" && !/_id$|^id$/.test(c),
+    );
+  }
+
+  if (!labelKey || !valueKey) return null;
+
+  const data = rows
+    .slice(0, 12)
+    .map((r) => ({
+      label: String(r[labelKey as string] ?? ""),
+      value: Number(r[valueKey as string] ?? 0),
+    }))
+    .filter((d) => Number.isFinite(d.value));
+
+  if (data.length === 0) return null;
+
+  const Icon =
+    chartHint === "line" ? LineIcon : chartHint === "pie" ? PieIcon : BarChart3;
+
+  return (
+    <div className="rounded-md border border-border bg-background/40 p-2">
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+        <Icon className="h-3 w-3" />
+        <span>{valueKey} por {labelKey}</span>
+      </div>
+      <div className="h-44">
+        <ResponsiveContainer width="100%" height="100%">
+          {chartHint === "line" ? (
+            <LineChart data={data} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+              <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={0} angle={-25} textAnchor="end" height={50} />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={CHART_COLORS[0]}
+                strokeWidth={2}
+                dot={{ r: 2 }}
+              />
+            </LineChart>
+          ) : chartHint === "pie" ? (
+            <PieChart>
+              <Pie data={data} dataKey="value" nameKey="label" outerRadius={70} label>
+                {data.map((_, idx) => (
+                  <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          ) : (
+            <BarChart data={data} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+              <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={0} angle={-25} textAnchor="end" height={50} />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Bar dataKey="value" fill={CHART_COLORS[0]} radius={[3, 3, 0, 0]} />
+            </BarChart>
+          )}
+        </ResponsiveContainer>
       </div>
     </div>
   );
