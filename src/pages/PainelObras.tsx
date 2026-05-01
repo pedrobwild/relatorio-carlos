@@ -427,7 +427,7 @@ export default function PainelObras() {
       });
     }
     return rows;
-  }, [obras, search, filterEtapa, filterStatus, filterRelacionamento, filterResponsavel, sortKey, sortDir]);
+  }, [obras, search, filterEtapa, filterStatuses, filterRelacionamento, filterResponsavel, sortKey, sortDir]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
     if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -435,10 +435,10 @@ export default function PainelObras() {
   };
 
   const clearFilters = () => {
-    setSearch(''); setFilterEtapa(ALL); setFilterStatus(ALL); setFilterRelacionamento(ALL); setFilterResponsavel(ALL);
+    setSearch(''); setFilterEtapa(ALL); setFilterStatuses(new Set()); setFilterRelacionamento(ALL); setFilterResponsavel(ALL);
   };
 
-  const hasFilters = !!search.trim() || filterEtapa !== ALL || filterStatus !== ALL || filterRelacionamento !== ALL || filterResponsavel !== ALL;
+  const hasFilters = !!search.trim() || filterEtapa !== ALL || filterStatuses.size > 0 || filterRelacionamento !== ALL || filterResponsavel !== ALL;
 
   const summary = useMemo(() => {
     const displayed = obras.map((o) => computeDisplayStatus(o));
