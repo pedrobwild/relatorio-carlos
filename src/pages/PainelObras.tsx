@@ -1721,25 +1721,35 @@ function KanbanView({
         </div>
 
         <div className="flex items-center gap-2">
+          {hasGroupFilter && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={clearGroupFilter}
+              className="h-7 px-2 text-xs text-muted-foreground"
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Limpar filtro de {groupBy === 'status' ? 'status' : 'etapa'}
+            </Button>
+          )}
           {isAuto && (
             <span className="text-[11px] text-muted-foreground">
               Ordem automática pelo critério da tabela
             </span>
           )}
           {!isAuto && isCustomOrder && (
-            <>
-              <span className="text-[11px] text-muted-foreground">Ordem personalizada</span>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={resetOrder}
-                className="h-7 px-2 text-xs"
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                Restaurar padrão
-              </Button>
-            </>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={resetOrder}
+              className="h-7 px-2 text-xs"
+              title="Restaurar a ordem padrão das colunas"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />
+              Restaurar ordem
+            </Button>
           )}
         </div>
       </div>
