@@ -1138,72 +1138,113 @@ function ExpandedRowContent({ projectId }: { projectId: string }) {
 }
 
 // ----- Kanban view -----
-// Colunas do kanban: mesmas opções de etapa do select inline + bucket
-// "(sem etapa)" para obras ainda não classificadas. A ordem padrão segue
-// o fluxo operacional (Sem etapa → Medição → … → Finalizada) mas o usuário
-// pode reordenar manualmente; a preferência é persistida em localStorage
-// por usuário (chave estável) para sobreviver a reloads.
-type KanbanColKey = PainelEtapa | 'none';
-const KANBAN_DEFAULT_ORDER: KanbanColKey[] = [
+// Visão de quadro estilo Monday: o usuário escolhe o critério de
+// agrupamento (etapa ou status), reordena colunas manualmente
+// (persistido em localStorage por critério) ou ativa modo automático
+// que segue a ordenação ativa da tabela.
+type KanbanGroupBy = 'etapa' | 'status';
+type KanbanColKey = string; // PainelEtapa | PainelStatus | 'none'
+
+const ETAPA_COL_ORDER: KanbanColKey[] = [
   'none',
   ...(ETAPA_OPTIONS as readonly PainelEtapa[]),
 ];
-const KANBAN_LABELS: Record<KanbanColKey, string> = {
+const ETAPA_COL_LABELS: Record<string, string> = {
   none: 'Sem etapa',
   ...(Object.fromEntries(ETAPA_OPTIONS.map((e) => [e, e])) as Record<PainelEtapa, string>),
 };
-const KANBAN_ORDER_STORAGE_KEY = 'painelObras:kanbanColumnOrder:v1';
 
-function loadKanbanOrder(): KanbanColKey[] {
-  if (typeof window === 'undefined') return KANBAN_DEFAULT_ORDER;
+// Ordem dos status segue o ciclo de vida operacional:
+// Aguardando (preparação) → Em dia (executando) → Atrasado (alerta) →
+// Paralisada (bloqueio). "Sem status" entra primeiro como bucket de
+// triagem para obras ainda não classificadas.
+const STATUS_COL_ORDER: KanbanColKey[] = [
+  'none',
+  ...(STATUS_OPTIONS as readonly PainelStatus[]),
+];
+const STATUS_COL_LABELS: Record<string, string> = {
+  none: 'Sem status',
+  ...(Object.fromEntries(STATUS_OPTIONS.map((s) => [s, s])) as Record<PainelStatus, string>),
+};
+
+function getDefaultOrderFor(groupBy: KanbanGroupBy): KanbanColKey[] {
+  return groupBy === 'status' ? STATUS_COL_ORDER : ETAPA_COL_ORDER;
+}
+function getLabelsFor(groupBy: KanbanGroupBy): Record<string, string> {
+  return groupBy === 'status' ? STATUS_COL_LABELS : ETAPA_COL_LABELS;
+}
+function getStorageKeyFor(groupBy: KanbanGroupBy): string {
+  return groupBy === 'status'
+    ? 'painelObras:kanbanColumnOrder:status:v1'
+    : 'painelObras:kanbanColumnOrder:etapa:v1';
+}
+
+function loadKanbanOrder(groupBy: KanbanGroupBy): KanbanColKey[] {
+  const fallback = getDefaultOrderFor(groupBy);
+  if (typeof window === 'undefined') return fallback;
   try {
-    const raw = window.localStorage.getItem(KANBAN_ORDER_STORAGE_KEY);
-    if (!raw) return KANBAN_DEFAULT_ORDER;
+    const raw = window.localStorage.getItem(getStorageKeyFor(groupBy));
+    if (!raw) return fallback;
     const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return KANBAN_DEFAULT_ORDER;
+    if (!Array.isArray(parsed)) return fallback;
     const valid = parsed.filter((k): k is KanbanColKey =>
-      typeof k === 'string' && (KANBAN_DEFAULT_ORDER as string[]).includes(k),
+      typeof k === 'string' && (fallback as string[]).includes(k),
     );
-    // Acrescenta etapas novas (ainda não vistas) ao final, preservando ordem do usuário.
-    const missing = KANBAN_DEFAULT_ORDER.filter((k) => !valid.includes(k));
+    // Acrescenta opções novas (ainda não vistas) ao final, preservando ordem do usuário.
+    const missing = fallback.filter((k) => !valid.includes(k));
     return [...valid, ...missing];
   } catch {
-    return KANBAN_DEFAULT_ORDER;
+    return fallback;
   }
 }
 
 interface KanbanViewProps {
   obras: PainelObra[];
-  /** Valor atual do filtro de etapa (ALL, NONE ou nome de uma etapa). */
+  /** Critério de agrupamento (define colunas, label, edição inline, filtros). */
+  groupBy: KanbanGroupBy;
+  onGroupByChange: (next: KanbanGroupBy) => void;
+  /** Filtros sincronizados (chip ativo destaca a coluna correspondente). */
   selectedEtapa: string;
-  /** Alterna o filtro: clicar no resumo seleciona/limpa a etapa. */
   onSelectEtapa: (value: string) => void;
+  selectedStatus: string;
+  onSelectStatus: (value: string) => void;
   /** Critério atual de ordenação da tabela (compartilhado com o Kanban). */
   sortKey: SortKey;
   sortDir: 'asc' | 'desc';
   onOpen: (id: string) => void;
   onUpdateEtapa: (id: string, etapa: PainelEtapa | null) => void;
+  onUpdateStatus: (id: string, status: PainelStatus | null) => void;
 }
 
 function KanbanView({
   obras,
+  groupBy,
+  onGroupByChange,
   selectedEtapa,
   onSelectEtapa,
+  selectedStatus,
+  onSelectStatus,
   sortKey,
   sortDir,
   onOpen,
   onUpdateEtapa,
+  onUpdateStatus,
 }: KanbanViewProps) {
-  const [order, setOrder] = useState<KanbanColKey[]>(() => loadKanbanOrder());
+  const labels = getLabelsFor(groupBy);
+  const defaultOrder = getDefaultOrderFor(groupBy);
 
-  // Persiste a ordem sempre que o usuário reordena.
+  // Ordem das colunas é persistida por critério; troca de critério remonta o estado.
+  const [order, setOrder] = useState<KanbanColKey[]>(() => loadKanbanOrder(groupBy));
+  useEffect(() => {
+    setOrder(loadKanbanOrder(groupBy));
+  }, [groupBy]);
   useEffect(() => {
     try {
-      window.localStorage.setItem(KANBAN_ORDER_STORAGE_KEY, JSON.stringify(order));
+      window.localStorage.setItem(getStorageKeyFor(groupBy), JSON.stringify(order));
     } catch {
       /* ignore (modo privado, quota etc.) */
     }
-  }, [order]);
+  }, [order, groupBy]);
 
   const moveColumn = (key: KanbanColKey, dir: -1 | 1) => {
     setOrder((prev) => {
@@ -1217,36 +1258,44 @@ function KanbanView({
     });
   };
 
-  const resetOrder = () => setOrder(KANBAN_DEFAULT_ORDER);
+  const resetOrder = () => setOrder(defaultOrder);
   const isCustomOrder = useMemo(
-    () => order.some((k, i) => k !== KANBAN_DEFAULT_ORDER[i]),
-    [order],
+    () => order.some((k, i) => k !== defaultOrder[i]),
+    [order, defaultOrder],
   );
 
-  // Agrupamento O(n) por etapa para renderização das colunas.
+  // Resolve o "valor de coluna" de uma obra conforme o critério.
+  // Para status, usamos `computeDisplayStatus` para refletir a mesma lógica
+  // visual da tabela (e.g., obras com entrega oficial vencida aparecem como
+  // "Atrasado" mesmo sem flag manual).
+  const colKeyOf = (o: PainelObra): KanbanColKey => {
+    if (groupBy === 'status') {
+      return (computeDisplayStatus(o) as PainelStatus | null) ?? 'none';
+    }
+    return (o.etapa as PainelEtapa | null) ?? 'none';
+  };
+
+  // Agrupamento O(n) por coluna para renderização.
   const grouped = useMemo(() => {
     const map = new Map<KanbanColKey, PainelObra[]>();
     order.forEach((k) => map.set(k, []));
     for (const o of obras) {
-      const key: KanbanColKey = (o.etapa as PainelEtapa | null) ?? 'none';
+      const key = colKeyOf(o);
       const arr = map.get(key);
       if (arr) arr.push(o);
-      // Etapas inválidas/legadas caem em "Sem etapa" para não sumir do painel.
       else map.get('none')?.push(o);
     }
     return map;
-  }, [obras, order]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [obras, order, groupBy]);
 
-  // Modo de layout das colunas: manual (drag/setas) vs automático
-  // (deriva do critério de ordenação ativo na tabela). No modo auto,
-  // as setas e o "Restaurar padrão" ficam desativados — a única fonte
-  // da ordem das colunas passa a ser sortKey/sortDir.
+  // Filtro/seleção atualmente vigente para o critério escolhido.
+  const selectedGroup = groupBy === 'status' ? selectedStatus : selectedEtapa;
+  const onSelectGroup = groupBy === 'status' ? onSelectStatus : onSelectEtapa;
+
+  // Modo de layout das colunas (manual vs auto pela ordenação ativa).
   const [layoutMode, setLayoutMode] = useState<'manual' | 'auto'>('manual');
 
-  // Agregação por etapa para ordenação automática. Estratégia por chave:
-  // - datas (entrega/início): menor data da coluna (próxima entrega/início)
-  // - responsavel_nome: menor nome alfabético da coluna (representante)
-  // - atraso: maior atraso da coluna (coluna mais crítica primeiro quando desc)
   const aggregateByCol = useMemo(() => {
     const agg = new Map<KanbanColKey, { num: number | null; str: string | null }>();
     for (const key of order) {
@@ -1268,8 +1317,6 @@ function KanbanView({
     return agg;
   }, [order, grouped, sortKey]);
 
-  // Ordem realmente exibida: manual usa `order`; auto reordena `order`
-  // pelo agregado, mantendo etapas vazias no final para não criar ruído.
   const displayedOrder = useMemo<KanbanColKey[]>(() => {
     if (layoutMode === 'manual' || !sortKey) return order;
     const withVal: KanbanColKey[] = [];
@@ -1301,25 +1348,60 @@ function KanbanView({
 
   return (
     <SectionCard flush>
-      {/* Resumo por etapa: chips clicáveis que servem como atalho do filtro.
-          A etapa atualmente filtrada aparece destacada (variant default).
-          Clicar de novo no chip ativo limpa o filtro de etapa. */}
+      {/* Toggle do critério de agrupamento (estilo Monday). */}
+      <div className="flex items-center justify-between gap-2 px-3 pt-3 flex-wrap">
+        <div
+          role="group"
+          aria-label="Agrupar quadro por"
+          className="inline-flex items-center rounded-md border border-border-subtle bg-surface p-0.5"
+        >
+          <span className="px-2 text-[11px] text-muted-foreground">Agrupar por</span>
+          <Button
+            type="button"
+            size="sm"
+            variant={groupBy === 'etapa' ? 'secondary' : 'ghost'}
+            aria-pressed={groupBy === 'etapa'}
+            onClick={() => onGroupByChange('etapa')}
+            className="h-7 px-2 text-xs"
+          >
+            Etapa
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={groupBy === 'status' ? 'secondary' : 'ghost'}
+            aria-pressed={groupBy === 'status'}
+            onClick={() => onGroupByChange('status')}
+            className="h-7 px-2 text-xs"
+          >
+            Status
+          </Button>
+        </div>
+      </div>
+
+      {/* Resumo por coluna: chips clicáveis que servem como atalho do filtro. */}
       <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3">
         {displayedOrder.map((key) => {
           const count = (grouped.get(key) ?? []).length;
           const filterValue = key === 'none' ? NONE : key;
-          const isActive = selectedEtapa === filterValue;
-          const label = KANBAN_LABELS[key] ?? key;
+          const isActive = selectedGroup === filterValue;
+          const label = labels[key] ?? key;
           return (
             <Button
-              key={`summary-${key}`}
+              key={`summary-${groupBy}-${key}`}
               type="button"
               size="sm"
               variant={isActive ? 'default' : 'outline'}
-              onClick={() => onSelectEtapa(isActive ? ALL : filterValue)}
+              onClick={() => onSelectGroup(isActive ? ALL : filterValue)}
               aria-pressed={isActive}
               className="h-7 gap-1.5 px-2 text-xs"
             >
+              {groupBy === 'status' && (
+                <span
+                  className={cn('h-2 w-2 rounded-full', statusDotClass(key === 'none' ? null : (key as PainelStatus)))}
+                  aria-hidden
+                />
+              )}
               <span className="truncate max-w-[140px]">{label}</span>
               <span
                 className={cn(
@@ -1334,16 +1416,16 @@ function KanbanView({
             </Button>
           );
         })}
-        {selectedEtapa !== ALL && (
+        {selectedGroup !== ALL && (
           <Button
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => onSelectEtapa(ALL)}
+            onClick={() => onSelectGroup(ALL)}
             className="h-7 px-2 text-xs text-muted-foreground"
           >
             <X className="h-3.5 w-3.5 mr-1" />
-            Limpar etapa
+            Limpar {groupBy === 'status' ? 'status' : 'etapa'}
           </Button>
         )}
       </div>
@@ -1374,7 +1456,7 @@ function KanbanView({
             onClick={() => setLayoutMode('auto')}
             className="h-7 gap-1.5 px-2 text-xs"
             title={autoAvailable
-              ? 'Reordenar pelas etapas conforme o critério de ordenação ativo'
+              ? 'Reordenar pelas colunas conforme o critério de ordenação ativo'
               : 'Selecione um critério de ordenação para usar o modo automático'}
           >
             Automático
@@ -1408,16 +1490,17 @@ function KanbanView({
         <div className="flex gap-3 min-w-max items-start">
           {displayedOrder.map((key, idx) => {
             const items = grouped.get(key) ?? [];
-            const label = KANBAN_LABELS[key] ?? key;
-            // No modo automático, as setas ficam desativadas (a ordem é
-            // derivada do critério de ordenação ativo, não do usuário).
+            const label = labels[key] ?? key;
             const canMoveLeft = !isAuto && idx > 0;
             const canMoveRight = !isAuto && idx < displayedOrder.length - 1;
             const filterValue = key === 'none' ? NONE : key;
-            const isActive = selectedEtapa === filterValue;
+            const isActive = selectedGroup === filterValue;
+            const accentDot = groupBy === 'status'
+              ? statusDotClass(key === 'none' ? null : (key as PainelStatus))
+              : null;
             return (
               <div
-                key={key}
+                key={`${groupBy}-${key}`}
                 className={cn(
                   'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border transition-colors',
                   isActive ? 'border-primary ring-2 ring-primary/30' : 'border-border-subtle',
@@ -1450,9 +1533,14 @@ function KanbanView({
                       <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate flex-1 text-center">
-                    {label}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-1 justify-center min-w-0">
+                    {accentDot && (
+                      <span className={cn('h-2 w-2 rounded-full shrink-0', accentDot)} aria-hidden />
+                    )}
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">
+                      {label}
+                    </span>
+                  </div>
                   <span className="text-[11px] tabular-nums text-muted-foreground bg-card border border-border-subtle rounded-full px-1.5 min-w-[20px] text-center shrink-0">
                     {items.length}
                   </span>
@@ -1467,8 +1555,10 @@ function KanbanView({
                       <KanbanCard
                         key={o.id}
                         obra={o}
+                        groupBy={groupBy}
                         onOpen={() => onOpen(o.id)}
                         onChangeEtapa={(e) => onUpdateEtapa(o.id, e)}
+                        onChangeStatus={(s) => onUpdateStatus(o.id, s)}
                       />
                     ))
                   )}
