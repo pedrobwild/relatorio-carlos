@@ -1289,6 +1289,24 @@ function loadKanbanOrder(groupBy: KanbanGroupBy): KanbanColKey[] {
   }
 }
 
+// Layout das colunas (manual vs automático) também é persistido por critério —
+// trocar entre Etapa/Status preserva a preferência feita em cada um.
+type KanbanLayoutMode = 'manual' | 'auto';
+function getLayoutStorageKeyFor(groupBy: KanbanGroupBy): string {
+  return groupBy === 'status'
+    ? 'painelObras:kanbanLayoutMode:status:v1'
+    : 'painelObras:kanbanLayoutMode:etapa:v1';
+}
+function loadKanbanLayoutMode(groupBy: KanbanGroupBy): KanbanLayoutMode {
+  if (typeof window === 'undefined') return 'manual';
+  try {
+    const raw = window.localStorage.getItem(getLayoutStorageKeyFor(groupBy));
+    return raw === 'auto' ? 'auto' : 'manual';
+  } catch {
+    return 'manual';
+  }
+}
+
 interface KanbanViewProps {
   obras: PainelObra[];
   /** Critério de agrupamento (define colunas, label, edição inline, filtros). */
