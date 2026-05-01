@@ -31,6 +31,8 @@ import {
   RotateCcw,
   Filter,
   Check,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
@@ -338,6 +340,27 @@ export default function PainelObras() {
     setSearchParams(params, { replace: true });
   };
 
+  // Densidade da tabela: 'comfortable' (padrão) ou 'compact' (tipo planilha).
+  // Persistida em localStorage para manter preferência entre sessões e telas do painel.
+  const DENSITY_STORAGE_KEY = 'painel-obras:density';
+  const [density, setDensity] = useState<'comfortable' | 'compact'>(() => {
+    if (typeof window === 'undefined') return 'comfortable';
+    const v = window.localStorage.getItem(DENSITY_STORAGE_KEY);
+    return v === 'compact' ? 'compact' : 'comfortable';
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(DENSITY_STORAGE_KEY, density);
+  }, [density]);
+
+  // Classes aplicadas ao <Table> de acordo com a densidade — afetam altura
+  // do header e padding vertical das células sem alterar paddings horizontais
+  // (que mantêm o alinhamento das colunas sticky).
+  const densityTableClass =
+    density === 'compact'
+      ? '[&_th]:h-7 [&_td]:py-1'
+      : '[&_th]:h-9 [&_td]:py-2.5';
+
   // Critério de agrupamento do Kanban: por etapa (default) ou por status (estilo Monday).
   // Persistido em URL para preservar a visão escolhida ao compartilhar / recarregar.
   const groupByParam = searchParams.get('groupBy');
@@ -558,17 +581,18 @@ export default function PainelObras() {
           description="Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
           actions={
             <>
-              <Button variant="outline" size="sm" onClick={() => navigate('/gestao/cs/operacional')} className="h-9 gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/gestao/cs/operacional')} className="h-8 gap-2">
                 <Headset className="h-4 w-4" />
                 <span className="hidden sm:inline">Customer Success</span>
                 <ArrowRight className="h-3.5 w-3.5 opacity-60" />
               </Button>
-              <Button size="sm" onClick={() => navigate('/gestao/nova-obra')} className="h-9 gap-2">
+              <Button size="sm" onClick={() => navigate('/gestao/nova-obra')} className="h-8 gap-2">
                 <Plus className="h-4 w-4" />Nova obra
               </Button>
             </>
           }
           flush
+          className="!pt-4 !pb-3 md:!pt-5 md:!pb-3 [&_h1]:!text-lg [&_h1]:md:!text-xl"
         />
 
         {/* Delete confirmation dialog */}
@@ -851,6 +875,25 @@ export default function PainelObras() {
                       <span className="hidden sm:inline">Kanban</span>
                     </Button>
                   </div>
+                  {/* Toggle de densidade — afeta Tabela e Board */}
+                  {activeView !== 'kanban' && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
+                      className="h-7 gap-1.5 px-2 text-xs border border-border-subtle bg-surface"
+                      aria-pressed={density === 'compact'}
+                      title={density === 'compact' ? 'Densidade compacta (clique para confortável)' : 'Densidade confortável (clique para compacta)'}
+                    >
+                      {density === 'compact' ? (
+                        <Maximize2 className="h-3.5 w-3.5" />
+                      ) : (
+                        <Minimize2 className="h-3.5 w-3.5" />
+                      )}
+                      <span className="hidden sm:inline">{density === 'compact' ? 'Compacta' : 'Confortável'}</span>
+                    </Button>
+                  )}
                 </div>
               }
             />
@@ -898,11 +941,12 @@ export default function PainelObras() {
                   renderSortableHeader={(label, key) => (
                     <SortableHeader label={label} sortKey={key} />
                   )}
+                  densityTableClass={densityTableClass}
                 />
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
-                    <Table className="w-full text-sm [&_th]:h-9 [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:py-1.5 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
+                    <Table className={cn('w-full text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle', densityTableClass)}>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
@@ -2204,6 +2248,7 @@ interface BoardViewProps {
   onDeleteRequest: (o: PainelObra) => void;
   onOpenDados: (o: PainelObra) => void;
   renderSortableHeader: (label: string, key: NonNullable<SortKey>) => React.ReactNode;
+  densityTableClass: string;
 }
 
 function BoardView({
@@ -2216,6 +2261,7 @@ function BoardView({
   onDeleteRequest,
   onOpenDados,
   renderSortableHeader,
+  densityTableClass,
 }: BoardViewProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(() => loadBoardCollapsed());
 
@@ -2364,7 +2410,7 @@ function BoardView({
                 onScroll={(e) => handleScrollerScroll(e.currentTarget)}
                 className="overflow-x-auto border-t border-border-subtle"
               >
-                <Table className="w-full text-sm [&_th]:h-9 [&_td]:py-1.5 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
+                <Table className={cn('w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle', densityTableClass)}>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border-subtle">
                       <TableHead className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
