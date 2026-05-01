@@ -1040,3 +1040,197 @@ function ExpandedRowContent({ projectId }: { projectId: string }) {
   );
 }
 
+// ----- Kanban view -----
+// Colunas do kanban: mesmas opções de etapa do select inline + bucket
+// "(sem etapa)" para obras ainda não classificadas. Manter a ordem alinhada
+// ao fluxo operacional (Medição → Finalizada) facilita leitura por varredura.
+const KANBAN_COLUMNS: Array<{ key: PainelEtapa | 'none'; label: string }> = [
+  { key: 'none',                label: 'Sem etapa' },
+  ...ETAPA_OPTIONS.map((e) => ({ key: e, label: e })),
+];
+
+interface KanbanViewProps {
+  obras: PainelObra[];
+  onOpen: (id: string) => void;
+  onUpdateEtapa: (id: string, etapa: PainelEtapa | null) => void;
+}
+
+function KanbanView({ obras, onOpen, onUpdateEtapa }: KanbanViewProps) {
+  // Agrupamento O(n) por etapa para renderização das colunas.
+  const grouped = useMemo(() => {
+    const map = new Map<PainelEtapa | 'none', PainelObra[]>();
+    KANBAN_COLUMNS.forEach((c) => map.set(c.key, []));
+    for (const o of obras) {
+      const key: PainelEtapa | 'none' = (o.etapa as PainelEtapa | null) ?? 'none';
+      const arr = map.get(key);
+      if (arr) arr.push(o);
+      // Etapas inválidas/legadas caem em "Sem etapa" para não sumir do painel.
+      else map.get('none')?.push(o);
+    }
+    return map;
+  }, [obras]);
+
+  return (
+    <SectionCard flush>
+      <div className="overflow-x-auto p-3">
+        <div className="flex gap-3 min-w-max items-start">
+          {KANBAN_COLUMNS.map((col) => {
+            const items = grouped.get(col.key) ?? [];
+            return (
+              <div
+                key={col.key}
+                className="flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border border-border-subtle"
+              >
+                <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">
+                    {col.label}
+                  </span>
+                  <span className="text-[11px] tabular-nums text-muted-foreground bg-card border border-border-subtle rounded-full px-1.5 min-w-[20px] text-center">
+                    {items.length}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2 p-2 max-h-[calc(100vh-360px)] overflow-y-auto">
+                  {items.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground text-center py-6 italic">
+                      Nenhuma obra
+                    </p>
+                  ) : (
+                    items.map((o) => (
+                      <KanbanCard
+                        key={o.id}
+                        obra={o}
+                        onOpen={() => onOpen(o.id)}
+                        onChangeEtapa={(e) => onUpdateEtapa(o.id, e)}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
+
+interface KanbanCardProps {
+  obra: PainelObra;
+  onOpen: () => void;
+  onChangeEtapa: (etapa: PainelEtapa | null) => void;
+}
+
+function KanbanCard({ obra, onOpen, onChangeEtapa }: KanbanCardProps) {
+  const displayStatus = computeDisplayStatus(obra);
+  const overdueDays = computeOverdueDays(obra);
+
+  // Card é navegável (clique/Enter abrem a obra). Controles internos
+  // interrompem propagação para preservar interação inline (mover etapa).
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      aria-label={`Abrir obra ${obra.nome}`}
+      className={cn(
+        'group rounded-md bg-card border border-border-subtle p-2.5 text-left',
+        'hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+      )}
+    >
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div className="min-w-0 flex-1">
+          {obra.customer_name && (
+            <p className="text-[11px] text-muted-foreground truncate" title={obra.customer_name}>
+              {obra.customer_name}
+            </p>
+          )}
+          <p className="text-sm font-medium text-foreground leading-tight truncate" title={obra.nome}>
+            {obra.nome}
+          </p>
+        </div>
+        <span
+          className={cn(
+            'inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0',
+            statusPillClass(displayStatus),
+          )}
+          aria-label={`Status: ${displayStatus ?? 'sem status'}`}
+        >
+          <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(displayStatus))} aria-hidden />
+          {displayStatus ?? '—'}
+        </span>
+      </div>
+
+      {/* Progresso */}
+      {obra.progress_percentage != null && (
+        <div className="mb-2">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-0.5">
+            <span>Progresso</span>
+            <span className="tabular-nums font-medium text-foreground">
+              {Math.round(obra.progress_percentage)}%
+            </span>
+          </div>
+          <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full bg-primary"
+              style={{ width: `${Math.max(0, Math.min(100, obra.progress_percentage))}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Linha inferior: entrega + responsável + atraso */}
+      <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
+        {obra.entrega_oficial && (
+          <span className="inline-flex items-center gap-1 tabular-nums">
+            <CalendarIcon className="h-3 w-3 opacity-60" />
+            {fmtDate(obra.entrega_oficial)}
+          </span>
+        )}
+        {obra.responsavel_nome && (
+          <span className="inline-flex items-center gap-1 truncate max-w-[120px]" title={obra.responsavel_nome}>
+            <User className="h-3 w-3 opacity-60" />
+            <span className="truncate">{obra.responsavel_nome}</span>
+          </span>
+        )}
+        {overdueDays > 0 && (
+          <span className="inline-flex items-center gap-1 text-destructive font-medium tabular-nums">
+            <Clock className="h-3 w-3" />
+            +{overdueDays}d
+          </span>
+        )}
+      </div>
+
+      {/* Mover etapa — Select inline (não navega ao abrir) */}
+      <div
+        className="mt-2 pt-2 border-t border-border-subtle"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <Select
+          value={obra.etapa ?? NONE}
+          onValueChange={(v) => onChangeEtapa(v === NONE ? null : (v as PainelEtapa))}
+        >
+          <SelectTrigger
+            className="h-7 text-[11px] border-border-subtle bg-surface"
+            aria-label="Mover obra para outra etapa"
+          >
+            <SelectValue placeholder="Mover para…" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE}>(sem etapa)</SelectItem>
+            {ETAPA_OPTIONS.map((e) => (
+              <SelectItem key={e} value={e}>{e}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
