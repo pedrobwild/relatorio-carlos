@@ -117,6 +117,32 @@ const NONE = '__none__';
 const fmtDate = (iso: string | null) =>
   iso ? format(parseISO(iso), 'dd/MM/yy', { locale: ptBR }) : '—';
 
+/**
+ * Normaliza nomes recebidos em CAPS LOCK (ex: "FELIPE ABRANTES DALMAGRO") para
+ * Title Case ("Felipe Abrantes Dalmagro"), preservando partículas usuais (de,
+ * da, do, dos, das, e). Quando o nome já tem capitalização mista, devolve
+ * inalterado para respeitar a grafia original.
+ */
+const PARTICULAS = new Set(['de', 'da', 'do', 'dos', 'das', 'e', 'di', 'du']);
+const formatNomePessoa = (raw: string | null | undefined): string => {
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  // Heurística: só converter se >70% das letras estão em CAPS
+  const letters = trimmed.replace(/[^A-Za-zÀ-ÿ]/g, '');
+  if (!letters) return trimmed;
+  const upperRatio = letters.split('').filter((c) => c === c.toUpperCase() && c !== c.toLowerCase()).length / letters.length;
+  if (upperRatio < 0.7) return trimmed;
+  return trimmed
+    .toLocaleLowerCase('pt-BR')
+    .split(/\s+/)
+    .map((w, i) => {
+      if (i > 0 && PARTICULAS.has(w)) return w;
+      return w.charAt(0).toLocaleUpperCase('pt-BR') + w.slice(1);
+    })
+    .join(' ');
+};
+
 
 const toIsoDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
 
@@ -1306,6 +1332,37 @@ const STATUS_COL_LABELS: Record<string, string> = {
 function getDefaultOrderFor(groupBy: KanbanGroupBy): KanbanColKey[] {
   return groupBy === 'status' ? STATUS_COL_ORDER : ETAPA_COL_ORDER;
 }
+
+/**
+ * Cor de acento (faixa do header da coluna) — referencial visual estilo Monday.
+ * Para `groupBy=status` usamos a paleta semântica já existente; para `etapa`
+ * mapeamos cores frias (preparação) → quentes (execução) → verde (entrega).
+ */
+function getColumnAccent(groupBy: KanbanGroupBy, key: KanbanColKey): string {
+  if (key === 'none') return 'bg-muted-foreground/30';
+  if (groupBy === 'status') {
+    switch (key as PainelStatus) {
+      case 'Aguardando': return 'bg-info';
+      case 'Em dia':     return 'bg-success';
+      case 'Atrasado':   return 'bg-destructive';
+      case 'Paralisada': return 'bg-muted-foreground';
+      default:           return 'bg-muted-foreground/30';
+    }
+  }
+  switch (key as PainelEtapa) {
+    case 'Medição':            return 'bg-sky-400';
+    case 'Executivo':          return 'bg-indigo-400';
+    case 'Emissão RRT':        return 'bg-violet-400';
+    case 'Condomínio':         return 'bg-purple-400';
+    case 'Planejamento':       return 'bg-blue-400';
+    case 'Mobilização':        return 'bg-amber-400';
+    case 'Execução':           return 'bg-orange-400';
+    case 'Vistoria':           return 'bg-teal-400';
+    case 'Vistoria reprovada': return 'bg-destructive';
+    case 'Finalizada':         return 'bg-success';
+    default:                   return 'bg-muted-foreground/30';
+  }
+}
 function getLabelsFor(groupBy: KanbanGroupBy): Record<string, string> {
   return groupBy === 'status' ? STATUS_COL_LABELS : ETAPA_COL_LABELS;
 }
@@ -1653,56 +1710,8 @@ function KanbanView({
         </div>
       </div>
 
-      {/* Resumo por coluna: chips clicáveis que servem como atalho do filtro. */}
-      <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3">
-        {displayedOrder.map((key) => {
-          const count = (grouped.get(key) ?? []).length;
-          const filterValue = key === 'none' ? NONE : key;
-          const isActive = isChipActive(filterValue);
-          const label = labels[key] ?? key;
-          return (
-            <Button
-              key={`summary-${groupBy}-${key}`}
-              type="button"
-              size="sm"
-              variant={isActive ? 'default' : 'outline'}
-              onClick={() => onChipClick(filterValue)}
-              aria-pressed={isActive}
-              className="h-7 gap-1.5 px-2 text-xs"
-            >
-              {groupBy === 'status' && (
-                <span
-                  className={cn('h-2 w-2 rounded-full', statusDotClass(key === 'none' ? null : (key as PainelStatus)))}
-                  aria-hidden
-                />
-              )}
-              <span className="truncate max-w-[140px]">{label}</span>
-              <span
-                className={cn(
-                  'tabular-nums rounded-full px-1.5 min-w-[20px] text-center text-[11px]',
-                  isActive
-                    ? 'bg-primary-foreground/20 text-primary-foreground'
-                    : 'bg-muted text-muted-foreground',
-                )}
-              >
-                {count}
-              </span>
-            </Button>
-          );
-        })}
-        {hasGroupFilter && (
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={clearGroupFilter}
-            className="h-7 px-2 text-xs text-muted-foreground"
-          >
-            <X className="h-3.5 w-3.5 mr-1" />
-            Limpar {groupBy === 'status' ? 'status' : 'etapa'}
-          </Button>
-        )}
-      </div>
+      {/* Filtro por coluna agora é feito clicando no header da própria coluna —
+          o resumo redundante foi removido para reduzir ruído visual. */}
       <div className="flex items-center justify-between gap-2 px-3 pt-2 flex-wrap">
         {/* Toggle de layout das colunas: manual vs automático (segue ordenação). */}
         <div
@@ -1738,25 +1747,35 @@ function KanbanView({
         </div>
 
         <div className="flex items-center gap-2">
+          {hasGroupFilter && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={clearGroupFilter}
+              className="h-7 px-2 text-xs text-muted-foreground"
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Limpar filtro de {groupBy === 'status' ? 'status' : 'etapa'}
+            </Button>
+          )}
           {isAuto && (
             <span className="text-[11px] text-muted-foreground">
               Ordem automática pelo critério da tabela
             </span>
           )}
           {!isAuto && isCustomOrder && (
-            <>
-              <span className="text-[11px] text-muted-foreground">Ordem personalizada</span>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={resetOrder}
-                className="h-7 px-2 text-xs"
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                Restaurar padrão
-              </Button>
-            </>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={resetOrder}
+              className="h-7 px-2 text-xs"
+              title="Restaurar a ordem padrão das colunas"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />
+              Restaurar ordem
+            </Button>
           )}
         </div>
       </div>
@@ -1769,57 +1788,65 @@ function KanbanView({
             const canMoveRight = !isAuto && idx < displayedOrder.length - 1;
             const filterValue = key === 'none' ? NONE : key;
             const isActive = isChipActive(filterValue);
-            const accentDot = groupBy === 'status'
-              ? statusDotClass(key === 'none' ? null : (key as PainelStatus))
-              : null;
+            const accent = getColumnAccent(groupBy, key);
             return (
               <div
                 key={`${groupBy}-${key}`}
                 className={cn(
-                  'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border transition-colors',
+                  'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border overflow-hidden transition-colors',
                   isActive ? 'border-primary ring-2 ring-primary/30' : 'border-border-subtle',
                 )}
               >
-                <div className="flex items-center justify-between gap-1 px-2 py-2 border-b border-border-subtle">
-                  <div className="flex items-center gap-0.5 shrink-0">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-6 w-6"
-                      disabled={!canMoveLeft}
-                      onClick={() => moveColumn(key, -1)}
-                      aria-label={`Mover coluna ${label} para a esquerda`}
-                      title="Mover para a esquerda"
-                    >
-                      <ChevronLeft className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-6 w-6"
-                      disabled={!canMoveRight}
-                      onClick={() => moveColumn(key, 1)}
-                      aria-label={`Mover coluna ${label} para a direita`}
-                      title="Mover para a direita"
-                    >
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-1 justify-center min-w-0">
-                    {accentDot && (
-                      <span className={cn('h-2 w-2 rounded-full shrink-0', accentDot)} aria-hidden />
-                    )}
-                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">
+                {/* Faixa colorida estilo Monday no topo da coluna */}
+                <div className={cn('h-1 w-full shrink-0', accent)} aria-hidden />
+                <button
+                  type="button"
+                  onClick={() => onChipClick(filterValue)}
+                  aria-pressed={isActive}
+                  aria-label={`Filtrar por ${label}`}
+                  className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle hover:bg-surface/60 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="text-sm font-semibold text-foreground truncate">
                       {label}
                     </span>
+                    <span className="text-[11px] tabular-nums text-muted-foreground bg-muted rounded-full px-1.5 min-w-[20px] text-center shrink-0">
+                      {items.length}
+                    </span>
                   </div>
-                  <span className="text-[11px] tabular-nums text-muted-foreground bg-card border border-border-subtle rounded-full px-1.5 min-w-[20px] text-center shrink-0">
-                    {items.length}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2 p-2 max-h-[calc(100vh-360px)] overflow-y-auto">
+                  {!isAuto && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 shrink-0 opacity-60 hover:opacity-100"
+                          aria-label={`Opções da coluna ${label}`}
+                        >
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-[180px]">
+                        <DropdownMenuItem
+                          disabled={!canMoveLeft}
+                          onClick={() => moveColumn(key, -1)}
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5 mr-2" />
+                          Mover para a esquerda
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={!canMoveRight}
+                          onClick={() => moveColumn(key, 1)}
+                        >
+                          <ChevronRight className="h-3.5 w-3.5 mr-2" />
+                          Mover para a direita
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </button>
+                <div className="flex flex-col gap-1.5 p-2 max-h-[calc(100vh-340px)] overflow-y-auto">
                   {items.length === 0 ? (
                     <p className="text-[11px] text-muted-foreground text-center py-6 italic">
                       Nenhuma obra
@@ -1921,7 +1948,7 @@ function KanbanCard({
         <div className="min-w-0 flex-1">
           {obra.customer_name && (
             <p className="text-[11px] text-muted-foreground truncate" title={obra.customer_name}>
-              {obra.customer_name}
+              {formatNomePessoa(obra.customer_name)}
             </p>
           )}
           <p className="text-sm font-medium text-foreground leading-tight truncate" title={obra.nome}>
@@ -1980,10 +2007,15 @@ function KanbanCard({
         )}
       </div>
 
-      {/* Mover obra de coluna — Select inline (não navega ao abrir).
-          Reflete o critério atual: alternar etapa OU alternar status. */}
+      {/* Mover obra de coluna — fica oculto até hover/focus para reduzir
+          ruído (o card já está na coluna, então o select repetia o valor). */}
       <div
-        className="mt-2 pt-2 border-t border-border-subtle"
+        className={cn(
+          'mt-2 pt-2 border-t border-border-subtle transition-opacity',
+          selected || anySelected
+            ? 'opacity-100'
+            : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+        )}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
