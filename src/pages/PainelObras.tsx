@@ -875,6 +875,25 @@ export default function PainelObras() {
                       <span className="hidden sm:inline">Kanban</span>
                     </Button>
                   </div>
+                  {/* Toggle de densidade — afeta Tabela e Board */}
+                  {activeView !== 'kanban' && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
+                      className="h-7 gap-1.5 px-2 text-xs border border-border-subtle bg-surface"
+                      aria-pressed={density === 'compact'}
+                      title={density === 'compact' ? 'Densidade compacta (clique para confortável)' : 'Densidade confortável (clique para compacta)'}
+                    >
+                      {density === 'compact' ? (
+                        <Maximize2 className="h-3.5 w-3.5" />
+                      ) : (
+                        <Minimize2 className="h-3.5 w-3.5" />
+                      )}
+                      <span className="hidden sm:inline">{density === 'compact' ? 'Compacta' : 'Confortável'}</span>
+                    </Button>
+                  )}
                 </div>
               }
             />
