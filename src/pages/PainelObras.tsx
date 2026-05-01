@@ -821,7 +821,7 @@ export default function PainelObras() {
                       </Button>
                     </div>
                   )}
-                  {/* Toggle de visualização: Tabela (densa) ou Kanban (por etapa) */}
+                  {/* Toggle de visualização: Tabela (densa), Board (estilo Monday) ou Kanban */}
                   <div
                     role="group"
                     aria-label="Modo de visualização"
@@ -837,6 +837,18 @@ export default function PainelObras() {
                     >
                       <Table2 className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">Tabela</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={activeView === 'board' ? 'secondary' : 'ghost'}
+                      aria-pressed={activeView === 'board'}
+                      onClick={() => handleViewChange('board')}
+                      className="h-7 gap-1.5 px-2 text-xs"
+                      title="Board agrupado por etapa (estilo Monday)"
+                    >
+                      <Rows3 className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Board</span>
                     </Button>
                     <Button
                       type="button"
