@@ -593,10 +593,41 @@ export default function PainelObras() {
                 </>
               }
               meta={
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  <span className="font-semibold text-foreground">{filtered.length}</span>
-                  <span className="opacity-60"> / {obras.length} obras</span>
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    <span className="font-semibold text-foreground">{filtered.length}</span>
+                    <span className="opacity-60"> / {obras.length} obras</span>
+                  </span>
+                  {/* Toggle de visualização: Tabela (densa) ou Kanban (por etapa) */}
+                  <div
+                    role="group"
+                    aria-label="Modo de visualização"
+                    className="inline-flex items-center rounded-md border border-border-subtle bg-surface p-0.5"
+                  >
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={activeView === 'table' ? 'secondary' : 'ghost'}
+                      aria-pressed={activeView === 'table'}
+                      onClick={() => handleViewChange('table')}
+                      className="h-7 gap-1.5 px-2 text-xs"
+                    >
+                      <Table2 className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Tabela</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={activeView === 'kanban' ? 'secondary' : 'ghost'}
+                      aria-pressed={activeView === 'kanban'}
+                      onClick={() => handleViewChange('kanban')}
+                      className="h-7 gap-1.5 px-2 text-xs"
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Kanban</span>
+                    </Button>
+                  </div>
+                </div>
               }
             />
 
