@@ -1494,6 +1494,52 @@ function KanbanView({
     [order, defaultOrder],
   );
 
+  // Drag-and-drop entre colunas: arrastar um card altera a etapa/status do
+  // projeto conforme o agrupamento ativo. O fallback de erro vem do
+  // `usePainelObras` (toast em onError + rollback otimista).
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverKey, setDragOverKey] = useState<KanbanColKey | null>(null);
+  const handleCardDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggingId(id);
+  };
+  const handleCardDragEnd = () => {
+    setDraggingId(null);
+    setDragOverKey(null);
+  };
+  const handleColumnDragOver = (e: React.DragEvent, key: KanbanColKey) => {
+    if (!draggingId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverKey !== key) setDragOverKey(key);
+  };
+  const handleColumnDragLeave = (e: React.DragEvent, key: KanbanColKey) => {
+    // Só limpa se o ponteiro saiu de fato da coluna (e não entrou em um filho)
+    const related = e.relatedTarget as Node | null;
+    if (related && (e.currentTarget as Node).contains(related)) return;
+    if (dragOverKey === key) setDragOverKey(null);
+  };
+  const handleColumnDrop = (e: React.DragEvent, key: KanbanColKey) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain') || draggingId;
+    setDragOverKey(null);
+    setDraggingId(null);
+    if (!id) return;
+    const obra = obras.find((o) => o.id === id);
+    if (!obra) return;
+    if (groupBy === 'status') {
+      const nextStatus = key === 'none' ? null : (key as PainelStatus);
+      const current = computeDisplayStatus(obra);
+      if (current === nextStatus) return;
+      onUpdateStatus(id, nextStatus);
+    } else {
+      const nextEtapa = key === 'none' ? null : (key as PainelEtapa);
+      if ((obra.etapa ?? null) === nextEtapa) return;
+      onUpdateEtapa(id, nextEtapa);
+    }
+  };
+
   // Resolve o "valor de coluna" de uma obra conforme o critério.
   // Para status, usamos `computeDisplayStatus` para refletir a mesma lógica
   // visual da tabela (e.g., obras com entrega oficial vencida aparecem como
@@ -1792,9 +1838,14 @@ function KanbanView({
             return (
               <div
                 key={`${groupBy}-${key}`}
+                onDragOver={(e) => handleColumnDragOver(e, key)}
+                onDragLeave={(e) => handleColumnDragLeave(e, key)}
+                onDrop={(e) => handleColumnDrop(e, key)}
+                aria-dropeffect={draggingId ? 'move' : undefined}
                 className={cn(
                   'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border overflow-hidden transition-colors',
                   isActive ? 'border-primary ring-2 ring-primary/30' : 'border-border-subtle',
+                  dragOverKey === key && 'border-primary ring-2 ring-primary/40 bg-primary/5',
                 )}
               >
                 {/* Faixa colorida estilo Monday no topo da coluna */}
@@ -1859,6 +1910,9 @@ function KanbanView({
                         groupBy={groupBy}
                         selected={selectedIds.has(o.id)}
                         anySelected={selectedIds.size > 0}
+                        dragging={draggingId === o.id}
+                        onDragStart={(e) => handleCardDragStart(e, o.id)}
+                        onDragEnd={handleCardDragEnd}
                         onToggleSelect={() => onToggleSelect(o.id)}
                         onOpen={() => onOpen(o.id)}
                         onChangeEtapa={(e) => onUpdateEtapa(o.id, e)}
@@ -1885,6 +1939,10 @@ interface KanbanCardProps {
   /** Há ao menos um card selecionado em qualquer coluna — mantém o
    *  checkbox visível mesmo sem hover, para reforçar o modo "seleção". */
   anySelected: boolean;
+  /** Card está sendo arrastado — usado para reduzir opacidade. */
+  dragging: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
   onToggleSelect: () => void;
   onOpen: () => void;
   onChangeEtapa: (etapa: PainelEtapa | null) => void;
@@ -1896,6 +1954,9 @@ function KanbanCard({
   groupBy,
   selected,
   anySelected,
+  dragging,
+  onDragStart,
+  onDragEnd,
   onToggleSelect,
   onOpen,
   onChangeEtapa,
@@ -1910,6 +1971,9 @@ function KanbanCard({
     <div
       role="button"
       tabIndex={0}
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       onClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1919,11 +1983,13 @@ function KanbanCard({
       }}
       aria-label={`Abrir obra ${obra.nome}`}
       aria-selected={selected}
+      aria-grabbed={dragging}
       className={cn(
         'group relative rounded-md bg-card border p-2.5 text-left',
-        'hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer',
+        'hover:border-primary/40 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         selected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border-subtle',
+        dragging && 'opacity-50',
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
