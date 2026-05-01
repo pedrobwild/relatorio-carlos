@@ -1948,7 +1948,7 @@ function KanbanCard({
         <div className="min-w-0 flex-1">
           {obra.customer_name && (
             <p className="text-[11px] text-muted-foreground truncate" title={obra.customer_name}>
-              {obra.customer_name}
+              {formatNomePessoa(obra.customer_name)}
             </p>
           )}
           <p className="text-sm font-medium text-foreground leading-tight truncate" title={obra.nome}>
