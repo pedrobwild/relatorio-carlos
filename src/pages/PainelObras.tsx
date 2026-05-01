@@ -917,7 +917,13 @@ export default function PainelObras() {
 
             <div className="mt-2">
               {isLoading ? (
-                <Skeleton className="h-96 w-full rounded-xl" />
+                activeView === 'board' ? (
+                  <BoardSkeleton densityTableClass={densityTableClass} />
+                ) : activeView === 'kanban' ? (
+                  <KanbanSkeleton />
+                ) : (
+                  <TableSkeleton densityTableClass={densityTableClass} />
+                )
               ) : filtered.length === 0 ? (
                 <SectionCard>
                   <EmptyState
