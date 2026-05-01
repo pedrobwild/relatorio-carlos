@@ -2230,6 +2230,39 @@ function BoardView({
 }: BoardViewProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(() => loadBoardCollapsed());
 
+  // Sincronização de scroll horizontal entre os grupos do Board.
+  // Permite comparar colunas alinhadas quando há múltiplos grupos visíveis.
+  const scrollersRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const isSyncingRef = useRef(false);
+
+  const registerScroller = useCallback((key: string, node: HTMLDivElement | null) => {
+    const map = scrollersRef.current;
+    if (node) {
+      map.set(key, node);
+      // Aplica imediatamente o scrollLeft atual (de outro grupo já existente)
+      // para que grupos recém-expandidos apareçam alinhados.
+      const any = Array.from(map.values()).find((el) => el !== node && el.scrollLeft > 0);
+      if (any) node.scrollLeft = any.scrollLeft;
+    } else {
+      map.delete(key);
+    }
+  }, []);
+
+  const handleScrollerScroll = useCallback((source: HTMLDivElement) => {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
+    const left = source.scrollLeft;
+    scrollersRef.current.forEach((el) => {
+      if (el !== source && el.scrollLeft !== left) {
+        el.scrollLeft = left;
+      }
+    });
+    // Libera no próximo frame para evitar loop de eventos.
+    requestAnimationFrame(() => {
+      isSyncingRef.current = false;
+    });
+  }, []);
+
   useEffect(() => {
     try {
       window.localStorage.setItem(
