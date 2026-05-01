@@ -1800,57 +1800,65 @@ function KanbanView({
             const canMoveRight = !isAuto && idx < displayedOrder.length - 1;
             const filterValue = key === 'none' ? NONE : key;
             const isActive = isChipActive(filterValue);
-            const accentDot = groupBy === 'status'
-              ? statusDotClass(key === 'none' ? null : (key as PainelStatus))
-              : null;
+            const accent = getColumnAccent(groupBy, key);
             return (
               <div
                 key={`${groupBy}-${key}`}
                 className={cn(
-                  'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border transition-colors',
+                  'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border overflow-hidden transition-colors',
                   isActive ? 'border-primary ring-2 ring-primary/30' : 'border-border-subtle',
                 )}
               >
-                <div className="flex items-center justify-between gap-1 px-2 py-2 border-b border-border-subtle">
-                  <div className="flex items-center gap-0.5 shrink-0">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-6 w-6"
-                      disabled={!canMoveLeft}
-                      onClick={() => moveColumn(key, -1)}
-                      aria-label={`Mover coluna ${label} para a esquerda`}
-                      title="Mover para a esquerda"
-                    >
-                      <ChevronLeft className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-6 w-6"
-                      disabled={!canMoveRight}
-                      onClick={() => moveColumn(key, 1)}
-                      aria-label={`Mover coluna ${label} para a direita`}
-                      title="Mover para a direita"
-                    >
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-1 justify-center min-w-0">
-                    {accentDot && (
-                      <span className={cn('h-2 w-2 rounded-full shrink-0', accentDot)} aria-hidden />
-                    )}
-                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">
+                {/* Faixa colorida estilo Monday no topo da coluna */}
+                <div className={cn('h-1 w-full shrink-0', accent)} aria-hidden />
+                <button
+                  type="button"
+                  onClick={() => onChipClick(filterValue)}
+                  aria-pressed={isActive}
+                  aria-label={`Filtrar por ${label}`}
+                  className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle hover:bg-surface/60 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="text-sm font-semibold text-foreground truncate">
                       {label}
                     </span>
+                    <span className="text-[11px] tabular-nums text-muted-foreground bg-muted rounded-full px-1.5 min-w-[20px] text-center shrink-0">
+                      {items.length}
+                    </span>
                   </div>
-                  <span className="text-[11px] tabular-nums text-muted-foreground bg-card border border-border-subtle rounded-full px-1.5 min-w-[20px] text-center shrink-0">
-                    {items.length}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2 p-2 max-h-[calc(100vh-360px)] overflow-y-auto">
+                  {!isAuto && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 shrink-0 opacity-60 hover:opacity-100"
+                          aria-label={`Opções da coluna ${label}`}
+                        >
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-[180px]">
+                        <DropdownMenuItem
+                          disabled={!canMoveLeft}
+                          onClick={() => moveColumn(key, -1)}
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5 mr-2" />
+                          Mover para a esquerda
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={!canMoveRight}
+                          onClick={() => moveColumn(key, 1)}
+                        >
+                          <ChevronRight className="h-3.5 w-3.5 mr-2" />
+                          Mover para a direita
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </button>
+                <div className="flex flex-col gap-1.5 p-2 max-h-[calc(100vh-340px)] overflow-y-auto">
                   {items.length === 0 ? (
                     <p className="text-[11px] text-muted-foreground text-center py-6 italic">
                       Nenhuma obra
