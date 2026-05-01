@@ -1390,11 +1390,13 @@ function KanbanView({
       </div>
       <div className="overflow-x-auto p-3">
         <div className="flex gap-3 min-w-max items-start">
-          {order.map((key, idx) => {
+          {displayedOrder.map((key, idx) => {
             const items = grouped.get(key) ?? [];
             const label = KANBAN_LABELS[key] ?? key;
-            const canMoveLeft = idx > 0;
-            const canMoveRight = idx < order.length - 1;
+            // No modo automático, as setas ficam desativadas (a ordem é
+            // derivada do critério de ordenação ativo, não do usuário).
+            const canMoveLeft = !isAuto && idx > 0;
+            const canMoveRight = !isAuto && idx < displayedOrder.length - 1;
             const filterValue = key === 'none' ? NONE : key;
             const isActive = selectedEtapa === filterValue;
             return (
