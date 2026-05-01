@@ -941,6 +941,7 @@ export default function PainelObras() {
                   renderSortableHeader={(label, key) => (
                     <SortableHeader label={label} sortKey={key} />
                   )}
+                  densityTableClass={densityTableClass}
                 />
               ) : (
                 <SectionCard flush>
