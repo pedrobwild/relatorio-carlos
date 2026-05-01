@@ -684,6 +684,7 @@ export default function PainelObras() {
                             onUpdate={(patch) => updateObra(o.id, patch)}
                             onOpen={() => navigate(`/obra/${o.id}`)}
                             onDeleteRequest={() => setDeleteTarget(o)}
+                            onOpenDados={() => setDadosTarget(o)}
                           />
                         ))}
                       </TableBody>
