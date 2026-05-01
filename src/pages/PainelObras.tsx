@@ -1497,7 +1497,7 @@ function KanbanView({
         {displayedOrder.map((key) => {
           const count = (grouped.get(key) ?? []).length;
           const filterValue = key === 'none' ? NONE : key;
-          const isActive = selectedGroup === filterValue;
+          const isActive = isChipActive(filterValue);
           const label = labels[key] ?? key;
           return (
             <Button
@@ -1505,7 +1505,7 @@ function KanbanView({
               type="button"
               size="sm"
               variant={isActive ? 'default' : 'outline'}
-              onClick={() => onSelectGroup(isActive ? ALL : filterValue)}
+              onClick={() => onChipClick(filterValue)}
               aria-pressed={isActive}
               className="h-7 gap-1.5 px-2 text-xs"
             >
@@ -1529,12 +1529,12 @@ function KanbanView({
             </Button>
           );
         })}
-        {selectedGroup !== ALL && (
+        {hasGroupFilter && (
           <Button
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => onSelectGroup(ALL)}
+            onClick={clearGroupFilter}
             className="h-7 px-2 text-xs text-muted-foreground"
           >
             <X className="h-3.5 w-3.5 mr-1" />
