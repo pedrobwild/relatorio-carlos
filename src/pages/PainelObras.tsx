@@ -31,6 +31,8 @@ import {
   RotateCcw,
   Filter,
   Check,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
@@ -337,6 +339,27 @@ export default function PainelObras() {
     else params.set('view', next);
     setSearchParams(params, { replace: true });
   };
+
+  // Densidade da tabela: 'comfortable' (padrão) ou 'compact' (tipo planilha).
+  // Persistida em localStorage para manter preferência entre sessões e telas do painel.
+  const DENSITY_STORAGE_KEY = 'painel-obras:density';
+  const [density, setDensity] = useState<'comfortable' | 'compact'>(() => {
+    if (typeof window === 'undefined') return 'comfortable';
+    const v = window.localStorage.getItem(DENSITY_STORAGE_KEY);
+    return v === 'compact' ? 'compact' : 'comfortable';
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(DENSITY_STORAGE_KEY, density);
+  }, [density]);
+
+  // Classes aplicadas ao <Table> de acordo com a densidade — afetam altura
+  // do header e padding vertical das células sem alterar paddings horizontais
+  // (que mantêm o alinhamento das colunas sticky).
+  const densityTableClass =
+    density === 'compact'
+      ? '[&_th]:h-7 [&_td]:py-1'
+      : '[&_th]:h-9 [&_td]:py-2.5';
 
   // Critério de agrupamento do Kanban: por etapa (default) ou por status (estilo Monday).
   // Persistido em URL para preservar a visão escolhida ao compartilhar / recarregar.
