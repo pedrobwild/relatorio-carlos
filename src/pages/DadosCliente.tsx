@@ -47,8 +47,18 @@ interface ProjectBasic {
   unit_name: string | null;
 }
 
-export default function DadosCliente() {
-  const { projectId } = useParams<{ projectId: string }>();
+interface DadosClienteProps {
+  /**
+   * ID da obra. Quando ausente, é lido de `useParams` (uso como rota).
+   * Quando informado (ex.: dentro de um Dialog no Painel de Obras),
+   * o componente ignora o roteador e funciona como widget embutido.
+   */
+  projectId?: string;
+}
+
+export default function DadosCliente({ projectId: propProjectId }: DadosClienteProps = {}) {
+  const params = useParams<{ projectId: string }>();
+  const projectId = propProjectId ?? params.projectId;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'contratante' | 'imovel' | 'info'>('contratante');

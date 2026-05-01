@@ -25,6 +25,7 @@ import {
   User,
   LayoutGrid,
   Clock,
+  FileText,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
@@ -89,6 +90,7 @@ import {
 import { EmptyState } from '@/components/ui/states';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
+import { DadosClienteDialog } from '@/components/admin/obras/DadosClienteDialog';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
@@ -325,6 +327,10 @@ export default function PainelObras() {
   const [deleteTarget, setDeleteTarget] = useState<PainelObra | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Popup "Dados do cliente" — abre a feature completa em dialog,
+  // disparado pelo ícone de documento na coluna após Cliente/Obra.
+  const [dadosTarget, setDadosTarget] = useState<PainelObra | null>(null);
+
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -502,6 +508,15 @@ export default function PainelObras() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Popup "Dados do cliente" — feature completa em dialog (Contratante / Imóvel / Info). */}
+        <DadosClienteDialog
+          open={!!dadosTarget}
+          onOpenChange={(o) => { if (!o) setDadosTarget(null); }}
+          projectId={dadosTarget?.id ?? null}
+          projectName={dadosTarget?.nome ?? null}
+          customerName={dadosTarget?.customer_name ?? null}
+        />
+
         <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-6">
           <TabsList className="bg-surface-sunken border border-border-subtle">
             <TabsTrigger value="obras" className="text-xs data-[state=active]:bg-card">Obras</TabsTrigger>
@@ -653,6 +668,7 @@ export default function PainelObras() {
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
+                          <TableHead className="w-[60px] text-center" aria-label="Dados do cliente">Dados</TableHead>
                           <TableHead data-testid="painel-obras-th-status" className="min-w-[120px]">Status</TableHead>
                           <TableHead className="min-w-[140px]">Etapa</TableHead>
                           <TableHead className="min-w-[120px] text-right">Progresso</TableHead>
@@ -677,6 +693,7 @@ export default function PainelObras() {
                             onUpdate={(patch) => updateObra(o.id, patch)}
                             onOpen={() => navigate(`/obra/${o.id}`)}
                             onDeleteRequest={() => setDeleteTarget(o)}
+                            onOpenDados={() => setDadosTarget(o)}
                           />
                         ))}
                       </TableBody>
@@ -707,10 +724,10 @@ export default function PainelObras() {
 // ----- row component -----
 // Total de colunas da tabela do Painel de Obras. Mantenha em sincronia com o
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
-// 1) Cliente / Obra · 2) Status · 3) Etapa · 4) Progresso · 5) Início Of. ·
-// 6) Entrega Of. · 7) Início Real · 8) Entrega Real · 9) Relacionamento ·
-// 10) Responsável · 11) Atraso · 12) Ações
-const PAINEL_COLUMN_COUNT = 12;
+// 1) Cliente / Obra · 2) Dados · 3) Status · 4) Etapa · 5) Progresso ·
+// 6) Início Of. · 7) Entrega Of. · 8) Início Real · 9) Entrega Real ·
+// 10) Relacionamento · 11) Responsável · 12) Atraso · 13) Ações
+const PAINEL_COLUMN_COUNT = 13;
 
 interface ObraRowProps {
   obra: PainelObra;
@@ -720,9 +737,11 @@ interface ObraRowProps {
   onUpdate: (patch: PainelObraPatch) => void;
   onOpen: () => void;
   onDeleteRequest: () => void;
+  /** Abre o popup com a feature "Dados do cliente" para esta obra. */
+  onOpenDados: () => void;
 }
 
-function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest }: ObraRowProps) {
+function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest, onOpenDados }: ObraRowProps) {
   const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
 
   return (
@@ -766,6 +785,25 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
               </span>
             </button>
           </div>
+        </TableCell>
+
+        {/* Dados do cliente — abre popup com a feature completa (Contratante / Imóvel / Info). */}
+        <TableCell className="w-[60px] text-center align-middle">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={onOpenDados}
+                aria-label={`Abrir dados do cliente da obra ${obra.nome ?? ''}`}
+                className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-accent/60"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">Dados do cliente</TooltipContent>
+          </Tooltip>
         </TableCell>
 
         {/* Status */}
