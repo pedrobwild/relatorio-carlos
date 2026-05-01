@@ -699,6 +699,8 @@ export default function PainelObras() {
                   obras={filtered}
                   selectedEtapa={filterEtapa}
                   onSelectEtapa={setFilterEtapa}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
                   onOpen={(id) => navigate(`/obra/${id}`)}
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                 />
