@@ -322,9 +322,25 @@ export default function PainelObras() {
 
   const [search, setSearch] = useState('');
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
-  const [filterStatus, setFilterStatus] = useState<string>(ALL);
+  /**
+   * Filtro de status agora é multi-seleção (Set vazio = sem filtro / mostra
+   * todos). Modelado como Set para performance O(1) no filtro de linhas e
+   * para permitir refinar quais colunas/cards aparecem mesmo quando o
+   * Kanban está agrupado por status (filtro independe da seleção visual da
+   * coluna ativa). Inclui o sentinel `NONE` para representar "sem status".
+   */
+  const [filterStatuses, setFilterStatuses] = useState<Set<string>>(() => new Set());
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
   const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
+
+  const toggleStatusFilter = (value: string) => {
+    setFilterStatuses((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value); else next.add(value);
+      return next;
+    });
+  };
+  const clearStatusFilter = () => setFilterStatuses(new Set());
 
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
