@@ -558,17 +558,18 @@ export default function PainelObras() {
           description="Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
           actions={
             <>
-              <Button variant="outline" size="sm" onClick={() => navigate('/gestao/cs/operacional')} className="h-9 gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/gestao/cs/operacional')} className="h-8 gap-2">
                 <Headset className="h-4 w-4" />
                 <span className="hidden sm:inline">Customer Success</span>
                 <ArrowRight className="h-3.5 w-3.5 opacity-60" />
               </Button>
-              <Button size="sm" onClick={() => navigate('/gestao/nova-obra')} className="h-9 gap-2">
+              <Button size="sm" onClick={() => navigate('/gestao/nova-obra')} className="h-8 gap-2">
                 <Plus className="h-4 w-4" />Nova obra
               </Button>
             </>
           }
           flush
+          className="!pt-4 !pb-3 md:!pt-5 md:!pb-3 [&_h1]:!text-lg [&_h1]:md:!text-xl"
         />
 
         {/* Delete confirmation dialog */}
