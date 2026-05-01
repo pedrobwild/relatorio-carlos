@@ -1553,8 +1553,97 @@ function KanbanView({
   const autoAvailable = !!sortKey;
   const isAuto = layoutMode === 'auto' && autoAvailable;
 
+  // Lista de ids visíveis (após filtros), usada por "selecionar todos".
+  const visibleIds = useMemo(() => obras.map((o) => o.id), [obras]);
+  const visibleSelectedCount = useMemo(
+    () => visibleIds.reduce((acc, id) => acc + (selectedIds.has(id) ? 1 : 0), 0),
+    [visibleIds, selectedIds],
+  );
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleSelectedCount === visibleIds.length;
+  const someVisibleSelected = visibleSelectedCount > 0 && !allVisibleSelected;
+  const toggleSelectAllVisible = () => {
+    if (allVisibleSelected) {
+      // limpa apenas os visíveis (preserva seleção fora da view filtrada)
+      visibleIds.forEach((id) => {
+        if (selectedIds.has(id)) onToggleSelect(id);
+      });
+    } else {
+      visibleIds.forEach((id) => {
+        if (!selectedIds.has(id)) onToggleSelect(id);
+      });
+    }
+  };
+
+  // Bulk action handlers — recebem o novo valor e disparam onBulkUpdate.
+  const handleBulkChangeEtapa = (value: string) => {
+    const next = value === NONE ? null : (value as PainelEtapa);
+    void onBulkUpdate(Array.from(selectedIds), { etapa: next });
+  };
+  const handleBulkChangeStatus = (value: string) => {
+    const next = value === NONE ? null : (value as PainelStatus);
+    void onBulkUpdate(Array.from(selectedIds), { status: next });
+  };
+
   return (
     <SectionCard flush>
+      {/* Barra de ações em lote — visível só quando há seleção. Sticky no topo
+          do quadro para permanecer acessível durante o scroll horizontal. */}
+      {selectedIds.size > 0 && (
+        <div
+          role="region"
+          aria-label="Ações em lote"
+          className="sticky top-0 z-sticky flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border-subtle bg-primary/10 backdrop-blur"
+        >
+          <span className="text-xs font-medium text-foreground">
+            {selectedIds.size} {selectedIds.size === 1 ? 'obra selecionada' : 'obras selecionadas'}
+          </span>
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <Select
+              value=""
+              onValueChange={handleBulkChangeEtapa}
+              disabled={bulkUpdating}
+            >
+              <SelectTrigger className="h-8 w-[180px] text-xs bg-surface" aria-label="Mudar etapa em lote">
+                <SelectValue placeholder="Mudar etapa…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>(sem etapa)</SelectItem>
+                {ETAPA_OPTIONS.map((e) => (
+                  <SelectItem key={e} value={e}>{e}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value=""
+              onValueChange={handleBulkChangeStatus}
+              disabled={bulkUpdating}
+            >
+              <SelectTrigger className="h-8 w-[180px] text-xs bg-surface" aria-label="Mudar status em lote">
+                <SelectValue placeholder="Mudar status…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>(sem status)</SelectItem>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2 text-xs"
+              onClick={onClearSelection}
+              disabled={bulkUpdating}
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Limpar seleção
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Toggle do critério de agrupamento (estilo Monday). */}
       <div className="flex items-center justify-between gap-2 px-3 pt-3 flex-wrap">
         <div
