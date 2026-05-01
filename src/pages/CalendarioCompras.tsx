@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import {
   ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon,
   FilterX, Plus, ChevronDown, ChevronUp, ExternalLink, Package,
-  FileText, Truck, ArrowUpDown, MoreHorizontal, Trash2,
+  FileText, Truck, ArrowUpDown, MoreHorizontal, Trash2, User,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -1283,6 +1283,40 @@ export default function CalendarioCompras() {
     };
   };
 
+  // Mapa de criadores das requisições (created_by → nome de exibição).
+  // Busca apenas profiles dos IDs efetivamente referenciados em allPurchases,
+  // evitando carregar a tabela inteira quando há poucos solicitantes.
+  const { data: creatorMap = new Map<string, { name: string; email: string | null }>() } = useQuery({
+    queryKey: [
+      'purchase-creators',
+      [...new Set(allPurchases.map((p) => (p as any).created_by).filter(Boolean) as string[])].sort().join(','),
+    ],
+    enabled: allPurchases.length > 0,
+    queryFn: async () => {
+      const ids = [...new Set(allPurchases.map((p) => (p as any).created_by).filter(Boolean) as string[])];
+      const map = new Map<string, { name: string; email: string | null }>();
+      if (ids.length === 0) return map;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email')
+        .in('user_id', ids);
+      if (error) throw error;
+      (data || []).forEach((row: { user_id: string; display_name: string | null; email: string | null }) => {
+        const name = (row.display_name?.trim() || row.email?.split('@')[0] || 'Usuário').trim();
+        map.set(row.user_id, { name, email: row.email });
+      });
+      return map;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  /** Retorna o nome de exibição do solicitante (ou null se não houver). */
+  const getCreatorName = (p: PurchaseWithProject): string | null => {
+    const id = (p as any).created_by as string | null | undefined;
+    if (!id) return null;
+    return creatorMap.get(id)?.name ?? null;
+  };
+
   // Fetch all projects for the New Purchase dialog (not just the ones with purchases)
   const { data: allProjects = [] } = useQuery({
     queryKey: ['all-projects-for-select'],
@@ -2081,10 +2115,23 @@ export default function CalendarioCompras() {
                               </TableCell>
 
                               <TableCell className={cn(
-                                'text-muted-foreground whitespace-nowrap text-xs tabular-nums',
+                                'whitespace-nowrap text-xs tabular-nums',
                                 !p.created_at && 'italic',
                               )}>
-                                {fmtRequestedDate(p.created_at)}
+                                <div className="text-muted-foreground">{fmtRequestedDate(p.created_at)}</div>
+                                {getCreatorName(p) && (
+                                  <Tooltip delayDuration={200}>
+                                    <TooltipTrigger asChild>
+                                      <div className="flex items-center gap-1 mt-0.5 text-foreground/70 text-[11px] max-w-[140px]">
+                                        <User className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
+                                        <span className="truncate">{getCreatorName(p)}</span>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-xs">
+                                      Solicitado por {getCreatorName(p)}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
                               </TableCell>
 
                               <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
@@ -2210,10 +2257,23 @@ export default function CalendarioCompras() {
                                 </TableCell>
                                 <TableCell className="max-w-[200px]"><p className="font-medium truncate" title={p.item_name}>{p.item_name}</p></TableCell>
                                 <TableCell className={cn(
-                                  'text-muted-foreground whitespace-nowrap text-xs tabular-nums',
+                                  'whitespace-nowrap text-xs tabular-nums',
                                   !p.created_at && 'italic',
                                 )}>
-                                  {fmtRequestedDate(p.created_at)}
+                                  <div className="text-muted-foreground">{fmtRequestedDate(p.created_at)}</div>
+                                  {getCreatorName(p) && (
+                                    <Tooltip delayDuration={200}>
+                                      <TooltipTrigger asChild>
+                                        <div className="flex items-center gap-1 mt-0.5 text-foreground/70 text-[11px] max-w-[140px]">
+                                          <User className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
+                                          <span className="truncate">{getCreatorName(p)}</span>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="text-xs">
+                                        Solicitado por {getCreatorName(p)}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
                                 </TableCell>
                                 <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
                                 <TableCell className="text-right whitespace-nowrap tabular-nums">
