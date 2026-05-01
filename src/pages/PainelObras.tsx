@@ -1910,6 +1910,9 @@ function KanbanView({
                         groupBy={groupBy}
                         selected={selectedIds.has(o.id)}
                         anySelected={selectedIds.size > 0}
+                        dragging={draggingId === o.id}
+                        onDragStart={(e) => handleCardDragStart(e, o.id)}
+                        onDragEnd={handleCardDragEnd}
                         onToggleSelect={() => onToggleSelect(o.id)}
                         onOpen={() => onOpen(o.id)}
                         onChangeEtapa={(e) => onUpdateEtapa(o.id, e)}
