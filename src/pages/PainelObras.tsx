@@ -1684,56 +1684,8 @@ function KanbanView({
         </div>
       </div>
 
-      {/* Resumo por coluna: chips clicáveis que servem como atalho do filtro. */}
-      <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3">
-        {displayedOrder.map((key) => {
-          const count = (grouped.get(key) ?? []).length;
-          const filterValue = key === 'none' ? NONE : key;
-          const isActive = isChipActive(filterValue);
-          const label = labels[key] ?? key;
-          return (
-            <Button
-              key={`summary-${groupBy}-${key}`}
-              type="button"
-              size="sm"
-              variant={isActive ? 'default' : 'outline'}
-              onClick={() => onChipClick(filterValue)}
-              aria-pressed={isActive}
-              className="h-7 gap-1.5 px-2 text-xs"
-            >
-              {groupBy === 'status' && (
-                <span
-                  className={cn('h-2 w-2 rounded-full', statusDotClass(key === 'none' ? null : (key as PainelStatus)))}
-                  aria-hidden
-                />
-              )}
-              <span className="truncate max-w-[140px]">{label}</span>
-              <span
-                className={cn(
-                  'tabular-nums rounded-full px-1.5 min-w-[20px] text-center text-[11px]',
-                  isActive
-                    ? 'bg-primary-foreground/20 text-primary-foreground'
-                    : 'bg-muted text-muted-foreground',
-                )}
-              >
-                {count}
-              </span>
-            </Button>
-          );
-        })}
-        {hasGroupFilter && (
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={clearGroupFilter}
-            className="h-7 px-2 text-xs text-muted-foreground"
-          >
-            <X className="h-3.5 w-3.5 mr-1" />
-            Limpar {groupBy === 'status' ? 'status' : 'etapa'}
-          </Button>
-        )}
-      </div>
+      {/* Filtro por coluna agora é feito clicando no header da própria coluna —
+          o resumo redundante foi removido para reduzir ruído visual. */}
       <div className="flex items-center justify-between gap-2 px-3 pt-2 flex-wrap">
         {/* Toggle de layout das colunas: manual vs automático (segue ordenação). */}
         <div
