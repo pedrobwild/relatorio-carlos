@@ -1065,7 +1065,7 @@ export default function PainelObras() {
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
-                    <Table className={cn('w-full text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle', densityTableClass)}>
+                    <Table className={cn('w-full text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
