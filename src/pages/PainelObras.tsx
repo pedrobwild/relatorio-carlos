@@ -1294,11 +1294,15 @@ interface KanbanViewProps {
   /** Critério de agrupamento (define colunas, label, edição inline, filtros). */
   groupBy: KanbanGroupBy;
   onGroupByChange: (next: KanbanGroupBy) => void;
-  /** Filtros sincronizados (chip ativo destaca a coluna correspondente). */
+  /** Filtro de etapa: seleção única (chip ativo == filtro vigente). */
   selectedEtapa: string;
   onSelectEtapa: (value: string) => void;
-  selectedStatus: string;
-  onSelectStatus: (value: string) => void;
+  /** Filtro de status: multi-seleção (Set vazio = todos). Os chips de status
+   *  toggleam membros do Set, permitindo refinar mantendo várias colunas
+   *  visíveis ao mesmo tempo (independente do agrupamento ativo). */
+  filterStatuses: Set<string>;
+  onToggleStatusFilter: (value: string) => void;
+  onClearStatusFilter: () => void;
   /** Critério atual de ordenação da tabela (compartilhado com o Kanban). */
   sortKey: SortKey;
   sortDir: 'asc' | 'desc';
@@ -1313,8 +1317,9 @@ function KanbanView({
   onGroupByChange,
   selectedEtapa,
   onSelectEtapa,
-  selectedStatus,
-  onSelectStatus,
+  filterStatuses,
+  onToggleStatusFilter,
+  onClearStatusFilter,
   sortKey,
   sortDir,
   onOpen,
