@@ -771,6 +771,25 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
           </div>
         </TableCell>
 
+        {/* Dados do cliente — abre popup com a feature completa (Contratante / Imóvel / Info). */}
+        <TableCell className="w-[60px] text-center align-middle">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={onOpenDados}
+                aria-label={`Abrir dados do cliente da obra ${obra.nome ?? ''}`}
+                className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-accent/60"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">Dados do cliente</TooltipContent>
+          </Tooltip>
+        </TableCell>
+
         {/* Status */}
         <TableCell className="min-w-[120px] relative z-table-body overflow-hidden">
           {(() => {
