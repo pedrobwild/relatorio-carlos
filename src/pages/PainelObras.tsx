@@ -15,6 +15,8 @@ import {
   ShieldOff,
   ExternalLink,
   ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
   ChevronRight,
   ChevronLeft,
   Search,
