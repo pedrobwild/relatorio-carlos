@@ -2150,6 +2150,9 @@ function KanbanCard({
             </SelectContent>
           </Select>
         )}
+      </div>
+    </div>
+  );
 }
 
 // ===== BoardView (estilo Monday) =====
