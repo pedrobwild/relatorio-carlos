@@ -721,9 +721,11 @@ interface ObraRowProps {
   onUpdate: (patch: PainelObraPatch) => void;
   onOpen: () => void;
   onDeleteRequest: () => void;
+  /** Abre o popup com a feature "Dados do cliente" para esta obra. */
+  onOpenDados: () => void;
 }
 
-function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest }: ObraRowProps) {
+function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest, onOpenDados }: ObraRowProps) {
   const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
 
   return (
