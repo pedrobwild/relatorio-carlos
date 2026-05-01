@@ -2150,7 +2150,229 @@ function KanbanCard({
             </SelectContent>
           </Select>
         )}
+}
+
+// ===== BoardView (estilo Monday) =====
+// Reaproveita o <Table> + <ObraRow> da visão Tabela, mas quebra as linhas em
+// grupos colapsáveis por etapa, com header colorido e contador. Mantém todas
+// as 13 colunas e a edição inline. Estado de colapso persistido em
+// localStorage para preservar a preferência entre sessões.
+
+const BOARD_COLLAPSED_STORAGE_KEY = 'painelObras:boardCollapsedEtapas:v1';
+const BOARD_NONE_KEY = '__none__';
+
+function loadBoardCollapsed(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = window.localStorage.getItem(BOARD_COLLAPSED_STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((k): k is string => typeof k === 'string'));
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * Cor de acento do header de cada grupo no Board (faixa lateral esquerda).
+ * Usa tokens semânticos do design system.
+ */
+function getBoardEtapaAccent(etapa: PainelEtapa | null): string {
+  if (!etapa) return 'bg-muted-foreground/40';
+  switch (etapa) {
+    case 'Medição':
+    case 'Executivo':
+    case 'Emissão RRT':
+    case 'Condomínio':
+      return 'bg-[hsl(var(--info))]';
+    case 'Planejamento':
+    case 'Mobilização':
+      return 'bg-[hsl(var(--warning))]';
+    case 'Execução':
+      return 'bg-primary';
+    case 'Vistoria':
+      return 'bg-[hsl(var(--success))]';
+    case 'Vistoria reprovada':
+      return 'bg-destructive';
+    case 'Finalizada':
+      return 'bg-muted-foreground';
+    default:
+      return 'bg-muted-foreground/40';
+  }
+}
+
+interface BoardViewProps {
+  obras: PainelObra[];
+  staffUsers: { id: string; nome: string }[];
+  expandedIds: Set<string>;
+  onToggleExpanded: (id: string) => void;
+  onUpdate: (id: string, patch: PainelObraPatch) => Promise<unknown> | unknown;
+  onOpen: (id: string) => void;
+  onDeleteRequest: (o: PainelObra) => void;
+  onOpenDados: (o: PainelObra) => void;
+  renderSortableHeader: (label: string, key: string) => React.ReactNode;
+}
+
+function BoardView({
+  obras,
+  staffUsers,
+  expandedIds,
+  onToggleExpanded,
+  onUpdate,
+  onOpen,
+  onDeleteRequest,
+  onOpenDados,
+  renderSortableHeader,
+}: BoardViewProps) {
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => loadBoardCollapsed());
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        BOARD_COLLAPSED_STORAGE_KEY,
+        JSON.stringify(Array.from(collapsed)),
+      );
+    } catch {
+      /* ignore quota errors */
+    }
+  }, [collapsed]);
+
+  const toggleGroup = (key: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // Agrupa preservando a ordem canônica das etapas; "Sem etapa" entra no fim.
+  const groups = useMemo(() => {
+    const map = new Map<string, PainelObra[]>();
+    for (const o of obras) {
+      const key = o.etapa ?? BOARD_NONE_KEY;
+      const arr = map.get(key);
+      if (arr) arr.push(o);
+      else map.set(key, [o]);
+    }
+    const ordered: { key: string; label: string; etapa: PainelEtapa | null; items: PainelObra[] }[] = [];
+    for (const e of ETAPA_OPTIONS) {
+      const items = map.get(e);
+      if (items && items.length > 0) {
+        ordered.push({ key: e, label: e, etapa: e, items });
+      }
+    }
+    const noneItems = map.get(BOARD_NONE_KEY);
+    if (noneItems && noneItems.length > 0) {
+      ordered.push({ key: BOARD_NONE_KEY, label: 'Sem etapa', etapa: null, items: noneItems });
+    }
+    return ordered;
+  }, [obras]);
+
+  const allCollapsed = groups.length > 0 && groups.every((g) => collapsed.has(g.key));
+
+  const handleToggleAll = () => {
+    if (allCollapsed) {
+      setCollapsed(new Set());
+    } else {
+      setCollapsed(new Set(groups.map((g) => g.key)));
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <p className="text-xs text-muted-foreground">
+          {groups.length} {groups.length === 1 ? 'grupo' : 'grupos'} · {obras.length}{' '}
+          {obras.length === 1 ? 'obra' : 'obras'}
+        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={handleToggleAll}
+          className="h-7 gap-1.5 px-2 text-xs"
+        >
+          {allCollapsed ? (
+            <>
+              <ChevronDown className="h-3.5 w-3.5" /> Expandir tudo
+            </>
+          ) : (
+            <>
+              <ChevronRight className="h-3.5 w-3.5" /> Recolher tudo
+            </>
+          )}
+        </Button>
       </div>
+
+      {groups.map((g) => {
+        const isCollapsed = collapsed.has(g.key);
+        return (
+          <SectionCard key={g.key} flush>
+            <button
+              type="button"
+              onClick={() => toggleGroup(g.key)}
+              aria-expanded={!isCollapsed}
+              aria-controls={`board-group-${g.key}`}
+              className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-accent/30 transition-colors rounded-t-xl"
+            >
+              <span
+                aria-hidden="true"
+                className={cn('h-5 w-1 rounded-full shrink-0', getBoardEtapaAccent(g.etapa))}
+              />
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+              )}
+              <span className="font-semibold text-sm">{g.label}</span>
+              <span className="inline-flex items-center justify-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground min-w-[24px]">
+                {g.items.length}
+              </span>
+            </button>
+
+            {!isCollapsed && (
+              <div id={`board-group-${g.key}`} className="overflow-x-auto border-t border-border-subtle">
+                <Table className="w-full text-sm [&_th]:h-10 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent border-b border-border-subtle">
+                      <TableHead className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
+                      <TableHead className="w-[60px] text-center" aria-label="Dados do cliente">Dados</TableHead>
+                      <TableHead className="min-w-[120px]">Status</TableHead>
+                      <TableHead className="min-w-[140px]">Etapa</TableHead>
+                      <TableHead className="min-w-[120px] text-right">Progresso</TableHead>
+                      <TableHead className="min-w-[100px]">{renderSortableHeader('Início Of.', 'inicio_oficial')}</TableHead>
+                      <TableHead className="min-w-[100px]">{renderSortableHeader('Entrega Of.', 'entrega_oficial')}</TableHead>
+                      <TableHead className="min-w-[100px]">{renderSortableHeader('Início Real', 'inicio_real')}</TableHead>
+                      <TableHead className="min-w-[100px]">{renderSortableHeader('Entrega Real', 'entrega_real')}</TableHead>
+                      <TableHead className="min-w-[130px]">Relacionamento</TableHead>
+                      <TableHead className="min-w-[150px]">{renderSortableHeader('Responsável', 'responsavel_nome')}</TableHead>
+                      <TableHead className="min-w-[110px] text-right">{renderSortableHeader('Atraso', 'atraso')}</TableHead>
+                      <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {g.items.map((o) => (
+                      <ObraRow
+                        key={o.id}
+                        obra={o}
+                        staffUsers={staffUsers}
+                        expanded={expandedIds.has(o.id)}
+                        onToggleExpanded={() => onToggleExpanded(o.id)}
+                        onUpdate={(patch) => onUpdate(o.id, patch)}
+                        onOpen={() => onOpen(o.id)}
+                        onDeleteRequest={() => onDeleteRequest(o)}
+                        onOpenDados={() => onOpenDados(o)}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </SectionCard>
+        );
+      })}
     </div>
   );
 }
