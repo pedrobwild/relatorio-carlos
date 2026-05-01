@@ -28,6 +28,8 @@ import {
   Clock,
   FileText,
   RotateCcw,
+  Filter,
+  Check,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
@@ -320,9 +322,25 @@ export default function PainelObras() {
 
   const [search, setSearch] = useState('');
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
-  const [filterStatus, setFilterStatus] = useState<string>(ALL);
+  /**
+   * Filtro de status agora é multi-seleção (Set vazio = sem filtro / mostra
+   * todos). Modelado como Set para performance O(1) no filtro de linhas e
+   * para permitir refinar quais colunas/cards aparecem mesmo quando o
+   * Kanban está agrupado por status (filtro independe da seleção visual da
+   * coluna ativa). Inclui o sentinel `NONE` para representar "sem status".
+   */
+  const [filterStatuses, setFilterStatuses] = useState<Set<string>>(() => new Set());
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
   const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
+
+  const toggleStatusFilter = (value: string) => {
+    setFilterStatuses((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value); else next.add(value);
+      return next;
+    });
+  };
+  const clearStatusFilter = () => setFilterStatuses(new Set());
 
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -368,10 +386,11 @@ export default function PainelObras() {
     }
     if (filterEtapa !== ALL)
       rows = rows.filter((o) => (filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa));
-    if (filterStatus !== ALL)
+    if (filterStatuses.size > 0)
       rows = rows.filter((o) => {
         const display = computeDisplayStatus(o);
-        return filterStatus === NONE ? !display : display === filterStatus;
+        const key = display ?? NONE;
+        return filterStatuses.has(key);
       });
     if (filterRelacionamento !== ALL)
       rows = rows.filter((o) =>
@@ -408,7 +427,7 @@ export default function PainelObras() {
       });
     }
     return rows;
-  }, [obras, search, filterEtapa, filterStatus, filterRelacionamento, filterResponsavel, sortKey, sortDir]);
+  }, [obras, search, filterEtapa, filterStatuses, filterRelacionamento, filterResponsavel, sortKey, sortDir]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
     if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -416,10 +435,10 @@ export default function PainelObras() {
   };
 
   const clearFilters = () => {
-    setSearch(''); setFilterEtapa(ALL); setFilterStatus(ALL); setFilterRelacionamento(ALL); setFilterResponsavel(ALL);
+    setSearch(''); setFilterEtapa(ALL); setFilterStatuses(new Set()); setFilterRelacionamento(ALL); setFilterResponsavel(ALL);
   };
 
-  const hasFilters = !!search.trim() || filterEtapa !== ALL || filterStatus !== ALL || filterRelacionamento !== ALL || filterResponsavel !== ALL;
+  const hasFilters = !!search.trim() || filterEtapa !== ALL || filterStatuses.size > 0 || filterRelacionamento !== ALL || filterResponsavel !== ALL;
 
   const summary = useMemo(() => {
     const displayed = obras.map((o) => computeDisplayStatus(o));
@@ -560,22 +579,93 @@ export default function PainelObras() {
               }
               filters={
                 <>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="h-8 w-[140px] text-xs border-border-subtle bg-surface">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ALL}>Todos status</SelectItem>
-                      <SelectItem value={NONE}>(sem status)</SelectItem>
-                      {STATUS_OPTIONS.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          <span className="flex items-center gap-2">
-                            <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(s))} />{s}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {/* Filtro de status: multi-seleção via popover. Independe da
+                      seleção visual da coluna no Kanban (que destaca um status
+                      por vez). Permite refinar quais cards aparecem mantendo
+                      múltiplas colunas/status visíveis simultaneamente. */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-[160px] justify-between text-xs border-border-subtle bg-surface px-3 font-normal"
+                        aria-label="Filtrar por status"
+                      >
+                        <span className="flex items-center gap-1.5 truncate">
+                          <Filter className="h-3.5 w-3.5 opacity-60" />
+                          {filterStatuses.size === 0
+                            ? 'Status'
+                            : filterStatuses.size === 1
+                              ? (() => {
+                                  const only = [...filterStatuses][0];
+                                  return only === NONE ? '(sem status)' : only;
+                                })()
+                              : `${filterStatuses.size} status`}
+                        </span>
+                        <ChevronDown className="h-3.5 w-3.5 opacity-60 shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-[220px] p-1">
+                      <div className="flex items-center justify-between px-2 py-1.5">
+                        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                          Filtrar status
+                        </span>
+                        {filterStatuses.size > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearStatusFilter}
+                            className="h-6 px-1.5 text-[11px] text-muted-foreground"
+                          >
+                            Limpar
+                          </Button>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        {[NONE, ...STATUS_OPTIONS].map((s) => {
+                          const checked = filterStatuses.has(s);
+                          const label = s === NONE ? '(sem status)' : s;
+                          return (
+                            <button
+                              type="button"
+                              key={`statusfilter-${s}`}
+                              onClick={() => toggleStatusFilter(s)}
+                              role="menuitemcheckbox"
+                              aria-checked={checked}
+                              className={cn(
+                                'flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs text-left',
+                                'hover:bg-accent hover:text-accent-foreground',
+                                'focus:outline-none focus:bg-accent',
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  'flex h-4 w-4 items-center justify-center rounded border',
+                                  checked
+                                    ? 'bg-primary border-primary text-primary-foreground'
+                                    : 'border-border bg-surface',
+                                )}
+                              >
+                                {checked && <Check className="h-3 w-3" />}
+                              </span>
+                              {s !== NONE && (
+                                <span
+                                  className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(s as PainelStatus))}
+                                  aria-hidden
+                                />
+                              )}
+                              <span className="truncate flex-1">{label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="px-2 pt-1.5 pb-1 text-[10px] text-muted-foreground leading-snug">
+                        Vazio mostra todos. Refina cards mesmo no Kanban agrupado por status.
+                      </p>
+                    </PopoverContent>
+                  </Popover>
 
                   <Select value={filterEtapa} onValueChange={setFilterEtapa}>
                     <SelectTrigger className="h-8 w-[150px] text-xs border-border-subtle bg-surface">
@@ -712,8 +802,9 @@ export default function PainelObras() {
                   onGroupByChange={handleGroupByChange}
                   selectedEtapa={filterEtapa}
                   onSelectEtapa={setFilterEtapa}
-                  selectedStatus={filterStatus}
-                  onSelectStatus={setFilterStatus}
+                  filterStatuses={filterStatuses}
+                  onToggleStatusFilter={toggleStatusFilter}
+                  onClearStatusFilter={clearStatusFilter}
                   sortKey={sortKey}
                   sortDir={sortDir}
                   onOpen={(id) => navigate(`/obra/${id}`)}
@@ -1203,11 +1294,15 @@ interface KanbanViewProps {
   /** Critério de agrupamento (define colunas, label, edição inline, filtros). */
   groupBy: KanbanGroupBy;
   onGroupByChange: (next: KanbanGroupBy) => void;
-  /** Filtros sincronizados (chip ativo destaca a coluna correspondente). */
+  /** Filtro de etapa: seleção única (chip ativo == filtro vigente). */
   selectedEtapa: string;
   onSelectEtapa: (value: string) => void;
-  selectedStatus: string;
-  onSelectStatus: (value: string) => void;
+  /** Filtro de status: multi-seleção (Set vazio = todos). Os chips de status
+   *  toggleam membros do Set, permitindo refinar mantendo várias colunas
+   *  visíveis ao mesmo tempo (independente do agrupamento ativo). */
+  filterStatuses: Set<string>;
+  onToggleStatusFilter: (value: string) => void;
+  onClearStatusFilter: () => void;
   /** Critério atual de ordenação da tabela (compartilhado com o Kanban). */
   sortKey: SortKey;
   sortDir: 'asc' | 'desc';
@@ -1222,8 +1317,9 @@ function KanbanView({
   onGroupByChange,
   selectedEtapa,
   onSelectEtapa,
-  selectedStatus,
-  onSelectStatus,
+  filterStatuses,
+  onToggleStatusFilter,
+  onClearStatusFilter,
   sortKey,
   sortDir,
   onOpen,
@@ -1289,9 +1385,26 @@ function KanbanView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [obras, order, groupBy]);
 
-  // Filtro/seleção atualmente vigente para o critério escolhido.
-  const selectedGroup = groupBy === 'status' ? selectedStatus : selectedEtapa;
-  const onSelectGroup = groupBy === 'status' ? onSelectStatus : onSelectEtapa;
+  // Helpers de "chip ativo" e "ação ao clicar no chip" por critério:
+  // - Etapa: single-select clássico (clica = filtra; reclicar = limpa).
+  // - Status: multi-select que reflete o popover de status na toolbar
+  //   (clica = toggle no Set; chip aparece marcado se status está no filtro).
+  const isChipActive = (filterValue: string): boolean => {
+    if (groupBy === 'status') return filterStatuses.has(filterValue);
+    return selectedEtapa === filterValue;
+  };
+  const onChipClick = (filterValue: string): void => {
+    if (groupBy === 'status') {
+      onToggleStatusFilter(filterValue);
+      return;
+    }
+    onSelectEtapa(selectedEtapa === filterValue ? ALL : filterValue);
+  };
+  const hasGroupFilter = groupBy === 'status' ? filterStatuses.size > 0 : selectedEtapa !== ALL;
+  const clearGroupFilter = () => {
+    if (groupBy === 'status') onClearStatusFilter();
+    else onSelectEtapa(ALL);
+  };
 
   // Modo de layout das colunas (manual vs auto pela ordenação ativa).
   const [layoutMode, setLayoutMode] = useState<'manual' | 'auto'>('manual');
@@ -1384,7 +1497,7 @@ function KanbanView({
         {displayedOrder.map((key) => {
           const count = (grouped.get(key) ?? []).length;
           const filterValue = key === 'none' ? NONE : key;
-          const isActive = selectedGroup === filterValue;
+          const isActive = isChipActive(filterValue);
           const label = labels[key] ?? key;
           return (
             <Button
@@ -1392,7 +1505,7 @@ function KanbanView({
               type="button"
               size="sm"
               variant={isActive ? 'default' : 'outline'}
-              onClick={() => onSelectGroup(isActive ? ALL : filterValue)}
+              onClick={() => onChipClick(filterValue)}
               aria-pressed={isActive}
               className="h-7 gap-1.5 px-2 text-xs"
             >
@@ -1416,12 +1529,12 @@ function KanbanView({
             </Button>
           );
         })}
-        {selectedGroup !== ALL && (
+        {hasGroupFilter && (
           <Button
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => onSelectGroup(ALL)}
+            onClick={clearGroupFilter}
             className="h-7 px-2 text-xs text-muted-foreground"
           >
             <X className="h-3.5 w-3.5 mr-1" />
@@ -1494,7 +1607,7 @@ function KanbanView({
             const canMoveLeft = !isAuto && idx > 0;
             const canMoveRight = !isAuto && idx < displayedOrder.length - 1;
             const filterValue = key === 'none' ? NONE : key;
-            const isActive = selectedGroup === filterValue;
+            const isActive = isChipActive(filterValue);
             const accentDot = groupBy === 'status'
               ? statusDotClass(key === 'none' ? null : (key as PainelStatus))
               : null;
