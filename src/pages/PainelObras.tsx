@@ -653,6 +653,7 @@ export default function PainelObras() {
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
+                          <TableHead className="w-[60px] text-center" aria-label="Dados do cliente">Dados</TableHead>
                           <TableHead data-testid="painel-obras-th-status" className="min-w-[120px]">Status</TableHead>
                           <TableHead className="min-w-[140px]">Etapa</TableHead>
                           <TableHead className="min-w-[120px] text-right">Progresso</TableHead>
