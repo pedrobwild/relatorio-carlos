@@ -1553,26 +1553,14 @@ function KanbanView({
   const autoAvailable = !!sortKey;
   const isAuto = layoutMode === 'auto' && autoAvailable;
 
-  // Lista de ids visíveis (após filtros), usada por "selecionar todos".
-  const visibleIds = useMemo(() => obras.map((o) => o.id), [obras]);
-  const visibleSelectedCount = useMemo(
-    () => visibleIds.reduce((acc, id) => acc + (selectedIds.has(id) ? 1 : 0), 0),
-    [visibleIds, selectedIds],
-  );
-  const allVisibleSelected =
-    visibleIds.length > 0 && visibleSelectedCount === visibleIds.length;
-  const someVisibleSelected = visibleSelectedCount > 0 && !allVisibleSelected;
-  const toggleSelectAllVisible = () => {
-    if (allVisibleSelected) {
-      // limpa apenas os visíveis (preserva seleção fora da view filtrada)
-      visibleIds.forEach((id) => {
-        if (selectedIds.has(id)) onToggleSelect(id);
-      });
-    } else {
-      visibleIds.forEach((id) => {
-        if (!selectedIds.has(id)) onToggleSelect(id);
-      });
-    }
+  // Bulk action handlers — recebem o novo valor e disparam onBulkUpdate.
+  const handleBulkChangeEtapa = (value: string) => {
+    const next = value === NONE ? null : (value as PainelEtapa);
+    void onBulkUpdate(Array.from(selectedIds), { etapa: next });
+  };
+  const handleBulkChangeStatus = (value: string) => {
+    const next = value === NONE ? null : (value as PainelStatus);
+    void onBulkUpdate(Array.from(selectedIds), { status: next });
   };
 
   // Bulk action handlers — recebem o novo valor e disparam onBulkUpdate.
