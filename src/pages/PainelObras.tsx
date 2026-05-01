@@ -309,10 +309,6 @@ export default function PainelObras() {
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
   const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
 
-  type SortKey =
-    | 'atraso'
-    | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
-    | 'entrega_real'   | 'responsavel_nome' | null;
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
