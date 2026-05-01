@@ -1015,7 +1015,7 @@ export default function PainelObras() {
                 </div>
               );
             })()}
-            />
+
 
             <div className="mt-2">
               {isLoading ? (
