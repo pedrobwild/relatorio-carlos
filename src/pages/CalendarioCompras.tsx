@@ -1300,19 +1300,24 @@ export default function CalendarioCompras() {
     enabled: allPurchases.length > 0,
     queryFn: async () => {
       const ids = [...new Set(allPurchases.map((p) => (p as any).created_by).filter(Boolean) as string[])];
-      const map = new Map<string, { name: string; email: string | null }>();
-      if (ids.length === 0) return map;
+      if (ids.length === 0) return [] as Array<[string, { name: string; email: string | null }]>;
       const { data, error } = await supabase
         .from('profiles')
         .select('user_id, display_name, email')
         .in('user_id', ids);
       if (error) throw error;
-      (data || []).forEach((row: { user_id: string; display_name: string | null; email: string | null }) => {
+      // Retorna como tuplas para sobreviver à serialização no localStorage.
+      return (data || []).map((row: { user_id: string; display_name: string | null; email: string | null }) => {
         const name = (row.display_name?.trim() || row.email?.split('@')[0] || 'Usuário').trim();
-        map.set(row.user_id, { name, email: row.email });
+        return [row.user_id, { name, email: row.email }] as [string, { name: string; email: string | null }];
       });
-      return map;
     },
+    select: (entries) =>
+      entries instanceof Map
+        ? entries
+        : new Map<string, { name: string; email: string | null }>(
+            entries as Array<[string, { name: string; email: string | null }]>,
+          ),
     staleTime: 5 * 60_000,
   });
 
