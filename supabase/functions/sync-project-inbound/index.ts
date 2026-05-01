@@ -85,15 +85,23 @@ Deno.serve(async (req) => {
     // --- Upsert: check if already linked ---
     const { data: existing } = await db
       .from("projects")
-      .select("id")
+      .select("id, deleted_at")
       .eq("external_id", source_id)
       .eq("external_system", "envision")
       .maybeSingle();
 
     let projectId: string;
     let isNewProject = false;
+    let wasRestored = false;
 
     if (existing) {
+      // If the project was soft-deleted, restore it on re-sync — otherwise the
+      // update would land on a hidden row and the obra would silently "not be created".
+      if (existing.deleted_at) {
+        projectPayload.deleted_at = null;
+        wasRestored = true;
+        console.log(`[sync-project-inbound] Restoring soft-deleted project ${existing.id} for source_id ${source_id}`);
+      }
       const { error: updateErr } = await db.from("projects").update(projectPayload).eq("id", existing.id);
       if (updateErr) {
         console.error("[sync-project-inbound] Update error:", updateErr.message);
@@ -234,7 +242,7 @@ Deno.serve(async (req) => {
       status: "success",
       project_id: projectId,
       orcamento_id: orcamentoId,
-      action: existing ? "updated" : "created",
+      action: existing ? (wasRestored ? "restored" : "updated") : "created",
       ai_enrichment: aiEnrichment ? "completed" : null,
     });
   } catch (error: unknown) {
