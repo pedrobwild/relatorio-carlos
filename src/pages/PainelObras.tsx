@@ -653,14 +653,14 @@ export default function PainelObras() {
           customerName={dadosTarget?.customer_name ?? null}
         />
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-3">
-          <TabsList className="h-8 bg-surface-sunken border border-border-subtle">
-            <TabsTrigger value="obras" className="h-7 text-xs data-[state=active]:bg-card">Obras</TabsTrigger>
-            <TabsTrigger value="fornecedores" className="h-7 text-xs data-[state=active]:bg-card">Fornecedores</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="obras" className="mt-2 focus-visible:outline-none">
-            {/*
+        <div className="mt-3">
+          {/*
+            Toolbar redesenhada — referência híbrida (Linear + Notion):
+            - linha única densa (h-9), divisores verticais entre grupos
+            - search compacto, filtros como chips com label inline + contador
+            - view switcher e densidade agrupados à direita, alinhados em h-8
+            - chip "Limpar" só aparece quando há filtros ativos
+          */}
               Toolbar redesenhada — referência híbrida (Linear + Notion):
               - linha única densa (h-9), divisores verticais entre grupos
               - search compacto, filtros como chips com label inline + contador
