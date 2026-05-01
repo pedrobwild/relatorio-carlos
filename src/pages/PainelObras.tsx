@@ -1494,6 +1494,52 @@ function KanbanView({
     [order, defaultOrder],
   );
 
+  // Drag-and-drop entre colunas: arrastar um card altera a etapa/status do
+  // projeto conforme o agrupamento ativo. O fallback de erro vem do
+  // `usePainelObras` (toast em onError + rollback otimista).
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverKey, setDragOverKey] = useState<KanbanColKey | null>(null);
+  const handleCardDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggingId(id);
+  };
+  const handleCardDragEnd = () => {
+    setDraggingId(null);
+    setDragOverKey(null);
+  };
+  const handleColumnDragOver = (e: React.DragEvent, key: KanbanColKey) => {
+    if (!draggingId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverKey !== key) setDragOverKey(key);
+  };
+  const handleColumnDragLeave = (e: React.DragEvent, key: KanbanColKey) => {
+    // Só limpa se o ponteiro saiu de fato da coluna (e não entrou em um filho)
+    const related = e.relatedTarget as Node | null;
+    if (related && (e.currentTarget as Node).contains(related)) return;
+    if (dragOverKey === key) setDragOverKey(null);
+  };
+  const handleColumnDrop = (e: React.DragEvent, key: KanbanColKey) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain') || draggingId;
+    setDragOverKey(null);
+    setDraggingId(null);
+    if (!id) return;
+    const obra = obras.find((o) => o.id === id);
+    if (!obra) return;
+    if (groupBy === 'status') {
+      const nextStatus = key === 'none' ? null : (key as PainelStatus);
+      const current = computeDisplayStatus(obra);
+      if (current === nextStatus) return;
+      onUpdateStatus(id, nextStatus);
+    } else {
+      const nextEtapa = key === 'none' ? null : (key as PainelEtapa);
+      if ((obra.etapa ?? null) === nextEtapa) return;
+      onUpdateEtapa(id, nextEtapa);
+    }
+  };
+
   // Resolve o "valor de coluna" de uma obra conforme o critério.
   // Para status, usamos `computeDisplayStatus` para refletir a mesma lógica
   // visual da tabela (e.g., obras com entrega oficial vencida aparecem como
