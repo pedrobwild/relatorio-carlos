@@ -288,6 +288,17 @@ export default function PainelObras() {
     setSearchParams(next, { replace: true });
   };
 
+  // Modo de visualização da aba "Obras": tabela densa (default) ou kanban por etapa.
+  // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
+  const viewParam = searchParams.get('view');
+  const activeView: 'table' | 'kanban' = viewParam === 'kanban' ? 'kanban' : 'table';
+  const handleViewChange = (next: 'table' | 'kanban') => {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'table') params.delete('view');
+    else params.set('view', next);
+    setSearchParams(params, { replace: true });
+  };
+
   const [search, setSearch] = useState('');
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
   const [filterStatus, setFilterStatus] = useState<string>(ALL);
