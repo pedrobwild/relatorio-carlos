@@ -558,17 +558,18 @@ export default function PainelObras() {
           description="Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
           actions={
             <>
-              <Button variant="outline" size="sm" onClick={() => navigate('/gestao/cs/operacional')} className="h-9 gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/gestao/cs/operacional')} className="h-8 gap-2">
                 <Headset className="h-4 w-4" />
                 <span className="hidden sm:inline">Customer Success</span>
                 <ArrowRight className="h-3.5 w-3.5 opacity-60" />
               </Button>
-              <Button size="sm" onClick={() => navigate('/gestao/nova-obra')} className="h-9 gap-2">
+              <Button size="sm" onClick={() => navigate('/gestao/nova-obra')} className="h-8 gap-2">
                 <Plus className="h-4 w-4" />Nova obra
               </Button>
             </>
           }
           flush
+          className="!pt-4 !pb-3 md:!pt-5 md:!pb-3 [&_h1]:!text-lg [&_h1]:md:!text-xl"
         />
 
         {/* Delete confirmation dialog */}
@@ -902,7 +903,7 @@ export default function PainelObras() {
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
-                    <Table className="w-full text-sm [&_th]:h-10 [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
+                    <Table className="w-full text-sm [&_th]:h-8 [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:py-1.5 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
@@ -2364,7 +2365,7 @@ function BoardView({
                 onScroll={(e) => handleScrollerScroll(e.currentTarget)}
                 className="overflow-x-auto border-t border-border-subtle"
               >
-                <Table className="w-full text-sm [&_th]:h-10 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
+                <Table className="w-full text-sm [&_th]:h-8 [&_td]:py-1.5 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border-subtle">
                       <TableHead className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
