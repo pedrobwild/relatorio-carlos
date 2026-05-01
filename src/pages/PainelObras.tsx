@@ -1574,11 +1574,14 @@ function KanbanView({
 
 interface KanbanCardProps {
   obra: PainelObra;
+  /** Define qual Select inline aparece no rodapé do card (etapa ou status). */
+  groupBy: KanbanGroupBy;
   onOpen: () => void;
   onChangeEtapa: (etapa: PainelEtapa | null) => void;
+  onChangeStatus: (status: PainelStatus | null) => void;
 }
 
-function KanbanCard({ obra, onOpen, onChangeEtapa }: KanbanCardProps) {
+function KanbanCard({ obra, groupBy, onOpen, onChangeEtapa, onChangeStatus }: KanbanCardProps) {
   const displayStatus = computeDisplayStatus(obra);
   const overdueDays = computeOverdueDays(obra);
 
