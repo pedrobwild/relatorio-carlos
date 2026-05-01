@@ -608,11 +608,48 @@ export default function PainelObras() {
                 </>
               }
               meta={
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-xs text-muted-foreground tabular-nums">
                     <span className="font-semibold text-foreground">{filtered.length}</span>
                     <span className="opacity-60"> / {obras.length} obras</span>
                   </span>
+                  {/* Ordenação visível no Kanban (no modo Tabela é feita pelos cabeçalhos) */}
+                  {activeView === 'kanban' && (
+                    <div className="flex items-center gap-1.5">
+                      <Select
+                        value={sortKey ?? 'default'}
+                        onValueChange={(v) => {
+                          if (v === 'default') { setSortKey(null); setSortDir('asc'); }
+                          else { setSortKey(v as NonNullable<SortKey>); }
+                        }}
+                      >
+                        <SelectTrigger className="h-8 w-[170px] text-xs" aria-label="Ordenar cards">
+                          <SelectValue placeholder="Ordenar por" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">Entrega + próxima (padrão)</SelectItem>
+                          <SelectItem value="entrega_oficial">Entrega oficial</SelectItem>
+                          <SelectItem value="inicio_oficial">Início oficial</SelectItem>
+                          <SelectItem value="entrega_real">Entrega real</SelectItem>
+                          <SelectItem value="inicio_real">Início real</SelectItem>
+                          <SelectItem value="responsavel_nome">Responsável</SelectItem>
+                          <SelectItem value="atraso">Atraso</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+                        disabled={!sortKey}
+                        className="h-8 px-2 text-xs"
+                        aria-label={`Direção: ${sortDir === 'asc' ? 'crescente' : 'decrescente'}`}
+                        title={sortDir === 'asc' ? 'Crescente' : 'Decrescente'}
+                      >
+                        {sortDir === 'asc' ? '↑' : '↓'}
+                      </Button>
+                    </div>
+                  )}
                   {/* Toggle de visualização: Tabela (densa) ou Kanban (por etapa) */}
                   <div
                     role="group"
