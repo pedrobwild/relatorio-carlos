@@ -648,27 +648,54 @@ function ChartView({
   const sample = rows[0] ?? {};
   const cols = Object.keys(sample);
 
+  // Postgres/Supabase devolvem `numeric` como string; também aceita number puro.
+  const isNumericLike = (v: unknown): boolean => {
+    if (typeof v === "number") return Number.isFinite(v);
+    if (typeof v === "string" && v.trim() !== "") {
+      return Number.isFinite(Number(v));
+    }
+    return false;
+  };
+  // Procura em até 5 linhas para tolerar nulls na primeira.
+  const probeColumn = (predicate: (v: unknown) => boolean) =>
+    cols.find((c) =>
+      rows.slice(0, 5).some((r) => {
+        const v = r[c];
+        return v !== null && v !== undefined && predicate(v);
+      }),
+    );
+
   // Se o LLM não passou key_columns, inferimos: 1ª string como label, 1ª numérica como value.
   let labelKey = keyColumns?.label;
   let valueKey = keyColumns?.value;
   if (!labelKey || !cols.includes(labelKey)) {
-    labelKey = cols.find((c) => typeof sample[c] === "string");
+    labelKey = probeColumn((v) => typeof v === "string" && !isNumericLike(v));
   }
   if (!valueKey || !cols.includes(valueKey)) {
     valueKey = cols.find(
-      (c) => c !== labelKey && typeof sample[c] === "number" && !/_id$|^id$/.test(c),
+      (c) =>
+        c !== labelKey &&
+        !/_id$|^id$/.test(c) &&
+        rows.slice(0, 5).some((r) => isNumericLike(r[c])),
     );
   }
 
   if (!labelKey || !valueKey) return null;
 
+  // Mantemos null como null (não vira 0): missing data não deve virar barra zero.
   const data = rows
     .slice(0, 12)
-    .map((r) => ({
-      label: String(r[labelKey as string] ?? ""),
-      value: Number(r[valueKey as string] ?? 0),
-    }))
-    .filter((d) => Number.isFinite(d.value));
+    .map((r) => {
+      const raw = r[valueKey as string];
+      if (raw === null || raw === undefined) return null;
+      const num = Number(raw);
+      if (!Number.isFinite(num)) return null;
+      return {
+        label: String(r[labelKey as string] ?? ""),
+        value: num,
+      };
+    })
+    .filter((d): d is { label: string; value: number } => d !== null);
 
   if (data.length === 0) return null;
 
