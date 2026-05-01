@@ -942,7 +942,7 @@ export default function PainelObras() {
             </div>
           </TabsContent>
 
-          <TabsContent value="fornecedores" className="mt-4 focus-visible:outline-none">
+          <TabsContent value="fornecedores" className="mt-2 focus-visible:outline-none">
             <Suspense fallback={
               <div className="space-y-3 p-4" aria-busy="true" aria-label="Carregando fornecedores">
                 <PageSkeleton className="h-10 w-64" />
