@@ -1256,18 +1256,24 @@ export default function CalendarioCompras() {
         .from('purchase_payment_schedule')
         .select('purchase_id, amount, paid_at');
       if (error) throw error;
-      const map = new Map<string, PaidAggregate>();
+      // Retorna como array de tuplas para sobreviver à serialização no
+      // localStorage (PersistQueryClient não preserva instâncias de Map).
+      const acc = new Map<string, PaidAggregate>();
       (data || []).forEach((row) => {
-        const cur = map.get(row.purchase_id) ?? { paidSum: 0, firstPaidAt: null, hasInstallments: false };
+        const cur = acc.get(row.purchase_id) ?? { paidSum: 0, firstPaidAt: null, hasInstallments: false };
         cur.hasInstallments = true;
         if (row.paid_at) {
           cur.paidSum += Number(row.amount) || 0;
           if (!cur.firstPaidAt || row.paid_at < cur.firstPaidAt) cur.firstPaidAt = row.paid_at;
         }
-        map.set(row.purchase_id, cur);
+        acc.set(row.purchase_id, cur);
       });
-      return map;
+      return Array.from(acc.entries());
     },
+    select: (entries) =>
+      entries instanceof Map
+        ? entries
+        : new Map<string, PaidAggregate>(entries as Array<[string, PaidAggregate]>),
     staleTime: 60_000,
   });
 
@@ -1294,19 +1300,24 @@ export default function CalendarioCompras() {
     enabled: allPurchases.length > 0,
     queryFn: async () => {
       const ids = [...new Set(allPurchases.map((p) => (p as any).created_by).filter(Boolean) as string[])];
-      const map = new Map<string, { name: string; email: string | null }>();
-      if (ids.length === 0) return map;
+      if (ids.length === 0) return [] as Array<[string, { name: string; email: string | null }]>;
       const { data, error } = await supabase
         .from('profiles')
         .select('user_id, display_name, email')
         .in('user_id', ids);
       if (error) throw error;
-      (data || []).forEach((row: { user_id: string; display_name: string | null; email: string | null }) => {
+      // Retorna como tuplas para sobreviver à serialização no localStorage.
+      return (data || []).map((row: { user_id: string; display_name: string | null; email: string | null }) => {
         const name = (row.display_name?.trim() || row.email?.split('@')[0] || 'Usuário').trim();
-        map.set(row.user_id, { name, email: row.email });
+        return [row.user_id, { name, email: row.email }] as [string, { name: string; email: string | null }];
       });
-      return map;
     },
+    select: (entries) =>
+      entries instanceof Map
+        ? entries
+        : new Map<string, { name: string; email: string | null }>(
+            entries as Array<[string, { name: string; email: string | null }]>,
+          ),
     staleTime: 5 * 60_000,
   });
 
