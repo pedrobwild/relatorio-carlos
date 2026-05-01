@@ -2369,7 +2369,12 @@ function BoardView({
             </button>
 
             {!isCollapsed && (
-              <div id={`board-group-${g.key}`} className="overflow-x-auto border-t border-border-subtle">
+              <div
+                id={`board-group-${g.key}`}
+                ref={(node) => registerScroller(g.key, node)}
+                onScroll={(e) => handleScrollerScroll(e.currentTarget)}
+                className="overflow-x-auto border-t border-border-subtle"
+              >
                 <Table className="w-full text-sm [&_th]:h-10 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border-subtle">
