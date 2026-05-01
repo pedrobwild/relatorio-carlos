@@ -327,6 +327,10 @@ export default function PainelObras() {
   const [deleteTarget, setDeleteTarget] = useState<PainelObra | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Popup "Dados do cliente" — abre a feature completa em dialog,
+  // disparado pelo ícone de documento na coluna após Cliente/Obra.
+  const [dadosTarget, setDadosTarget] = useState<PainelObra | null>(null);
+
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
