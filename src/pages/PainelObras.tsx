@@ -1156,11 +1156,15 @@ function loadKanbanOrder(): KanbanColKey[] {
 
 interface KanbanViewProps {
   obras: PainelObra[];
+  /** Valor atual do filtro de etapa (ALL, NONE ou nome de uma etapa). */
+  selectedEtapa: string;
+  /** Alterna o filtro: clicar no resumo seleciona/limpa a etapa. */
+  onSelectEtapa: (value: string) => void;
   onOpen: (id: string) => void;
   onUpdateEtapa: (id: string, etapa: PainelEtapa | null) => void;
 }
 
-function KanbanView({ obras, onOpen, onUpdateEtapa }: KanbanViewProps) {
+function KanbanView({ obras, selectedEtapa, onSelectEtapa, onOpen, onUpdateEtapa }: KanbanViewProps) {
   const [order, setOrder] = useState<KanbanColKey[]>(() => loadKanbanOrder());
 
   // Persiste a ordem sempre que o usuário reordena.
