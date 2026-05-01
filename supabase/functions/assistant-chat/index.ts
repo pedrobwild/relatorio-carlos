@@ -1,74 +1,24 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { corsHeaders, corsResponse, jsonResponse } from '../_shared/cors.ts';
+import { renderCatalog } from './_lib/catalog.ts';
+import {
+  analyzeDataQuality,
+  generateInsights,
+  recommendVisualizations,
+  scoreConfidence,
+  suggestFollowUps,
+} from './_lib/analysis.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const MODEL = 'google/gemini-3-flash-preview';
 
-// Catálogo curado: só o que o assistente pode "ver".
-const SCHEMA_CATALOG = `
-# CATÁLOGO DE TABELAS DISPONÍVEIS (apenas leitura, RLS aplicada automaticamente)
-
-## projects (obras)
-- id uuid, name text, status text, org_id uuid, created_by uuid
-- start_date date, end_date date, budget_total numeric
-- is_project_phase boolean
-
-## project_payments (parcelas/pagamentos)
-- id uuid, project_id uuid, installment_number int
-- description text, amount numeric, due_date date, paid_at timestamptz
-- payment_method text, boleto_code text, boleto_path text, pix_key text
-- payment_proof_path text, notification_sent_at timestamptz
-- IMPORTANTE: NÃO existe coluna 'status'. Derive o status assim:
-    * 'paid' quando paid_at IS NOT NULL
-    * 'overdue' quando paid_at IS NULL AND due_date < CURRENT_DATE
-    * 'pending' quando paid_at IS NULL AND due_date >= CURRENT_DATE
-  Exemplo: CASE WHEN paid_at IS NOT NULL THEN 'paid' WHEN due_date < CURRENT_DATE THEN 'overdue' ELSE 'pending' END AS status
-
-## project_purchases (compras de produtos e prestadores)
-- id uuid, project_id uuid, item_name text, description text
-- quantity numeric, unit text, estimated_cost numeric, actual_cost numeric
-- category text, supplier_name text, fornecedor_id uuid
-- required_by_date date, lead_time_days int
-- status text  -- 'pending' | 'ordered' | 'delivered' | 'cancelled'
-- purchase_type text  -- 'produto' | 'prestador'
-- scheduled_start date, scheduled_end date
-
-## fornecedores
-- id uuid, nome text, categoria text, telefone text, email text
-- supplier_type text  -- 'prestadores' | 'produtos'
-- status text, nota_avaliacao numeric
-
-## project_activities (cronograma)
-- id uuid, project_id uuid, description text, etapa text
-- planned_start date, planned_end date, actual_start date, actual_end date
-- weight numeric, sort_order int, progress_pct numeric
-- responsavel_user_id uuid
-
-## non_conformities (NCs)
-- id uuid, project_id uuid, title text, description text
-- status text  -- 'open'|'in_treatment'|'pending_verification'|'pending_approval'|'closed'|'reopened'
-- severity text, category text, deadline date
-- responsible_user_id uuid, created_by uuid
-
-## pending_items (pendências do cliente)
-- id uuid, project_id uuid, title text, description text
-- type text, status text  -- 'pending' | 'completed'
-- due_date date, amount numeric
-
-## cs_tickets (atendimento)
-- id uuid, project_id uuid, situation text, description text
-- status text, severity text, responsible_user_id uuid
-- created_at timestamptz, resolved_at timestamptz
-
-## users_profile
-- id uuid, nome text, email text, perfil text, status text
-`;
+const SCHEMA_CATALOG = renderCatalog();
 
 const SYSTEM_PROMPT = `Você é o Assistente BWild, um copiloto especializado no portal de gestão de obras.
 
-OBJETIVO: responder perguntas sobre dados do sistema (financeiro, compras, cronograma, NCs, pendências, CS) gerando UMA consulta SQL PostgreSQL e interpretando o resultado em português claro.
+OBJETIVO: responder perguntas sobre dados do sistema (financeiro, compras, cronograma, NCs, pendências, CS) gerando UMA consulta SQL PostgreSQL e interpretando o resultado em português claro, com análise executiva quando útil.
 
 REGRAS DE SQL (CRÍTICAS):
 1. Apenas SELECT (ou WITH ... SELECT). Nunca INSERT/UPDATE/DELETE/DDL.
@@ -79,14 +29,18 @@ REGRAS DE SQL (CRÍTICAS):
 6. Para "hoje" use CURRENT_DATE. Para "esta semana" use date_trunc('week', CURRENT_DATE).
 7. Sempre ordene de forma lógica (vencimento ASC, criação DESC, etc.).
 8. Limite implícito de 200 linhas é aplicado automaticamente — não adicione LIMIT manualmente a menos que o usuário peça top N.
-9. Para somas/totais use SUM(), COUNT(). Para agrupar use GROUP BY.
+9. Para somas/totais use SUM(), COUNT(), AVG(). Para agrupar use GROUP BY.
+10. Evite SELECT *. Liste colunas necessárias.
+11. Para "atrasada"/"vencida" use as regras derivadas do CATÁLOGO. Nunca invente coluna 'status' em project_payments.
 
-REGRAS DE RESPOSTA:
-- Responda em português brasileiro, tom profissional e direto.
-- Comece com a resposta numérica/factual ("Hoje há 3 compras a pagar, totalizando R$ 12.450,00").
+ESTILO DE RESPOSTA:
+- Português brasileiro, tom executivo e direto.
+- Comece com a resposta numérica/factual.
 - Use markdown: tabelas para listas, **negrito** para destaques.
 - Formate moeda como R$ 1.234,56 e datas como DD/MM/AAAA.
-- Se o resultado vier vazio, diga isso claramente e sugira variações.
+- Se vier vazio, diga claramente e sugira variações.
+- Separe fato (o que veio do dado), inferência (o que parece) e recomendação (o que fazer).
+- Indique limitações quando souber.
 - Nunca invente dados; só relate o que veio do SQL.
 
 A RLS do banco já filtra automaticamente o que o usuário pode ver — você não precisa adicionar filtros de permissão.
@@ -104,7 +58,7 @@ const TOOL_SCHEMA = {
         sql: { type: 'string', description: 'Consulta SELECT/WITH em PostgreSQL. UMA instrução, sem ponto-e-vírgula.' },
         domain: {
           type: 'string',
-          enum: ['financeiro', 'compras', 'cronograma', 'ncs', 'pendencias', 'cs', 'outros'],
+          enum: ['financeiro', 'compras', 'cronograma', 'ncs', 'pendencias', 'cs', 'obras', 'fornecedores', 'outros'],
           description: 'Domínio principal da pergunta.',
         },
         intent: { type: 'string', description: 'Resumo curto do que será consultado.' },
@@ -127,10 +81,33 @@ function sseEvent(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
+function buildAnalysis(opts: {
+  rows: Record<string, unknown>[];
+  rowsReturned: number;
+  domain: string;
+  sql: string | null;
+  status: string;
+}) {
+  const insights = generateInsights(opts.rows, opts.domain, opts.sql);
+  const dataQuality = analyzeDataQuality(opts.rows);
+  const visualizations = recommendVisualizations(opts.rows);
+  const followUps = suggestFollowUps(opts.domain);
+  const confidence = scoreConfidence({
+    rowsReturned: opts.rowsReturned,
+    hasSql: Boolean(opts.sql),
+    domainKnown: opts.domain !== 'outros',
+    dataQualityIssues: dataQuality.length,
+  });
+  const limitations: string[] = [];
+  if (opts.rows.length === 0) limitations.push('Nenhum registro retornado.');
+  if (opts.rows.length >= 200) limitations.push('Resultado truncado em 200 linhas.');
+  if (dataQuality.length > 0) limitations.push('Inconsistências detectadas na qualidade dos dados.');
+  return { insights, dataQuality, visualizations, followUps, confidence, limitations };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return corsResponse();
 
-  // Preserva contrato: aceita JSON body
   let body: { question?: string; conversation_id?: string | null; stream?: boolean } = {};
   try {
     body = await req.json();
@@ -159,7 +136,6 @@ Deno.serve(async (req) => {
   }
   const userId = userData.user.id;
 
-  // Fallback não-streaming: caminho legado (mantém compatibilidade com testes)
   if (!wantsStream) {
     return await runNonStreaming({ supabase, userId, question, conversationId });
   }
@@ -175,7 +151,8 @@ Deno.serve(async (req) => {
 
       const startedAt = Date.now();
       let generatedSql: string | null = null;
-      let domain: string | null = null;
+      let domain: string = 'outros';
+      let intent: string | null = null;
       let status: 'success' | 'sql_blocked' | 'sql_error' | 'llm_error' | 'timeout' | 'other' = 'success';
       let errorMessage: string | null = null;
       let rowsReturned = 0;
@@ -184,9 +161,9 @@ Deno.serve(async (req) => {
       let finalAnswer = '';
       let rows: Record<string, unknown>[] = [];
       let logId: string | null = null;
+      let analysis: ReturnType<typeof buildAnalysis> | null = null;
 
       try {
-        // 1) Cria conversa se nova
         if (!conversationId) {
           const { data: conv, error: convErr } = await supabase
             .from('assistant_conversations')
@@ -198,7 +175,6 @@ Deno.serve(async (req) => {
         }
         send('conversation', { conversation_id: conversationId });
 
-        // Salva mensagem do usuário
         await supabase.from('assistant_messages').insert({
           conversation_id: conversationId,
           user_id: userId,
@@ -208,7 +184,6 @@ Deno.serve(async (req) => {
 
         send('status', { phase: 'thinking', message: 'Interpretando pergunta...' });
 
-        // Histórico
         const { data: history } = await supabase
           .from('assistant_messages')
           .select('role, content')
@@ -216,7 +191,6 @@ Deno.serve(async (req) => {
           .order('created_at', { ascending: true })
           .limit(10);
 
-        // 2) Tool call para gerar SQL (não-stream — precisamos do JSON completo)
         const llmMessages = [
           { role: 'system', content: SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG },
           ...(history ?? []).map((m: { role: string; content: string }) => ({
@@ -270,11 +244,11 @@ Deno.serve(async (req) => {
         const args = JSON.parse(toolCall.function.arguments);
         generatedSql = (args.sql ?? '').toString();
         domain = (args.domain ?? 'outros').toString();
+        intent = (args.intent ?? null);
 
-        send('sql', { sql: generatedSql, domain });
+        send('sql', { sql: generatedSql, domain, intent });
         send('status', { phase: 'querying', message: 'Consultando banco de dados...' });
 
-        // 3) Executa SQL
         const { data: rpcData, error: rpcErr } = await supabase.rpc('execute_assistant_query', {
           p_sql: generatedSql,
         });
@@ -292,7 +266,18 @@ Deno.serve(async (req) => {
 
         send('rows', { rows_returned: rowsReturned, preview: rows.slice(0, 50) });
 
-        // 4) Streaming da resposta final
+        if (status === 'success') {
+          analysis = buildAnalysis({ rows, rowsReturned, domain, sql: generatedSql, status });
+          send('analysis', {
+            insights: analysis.insights,
+            data_quality: analysis.dataQuality,
+            visualizations: analysis.visualizations,
+            suggested_questions: analysis.followUps,
+            confidence: analysis.confidence,
+            limitations: analysis.limitations,
+          });
+        }
+
         if (status !== 'success') {
           finalAnswer = `Não consegui executar a consulta. ${
             status === 'sql_blocked'
@@ -305,6 +290,13 @@ Deno.serve(async (req) => {
         } else {
           send('status', { phase: 'formatting', message: 'Formatando resposta...' });
 
+          const insightsBrief = analysis
+            ? analysis.insights
+                .slice(0, 5)
+                .map((i) => `- ${i.title} [${i.severity}]: ${i.summary}`)
+                .join('\n')
+            : '';
+
           const formatResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
             method: 'POST',
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
@@ -315,11 +307,11 @@ Deno.serve(async (req) => {
                 {
                   role: 'system',
                   content:
-                    'Você é o Assistente BWild. Receba a pergunta original e os dados (JSON) retornados de uma consulta SQL. Responda em português brasileiro, com markdown, formatando moedas como R$ 1.234,56 e datas como DD/MM/AAAA. Comece pela resposta direta. Use tabela markdown se houver mais de uma linha. Se vier vazio, diga claramente. Nunca invente dados.',
+                    'Você é o Assistente BWild. Receba a pergunta original, os dados (JSON) e os insights pré-computados de uma consulta SQL. Responda em português brasileiro, com markdown, formatando moedas como R$ 1.234,56 e datas como DD/MM/AAAA. Estruture a resposta em três partes:\n1. **Resposta direta** (1 parágrafo curto, com os números principais).\n2. **Tabela/lista** quando houver mais de uma linha relevante.\n3. **Análise & próximos passos** com 1-3 bullets de leitura, riscos ou recomendações, baseando-se nos insights pré-computados quando úteis.\nSe vier vazio, diga claramente. Nunca invente dados.',
                 },
                 {
                   role: 'user',
-                  content: `Pergunta: ${question}\n\nDomínio: ${domain}\n\nDados (até 200 linhas):\n${JSON.stringify(
+                  content: `Pergunta: ${question}\nDomínio: ${domain}\nIntent: ${intent ?? '—'}\n\nInsights pré-computados:\n${insightsBrief || '—'}\n\nDados (até 50 linhas):\n${JSON.stringify(
                     rows.slice(0, 50)
                   )}\n\nTotal de linhas retornadas: ${rowsReturned}`,
                 },
@@ -365,7 +357,6 @@ Deno.serve(async (req) => {
           }
         }
 
-        // 5) Persiste log e mensagem
         const { data: logRow } = await supabase
           .from('assistant_logs')
           .insert({
@@ -392,7 +383,19 @@ Deno.serve(async (req) => {
           user_id: userId,
           role: 'assistant',
           content: finalAnswer,
-          result_data: { rows: rows.slice(0, 50), rows_returned: rowsReturned, sql: generatedSql, domain, status },
+          result_data: {
+            rows: rows.slice(0, 50),
+            rows_returned: rowsReturned,
+            sql: generatedSql,
+            domain,
+            status,
+            insights: analysis?.insights ?? null,
+            data_quality: analysis?.dataQuality ?? null,
+            visualizations: analysis?.visualizations ?? null,
+            suggested_questions: analysis?.followUps ?? null,
+            confidence: analysis?.confidence ?? null,
+            limitations: analysis?.limitations ?? null,
+          },
           log_id: logId,
         });
 
@@ -408,15 +411,21 @@ Deno.serve(async (req) => {
           rows_returned: rowsReturned,
           sql: generatedSql,
           domain,
+          intent,
           status,
           log_id: logId,
           latency_ms: Date.now() - startedAt,
+          insights: analysis?.insights ?? null,
+          data_quality: analysis?.dataQuality ?? null,
+          visualizations: analysis?.visualizations ?? null,
+          suggested_questions: analysis?.followUps ?? null,
+          confidence: analysis?.confidence ?? null,
+          limitations: analysis?.limitations ?? null,
         });
       } catch (e) {
         console.error('[assistant-chat stream] error:', e);
         const message = e instanceof Error ? e.message : String(e);
         send('error', { message, status: 'other' });
-        // Tentativa de log
         try {
           await supabase.from('assistant_logs').insert({
             user_id: userId,
@@ -455,7 +464,8 @@ async function runNonStreaming(opts: {
   let { conversationId } = opts;
   const startedAt = Date.now();
   let generatedSql: string | null = null;
-  let domain: string | null = null;
+  let domain: string = 'outros';
+  let intent: string | null = null;
   let status: 'success' | 'sql_blocked' | 'sql_error' | 'llm_error' | 'timeout' | 'other' = 'success';
   let errorMessage: string | null = null;
   let rowsReturned = 0;
@@ -514,6 +524,7 @@ async function runNonStreaming(opts: {
     const args = JSON.parse(toolCall.function.arguments);
     generatedSql = (args.sql ?? '').toString();
     domain = (args.domain ?? 'outros').toString();
+    intent = (args.intent ?? null);
 
     const { data: rpcData, error: rpcErr } = await supabase.rpc('execute_assistant_query', { p_sql: generatedSql });
     if (rpcErr) {
@@ -527,17 +538,33 @@ async function runNonStreaming(opts: {
       rowsReturned = rows.length;
     }
 
+    let analysis: ReturnType<typeof buildAnalysis> | null = null;
+    if (status === 'success') {
+      analysis = buildAnalysis({ rows, rowsReturned, domain, sql: generatedSql, status });
+    }
+
     if (status !== 'success') {
       finalAnswer = 'Não consegui executar a consulta. Tente reformular.';
     } else {
+      const insightsBrief = analysis
+        ? analysis.insights.slice(0, 5).map((i) => `- ${i.title} [${i.severity}]: ${i.summary}`).join('\n')
+        : '';
+
       const formatResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: MODEL,
           messages: [
-            { role: 'system', content: 'Responda em PT-BR markdown a partir do JSON.' },
-            { role: 'user', content: `Pergunta: ${question}\nDados: ${JSON.stringify(rows.slice(0, 50))}` },
+            {
+              role: 'system',
+              content:
+                'Responda em PT-BR markdown. Estruture: resposta direta, tabela/lista, análise & próximos passos. Use insights pré-computados quando úteis.',
+            },
+            {
+              role: 'user',
+              content: `Pergunta: ${question}\nDomínio: ${domain}\nInsights pré-computados:\n${insightsBrief || '—'}\nDados: ${JSON.stringify(rows.slice(0, 50))}`,
+            },
           ],
         }),
       });
@@ -561,7 +588,19 @@ async function runNonStreaming(opts: {
     await supabase.from('assistant_messages').insert({
       conversation_id: conversationId, user_id: userId, role: 'assistant',
       content: finalAnswer,
-      result_data: { rows: rows.slice(0, 50), rows_returned: rowsReturned, sql: generatedSql, domain, status },
+      result_data: {
+        rows: rows.slice(0, 50),
+        rows_returned: rowsReturned,
+        sql: generatedSql,
+        domain,
+        status,
+        insights: analysis?.insights ?? null,
+        data_quality: analysis?.dataQuality ?? null,
+        visualizations: analysis?.visualizations ?? null,
+        suggested_questions: analysis?.followUps ?? null,
+        confidence: analysis?.confidence ?? null,
+        limitations: analysis?.limitations ?? null,
+      },
       log_id: logRow?.id ?? null,
     });
 
@@ -570,8 +609,14 @@ async function runNonStreaming(opts: {
     return jsonResponse({
       conversation_id: conversationId, answer: finalAnswer,
       rows: rows.slice(0, 50), rows_returned: rowsReturned,
-      sql: generatedSql, domain, status, log_id: logRow?.id ?? null,
+      sql: generatedSql, domain, intent, status, log_id: logRow?.id ?? null,
       latency_ms: Date.now() - startedAt,
+      insights: analysis?.insights ?? null,
+      data_quality: analysis?.dataQuality ?? null,
+      visualizations: analysis?.visualizations ?? null,
+      suggested_questions: analysis?.followUps ?? null,
+      confidence: analysis?.confidence ?? null,
+      limitations: analysis?.limitations ?? null,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
