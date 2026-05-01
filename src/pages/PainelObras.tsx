@@ -708,12 +708,17 @@ export default function PainelObras() {
               ) : activeView === 'kanban' ? (
                 <KanbanView
                   obras={filtered}
+                  groupBy={kanbanGroupBy}
+                  onGroupByChange={handleGroupByChange}
                   selectedEtapa={filterEtapa}
                   onSelectEtapa={setFilterEtapa}
+                  selectedStatus={filterStatus}
+                  onSelectStatus={setFilterStatus}
                   sortKey={sortKey}
                   sortDir={sortDir}
                   onOpen={(id) => navigate(`/obra/${id}`)}
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
+                  onUpdateStatus={(id, status) => updateObra(id, { status })}
                 />
               ) : (
                 <SectionCard flush>
