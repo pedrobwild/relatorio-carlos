@@ -697,6 +697,8 @@ export default function PainelObras() {
               ) : activeView === 'kanban' ? (
                 <KanbanView
                   obras={filtered}
+                  selectedEtapa={filterEtapa}
+                  onSelectEtapa={setFilterEtapa}
                   onOpen={(id) => navigate(`/obra/${id}`)}
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                 />
@@ -1154,11 +1156,15 @@ function loadKanbanOrder(): KanbanColKey[] {
 
 interface KanbanViewProps {
   obras: PainelObra[];
+  /** Valor atual do filtro de etapa (ALL, NONE ou nome de uma etapa). */
+  selectedEtapa: string;
+  /** Alterna o filtro: clicar no resumo seleciona/limpa a etapa. */
+  onSelectEtapa: (value: string) => void;
   onOpen: (id: string) => void;
   onUpdateEtapa: (id: string, etapa: PainelEtapa | null) => void;
 }
 
-function KanbanView({ obras, onOpen, onUpdateEtapa }: KanbanViewProps) {
+function KanbanView({ obras, selectedEtapa, onSelectEtapa, onOpen, onUpdateEtapa }: KanbanViewProps) {
   const [order, setOrder] = useState<KanbanColKey[]>(() => loadKanbanOrder());
 
   // Persiste a ordem sempre que o usuário reordena.
@@ -1204,6 +1210,52 @@ function KanbanView({ obras, onOpen, onUpdateEtapa }: KanbanViewProps) {
 
   return (
     <SectionCard flush>
+      {/* Resumo por etapa: chips clicáveis que servem como atalho do filtro.
+          A etapa atualmente filtrada aparece destacada (variant default).
+          Clicar de novo no chip ativo limpa o filtro de etapa. */}
+      <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3">
+        {order.map((key) => {
+          const count = (grouped.get(key) ?? []).length;
+          const filterValue = key === 'none' ? NONE : key;
+          const isActive = selectedEtapa === filterValue;
+          const label = KANBAN_LABELS[key] ?? key;
+          return (
+            <Button
+              key={`summary-${key}`}
+              type="button"
+              size="sm"
+              variant={isActive ? 'default' : 'outline'}
+              onClick={() => onSelectEtapa(isActive ? ALL : filterValue)}
+              aria-pressed={isActive}
+              className="h-7 gap-1.5 px-2 text-xs"
+            >
+              <span className="truncate max-w-[140px]">{label}</span>
+              <span
+                className={cn(
+                  'tabular-nums rounded-full px-1.5 min-w-[20px] text-center text-[11px]',
+                  isActive
+                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                    : 'bg-muted text-muted-foreground',
+                )}
+              >
+                {count}
+              </span>
+            </Button>
+          );
+        })}
+        {selectedEtapa !== ALL && (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => onSelectEtapa(ALL)}
+            className="h-7 px-2 text-xs text-muted-foreground"
+          >
+            <X className="h-3.5 w-3.5 mr-1" />
+            Limpar etapa
+          </Button>
+        )}
+      </div>
       {isCustomOrder && (
         <div className="flex items-center justify-end gap-2 px-3 pt-2">
           <span className="text-[11px] text-muted-foreground">Ordem personalizada</span>
@@ -1226,10 +1278,15 @@ function KanbanView({ obras, onOpen, onUpdateEtapa }: KanbanViewProps) {
             const label = KANBAN_LABELS[key] ?? key;
             const canMoveLeft = idx > 0;
             const canMoveRight = idx < order.length - 1;
+            const filterValue = key === 'none' ? NONE : key;
+            const isActive = selectedEtapa === filterValue;
             return (
               <div
                 key={key}
-                className="flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border border-border-subtle"
+                className={cn(
+                  'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border transition-colors',
+                  isActive ? 'border-primary ring-2 ring-primary/30' : 'border-border-subtle',
+                )}
               >
                 <div className="flex items-center justify-between gap-1 px-2 py-2 border-b border-border-subtle">
                   <div className="flex items-center gap-0.5 shrink-0">
