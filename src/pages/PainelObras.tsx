@@ -1852,6 +1852,9 @@ function KanbanView({
                         key={o.id}
                         obra={o}
                         groupBy={groupBy}
+                        selected={selectedIds.has(o.id)}
+                        anySelected={selectedIds.size > 0}
+                        onToggleSelect={() => onToggleSelect(o.id)}
                         onOpen={() => onOpen(o.id)}
                         onChangeEtapa={(e) => onUpdateEtapa(o.id, e)}
                         onChangeStatus={(s) => onUpdateStatus(o.id, s)}
