@@ -1054,7 +1054,7 @@ interface ObraRowProps {
 }
 
 function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest, onOpenDados }: ObraRowProps) {
-  const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
+  const stickyBase = 'bg-card group-hover:bg-muted/50 transition-colors';
 
   return (
     <>
