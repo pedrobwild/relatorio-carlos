@@ -855,7 +855,7 @@ export default function PainelObras() {
               }
             />
 
-            <div className="mt-4">
+            <div className="mt-2">
               {isLoading ? (
                 <Skeleton className="h-96 w-full rounded-xl" />
               ) : filtered.length === 0 ? (
@@ -902,7 +902,7 @@ export default function PainelObras() {
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
-                    <Table className="w-full text-sm [&_th]:h-11 [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
+                    <Table className="w-full text-sm [&_th]:h-10 [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
@@ -2306,7 +2306,7 @@ function BoardView({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center justify-between gap-2 px-1">
         <p className="text-xs text-muted-foreground">
           {groups.length} {groups.length === 1 ? 'grupo' : 'grupos'} · {obras.length}{' '}
@@ -2340,7 +2340,7 @@ function BoardView({
               onClick={() => toggleGroup(g.key)}
               aria-expanded={!isCollapsed}
               aria-controls={`board-group-${g.key}`}
-              className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-accent/30 transition-colors rounded-t-xl"
+              className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-accent/30 transition-colors rounded-t-xl"
             >
               <span
                 aria-hidden="true"
