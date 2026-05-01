@@ -2115,10 +2115,23 @@ export default function CalendarioCompras() {
                               </TableCell>
 
                               <TableCell className={cn(
-                                'text-muted-foreground whitespace-nowrap text-xs tabular-nums',
+                                'whitespace-nowrap text-xs tabular-nums',
                                 !p.created_at && 'italic',
                               )}>
-                                {fmtRequestedDate(p.created_at)}
+                                <div className="text-muted-foreground">{fmtRequestedDate(p.created_at)}</div>
+                                {getCreatorName(p) && (
+                                  <Tooltip delayDuration={200}>
+                                    <TooltipTrigger asChild>
+                                      <div className="flex items-center gap-1 mt-0.5 text-foreground/70 text-[11px] max-w-[140px]">
+                                        <User className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
+                                        <span className="truncate">{getCreatorName(p)}</span>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-xs">
+                                      Solicitado por {getCreatorName(p)}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
                               </TableCell>
 
                               <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
