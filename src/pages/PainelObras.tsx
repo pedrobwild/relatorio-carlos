@@ -1875,12 +1875,27 @@ interface KanbanCardProps {
   obra: PainelObra;
   /** Define qual Select inline aparece no rodapé do card (etapa ou status). */
   groupBy: KanbanGroupBy;
+  /** Marcado para ação em lote. */
+  selected: boolean;
+  /** Há ao menos um card selecionado em qualquer coluna — mantém o
+   *  checkbox visível mesmo sem hover, para reforçar o modo "seleção". */
+  anySelected: boolean;
+  onToggleSelect: () => void;
   onOpen: () => void;
   onChangeEtapa: (etapa: PainelEtapa | null) => void;
   onChangeStatus: (status: PainelStatus | null) => void;
 }
 
-function KanbanCard({ obra, groupBy, onOpen, onChangeEtapa, onChangeStatus }: KanbanCardProps) {
+function KanbanCard({
+  obra,
+  groupBy,
+  selected,
+  anySelected,
+  onToggleSelect,
+  onOpen,
+  onChangeEtapa,
+  onChangeStatus,
+}: KanbanCardProps) {
   const displayStatus = computeDisplayStatus(obra);
   const overdueDays = computeOverdueDays(obra);
 
@@ -1898,13 +1913,33 @@ function KanbanCard({ obra, groupBy, onOpen, onChangeEtapa, onChangeStatus }: Ka
         }
       }}
       aria-label={`Abrir obra ${obra.nome}`}
+      aria-selected={selected}
       className={cn(
-        'group rounded-md bg-card border border-border-subtle p-2.5 text-left',
+        'group relative rounded-md bg-card border p-2.5 text-left',
         'hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        selected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border-subtle',
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
+        {/* Checkbox de seleção em lote — visível em hover, focus ou quando
+            já há seleção ativa. Para o clique no card de navegar. */}
+        <div
+          className={cn(
+            'shrink-0 pt-0.5 transition-opacity',
+            selected || anySelected
+              ? 'opacity-100'
+              : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+          )}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <Checkbox
+            checked={selected}
+            onCheckedChange={onToggleSelect}
+            aria-label={selected ? `Desmarcar ${obra.nome}` : `Selecionar ${obra.nome}`}
+          />
+        </div>
         <div className="min-w-0 flex-1">
           {obra.customer_name && (
             <p className="text-[11px] text-muted-foreground truncate" title={obra.customer_name}>
