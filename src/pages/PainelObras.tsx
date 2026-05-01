@@ -579,22 +579,93 @@ export default function PainelObras() {
               }
               filters={
                 <>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="h-8 w-[140px] text-xs border-border-subtle bg-surface">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ALL}>Todos status</SelectItem>
-                      <SelectItem value={NONE}>(sem status)</SelectItem>
-                      {STATUS_OPTIONS.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          <span className="flex items-center gap-2">
-                            <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(s))} />{s}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {/* Filtro de status: multi-seleção via popover. Independe da
+                      seleção visual da coluna no Kanban (que destaca um status
+                      por vez). Permite refinar quais cards aparecem mantendo
+                      múltiplas colunas/status visíveis simultaneamente. */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-[160px] justify-between text-xs border-border-subtle bg-surface px-3 font-normal"
+                        aria-label="Filtrar por status"
+                      >
+                        <span className="flex items-center gap-1.5 truncate">
+                          <Filter className="h-3.5 w-3.5 opacity-60" />
+                          {filterStatuses.size === 0
+                            ? 'Status'
+                            : filterStatuses.size === 1
+                              ? (() => {
+                                  const only = [...filterStatuses][0];
+                                  return only === NONE ? '(sem status)' : only;
+                                })()
+                              : `${filterStatuses.size} status`}
+                        </span>
+                        <ChevronDown className="h-3.5 w-3.5 opacity-60 shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-[220px] p-1">
+                      <div className="flex items-center justify-between px-2 py-1.5">
+                        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                          Filtrar status
+                        </span>
+                        {filterStatuses.size > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearStatusFilter}
+                            className="h-6 px-1.5 text-[11px] text-muted-foreground"
+                          >
+                            Limpar
+                          </Button>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        {[NONE, ...STATUS_OPTIONS].map((s) => {
+                          const checked = filterStatuses.has(s);
+                          const label = s === NONE ? '(sem status)' : s;
+                          return (
+                            <button
+                              type="button"
+                              key={`statusfilter-${s}`}
+                              onClick={() => toggleStatusFilter(s)}
+                              role="menuitemcheckbox"
+                              aria-checked={checked}
+                              className={cn(
+                                'flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs text-left',
+                                'hover:bg-accent hover:text-accent-foreground',
+                                'focus:outline-none focus:bg-accent',
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  'flex h-4 w-4 items-center justify-center rounded border',
+                                  checked
+                                    ? 'bg-primary border-primary text-primary-foreground'
+                                    : 'border-border bg-surface',
+                                )}
+                              >
+                                {checked && <Check className="h-3 w-3" />}
+                              </span>
+                              {s !== NONE && (
+                                <span
+                                  className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(s as PainelStatus))}
+                                  aria-hidden
+                                />
+                              )}
+                              <span className="truncate flex-1">{label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="px-2 pt-1.5 pb-1 text-[10px] text-muted-foreground leading-snug">
+                        Vazio mostra todos. Refina cards mesmo no Kanban agrupado por status.
+                      </p>
+                    </PopoverContent>
+                  </Popover>
 
                   <Select value={filterEtapa} onValueChange={setFilterEtapa}>
                     <SelectTrigger className="h-8 w-[150px] text-xs border-border-subtle bg-surface">
