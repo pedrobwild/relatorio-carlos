@@ -105,6 +105,10 @@ const Fornecedores = lazy(() => import('@/pages/gestao/Fornecedores'));
 
 // ----- helpers -----
 const ALL = '__all__';
+type SortKey =
+  | 'atraso'
+  | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
+  | 'entrega_real'   | 'responsavel_nome' | null;
 const NONE = '__none__';
 
 const fmtDate = (iso: string | null) =>
