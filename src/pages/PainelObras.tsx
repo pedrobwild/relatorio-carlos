@@ -3,7 +3,7 @@
  * UX densa tipo planilha (Airtable/Monday): cabeçalho leve, linhas compactas,
  * colunas prioritárias fixas à esquerda, edição inline com affordance visual.
  */
-import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -2230,6 +2230,39 @@ function BoardView({
 }: BoardViewProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(() => loadBoardCollapsed());
 
+  // Sincronização de scroll horizontal entre os grupos do Board.
+  // Permite comparar colunas alinhadas quando há múltiplos grupos visíveis.
+  const scrollersRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const isSyncingRef = useRef(false);
+
+  const registerScroller = useCallback((key: string, node: HTMLDivElement | null) => {
+    const map = scrollersRef.current;
+    if (node) {
+      map.set(key, node);
+      // Aplica imediatamente o scrollLeft atual (de outro grupo já existente)
+      // para que grupos recém-expandidos apareçam alinhados.
+      const any = Array.from(map.values()).find((el) => el !== node && el.scrollLeft > 0);
+      if (any) node.scrollLeft = any.scrollLeft;
+    } else {
+      map.delete(key);
+    }
+  }, []);
+
+  const handleScrollerScroll = useCallback((source: HTMLDivElement) => {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
+    const left = source.scrollLeft;
+    scrollersRef.current.forEach((el) => {
+      if (el !== source && el.scrollLeft !== left) {
+        el.scrollLeft = left;
+      }
+    });
+    // Libera no próximo frame para evitar loop de eventos.
+    requestAnimationFrame(() => {
+      isSyncingRef.current = false;
+    });
+  }, []);
+
   useEffect(() => {
     try {
       window.localStorage.setItem(
@@ -2336,7 +2369,12 @@ function BoardView({
             </button>
 
             {!isCollapsed && (
-              <div id={`board-group-${g.key}`} className="overflow-x-auto border-t border-border-subtle">
+              <div
+                id={`board-group-${g.key}`}
+                ref={(node) => registerScroller(g.key, node)}
+                onScroll={(e) => handleScrollerScroll(e.currentTarget)}
+                className="overflow-x-auto border-t border-border-subtle"
+              >
                 <Table className="w-full text-sm [&_th]:h-10 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border-subtle">
