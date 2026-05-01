@@ -846,6 +846,11 @@ export default function PainelObras() {
                   onClearStatusFilter={clearStatusFilter}
                   sortKey={sortKey}
                   sortDir={sortDir}
+                  selectedIds={selectedIds}
+                  onToggleSelect={toggleSelectId}
+                  onClearSelection={clearSelection}
+                  onBulkUpdate={bulkUpdate}
+                  bulkUpdating={bulkUpdating}
                   onOpen={(id) => navigate(`/obra/${id}`)}
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                   onUpdateStatus={(id, status) => updateObra(id, { status })}
