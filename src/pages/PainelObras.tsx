@@ -3,7 +3,7 @@
  * UX densa tipo planilha (Airtable/Monday): cabeçalho leve, linhas compactas,
  * colunas prioritárias fixas à esquerda, edição inline com affordance visual.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -102,14 +102,9 @@ import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
 import { DadosClienteDialog } from '@/components/admin/obras/DadosClienteDialog';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
-
-// Lazy: a aba Fornecedores carrega o módulo completo só quando ativada.
-const Fornecedores = lazy(() => import('@/pages/gestao/Fornecedores'));
 
 // ----- helpers -----
 const ALL = '__all__';
