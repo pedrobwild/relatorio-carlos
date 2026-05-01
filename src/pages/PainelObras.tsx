@@ -342,6 +342,45 @@ export default function PainelObras() {
   };
   const clearStatusFilter = () => setFilterStatuses(new Set());
 
+  /**
+   * Seleção múltipla de obras no Kanban — Set de ids selecionados.
+   * Vazio = nenhuma seleção (oculta a barra de ações em lote).
+   * Mantida no nível da página para sobreviver a re-renders do Kanban.
+   */
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const toggleSelectId = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  const bulkUpdate = async (
+    ids: string[],
+    patch: { etapa?: PainelEtapa | null; status?: PainelStatus | null },
+  ) => {
+    if (ids.length === 0) return;
+    setBulkUpdating(true);
+    try {
+      // Atualiza em paralelo; cada chamada é uma mutation independente.
+      const results = await Promise.allSettled(ids.map((id) => updateObra(id, patch)));
+      const ok = results.filter((r) => r.status === 'fulfilled').length;
+      const fail = results.length - ok;
+      if (fail === 0) {
+        toast.success(`${ok} ${ok === 1 ? 'obra atualizada' : 'obras atualizadas'}.`);
+      } else if (ok === 0) {
+        toast.error('Não foi possível atualizar as obras selecionadas.');
+      } else {
+        toast.warning(`${ok} atualizadas, ${fail} com falha.`);
+      }
+      clearSelection();
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
