@@ -296,7 +296,7 @@ export default function PainelObras() {
     setSearchParams(next, { replace: true });
   };
 
-  // Modo de visualização da aba "Obras": tabela densa (default) ou kanban por etapa.
+  // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
   const viewParam = searchParams.get('view');
   const activeView: 'table' | 'kanban' = viewParam === 'kanban' ? 'kanban' : 'table';
@@ -304,6 +304,17 @@ export default function PainelObras() {
     const params = new URLSearchParams(searchParams);
     if (next === 'table') params.delete('view');
     else params.set('view', next);
+    setSearchParams(params, { replace: true });
+  };
+
+  // Critério de agrupamento do Kanban: por etapa (default) ou por status (estilo Monday).
+  // Persistido em URL para preservar a visão escolhida ao compartilhar / recarregar.
+  const groupByParam = searchParams.get('groupBy');
+  const kanbanGroupBy: 'etapa' | 'status' = groupByParam === 'status' ? 'status' : 'etapa';
+  const handleGroupByChange = (next: 'etapa' | 'status') => {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'etapa') params.delete('groupBy');
+    else params.set('groupBy', next);
     setSearchParams(params, { replace: true });
   };
 
