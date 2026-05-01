@@ -1283,7 +1283,10 @@ function KanbanView({ obras, selectedEtapa, onSelectEtapa, onOpen, onUpdateEtapa
             return (
               <div
                 key={key}
-                className="flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border border-border-subtle"
+                className={cn(
+                  'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border transition-colors',
+                  isActive ? 'border-primary ring-2 ring-primary/30' : 'border-border-subtle',
+                )}
               >
                 <div className="flex items-center justify-between gap-1 px-2 py-2 border-b border-border-subtle">
                   <div className="flex items-center gap-0.5 shrink-0">
