@@ -1668,29 +1668,50 @@ function KanbanCard({ obra, groupBy, onOpen, onChangeEtapa, onChangeStatus }: Ka
         )}
       </div>
 
-      {/* Mover etapa — Select inline (não navega ao abrir) */}
+      {/* Mover obra de coluna — Select inline (não navega ao abrir).
+          Reflete o critério atual: alternar etapa OU alternar status. */}
       <div
         className="mt-2 pt-2 border-t border-border-subtle"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <Select
-          value={obra.etapa ?? NONE}
-          onValueChange={(v) => onChangeEtapa(v === NONE ? null : (v as PainelEtapa))}
-        >
-          <SelectTrigger
-            className="h-7 text-[11px] border-border-subtle bg-surface"
-            aria-label="Mover obra para outra etapa"
+        {groupBy === 'status' ? (
+          <Select
+            value={obra.status ?? NONE}
+            onValueChange={(v) => onChangeStatus(v === NONE ? null : (v as PainelStatus))}
           >
-            <SelectValue placeholder="Mover para…" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>(sem etapa)</SelectItem>
-            {ETAPA_OPTIONS.map((e) => (
-              <SelectItem key={e} value={e}>{e}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <SelectTrigger
+              className="h-7 text-[11px] border-border-subtle bg-surface"
+              aria-label="Mover obra para outro status"
+            >
+              <SelectValue placeholder="Mover para…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>(sem status)</SelectItem>
+              {STATUS_OPTIONS.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Select
+            value={obra.etapa ?? NONE}
+            onValueChange={(v) => onChangeEtapa(v === NONE ? null : (v as PainelEtapa))}
+          >
+            <SelectTrigger
+              className="h-7 text-[11px] border-border-subtle bg-surface"
+              aria-label="Mover obra para outra etapa"
+            >
+              <SelectValue placeholder="Mover para…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>(sem etapa)</SelectItem>
+              {ETAPA_OPTIONS.map((e) => (
+                <SelectItem key={e} value={e}>{e}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
     </div>
   );
