@@ -2214,7 +2214,7 @@ interface BoardViewProps {
   onOpen: (id: string) => void;
   onDeleteRequest: (o: PainelObra) => void;
   onOpenDados: (o: PainelObra) => void;
-  renderSortableHeader: (label: string, key: string) => React.ReactNode;
+  renderSortableHeader: (label: string, key: NonNullable<SortKey>) => React.ReactNode;
 }
 
 function BoardView({
