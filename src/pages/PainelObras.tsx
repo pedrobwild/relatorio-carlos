@@ -1607,7 +1607,7 @@ function KanbanView({
             const canMoveLeft = !isAuto && idx > 0;
             const canMoveRight = !isAuto && idx < displayedOrder.length - 1;
             const filterValue = key === 'none' ? NONE : key;
-            const isActive = selectedGroup === filterValue;
+            const isActive = isChipActive(filterValue);
             const accentDot = groupBy === 'status'
               ? statusDotClass(key === 'none' ? null : (key as PainelStatus))
               : null;
