@@ -1981,10 +1981,15 @@ function KanbanCard({
         )}
       </div>
 
-      {/* Mover obra de coluna — Select inline (não navega ao abrir).
-          Reflete o critério atual: alternar etapa OU alternar status. */}
+      {/* Mover obra de coluna — fica oculto até hover/focus para reduzir
+          ruído (o card já está na coluna, então o select repetia o valor). */}
       <div
-        className="mt-2 pt-2 border-t border-border-subtle"
+        className={cn(
+          'mt-2 pt-2 border-t border-border-subtle transition-opacity',
+          selected || anySelected
+            ? 'opacity-100'
+            : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+        )}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
