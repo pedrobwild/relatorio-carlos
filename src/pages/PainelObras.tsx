@@ -1289,6 +1289,24 @@ function loadKanbanOrder(groupBy: KanbanGroupBy): KanbanColKey[] {
   }
 }
 
+// Layout das colunas (manual vs automático) também é persistido por critério —
+// trocar entre Etapa/Status preserva a preferência feita em cada um.
+type KanbanLayoutMode = 'manual' | 'auto';
+function getLayoutStorageKeyFor(groupBy: KanbanGroupBy): string {
+  return groupBy === 'status'
+    ? 'painelObras:kanbanLayoutMode:status:v1'
+    : 'painelObras:kanbanLayoutMode:etapa:v1';
+}
+function loadKanbanLayoutMode(groupBy: KanbanGroupBy): KanbanLayoutMode {
+  if (typeof window === 'undefined') return 'manual';
+  try {
+    const raw = window.localStorage.getItem(getLayoutStorageKeyFor(groupBy));
+    return raw === 'auto' ? 'auto' : 'manual';
+  } catch {
+    return 'manual';
+  }
+}
+
 interface KanbanViewProps {
   obras: PainelObra[];
   /** Critério de agrupamento (define colunas, label, edição inline, filtros). */
@@ -1407,7 +1425,24 @@ function KanbanView({
   };
 
   // Modo de layout das colunas (manual vs auto pela ordenação ativa).
-  const [layoutMode, setLayoutMode] = useState<'manual' | 'auto'>('manual');
+  // Persistido em localStorage por critério de agrupamento — ao recarregar
+  // a página ou alternar Etapa/Status, voltamos no mesmo modo escolhido.
+  const [layoutMode, setLayoutMode] = useState<KanbanLayoutMode>(() =>
+    loadKanbanLayoutMode(groupBy),
+  );
+  // Ao trocar o critério de agrupamento, recarrega a preferência salva
+  // daquele critério (cada um tem seu próprio modo).
+  useEffect(() => {
+    setLayoutMode(loadKanbanLayoutMode(groupBy));
+  }, [groupBy]);
+  // Persiste sempre que o usuário alterna entre manual/auto.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(getLayoutStorageKeyFor(groupBy), layoutMode);
+    } catch {
+      /* ignore (modo privado, quota etc.) */
+    }
+  }, [layoutMode, groupBy]);
 
   const aggregateByCol = useMemo(() => {
     const agg = new Map<KanbanColKey, { num: number | null; str: string | null }>();
