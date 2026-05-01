@@ -624,18 +624,7 @@ export default function PainelObras() {
           </TabsList>
 
           <TabsContent value="obras" className="mt-4 focus-visible:outline-none">
-            <div>
-              <MetricRail>
-                <MetricCard label="Total" value={summary.total} />
-                <MetricCard label="Aguardando" value={summary.aguardando} accent="info" />
-                <MetricCard label="Em dia" value={summary.emDia} accent="success" />
-                <MetricCard label="Atrasadas" value={summary.atrasadas} accent="destructive" />
-                <MetricCard label="Paralisadas" value={summary.paralisadas} accent="muted" />
-              </MetricRail>
-            </div>
-
             <PageToolbar
-              className="mt-6"
               sticky={false}
               search={
                 <div className="relative">
