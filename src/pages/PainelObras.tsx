@@ -1162,11 +1162,22 @@ interface KanbanViewProps {
   selectedEtapa: string;
   /** Alterna o filtro: clicar no resumo seleciona/limpa a etapa. */
   onSelectEtapa: (value: string) => void;
+  /** Critério atual de ordenação da tabela (compartilhado com o Kanban). */
+  sortKey: SortKey;
+  sortDir: 'asc' | 'desc';
   onOpen: (id: string) => void;
   onUpdateEtapa: (id: string, etapa: PainelEtapa | null) => void;
 }
 
-function KanbanView({ obras, selectedEtapa, onSelectEtapa, onOpen, onUpdateEtapa }: KanbanViewProps) {
+function KanbanView({
+  obras,
+  selectedEtapa,
+  onSelectEtapa,
+  sortKey,
+  sortDir,
+  onOpen,
+  onUpdateEtapa,
+}: KanbanViewProps) {
   const [order, setOrder] = useState<KanbanColKey[]>(() => loadKanbanOrder());
 
   // Persiste a ordem sempre que o usuário reordena.
