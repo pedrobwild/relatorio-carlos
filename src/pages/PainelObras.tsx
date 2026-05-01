@@ -2247,6 +2247,7 @@ interface BoardViewProps {
   onDeleteRequest: (o: PainelObra) => void;
   onOpenDados: (o: PainelObra) => void;
   renderSortableHeader: (label: string, key: NonNullable<SortKey>) => React.ReactNode;
+  densityTableClass: string;
 }
 
 function BoardView({
@@ -2259,6 +2260,7 @@ function BoardView({
   onDeleteRequest,
   onOpenDados,
   renderSortableHeader,
+  densityTableClass,
 }: BoardViewProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(() => loadBoardCollapsed());
 
