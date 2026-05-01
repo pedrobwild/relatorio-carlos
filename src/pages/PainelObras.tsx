@@ -920,9 +920,22 @@ export default function PainelObras() {
                 <Skeleton className="h-96 w-full rounded-xl" />
               ) : filtered.length === 0 ? (
                 <SectionCard>
-                  <EmptyState icon={Table2}
+                  <EmptyState
+                    icon={Table2}
                     title={obras.length === 0 ? 'Nenhuma obra cadastrada' : 'Nenhum resultado'}
-                    description={obras.length === 0 ? 'Crie uma nova obra a partir do botão acima.' : 'Tente ajustar ou limpar os filtros.'} />
+                    description={
+                      obras.length === 0
+                        ? 'Crie sua primeira obra para começar a monitorar status, prazos e relacionamento da equipe.'
+                        : 'Nenhuma obra corresponde aos filtros atuais. Ajuste os filtros ou limpe-os para ver todas as obras.'
+                    }
+                    action={
+                      obras.length === 0
+                        ? { label: 'Nova obra', onClick: () => navigate('/gestao/nova-obra'), icon: Plus }
+                        : hasFilters
+                          ? { label: 'Limpar filtros', onClick: clearFilters, icon: RotateCcw }
+                          : undefined
+                    }
+                  />
                 </SectionCard>
               ) : activeView === 'kanban' ? (
                 <KanbanView
