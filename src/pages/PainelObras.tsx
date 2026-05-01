@@ -1369,6 +1369,15 @@ interface KanbanViewProps {
   /** Critério atual de ordenação da tabela (compartilhado com o Kanban). */
   sortKey: SortKey;
   sortDir: 'asc' | 'desc';
+  /** Seleção múltipla: ids de obras marcadas para ação em lote. */
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onClearSelection: () => void;
+  onBulkUpdate: (
+    ids: string[],
+    patch: { etapa?: PainelEtapa | null; status?: PainelStatus | null },
+  ) => Promise<void>;
+  bulkUpdating: boolean;
   onOpen: (id: string) => void;
   onUpdateEtapa: (id: string, etapa: PainelEtapa | null) => void;
   onUpdateStatus: (id: string, status: PainelStatus | null) => void;
@@ -1385,6 +1394,11 @@ function KanbanView({
   onClearStatusFilter,
   sortKey,
   sortDir,
+  selectedIds,
+  onToggleSelect,
+  onClearSelection,
+  onBulkUpdate,
+  bulkUpdating,
   onOpen,
   onUpdateEtapa,
   onUpdateStatus,
