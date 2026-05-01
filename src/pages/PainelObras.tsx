@@ -562,17 +562,32 @@ export default function PainelObras() {
     );
   }
 
-  const SortableHeader = ({ label, sortKey: k }: { label: string; sortKey: NonNullable<SortKey> }) => (
-    <button type="button" onClick={() => toggleSort(k)}
-      className="flex items-center gap-1 hover:text-foreground transition-colors uppercase tracking-wide">
-      {label}
-      {sortKey === k ? (
-        <span className="text-[10px]">{sortDir === 'asc' ? '↑' : '↓'}</span>
-      ) : (
-        <ChevronDown className="h-3 w-3 opacity-30" />
-      )}
-    </button>
-  );
+  const SortableHeader = ({ label, sortKey: k }: { label: string; sortKey: NonNullable<SortKey> }) => {
+    const isActive = sortKey === k;
+    const Icon = !isActive ? ChevronsUpDown : sortDir === 'asc' ? ChevronUp : ChevronDown;
+    return (
+      <button
+        type="button"
+        onClick={() => toggleSort(k)}
+        aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+        aria-label={`Ordenar por ${label}${isActive ? (sortDir === 'asc' ? ' (crescente)' : ' (decrescente)') : ''}`}
+        className={cn(
+          'group/sort inline-flex items-center gap-1 rounded uppercase tracking-wide transition-colors',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+          isActive ? 'text-foreground' : 'hover:text-foreground',
+        )}
+      >
+        <span>{label}</span>
+        <Icon
+          aria-hidden="true"
+          className={cn(
+            'h-3 w-3 shrink-0 transition-opacity',
+            isActive ? 'opacity-100' : 'opacity-30 group-hover/sort:opacity-70',
+          )}
+        />
+      </button>
+    );
+  };
 
   return (
     <TooltipProvider delayDuration={200}>
