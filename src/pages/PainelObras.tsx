@@ -1221,6 +1221,68 @@ function KanbanView({
     return map;
   }, [obras, order]);
 
+  // Modo de layout das colunas: manual (drag/setas) vs automático
+  // (deriva do critério de ordenação ativo na tabela). No modo auto,
+  // as setas e o "Restaurar padrão" ficam desativados — a única fonte
+  // da ordem das colunas passa a ser sortKey/sortDir.
+  const [layoutMode, setLayoutMode] = useState<'manual' | 'auto'>('manual');
+
+  // Agregação por etapa para ordenação automática. Estratégia por chave:
+  // - datas (entrega/início): menor data da coluna (próxima entrega/início)
+  // - responsavel_nome: menor nome alfabético da coluna (representante)
+  // - atraso: maior atraso da coluna (coluna mais crítica primeiro quando desc)
+  const aggregateByCol = useMemo(() => {
+    const agg = new Map<KanbanColKey, { num: number | null; str: string | null }>();
+    for (const key of order) {
+      const items = grouped.get(key) ?? [];
+      if (items.length === 0) { agg.set(key, { num: null, str: null }); continue; }
+      if (sortKey === 'atraso') {
+        const max = Math.max(...items.map((o) => computeOverdueDays(o)));
+        agg.set(key, { num: max, str: null });
+      } else if (sortKey === 'responsavel_nome') {
+        const names = items.map((o) => o.responsavel_nome ?? '').filter(Boolean).sort();
+        agg.set(key, { num: null, str: names[0] ?? null });
+      } else if (sortKey) {
+        const dates = items.map((o) => o[sortKey] ?? '').filter(Boolean).sort();
+        agg.set(key, { num: null, str: dates[0] ?? null });
+      } else {
+        agg.set(key, { num: null, str: null });
+      }
+    }
+    return agg;
+  }, [order, grouped, sortKey]);
+
+  // Ordem realmente exibida: manual usa `order`; auto reordena `order`
+  // pelo agregado, mantendo etapas vazias no final para não criar ruído.
+  const displayedOrder = useMemo<KanbanColKey[]>(() => {
+    if (layoutMode === 'manual' || !sortKey) return order;
+    const withVal: KanbanColKey[] = [];
+    const empty: KanbanColKey[] = [];
+    for (const k of order) {
+      const items = grouped.get(k) ?? [];
+      (items.length === 0 ? empty : withVal).push(k);
+    }
+    withVal.sort((a, b) => {
+      const va = aggregateByCol.get(a);
+      const vb = aggregateByCol.get(b);
+      if (sortKey === 'atraso') {
+        const an = va?.num ?? -Infinity;
+        const bn = vb?.num ?? -Infinity;
+        return sortDir === 'asc' ? an - bn : bn - an;
+      }
+      const sa = va?.str ?? '';
+      const sb = vb?.str ?? '';
+      if (!sa && !sb) return 0;
+      if (!sa) return 1;
+      if (!sb) return -1;
+      return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa);
+    });
+    return [...withVal, ...empty];
+  }, [layoutMode, sortKey, sortDir, order, grouped, aggregateByCol]);
+
+  const autoAvailable = !!sortKey;
+  const isAuto = layoutMode === 'auto' && autoAvailable;
+
   return (
     <SectionCard flush>
       {/* Resumo por etapa: chips clicáveis que servem como atalho do filtro.
