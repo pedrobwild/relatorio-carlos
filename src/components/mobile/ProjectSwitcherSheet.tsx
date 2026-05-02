@@ -87,10 +87,10 @@ export function ProjectSwitcherSheet({
           <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
         </button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="rounded-t-2xl pb-safe max-h-[70dvh] flex flex-col">
-        <SheetHeader className="pb-2 shrink-0">
-          <SheetTitle className="text-base flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
+      <SheetContent side="bottom" className="rounded-t-3xl pt-7 pb-safe max-h-[80dvh] flex flex-col">
+        <SheetHeader className="pb-2 shrink-0 text-left">
+          <SheetTitle className="text-base font-bold flex items-center gap-2">
+            <Building2 className="h-4 w-4" aria-hidden="true" />
             Trocar de Obra
           </SheetTitle>
         </SheetHeader>

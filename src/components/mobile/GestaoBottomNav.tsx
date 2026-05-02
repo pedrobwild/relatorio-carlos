@@ -37,11 +37,11 @@ export function GestaoBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-50 md:hidden"
+      className="fixed bottom-0 inset-x-0 z-shell md:hidden hide-on-keyboard"
       aria-label="Navegação gestão"
     >
       {/* Frosted glass bar */}
-      <div className="border-t border-border/60 bg-card/90 backdrop-blur-xl backdrop-saturate-150 pb-safe">
+      <div className="border-t border-border-subtle bg-card/90 backdrop-blur-xl backdrop-saturate-150 pb-safe pl-safe pr-safe">
         <div className="flex items-end justify-around h-16 relative px-2">
           {/* Painel */}
           <NavLink

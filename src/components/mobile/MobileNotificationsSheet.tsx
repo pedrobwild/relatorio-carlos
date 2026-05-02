@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   CheckCheck,
@@ -127,12 +127,12 @@ export function MobileNotificationsSheet({ open, onOpenChange }: MobileNotificat
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl pb-safe max-h-[85dvh] flex flex-col p-0">
-        {/* Header */}
+      <SheetContent side="bottom" className="rounded-t-3xl pb-safe max-h-[88dvh] flex flex-col p-0">
+        {/* Header (extra top padding leaves room for the drag-handle) */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-          <SheetHeader className="p-0">
-            <SheetTitle className="text-base flex items-center gap-2">
-              <Bell className="h-4 w-4" />
+          <SheetHeader className="p-0 text-left">
+            <SheetTitle className="text-base font-bold flex items-center gap-2">
+              <Bell className="h-4 w-4" aria-hidden="true" />
               Notificações
               {unreadCount > 0 && (
                 <Badge variant="destructive" className="text-[10px] px-1.5 h-5">
@@ -142,7 +142,12 @@ export function MobileNotificationsSheet({ open, onOpenChange }: MobileNotificat
             </SheetTitle>
           </SheetHeader>
           {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs text-primary h-auto py-1 px-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={markAllAsRead}
+              className="text-xs text-primary h-9 py-1 px-2 -mr-1"
+            >
               <CheckCheck className="w-3.5 h-3.5 mr-1" />
               Marcar todas
             </Button>
@@ -154,15 +159,15 @@ export function MobileNotificationsSheet({ open, onOpenChange }: MobileNotificat
           <TabsList className="w-full rounded-none border-b border-border bg-transparent h-auto p-0 shrink-0">
             <TabsTrigger
               value="all"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[40px] text-xs"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[44px] text-[13px] font-medium"
             >
               Todas
             </TabsTrigger>
             <TabsTrigger
               value="actions"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-destructive data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[40px] text-xs"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-destructive data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[44px] text-[13px] font-medium"
             >
-              <AlertCircle className="w-3 h-3 mr-1 text-destructive" />
+              <AlertCircle className="w-3.5 h-3.5 mr-1 text-destructive" aria-hidden="true" />
               Ação
               {unreadActionCount > 0 && (
                 <Badge variant="destructive" className="ml-1 h-4 min-w-[16px] px-1 text-[10px]">
@@ -172,9 +177,9 @@ export function MobileNotificationsSheet({ open, onOpenChange }: MobileNotificat
             </TabsTrigger>
             <TabsTrigger
               value="updates"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[40px] text-xs"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[44px] text-[13px] font-medium"
             >
-              <Calendar className="w-3 h-3 mr-1 text-primary" />
+              <Calendar className="w-3.5 h-3.5 mr-1 text-primary" aria-hidden="true" />
               Atualizações
             </TabsTrigger>
           </TabsList>

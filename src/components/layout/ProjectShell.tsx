@@ -4,6 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProjectSidebar } from "@/components/layout/ProjectSidebar";
 import { ProjectSlimHeader } from "@/components/layout/ProjectSlimHeader";
+import { ProjectMobileHeader } from "@/components/layout/ProjectMobileHeader";
 import { ProjectLayoutProvider } from "@/components/layout/ProjectLayoutContext";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { FloatingApprovalBanner } from "@/components/pendencias/FloatingApprovalBanner";
@@ -52,11 +53,13 @@ export function ProjectShell({ children }: ProjectShellProps) {
     );
   }
 
-  // Clients get the existing experience + mobile bottom nav + floating approval banner
+  // Clients get the existing experience + mobile bottom nav + floating approval banner.
+  // On mobile, also render a slim project header so they can switch between obras.
   if (!isStaff) {
     return (
       <ProjectLayoutProvider value={{ hasShell: false }}>
         <div className="relative min-h-[100dvh]">
+          <ProjectMobileHeader />
           {isSwitching && <ProjectSwitchOverlay />}
           <div className="pb-bottom-nav">{children}</div>
         </div>
@@ -66,7 +69,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
     );
   }
 
-  // Staff gets sidebar + slim header + mobile bottom nav
+  // Staff gets sidebar + slim header (desktop) / mobile header + mobile bottom nav
   return (
     <ProjectLayoutProvider value={{ hasShell: true }}>
       <SidebarProvider>
@@ -75,6 +78,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
             <ProjectSidebar />
           </TooltipProvider>
           <div className="flex-1 flex flex-col min-w-0 relative">
+            <ProjectMobileHeader />
             <ProjectSlimHeader />
             {isSwitching && <ProjectSwitchOverlay />}
             <main className="flex-1 overflow-y-auto pb-bottom-nav">{children}</main>
