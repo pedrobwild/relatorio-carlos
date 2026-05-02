@@ -84,36 +84,44 @@ test.describe('Painel de Obras — sticky "Cliente / Obra" column', () => {
     });
   });
 
-  test.describe('Mobile (375x812)', () => {
+  // ── Mobile (< md): a tabela densa foi substituída por uma listagem em
+  //    cards (`MobilePainelView`). As assertivas de coluna sticky deixam de
+  //    fazer sentido — agora validamos que (a) a tabela está oculta, (b) a
+  //    lista de cards aparece sem scroll horizontal acidental, (c) o topo
+  //    expõe busca + botão "Filtros" como ação primária da viewport.
+  test.describe('Mobile (375x812) — cards empilhados', () => {
     test.use({ viewport: { width: 375, height: 812 } });
 
-    test('sticky column keeps 240px even on small viewport', async ({ page }) => {
+    test('table is hidden and mobile card list renders without horizontal scroll', async ({ page }) => {
       await gotoPainel(page);
-      await getFirstRow(page);
 
-      const clienteWidth = await getCellWidth(page, '[data-testid="painel-obras-th-cliente"]');
-      expect(Math.round(clienteWidth)).toBe(STICKY_WIDTH);
+      // Cards mobile devem estar presentes (link com aria-label "Abrir obra…").
+      const cards = page.locator('button[aria-label^="Abrir obra"]');
+      const cardCount = await cards.count();
+      if (cardCount === 0) {
+        test.skip(true, 'No projects available in environment to test mobile cards');
+      }
+      await expect(cards.first()).toBeVisible();
+
+      // Tabela desktop não pode estar visível no mobile.
+      await expect(page.locator('[data-testid="painel-obras-th-cliente"]')).toBeHidden();
+
+      // Sem overflow horizontal acidental.
+      const docOverflow = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(docOverflow.scrollWidth).toBeLessThanOrEqual(docOverflow.clientWidth + 1);
     });
 
-    test('expanding row in mobile does not collapse adjacent columns', async ({ page }) => {
+    test('top exposes search + Filtros as primary actions', async ({ page }) => {
       await gotoPainel(page);
-      const row = await getFirstRow(page);
 
-      const widthBefore = await getCellWidth(page, '[data-testid="painel-obras-cell-cliente"]');
-      const statusBefore = await getCellWidth(page, '[data-testid="painel-obras-th-status"]');
+      const search = page.getByLabel('Buscar obras');
+      await expect(search).toBeVisible();
 
-      await row.locator('button[aria-label="Expandir detalhes"]').click();
-      await expect(row).toHaveAttribute('data-expanded', 'true');
-      await page.waitForTimeout(300);
-
-      const widthAfter = await getCellWidth(page, '[data-testid="painel-obras-cell-cliente"]');
-      const statusAfter = await getCellWidth(page, '[data-testid="painel-obras-th-status"]');
-
-      expect(Math.round(widthAfter)).toBe(STICKY_WIDTH);
-      // Status column should not collapse below its declared min-width (120px)
-      expect(statusAfter).toBeGreaterThanOrEqual(120 - 1);
-      expect(Math.abs(statusAfter - statusBefore)).toBeLessThan(2);
-      expect(Math.abs(widthAfter - widthBefore)).toBeLessThan(1);
+      const filtersButton = page.getByRole('button', { name: /Filtros|filtros/i });
+      await expect(filtersButton.first()).toBeVisible();
     });
   });
 });

@@ -7,12 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, User, Building2, Loader2, Search, FileText } from 'lucide-react';
 import { ProjectInfoDoc } from '@/components/project/ProjectInfoDoc';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
 import { formatCpf, formatRg, isValidCpf, isValidRg } from '@/lib/documentValidation';
+import {
+  ResponsiveTabsRoot,
+  ResponsiveTabsList,
+  ResponsiveTabsTrigger,
+} from '@/components/mobile';
+import { cn } from '@/lib/utils';
 
 interface CustomerData {
   id: string;
@@ -54,9 +58,19 @@ interface DadosClienteProps {
    * o componente ignora o roteador e funciona como widget embutido.
    */
   projectId?: string;
+  /**
+   * Quando true, o componente é tratado como widget embutido em
+   * Dialog/Sheet: o cabeçalho duplicado ("Dados do Cliente" + ação Salvar
+   * inline) é omitido e a ação Salvar fica em uma barra sticky no rodapé,
+   * compatível com a viewport mobile e safe areas.
+   *
+   * Use sempre que renderizar dentro de `DadosClienteDialog` ou
+   * `MobileFullscreenSheet` — o invólucro já provê título/descrição.
+   */
+  embedded?: boolean;
 }
 
-export default function DadosCliente({ projectId: propProjectId }: DadosClienteProps = {}) {
+export default function DadosCliente({ projectId: propProjectId, embedded = false }: DadosClienteProps = {}) {
   const params = useParams<{ projectId: string }>();
   const projectId = propProjectId ?? params.projectId;
   const [loading, setLoading] = useState(true);
@@ -230,36 +244,52 @@ export default function DadosCliente({ projectId: propProjectId }: DadosClienteP
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Dados do Cliente</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Informações cadastrais do contratante e do imóvel
-          </p>
+    <div
+      className={cn(
+        'mx-auto w-full',
+        // Quando embutido (dialog/sheet) o invólucro já tem padding e
+        // largura; aqui só damos um respiro lateral consistente. Quando
+        // usado como página standalone, mantemos o layout original.
+        embedded ? 'max-w-3xl px-4 pt-3 pb-4 md:px-6 md:pt-4' : 'max-w-4xl p-4 md:p-6',
+        // Reserva espaço inferior para a sticky bar de Salvar não cobrir
+        // o último campo. ~80px = 64px barra + 16px folga (mais safe-area).
+        'pb-[calc(80px+env(safe-area-inset-bottom,0px))]',
+      )}
+    >
+      {/* Header inline — só quando NÃO está embutido (rota /obra/:id/dados-cliente). */}
+      {!embedded && (
+        <div className="flex items-center justify-between mb-5">
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">Dados do Cliente</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Informações cadastrais do contratante e do imóvel
+            </p>
+          </div>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-          Salvar
-        </Button>
-      </div>
+      )}
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'contratante' | 'imovel' | 'info')}>
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="contratante" className="gap-1.5">
+      <ResponsiveTabsRoot
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as 'contratante' | 'imovel' | 'info')}
+        className="w-full"
+      >
+        <ResponsiveTabsList ariaLabel="Seções dos dados do cliente" className="md:w-auto">
+          <ResponsiveTabsTrigger value="contratante">
             <User className="h-4 w-4" />
             Contratante
-          </TabsTrigger>
-          <TabsTrigger value="imovel" className="gap-1.5">
+          </ResponsiveTabsTrigger>
+          <ResponsiveTabsTrigger value="imovel">
             <Building2 className="h-4 w-4" />
             Imóvel
-          </TabsTrigger>
-          <TabsTrigger value="info" className="gap-1.5">
+          </ResponsiveTabsTrigger>
+          <ResponsiveTabsTrigger value="info">
             <FileText className="h-4 w-4" />
             Informações do Projeto
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+          </ResponsiveTabsTrigger>
+        </ResponsiveTabsList>
+      </ResponsiveTabsRoot>
+
+      <div className="mt-4 space-y-6">
 
       {/* ── Cliente (Contratante) ── */}
       {activeTab === 'contratante' && (
@@ -518,6 +548,37 @@ export default function DadosCliente({ projectId: propProjectId }: DadosClienteP
       {activeTab === 'info' && projectId && (
         <ProjectInfoDoc projectId={projectId} />
       )}
+      </div>
+
+      {/* ── Sticky save bar ──────────────────────────────────────────────
+          Mantém "Salvar" sempre acessível mesmo em formulários longos no
+          mobile. Em DadosClienteDialog (mobile full-screen), esta barra
+          fica colada acima da safe-area inferior; no desktop standalone,
+          fica colada ao rodapé do scroller dentro do container. */}
+      <div
+        className={cn(
+          'sticky bottom-0 -mx-4 md:-mx-6 mt-6',
+          'bg-background/95 backdrop-blur border-t border-border-subtle',
+          'pl-safe pr-safe pb-safe',
+        )}
+      >
+        <div className="px-4 md:px-6 py-3 flex items-center justify-end gap-2">
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            size="lg"
+            className="min-w-[140px] h-11"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Salvar
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

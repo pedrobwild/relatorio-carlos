@@ -101,6 +101,11 @@ import { EmptyState } from '@/components/ui/states';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
 import { DadosClienteDialog } from '@/components/admin/obras/DadosClienteDialog';
+import {
+  MobileRecordCard,
+  MobileFiltersSheet,
+  type MobileRecordCardChip,
+} from '@/components/mobile';
 
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -316,6 +321,7 @@ export default function PainelObras() {
   const queryClient = useQueryClient();
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
@@ -584,7 +590,11 @@ export default function PainelObras() {
           title="Painel de Obras"
           description="Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
           actions={
-            <>
+            // Mobile: ações concorrentes (Customer Success + Nova obra) ficam
+            // ocultas porque (a) "Nova obra" já está como FAB central no
+            // GestaoBottomNav e (b) atalhos secundários ficam no menu "Mais".
+            // Isso preserva uma única ação primária dominante por viewport.
+            <div className="hidden md:flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate('/gestao/cs/operacional')} className="h-8 gap-2">
                 <Headset className="h-4 w-4" />
                 <span className="hidden sm:inline">Customer Success</span>
@@ -593,7 +603,7 @@ export default function PainelObras() {
               <Button size="sm" onClick={() => navigate('/gestao/nova-obra')} className="h-8 gap-2">
                 <Plus className="h-4 w-4" />Nova obra
               </Button>
-            </>
+            </div>
           }
           flush
           className="!pt-4 !pb-3 md:!pt-5 md:!pb-3 [&_h1]:!text-lg [&_h1]:md:!text-xl"
@@ -646,6 +656,46 @@ export default function PainelObras() {
         />
 
         <div className="mt-3">
+          {/* ── Mobile: cards empilhados + filtros em bottom sheet ───────────
+              Substitui a tabela densa por uma listagem 1-coluna que cabe em
+              320–430px sem scroll horizontal. Ações secundárias (Customer
+              Success, criar obra) já estão na bottom navigation; aqui o foco
+              é busca, filtros e o conteúdo. Veja `<MobilePainelView />`. */}
+          <MobilePainelView
+            obras={obras}
+            filtered={filtered}
+            isLoading={isLoading}
+            search={search}
+            onSearchChange={setSearch}
+            hasFilters={hasFilters}
+            activeFilterCount={
+              (search.trim() ? 1 : 0) +
+              (filterEtapa !== ALL ? 1 : 0) +
+              filterStatuses.size +
+              (filterRelacionamento !== ALL ? 1 : 0) +
+              (filterResponsavel !== ALL ? 1 : 0)
+            }
+            staffUsers={staffUsers}
+            filterEtapa={filterEtapa}
+            onFilterEtapa={setFilterEtapa}
+            filterStatuses={filterStatuses}
+            onToggleStatus={toggleStatusFilter}
+            onClearStatuses={clearStatusFilter}
+            filterRelacionamento={filterRelacionamento}
+            onFilterRelacionamento={setFilterRelacionamento}
+            filterResponsavel={filterResponsavel}
+            onFilterResponsavel={setFilterResponsavel}
+            clearAllFilters={clearFilters}
+            mobileFiltersOpen={mobileFiltersOpen}
+            setMobileFiltersOpen={setMobileFiltersOpen}
+            onOpen={(id) => navigate(`/obra/${id}`)}
+            onOpenDados={(o) => setDadosTarget(o)}
+            onDeleteRequest={(o) => setDeleteTarget(o)}
+            onCreate={() => navigate('/gestao/nova-obra')}
+          />
+
+          {/* ── Desktop: toolbar + tabela/board/kanban (preserva comportamento) ── */}
+          <div className="hidden md:block">
           {/*
             Toolbar redesenhada — referência híbrida (Linear + Notion):
             - linha única densa (h-9), divisores verticais entre grupos
@@ -1103,6 +1153,7 @@ export default function PainelObras() {
                 </SectionCard>
               )}
             </div>
+          </div>
         </div>
       </PageContainer>
     </TooltipProvider>
@@ -2700,6 +2751,435 @@ function BoardView({
           </SectionCard>
         );
       })}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Mobile view (md:hidden) — substitui a tabela densa por uma listagem em
+// cards. Toda a lógica de filtros/edição é compartilhada com o desktop;
+// este componente só assume responsabilidade pela apresentação mobile-first.
+// ──────────────────────────────────────────────────────────────────────────
+
+interface MobilePainelViewProps {
+  obras: PainelObra[];
+  filtered: PainelObra[];
+  isLoading: boolean;
+  search: string;
+  onSearchChange: (v: string) => void;
+  hasFilters: boolean;
+  activeFilterCount: number;
+  staffUsers: { id: string; nome: string }[];
+  filterEtapa: string;
+  onFilterEtapa: (v: string) => void;
+  filterStatuses: Set<string>;
+  onToggleStatus: (v: string) => void;
+  onClearStatuses: () => void;
+  filterRelacionamento: string;
+  onFilterRelacionamento: (v: string) => void;
+  filterResponsavel: string;
+  onFilterResponsavel: (v: string) => void;
+  clearAllFilters: () => void;
+  mobileFiltersOpen: boolean;
+  setMobileFiltersOpen: (open: boolean) => void;
+  onOpen: (id: string) => void;
+  onOpenDados: (o: PainelObra) => void;
+  onDeleteRequest: (o: PainelObra) => void;
+  onCreate: () => void;
+}
+
+function statusChipTone(s: PainelStatus | null): NonNullable<MobileRecordCardChip['tone']> {
+  switch (s) {
+    case 'Em dia':     return 'success';
+    case 'Aguardando': return 'info';
+    case 'Atrasado':   return 'destructive';
+    case 'Paralisada': return 'neutral';
+    default:           return 'muted';
+  }
+}
+
+function relacionamentoChipTone(r: PainelRelacionamento | null): NonNullable<MobileRecordCardChip['tone']> {
+  switch (r) {
+    case 'Normal':       return 'success';
+    case 'Atrito':       return 'warning';
+    case 'Insatisfeito': return 'warning';
+    case 'Crítico':      return 'destructive';
+    default:             return 'muted';
+  }
+}
+
+function MobilePainelView({
+  obras,
+  filtered,
+  isLoading,
+  search,
+  onSearchChange,
+  hasFilters,
+  activeFilterCount,
+  staffUsers,
+  filterEtapa,
+  onFilterEtapa,
+  filterStatuses,
+  onToggleStatus,
+  onClearStatuses,
+  filterRelacionamento,
+  onFilterRelacionamento,
+  filterResponsavel,
+  onFilterResponsavel,
+  clearAllFilters,
+  mobileFiltersOpen,
+  setMobileFiltersOpen,
+  onOpen,
+  onOpenDados,
+  onDeleteRequest,
+  onCreate,
+}: MobilePainelViewProps) {
+  return (
+    <div className="md:hidden">
+      {/* ── Topo compacto: search + Filtros + contador ───────────────────
+          Linha única (52px) com busca dominante e um único botão de
+          filtros. Contador ocupa apenas a linha secundária minimalista
+          quando há filtros — evita poluir o topo. */}
+      <div className="sticky top-0 z-shell bg-background pt-2 pb-2 -mx-4 px-4 border-b border-border-subtle">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Buscar obra ou cliente"
+              aria-label="Buscar obras"
+              className="h-11 pl-9 pr-9 text-[14px] bg-surface border-border-subtle"
+              inputMode="search"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                aria-label="Limpar busca"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setMobileFiltersOpen(true)}
+            className={cn(
+              'shrink-0 h-11 px-3 gap-1.5 text-[13px] font-medium',
+              activeFilterCount > 0 && 'border-primary/40 bg-primary/5 text-foreground',
+            )}
+            aria-label={
+              activeFilterCount > 0
+                ? `Filtros (${activeFilterCount} ativos)`
+                : 'Abrir filtros'
+            }
+            aria-haspopup="dialog"
+          >
+            <Filter className="h-4 w-4" />
+            Filtros
+            {activeFilterCount > 0 && (
+              <span className="inline-flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-semibold tabular-nums">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+        </div>
+
+        {/* Linha secundária: contador + limpar (só quando há filtros) */}
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-[12px] text-muted-foreground tabular-nums">
+            <span className="font-semibold text-foreground">{filtered.length}</span>
+            <span className="opacity-60"> de {obras.length} obras</span>
+          </span>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="inline-flex items-center gap-1 h-7 px-2 text-[12px] text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Limpar filtros
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Lista de obras ─────────────────────────────────────────────── */}
+      {isLoading ? (
+        <ul className="mt-1 divide-y divide-border-subtle bg-card rounded-lg overflow-hidden border border-border-subtle">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <li key={i} className="px-4 py-3 space-y-2">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-1/2" />
+              <div className="flex gap-1.5">
+                <Skeleton className="h-4 w-14 rounded-md" />
+                <Skeleton className="h-4 w-20 rounded-md" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : filtered.length === 0 ? (
+        <div className="mt-3">
+          <EmptyState
+            icon={Table2}
+            title={obras.length === 0 ? 'Nenhuma obra cadastrada' : 'Nenhum resultado'}
+            description={
+              obras.length === 0
+                ? 'Crie sua primeira obra para começar.'
+                : 'Nenhuma obra corresponde aos filtros atuais.'
+            }
+            action={
+              obras.length === 0
+                ? { label: 'Nova obra', onClick: onCreate, icon: Plus }
+                : hasFilters
+                  ? { label: 'Limpar filtros', onClick: clearAllFilters, icon: RotateCcw }
+                  : undefined
+            }
+          />
+        </div>
+      ) : (
+        <ul className="mt-2 bg-card rounded-lg overflow-hidden border border-border-subtle">
+          {filtered.map((o) => {
+            const displayStatus = computeDisplayStatus(o);
+            const dias = computeOverdueDays(o);
+            const chips: MobileRecordCardChip[] = [];
+            if (displayStatus) {
+              chips.push({
+                label: displayStatus,
+                tone: statusChipTone(displayStatus),
+                leading: (
+                  <span
+                    className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(displayStatus))}
+                    aria-hidden
+                  />
+                ),
+              });
+            }
+            if (o.etapa) {
+              chips.push({
+                label: o.etapa,
+                tone:
+                  o.etapa === 'Finalizada'
+                    ? 'success'
+                    : o.etapa === 'Vistoria reprovada'
+                      ? 'destructive'
+                      : 'neutral',
+              });
+            }
+            if (o.relacionamento && o.relacionamento !== 'Normal') {
+              chips.push({
+                label: o.relacionamento,
+                tone: relacionamentoChipTone(o.relacionamento),
+              });
+            }
+
+            const tone: 'default' | 'destructive' | 'warning' =
+              displayStatus === 'Atrasado' || dias > 10
+                ? 'destructive'
+                : dias > 0
+                  ? 'warning'
+                  : 'default';
+
+            const responsavel = o.responsavel_nome
+              ? formatNomePessoa(o.responsavel_nome)
+              : null;
+            const meta = (
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                {o.entrega_oficial && (
+                  <span className="inline-flex items-center gap-1 tabular-nums">
+                    <CalendarIcon className="h-3 w-3 opacity-60" />
+                    Entrega {fmtDate(o.entrega_oficial)}
+                  </span>
+                )}
+                {dias > 0 && (
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 font-semibold tabular-nums',
+                      dias > 10 ? 'text-destructive' : 'text-warning',
+                    )}
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    {dias}d atraso
+                  </span>
+                )}
+                {responsavel && (
+                  <span className="inline-flex items-center gap-1 truncate">
+                    <User className="h-3 w-3 opacity-60" />
+                    <span className="truncate max-w-[140px]">{responsavel}</span>
+                  </span>
+                )}
+              </span>
+            );
+
+            return (
+              <li key={o.id}>
+                <MobileRecordCard
+                  title={o.customer_name ?? 'Sem cliente'}
+                  subtitle={o.nome ?? '—'}
+                  chips={chips}
+                  meta={meta}
+                  tone={tone}
+                  onClick={() => onOpen(o.id)}
+                  ariaLabel={`Abrir obra ${o.nome ?? ''} de ${o.customer_name ?? 'cliente sem nome'}`}
+                  overflowMenu={
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => onOpen(o.id)}
+                        className="text-sm gap-2"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Abrir obra
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onOpenDados(o)}
+                        className="text-sm gap-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Dados do cliente
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => onDeleteRequest(o)}
+                        className="text-sm gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Excluir obra
+                      </DropdownMenuItem>
+                    </>
+                  }
+                />
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {/* ── Bottom sheet de filtros ─────────────────────────────────────── */}
+      <MobileFiltersSheet
+        open={mobileFiltersOpen}
+        onOpenChange={setMobileFiltersOpen}
+        activeCount={activeFilterCount}
+        onClear={clearAllFilters}
+        applyLabel={`Ver ${filtered.length} obras`}
+      >
+        {/* Status (multi) */}
+        <fieldset>
+          <legend className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+            Status
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {[NONE, ...STATUS_OPTIONS].map((s) => {
+              const checked = filterStatuses.has(s);
+              const label = s === NONE ? 'Sem status' : s;
+              return (
+                <button
+                  type="button"
+                  key={`m-status-${s}`}
+                  onClick={() => onToggleStatus(s)}
+                  role="checkbox"
+                  aria-checked={checked}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[13px] border transition-colors',
+                    checked
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-surface text-foreground border-border-subtle hover:border-border-strong',
+                  )}
+                >
+                  {s !== NONE && (
+                    <span
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full',
+                        checked ? 'bg-primary-foreground' : statusDotClass(s as PainelStatus),
+                      )}
+                      aria-hidden
+                    />
+                  )}
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          {filterStatuses.size > 0 && (
+            <button
+              type="button"
+              onClick={onClearStatuses}
+              className="mt-2 text-[12px] text-muted-foreground hover:text-foreground"
+            >
+              Limpar status
+            </button>
+          )}
+        </fieldset>
+
+        {/* Etapa */}
+        <fieldset>
+          <legend className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+            Etapa
+          </legend>
+          <Select value={filterEtapa} onValueChange={onFilterEtapa}>
+            <SelectTrigger
+              aria-label="Filtrar por etapa"
+              className="h-11 w-full text-[14px]"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Todas etapas</SelectItem>
+              <SelectItem value={NONE}>(sem etapa)</SelectItem>
+              {ETAPA_OPTIONS.map((e) => (
+                <SelectItem key={e} value={e}>{e}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </fieldset>
+
+        {/* Relacionamento */}
+        <fieldset>
+          <legend className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+            Relacionamento
+          </legend>
+          <Select value={filterRelacionamento} onValueChange={onFilterRelacionamento}>
+            <SelectTrigger
+              aria-label="Filtrar por relacionamento"
+              className="h-11 w-full text-[14px]"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Todos relacionamentos</SelectItem>
+              <SelectItem value={NONE}>(sem relacionamento)</SelectItem>
+              {RELACIONAMENTO_OPTIONS.map((r) => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </fieldset>
+
+        {/* Responsável */}
+        <fieldset>
+          <legend className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+            Responsável
+          </legend>
+          <Select value={filterResponsavel} onValueChange={onFilterResponsavel}>
+            <SelectTrigger
+              aria-label="Filtrar por responsável"
+              className="h-11 w-full text-[14px]"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Todos responsáveis</SelectItem>
+              <SelectItem value={NONE}>(sem responsável)</SelectItem>
+              {staffUsers.map((u) => (
+                <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </fieldset>
+      </MobileFiltersSheet>
     </div>
   );
 }
