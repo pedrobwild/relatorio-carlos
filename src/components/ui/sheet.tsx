@@ -56,10 +56,20 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
+        {/* Visual drag-handle for bottom sheets — communicates swipe-to-dismiss affordance */}
+        {side === "bottom" && <span aria-hidden="true" className="sheet-drag-handle" />}
         {children}
-        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+        <SheetPrimitive.Close
+          className={cn(
+            "absolute rounded-full opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none",
+            // Bigger hit-area on mobile sheets; standard on side sheets
+            side === "bottom"
+              ? "right-3 top-3 inline-flex h-10 w-10 items-center justify-center"
+              : "right-4 top-4",
+          )}
+        >
           <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">Fechar</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>

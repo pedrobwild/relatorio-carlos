@@ -117,9 +117,10 @@
     --shadow-ring: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.45);
 
     /* Mobile layout tokens */
-    --bottom-nav-height: 56px; /* h-14 */
+    --bottom-nav-height: 64px; /* h-16 — matches MobileBottomNav/GestaoBottomNav */
     --bottom-nav-offset: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
     --sticky-cta-height: 64px;
+    --mobile-header-height: 52px; /* slim mobile header inside ProjectShell */
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 212 43% 24%;
@@ -484,9 +485,18 @@
     display: none;
   }
 
-  /* Safe area padding for mobile */
+  /* Safe area paddings for mobile (notched / home-indicator devices) */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
   }
 
   /* Bottom nav spacing — use on page content containers on mobile */
@@ -533,6 +543,47 @@
     .keyboard-aware {
       transition: padding-bottom 0.2s ease;
       padding-bottom: env(keyboard-inset-height, 0px);
+    }
+  }
+
+  /* Bottom-sheet drag handle (visual affordance for swipe-to-dismiss).
+   * Sits inside the rounded-top edge, neutral gray pill. */
+  .sheet-drag-handle {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    border-radius: 9999px;
+    background-color: hsl(var(--border-strong));
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Toast viewport offset on mobile so toasts don't sit under the bottom nav.
+   * Only applies at <md, where bottom nav is rendered. */
+  .toaster-mobile-aware {
+    bottom: calc(var(--bottom-nav-offset) + 12px) !important;
+  }
+  @media (min-width: 768px) {
+    .toaster-mobile-aware {
+      bottom: 16px !important;
+    }
+  }
+
+  /* Auto-hide bottom nav when virtual keyboard is open (modern iOS/Android).
+   * Use on the bottom nav <nav> element. */
+  @supports (height: env(keyboard-inset-height)) {
+    .hide-on-keyboard {
+      transition: transform 0.18s ease;
+    }
+    @media (max-width: 767px) {
+      :root:has(input:focus, textarea:focus, [contenteditable="true"]:focus)
+        .hide-on-keyboard {
+        transform: translateY(110%);
+      }
     }
   }
 

@@ -129,49 +129,57 @@ export function PageHeader({
       </div>
 
       {/* ── Mobile: two-row layout ── */}
-      <div className={cn("mx-auto px-4 py-2 sm:hidden space-y-1", maxWidthMap[maxWidth])}>
+      <div className={cn("mx-auto px-3 py-2 sm:hidden space-y-1.5 pl-safe pr-safe", maxWidthMap[maxWidth])}>
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
             {(backTo || onBack) && (
               <BackWrapper {...backProps}>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onBack}
-                  className="shrink-0 h-11 w-11 sm:h-9 sm:w-9 rounded-full hover:bg-primary/10"
+                  className="shrink-0 h-11 w-11 rounded-full hover:bg-primary/10 active:bg-primary/15 active:scale-[0.94] transition-transform"
                   aria-label="Voltar"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-5 h-5" />
                 </Button>
               </BackWrapper>
             )}
             {showLogo && (
-              <img src={bwildLogo} alt="Bwild" className="h-7 w-auto shrink-0" />
+              <img src={bwildLogo} alt="Bwild" className="h-6 w-auto shrink-0" />
             )}
           </div>
-          <div className="flex items-center gap-2 min-w-0 shrink">
-            {children && <div className="min-w-0">{children}</div>}
+          <div className="flex items-center gap-1 min-w-0 shrink">
+            {children && <div className="min-w-0 flex items-center gap-1">{children}</div>}
             <UserMenu />
           </div>
         </div>
         <div className="min-w-0">
           {breadcrumbs && breadcrumbs.length > 0 && (
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 overflow-hidden">
+            <nav
+              aria-label="Breadcrumb"
+              className="flex items-center gap-1 text-[11px] text-muted-foreground mb-0.5 overflow-x-auto scrollbar-hide"
+            >
               {breadcrumbs.map((crumb, i) => (
                 <span key={i} className="flex items-center gap-1 shrink-0">
                   {i > 0 && <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
                   {crumb.href ? (
-                    <Link to={crumb.href} className="hover:text-foreground transition-colors truncate max-w-[120px]">
+                    <Link
+                      to={crumb.href}
+                      className="hover:text-foreground transition-colors truncate max-w-[140px]"
+                    >
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span className="truncate max-w-[120px]">{crumb.label}</span>
+                    <span className="truncate max-w-[140px]">{crumb.label}</span>
                   )}
                 </span>
               ))}
             </nav>
           )}
-          <h1 className="text-page-title">{title}</h1>
+          <h1 className="text-[18px] font-bold text-foreground leading-tight truncate">
+            {title}
+          </h1>
         </div>
       </div>
     </div>

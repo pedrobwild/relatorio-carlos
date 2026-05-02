@@ -40,23 +40,19 @@ export function BottomSheetPicker({
       <SheetContent
         side="bottom"
         className={cn(
-          "max-h-[85dvh] rounded-t-2xl px-4 pb-safe overflow-y-auto",
-          className
+          "max-h-[88dvh] rounded-t-3xl px-4 pt-7 pb-safe overflow-y-auto",
+          className,
         )}
       >
-        <SheetHeader className="pb-3 border-b border-border mb-3">
-          <SheetTitle className="text-base font-semibold text-foreground">
-            {title}
-          </SheetTitle>
+        <SheetHeader className="pb-3 border-b border-border-subtle mb-3 text-left">
+          <SheetTitle className="text-base font-bold text-foreground">{title}</SheetTitle>
           {description && (
-            <SheetDescription className="text-sm text-muted-foreground">
+            <SheetDescription className="text-[13px] text-muted-foreground">
               {description}
             </SheetDescription>
           )}
         </SheetHeader>
-        <div className="min-w-0">
-          {children}
-        </div>
+        <div className="min-w-0">{children}</div>
       </SheetContent>
     </Sheet>
   );

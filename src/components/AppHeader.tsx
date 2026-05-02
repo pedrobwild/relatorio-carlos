@@ -33,24 +33,41 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-      <div className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-header bg-background/95 backdrop-blur border-b border-border-subtle pt-safe">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 pl-safe pr-safe">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {showBackButton && onBack && (
-              <Button variant="ghost" size="icon" onClick={onBack}>
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onBack}
+                aria-label="Voltar"
+                className="shrink-0 h-11 w-11 rounded-full hover:bg-primary/10 active:bg-primary/15 active:scale-[0.94] transition-transform"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </Button>
             )}
-            <Link to="/">
-              <img src={bwildLogo} alt="Bwild" className="h-8" />
+            <Link to="/" className="shrink-0 inline-flex items-center" aria-label="Início">
+              <img src={bwildLogo} alt="Bwild" className="h-7 sm:h-8" />
             </Link>
             {children}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {loading ? (
               <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
             ) : isAuthenticated ? (
@@ -61,17 +78,23 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
 
                 <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground ml-2">
                   <User className="h-4 w-4" />
-                  <span>{user?.email?.split('@')[0]}</span>
+                  <span>{user?.email?.split("@")[0]}</span>
                 </div>
-                
-                <Button variant="ghost" size="sm" onClick={handleSignOut}>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSignOut}
+                  aria-label="Sair"
+                  className="h-10 sm:h-9"
+                >
                   <LogOut className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Sair</span>
                 </Button>
               </>
             ) : (
               <Link to="/auth">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" aria-label="Entrar" className="h-10 sm:h-9">
                   <LogIn className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Entrar</span>
                 </Button>
