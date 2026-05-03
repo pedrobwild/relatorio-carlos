@@ -477,7 +477,8 @@ export default function PainelObras() {
   };
 
   const filtered = useMemo(() => {
-    let rows = obras;
+    // Separa obras (execução) de projetos (fase de projeto). Default: obras.
+    let rows = obras.filter((o) => (fase === 'projetos' ? o.is_project_phase : !o.is_project_phase));
     if (search.trim()) {
       rows = rows.filter((o) => matchesSearch(search, [o.nome, o.customer_name, o.responsavel_nome]));
     }
