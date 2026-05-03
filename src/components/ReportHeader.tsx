@@ -63,16 +63,8 @@ const ReportHeader = ({
   };
 
   const showMetrics = !(isProjectPhase && !isStaff);
-  // Use planned dates from the schedule as source of truth so header matches the cronograma.
-  // "Início previsto" deve refletir a data de início da primeira atividade do cronograma.
-  const earliestActivityStart = useMemo(() => {
-    const starts = activities
-      .map(a => a.plannedStart)
-      .filter((d): d is string => !!d)
-      .sort();
-    return starts[0] ?? null;
-  }, [activities]);
-  const displayStartDate = earliestActivityStart ?? startDate;
+  // "Início previsto" reflete a data de início da primeira atividade do cronograma.
+  const displayStartDate = effectiveStartDate;
   const displayEndDate = effectiveEndDate;
 
   return (
