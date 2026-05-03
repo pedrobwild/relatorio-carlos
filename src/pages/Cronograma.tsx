@@ -349,6 +349,10 @@ const Cronograma = () => {
     value: string | string[],
   ) => {
     setActivities(prev => {
+      const changedIndex = prev.findIndex(a => a.id === id);
+      const oldAct = changedIndex >= 0 ? prev[changedIndex] : null;
+      const oldPlannedEnd = oldAct?.plannedEnd ?? '';
+
       const newActivities = prev.map((act) => {
         if (act.id !== id) return act;
         const updated = { ...act, [field]: value };
@@ -372,34 +376,40 @@ const Cronograma = () => {
         return updated;
       });
 
-      // If plannedStart changed, cascade dates to all subsequent activities
-      if (field === 'plannedStart' && typeof value === 'string' && value) {
-        const changedIndex = newActivities.findIndex(a => a.id === id);
-        if (changedIndex >= 0 && changedIndex < newActivities.length - 1) {
-          for (let i = changedIndex + 1; i < newActivities.length; i++) {
-            const prevAct = newActivities[i - 1];
-            const currAct = newActivities[i];
-            if (!prevAct.plannedEnd) break;
-
-            // Preserve original duration of this activity
-            let durationDays = 4; // default Mon-Fri
-            if (currAct.plannedStart && currAct.plannedEnd) {
-              const cs = new Date(currAct.plannedStart + 'T00:00:00');
-              const ce = new Date(currAct.plannedEnd + 'T00:00:00');
-              durationDays = Math.round((ce.getTime() - cs.getTime()) / (1000 * 60 * 60 * 24));
-              if (durationDays < 0) durationDays = 4;
+      // Cascade: when planned dates change, shift subsequent activities by the same delta
+      // (computed against the changed activity's plannedEnd). A delta-based shift preserves
+      // the gap structure (weekends, intentional pauses) between activities.
+      const isDateChange = field === 'plannedStart' || field === 'plannedEnd';
+      if (
+        isDateChange &&
+        changedIndex >= 0 &&
+        changedIndex < newActivities.length - 1 &&
+        oldPlannedEnd
+      ) {
+        const updatedAct = newActivities[changedIndex];
+        if (updatedAct.plannedEnd) {
+          const oldEndDate = new Date(oldPlannedEnd + 'T00:00:00');
+          const newEndDate = new Date(updatedAct.plannedEnd + 'T00:00:00');
+          if (!isNaN(oldEndDate.getTime()) && !isNaN(newEndDate.getTime())) {
+            const deltaDays = Math.round(
+              (newEndDate.getTime() - oldEndDate.getTime()) / (1000 * 60 * 60 * 24),
+            );
+            if (deltaDays !== 0) {
+              for (let i = changedIndex + 1; i < newActivities.length; i++) {
+                const a = newActivities[i];
+                const shiftIso = (iso: string) => {
+                  const d = new Date(iso + 'T00:00:00');
+                  if (isNaN(d.getTime())) return iso;
+                  d.setDate(d.getDate() + deltaDays);
+                  return toISO(d);
+                };
+                newActivities[i] = {
+                  ...a,
+                  plannedStart: a.plannedStart ? shiftIso(a.plannedStart) : a.plannedStart,
+                  plannedEnd: a.plannedEnd ? shiftIso(a.plannedEnd) : a.plannedEnd,
+                };
+              }
             }
-
-            const prevEnd = new Date(prevAct.plannedEnd + 'T00:00:00');
-            const nextStart = getNextMonday(prevEnd);
-            const nextEnd = new Date(nextStart);
-            nextEnd.setDate(nextEnd.getDate() + durationDays);
-
-            newActivities[i] = {
-              ...currAct,
-              plannedStart: toISO(nextStart),
-              plannedEnd: toISO(nextEnd),
-            };
           }
         }
       }
