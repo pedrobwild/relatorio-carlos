@@ -128,11 +128,21 @@ const ScheduleTable = ({
               {stats.delayed}
             </span>
           )}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setUltraCompact(v => !v); }}
+            className="md:hidden inline-flex items-center justify-center w-7 h-7 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground active:scale-95 transition shrink-0"
+            aria-label={ultraCompact ? "Mostrar mais detalhes" : "Modo ultra compacto"}
+            aria-pressed={ultraCompact}
+            title={ultraCompact ? "Modo padrão" : "Modo ultra compacto"}
+          >
+            {ultraCompact ? <Rows3 className="w-3.5 h-3.5" /> : <Rows2 className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
 
       {/* Mobile Card View — compact list, expand on tap */}
-      <div className="md:hidden space-y-1">
+      <div className={cn("md:hidden", ultraCompact ? "space-y-px" : "space-y-1")}>
         {sortedActivities.map((activity, index) => {
           const originalIndex = activities.indexOf(activity);
           const status = getActivityStatus(activity);
