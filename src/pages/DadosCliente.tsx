@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Save, Building2, Loader2, Search, FileText, UserCog, Users, Clock } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Save, Building2, Loader2, Search, FileText, UserCog, Users, Clock, KeyRound } from 'lucide-react';
 import { ProjectInfoDoc } from '@/components/project/ProjectInfoDoc';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
 import {
@@ -131,6 +132,9 @@ interface StudioData {
   allowed_work_days: string[] | null;
   allowed_work_start_time: string | null;
   allowed_work_end_time: string | null;
+  key_location: string | null;
+  electronic_lock_password: string | null;
+  provider_access_instructions: string | null;
 }
 
 interface ProjectBasic {
@@ -198,6 +202,9 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
           allowed_work_days: null,
           allowed_work_start_time: null,
           allowed_work_end_time: null,
+          key_location: null,
+          electronic_lock_password: null,
+          provider_access_instructions: null,
         });
       }
       if (projectRes.data) setProject(projectRes.data);
@@ -287,6 +294,9 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             allowed_work_days: studio.allowed_work_days,
             allowed_work_start_time: studio.allowed_work_start_time,
             allowed_work_end_time: studio.allowed_work_end_time,
+            key_location: studio.key_location,
+            electronic_lock_password: studio.electronic_lock_password,
+            provider_access_instructions: studio.provider_access_instructions,
           } as any, { onConflict: 'project_id' });
         if (studioErr) throw studioErr;
       }
@@ -754,6 +764,59 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
               )}
             </CardContent>
 
+          </Card>
+
+          {/* Acesso à obra */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <KeyRound className="h-5 w-5 text-muted-foreground" />
+                Acesso à obra
+              </CardTitle>
+              <CardDescription>
+                Informações para entrada da equipe e prestadores no imóvel.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="key-location" className="text-xs font-medium text-muted-foreground">
+                  Local da chave
+                </Label>
+                <Input
+                  id="key-location"
+                  value={studio?.key_location || ''}
+                  onChange={(e) => updateStudio('key_location', e.target.value || null)}
+                  placeholder="Ex.: portaria, com o zelador, cofre na entrada…"
+                  maxLength={300}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lock-password" className="text-xs font-medium text-muted-foreground">
+                  Senha da fechadura eletrônica
+                </Label>
+                <Input
+                  id="lock-password"
+                  value={studio?.electronic_lock_password || ''}
+                  onChange={(e) => updateStudio('electronic_lock_password', e.target.value || null)}
+                  placeholder="Ex.: 1234#"
+                  maxLength={50}
+                  autoComplete="off"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="provider-access" className="text-xs font-medium text-muted-foreground">
+                  Como liberar prestadores
+                </Label>
+                <Textarea
+                  id="provider-access"
+                  value={studio?.provider_access_instructions || ''}
+                  onChange={(e) => updateStudio('provider_access_instructions', e.target.value || null)}
+                  placeholder="Descreva o procedimento: aviso prévio à portaria, lista de nomes, documentos exigidos…"
+                  maxLength={1000}
+                  rows={4}
+                />
+              </div>
+            </CardContent>
           </Card>
 
           {/* Rich text livre */}

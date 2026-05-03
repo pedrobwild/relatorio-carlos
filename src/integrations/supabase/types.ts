@@ -5052,9 +5052,12 @@ export type Database = {
           complemento: string | null
           created_at: string
           data_recebimento_chaves: string | null
+          electronic_lock_password: string | null
           endereco_completo: string | null
+          key_location: string | null
           nome_do_empreendimento: string | null
           project_id: string
+          provider_access_instructions: string | null
           syndic_email: string | null
           syndic_name: string | null
           syndic_phone: string | null
@@ -5075,9 +5078,12 @@ export type Database = {
           complemento?: string | null
           created_at?: string
           data_recebimento_chaves?: string | null
+          electronic_lock_password?: string | null
           endereco_completo?: string | null
+          key_location?: string | null
           nome_do_empreendimento?: string | null
           project_id: string
+          provider_access_instructions?: string | null
           syndic_email?: string | null
           syndic_name?: string | null
           syndic_phone?: string | null
@@ -5098,9 +5104,12 @@ export type Database = {
           complemento?: string | null
           created_at?: string
           data_recebimento_chaves?: string | null
+          electronic_lock_password?: string | null
           endereco_completo?: string | null
+          key_location?: string | null
           nome_do_empreendimento?: string | null
           project_id?: string
+          provider_access_instructions?: string | null
           syndic_email?: string | null
           syndic_name?: string | null
           syndic_phone?: string | null
