@@ -233,7 +233,7 @@ export default function Auth() {
       {/* Form – centered on mobile, left on desktop */}
       <div className="flex flex-col justify-center items-center md:items-start w-full md:max-w-lg px-5 sm:px-12 md:px-16 py-10 sm:py-16 safe-area-top safe-area-bottom mx-auto md:mx-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-10 sm:mb-12 text-center md:text-left w-full">
-          Portal Bwild<span className="text-[#366478]">.</span>
+          {"\n"}
         </h1>
 
         {isDemoPrefill && (
