@@ -201,6 +201,9 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
           allowed_work_days: null,
           allowed_work_start_time: null,
           allowed_work_end_time: null,
+          key_location: null,
+          electronic_lock_password: null,
+          provider_access_instructions: null,
         });
       }
       if (projectRes.data) setProject(projectRes.data);
