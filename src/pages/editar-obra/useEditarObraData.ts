@@ -7,6 +7,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
 import { invalidateActivityQueries } from '@/lib/queryKeys';
 import { shiftActivityDates, type ShiftMode } from '@/lib/shiftActivityDates';
+import { recalculateWeeklyActivities } from '@/lib/weeklySchedule';
+import { addBusinessDays } from '@/lib/businessDays';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
 import type { StudioInfo } from './TabFichaTecnica';
 
@@ -513,6 +515,107 @@ export function useEditarObraData(projectId: string | undefined) {
     });
   };
 
+  /**
+   * Recalcula as etapas semana-a-semana (Seg→Sex), preservando a ordem,
+   * a partir da data de início prevista do projeto.
+   * Cada etapa ocupa exatamente uma semana útil.
+   */
+  const recalculateScheduleWeekly = async () => {
+    if (!project || !projectId) return;
+    if (activities.length === 0) {
+      toast({ title: 'Cronograma vazio', description: 'Adicione etapas antes de recalcular.' });
+      return;
+    }
+    const start = project.planned_start_date;
+    if (!start) {
+      toast({
+        title: 'Defina o Início Previsto',
+        description: 'Informe a data de início antes de recalcular semana a semana.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const ordered = [...activities].sort((a, b) => a.sort_order - b.sort_order);
+      const recalculated = recalculateWeeklyActivities(ordered, start);
+
+      const preShiftSnapshot = activities.map(a => ({
+        id: a.id,
+        planned_start: a.planned_start,
+        planned_end: a.planned_end,
+      }));
+
+      const changedIds: string[] = [];
+      const updatedById = new Map(recalculated.map(r => [r.id, r]));
+      const next = activities.map(a => {
+        const r = updatedById.get(a.id);
+        if (!r) return a;
+        if (r.planned_start !== a.planned_start || r.planned_end !== a.planned_end) {
+          changedIds.push(a.id);
+          return { ...a, planned_start: r.planned_start, planned_end: r.planned_end };
+        }
+        return a;
+      });
+
+      if (changedIds.length === 0) {
+        toast({ title: 'Já alinhado', description: 'O cronograma já está semana a semana.' });
+        return;
+      }
+
+      const updates = next
+        .filter(a => changedIds.includes(a.id))
+        .map(a =>
+          supabase
+            .from('project_activities')
+            .update({ planned_start: a.planned_start, planned_end: a.planned_end })
+            .eq('id', a.id)
+        );
+      const results = await Promise.all(updates);
+      const failed = results.find(r => r.error);
+      if (failed?.error) throw failed.error;
+
+      setActivities(next);
+      invalidateActivityQueries(projectId);
+
+      const undoSnapshot: ShiftUndoSnapshot = {
+        origin: 'recalc-only',
+        activities: preShiftSnapshot.filter(s => changedIds.includes(s.id)),
+        projectStart: null,
+        projectEnd: null,
+        createdAt: Date.now(),
+      };
+      setLastShiftUndo(undoSnapshot);
+
+      toast({
+        title: 'Cronograma recalculado',
+        description: `${changedIds.length} etapa(s) reorganizada(s) semana a semana (Seg→Sex).`,
+        duration: 12000,
+        action: buildUndoAction(() => { void undoLastShift(); }),
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      console.error('Error recalculating weekly:', err);
+      toast({ title: 'Erro ao recalcular', description: message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /**
+   * Aplica uma duração em dias úteis ao projeto: a partir de planned_start_date,
+   * calcula planned_end_date pulando finais de semana e feriados de SP.
+   * Retorna a nova data de término (yyyy-MM-dd) ou null se não pôde calcular.
+   */
+  const applyBusinessDaysDuration = (days: number): string | null => {
+    if (!project || !project.planned_start_date || !Number.isFinite(days) || days <= 0) return null;
+    const start = new Date(project.planned_start_date + 'T00:00:00');
+    const end = addBusinessDays(start, days - 1);
+    const iso = end.toISOString().split('T')[0];
+    setProject(p => p ? { ...p, planned_end_date: iso } : p);
+    return iso;
+  };
   const performRecalcOnly = async (shiftMode: ShiftMode) => {
     if (!project || activities.length === 0) return;
     const valid = activities.filter(a => a.planned_start && a.planned_end);
@@ -859,6 +962,8 @@ export function useEditarObraData(projectId: string | undefined) {
     handleStudioInfoChange,
     saveProject,
     recalculateSchedule,
+    recalculateScheduleWeekly,
+    applyBusinessDaysDuration,
     addActivity,
     updateActivity: smartUpdateActivity,
     deleteActivity,

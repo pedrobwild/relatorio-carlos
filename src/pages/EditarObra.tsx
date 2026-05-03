@@ -177,6 +177,8 @@ export default function EditarObra() {
                   onProjectChange={data.handleProjectChange}
                   onCustomerChange={data.handleCustomerChange}
                   onRecalculateSchedule={canEdit ? data.recalculateSchedule : undefined}
+                  onRecalculateWeekly={canEdit ? data.recalculateScheduleWeekly : undefined}
+                  onApplyBusinessDaysDuration={canEdit ? data.applyBusinessDaysDuration : undefined}
                   isSaving={data.saving}
                 />
               </TabsContent>
