@@ -20,6 +20,7 @@ import {
   PackageCheck,
   TrendingUp,
   ClipboardList,
+  Compass,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -27,6 +28,13 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
+import type {
+  Insight,
+  DataQualityWarning,
+  InsightVisualizationHint,
+} from "@/lib/assistant";
+import { AssistantAnalysisPanel } from "@/components/assistant/AssistantAnalysisPanel";
+import { ConfidenceBadge } from "@/components/assistant/ConfidenceBadge";
 
 interface SuggestionCategory {
   label: string;
@@ -37,14 +45,26 @@ interface SuggestionCategory {
 
 const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
   {
+    label: "Executivo",
+    icon: Compass,
+    color: "text-cyan-600 dark:text-cyan-400",
+    questions: [
+      { label: "O que priorizar hoje", question: "O que eu preciso priorizar hoje no portal?" },
+      { label: "Maiores riscos agora", question: "Quais são os maiores riscos da operação agora? Resumo executivo." },
+      { label: "5 ações de impacto", question: "Quais 5 ações geram mais impacto esta semana?" },
+      { label: "Qualidade dos dados", question: "Quais dados parecem ruins, incompletos ou inconsistentes?" },
+    ],
+  },
+  {
     label: "Financeiro",
     icon: Wallet,
     color: "text-emerald-600 dark:text-emerald-400",
     questions: [
-      { label: "Quais compras venceram hoje", question: "Quais compras venceram hoje? Liste obra, descrição e valor." },
-      { label: "Total a pagar hoje", question: "Qual o valor total de pagamentos com vencimento hoje, agrupado por obra?" },
-      { label: "Pagamentos em atraso", question: "Liste todos os pagamentos em atraso (paid_at nulo e due_date < hoje), com obra, descrição, vencimento e valor." },
-      { label: "A pagar nos próximos 7 dias", question: "Quais pagamentos vencem nos próximos 7 dias? Mostre obra, vencimento, descrição e valor, ordenados por data." },
+      { label: "Vencidos por obra", question: "Quais pagamentos estão vencidos e qual o total por obra?" },
+      { label: "A pagar hoje", question: "Qual o valor total de pagamentos com vencimento hoje, agrupado por obra?" },
+      { label: "Próximos 7 dias", question: "Quais pagamentos vencem nos próximos 7 dias? Mostre obra, vencimento, descrição e valor, ordenados por data." },
+      { label: "Recebido este mês", question: "Quanto foi recebido em pagamentos neste mês, total e por obra?" },
+      { label: "Concentração em aberto", question: "Quais obras concentram maior valor em aberto?" },
     ],
   },
   {
@@ -52,9 +72,11 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
     icon: PackageCheck,
     color: "text-blue-600 dark:text-blue-400",
     questions: [
-      { label: "Compras pendentes esta semana", question: "Quais compras (project_purchases) estão com status 'pending' e required_by_date nesta semana? Mostre item, obra e fornecedor." },
+      { label: "Compras atrasadas", question: "Quais compras estão atrasadas? Mostre obra, item, fornecedor e dias de atraso." },
       { label: "Top fornecedores por uso", question: "Quais são os 10 fornecedores mais usados em project_purchases? Mostre nome e quantidade de compras." },
-      { label: "Prestadores agendados hoje", question: "Quais prestadores (purchase_type = 'prestador') têm scheduled_start = hoje? Mostre item, obra e fornecedor." },
+      { label: "Itens sem fornecedor", question: "Quais compras estão sem fornecedor associado?" },
+      { label: "Custo real vs estimado", question: "Onde o custo real ultrapassou o estimado? Top 10 com maior excesso." },
+      { label: "Críticas da semana", question: "Quais compras são críticas para esta semana?" },
     ],
   },
   {
@@ -62,9 +84,10 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
     icon: CalendarClock,
     color: "text-purple-600 dark:text-purple-400",
     questions: [
-      { label: "Atividades atrasadas", question: "Liste todas as atividades (project_activities) cuja planned_end < hoje e actual_end é nulo. Mostre obra, descrição, etapa e dias de atraso." },
-      { label: "Atividades desta semana", question: "Quais atividades têm planned_start ou planned_end dentro da semana atual? Agrupe por obra." },
-      { label: "Progresso médio por obra", question: "Mostre o progresso médio (avg de progress_pct) das atividades por obra, ordenado do menor para o maior." },
+      { label: "Atividades atrasadas", question: "Liste todas as atividades atrasadas (planned_end < hoje e actual_end IS NULL). Mostre obra, descrição, etapa e dias de atraso." },
+      { label: "Atividades da semana", question: "Quais atividades têm planned_start ou planned_end dentro da semana atual? Agrupe por obra." },
+      { label: "Etapas com mais atraso", question: "Quais etapas concentram mais atrasos? Conte atividades atrasadas por etapa." },
+      { label: "Sem responsável", question: "Quais atividades não têm responsável definido?" },
     ],
   },
   {
@@ -73,8 +96,10 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
     color: "text-amber-600 dark:text-amber-400",
     questions: [
       { label: "NCs em aberto por obra", question: "Quantas non_conformities estão com status diferente de 'closed', agrupadas por obra?" },
+      { label: "NCs críticas abertas", question: "Quais NCs com severidade crítica estão em aberto? Mostre obra, título, deadline e responsável." },
       { label: "NCs vencidas", question: "Liste NCs com deadline < hoje e status diferente de 'closed'. Mostre obra, título, severidade e dias de atraso." },
       { label: "Pendências do cliente", question: "Quais pending_items estão com status 'pending' e due_date nos próximos 7 dias? Mostre obra, título e vencimento." },
+      { label: "Pendências bloqueadoras", question: "Quais pendências bloqueando obras estão atrasadas?" },
     ],
   },
   {
@@ -82,8 +107,9 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
     icon: ClipboardList,
     color: "text-rose-600 dark:text-rose-400",
     questions: [
-      { label: "Tickets abertos por severidade", question: "Quantos cs_tickets estão abertos (resolved_at nulo) agrupados por severity?" },
-      { label: "Tickets criados esta semana", question: "Liste cs_tickets criados nesta semana com obra, situação e severidade." },
+      { label: "Tickets críticos abertos", question: "Quais cs_tickets críticos (severity = 'critical') estão sem resolved_at? Mostre obra e situação." },
+      { label: "Tickets sem responsável", question: "Quais tickets de atendimento estão sem responsible_user_id?" },
+      { label: "Por obra", question: "Quais obras têm mais tickets de CS abertos?" },
     ],
   },
   {
@@ -91,7 +117,7 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
     icon: TrendingUp,
     color: "text-cyan-600 dark:text-cyan-400",
     questions: [
-      { label: "Obras ativas", question: "Quantas obras (projects) estão com status 'active'? Liste nome e data de início." },
+      { label: "Obras ativas", question: "Quantas obras (projects) estão com status 'active' e não foram arquivadas? Liste nome e data de início." },
       { label: "Resumo financeiro do mês", question: "Qual o total recebido (paid_at no mês atual) e o total a receber (paid_at nulo) deste mês?" },
     ],
   },
@@ -99,13 +125,19 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
 
 interface Result {
   answer: string;
-  rows: unknown[];
+  rows: Record<string, unknown>[];
   rows_returned: number;
   sql?: string;
   domain?: string;
   status: string;
   conversation_id?: string;
   latency_ms?: number;
+  insights?: Insight[] | null;
+  data_quality?: DataQualityWarning[] | null;
+  visualizations?: InsightVisualizationHint[] | null;
+  suggested_questions?: string[] | null;
+  confidence?: number | null;
+  limitations?: string[] | null;
 }
 
 export default function AssistenteConsultas() {
@@ -131,7 +163,7 @@ export default function AssistenteConsultas() {
 
     try {
       const { data, error } = await supabase.functions.invoke("assistant-chat", {
-        body: { question: trimmed },
+        body: { question: trimmed, stream: false },
       });
       if (error) throw error;
       if (data?.error && !data?.answer) throw new Error(data.error);
@@ -163,7 +195,7 @@ export default function AssistenteConsultas() {
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold tracking-tight">Consultas do Assistente</h1>
             <p className="text-sm text-muted-foreground">
-              Pergunte em linguagem natural sobre os dados do sistema. As respostas respeitam suas permissões.
+              Pergunte em linguagem natural — receba números, insights e próximos passos. As respostas respeitam suas permissões.
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -185,7 +217,7 @@ export default function AssistenteConsultas() {
             <Textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Ex: Quais compras precisam ser pagas hoje e o valor total?"
+              placeholder="Ex: O que eu preciso priorizar hoje?"
               rows={3}
               className="resize-none"
               onKeyDown={(e) => {
@@ -204,12 +236,12 @@ export default function AssistenteConsultas() {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Consultando...
+                    Analisando...
                   </>
                 ) : (
                   <>
                     <Send className="h-4 w-4" />
-                    Consultar
+                    Analisar
                   </>
                 )}
               </Button>
@@ -240,6 +272,7 @@ export default function AssistenteConsultas() {
                   >
                     {result.rows_returned} resultado(s)
                   </Badge>
+                  {typeof result.confidence === "number" && <ConfidenceBadge confidence={result.confidence} />}
                   {typeof result.latency_ms === "number" && (
                     <Badge variant="outline" className="text-[10px]">
                       {result.latency_ms} ms
@@ -250,21 +283,21 @@ export default function AssistenteConsultas() {
             </div>
           </CardHeader>
           <Separator />
-          <CardContent className="pt-4">
+          <CardContent className="pt-4 space-y-4">
             {isLoading && (
               <div className="flex items-center gap-2 text-muted-foreground py-6 justify-center">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Gerando consulta e analisando os dados...</span>
+                <span className="text-sm">Gerando consulta, executando análise e produzindo insights...</span>
               </div>
             )}
             {result && !isLoading && (
-              <div className="space-y-3">
+              <>
                 <div
                   className={cn(
                     "rounded-lg px-4 py-3 text-sm",
                     isError
                       ? "bg-destructive/10 border border-destructive/30"
-                      : "bg-muted/40 border border-border"
+                      : "bg-muted/40 border border-border",
                   )}
                 >
                   <div className="prose prose-sm max-w-none dark:prose-invert prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5">
@@ -279,6 +312,24 @@ export default function AssistenteConsultas() {
                     </div>
                   )}
                 </div>
+
+                {!isError && (
+                  <AssistantAnalysisPanel
+                    analysis={{
+                      insights: result.insights ?? [],
+                      visualizations: result.visualizations ?? [],
+                      data_quality: result.data_quality ?? [],
+                      suggested_questions: result.suggested_questions ?? [],
+                      limitations: result.limitations ?? [],
+                      confidence: result.confidence ?? undefined,
+                    }}
+                    rows={result.rows ?? []}
+                    onAsk={(q) => {
+                      setQuestion(q);
+                      runQuery(q);
+                    }}
+                  />
+                )}
 
                 {result.sql && (
                   <div>
@@ -297,7 +348,7 @@ export default function AssistenteConsultas() {
                     )}
                   </div>
                 )}
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -308,7 +359,7 @@ export default function AssistenteConsultas() {
         <div>
           <h2 className="text-lg font-semibold">Sugestões rápidas</h2>
           <p className="text-xs text-muted-foreground">
-            Clique para executar a consulta imediatamente.
+            Clique para executar a análise imediatamente.
           </p>
         </div>
 

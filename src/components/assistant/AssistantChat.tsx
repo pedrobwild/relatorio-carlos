@@ -19,20 +19,31 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import type { Insight, DataQualityWarning, InsightVisualizationHint, MetricSnapshot } from "@/lib/assistant";
+import { AssistantAnalysisPanel } from "./AssistantAnalysisPanel";
+
+export interface AssistantMessageResultData {
+  rows?: unknown[];
+  rows_returned?: number;
+  sql?: string;
+  domain?: string;
+  status?: string;
+  phase?: string;
+  statusMessage?: string;
+  insights?: Insight[] | null;
+  data_quality?: DataQualityWarning[] | null;
+  visualizations?: InsightVisualizationHint[] | null;
+  suggested_questions?: string[] | null;
+  confidence?: number | null;
+  limitations?: string[] | null;
+  metrics?: MetricSnapshot[] | null;
+}
 
 export interface AssistantMessage {
   id?: string;
   role: "user" | "assistant";
   content: string;
-  result_data?: {
-    rows?: unknown[];
-    rows_returned?: number;
-    sql?: string;
-    domain?: string;
-    status?: string;
-    phase?: string;
-    statusMessage?: string;
-  } | null;
+  result_data?: AssistantMessageResultData | null;
   pending?: boolean;
 }
 
@@ -47,10 +58,11 @@ interface AssistantChatProps {
 }
 
 const DEFAULT_SUGGESTIONS = [
-  "Quais compras precisam ser pagas hoje e o valor total?",
-  "Liste as NCs em aberto agrupadas por obra",
-  "Quais atividades estão atrasadas esta semana?",
-  "Quanto recebemos de pagamentos este mês?",
+  "O que eu preciso priorizar hoje?",
+  "Quais pagamentos estão vencidos e qual o total por obra?",
+  "Quais obras estão em risco de atraso?",
+  "Quais NCs críticas estão abertas?",
+  "Quais compras estão atrasadas?",
 ];
 
 export function AssistantChat({
@@ -75,7 +87,6 @@ export function AssistantChat({
   }, [externalConvId]);
 
   useEffect(() => {
-    // Auto-scroll to bottom
     requestAnimationFrame(() => {
       const el = scrollRef.current;
       if (el) el.scrollTop = el.scrollHeight;
@@ -145,13 +156,11 @@ export function AssistantChat({
       const decoder = new TextDecoder();
       let buffer = "";
 
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        // SSE messages separated by blank line
         const blocks = buffer.split("\n\n");
         buffer = blocks.pop() ?? "";
 
@@ -209,6 +218,21 @@ export function AssistantChat({
               }));
               break;
             }
+            case "analysis": {
+              updateLastAssistant((m) => ({
+                ...m,
+                result_data: {
+                  ...(m.result_data ?? {}),
+                  insights: payload.insights as Insight[] | null,
+                  data_quality: payload.data_quality as DataQualityWarning[] | null,
+                  visualizations: payload.visualizations as InsightVisualizationHint[] | null,
+                  suggested_questions: payload.suggested_questions as string[] | null,
+                  confidence: payload.confidence as number | null,
+                  limitations: payload.limitations as string[] | null,
+                },
+              }));
+              break;
+            }
             case "delta": {
               const chunk = (payload.content as string) ?? "";
               if (chunk) {
@@ -229,6 +253,17 @@ export function AssistantChat({
                   sql: payload.sql as string,
                   domain: payload.domain as string,
                   status: finalStatus,
+                  insights: (payload.insights as Insight[] | null) ?? m.result_data?.insights ?? null,
+                  data_quality:
+                    (payload.data_quality as DataQualityWarning[] | null) ?? m.result_data?.data_quality ?? null,
+                  visualizations:
+                    (payload.visualizations as InsightVisualizationHint[] | null) ??
+                    m.result_data?.visualizations ??
+                    null,
+                  suggested_questions:
+                    (payload.suggested_questions as string[] | null) ?? m.result_data?.suggested_questions ?? null,
+                  confidence: (payload.confidence as number | null) ?? m.result_data?.confidence ?? null,
+                  limitations: (payload.limitations as string[] | null) ?? m.result_data?.limitations ?? null,
                 },
               }));
               break;
@@ -269,8 +304,8 @@ export function AssistantChat({
                 Assistente BWild
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Pergunte sobre pagamentos, compras, cronogramas, NCs e
-                pendências. As respostas respeitam suas permissões.
+                Pergunte sobre pagamentos, compras, cronogramas, NCs, pendências e atendimento.
+                Eu trago números, insights e próximos passos — sempre respeitando suas permissões.
               </p>
             </div>
           )}
@@ -296,7 +331,7 @@ export function AssistantChat({
           )}
 
           {messages.map((m, i) => (
-            <MessageBubble key={i} message={m} />
+            <MessageBubble key={i} message={m} onAsk={send} />
           ))}
         </div>
       </ScrollArea>
@@ -328,7 +363,7 @@ export function AssistantChat({
   );
 }
 
-function MessageBubble({ message }: { message: AssistantMessage }) {
+function MessageBubble({ message, onAsk }: { message: AssistantMessage; onAsk: (q: string) => void }) {
   const [showSql, setShowSql] = useState(false);
 
   if (message.role === "user") {
@@ -345,10 +380,18 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
   const isStreaming = status === "streaming";
   const isError = status && status !== "success" && status !== "streaming";
   const phaseMessage = message.result_data?.statusMessage;
+  const rows = (message.result_data?.rows as Record<string, unknown>[] | undefined) ?? [];
+  const hasAnalysis =
+    !isError &&
+    !!message.result_data &&
+    ((message.result_data.insights?.length ?? 0) > 0 ||
+      (message.result_data.visualizations?.length ?? 0) > 0 ||
+      (message.result_data.suggested_questions?.length ?? 0) > 0 ||
+      (message.result_data.data_quality?.length ?? 0) > 0);
 
   return (
     <div className="flex justify-start">
-      <div className="max-w-[92%] w-full">
+      <div className="max-w-[95%] w-full">
         <div className="flex items-center gap-1.5 mb-1.5 text-xs text-muted-foreground">
           <Sparkles className="h-3 w-3" />
           <span>Assistente</span>
@@ -367,7 +410,7 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
             "rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm",
             isError
               ? "bg-destructive/10 border border-destructive/30"
-              : "bg-muted"
+              : "bg-muted",
           )}
         >
           {message.pending ? (
@@ -394,10 +437,27 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
           )}
         </div>
 
+        {hasAnalysis && (
+          <div className="mt-3">
+            <AssistantAnalysisPanel
+              analysis={{
+                insights: message.result_data?.insights ?? [],
+                visualizations: message.result_data?.visualizations ?? [],
+                data_quality: message.result_data?.data_quality ?? [],
+                suggested_questions: message.result_data?.suggested_questions ?? [],
+                limitations: message.result_data?.limitations ?? [],
+                confidence: message.result_data?.confidence ?? undefined,
+              }}
+              rows={rows}
+              onAsk={onAsk}
+            />
+          </div>
+        )}
+
         {message.result_data?.sql && (
           <button
             onClick={() => setShowSql((v) => !v)}
-            className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             {showSql ? (
               <ChevronDown className="h-3 w-3" />

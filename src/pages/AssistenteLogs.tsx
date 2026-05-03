@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { matchesSearch } from "@/lib/searchNormalize";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -104,12 +103,15 @@ export default function AssistenteLogs() {
   };
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase();
     return logs.filter((l) => {
       if (statusFilter !== "all" && l.status !== statusFilter) return false;
       if (domainFilter !== "all" && l.domain !== domainFilter) return false;
-      if (!matchesSearch(search, [l.question, l.answer_summary, userMap[l.user_id]])) {
-        return false;
-      }
+      if (q && !(
+        l.question.toLowerCase().includes(q) ||
+        (l.answer_summary ?? "").toLowerCase().includes(q) ||
+        (userMap[l.user_id] ?? "").toLowerCase().includes(q)
+      )) return false;
       return true;
     });
   }, [logs, search, statusFilter, domainFilter, userMap]);
@@ -345,6 +347,8 @@ export default function AssistenteLogs() {
               <SelectItem value="ncs">NCs</SelectItem>
               <SelectItem value="pendencias">Pendências</SelectItem>
               <SelectItem value="cs">CS</SelectItem>
+              <SelectItem value="obras">Obras</SelectItem>
+              <SelectItem value="fornecedores">Fornecedores</SelectItem>
               <SelectItem value="outros">Outros</SelectItem>
             </SelectContent>
           </Select>
