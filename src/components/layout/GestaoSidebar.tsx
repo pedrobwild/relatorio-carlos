@@ -170,14 +170,21 @@ export function GestaoSidebar() {
 
   const isActive = (item: NavItem) => {
     const currentPath = location.pathname;
+    const currentSearch = location.search;
+    const currentFase = new URLSearchParams(currentSearch).get('fase');
+
+    // Painel de Obras (execução): ativo só quando a URL não está em ?fase=projetos
     if (item.path === "/gestao/painel-obras") {
-      return (
+      const onPainel =
         currentPath === "/gestao/painel-obras" ||
         currentPath === "/gestao" ||
-        currentPath.startsWith("/gestao/obra/")
-      );
+        currentPath.startsWith("/gestao/obra/");
+      return onPainel && currentFase !== 'projetos';
     }
-    // CS Operacional também ativa para a rota de detalhe do ticket (/gestao/cs/:id)
+    // Painel de Projetos: ativo só quando ?fase=projetos
+    if (item.path === "/gestao/painel-obras?fase=projetos") {
+      return currentPath === "/gestao/painel-obras" && currentFase === 'projetos';
+    }
     if (item.path === "/gestao/cs/operacional") {
       if (currentPath === "/gestao/cs/operacional") return true;
       if (
