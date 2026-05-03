@@ -599,14 +599,37 @@ export default function PainelObras() {
       <PageContainer maxWidth="full">
         <PageHeader
           eyebrow="Operações"
-          title="Painel de Obras"
-          description="Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
+          title={fase === 'projetos' ? 'Painel de Projetos' : 'Painel de Obras'}
+          description={
+            fase === 'projetos'
+              ? 'Empreendimentos em fase de projeto — anteprojeto, executivo e aprovações antes da execução em campo.'
+              : 'Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução.'
+          }
           actions={
-            // Mobile: ações concorrentes (Customer Success + Nova obra) ficam
-            // ocultas porque (a) "Nova obra" já está como FAB central no
-            // GestaoBottomNav e (b) atalhos secundários ficam no menu "Mais".
-            // Isso preserva uma única ação primária dominante por viewport.
             <div className="hidden md:flex items-center gap-2">
+              {/* Toggle de fase: Obras (execução) | Projetos (fase de projeto) */}
+              <div role="tablist" aria-label="Alternar entre obras e projetos" className="inline-flex h-8 rounded-md border border-border-subtle bg-surface p-0.5">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={fase === 'obras'}
+                  onClick={() => handleFaseChange('obras')}
+                  className={cn(
+                    'h-7 px-3 rounded-[5px] text-xs font-medium transition-colors',
+                    fase === 'obras' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >Obras</button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={fase === 'projetos'}
+                  onClick={() => handleFaseChange('projetos')}
+                  className={cn(
+                    'h-7 px-3 rounded-[5px] text-xs font-medium transition-colors',
+                    fase === 'projetos' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >Projetos</button>
+              </div>
               <Button variant="outline" size="sm" onClick={() => navigate('/gestao/cs/operacional')} className="h-8 gap-2">
                 <Headset className="h-4 w-4" />
                 <span className="hidden sm:inline">Customer Success</span>
@@ -620,6 +643,33 @@ export default function PainelObras() {
           flush
           className="!pt-4 !pb-3 md:!pt-5 md:!pb-3 [&_h1]:!text-lg [&_h1]:md:!text-xl"
         />
+
+        {/* Mobile: toggle Obras/Projetos compacto acima da listagem */}
+        <div className="md:hidden mt-2 px-3">
+          <div role="tablist" aria-label="Alternar entre obras e projetos" className="inline-flex h-9 rounded-md border border-border-subtle bg-surface p-0.5 w-full">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={fase === 'obras'}
+              onClick={() => handleFaseChange('obras')}
+              className={cn(
+                'flex-1 h-8 rounded-[5px] text-sm font-medium transition-colors',
+                fase === 'obras' ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
+              )}
+            >Obras</button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={fase === 'projetos'}
+              onClick={() => handleFaseChange('projetos')}
+              className={cn(
+                'flex-1 h-8 rounded-[5px] text-sm font-medium transition-colors',
+                fase === 'projetos' ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
+              )}
+            >Projetos</button>
+          </div>
+        </div>
+
 
         {/* Delete confirmation dialog */}
         <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o && !deleting) setDeleteTarget(null); }}>
