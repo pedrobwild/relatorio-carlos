@@ -129,7 +129,7 @@ const ScheduleTable = ({
           const status = getActivityStatus(activity);
           const isCurrent = originalIndex === currentActivityIndex;
           const isSelected = selectedActivityId === activity.id;
-          const expanded = isSelected || canEditDates;
+          const expanded = isSelected;
           const hasDetails = !!activity.detailed_description?.trim();
           const realRange = activity.actualStart
             ? `${formatDate(activity.actualStart, baseYear)}${activity.actualEnd ? ` → ${formatDate(activity.actualEnd, baseYear)}` : ""}`
