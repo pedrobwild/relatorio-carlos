@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Save, Building2, Loader2, Search, FileText, UserCog, Users, Clock } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Save, Building2, Loader2, Search, FileText, UserCog, Users, Clock, KeyRound } from 'lucide-react';
 import { ProjectInfoDoc } from '@/components/project/ProjectInfoDoc';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
 import {
