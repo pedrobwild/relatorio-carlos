@@ -525,7 +525,7 @@ export default function PainelObras() {
       });
     }
     return rows;
-  }, [obras, search, filterEtapa, filterStatuses, filterRelacionamento, filterResponsavel, sortKey, sortDir]);
+  }, [obras, fase, search, filterEtapa, filterStatuses, filterRelacionamento, filterResponsavel, sortKey, sortDir]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
     if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
