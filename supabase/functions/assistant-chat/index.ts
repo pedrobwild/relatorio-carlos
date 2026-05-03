@@ -11,8 +11,15 @@ import {
 import {
   SYSTEM_PROMPT,
   FORMATTER_SYSTEM_PROMPT,
+  PLANNER_EXTERNAL_DELTA,
   buildFormatterUserMessage,
+  type FormatterEvidence,
 } from './_lib/prompts.ts';
+import {
+  EXTERNAL_SOURCES,
+  renderExternalSourcesCatalog,
+} from './_lib/externalSources.ts';
+import { dispatchExternalStep } from './_lib/dispatcher.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -20,24 +27,64 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const MODEL = 'google/gemini-3-flash-preview';
 
 const SCHEMA_CATALOG = renderCatalog();
+const EXTERNAL_CATALOG = renderExternalSourcesCatalog();
+const VALID_SOURCE_IDS = EXTERNAL_SOURCES.map((s) => s.id);
 
+const PERPLEXITY_FN_URL = `${SUPABASE_URL}/functions/v1/perplexity-research`;
+
+// Tool schema v4: extende o generate_query do v3 com classificação interna×externa.
+// `step_type=internal` (default, comportamento legado) → SQL apenas.
+// `step_type=external` → sem SQL, só busca externa.
+// `step_type=mixed`    → SQL + busca externa em paralelo (Formatter cruza).
 const TOOL_SCHEMA = {
   type: 'function',
   function: {
     name: 'generate_query',
-    description: 'Gera a consulta SQL e o domínio para responder à pergunta do usuário.',
+    description:
+      'Gera a consulta principal para responder à pergunta. Classifica entre dado interno (SQL) e externo (mercado, regulação, fornecedor). Em pergunta cruzada, marca step_type=mixed.',
     parameters: {
       type: 'object',
       properties: {
-        sql: { type: 'string', description: 'Consulta SELECT/WITH em PostgreSQL. UMA instrução, sem ponto-e-vírgula.' },
+        step_type: {
+          type: 'string',
+          enum: ['internal', 'external', 'mixed'],
+          description:
+            "internal=só banco BWild. external=só fonte externa. mixed=banco + 1 fonte externa cruzados. Default=internal.",
+        },
+        sql: {
+          type: 'string',
+          description:
+            'Consulta SELECT/WITH em PostgreSQL. UMA instrução, sem ponto-e-vírgula. Obrigatória em internal/mixed; deixe string vazia em external.',
+        },
         domain: {
           type: 'string',
           enum: ['financeiro', 'compras', 'cronograma', 'ncs', 'pendencias', 'cs', 'obras', 'fornecedores', 'outros'],
           description: 'Domínio principal da pergunta.',
         },
         intent: { type: 'string', description: 'Resumo curto do que será consultado.' },
+        external_source_id: {
+          type: 'string',
+          description:
+            'id de EXTERNAL_SOURCES quando step_type ∈ {external,mixed}. Ex: bcb_ipca, bcb_cambio_usd, cub_sp.',
+        },
+        external_kind: {
+          type: 'string',
+          enum: ['fetch', 'web'],
+          description:
+            "fetch=API estruturada (BCB/Receita) → use external_params. web=Perplexity → use external_query.",
+        },
+        external_params: {
+          type: 'object',
+          description:
+            'Parâmetros para fetch_market_data. BCB: { n: número de pontos } (padrão 12 para séries mensais, 1 para câmbio diário). CNPJ: { cnpj: 14 dígitos }.',
+        },
+        external_query: {
+          type: 'string',
+          description:
+            'Pergunta natural em PT-BR para web_research, específica e datada.',
+        },
       },
-      required: ['sql', 'domain', 'intent'],
+      required: ['step_type', 'sql', 'domain', 'intent'],
       additionalProperties: false,
     },
   },
@@ -136,6 +183,12 @@ Deno.serve(async (req) => {
       let rows: Record<string, unknown>[] = [];
       let logId: string | null = null;
       let analysis: ReturnType<typeof buildAnalysis> | null = null;
+      let stepType: 'internal' | 'external' | 'mixed' = 'internal';
+      const evidences: FormatterEvidence[] = [];
+      let externalCalls = 0;
+      let externalCacheHits = 0;
+      let externalCostCents = 0;
+      const externalSourcesUsed: string[] = [];
 
       try {
         if (!conversationId) {
@@ -166,7 +219,12 @@ Deno.serve(async (req) => {
           .limit(10);
 
         const llmMessages = [
-          { role: 'system', content: SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG },
+          {
+            role: 'system',
+            content:
+              SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG +
+              '\n\n' + PLANNER_EXTERNAL_DELTA + '\n\n' + EXTERNAL_CATALOG,
+          },
           ...(history ?? []).map((m: { role: string; content: string }) => ({
             role: m.role === 'assistant' ? 'assistant' : 'user',
             content: m.content,
@@ -219,26 +277,106 @@ Deno.serve(async (req) => {
         generatedSql = (args.sql ?? '').toString();
         domain = (args.domain ?? 'outros').toString();
         intent = (args.intent ?? null);
+        stepType = (args.step_type === 'external' || args.step_type === 'mixed')
+          ? args.step_type
+          : 'internal';
+        const externalSourceId: string | undefined =
+          typeof args.external_source_id === 'string' && VALID_SOURCE_IDS.includes(args.external_source_id)
+            ? args.external_source_id
+            : undefined;
+        const externalKind: 'fetch' | 'web' | undefined =
+          args.external_kind === 'fetch' || args.external_kind === 'web' ? args.external_kind : undefined;
+        const externalParams: Record<string, unknown> = (args.external_params && typeof args.external_params === 'object')
+          ? args.external_params as Record<string, unknown>
+          : {};
+        const externalQuery: string | undefined =
+          typeof args.external_query === 'string' && args.external_query.trim().length > 0
+            ? args.external_query.trim()
+            : undefined;
 
-        send('sql', { sql: generatedSql, domain, intent });
-        send('status', { phase: 'querying', message: 'Consultando banco de dados...' });
+        send('sql', { sql: generatedSql, domain, intent, step_type: stepType, external_source_id: externalSourceId ?? null });
 
-        const { data: rpcData, error: rpcErr } = await supabase.rpc('execute_assistant_query', {
-          p_sql: generatedSql,
-        });
+        // ---- 1. Internal step (SQL) — pula em step_type='external' ------------
+        if (stepType !== 'external' && generatedSql) {
+          send('status', { phase: 'querying', message: 'Consultando banco de dados...' });
 
-        if (rpcErr) {
-          const msg = (rpcErr.message || '').toLowerCase();
-          if (msg.includes('proibido') || msg.includes('apenas') || msg.includes('multiplas') || msg.includes('blocos') || msg.includes('esquemas')) status = 'sql_blocked';
-          else if (msg.includes('timeout') || msg.includes('canceling statement')) status = 'timeout';
-          else status = 'sql_error';
-          errorMessage = rpcErr.message;
-        } else {
-          rows = Array.isArray(rpcData) ? (rpcData as Record<string, unknown>[]) : [];
-          rowsReturned = rows.length;
+          const { data: rpcData, error: rpcErr } = await supabase.rpc('execute_assistant_query', {
+            p_sql: generatedSql,
+          });
+
+          if (rpcErr) {
+            const msg = (rpcErr.message || '').toLowerCase();
+            if (msg.includes('proibido') || msg.includes('apenas') || msg.includes('multiplas') || msg.includes('blocos') || msg.includes('esquemas')) status = 'sql_blocked';
+            else if (msg.includes('timeout') || msg.includes('canceling statement')) status = 'timeout';
+            else status = 'sql_error';
+            errorMessage = rpcErr.message;
+          } else {
+            rows = Array.isArray(rpcData) ? (rpcData as Record<string, unknown>[]) : [];
+            rowsReturned = rows.length;
+          }
+        } else if (stepType === 'external') {
+          // Em external puro, não há SQL — segue para a busca externa abaixo.
+          rows = [];
+          rowsReturned = 0;
         }
 
         send('rows', { rows_returned: rowsReturned, preview: rows.slice(0, 50) });
+
+        // ---- 2. External step (mercado/regulação) — limite hard de 1 fonte ---
+        if (
+          status === 'success' &&
+          stepType !== 'internal' &&
+          externalSourceId
+        ) {
+          send('status', { phase: 'researching', message: 'Buscando dado de mercado...' });
+          externalCalls += 1;
+          externalSourcesUsed.push(externalSourceId);
+
+          const isWeb = externalKind === 'web' || (!externalKind && !externalParams.cnpj && !externalParams.n);
+          const result = await dispatchExternalStep(
+            {
+              source_id: externalSourceId,
+              params: externalParams,
+              query: externalQuery,
+            },
+            isWeb
+              ? { perplexityFnUrl: PERPLEXITY_FN_URL, authHeader: authHeader }
+              : {},
+          );
+
+          if (result.cached) externalCacheHits += 1;
+          externalCostCents += result.cost_cents;
+
+          if (result.evidence) {
+            const ev = result.evidence;
+            evidences.push({
+              source_id: ev.source_id,
+              publisher: ev.publisher,
+              claim: ev.claim,
+              url: ev.url,
+              access_date: ev.access_date,
+              published_at: ev.published_at,
+              numeric_value: ev.numeric_value,
+              numeric_unit: ev.numeric_unit,
+              tier: ev.tier,
+              warnings: ev.warnings,
+            });
+            send('evidence', {
+              source_id: ev.source_id,
+              publisher: ev.publisher,
+              claim: ev.claim,
+              url: ev.url,
+              tier: ev.tier,
+              cached: result.cached,
+            });
+          } else if (result.error) {
+            // Falha externa não derruba a sessão — degrada via Formatter.
+            send('evidence_error', {
+              source_id: externalSourceId,
+              error: result.error,
+            });
+          }
+        }
 
         if (status === 'success') {
           analysis = buildAnalysis({ rows, rowsReturned, domain, sql: generatedSql, status });
@@ -279,6 +417,7 @@ Deno.serve(async (req) => {
                   visualizations: analysis.visualizations,
                 }
               : null,
+            evidences: evidences.length ? evidences : null,
           });
 
           const formatResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -348,6 +487,10 @@ Deno.serve(async (req) => {
             status,
             error_message: errorMessage,
             answer_summary: finalAnswer.slice(0, 280),
+            external_calls_count: externalCalls,
+            external_cache_hits: externalCacheHits,
+            external_cost_cents: externalCostCents,
+            external_sources_used: externalSourcesUsed.length ? externalSourcesUsed : null,
           })
           .select('id')
           .single();
@@ -364,12 +507,14 @@ Deno.serve(async (req) => {
             sql: generatedSql,
             domain,
             status,
+            step_type: stepType,
             insights: analysis?.insights ?? null,
             data_quality: analysis?.dataQuality ?? null,
             visualizations: analysis?.visualizations ?? null,
             suggested_questions: analysis?.followUps ?? null,
             confidence: analysis?.confidence ?? null,
             limitations: analysis?.limitations ?? null,
+            evidences: evidences.length ? evidences : null,
           },
           log_id: logId,
         });
@@ -388,6 +533,7 @@ Deno.serve(async (req) => {
           domain,
           intent,
           status,
+          step_type: stepType,
           log_id: logId,
           latency_ms: Date.now() - startedAt,
           insights: analysis?.insights ?? null,
@@ -396,6 +542,7 @@ Deno.serve(async (req) => {
           suggested_questions: analysis?.followUps ?? null,
           confidence: analysis?.confidence ?? null,
           limitations: analysis?.limitations ?? null,
+          evidences: evidences.length ? evidences : null,
         });
       } catch (e) {
         console.error('[assistant-chat stream] error:', e);
@@ -477,7 +624,12 @@ async function runNonStreaming(opts: {
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG },
+          {
+            role: 'system',
+            content:
+              SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG +
+              '\n\n' + PLANNER_EXTERNAL_DELTA + '\n\n' + EXTERNAL_CATALOG,
+          },
           ...(history ?? []).map((m: { role: string; content: string }) => ({
             role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content,
           })),
@@ -500,8 +652,16 @@ async function runNonStreaming(opts: {
     generatedSql = (args.sql ?? '').toString();
     domain = (args.domain ?? 'outros').toString();
     intent = (args.intent ?? null);
+    const stepType: 'internal' | 'external' | 'mixed' =
+      args.step_type === 'external' || args.step_type === 'mixed' ? args.step_type : 'internal';
 
-    const { data: rpcData, error: rpcErr } = await supabase.rpc('execute_assistant_query', { p_sql: generatedSql });
+    let rpcData: unknown = [];
+    let rpcErr: { message?: string } | null = null;
+    if (stepType !== 'external' && generatedSql) {
+      const r = await supabase.rpc('execute_assistant_query', { p_sql: generatedSql });
+      rpcData = r.data;
+      rpcErr = r.error;
+    }
     if (rpcErr) {
       const msg = (rpcErr.message || '').toLowerCase();
       if (msg.includes('proibido') || msg.includes('apenas')) status = 'sql_blocked';

@@ -3,6 +3,11 @@
 // Versionado em arquivo separado para facilitar A/B test e revisão.
 // Mantém o tool schema, o catálogo, o RPC `execute_assistant_query` e a
 // camada `analysis.ts` intactos — só conteúdo de prompt.
+//
+// v4: pergunta pode exigir cruzamento dado interno × dado externo (mercado,
+// regulação, fornecedor). Quando isso acontece, o LLM dispara fetch_market_data
+// (BCB/Receita) ou web_research (Perplexity sobre Sinduscon, .gov.br, etc.).
+// O catálogo formal de fontes é injetado pelo orquestrador antes do prompt.
 
 export const SYSTEM_PROMPT = `Você é o **Assistente BWild**, copiloto analítico do portal de gestão de obras da Bwild Reformas — empresa que entrega reformas turnkey de studios para investidores de short-stay em São Paulo.
 
@@ -84,6 +89,80 @@ Você DEVE chamar a função \`generate_query\` exatamente UMA vez, com:
 
 Não escreva texto fora do tool call.`;
 
+// ============================================================
+// v4 — classificação interna × externa
+// ============================================================
+//
+// Bloco anexado ao SYSTEM_PROMPT quando a pergunta pode envolver mercado.
+// Mantemos a saída como UMA tool_call (compatibilidade): a tool agora aceita
+// `step_type` ∈ {internal, external} e os campos correspondentes.
+
+export const PLANNER_EXTERNAL_DELTA =
+  `# Dados internos vs externos (v4)
+
+Para CADA pergunta, decida o passo principal:
+
+- **internal**: a sub-pergunta é totalmente respondível pelo banco BWild (CATÁLOGO interno).
+- **external**: a sub-pergunta exige dado de fora (CATÁLOGO DE FONTES EXTERNAS abaixo). Cite \`external_source_id\`.
+
+Heurística: se a pergunta menciona "mercado", "média do setor", "INCC", "IPCA", "Selic", "CUB", "câmbio", "dólar", "USD", "regulação", "lei", "Airbnb", "ocupação", "preço de [bairro]", ou "fornecedor [nome] tem" → external.
+
+Se cruza ambos (típico — "estamos cobrando acima do CUB?"): escolha como passo principal o **internal** (a base da nossa obra) e marque \`needs_external: true\` com \`external_source_id\` e \`external_query\` curtos. O orquestrador buscará o externo em paralelo e o Formatter cruzará.
+
+Limite: máximo 1 fonte externa por pergunta (custo). Se exigir mais, simplifique e diga em \`intent\`.`;
+
+export const FETCH_MARKET_DATA_TOOL = {
+  type: "function" as const,
+  function: {
+    name: "fetch_market_data",
+    description:
+      "Chama endpoint estruturado de fonte externa (BCB SGS, Receita Federal). Use SOMENTE quando o source.kind for api_official ou api_aggregator.",
+    parameters: {
+      type: "object",
+      properties: {
+        source_id: {
+          type: "string",
+          description:
+            "id de EXTERNAL_SOURCES — ex: bcb_selic, bcb_ipca, bcb_incc_m, bcb_cambio_usd, cnpj_receita.",
+        },
+        params: {
+          type: "object",
+          description:
+            "Parâmetros do endpoint. Para BCB: { n: número de pontos a retornar }. Para CNPJ: { cnpj: 14 dígitos }.",
+        },
+      },
+      required: ["source_id", "params"],
+      additionalProperties: false,
+    },
+  },
+};
+
+export const WEB_RESEARCH_TOOL = {
+  type: "function" as const,
+  function: {
+    name: "web_research",
+    description:
+      "Pesquisa via Perplexity Sonar para dado não estruturado (CUB, regulação, notícia, reputação de fornecedor). Use SOMENTE quando o source.kind for web_search.",
+    parameters: {
+      type: "object",
+      properties: {
+        source_id: {
+          type: "string",
+          description:
+            "id de EXTERNAL_SOURCES — ex: cub_sp, short_stay_lei_sp, reclame_aqui, noticias_construcao.",
+        },
+        query: {
+          type: "string",
+          description:
+            "Pergunta natural em PT-BR, específica e datada. Ex: 'CUB residencial alto padrão R-8 de São Paulo, valor em R$/m² no mês mais recente, fonte Sinduscon-SP'.",
+        },
+      },
+      required: ["source_id", "query"],
+      additionalProperties: false,
+    },
+  },
+};
+
 export const FORMATTER_SYSTEM_PROMPT = `Você é o **Assistente BWild** apresentando o resultado de uma consulta ao gestor.
 
 Audiência: o CEO Pedro e o time da Bwild leem isso de obra, no celular, entre uma reunião e outra. Densidade > simpatia. Decisão > descrição.
@@ -144,7 +223,25 @@ Antes de finalizar, valide internamente:
 
 # Quando a consulta deu erro
 
-Se receber \`status\` ≠ \`success\`, diga em 1 linha o que aconteceu e proponha 1 reformulação. Não invente dados.`;
+Se receber \`status\` ≠ \`success\`, diga em 1 linha o que aconteceu e proponha 1 reformulação. Não invente dados.
+
+# Quando há fontes externas (v4)
+
+Se o user message inclui bloco "# Evidências externas", incorpore os números literais delas no headline e no corpo. Regras:
+
+1. **Cite valor + data**: "Câmbio USD/BRL fechou em **R$ 5,87 em 02/05/2026** (fonte BCB)".
+2. **NUNCA cite número que não esteja na evidência.** Sem evidência → não fale do tema.
+3. **Adicione ao final** uma seção "**Fontes**" com bullets, antes do "🎯 Próximo passo":
+
+   **Fontes**
+   - Banco Central do Brasil — Câmbio USD/BRL (consulta em 03/05/2026)
+   - Sinduscon-SP — CUB R-8 abril/2026
+
+4. Se TODAS as evidências têm tier 3+ (agregadores), adicione antes do "🎯 Próximo passo":
+   \`_⚠ Fontes secundárias — confirme antes de tomar decisão de R$ alto valor._\`
+
+5. Para temas jurídicos (lei, advogado, processo, multa, fisco, contrato, rescisão, indenização), adicione disclaimer:
+   \`_Esta resposta é informativa. Decisões jurídicas exigem validação com advogado/contador._\``;
 
 export interface FormatterAnalysis {
   confidence?: number | null;
@@ -159,6 +256,20 @@ export interface FormatterAnalysis {
   visualizations?: Array<{ type: string; title?: string | null }> | null;
 }
 
+/** Evidência externa renderizada pro Formatter (subset de ExternalEvidence). */
+export interface FormatterEvidence {
+  source_id: string;
+  publisher: string;
+  claim: string;
+  url: string;
+  access_date: string;
+  published_at?: string | null;
+  numeric_value?: number | null;
+  numeric_unit?: string | null;
+  tier: 1 | 2 | 3 | 4;
+  warnings?: string[];
+}
+
 export function buildFormatterUserMessage(opts: {
   question: string;
   domain: string;
@@ -166,8 +277,9 @@ export function buildFormatterUserMessage(opts: {
   rows: Record<string, unknown>[];
   rowsReturned: number;
   analysis: FormatterAnalysis | null;
+  evidences?: FormatterEvidence[] | null;
 }): string {
-  const { question, domain, intent, rows, rowsReturned, analysis } = opts;
+  const { question, domain, intent, rows, rowsReturned, analysis, evidences } = opts;
 
   const insightsBlock = analysis?.insights?.length
     ? analysis.insights
@@ -194,6 +306,22 @@ export function buildFormatterUserMessage(opts: {
         .map((v) => `- ${v.type}: ${v.title ?? ''}`)
         .join('\n')
     : '—';
+
+  const evidencesBlock = evidences?.length
+    ? evidences
+        .map((e) => {
+          const num = e.numeric_value != null
+            ? `${e.numeric_value}${e.numeric_unit ?? ''}`
+            : '—';
+          const warn = e.warnings?.length ? ` ⚠ ${e.warnings.join(',')}` : '';
+          return `- [tier ${e.tier}] **${e.publisher}** (${e.source_id}): ${e.claim} · valor=${num} · acesso=${e.access_date}${e.published_at ? ` · publicado=${e.published_at}` : ''} · ${e.url}${warn}`;
+        })
+        .join('\n')
+    : null;
+
+  const evidencesSection = evidencesBlock
+    ? `\n\n# Evidências externas\n${evidencesBlock}`
+    : '';
 
   return `# Pergunta original
 ${question}
@@ -223,5 +351,5 @@ ${vizBlock}
 ${rowsReturned}
 
 # Dados (até 50 linhas, JSON)
-${JSON.stringify(rows.slice(0, 50))}`;
+${JSON.stringify(rows.slice(0, 50))}${evidencesSection}`;
 }
