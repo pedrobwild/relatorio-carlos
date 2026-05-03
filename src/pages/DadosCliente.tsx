@@ -258,6 +258,26 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       ? `${Math.floor(workWindowMinutes / 60)}h${workWindowMinutes % 60 ? ` ${workWindowMinutes % 60}min` : ''}`
       : '';
 
+  // ── Validação do editor "Como liberar prestadores" ──
+  const PROVIDER_ACCESS_MAX = 4000;
+  const providerAccessHtml = studio?.provider_access_instructions ?? '';
+  const providerAccessText = providerAccessHtml
+    .replace(/<br\s*\/?>(?!\n)/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
+  const providerAccessFilled = providerAccessText.length > 0;
+  let providerAccessError: string | null = null;
+  if (providerAccessHtml.length > PROVIDER_ACCESS_MAX) {
+    providerAccessError = `Texto muito longo (limite de ${PROVIDER_ACCESS_MAX.toLocaleString('pt-BR')} caracteres). Reduza para salvar.`;
+  } else if (providerAccessHtml.trim().length > 0 && !providerAccessFilled) {
+    providerAccessError = 'O texto está vazio. Escreva o procedimento ou limpe o campo.';
+  }
+
   const handleSave = async () => {
     if (!projectId) return;
     if (hasContactErrors) {
@@ -267,6 +287,11 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
     }
     if (workWindowError) {
       toast.error(workWindowError);
+      setActiveTab('info');
+      return;
+    }
+    if (providerAccessError) {
+      toast.error(providerAccessError);
       setActiveTab('info');
       return;
     }
@@ -297,7 +322,7 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             allowed_work_end_time: studio.allowed_work_end_time,
             key_location: studio.key_location,
             electronic_lock_password: studio.electronic_lock_password,
-            provider_access_instructions: studio.provider_access_instructions,
+            provider_access_instructions: providerAccessFilled ? studio.provider_access_instructions : null,
           } as any, { onConflict: 'project_id' });
         if (studioErr) throw studioErr;
       }
@@ -813,10 +838,31 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
                   onChange={(html) => updateStudio('provider_access_instructions', html || null)}
                   placeholder="Descreva o procedimento: aviso prévio à portaria, lista de nomes, documentos exigidos…"
                   minHeight="140px"
+                  className={providerAccessError ? 'border-destructive' : ''}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Use negrito, itálico e listas para destacar etapas. Ex.: 1) Avisar portaria · 2) Enviar lista de nomes · 3) Documentos exigidos.
-                </p>
+                <div className="flex items-start justify-between gap-2">
+                  {providerAccessError ? (
+                    <p className="text-xs text-destructive" role="alert">
+                      {providerAccessError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Use negrito, itálico e listas para destacar etapas. Ex.: 1) Avisar portaria · 2) Enviar lista de nomes · 3) Documentos exigidos.
+                    </p>
+                  )}
+                  <span
+                    className={cn(
+                      'text-xs tabular-nums shrink-0',
+                      providerAccessHtml.length > PROVIDER_ACCESS_MAX
+                        ? 'text-destructive font-medium'
+                        : providerAccessHtml.length > PROVIDER_ACCESS_MAX * 0.9
+                          ? 'text-amber-600'
+                          : 'text-muted-foreground',
+                    )}
+                  >
+                    {providerAccessHtml.length.toLocaleString('pt-BR')}/{PROVIDER_ACCESS_MAX.toLocaleString('pt-BR')}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -839,11 +885,11 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
           <Button
             type="button"
             onClick={handleSave}
-            disabled={saving || hasContactErrors || !!workWindowError}
+            disabled={saving || hasContactErrors || !!workWindowError || !!providerAccessError}
             title={
               hasContactErrors
                 ? 'Corrija os campos de contato destacados'
-                : workWindowError ?? undefined
+                : workWindowError ?? providerAccessError ?? undefined
             }
             size="lg"
             className="min-w-[140px] h-11"
