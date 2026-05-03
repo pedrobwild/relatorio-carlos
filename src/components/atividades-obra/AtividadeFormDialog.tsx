@@ -32,6 +32,8 @@ import { AutosaveIndicator } from '@/components/ui/AutosaveIndicator';
 import { toast } from 'sonner';
 import { trackAmplitude } from '@/lib/amplitude';
 import { formatCurrencyBRL, parseCurrencyBRL } from '@/lib/currencyMask';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileFullscreenSheet } from '@/components/mobile';
 
 interface Props {
   open: boolean;
@@ -69,6 +71,7 @@ interface AtividadeDraft {
 }
 
 export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData, draftScope }: Props) {
+  const isMobile = useIsMobile();
   const { data: staffUsers = [] } = useStaffUsers();
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
@@ -184,6 +187,239 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
     titleTooLong ? 'text-destructive' : titleCount > TITLE_MAX * 0.85 ? 'text-warning' : 'text-muted-foreground',
   );
 
+  // Campos do formulário — partilhados entre Dialog (desktop) e
+  // MobileFullscreenSheet (mobile). Mantém indentação/espaçamento mais
+  // generosos no mobile para melhorar tap-target e ritmo vertical.
+  const fields = (
+    <div
+      className={cn(
+        'space-y-5',
+        isMobile ? 'px-4 py-5' : 'px-5 py-4',
+      )}
+    >
+      {/* Título */}
+      <div className="space-y-1.5">
+        <div className="flex items-baseline justify-between gap-2">
+          <Label htmlFor="title" className="text-xs font-medium">
+            Título <span className="text-destructive">*</span>
+          </Label>
+          <span className={titleCounterClass}>
+            {titleCount}/{TITLE_MAX}
+          </span>
+        </div>
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX + 20))}
+          placeholder="Ex.: Comprar material elétrico"
+          required
+          maxLength={TITLE_MAX + 20}
+          aria-invalid={titleTooLong || undefined}
+          // Evita autoFocus no mobile: dispara o teclado virtual e
+          // empurra o conteúdo para fora da viewport antes do usuário
+          // ler o cabeçalho.
+          autoFocus={!isMobile}
+        />
+        {titleTooLong && (
+          <p className="text-[11px] text-destructive">
+            Reduza para até {TITLE_MAX} caracteres.
+          </p>
+        )}
+      </div>
+
+      {/* Responsável + Prioridade */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="responsible" className="text-xs font-medium">
+            Responsável
+          </Label>
+          <Select value={responsibleUserId} onValueChange={setResponsibleUserId}>
+            <SelectTrigger id="responsible">
+              <SelectValue placeholder="Sem responsável" />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              <SelectItem value="none">
+                <span className="text-muted-foreground">Sem responsável</span>
+              </SelectItem>
+              {staffUsers.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  <span className="truncate">
+                    {u.nome}
+                    <span className="text-muted-foreground text-xs ml-1">
+                      · {u.perfil}
+                    </span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="priority" className="text-xs font-medium">
+            Prioridade
+          </Label>
+          <Select value={priority} onValueChange={(v) => setPriority(v as ObraTaskPriority)}>
+            <SelectTrigger id="priority">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              {priorities.map((p) => (
+                <SelectItem key={p.value} value={p.value}>
+                  <span className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className={cn('inline-block h-2 w-2 rounded-full', p.dot)}
+                    />
+                    {p.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Datas */}
+      <div className="space-y-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="start_date" className="text-xs font-medium">
+              Data de início
+            </Label>
+            <Input
+              id="start_date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              max={dueDate || undefined}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="due_date" className="text-xs font-medium">
+              Prazo
+            </Label>
+            <Input
+              id="due_date"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              min={startDate || undefined}
+              aria-invalid={dateRangeInvalid || undefined}
+            />
+          </div>
+        </div>
+        {dateRangeInvalid && (
+          <p className="text-[11px] text-destructive">
+            O prazo não pode ser anterior à data de início.
+          </p>
+        )}
+      </div>
+
+      {/* Custo */}
+      <div className="space-y-1.5">
+        <Label htmlFor="cost" className="text-xs font-medium">
+          Custo estimado
+        </Label>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
+            R$
+          </span>
+          <Input
+            id="cost"
+            type="text"
+            inputMode="decimal"
+            value={cost}
+            onChange={(e) => setCost(formatCurrencyBRL(e.target.value))}
+            placeholder="0,00"
+            className="pl-9 tabular-nums"
+          />
+        </div>
+      </div>
+
+      {/* Descrição */}
+      <div className="space-y-1.5">
+        <Label htmlFor="description" className="text-xs font-medium">
+          Descrição
+        </Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Detalhes, contexto ou instruções para quem for executar."
+          rows={isMobile ? 4 : 3}
+          className="resize-y"
+        />
+      </div>
+    </div>
+  );
+
+  const submitLabel = initialData ? 'Salvar alterações' : 'Criar atividade';
+
+  // Footer mobile — Cancelar + Salvar com tap-target ≥ 44px e
+  // hierarquia clara. Sem tooltip (não funciona bem em touch); a
+  // razão do disabled é exibida inline via aria-describedby.
+  const mobileFooter = (
+    <div className="flex flex-col gap-2">
+      {!isValid && disabledReason && (
+        <p
+          id="atividade-disabled-reason"
+          className="text-[11px] text-muted-foreground text-center"
+        >
+          {disabledReason}
+        </p>
+      )}
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => handleOpenChange(false)}
+          className="h-11 flex-1"
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          form="atividade-form"
+          disabled={!isValid}
+          aria-describedby={!isValid ? 'atividade-disabled-reason' : undefined}
+          className="h-11 flex-[2]"
+        >
+          {submitLabel}
+        </Button>
+      </div>
+      <AutosaveIndicator
+        lastSavedAt={lastSavedAt}
+        className="self-center text-[11px]"
+      />
+    </div>
+  );
+
+  // ── Mobile: full-screen sheet com header sticky (back + título),
+  //    body rolável e ações primárias sticky no rodapé via footer do
+  //    MobileFullscreenSheet (já respeita pb-safe).
+  if (isMobile) {
+    return (
+      <MobileFullscreenSheet
+        open={open}
+        onOpenChange={handleOpenChange}
+        title={initialData ? 'Editar atividade' : 'Nova atividade'}
+        description={
+          initialData
+            ? 'Atualize as informações da atividade.'
+            : 'Cadastre uma tarefa interna da equipe.'
+        }
+        closeAriaLabel="Cancelar e voltar"
+        footer={mobileFooter}
+      >
+        <form id="atividade-form" onSubmit={handleSubmit}>
+          {fields}
+        </form>
+      </MobileFullscreenSheet>
+    );
+  }
+
+  // ── Desktop: dialog centralizado (preserva o comportamento original).
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
@@ -201,158 +437,8 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-            {/* Título */}
-            <div className="space-y-1.5">
-              <div className="flex items-baseline justify-between gap-2">
-                <Label htmlFor="title" className="text-xs font-medium">
-                  Título <span className="text-destructive">*</span>
-                </Label>
-                <span className={titleCounterClass}>
-                  {titleCount}/{TITLE_MAX}
-                </span>
-              </div>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX + 20))}
-                placeholder="Ex.: Comprar material elétrico"
-                required
-                maxLength={TITLE_MAX + 20}
-                aria-invalid={titleTooLong || undefined}
-                autoFocus
-              />
-              {titleTooLong && (
-                <p className="text-[11px] text-destructive">
-                  Reduza para até {TITLE_MAX} caracteres.
-                </p>
-              )}
-            </div>
-
-            {/* Responsável + Prioridade */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="responsible" className="text-xs font-medium">
-                  Responsável
-                </Label>
-                <Select value={responsibleUserId} onValueChange={setResponsibleUserId}>
-                  <SelectTrigger id="responsible">
-                    <SelectValue placeholder="Sem responsável" />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    <SelectItem value="none">
-                      <span className="text-muted-foreground">Sem responsável</span>
-                    </SelectItem>
-                    {staffUsers.map((u) => (
-                      <SelectItem key={u.id} value={u.id}>
-                        <span className="truncate">
-                          {u.nome}
-                          <span className="text-muted-foreground text-xs ml-1">
-                            · {u.perfil}
-                          </span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="priority" className="text-xs font-medium">
-                  Prioridade
-                </Label>
-                <Select value={priority} onValueChange={(v) => setPriority(v as ObraTaskPriority)}>
-                  <SelectTrigger id="priority">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    {priorities.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
-                        <span className="flex items-center gap-2">
-                          <span
-                            aria-hidden
-                            className={cn('inline-block h-2 w-2 rounded-full', p.dot)}
-                          />
-                          {p.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Datas */}
-            <div className="space-y-1.5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="start_date" className="text-xs font-medium">
-                    Data de início
-                  </Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    max={dueDate || undefined}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="due_date" className="text-xs font-medium">
-                    Prazo
-                  </Label>
-                  <Input
-                    id="due_date"
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    min={startDate || undefined}
-                    aria-invalid={dateRangeInvalid || undefined}
-                  />
-                </div>
-              </div>
-              {dateRangeInvalid && (
-                <p className="text-[11px] text-destructive">
-                  O prazo não pode ser anterior à data de início.
-                </p>
-              )}
-            </div>
-
-            {/* Custo */}
-            <div className="space-y-1.5">
-              <Label htmlFor="cost" className="text-xs font-medium">
-                Custo estimado
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
-                  R$
-                </span>
-                <Input
-                  id="cost"
-                  type="text"
-                  inputMode="decimal"
-                  value={cost}
-                  onChange={(e) => setCost(formatCurrencyBRL(e.target.value))}
-                  placeholder="0,00"
-                  className="pl-9 tabular-nums"
-                />
-              </div>
-            </div>
-
-            {/* Descrição */}
-            <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-xs font-medium">
-                Descrição
-              </Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Detalhes, contexto ou instruções para quem for executar."
-                rows={3}
-                className="resize-y"
-              />
-            </div>
+          <div className="flex-1 overflow-y-auto">
+            {fields}
           </div>
 
           <DialogFooter className="border-t border-border-subtle bg-muted/30 px-5 py-3 gap-2 sm:justify-between">
@@ -374,7 +460,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
                     {/* span wrapper so disabled button still triggers tooltip */}
                     <span tabIndex={isValid ? -1 : 0}>
                       <Button type="submit" disabled={!isValid}>
-                        {initialData ? 'Salvar alterações' : 'Criar atividade'}
+                        {submitLabel}
                       </Button>
                     </span>
                   </TooltipTrigger>
