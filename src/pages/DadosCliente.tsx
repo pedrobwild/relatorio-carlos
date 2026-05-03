@@ -18,6 +18,42 @@ import {
 } from '@/components/mobile';
 import { cn } from '@/lib/utils';
 
+// ── Validações dos contatos (gerente predial e síndico) ──────────────
+// Email RFC 5322 simplificado; telefone BR aceita 10 ou 11 dígitos
+// (com ou sem máscara). Nome exige pelo menos 2 caracteres não vazios.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function validateContactName(value: string | null): string | null {
+  if (!value || !value.trim()) return null; // opcional
+  if (value.trim().length < 2) return 'Nome muito curto';
+  if (value.trim().length > 120) return 'Nome muito longo';
+  return null;
+}
+
+function validateContactEmail(value: string | null): string | null {
+  if (!value || !value.trim()) return null;
+  if (!EMAIL_RE.test(value.trim())) return 'E-mail inválido';
+  return null;
+}
+
+function validateContactPhone(value: string | null): string | null {
+  if (!value || !value.trim()) return null;
+  const digits = value.replace(/\D/g, '');
+  if (digits.length < 10 || digits.length > 11) {
+    return 'Telefone deve ter 10 ou 11 dígitos';
+  }
+  return null;
+}
+
+interface ContactErrors {
+  building_manager_name?: string;
+  building_manager_email?: string;
+  building_manager_phone?: string;
+  syndic_name?: string;
+  syndic_email?: string;
+  syndic_phone?: string;
+}
+
 interface StudioData {
   project_id: string;
   nome_do_empreendimento: string | null;
