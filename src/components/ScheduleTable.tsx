@@ -38,8 +38,7 @@ const ScheduleTable = ({
     ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
     : new Date().getFullYear();
 
-  // TODO: Use currentActivityIndex for visual highlighting of the active row
-  const _currentActivityIndex = useMemo(() => {
+  const currentActivityIndex = useMemo(() => {
     if (!reportDate) return -1;
     const currentDate = new Date(reportDate + "T00:00:00");
     return activities.findIndex(a => {
@@ -128,13 +127,19 @@ const ScheduleTable = ({
         {sortedActivities.map((activity, index) => {
           const originalIndex = activities.indexOf(activity);
           const status = getActivityStatus(activity);
+          const isCurrent = originalIndex === currentActivityIndex;
+          const isSelected = selectedActivityId === activity.id;
           return (
             <div
               key={activity.id}
               className={cn(
                 "bg-card border rounded-lg p-2.5 shadow-sm opacity-0 animate-fade-in transition-all",
                 !canEditDates && onActivitySelect && "cursor-pointer active:scale-[0.98]",
-                selectedActivityId === activity.id ? "border-primary ring-2 ring-primary/20" : "border-border"
+                isSelected
+                  ? "border-primary ring-2 ring-primary/20"
+                  : isCurrent
+                    ? "border-primary/40 bg-primary/5"
+                    : "border-border"
               )}
               style={{ animationDelay: `${index * 30}ms` }}
               onClick={() => !canEditDates && onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
@@ -210,17 +215,21 @@ const ScheduleTable = ({
               {sortedActivities.map((activity, index) => {
                 const originalIndex = activities.indexOf(activity);
                 const status = getActivityStatus(activity);
+                const isCurrent = originalIndex === currentActivityIndex;
+                const isSelected = selectedActivityId === activity.id;
                 return (
                   <TableRow
                     key={activity.id}
                     className={cn(
                       "transition-colors border-b border-border/50 last:border-b-0",
                       !canEditDates && onActivitySelect && "cursor-pointer",
-                      selectedActivityId === activity.id
+                      isSelected
                         ? "bg-primary/10 hover:bg-primary/15 ring-1 ring-inset ring-primary/30"
-                        : index % 2 === 0
-                          ? "bg-card hover:bg-accent/30"
-                          : "bg-secondary/20 hover:bg-accent/30"
+                        : isCurrent
+                          ? "bg-primary/[0.04] hover:bg-primary/10 ring-1 ring-inset ring-primary/20"
+                          : index % 2 === 0
+                            ? "bg-card hover:bg-accent/30"
+                            : "bg-secondary/20 hover:bg-accent/30"
                     )}
                     onClick={() => !canEditDates && onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
                   >
