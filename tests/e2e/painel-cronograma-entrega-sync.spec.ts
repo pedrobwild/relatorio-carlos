@@ -13,7 +13,12 @@ import { test, expect, type Page } from './fixtures/auth';
 
 const VIEWPORTS = [
   { id: 'desktop', width: 1280, height: 720 },
+  { id: 'desktop-large', width: 1920, height: 1080 },
+  { id: 'tablet-portrait', width: 768, height: 1024 },
+  { id: 'tablet-landscape', width: 1024, height: 768 },
+  { id: 'tablet-large-landscape', width: 1366, height: 768 },
   { id: 'mobile', width: 390, height: 844 },
+  { id: 'mobile-landscape', width: 844, height: 390 },
 ] as const;
 
 /** Painel: lê o ISO da entrega oficial diretamente do data-attribute. */
