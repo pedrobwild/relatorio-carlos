@@ -650,6 +650,80 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             </CardContent>
           </Card>
 
+          {/* Acesso à obra */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <KeyRound className="h-5 w-5 text-muted-foreground" />
+                Acesso à obra
+              </CardTitle>
+              <CardDescription>
+                Informações para entrada da equipe e prestadores no imóvel.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="key-location" className="text-xs font-medium text-muted-foreground">
+                  Local da chave
+                </Label>
+                <Input
+                  id="key-location"
+                  value={studio?.key_location || ''}
+                  onChange={(e) => updateStudio('key_location', e.target.value || null)}
+                  placeholder="Ex.: portaria, com o zelador, cofre na entrada…"
+                  maxLength={300}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lock-password" className="text-xs font-medium text-muted-foreground">
+                  Senha da fechadura eletrônica
+                </Label>
+                <Input
+                  id="lock-password"
+                  value={studio?.electronic_lock_password || ''}
+                  onChange={(e) => updateStudio('electronic_lock_password', e.target.value || null)}
+                  placeholder="Ex.: 1234#"
+                  maxLength={50}
+                  autoComplete="off"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="provider-access" className="text-xs font-medium text-muted-foreground">
+                  Como liberar prestadores
+                </Label>
+                <InlineRichEditor
+                  value={studio?.provider_access_instructions || ''}
+                  onChange={(html) => updateStudio('provider_access_instructions', html || null)}
+                  placeholder="Descreva o procedimento: aviso prévio à portaria, lista de nomes, documentos exigidos…"
+                  minHeight="140px"
+                  className={providerAccessError ? 'border-destructive' : ''}
+                />
+                <div className="flex items-start justify-between gap-2">
+                  {providerAccessError ? (
+                    <p className="text-xs text-destructive" role="alert">
+                      {providerAccessError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Use negrito, itálico e listas para destacar etapas. Ex.: 1) Avisar portaria · 2) Enviar lista de nomes · 3) Documentos exigidos.
+                    </p>
+                  )}
+                  <span
+                    className={cn(
+                      'text-xs tabular-nums shrink-0',
+                      providerAccessHtml.length > PROVIDER_ACCESS_MAX
+                        ? 'text-destructive font-medium'
+                        : providerAccessHtml.length > PROVIDER_ACCESS_MAX * 0.9
+                          ? 'text-amber-600'
+                          : 'text-muted-foreground',
+                    )}
+                  >
+                    {providerAccessHtml.length.toLocaleString('pt-BR')}/{PROVIDER_ACCESS_MAX.toLocaleString('pt-BR')}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Dias e horários permitidos */}
           <Card>
@@ -787,81 +861,6 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
               )}
             </CardContent>
 
-          </Card>
-
-          {/* Acesso à obra */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <KeyRound className="h-5 w-5 text-muted-foreground" />
-                Acesso à obra
-              </CardTitle>
-              <CardDescription>
-                Informações para entrada da equipe e prestadores no imóvel.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="key-location" className="text-xs font-medium text-muted-foreground">
-                  Local da chave
-                </Label>
-                <Input
-                  id="key-location"
-                  value={studio?.key_location || ''}
-                  onChange={(e) => updateStudio('key_location', e.target.value || null)}
-                  placeholder="Ex.: portaria, com o zelador, cofre na entrada…"
-                  maxLength={300}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lock-password" className="text-xs font-medium text-muted-foreground">
-                  Senha da fechadura eletrônica
-                </Label>
-                <Input
-                  id="lock-password"
-                  value={studio?.electronic_lock_password || ''}
-                  onChange={(e) => updateStudio('electronic_lock_password', e.target.value || null)}
-                  placeholder="Ex.: 1234#"
-                  maxLength={50}
-                  autoComplete="off"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="provider-access" className="text-xs font-medium text-muted-foreground">
-                  Como liberar prestadores
-                </Label>
-                <InlineRichEditor
-                  value={studio?.provider_access_instructions || ''}
-                  onChange={(html) => updateStudio('provider_access_instructions', html || null)}
-                  placeholder="Descreva o procedimento: aviso prévio à portaria, lista de nomes, documentos exigidos…"
-                  minHeight="140px"
-                  className={providerAccessError ? 'border-destructive' : ''}
-                />
-                <div className="flex items-start justify-between gap-2">
-                  {providerAccessError ? (
-                    <p className="text-xs text-destructive" role="alert">
-                      {providerAccessError}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      Use negrito, itálico e listas para destacar etapas. Ex.: 1) Avisar portaria · 2) Enviar lista de nomes · 3) Documentos exigidos.
-                    </p>
-                  )}
-                  <span
-                    className={cn(
-                      'text-xs tabular-nums shrink-0',
-                      providerAccessHtml.length > PROVIDER_ACCESS_MAX
-                        ? 'text-destructive font-medium'
-                        : providerAccessHtml.length > PROVIDER_ACCESS_MAX * 0.9
-                          ? 'text-amber-600'
-                          : 'text-muted-foreground',
-                    )}
-                  >
-                    {providerAccessHtml.length.toLocaleString('pt-BR')}/{PROVIDER_ACCESS_MAX.toLocaleString('pt-BR')}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
           </Card>
 
           {/* Rich text livre */}
