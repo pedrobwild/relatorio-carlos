@@ -319,7 +319,7 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             allowed_work_end_time: studio.allowed_work_end_time,
             key_location: studio.key_location,
             electronic_lock_password: studio.electronic_lock_password,
-            provider_access_instructions: providerAccessFilled ? studio.provider_access_instructions : null,
+            provider_access_instructions: providerAccessFilled ? providerAccessHtml : null,
           } as any, { onConflict: 'project_id' });
         if (studioErr) throw studioErr;
       }
