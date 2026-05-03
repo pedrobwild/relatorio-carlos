@@ -49,6 +49,8 @@ import {
 } from '@/hooks/useCsTickets';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileFullscreenSheet } from '@/components/mobile';
 
 interface CsTicketDialogProps {
   open: boolean;
@@ -68,6 +70,7 @@ export function CsTicketDialog({
   defaultProjectId,
 }: CsTicketDialogProps) {
   const isEdit = !!ticket;
+  const isMobile = useIsMobile();
   const create = useCreateCsTicket();
   const update = useUpdateCsTicket();
   const { data: staff = [] } = useStaffUsers();
@@ -148,21 +151,24 @@ export function CsTicketDialog({
     onOpenChange(false);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl flex flex-col gap-0 p-0 max-h-[calc(100dvh-4rem)] overflow-hidden">
-        <DialogHeader className="shrink-0 p-4 sm:p-6 pb-2">
-          <DialogTitle>{isEdit ? 'Editar ticket' : 'Novo ticket de CS'}</DialogTitle>
-          <DialogDescription>
-            Registre a situação relatada, severidade e plano de ação. O cliente não tem visibilidade
-            destes tickets.
-          </DialogDescription>
-        </DialogHeader>
+  const headerTitle = isEdit ? 'Editar ticket' : 'Novo ticket de CS';
+  const headerDescription =
+    'Registre a situação relatada, severidade e plano de ação. O cliente não tem visibilidade destes tickets.';
+  const submitLabel = isEdit ? 'Salvar alterações' : 'Criar ticket';
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 sm:px-6 py-2 overflow-y-auto flex-1 min-h-0">
-          {/* Obra */}
-          <div className="md:col-span-2 space-y-1.5">
-            <Label htmlFor="cs-project">Obra / Cliente *</Label>
+  // Campos compartilhados entre Dialog (desktop) e MobileFullscreenSheet
+  // (mobile). No mobile a grid colapsa para 1 coluna naturalmente
+  // (sem `md:` ativo) e o spacing/padding aumentam para tap-target.
+  const fields = (
+    <div
+      className={cn(
+        'grid grid-cols-1 md:grid-cols-2 gap-4',
+        isMobile ? 'px-4 py-4' : 'px-4 sm:px-6 py-2',
+      )}
+    >
+      {/* Obra */}
+      <div className="md:col-span-2 space-y-1.5">
+        <Label htmlFor="cs-project">Obra / Cliente *</Label>
             <Popover open={projectPickerOpen} onOpenChange={setProjectPickerOpen} modal>
               <PopoverTrigger asChild>
                 <Button
@@ -343,18 +349,69 @@ export function CsTicketDialog({
             />
           </div>
 
-          {/* Plano de ação */}
-          <div className="md:col-span-2 space-y-1.5">
-            <Label htmlFor="cs-action">Plano de ação</Label>
-            <Textarea
-              id="cs-action"
-              value={actionPlan}
-              onChange={(e) => setActionPlan(e.target.value)}
-              placeholder="Quais passos serão tomados, prazos e próximos contatos."
-              rows={4}
-              maxLength={2000}
-            />
+      {/* Plano de ação */}
+      <div className="md:col-span-2 space-y-1.5">
+        <Label htmlFor="cs-action">Plano de ação</Label>
+        <Textarea
+          id="cs-action"
+          value={actionPlan}
+          onChange={(e) => setActionPlan(e.target.value)}
+          placeholder="Quais passos serão tomados, prazos e próximos contatos."
+          rows={4}
+          maxLength={2000}
+        />
+      </div>
+    </div>
+  );
+
+  // ── Mobile: full-screen sheet com header sticky e ações primárias
+  //    no rodapé sticky (pb-safe). Sem modal centralizado, sem
+  //    truncamento de título.
+  if (isMobile) {
+    return (
+      <MobileFullscreenSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title={headerTitle}
+        description={headerDescription}
+        closeAriaLabel="Cancelar e voltar"
+        footer={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSaving}
+              className="h-11 flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!canSubmit || isSaving}
+              className="h-11 flex-[2]"
+            >
+              {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {submitLabel}
+            </Button>
           </div>
+        }
+      >
+        {fields}
+      </MobileFullscreenSheet>
+    );
+  }
+
+  // ── Desktop: dialog centralizado (preserva o comportamento original).
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl flex flex-col gap-0 p-0 max-h-[calc(100dvh-4rem)] overflow-hidden">
+        <DialogHeader className="shrink-0 p-4 sm:p-6 pb-2">
+          <DialogTitle>{headerTitle}</DialogTitle>
+          <DialogDescription>{headerDescription}</DialogDescription>
+        </DialogHeader>
+
+        <div className="overflow-y-auto flex-1 min-h-0">
+          {fields}
         </div>
 
         <DialogFooter className="shrink-0 p-4 sm:p-6 pt-2 border-t border-border bg-background">
@@ -363,7 +420,7 @@ export function CsTicketDialog({
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit || isSaving}>
             {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {isEdit ? 'Salvar alterações' : 'Criar ticket'}
+            {submitLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

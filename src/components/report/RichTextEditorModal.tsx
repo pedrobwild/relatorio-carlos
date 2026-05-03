@@ -308,48 +308,66 @@ export function RichTextEditorModal({
   );
 
   const MobileToolbar = (
+    // Wrapper em flex: o trilho rolável (esquerda) e o "Mais" sticky
+    // (direita) ficam em containers irmãos. Assim, mesmo em 320px, o
+    // botão "Mais" nunca rola para fora da viewport — garantindo
+    // acesso permanente a cor/destaque/tamanho.
     <div
-      className="px-2 py-1.5 border-b border-border bg-muted/30 flex items-center gap-0.5 overflow-x-auto scrollbar-hide"
+      className="border-b border-border bg-muted/30 flex items-center"
       role="toolbar"
       aria-label="Formatação de texto"
     >
-      <ToolbarButton onClick={() => exec("bold")} title="Negrito">
-        <Bold className="w-5 h-5" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => exec("italic")} title="Itálico">
-        <Italic className="w-5 h-5" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => exec("underline")} title="Sublinhado">
-        <Underline className="w-5 h-5" />
-      </ToolbarButton>
-      <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden />
-      <ToolbarButton onClick={() => exec("insertUnorderedList")} title="Lista">
-        <List className="w-5 h-5" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => exec("insertOrderedList")} title="Lista numerada">
-        <ListOrdered className="w-5 h-5" />
-      </ToolbarButton>
-      <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden />
-      <ToolbarButton onClick={() => exec("undo")} title="Desfazer">
-        <Undo2 className="w-5 h-5" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => exec("redo")} title="Refazer">
-        <Redo2 className="w-5 h-5" />
-      </ToolbarButton>
+      <div
+        className="flex-1 min-w-0 flex items-center gap-0.5 px-2 py-1.5 overflow-x-auto scrollbar-hide"
+        // Reserva tap-target confortável e evita que o scroll horizontal
+        // capture gestos verticais de rolagem do conteúdo.
+        style={{ overscrollBehaviorX: 'contain' }}
+      >
+        <ToolbarButton onClick={() => exec("bold")} title="Negrito">
+          <Bold className="w-5 h-5" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => exec("italic")} title="Itálico">
+          <Italic className="w-5 h-5" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => exec("underline")} title="Sublinhado">
+          <Underline className="w-5 h-5" />
+        </ToolbarButton>
+        <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden />
+        <ToolbarButton onClick={() => exec("insertUnorderedList")} title="Lista">
+          <List className="w-5 h-5" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => exec("insertOrderedList")} title="Lista numerada">
+          <ListOrdered className="w-5 h-5" />
+        </ToolbarButton>
+        <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden />
+        <ToolbarButton onClick={() => exec("undo")} title="Desfazer">
+          <Undo2 className="w-5 h-5" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => exec("redo")} title="Refazer">
+          <Redo2 className="w-5 h-5" />
+        </ToolbarButton>
+      </div>
 
-      {/* Mais — concentra ações secundárias e evita overflow horizontal. */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            title="Mais opções de formatação"
-            aria-label="Mais opções de formatação"
-            className="ml-auto shrink-0 p-1.5 rounded-md min-h-[40px] min-w-[40px] flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
+      {/* "Mais" fora do scroll: sempre visível, com fade-out no
+          conteúdo rolável à esquerda para indicar overflow. */}
+      <div className="shrink-0 flex items-center pr-2 pl-1 border-l border-border/60 bg-muted/30">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              title="Mais opções de formatação"
+              aria-label="Mais opções de formatação"
+              className="shrink-0 rounded-md min-h-[40px] min-w-[40px] flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            sideOffset={8}
+            collisionPadding={12}
+            className="w-[min(calc(100vw-1.5rem),320px)] p-3 space-y-3"
           >
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-[280px] p-3 space-y-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Tamanho</p>
             <Select value={fontSize} onValueChange={handleFontSize}>
@@ -417,8 +435,9 @@ export function RichTextEditorModal({
               ))}
             </div>
           </div>
-        </PopoverContent>
-      </Popover>
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 
@@ -441,8 +460,10 @@ export function RichTextEditorModal({
     />
   );
 
-  // ── Mobile: full-screen sheet com header sticky (Salvar inline) e
-  //    toolbar compacta. Sem modal centralizado, sem footer redundante.
+  // ── Mobile: full-screen sheet com header sticky e toolbar compacta.
+  //    Toolbar fica sticky no topo do body (logo abaixo do header
+  //    do sheet), e o editor rola num único scroller. Sem scroll
+  //    duplo, sem footer desktop redundante.
   if (isMobile) {
     return (
       <MobileFullscreenSheet
@@ -450,21 +471,26 @@ export function RichTextEditorModal({
         onOpenChange={onOpenChange}
         title={title}
         closeAriaLabel="Cancelar e voltar"
-        bodyClassName="flex flex-col"
         footer={
-          <div className="flex items-center justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="h-11 flex-1"
+            >
               Cancelar
             </Button>
-            <Button onClick={handleSave} className="h-11 min-w-[120px]">
+            <Button onClick={handleSave} className="h-11 flex-[2]">
               <Save className="w-4 h-4 mr-2" />
               Aplicar
             </Button>
           </div>
         }
       >
-        {MobileToolbar}
-        <div className="flex-1 min-h-0 overflow-auto px-4 py-3">
+        <div className="sticky top-0 z-shell bg-background">
+          {MobileToolbar}
+        </div>
+        <div className="px-4 py-3">
           {EditorArea}
         </div>
       </MobileFullscreenSheet>
