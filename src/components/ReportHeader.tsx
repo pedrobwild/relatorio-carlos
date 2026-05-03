@@ -13,6 +13,7 @@ import { IdentityBar } from "@/components/header/IdentityBar";
 import { ProjectStateSection, MilestonesBar } from "@/components/header/ProjectStateSection";
 import { MobileReportHeader } from "@/components/header/MobileReportHeader";
 import { DateChangeAlert } from "@/components/header/DateChangeAlert";
+import { ScheduleInconsistencyAlert } from "@/components/header/ScheduleInconsistencyAlert";
 import { useProjectMetrics, useMilestoneItems } from "@/components/header/useReportHeaderData";
 import type { ReportHeaderProps, MilestoneKey } from "@/components/header/types";
 
