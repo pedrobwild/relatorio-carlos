@@ -5040,7 +5040,13 @@ export type Database = {
       }
       project_studio_info: {
         Row: {
+          allowed_work_days: string[] | null
+          allowed_work_end_time: string | null
+          allowed_work_start_time: string | null
           bairro: string | null
+          building_manager_email: string | null
+          building_manager_name: string | null
+          building_manager_phone: string | null
           cep: string | null
           cidade: string | null
           complemento: string | null
@@ -5049,12 +5055,21 @@ export type Database = {
           endereco_completo: string | null
           nome_do_empreendimento: string | null
           project_id: string
+          syndic_email: string | null
+          syndic_name: string | null
+          syndic_phone: string | null
           tamanho_imovel_m2: number | null
           tipo_de_locacao: string | null
           updated_at: string
         }
         Insert: {
+          allowed_work_days?: string[] | null
+          allowed_work_end_time?: string | null
+          allowed_work_start_time?: string | null
           bairro?: string | null
+          building_manager_email?: string | null
+          building_manager_name?: string | null
+          building_manager_phone?: string | null
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
@@ -5063,12 +5078,21 @@ export type Database = {
           endereco_completo?: string | null
           nome_do_empreendimento?: string | null
           project_id: string
+          syndic_email?: string | null
+          syndic_name?: string | null
+          syndic_phone?: string | null
           tamanho_imovel_m2?: number | null
           tipo_de_locacao?: string | null
           updated_at?: string
         }
         Update: {
+          allowed_work_days?: string[] | null
+          allowed_work_end_time?: string | null
+          allowed_work_start_time?: string | null
           bairro?: string | null
+          building_manager_email?: string | null
+          building_manager_name?: string | null
+          building_manager_phone?: string | null
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
@@ -5077,6 +5101,9 @@ export type Database = {
           endereco_completo?: string | null
           nome_do_empreendimento?: string | null
           project_id?: string
+          syndic_email?: string | null
+          syndic_name?: string | null
+          syndic_phone?: string | null
           tamanho_imovel_m2?: number | null
           tipo_de_locacao?: string | null
           updated_at?: string
