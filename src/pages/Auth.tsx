@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import authBg from '@/assets/auth-bg.png';
 import bwildLogo from '@/assets/bwild-logo-transparent.png';
+import workflowLogo from '@/assets/bwild-workflow-manager.png';
 import { z } from 'zod';
 import { logError, logInfo, logWarn } from '@/lib/errorLogger';
 
@@ -232,9 +233,11 @@ export default function Auth() {
 
       {/* Form – centered on mobile, left on desktop */}
       <div className="flex flex-col justify-center items-center md:items-start w-full md:max-w-lg px-5 sm:px-12 md:px-16 py-10 sm:py-16 safe-area-top safe-area-bottom mx-auto md:mx-0">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-10 sm:mb-12 text-center md:text-left w-full">
-          {"\n"}
-        </h1>
+        <img
+          src={workflowLogo}
+          alt="Bwild Workflow Manager"
+          className="w-full max-w-xs sm:max-w-sm md:max-w-md h-auto object-contain mb-8 sm:mb-10 mx-auto md:mx-0"
+        />
 
         {isDemoPrefill && (
           <div
