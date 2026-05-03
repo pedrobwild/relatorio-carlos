@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Textarea } from '@/components/ui/textarea';
 import { InlineRichEditor } from '@/components/ui/inline-rich-editor';
+import { sanitizeInlineRichText, extractRichTextPlain } from '@/lib/sanitizeRichText';
 import { Save, Building2, Loader2, Search, FileText, UserCog, Users, Clock, KeyRound } from 'lucide-react';
 import { ProjectInfoDoc } from '@/components/project/ProjectInfoDoc';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
@@ -181,7 +182,11 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       ]);
 
       if (studioRes.data) {
-        setStudio(studioRes.data as StudioData);
+        const raw = studioRes.data as StudioData;
+        setStudio({
+          ...raw,
+          provider_access_instructions: sanitizeInlineRichText(raw.provider_access_instructions),
+        });
       } else {
         setStudio({
           project_id: projectId!,
@@ -260,21 +265,13 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
 
   // ── Validação do editor "Como liberar prestadores" ──
   const PROVIDER_ACCESS_MAX = 4000;
-  const providerAccessHtml = studio?.provider_access_instructions ?? '';
-  const providerAccessText = providerAccessHtml
-    .replace(/<br\s*\/?>(?!\n)/gi, '\n')
-    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .trim();
+  const providerAccessHtml = sanitizeInlineRichText(studio?.provider_access_instructions);
+  const providerAccessText = extractRichTextPlain(providerAccessHtml);
   const providerAccessFilled = providerAccessText.length > 0;
   let providerAccessError: string | null = null;
   if (providerAccessHtml.length > PROVIDER_ACCESS_MAX) {
     providerAccessError = `Texto muito longo (limite de ${PROVIDER_ACCESS_MAX.toLocaleString('pt-BR')} caracteres). Reduza para salvar.`;
-  } else if (providerAccessHtml.trim().length > 0 && !providerAccessFilled) {
+  } else if ((studio?.provider_access_instructions ?? '').trim().length > 0 && !providerAccessFilled) {
     providerAccessError = 'O texto está vazio. Escreva o procedimento ou limpe o campo.';
   }
 
@@ -322,7 +319,7 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             allowed_work_end_time: studio.allowed_work_end_time,
             key_location: studio.key_location,
             electronic_lock_password: studio.electronic_lock_password,
-            provider_access_instructions: providerAccessFilled ? studio.provider_access_instructions : null,
+            provider_access_instructions: providerAccessFilled ? providerAccessHtml : null,
           } as any, { onConflict: 'project_id' });
         if (studioErr) throw studioErr;
       }
