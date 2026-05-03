@@ -1188,16 +1188,16 @@ interface ObraRowProps {
 const TABLE_COLS: { width: string; align?: 'right' | 'center' }[] = [
   { width: 'w-[240px] min-w-[240px] max-w-[240px]' }, // Cliente / Obra (sticky)
   { width: 'w-[60px]', align: 'center' },              // Dados
-  { width: 'min-w-[120px]' },                          // Status
-  { width: 'min-w-[140px]' },                          // Etapa
-  { width: 'min-w-[120px]', align: 'right' },          // Progresso
-  { width: 'min-w-[100px]' },                          // Início Of.
-  { width: 'min-w-[100px]' },                          // Entrega Of.
-  { width: 'min-w-[100px]' },                          // Início Real
-  { width: 'min-w-[100px]' },                          // Entrega Real
-  { width: 'min-w-[130px]' },                          // Relacionamento
-  { width: 'min-w-[150px]' },                          // Responsável
-  { width: 'min-w-[110px]', align: 'right' },          // Atraso
+  { width: 'min-w-[140px]' },                          // Status
+  { width: 'min-w-[160px]' },                          // Etapa
+  { width: 'min-w-[140px]', align: 'right' },          // Progresso
+  { width: 'min-w-[120px]' },                          // Início Of.
+  { width: 'min-w-[120px]' },                          // Entrega Of.
+  { width: 'min-w-[120px]' },                          // Início Real
+  { width: 'min-w-[120px]' },                          // Entrega Real
+  { width: 'min-w-[150px]' },                          // Relacionamento
+  { width: 'min-w-[180px]' },                          // Responsável
+  { width: 'min-w-[120px]', align: 'right' },          // Atraso
   { width: 'w-16' },                                    // Ações
 ];
 
@@ -1205,7 +1205,7 @@ function TableSkeleton({ densityTableClass, rows = 8 }: { densityTableClass: str
   return (
     <SectionCard flush>
       <div className="overflow-x-auto" aria-busy="true" aria-live="polite" aria-label="Carregando obras">
-        <Table className={cn('w-full text-sm [&_th]:px-3 [&_td]:px-3 [&_tr]:border-border-subtle', densityTableClass)}>
+        <Table className={cn('min-w-max text-sm [&_th]:px-3 [&_td]:px-3 [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border-subtle">
               {TABLE_COLS.map((c, i) => (
