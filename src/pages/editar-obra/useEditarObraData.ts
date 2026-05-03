@@ -616,7 +616,7 @@ export function useEditarObraData(projectId: string | undefined) {
     setProject(p => p ? { ...p, planned_end_date: iso } : p);
     return iso;
   };
-
+  const performRecalcOnly = async (shiftMode: ShiftMode) => {
     if (!project || activities.length === 0) return;
     const valid = activities.filter(a => a.planned_start && a.planned_end);
     if (valid.length === 0) return;
