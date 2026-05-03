@@ -589,6 +589,18 @@ const Cronograma = () => {
         ]}
       >
         <div className="flex items-center gap-2 flex-wrap">
+          <span
+            role="status"
+            aria-live="polite"
+            className={cn(
+              'text-xs flex items-center gap-1.5',
+              autosaveStatus === 'error' ? 'text-destructive' : 'text-muted-foreground',
+            )}
+          >
+            {autosaveStatus === 'saving' && (<><Loader2 className="w-3 h-3 animate-spin" />Salvando…</>)}
+            {autosaveStatus === 'saved' && 'Salvo automaticamente'}
+            {autosaveStatus === 'error' && 'Falha ao salvar — tentaremos de novo'}
+          </span>
           <AIScheduleGenerator
             projectId={projectId || ''}
             projectName={project?.name || 'Obra'}
