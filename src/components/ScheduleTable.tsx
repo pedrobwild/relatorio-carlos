@@ -129,7 +129,7 @@ const ScheduleTable = ({
           const status = getActivityStatus(activity);
           const isCurrent = originalIndex === currentActivityIndex;
           const isSelected = selectedActivityId === activity.id;
-          const expanded = isSelected || canEditDates;
+          const expanded = isSelected;
           const hasDetails = !!activity.detailed_description?.trim();
           const realRange = activity.actualStart
             ? `${formatDate(activity.actualStart, baseYear)}${activity.actualEnd ? ` → ${formatDate(activity.actualEnd, baseYear)}` : ""}`
@@ -139,7 +139,7 @@ const ScheduleTable = ({
               key={activity.id}
               className={cn(
                 "bg-card border rounded-lg px-2.5 py-1.5 shadow-sm opacity-0 animate-fade-in transition-all",
-                onActivitySelect && !canEditDates && "cursor-pointer active:scale-[0.99]",
+                onActivitySelect && "cursor-pointer active:scale-[0.99]",
                 isSelected
                   ? "border-primary ring-1 ring-primary/20"
                   : isCurrent
@@ -147,7 +147,7 @@ const ScheduleTable = ({
                     : "border-border"
               )}
               style={{ animationDelay: `${Math.min(index, 10) * 20}ms` }}
-              onClick={() => !canEditDates && onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
+              onClick={() => onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
             >
               {/* Compact summary row */}
               <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ const ScheduleTable = ({
                   </p>
                 </div>
                 <StatusBadge status={status} />
-                {!canEditDates && onActivitySelect && (
+                {onActivitySelect && (
                   <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform shrink-0", expanded && "rotate-180")} />
                 )}
               </div>
