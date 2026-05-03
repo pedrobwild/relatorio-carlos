@@ -462,6 +462,61 @@ const Cronograma = () => {
     }
   };
 
+  // Autosave: persist changes with debounce after the user stops editing.
+  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipNextAutosaveRef = useRef(true); // skip on initial hydration
+  const lastSavedSnapshotRef = useRef<string>('');
+
+  useEffect(() => {
+    if (!initializedRef.current) return;
+    if (skipNextAutosaveRef.current) {
+      skipNextAutosaveRef.current = false;
+      lastSavedSnapshotRef.current = JSON.stringify(activities);
+      return;
+    }
+    if (saving) return;
+
+    // Skip if invalid (incomplete or with date errors)
+    const hasEmpty = activities.some(
+      (act) => !act.description.trim() || !act.plannedStart || !act.plannedEnd,
+    );
+    if (hasEmpty || hasDateErrors) return;
+
+    const snapshot = JSON.stringify(activities);
+    if (snapshot === lastSavedSnapshotRef.current) return;
+
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(async () => {
+      setAutosaveStatus('saving');
+      const inputs: ActivityInput[] = activities.map((act, index) => ({
+        description: act.description.trim(),
+        planned_start: act.plannedStart,
+        planned_end: act.plannedEnd,
+        actual_start: act.actualStart || null,
+        actual_end: act.actualEnd || null,
+        weight: parseFloat(act.weight) || 0,
+        sort_order: index,
+        predecessor_ids: act.predecessorIds,
+        etapa: act.etapa?.trim() || null,
+        detailed_description: act.detailed_description?.trim() || null,
+      }));
+      const ok = await saveActivities(inputs);
+      if (ok) {
+        lastSavedSnapshotRef.current = snapshot;
+        setAutosaveStatus('saved');
+        setTimeout(() => setAutosaveStatus((s) => (s === 'saved' ? 'idle' : s)), 2000);
+      } else {
+        setAutosaveStatus('error');
+      }
+    }, 1200);
+
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    };
+  }, [activities, hasDateErrors, saving, saveActivities]);
+
+
   if (projectLoading || activitiesLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -534,6 +589,18 @@ const Cronograma = () => {
         ]}
       >
         <div className="flex items-center gap-2 flex-wrap">
+          <span
+            role="status"
+            aria-live="polite"
+            className={cn(
+              'text-xs flex items-center gap-1.5',
+              autosaveStatus === 'error' ? 'text-destructive' : 'text-muted-foreground',
+            )}
+          >
+            {autosaveStatus === 'saving' && (<><Loader2 className="w-3 h-3 animate-spin" />Salvando…</>)}
+            {autosaveStatus === 'saved' && 'Salvo automaticamente'}
+            {autosaveStatus === 'error' && 'Falha ao salvar — tentaremos de novo'}
+          </span>
           <AIScheduleGenerator
             projectId={projectId || ''}
             projectName={project?.name || 'Obra'}
