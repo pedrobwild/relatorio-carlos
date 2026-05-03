@@ -54,6 +54,63 @@ interface ContactErrors {
   syndic_phone?: string;
 }
 
+// ── Campo de contato padronizado (label + input + erro inline) ──
+type ContactFieldType = 'text' | 'email' | 'tel';
+interface ContactFieldProps {
+  id: string;
+  label: string;
+  type?: ContactFieldType;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  error?: string;
+  autoComplete?: string;
+}
+
+function ContactField({
+  id,
+  label,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
+  error,
+  autoComplete,
+}: ContactFieldProps) {
+  const errorId = `${id}-err`;
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-xs font-medium text-muted-foreground">
+        {label}
+      </Label>
+      <Input
+        id={id}
+        type={type}
+        inputMode={type === 'email' ? 'email' : type === 'tel' ? 'tel' : undefined}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-invalid={!!error}
+        aria-describedby={error ? errorId : undefined}
+        className={
+          error ? 'border-destructive focus-visible:ring-destructive' : undefined
+        }
+      />
+      {error ? (
+        <p id={errorId} className="text-xs text-destructive leading-snug" role="alert">
+          {error}
+        </p>
+      ) : (
+        // Reserva 1 linha de altura para evitar shift quando erro aparece.
+        <p className="text-xs text-transparent leading-snug select-none" aria-hidden>
+          ​
+        </p>
+      )}
+    </div>
+  );
+}
+
 interface StudioData {
   project_id: string;
   nome_do_empreendimento: string | null;
