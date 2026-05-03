@@ -195,6 +195,7 @@ export function usePainelObras() {
         responsavel_id: responsavelId,
         responsavel_nome: responsavelId ? (staffMap.get(responsavelId) ?? null) : null,
         ultima_atualizacao: raw.painel_ultima_atualizacao ?? p.updated_at,
+        is_project_phase: !!p.is_project_phase,
         progress_percentage:
           s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : null,
         pending_count: s?.pending_count ?? 0,
