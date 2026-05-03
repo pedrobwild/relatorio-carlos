@@ -24,6 +24,15 @@ const ScheduleTable = ({
   // (desktop, tablet e mobile); o usuário pode colapsar no chevron.
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const isExpanded = useCallback((id: string) => !collapsedIds.has(id), [collapsedIds]);
+  const [ultraCompact, setUltraCompact] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("schedule:ultraCompact") === "1";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("schedule:ultraCompact", ultraCompact ? "1" : "0");
+    }
+  }, [ultraCompact]);
 
   const toggleExpand = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
