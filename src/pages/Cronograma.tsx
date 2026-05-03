@@ -180,6 +180,7 @@ const Cronograma = () => {
   };
 
   const [activities, setActivities] = useState<ActivityFormData[]>([createEmptyActivity()]);
+  const initializedRef = useRef(false);
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [savingBaseline, setSavingBaseline] = useState(false);
@@ -250,6 +251,11 @@ const Cronograma = () => {
 
   // Load existing activities or auto-generate weekly slots
   useEffect(() => {
+    // Only initialize once to avoid overwriting user edits when the
+    // underlying query refetches (e.g. realtime invalidation).
+    if (initializedRef.current) return;
+    if (activitiesLoading) return;
+
     if (existingActivities.length > 0) {
       const formActivities: ActivityFormData[] = existingActivities.map((act) => ({
         id: act.id,
@@ -264,7 +270,8 @@ const Cronograma = () => {
         detailed_description: act.detailed_description || '',
       }));
       setActivities(formActivities);
-    } else if (!activitiesLoading && project?.planned_start_date && project?.planned_end_date) {
+      initializedRef.current = true;
+    } else if (project?.planned_start_date && project?.planned_end_date) {
       const start = new Date(project.planned_start_date + 'T00:00:00');
       const end = new Date(project.planned_end_date + 'T00:00:00');
       if (start >= end) return;
@@ -302,12 +309,12 @@ const Cronograma = () => {
         });
         setActivities(weeks);
       } else {
-        // No weeks generated but project has dates — use first activity with project start
         setActivities([createFirstActivity()]);
       }
-    } else if (!activitiesLoading && existingActivities.length === 0) {
-      // No existing activities and no planned dates — still pre-fill if start date exists
+      initializedRef.current = true;
+    } else {
       setActivities([createFirstActivity()]);
+      initializedRef.current = true;
     }
   }, [existingActivities, activitiesLoading, project]);
 
