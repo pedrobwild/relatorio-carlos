@@ -35,7 +35,12 @@ const ReportHeader = ({
 
   const effectiveEndDate = endDate === dateChangeInfo.originalDate ? dateChangeInfo.newDate : endDate;
 
-  const projectMetrics = useProjectMetrics(startDate, effectiveEndDate, reportDate, activities);
+  const earliestStartFromActivities = useMemo(() => {
+    const starts = activities.map(a => a.plannedStart).filter((d): d is string => !!d).sort();
+    return starts[0] ?? null;
+  }, [activities]);
+  const effectiveStartDate = earliestStartFromActivities ?? startDate;
+  const projectMetrics = useProjectMetrics(effectiveStartDate, effectiveEndDate, reportDate, activities);
   const milestoneItems = useMilestoneItems(milestoneDates);
 
   const { paths, projectId } = useProjectNavigation();
@@ -58,9 +63,8 @@ const ReportHeader = ({
   };
 
   const showMetrics = !(isProjectPhase && !isStaff);
-  // Use planned dates from the schedule as source of truth so header matches the cronograma.
-  // Official milestone dates are shown separately in the MilestonesBar.
-  const displayStartDate = startDate;
+  // "Início previsto" reflete a data de início da primeira atividade do cronograma.
+  const displayStartDate = effectiveStartDate;
   const displayEndDate = effectiveEndDate;
 
   return (
