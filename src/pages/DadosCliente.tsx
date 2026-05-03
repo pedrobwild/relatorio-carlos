@@ -182,7 +182,11 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       ]);
 
       if (studioRes.data) {
-        setStudio(studioRes.data as StudioData);
+        const raw = studioRes.data as StudioData;
+        setStudio({
+          ...raw,
+          provider_access_instructions: sanitizeInlineRichText(raw.provider_access_instructions),
+        });
       } else {
         setStudio({
           project_id: projectId!,
