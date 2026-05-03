@@ -617,14 +617,61 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="mb-2 block">Dias da semana</Label>
+                <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                  <Label>
+                    Dias da semana
+                    {workDays.length > 0 && (
+                      <span className="ml-2 text-xs text-muted-foreground font-normal">
+                        {workDays.length} selecionado{workDays.length > 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </Label>
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() =>
+                        updateStudio('allowed_work_days', ['mon', 'tue', 'wed', 'thu', 'fri'])
+                      }
+                    >
+                      Dias úteis
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() =>
+                        updateStudio(
+                          'allowed_work_days',
+                          WEEK_DAYS.map((d) => d.value),
+                        )
+                      }
+                    >
+                      Todos
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-muted-foreground"
+                      onClick={() => updateStudio('allowed_work_days', null)}
+                      disabled={!workDays.length}
+                    >
+                      Limpar
+                    </Button>
+                  </div>
+                </div>
                 <ToggleGroup
                   type="multiple"
-                  value={studio?.allowed_work_days || []}
+                  value={workDays}
                   onValueChange={(value) =>
                     updateStudio('allowed_work_days', value.length ? value : null)
                   }
                   className="flex flex-wrap justify-start gap-2"
+                  aria-invalid={workWindowFilled && !workDays.length}
                 >
                   {WEEK_DAYS.map((day) => (
                     <ToggleGroupItem
@@ -641,27 +688,58 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label>Horário de início</Label>
+                  <Label htmlFor="work-start">Horário de início</Label>
                   <Input
+                    id="work-start"
                     type="time"
-                    value={studio?.allowed_work_start_time || ''}
+                    value={workStart}
+                    max={workEnd || undefined}
                     onChange={(e) =>
                       updateStudio('allowed_work_start_time', e.target.value || null)
+                    }
+                    aria-invalid={!!workWindowError && !!workStart}
+                    className={
+                      workWindowError && workStart && workEnd && workStart >= workEnd
+                        ? 'border-destructive focus-visible:ring-destructive'
+                        : ''
                     }
                   />
                 </div>
                 <div>
-                  <Label>Horário de término</Label>
+                  <Label htmlFor="work-end">Horário de término</Label>
                   <Input
+                    id="work-end"
                     type="time"
-                    value={studio?.allowed_work_end_time || ''}
+                    value={workEnd}
+                    min={workStart || undefined}
                     onChange={(e) =>
                       updateStudio('allowed_work_end_time', e.target.value || null)
+                    }
+                    aria-invalid={!!workWindowError && !!workEnd}
+                    className={
+                      workWindowError && workStart && workEnd && workStart >= workEnd
+                        ? 'border-destructive focus-visible:ring-destructive'
+                        : ''
                     }
                   />
                 </div>
               </div>
+
+              {workWindowError ? (
+                <p className="text-xs text-destructive" role="alert">
+                  {workWindowError}
+                </p>
+              ) : workWindowLabel && workDays.length > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Janela diária permitida: <span className="font-medium text-foreground">{workWindowLabel}</span> · {workDays.length} dia{workDays.length > 1 ? 's' : ''} por semana
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Preencha dias e horários para definir a janela permitida pelo condomínio.
+                </p>
+              )}
             </CardContent>
+
           </Card>
 
           {/* Rich text livre */}
