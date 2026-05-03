@@ -81,6 +81,17 @@ jobs:
           TEST_STAFF_PASSWORD: ${{ secrets.TEST_STAFF_PASSWORD }}
           TEST_PROJECT_ID: ${{ secrets.TEST_PROJECT_ID }}
 
+      - name: Run Painel ↔ Cronograma sync regression (desktop + mobile)
+        run: npx playwright test painel-cronograma-entrega-sync.spec.ts --reporter=list
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+          TEST_STAFF_EMAIL: ${{ secrets.TEST_STAFF_EMAIL }}
+          TEST_STAFF_PASSWORD: ${{ secrets.TEST_STAFF_PASSWORD }}
+          TEST_PROJECT_ID: ${{ secrets.TEST_PROJECT_ID }}
+
       - name: Upload test artifacts
         if: failure()
         uses: actions/upload-artifact@v4
