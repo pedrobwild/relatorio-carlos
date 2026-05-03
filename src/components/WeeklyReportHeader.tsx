@@ -59,52 +59,52 @@ const WeeklyReportHeader = ({
   const currentPhase = getCurrentPhase(activities, weeklyReport.startDate, weeklyReport.endDate);
 
   return (
-    <div className="max-w-[840px] mx-auto bg-card rounded-xl border border-border p-4 md:p-5 mb-6 animate-fade-in">
+    <div className="max-w-[840px] mx-auto bg-card rounded-xl border border-border px-3 py-2.5 md:p-5 mb-3 md:mb-6 animate-fade-in">
       {/* Top row: Back + Navigation + PDF */}
-      <div className="flex items-center justify-between gap-2 mb-4">
+      <div className="flex items-center justify-between gap-2 mb-2 md:mb-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={onBackToList}
-          className="text-muted-foreground hover:text-foreground min-h-[44px] h-auto text-sm -ml-2 px-3"
+          className="text-muted-foreground hover:text-foreground h-9 md:min-h-[44px] md:h-auto text-sm -ml-1.5 px-2"
           aria-label="Voltar para lista de relatórios"
         >
-          <ArrowLeft className="w-4 h-4 mr-1.5" />
-          Ver todos
+          <ArrowLeft className="w-4 h-4 md:mr-1.5" />
+          <span className="hidden md:inline">Ver todos</span>
         </Button>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 md:gap-1.5">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={onPreviousWeek}
             disabled={!hasPrevious}
-            className="min-h-[44px] h-auto px-3 text-xs"
+            className="h-9 w-9 md:min-h-[44px] md:h-auto md:w-auto md:px-3 text-xs"
             aria-label="Semana anterior"
           >
-            <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-            <span className="hidden xs:inline">Anterior</span>
+            <ArrowLeft className="w-3.5 h-3.5 md:mr-1" />
+            <span className="hidden md:inline">Anterior</span>
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={onNextWeek}
             disabled={!hasNext}
-            className="min-h-[44px] h-auto px-3 text-xs"
+            className="h-9 w-9 md:min-h-[44px] md:h-auto md:w-auto md:px-3 text-xs"
             aria-label="Próxima semana"
           >
-            <span className="hidden xs:inline">Próxima</span>
-            <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            <span className="hidden md:inline">Próxima</span>
+            <ArrowRight className="w-3.5 h-3.5 md:ml-1" />
           </Button>
           {onExportPDF && (
             <Button
               onClick={onExportPDF}
               disabled={isExporting}
               size="sm"
-              className="min-h-[44px] h-auto px-3 text-xs"
+              className="h-9 md:min-h-[44px] md:h-auto px-2.5 md:px-3 text-xs"
               aria-label="Exportar relatório em PDF"
             >
-              <Download className="w-3.5 h-3.5 mr-1.5" />
+              <Download className="w-3.5 h-3.5 mr-1" />
               {isExporting ? "..." : "PDF"}
             </Button>
           )}
@@ -112,20 +112,20 @@ const WeeklyReportHeader = ({
       </div>
 
       {/* Main info row */}
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
-        <div className="flex items-baseline gap-2.5">
-          <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <div className="flex items-baseline gap-2">
+          <span className="bg-primary text-primary-foreground px-2.5 py-0.5 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap">
             Semana {weeklyReport.weekNumber}
           </span>
           <span className="text-xs text-muted-foreground">
             {dateRange}
           </span>
         </div>
-        <span className="text-2xl font-bold tabular-nums">{weeklyReport.completionPercentage}%</span>
+        <span className="text-lg md:text-2xl font-bold tabular-nums">{weeklyReport.completionPercentage}%</span>
       </div>
 
       {/* Progress bar */}
-      <Progress value={weeklyReport.completionPercentage} className="h-1.5 mb-2" />
+      <Progress value={weeklyReport.completionPercentage} className="h-1 md:h-1.5 mt-1.5 mb-1.5" />
 
       {/* Current phase */}
       <p className="text-xs text-muted-foreground line-clamp-1">
