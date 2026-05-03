@@ -180,7 +180,6 @@ const Cronograma = () => {
   };
 
   const [activities, setActivities] = useState<ActivityFormData[]>([createEmptyActivity()]);
-  const initializedRef = useRef(false);
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [savingBaseline, setSavingBaseline] = useState(false);
