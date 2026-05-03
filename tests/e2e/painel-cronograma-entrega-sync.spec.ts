@@ -104,7 +104,7 @@ for (const vp of VIEWPORTS) {
       // `<input type="text">` aceitando dd/mm/aaaa via DatePickerField; aqui
       // usamos a propriedade nativa para forçar o valor ISO via fill no
       // input subjacente do componente.
-      const isMobile = vp.id === 'mobile';
+      const isMobile = vp.width < 768;
       const wrapperSel = isMobile
         ? '[data-testid="cronograma-activity-end-mobile"]'
         : '[data-testid="cronograma-activity-end"]';
