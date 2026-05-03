@@ -5,7 +5,7 @@
  * with optimistic updates for Gantt chart interactions.
  */
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -77,6 +77,20 @@ export function useProjectActivities(projectId: string | undefined) {
     gcTime: QUERY_TIMING.activities.gcTime,
     placeholderData: (previousData) => previousData,
   });
+
+  // Realtime: re-sync activities (and dependent UI like ReportHeader) on any change
+  useEffect(() => {
+    if (!projectId) return;
+    const channel = supabase
+      .channel(`project_activities:${projectId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'project_activities', filter: `project_id=eq.${projectId}` },
+        () => { invalidateActivityQueries(projectId); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [projectId]);
 
   // Save all activities (bulk replace)
   const saveActivitiesMutation = useMutation({
