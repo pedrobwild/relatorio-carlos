@@ -251,7 +251,6 @@ const Cronograma = () => {
 
   // Load existing activities or auto-generate weekly slots
   useEffect(() => {
-  useEffect(() => {
     // Only initialize once to avoid overwriting user edits when the
     // underlying query refetches (e.g. realtime invalidation).
     if (initializedRef.current) return;
