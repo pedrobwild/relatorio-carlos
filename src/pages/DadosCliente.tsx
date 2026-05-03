@@ -25,14 +25,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function validateContactName(value: string | null): string | null {
   if (!value || !value.trim()) return null; // opcional
-  if (value.trim().length < 2) return 'Nome muito curto';
-  if (value.trim().length > 120) return 'Nome muito longo';
+  if (value.trim().length < 2) return 'Informe o nome completo (mínimo 2 letras).';
+  if (value.trim().length > 120) return 'Nome muito longo (máximo 120 caracteres).';
   return null;
 }
 
 function validateContactEmail(value: string | null): string | null {
   if (!value || !value.trim()) return null;
-  if (!EMAIL_RE.test(value.trim())) return 'E-mail inválido';
+  if (!EMAIL_RE.test(value.trim())) return 'E-mail inválido. Exemplo: nome@dominio.com';
   return null;
 }
 
@@ -40,7 +40,7 @@ function validateContactPhone(value: string | null): string | null {
   if (!value || !value.trim()) return null;
   const digits = value.replace(/\D/g, '');
   if (digits.length < 10 || digits.length > 11) {
-    return 'Telefone deve ter 10 ou 11 dígitos';
+    return 'Use DDD + número, com 10 ou 11 dígitos. Ex.: (11) 99999-9999';
   }
   return null;
 }
@@ -52,6 +52,63 @@ interface ContactErrors {
   syndic_name?: string;
   syndic_email?: string;
   syndic_phone?: string;
+}
+
+// ── Campo de contato padronizado (label + input + erro inline) ──
+type ContactFieldType = 'text' | 'email' | 'tel';
+interface ContactFieldProps {
+  id: string;
+  label: string;
+  type?: ContactFieldType;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  error?: string;
+  autoComplete?: string;
+}
+
+function ContactField({
+  id,
+  label,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
+  error,
+  autoComplete,
+}: ContactFieldProps) {
+  const errorId = `${id}-err`;
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-xs font-medium text-muted-foreground">
+        {label}
+      </Label>
+      <Input
+        id={id}
+        type={type}
+        inputMode={type === 'email' ? 'email' : type === 'tel' ? 'tel' : undefined}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-invalid={!!error}
+        aria-describedby={error ? errorId : undefined}
+        className={
+          error ? 'border-destructive focus-visible:ring-destructive' : undefined
+        }
+      />
+      {error ? (
+        <p id={errorId} className="text-xs text-destructive leading-snug" role="alert">
+          {error}
+        </p>
+      ) : (
+        // Reserva 1 linha de altura para evitar shift quando erro aparece.
+        <p className="text-xs text-transparent leading-snug select-none" aria-hidden>
+          ​
+        </p>
+      )}
+    </div>
+  );
 }
 
 interface StudioData {
@@ -474,145 +531,102 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
         <div className="space-y-6">
           {/* Contato gerente predial */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserCog className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <UserCog className="h-5 w-5 text-muted-foreground" />
                 Contato gerente predial
               </CardTitle>
-              <CardDescription>Responsável pela administração do edifício</CardDescription>
+              <CardDescription>Responsável pela administração do edifício.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="bm-name">Nome</Label>
-                  <Input
-                    id="bm-name"
-                    value={studio?.building_manager_name || ''}
-                    onChange={(e) => updateStudio('building_manager_name', e.target.value || null)}
-                    placeholder="Nome completo"
-                    aria-invalid={!!contactErrors.building_manager_name}
-                    aria-describedby={contactErrors.building_manager_name ? 'bm-name-err' : undefined}
-                    className={contactErrors.building_manager_name ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  />
-                  {contactErrors.building_manager_name && (
-                    <p id="bm-name-err" className="text-xs text-destructive mt-1">{contactErrors.building_manager_name}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="bm-email">E-mail</Label>
-                  <Input
-                    id="bm-email"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    value={studio?.building_manager_email || ''}
-                    onChange={(e) => updateStudio('building_manager_email', e.target.value || null)}
-                    placeholder="email@exemplo.com"
-                    aria-invalid={!!contactErrors.building_manager_email}
-                    aria-describedby={contactErrors.building_manager_email ? 'bm-email-err' : undefined}
-                    className={contactErrors.building_manager_email ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  />
-                  {contactErrors.building_manager_email && (
-                    <p id="bm-email-err" className="text-xs text-destructive mt-1">{contactErrors.building_manager_email}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="bm-phone">Telefone</Label>
-                  <Input
-                    id="bm-phone"
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    value={studio?.building_manager_phone || ''}
-                    onChange={(e) => updateStudio('building_manager_phone', e.target.value || null)}
-                    placeholder="(11) 99999-9999"
-                    aria-invalid={!!contactErrors.building_manager_phone}
-                    aria-describedby={contactErrors.building_manager_phone ? 'bm-phone-err' : undefined}
-                    className={contactErrors.building_manager_phone ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  />
-                  {contactErrors.building_manager_phone && (
-                    <p id="bm-phone-err" className="text-xs text-destructive mt-1">{contactErrors.building_manager_phone}</p>
-                  )}
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2">
+                <ContactField
+                  id="bm-name"
+                  label="Nome"
+                  value={studio?.building_manager_name || ''}
+                  onChange={(v) => updateStudio('building_manager_name', v || null)}
+                  placeholder="Nome completo"
+                  error={contactErrors.building_manager_name}
+                  autoComplete="name"
+                />
+                <ContactField
+                  id="bm-email"
+                  label="E-mail"
+                  type="email"
+                  value={studio?.building_manager_email || ''}
+                  onChange={(v) => updateStudio('building_manager_email', v || null)}
+                  placeholder="nome@dominio.com"
+                  error={contactErrors.building_manager_email}
+                  autoComplete="email"
+                />
+                <ContactField
+                  id="bm-phone"
+                  label="Telefone"
+                  type="tel"
+                  value={studio?.building_manager_phone || ''}
+                  onChange={(v) => updateStudio('building_manager_phone', v || null)}
+                  placeholder="(11) 99999-9999"
+                  error={contactErrors.building_manager_phone}
+                  autoComplete="tel"
+                />
               </div>
             </CardContent>
           </Card>
 
           {/* Contato síndico */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Users className="h-5 w-5 text-muted-foreground" />
                 Contato síndico
               </CardTitle>
-              <CardDescription>Síndico do condomínio</CardDescription>
+              <CardDescription>Síndico do condomínio.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="syn-name">Nome</Label>
-                  <Input
-                    id="syn-name"
-                    value={studio?.syndic_name || ''}
-                    onChange={(e) => updateStudio('syndic_name', e.target.value || null)}
-                    placeholder="Nome completo"
-                    aria-invalid={!!contactErrors.syndic_name}
-                    aria-describedby={contactErrors.syndic_name ? 'syn-name-err' : undefined}
-                    className={contactErrors.syndic_name ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  />
-                  {contactErrors.syndic_name && (
-                    <p id="syn-name-err" className="text-xs text-destructive mt-1">{contactErrors.syndic_name}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="syn-email">E-mail</Label>
-                  <Input
-                    id="syn-email"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    value={studio?.syndic_email || ''}
-                    onChange={(e) => updateStudio('syndic_email', e.target.value || null)}
-                    placeholder="email@exemplo.com"
-                    aria-invalid={!!contactErrors.syndic_email}
-                    aria-describedby={contactErrors.syndic_email ? 'syn-email-err' : undefined}
-                    className={contactErrors.syndic_email ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  />
-                  {contactErrors.syndic_email && (
-                    <p id="syn-email-err" className="text-xs text-destructive mt-1">{contactErrors.syndic_email}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="syn-phone">Telefone</Label>
-                  <Input
-                    id="syn-phone"
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    value={studio?.syndic_phone || ''}
-                    onChange={(e) => updateStudio('syndic_phone', e.target.value || null)}
-                    placeholder="(11) 99999-9999"
-                    aria-invalid={!!contactErrors.syndic_phone}
-                    aria-describedby={contactErrors.syndic_phone ? 'syn-phone-err' : undefined}
-                    className={contactErrors.syndic_phone ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  />
-                  {contactErrors.syndic_phone && (
-                    <p id="syn-phone-err" className="text-xs text-destructive mt-1">{contactErrors.syndic_phone}</p>
-                  )}
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2">
+                <ContactField
+                  id="syn-name"
+                  label="Nome"
+                  value={studio?.syndic_name || ''}
+                  onChange={(v) => updateStudio('syndic_name', v || null)}
+                  placeholder="Nome completo"
+                  error={contactErrors.syndic_name}
+                  autoComplete="name"
+                />
+                <ContactField
+                  id="syn-email"
+                  label="E-mail"
+                  type="email"
+                  value={studio?.syndic_email || ''}
+                  onChange={(v) => updateStudio('syndic_email', v || null)}
+                  placeholder="nome@dominio.com"
+                  error={contactErrors.syndic_email}
+                  autoComplete="email"
+                />
+                <ContactField
+                  id="syn-phone"
+                  label="Telefone"
+                  type="tel"
+                  value={studio?.syndic_phone || ''}
+                  onChange={(v) => updateStudio('syndic_phone', v || null)}
+                  placeholder="(11) 99999-9999"
+                  error={contactErrors.syndic_phone}
+                  autoComplete="tel"
+                />
               </div>
             </CardContent>
           </Card>
 
+
           {/* Dias e horários permitidos */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Clock className="h-5 w-5 text-muted-foreground" />
                 Dias e horários permitidos para trabalho
               </CardTitle>
               <CardDescription>
-                Selecione os dias da semana e a janela de horário liberada pelo condomínio
+                Selecione os dias da semana e a janela de horário liberada pelo condomínio.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
