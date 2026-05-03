@@ -7,6 +7,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
 import { invalidateActivityQueries } from '@/lib/queryKeys';
 import { shiftActivityDates, type ShiftMode } from '@/lib/shiftActivityDates';
+import { recalculateWeeklyActivities } from '@/lib/weeklySchedule';
+import { addBusinessDays } from '@/lib/businessDays';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
 import type { StudioInfo } from './TabFichaTecnica';
 
