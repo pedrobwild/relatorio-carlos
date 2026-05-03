@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Textarea } from '@/components/ui/textarea';
+import { InlineRichEditor } from '@/components/ui/inline-rich-editor';
 import { Save, Building2, Loader2, Search, FileText, UserCog, Users, Clock, KeyRound } from 'lucide-react';
 import { ProjectInfoDoc } from '@/components/project/ProjectInfoDoc';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
