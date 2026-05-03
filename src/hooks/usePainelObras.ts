@@ -70,6 +70,8 @@ export interface PainelObra {
   /** Nome do responsável (resolvido em runtime via useStaffUsers). */
   responsavel_nome: string | null;
   ultima_atualizacao: string;
+  /** True quando a obra ainda está em fase de projeto (sem execução em campo). */
+  is_project_phase: boolean;
 
   // Métricas (do summary)
   progress_percentage: number | null;
@@ -193,6 +195,7 @@ export function usePainelObras() {
         responsavel_id: responsavelId,
         responsavel_nome: responsavelId ? (staffMap.get(responsavelId) ?? null) : null,
         ultima_atualizacao: raw.painel_ultima_atualizacao ?? p.updated_at,
+        is_project_phase: !!p.is_project_phase,
         progress_percentage:
           s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : null,
         pending_count: s?.pending_count ?? 0,
