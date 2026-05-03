@@ -62,6 +62,11 @@ export function GestaoSidebar() {
           matchPaths: ["/gestao/obra/"],
         },
         {
+          label: "Painel de Projetos",
+          icon: Table2,
+          path: "/gestao/painel-obras?fase=projetos",
+        },
+        {
           label: "Nova Obra",
           icon: Plus,
           path: "/gestao/nova-obra",
