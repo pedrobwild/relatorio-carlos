@@ -1,12 +1,15 @@
-import { Building2, Calendar, DollarSign, Map, User, Info } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Building2, Calendar, DollarSign, Map, User, Info, RefreshCw, CalendarRange } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { countBusinessDaysInclusive } from '@/lib/businessDays';
 import type { Project, Customer, Activity } from './types';
 import { ScheduleSyncAlert } from './ScheduleSyncAlert';
 
@@ -24,10 +27,42 @@ interface TabGeralProps {
   onProjectChange: (field: keyof Project, value: string | number | boolean | null) => void;
   onCustomerChange: (field: keyof Customer, value: string | null) => void;
   onRecalculateSchedule?: () => void;
+  onRecalculateWeekly?: () => void;
+  onApplyBusinessDaysDuration?: (days: number) => string | null;
   isSaving?: boolean;
 }
 
-export function TabGeral({ project, customer, activities = [], onProjectChange, onCustomerChange, onRecalculateSchedule, isSaving }: TabGeralProps) {
+export function TabGeral({
+  project,
+  customer,
+  activities = [],
+  onProjectChange,
+  onCustomerChange,
+  onRecalculateSchedule,
+  onRecalculateWeekly,
+  onApplyBusinessDaysDuration,
+  isSaving,
+}: TabGeralProps) {
+  // Dias úteis derivados do intervalo atual planned_start..planned_end
+  const derivedDuration = useMemo(() => {
+    if (!project.planned_start_date || !project.planned_end_date) return '';
+    const s = new Date(project.planned_start_date + 'T00:00:00');
+    const e = new Date(project.planned_end_date + 'T00:00:00');
+    if (e < s) return '';
+    return String(countBusinessDaysInclusive(s, e));
+  }, [project.planned_start_date, project.planned_end_date]);
+
+  const [durationInput, setDurationInput] = useState<string>(derivedDuration);
+  useEffect(() => {
+    setDurationInput(derivedDuration);
+  }, [derivedDuration]);
+
+  const handleApplyDuration = () => {
+    const n = parseInt(durationInput, 10);
+    if (!Number.isFinite(n) || n <= 0) return;
+    onApplyBusinessDaysDuration?.(n);
+  };
+
   return (
     <div className="space-y-6">
       {/* Project Info */}
