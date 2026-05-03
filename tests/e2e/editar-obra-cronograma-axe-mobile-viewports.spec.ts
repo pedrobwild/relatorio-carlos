@@ -15,7 +15,9 @@ import { test, expect, type Page } from './fixtures/auth';
 const VIEWPORTS = [
   { name: 'Android compact 360×740', width: 360, height: 740 },
   { name: 'iPhone SE 375×667', width: 375, height: 667 },
+  { name: 'iPhone 12/13/14 390×844', width: 390, height: 844 },
   { name: 'Android large 412×915', width: 412, height: 915 },
+  { name: 'iPhone 14 Plus / Pro Max 428×926', width: 428, height: 926 },
 ];
 
 const CRITICAL_RULES = [
