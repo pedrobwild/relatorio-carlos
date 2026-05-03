@@ -448,29 +448,55 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <Label>Nome</Label>
+                  <Label htmlFor="bm-name">Nome</Label>
                   <Input
+                    id="bm-name"
                     value={studio?.building_manager_name || ''}
                     onChange={(e) => updateStudio('building_manager_name', e.target.value || null)}
                     placeholder="Nome completo"
+                    aria-invalid={!!contactErrors.building_manager_name}
+                    aria-describedby={contactErrors.building_manager_name ? 'bm-name-err' : undefined}
+                    className={contactErrors.building_manager_name ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.building_manager_name && (
+                    <p id="bm-name-err" className="text-xs text-destructive mt-1">{contactErrors.building_manager_name}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>E-mail</Label>
+                  <Label htmlFor="bm-email">E-mail</Label>
                   <Input
+                    id="bm-email"
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     value={studio?.building_manager_email || ''}
                     onChange={(e) => updateStudio('building_manager_email', e.target.value || null)}
                     placeholder="email@exemplo.com"
+                    aria-invalid={!!contactErrors.building_manager_email}
+                    aria-describedby={contactErrors.building_manager_email ? 'bm-email-err' : undefined}
+                    className={contactErrors.building_manager_email ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.building_manager_email && (
+                    <p id="bm-email-err" className="text-xs text-destructive mt-1">{contactErrors.building_manager_email}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>Telefone</Label>
+                  <Label htmlFor="bm-phone">Telefone</Label>
                   <Input
+                    id="bm-phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={studio?.building_manager_phone || ''}
                     onChange={(e) => updateStudio('building_manager_phone', e.target.value || null)}
                     placeholder="(11) 99999-9999"
+                    aria-invalid={!!contactErrors.building_manager_phone}
+                    aria-describedby={contactErrors.building_manager_phone ? 'bm-phone-err' : undefined}
+                    className={contactErrors.building_manager_phone ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.building_manager_phone && (
+                    <p id="bm-phone-err" className="text-xs text-destructive mt-1">{contactErrors.building_manager_phone}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
