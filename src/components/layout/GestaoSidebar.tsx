@@ -220,6 +220,73 @@ export function GestaoSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border-subtle">
       <SidebarContent className="pt-3 px-1 gap-1">
+        {/* Atalho rápido: alternar entre Obras e Projetos */}
+        <div className="px-2 pb-2">
+          {collapsed ? (
+            <div className="flex flex-col gap-1">
+              <Button
+                type="button"
+                size="icon"
+                variant={currentFase === "obras" ? "default" : "ghost"}
+                onClick={() => switchFase("obras")}
+                aria-label="Ver Obras"
+                aria-pressed={currentFase === "obras"}
+                className="h-8 w-8"
+              >
+                <Building2 className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant={currentFase === "projetos" ? "default" : "ghost"}
+                onClick={() => switchFase("projetos")}
+                aria-label="Ver Projetos"
+                aria-pressed={currentFase === "projetos"}
+                className="h-8 w-8"
+              >
+                <ClipboardEdit className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div
+              role="tablist"
+              aria-label="Alternar entre Obras e Projetos"
+              className="grid grid-cols-2 gap-1 p-1 bg-sidebar-accent/40 rounded-md"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={currentFase === "obras"}
+                onClick={() => switchFase("obras")}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 h-7 rounded text-[12px] font-medium transition-colors",
+                  currentFase === "obras"
+                    ? "bg-background text-sidebar-primary shadow-sm"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                )}
+              >
+                <Building2 className="h-3.5 w-3.5" />
+                Obras
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={currentFase === "projetos"}
+                onClick={() => switchFase("projetos")}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 h-7 rounded text-[12px] font-medium transition-colors",
+                  currentFase === "projetos"
+                    ? "bg-background text-sidebar-primary shadow-sm"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                )}
+              >
+                <ClipboardEdit className="h-3.5 w-3.5" />
+                Projetos
+              </button>
+            </div>
+          )}
+        </div>
+
         {groups.map((group) => {
           const visibleItems = group.items.filter(
             (item) => !item.adminOnly || isAdmin
