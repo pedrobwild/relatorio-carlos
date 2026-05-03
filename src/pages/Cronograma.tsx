@@ -677,7 +677,7 @@ const Cronograma = () => {
                           />
                         </div>
 
-                        <div className="px-2 py-2">
+                        <div className="px-2 py-2" data-testid="cronograma-activity-end" data-planned-end={activity.plannedEnd}>
                           <DatePickerField
                             value={activity.plannedEnd}
                             onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
