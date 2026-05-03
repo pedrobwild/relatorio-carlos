@@ -162,10 +162,46 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
   };
   const hasContactErrors = Object.values(contactErrors).some(Boolean);
 
+  // ── Validação da janela de trabalho permitida ──
+  const workDays = studio?.allowed_work_days ?? [];
+  const workStart = studio?.allowed_work_start_time ?? '';
+  const workEnd = studio?.allowed_work_end_time ?? '';
+  const workWindowFilled = !!workDays.length || !!workStart || !!workEnd;
+
+  let workWindowError: string | null = null;
+  if (workWindowFilled) {
+    if (!workDays.length) {
+      workWindowError = 'Selecione pelo menos um dia da semana';
+    } else if (!workStart || !workEnd) {
+      workWindowError = 'Informe horário de início e término';
+    } else if (workStart >= workEnd) {
+      workWindowError = 'O horário de término deve ser maior que o de início';
+    }
+  }
+
+  // Duração em minutos (apenas exibição quando válida)
+  const workWindowMinutes =
+    !workWindowError && workStart && workEnd
+      ? (() => {
+          const [sh, sm] = workStart.split(':').map(Number);
+          const [eh, em] = workEnd.split(':').map(Number);
+          return eh * 60 + em - (sh * 60 + sm);
+        })()
+      : 0;
+  const workWindowLabel =
+    workWindowMinutes > 0
+      ? `${Math.floor(workWindowMinutes / 60)}h${workWindowMinutes % 60 ? ` ${workWindowMinutes % 60}min` : ''}`
+      : '';
+
   const handleSave = async () => {
     if (!projectId) return;
     if (hasContactErrors) {
       toast.error('Corrija os campos de contato destacados antes de salvar');
+      setActiveTab('info');
+      return;
+    }
+    if (workWindowError) {
+      toast.error(workWindowError);
       setActiveTab('info');
       return;
     }
