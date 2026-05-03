@@ -778,7 +778,7 @@ const Cronograma = () => {
                         hasError={!!rowError?.plannedDates}
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1" data-testid="cronograma-activity-end-mobile" data-planned-end={activity.plannedEnd}>
                       <span className="text-[10px] text-muted-foreground font-medium">Término Prev.</span>
                       <DatePickerField
                         value={activity.plannedEnd}
