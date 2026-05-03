@@ -13,6 +13,7 @@ import { IdentityBar } from "@/components/header/IdentityBar";
 import { ProjectStateSection, MilestonesBar } from "@/components/header/ProjectStateSection";
 import { MobileReportHeader } from "@/components/header/MobileReportHeader";
 import { DateChangeAlert } from "@/components/header/DateChangeAlert";
+import { ScheduleInconsistencyAlert } from "@/components/header/ScheduleInconsistencyAlert";
 import { useProjectMetrics, useMilestoneItems } from "@/components/header/useReportHeaderData";
 import type { ReportHeaderProps, MilestoneKey } from "@/components/header/types";
 
@@ -69,6 +70,15 @@ const ReportHeader = ({
 
   return (
     <header className="animate-fade-in mb-3 md:mb-4">
+      {showMetrics && (
+        <ScheduleInconsistencyAlert
+          startDate={displayStartDate}
+          endDate={displayEndDate}
+          activities={activities}
+          cronogramaPath={paths.cronograma}
+          canFix={isStaff}
+        />
+      )}
       {/* Desktop */}
       <div className="hidden md:block">
         <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
