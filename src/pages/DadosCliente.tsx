@@ -838,10 +838,31 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
                   onChange={(html) => updateStudio('provider_access_instructions', html || null)}
                   placeholder="Descreva o procedimento: aviso prévio à portaria, lista de nomes, documentos exigidos…"
                   minHeight="140px"
+                  className={providerAccessError ? 'border-destructive' : ''}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Use negrito, itálico e listas para destacar etapas. Ex.: 1) Avisar portaria · 2) Enviar lista de nomes · 3) Documentos exigidos.
-                </p>
+                <div className="flex items-start justify-between gap-2">
+                  {providerAccessError ? (
+                    <p className="text-xs text-destructive" role="alert">
+                      {providerAccessError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Use negrito, itálico e listas para destacar etapas. Ex.: 1) Avisar portaria · 2) Enviar lista de nomes · 3) Documentos exigidos.
+                    </p>
+                  )}
+                  <span
+                    className={cn(
+                      'text-xs tabular-nums shrink-0',
+                      providerAccessHtml.length > PROVIDER_ACCESS_MAX
+                        ? 'text-destructive font-medium'
+                        : providerAccessHtml.length > PROVIDER_ACCESS_MAX * 0.9
+                          ? 'text-amber-600'
+                          : 'text-muted-foreground',
+                    )}
+                  >
+                    {providerAccessHtml.length.toLocaleString('pt-BR')}/{PROVIDER_ACCESS_MAX.toLocaleString('pt-BR')}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
