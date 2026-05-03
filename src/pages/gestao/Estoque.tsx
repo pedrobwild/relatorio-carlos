@@ -884,7 +884,7 @@ function NewMovementDialog({
               <SelectTrigger aria-invalid={!!errors.item_id}>
                 <SelectValue placeholder="Selecione o material" />
               </SelectTrigger>
-              <SelectContent position="popper" className="z-50">
+              <SelectContent position="popper">
                 {items.map((it) => (
                   <SelectItem key={it.id} value={it.id}>
                     {it.name} <span className="text-muted-foreground">({it.unit})</span>
@@ -960,7 +960,7 @@ function NewMovementDialog({
                 <SelectTrigger aria-invalid={!!errors.project_id}>
                   <SelectValue placeholder="Selecione a obra" />
                 </SelectTrigger>
-                <SelectContent position="popper" className="z-50">
+                <SelectContent position="popper">
                   {projects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.name}

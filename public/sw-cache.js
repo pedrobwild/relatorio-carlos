@@ -21,14 +21,11 @@ const CACHEABLE_PATTERNS = [
   '/rest/v1/obra_tasks',
 ];
 
-// @ts-ignore - Service Worker scope
-self.addEventListener('install', (event: ExtendableEvent) => {
-  // Activate immediately
-  (self as any).skipWaiting();
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
 });
 
-// @ts-ignore
-self.addEventListener('activate', (event: ExtendableEvent) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
@@ -38,19 +35,18 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
       )
     )
   );
-  (self as any).clients.claim();
+  self.clients.claim();
 });
 
-function shouldCache(url: string): boolean {
+function shouldCache(url) {
   return CACHEABLE_PATTERNS.some(pattern => url.includes(pattern));
 }
 
-function isGetRequest(request: Request): boolean {
+function isGetRequest(request) {
   return request.method === 'GET';
 }
 
-// @ts-ignore
-self.addEventListener('fetch', (event: FetchEvent) => {
+self.addEventListener('fetch', (event) => {
   const { request } = event;
 
   // Only cache GET requests to our API

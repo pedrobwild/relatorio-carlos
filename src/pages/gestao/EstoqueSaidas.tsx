@@ -360,7 +360,7 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                     <SelectTrigger aria-invalid={!!errors.project_id}>
                       <SelectValue placeholder="Selecione a obra" />
                     </SelectTrigger>
-                    <SelectContent position="popper" className="z-50">
+                    <SelectContent position="popper">
                       {(projectsQ.data ?? []).map((p) => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.name}
@@ -384,7 +384,7 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                   <SelectTrigger aria-invalid={!!errors.item_id}>
                     <SelectValue placeholder="Selecione o material" />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="z-50">
+                  <SelectContent position="popper">
                     {(itemsQ.data ?? []).map((it) => (
                       <SelectItem key={it.id} value={it.id}>
                         {it.name}{" "}
@@ -460,7 +460,7 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                   <SelectTrigger aria-invalid={!!errors.responsible_user_id}>
                     <SelectValue placeholder="Selecione o responsável" />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="z-50">
+                  <SelectContent position="popper">
                     {(staffQ.data ?? []).map((u) => (
                       <SelectItem key={u.id} value={u.id}>
                         {u.nome || u.email}
@@ -483,7 +483,7 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="z-50">
+                  <SelectContent position="popper">
                     {REASONS.map((r) => (
                       <SelectItem key={r} value={r}>
                         {r}
