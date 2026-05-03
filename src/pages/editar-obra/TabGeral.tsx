@@ -182,6 +182,72 @@ export function TabGeral({
               <Input type="date" value={project.actual_end_date || ''} onChange={(e) => onProjectChange('actual_end_date', e.target.value || null)} />
             </div>
           </div>
+
+          {/* Duração em dias úteis + recálculo semana a semana */}
+          {onApplyBusinessDaysDuration && (
+            <div className="rounded-lg border bg-muted/30 p-3 sm:p-4 space-y-3">
+              <div className="flex items-start gap-2">
+                <CalendarRange className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <Label htmlFor="business_days_duration" className="text-sm font-medium">
+                    Dias úteis de execução
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    A partir do Início Previsto, calcula o Término automaticamente, pulando finais de semana e feriados de SP.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  id="business_days_duration"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  placeholder="Ex: 60"
+                  value={durationInput}
+                  onChange={(e) => setDurationInput(e.target.value)}
+                  className="sm:w-40"
+                  disabled={!project.planned_start_date || isSaving}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleApplyDuration}
+                  disabled={!project.planned_start_date || !durationInput || isSaving}
+                  className="sm:w-auto"
+                >
+                  Aplicar duração
+                </Button>
+              </div>
+              {!project.planned_start_date && (
+                <p className="text-xs text-muted-foreground">Defina o Início Previsto para usar a duração em dias úteis.</p>
+              )}
+            </div>
+          )}
+
+          {/* Recálculo semana a semana das etapas */}
+          {onRecalculateWeekly && activities.length > 0 && (
+            <div className="rounded-lg border bg-muted/30 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-start gap-2 flex-1 min-w-0">
+                <RefreshCw className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Recalcular etapas semana a semana</p>
+                  <p className="text-xs text-muted-foreground">
+                    Reorganiza cada etapa do cronograma em uma semana útil (Seg→Sex), preservando a ordem, a partir do Início Previsto.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onRecalculateWeekly}
+                disabled={!project.planned_start_date || isSaving}
+                className="sm:w-auto whitespace-nowrap"
+              >
+                Recalcular semana a semana
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
