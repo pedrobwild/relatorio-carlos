@@ -514,29 +514,55 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <Label>Nome</Label>
+                  <Label htmlFor="syn-name">Nome</Label>
                   <Input
+                    id="syn-name"
                     value={studio?.syndic_name || ''}
                     onChange={(e) => updateStudio('syndic_name', e.target.value || null)}
                     placeholder="Nome completo"
+                    aria-invalid={!!contactErrors.syndic_name}
+                    aria-describedby={contactErrors.syndic_name ? 'syn-name-err' : undefined}
+                    className={contactErrors.syndic_name ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.syndic_name && (
+                    <p id="syn-name-err" className="text-xs text-destructive mt-1">{contactErrors.syndic_name}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>E-mail</Label>
+                  <Label htmlFor="syn-email">E-mail</Label>
                   <Input
+                    id="syn-email"
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     value={studio?.syndic_email || ''}
                     onChange={(e) => updateStudio('syndic_email', e.target.value || null)}
                     placeholder="email@exemplo.com"
+                    aria-invalid={!!contactErrors.syndic_email}
+                    aria-describedby={contactErrors.syndic_email ? 'syn-email-err' : undefined}
+                    className={contactErrors.syndic_email ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.syndic_email && (
+                    <p id="syn-email-err" className="text-xs text-destructive mt-1">{contactErrors.syndic_email}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>Telefone</Label>
+                  <Label htmlFor="syn-phone">Telefone</Label>
                   <Input
+                    id="syn-phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={studio?.syndic_phone || ''}
                     onChange={(e) => updateStudio('syndic_phone', e.target.value || null)}
                     placeholder="(11) 99999-9999"
+                    aria-invalid={!!contactErrors.syndic_phone}
+                    aria-describedby={contactErrors.syndic_phone ? 'syn-phone-err' : undefined}
+                    className={contactErrors.syndic_phone ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.syndic_phone && (
+                    <p id="syn-phone-err" className="text-xs text-destructive mt-1">{contactErrors.syndic_phone}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
