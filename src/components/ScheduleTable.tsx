@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
-import { CalendarDays, AlertTriangle, ChevronDown } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { CalendarDays, AlertTriangle, ChevronDown, Rows3, Rows2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import {
@@ -24,6 +24,15 @@ const ScheduleTable = ({
   // (desktop, tablet e mobile); o usuário pode colapsar no chevron.
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const isExpanded = useCallback((id: string) => !collapsedIds.has(id), [collapsedIds]);
+  const [ultraCompact, setUltraCompact] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("schedule:ultraCompact") === "1";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("schedule:ultraCompact", ultraCompact ? "1" : "0");
+    }
+  }, [ultraCompact]);
 
   const toggleExpand = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -119,11 +128,21 @@ const ScheduleTable = ({
               {stats.delayed}
             </span>
           )}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setUltraCompact(v => !v); }}
+            className="md:hidden inline-flex items-center justify-center w-7 h-7 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground active:scale-95 transition shrink-0"
+            aria-label={ultraCompact ? "Mostrar mais detalhes" : "Modo ultra compacto"}
+            aria-pressed={ultraCompact}
+            title={ultraCompact ? "Modo padrão" : "Modo ultra compacto"}
+          >
+            {ultraCompact ? <Rows3 className="w-3.5 h-3.5" /> : <Rows2 className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
 
       {/* Mobile Card View — compact list, expand on tap */}
-      <div className="md:hidden space-y-1">
+      <div className={cn("md:hidden", ultraCompact ? "space-y-px" : "space-y-1")}>
         {sortedActivities.map((activity, index) => {
           const originalIndex = activities.indexOf(activity);
           const status = getActivityStatus(activity);
@@ -138,7 +157,8 @@ const ScheduleTable = ({
             <div
               key={activity.id}
               className={cn(
-                "bg-card border rounded-lg px-2.5 py-1.5 shadow-sm opacity-0 animate-fade-in transition-all",
+                "bg-card border shadow-sm opacity-0 animate-fade-in transition-all",
+                ultraCompact ? "rounded-md px-2 py-1" : "rounded-lg px-2.5 py-1.5",
                 onActivitySelect && "cursor-pointer active:scale-[0.99]",
                 isSelected
                   ? "border-primary ring-1 ring-primary/20"
@@ -150,67 +170,97 @@ const ScheduleTable = ({
               onClick={() => onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
             >
               {/* Compact summary row */}
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold shrink-0 bg-primary/10 text-primary">{originalIndex + 1}</span>
+              <div className={cn("flex items-center", ultraCompact ? "gap-1.5" : "gap-2")}>
+                <span className={cn(
+                  "inline-flex items-center justify-center rounded-full font-bold shrink-0 bg-primary/10 text-primary tabular-nums",
+                  ultraCompact ? "w-4 h-4 text-[8px]" : "w-5 h-5 text-[9px]"
+                )}>{originalIndex + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold leading-tight text-foreground line-clamp-2">{activity.description}</p>
-                  <p className="text-[10px] text-muted-foreground tabular-nums mt-0.5 truncate">
-                    {formatDate(activity.plannedStart, baseYear)} → {formatDate(activity.plannedEnd, baseYear)}
-                    {realRange && <span className="ml-1.5 text-foreground/70">• Real {realRange}</span>}
-                  </p>
+                  <p className={cn(
+                    "font-semibold leading-tight text-foreground",
+                    ultraCompact ? "text-[12px] truncate" : "text-[13px] line-clamp-2"
+                  )}>{activity.description}</p>
+                  {!ultraCompact && (
+                    <p className="text-[10px] text-muted-foreground tabular-nums mt-0.5 truncate">
+                      {formatDate(activity.plannedStart, baseYear)} → {formatDate(activity.plannedEnd, baseYear)}
+                      {realRange && <span className="ml-1.5 text-foreground/70">• Real {realRange}</span>}
+                    </p>
+                  )}
                 </div>
+                {ultraCompact && (
+                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+                    {formatDate(activity.plannedEnd, baseYear)}
+                  </span>
+                )}
                 <StatusBadge status={status} />
-                {onActivitySelect && (
+                {onActivitySelect && !ultraCompact && (
                   <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform shrink-0", expanded && "rotate-180")} />
                 )}
               </div>
 
               {/* Expanded details */}
               {expanded && (
-                <div className="mt-2 pt-2 border-t border-border/60 animate-fade-in">
-                  {(activity.etapa || hasDetails) && (
-                    <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                      {activity.etapa && (
-                        <span className="inline-block px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent text-accent-foreground">{activity.etapa}</span>
-                      )}
-                      {hasDetails && (
-                        <button
-                          onClick={(e) => toggleExpand(activity.id, e)}
-                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-                          aria-label={isExpanded(activity.id) ? "Ocultar descrição" : "Ver descrição"}
-                        >
-                          {isExpanded(activity.id) ? "Ocultar descrição" : "Ver descrição"}
-                          <ChevronDown className={cn("w-3 h-3 transition-transform", isExpanded(activity.id) && "rotate-180")} />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  {hasDetails && isExpanded(activity.id) && (
-                    <p className="mb-2 text-xs text-muted-foreground whitespace-pre-line leading-relaxed bg-secondary/30 rounded-md p-2 animate-fade-in">
-                      {activity.detailed_description}
-                    </p>
-                  )}
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <div className="bg-muted/40 rounded-md px-2 py-1">
-                      <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium">Previsto</p>
-                      <p className="text-[11px] font-semibold text-foreground tabular-nums">
-                        {formatDate(activity.plannedStart, baseYear)} → {formatDate(activity.plannedEnd, baseYear)}
-                      </p>
-                    </div>
-                    {canEditDates && onUpdateActivityDates && activity.id ? (
-                      <>
-                        <EditableDateCellMobile value={activity.actualStart} baseYear={baseYear} activityId={activity.id} field="actual_start" label="Início Real" onSave={onUpdateActivityDates} />
-                        <EditableDateCellMobile value={activity.actualEnd} baseYear={baseYear} activityId={activity.id} field="actual_end" label="Término Real" onSave={onUpdateActivityDates} />
-                      </>
-                    ) : (
-                      <div className="bg-muted/40 rounded-md px-2 py-1">
-                        <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium">Real</p>
-                        <p className="text-[11px] font-semibold tabular-nums text-foreground">
-                          {realRange ?? "—"}
-                        </p>
+                <div className={cn("animate-fade-in", ultraCompact ? "mt-1.5 pt-1.5" : "mt-2 pt-2", "border-t border-border/60")}>
+                  {ultraCompact ? (
+                    <div className="grid grid-cols-2 gap-1 text-[10px]">
+                      <div className="bg-muted/40 rounded px-1.5 py-0.5">
+                        <span className="text-muted-foreground">Prev: </span>
+                        <span className="font-semibold tabular-nums text-foreground">
+                          {formatDate(activity.plannedStart, baseYear)}–{formatDate(activity.plannedEnd, baseYear)}
+                        </span>
                       </div>
-                    )}
-                  </div>
+                      <div className="bg-muted/40 rounded px-1.5 py-0.5">
+                        <span className="text-muted-foreground">Real: </span>
+                        <span className="font-semibold tabular-nums text-foreground">{realRange ?? "—"}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {(activity.etapa || hasDetails) && (
+                        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                          {activity.etapa && (
+                            <span className="inline-block px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent text-accent-foreground">{activity.etapa}</span>
+                          )}
+                          {hasDetails && (
+                            <button
+                              onClick={(e) => toggleExpand(activity.id, e)}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                              aria-label={isExpanded(activity.id) ? "Ocultar descrição" : "Ver descrição"}
+                            >
+                              {isExpanded(activity.id) ? "Ocultar descrição" : "Ver descrição"}
+                              <ChevronDown className={cn("w-3 h-3 transition-transform", isExpanded(activity.id) && "rotate-180")} />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {hasDetails && isExpanded(activity.id) && (
+                        <p className="mb-2 text-xs text-muted-foreground whitespace-pre-line leading-relaxed bg-secondary/30 rounded-md p-2 animate-fade-in">
+                          {activity.detailed_description}
+                        </p>
+                      )}
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <div className="bg-muted/40 rounded-md px-2 py-1">
+                          <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium">Previsto</p>
+                          <p className="text-[11px] font-semibold text-foreground tabular-nums">
+                            {formatDate(activity.plannedStart, baseYear)} → {formatDate(activity.plannedEnd, baseYear)}
+                          </p>
+                        </div>
+                        {canEditDates && onUpdateActivityDates && activity.id ? (
+                          <>
+                            <EditableDateCellMobile value={activity.actualStart} baseYear={baseYear} activityId={activity.id} field="actual_start" label="Início Real" onSave={onUpdateActivityDates} />
+                            <EditableDateCellMobile value={activity.actualEnd} baseYear={baseYear} activityId={activity.id} field="actual_end" label="Término Real" onSave={onUpdateActivityDates} />
+                          </>
+                        ) : (
+                          <div className="bg-muted/40 rounded-md px-2 py-1">
+                            <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium">Real</p>
+                            <p className="text-[11px] font-semibold tabular-nums text-foreground">
+                              {realRange ?? "—"}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
