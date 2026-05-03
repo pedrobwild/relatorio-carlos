@@ -18,6 +18,42 @@ import {
 } from '@/components/mobile';
 import { cn } from '@/lib/utils';
 
+// ── Validações dos contatos (gerente predial e síndico) ──────────────
+// Email RFC 5322 simplificado; telefone BR aceita 10 ou 11 dígitos
+// (com ou sem máscara). Nome exige pelo menos 2 caracteres não vazios.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function validateContactName(value: string | null): string | null {
+  if (!value || !value.trim()) return null; // opcional
+  if (value.trim().length < 2) return 'Nome muito curto';
+  if (value.trim().length > 120) return 'Nome muito longo';
+  return null;
+}
+
+function validateContactEmail(value: string | null): string | null {
+  if (!value || !value.trim()) return null;
+  if (!EMAIL_RE.test(value.trim())) return 'E-mail inválido';
+  return null;
+}
+
+function validateContactPhone(value: string | null): string | null {
+  if (!value || !value.trim()) return null;
+  const digits = value.replace(/\D/g, '');
+  if (digits.length < 10 || digits.length > 11) {
+    return 'Telefone deve ter 10 ou 11 dígitos';
+  }
+  return null;
+}
+
+interface ContactErrors {
+  building_manager_name?: string;
+  building_manager_email?: string;
+  building_manager_phone?: string;
+  syndic_name?: string;
+  syndic_email?: string;
+  syndic_phone?: string;
+}
+
 interface StudioData {
   project_id: string;
   nome_do_empreendimento: string | null;
@@ -116,8 +152,23 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
     }
   };
 
+  const contactErrors: ContactErrors = {
+    building_manager_name: validateContactName(studio?.building_manager_name ?? null) ?? undefined,
+    building_manager_email: validateContactEmail(studio?.building_manager_email ?? null) ?? undefined,
+    building_manager_phone: validateContactPhone(studio?.building_manager_phone ?? null) ?? undefined,
+    syndic_name: validateContactName(studio?.syndic_name ?? null) ?? undefined,
+    syndic_email: validateContactEmail(studio?.syndic_email ?? null) ?? undefined,
+    syndic_phone: validateContactPhone(studio?.syndic_phone ?? null) ?? undefined,
+  };
+  const hasContactErrors = Object.values(contactErrors).some(Boolean);
+
   const handleSave = async () => {
     if (!projectId) return;
+    if (hasContactErrors) {
+      toast.error('Corrija os campos de contato destacados antes de salvar');
+      setActiveTab('info');
+      return;
+    }
     setSaving(true);
     try {
       if (studio) {
@@ -397,29 +448,55 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <Label>Nome</Label>
+                  <Label htmlFor="bm-name">Nome</Label>
                   <Input
+                    id="bm-name"
                     value={studio?.building_manager_name || ''}
                     onChange={(e) => updateStudio('building_manager_name', e.target.value || null)}
                     placeholder="Nome completo"
+                    aria-invalid={!!contactErrors.building_manager_name}
+                    aria-describedby={contactErrors.building_manager_name ? 'bm-name-err' : undefined}
+                    className={contactErrors.building_manager_name ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.building_manager_name && (
+                    <p id="bm-name-err" className="text-xs text-destructive mt-1">{contactErrors.building_manager_name}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>E-mail</Label>
+                  <Label htmlFor="bm-email">E-mail</Label>
                   <Input
+                    id="bm-email"
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     value={studio?.building_manager_email || ''}
                     onChange={(e) => updateStudio('building_manager_email', e.target.value || null)}
                     placeholder="email@exemplo.com"
+                    aria-invalid={!!contactErrors.building_manager_email}
+                    aria-describedby={contactErrors.building_manager_email ? 'bm-email-err' : undefined}
+                    className={contactErrors.building_manager_email ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.building_manager_email && (
+                    <p id="bm-email-err" className="text-xs text-destructive mt-1">{contactErrors.building_manager_email}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>Telefone</Label>
+                  <Label htmlFor="bm-phone">Telefone</Label>
                   <Input
+                    id="bm-phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={studio?.building_manager_phone || ''}
                     onChange={(e) => updateStudio('building_manager_phone', e.target.value || null)}
                     placeholder="(11) 99999-9999"
+                    aria-invalid={!!contactErrors.building_manager_phone}
+                    aria-describedby={contactErrors.building_manager_phone ? 'bm-phone-err' : undefined}
+                    className={contactErrors.building_manager_phone ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.building_manager_phone && (
+                    <p id="bm-phone-err" className="text-xs text-destructive mt-1">{contactErrors.building_manager_phone}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -437,29 +514,55 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <Label>Nome</Label>
+                  <Label htmlFor="syn-name">Nome</Label>
                   <Input
+                    id="syn-name"
                     value={studio?.syndic_name || ''}
                     onChange={(e) => updateStudio('syndic_name', e.target.value || null)}
                     placeholder="Nome completo"
+                    aria-invalid={!!contactErrors.syndic_name}
+                    aria-describedby={contactErrors.syndic_name ? 'syn-name-err' : undefined}
+                    className={contactErrors.syndic_name ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.syndic_name && (
+                    <p id="syn-name-err" className="text-xs text-destructive mt-1">{contactErrors.syndic_name}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>E-mail</Label>
+                  <Label htmlFor="syn-email">E-mail</Label>
                   <Input
+                    id="syn-email"
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     value={studio?.syndic_email || ''}
                     onChange={(e) => updateStudio('syndic_email', e.target.value || null)}
                     placeholder="email@exemplo.com"
+                    aria-invalid={!!contactErrors.syndic_email}
+                    aria-describedby={contactErrors.syndic_email ? 'syn-email-err' : undefined}
+                    className={contactErrors.syndic_email ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.syndic_email && (
+                    <p id="syn-email-err" className="text-xs text-destructive mt-1">{contactErrors.syndic_email}</p>
+                  )}
                 </div>
                 <div>
-                  <Label>Telefone</Label>
+                  <Label htmlFor="syn-phone">Telefone</Label>
                   <Input
+                    id="syn-phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={studio?.syndic_phone || ''}
                     onChange={(e) => updateStudio('syndic_phone', e.target.value || null)}
                     placeholder="(11) 99999-9999"
+                    aria-invalid={!!contactErrors.syndic_phone}
+                    aria-describedby={contactErrors.syndic_phone ? 'syn-phone-err' : undefined}
+                    className={contactErrors.syndic_phone ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {contactErrors.syndic_phone && (
+                    <p id="syn-phone-err" className="text-xs text-destructive mt-1">{contactErrors.syndic_phone}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -543,7 +646,8 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
           <Button
             type="button"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || hasContactErrors}
+            title={hasContactErrors ? 'Corrija os campos de contato destacados' : undefined}
             size="lg"
             className="min-w-[140px] h-11"
           >
