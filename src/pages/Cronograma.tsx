@@ -677,7 +677,7 @@ const Cronograma = () => {
                           />
                         </div>
 
-                        <div className="px-2 py-2">
+                        <div className="px-2 py-2" data-testid="cronograma-activity-end" data-planned-end={activity.plannedEnd}>
                           <DatePickerField
                             value={activity.plannedEnd}
                             onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
@@ -778,7 +778,7 @@ const Cronograma = () => {
                         hasError={!!rowError?.plannedDates}
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1" data-testid="cronograma-activity-end-mobile" data-planned-end={activity.plannedEnd}>
                       <span className="text-[10px] text-muted-foreground font-medium">Término Prev.</span>
                       <DatePickerField
                         value={activity.plannedEnd}

@@ -1468,7 +1468,7 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
 
         {/* Datas */}
         <TableCell><DateCell value={obra.inicio_oficial} onChange={(v) => onUpdate({ inicio_oficial: v })} confirmEdit confirmTitle="Alterar início oficial?" /></TableCell>
-        <TableCell><DateCell value={obra.entrega_oficial} onChange={(v) => onUpdate({ entrega_oficial: v })} confirmEdit confirmTitle="Alterar entrega oficial?" /></TableCell>
+        <TableCell data-testid="painel-obras-cell-entrega-oficial" data-entrega-oficial={obra.entrega_oficial ?? ''}><DateCell value={obra.entrega_oficial} onChange={(v) => onUpdate({ entrega_oficial: v })} confirmEdit confirmTitle="Alterar entrega oficial?" /></TableCell>
         <TableCell><DateCell value={obra.inicio_real} onChange={(v) => onUpdate({ inicio_real: v })} /></TableCell>
         <TableCell><DateCell value={obra.entrega_real} onChange={(v) => onUpdate({ entrega_real: v })} /></TableCell>
 
