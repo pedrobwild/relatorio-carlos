@@ -646,7 +646,8 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
           <Button
             type="button"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || hasContactErrors}
+            title={hasContactErrors ? 'Corrija os campos de contato destacados' : undefined}
             size="lg"
             className="min-w-[140px] h-11"
           >
