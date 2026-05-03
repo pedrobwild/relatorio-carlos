@@ -70,6 +70,15 @@ const ReportHeader = ({
 
   return (
     <header className="animate-fade-in mb-3 md:mb-4">
+      {showMetrics && (
+        <ScheduleInconsistencyAlert
+          startDate={displayStartDate}
+          endDate={displayEndDate}
+          activities={activities}
+          cronogramaPath={paths.cronograma}
+          canFix={isStaff}
+        />
+      )}
       {/* Desktop */}
       <div className="hidden md:block">
         <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
