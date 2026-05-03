@@ -11,13 +11,12 @@ import {
   type RepositoryResult,
   type RepositoryListResult,
 } from './base.repository';
-import type { Json } from '@/integrations/supabase/types';
+import type { Database, Json } from '@/integrations/supabase/types';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-import type { Database } from '@/integrations/supabase/types';
 
 type FormalizationType = Database['public']['Enums']['formalization_type'];
 type FormalizationStatus = Database['public']['Enums']['formalization_status'];

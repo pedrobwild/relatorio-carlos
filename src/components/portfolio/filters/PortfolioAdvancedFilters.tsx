@@ -10,8 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import type { AdvancedFilters } from './types';
-import { emptyFilters, isFiltersEmpty } from './types';
+import { emptyFilters, isFiltersEmpty, type AdvancedFilters } from './types';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 
 // ─── Props ───────────────────────────────────────────────────────────────────

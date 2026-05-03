@@ -9,6 +9,7 @@ import {
   ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon,
   FilterX, Plus, ChevronDown, ChevronUp, ExternalLink, Package,
   FileText, Truck, ArrowUpDown, MoreHorizontal, Trash2, User,
+  Clock, ThumbsUp, CheckCircle2, AlertTriangle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -46,7 +47,6 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import type { ProjectPurchase } from '@/hooks/useProjectPurchases';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
-import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PaymentSection } from '@/pages/compras/PaymentSection';
 import { parseFlexibleBRDate, parseLocalDate } from '@/lib/dates';
 import { addBusinessDays } from '@/lib/businessDays';
@@ -195,7 +195,7 @@ function DateCell({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 z-[200]" align="start">
+      <PopoverContent className="w-auto p-0" align="start">
         <CalendarPicker
           mode="single"
           selected={selected}
@@ -924,7 +924,7 @@ function NewPurchaseDialog({
               <SelectTrigger className={cn('h-9', !form.project_id && 'border-destructive/50')}>
                 <SelectValue placeholder="Selecionar obra…" />
               </SelectTrigger>
-              <SelectContent className="z-[300]">
+              <SelectContent>
                 {projects.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.name}
@@ -998,7 +998,7 @@ function NewPurchaseDialog({
                   {form.planned_purchase_date ? format(form.planned_purchase_date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : 'Selecionar data…'}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-[300]" align="start">
+              <PopoverContent className="w-auto p-0" align="start">
                 <CalendarPicker mode="single" selected={form.planned_purchase_date}
                   onSelect={(d) => { set('planned_purchase_date', d); setDateOpen(false); }}
                   locale={ptBR} initialFocus className="p-3 pointer-events-auto" />
@@ -1045,7 +1045,7 @@ function NewPurchaseDialog({
                         : 'Selecionar…'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[300]" align="start">
+                  <PopoverContent className="w-auto p-0" align="start">
                     <CalendarPicker
                       mode="single"
                       selected={form.payment_due_date}
@@ -1205,7 +1205,7 @@ export default function CalendarioCompras() {
   const toggleRow = (id: string) =>
     setExpandedRows((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
 

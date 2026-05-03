@@ -111,7 +111,7 @@ export function parseFlexibleBRDate(input: string | null | undefined): string | 
     month = Number(isoMatch[2]);
     day = Number(isoMatch[3]);
   } else {
-    const brMatch = /^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2}|\d{4})$/.exec(value);
+    const brMatch = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2}|\d{4})$/.exec(value);
     if (!brMatch) return null;
     day = Number(brMatch[1]);
     month = Number(brMatch[2]);
