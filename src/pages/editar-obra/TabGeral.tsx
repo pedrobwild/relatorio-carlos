@@ -55,15 +55,30 @@ export function TabGeral({
 
   const [durationInput, setDurationInput] = useState<string>(derivedDuration);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [durationTouched, setDurationTouched] = useState(false);
   useEffect(() => {
     setDurationInput(derivedDuration);
+    setDurationTouched(false);
   }, [derivedDuration]);
 
+  const MAX_BUSINESS_DAYS = 2000; // ~8 anos úteis — limite defensivo
+  const durationError: string | null = (() => {
+    const raw = durationInput.trim();
+    if (!raw) return 'Informe a duração em dias úteis.';
+    if (!/^\d+$/.test(raw)) return 'Use apenas números inteiros (sem vírgulas ou pontos).';
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) return 'A duração deve ser maior que zero.';
+    if (n > MAX_BUSINESS_DAYS) return `Duração muito alta. Use até ${MAX_BUSINESS_DAYS} dias úteis.`;
+    return null;
+  })();
+
   const handleApplyDuration = () => {
+    setDurationTouched(true);
+    if (durationError) return;
     const n = parseInt(durationInput, 10);
-    if (!Number.isFinite(n) || n <= 0) return;
     onApplyBusinessDaysDuration?.(n);
   };
+
 
   return (
     <div className="space-y-6">
@@ -205,25 +220,44 @@ export function TabGeral({
                   type="number"
                   inputMode="numeric"
                   min={1}
+                  max={MAX_BUSINESS_DAYS}
+                  step={1}
                   placeholder="Ex: 60"
                   value={durationInput}
-                  onChange={(e) => setDurationInput(e.target.value)}
-                  className="sm:w-40"
+                  onChange={(e) => {
+                    setDurationInput(e.target.value);
+                    setDurationTouched(true);
+                  }}
+                  onBlur={() => setDurationTouched(true)}
+                  aria-invalid={!!(durationTouched && durationError)}
+                  aria-describedby="business_days_duration_msg"
+                  className={`sm:w-40 ${durationTouched && durationError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                   disabled={!project.planned_start_date || isSaving}
                 />
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={handleApplyDuration}
-                  disabled={!project.planned_start_date || !durationInput || isSaving}
+                  disabled={!project.planned_start_date || isSaving || !!durationError}
                   className="sm:w-auto"
                 >
                   Aplicar duração
                 </Button>
               </div>
-              {!project.planned_start_date && (
-                <p className="text-xs text-muted-foreground">Defina o Início Previsto para usar a duração em dias úteis.</p>
-              )}
+              <p
+                id="business_days_duration_msg"
+                className={`text-xs ${
+                  durationTouched && durationError ? 'text-destructive' : 'text-muted-foreground'
+                }`}
+                role={durationTouched && durationError ? 'alert' : undefined}
+              >
+                {!project.planned_start_date
+                  ? 'Defina o Início Previsto para usar a duração em dias úteis.'
+                  : durationTouched && durationError
+                    ? durationError
+                    : 'Inteiro maior que zero. Pula sábados, domingos e feriados de SP.'}
+              </p>
+
             </div>
           )}
 
