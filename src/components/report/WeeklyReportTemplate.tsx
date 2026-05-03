@@ -126,6 +126,10 @@ const WeeklyReportTemplate = ({
           </div>
         )}
 
+        {safeData.gallery.length > 0 && (
+          <PhotoGallery photos={safeData.gallery} />
+        )}
+
         <ExecutiveSummary data={safeData} />
 
         {safeData.roomsProgress && safeData.roomsProgress.length > 0 && (
