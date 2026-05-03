@@ -35,7 +35,12 @@ const ReportHeader = ({
 
   const effectiveEndDate = endDate === dateChangeInfo.originalDate ? dateChangeInfo.newDate : endDate;
 
-  const projectMetrics = useProjectMetrics(startDate, effectiveEndDate, reportDate, activities);
+  const earliestStartFromActivities = useMemo(() => {
+    const starts = activities.map(a => a.plannedStart).filter((d): d is string => !!d).sort();
+    return starts[0] ?? null;
+  }, [activities]);
+  const effectiveStartDate = earliestStartFromActivities ?? startDate;
+  const projectMetrics = useProjectMetrics(effectiveStartDate, effectiveEndDate, reportDate, activities);
   const milestoneItems = useMilestoneItems(milestoneDates);
 
   const { paths, projectId } = useProjectNavigation();
