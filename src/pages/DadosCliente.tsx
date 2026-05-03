@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Textarea } from '@/components/ui/textarea';
+import { InlineRichEditor } from '@/components/ui/inline-rich-editor';
 import { Save, Building2, Loader2, Search, FileText, UserCog, Users, Clock, KeyRound } from 'lucide-react';
 import { ProjectInfoDoc } from '@/components/project/ProjectInfoDoc';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
@@ -807,14 +808,15 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
                 <Label htmlFor="provider-access" className="text-xs font-medium text-muted-foreground">
                   Como liberar prestadores
                 </Label>
-                <Textarea
-                  id="provider-access"
+                <InlineRichEditor
                   value={studio?.provider_access_instructions || ''}
-                  onChange={(e) => updateStudio('provider_access_instructions', e.target.value || null)}
+                  onChange={(html) => updateStudio('provider_access_instructions', html || null)}
                   placeholder="Descreva o procedimento: aviso prévio à portaria, lista de nomes, documentos exigidos…"
-                  maxLength={1000}
-                  rows={4}
+                  minHeight="140px"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Use negrito, itálico e listas para destacar etapas. Ex.: 1) Avisar portaria · 2) Enviar lista de nomes · 3) Documentos exigidos.
+                </p>
               </div>
             </CardContent>
           </Card>
