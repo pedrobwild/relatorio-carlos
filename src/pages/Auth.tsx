@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import authBg from '@/assets/auth-bg.png';
 import bwildLogo from '@/assets/bwild-logo-transparent.png';
+import workflowLogo from '@/assets/bwild-workflow-manager.png';
 import { z } from 'zod';
 import { logError, logInfo, logWarn } from '@/lib/errorLogger';
 
