@@ -4755,6 +4755,51 @@ export type Database = {
           },
         ]
       }
+      project_planned_dates_resync_runs: {
+        Row: {
+          changed_ids: string[]
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          out_of_sync_ids_before: string[]
+          projects_changed: number
+          projects_out_of_sync_before: number
+          projects_total: number
+          started_at: string
+          still_out_of_sync_ids_after: string[]
+        }
+        Insert: {
+          changed_ids?: string[]
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          out_of_sync_ids_before?: string[]
+          projects_changed?: number
+          projects_out_of_sync_before?: number
+          projects_total?: number
+          started_at?: string
+          still_out_of_sync_ids_after?: string[]
+        }
+        Update: {
+          changed_ids?: string[]
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          out_of_sync_ids_before?: string[]
+          projects_changed?: number
+          projects_out_of_sync_before?: number
+          projects_total?: number
+          started_at?: string
+          still_out_of_sync_ids_after?: string[]
+        }
+        Relationships: []
+      }
       project_purchase_attachments: {
         Row: {
           created_at: string
