@@ -52,7 +52,21 @@ export function GestaoSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+
+  const currentFase =
+    new URLSearchParams(location.search).get("fase") === "projetos"
+      ? "projetos"
+      : "obras";
+
+  const switchFase = (fase: "obras" | "projetos") => {
+    const params = new URLSearchParams(location.search);
+    if (fase === "projetos") params.set("fase", "projetos");
+    else params.delete("fase");
+    const qs = params.toString();
+    navigate(`/gestao/painel-obras${qs ? `?${qs}` : ""}`);
+  };
 
   const groups: NavGroup[] = [
     {
