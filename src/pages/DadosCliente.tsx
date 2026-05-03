@@ -290,6 +290,11 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       setActiveTab('info');
       return;
     }
+    if (providerAccessError) {
+      toast.error(providerAccessError);
+      setActiveTab('info');
+      return;
+    }
     setSaving(true);
     try {
       if (studio) {
