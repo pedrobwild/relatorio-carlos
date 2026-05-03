@@ -25,14 +25,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function validateContactName(value: string | null): string | null {
   if (!value || !value.trim()) return null; // opcional
-  if (value.trim().length < 2) return 'Nome muito curto';
-  if (value.trim().length > 120) return 'Nome muito longo';
+  if (value.trim().length < 2) return 'Informe o nome completo (mínimo 2 letras).';
+  if (value.trim().length > 120) return 'Nome muito longo (máximo 120 caracteres).';
   return null;
 }
 
 function validateContactEmail(value: string | null): string | null {
   if (!value || !value.trim()) return null;
-  if (!EMAIL_RE.test(value.trim())) return 'E-mail inválido';
+  if (!EMAIL_RE.test(value.trim())) return 'E-mail inválido. Exemplo: nome@dominio.com';
   return null;
 }
 
@@ -40,7 +40,7 @@ function validateContactPhone(value: string | null): string | null {
   if (!value || !value.trim()) return null;
   const digits = value.replace(/\D/g, '');
   if (digits.length < 10 || digits.length > 11) {
-    return 'Telefone deve ter 10 ou 11 dígitos';
+    return 'Use DDD + número, com 10 ou 11 dígitos. Ex.: (11) 99999-9999';
   }
   return null;
 }
