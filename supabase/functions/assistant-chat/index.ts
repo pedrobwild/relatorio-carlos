@@ -8,6 +8,11 @@ import {
   scoreConfidence,
   suggestFollowUps,
 } from './_lib/analysis.ts';
+import {
+  SYSTEM_PROMPT,
+  FORMATTER_SYSTEM_PROMPT,
+  buildFormatterUserMessage,
+} from './_lib/prompts.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -15,37 +20,6 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const MODEL = 'google/gemini-3-flash-preview';
 
 const SCHEMA_CATALOG = renderCatalog();
-
-const SYSTEM_PROMPT = `Você é o Assistente BWild, um copiloto especializado no portal de gestão de obras.
-
-OBJETIVO: responder perguntas sobre dados do sistema (financeiro, compras, cronograma, NCs, pendências, CS) gerando UMA consulta SQL PostgreSQL e interpretando o resultado em português claro, com análise executiva quando útil.
-
-REGRAS DE SQL (CRÍTICAS):
-1. Apenas SELECT (ou WITH ... SELECT). Nunca INSERT/UPDATE/DELETE/DDL.
-2. Apenas UMA instrução, sem ponto-e-vírgula no final.
-3. Use somente tabelas e colunas listadas no CATÁLOGO. Nunca invente colunas.
-4. Sempre filtre por datas/condições relevantes (ex: due_date = CURRENT_DATE).
-5. Use LEFT JOIN com projects para mostrar o nome da obra quando útil.
-6. Para "hoje" use CURRENT_DATE. Para "esta semana" use date_trunc('week', CURRENT_DATE).
-7. Sempre ordene de forma lógica (vencimento ASC, criação DESC, etc.).
-8. Limite implícito de 200 linhas é aplicado automaticamente — não adicione LIMIT manualmente a menos que o usuário peça top N.
-9. Para somas/totais use SUM(), COUNT(), AVG(). Para agrupar use GROUP BY.
-10. Evite SELECT *. Liste colunas necessárias.
-11. Para "atrasada"/"vencida" use as regras derivadas do CATÁLOGO. Nunca invente coluna 'status' em project_payments.
-
-ESTILO DE RESPOSTA:
-- Português brasileiro, tom executivo e direto.
-- Comece com a resposta numérica/factual.
-- Use markdown: tabelas para listas, **negrito** para destaques.
-- Formate moeda como R$ 1.234,56 e datas como DD/MM/AAAA.
-- Se vier vazio, diga claramente e sugira variações.
-- Separe fato (o que veio do dado), inferência (o que parece) e recomendação (o que fazer).
-- Indique limitações quando souber.
-- Nunca invente dados; só relate o que veio do SQL.
-
-A RLS do banco já filtra automaticamente o que o usuário pode ver — você não precisa adicionar filtros de permissão.
-
-VOCÊ DEVE OBRIGATORIAMENTE chamar a função generate_query exatamente uma vez por pergunta.`;
 
 const TOOL_SCHEMA = {
   type: 'function',
@@ -290,12 +264,22 @@ Deno.serve(async (req) => {
         } else {
           send('status', { phase: 'formatting', message: 'Formatando resposta...' });
 
-          const insightsBrief = analysis
-            ? analysis.insights
-                .slice(0, 5)
-                .map((i) => `- ${i.title} [${i.severity}]: ${i.summary}`)
-                .join('\n')
-            : '';
+          const formatterUserMessage = buildFormatterUserMessage({
+            question,
+            domain,
+            intent,
+            rows,
+            rowsReturned,
+            analysis: analysis
+              ? {
+                  confidence: analysis.confidence,
+                  insights: analysis.insights,
+                  dataQuality: analysis.dataQuality,
+                  limitations: analysis.limitations,
+                  visualizations: analysis.visualizations,
+                }
+              : null,
+          });
 
           const formatResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
             method: 'POST',
@@ -304,17 +288,8 @@ Deno.serve(async (req) => {
               model: MODEL,
               stream: true,
               messages: [
-                {
-                  role: 'system',
-                  content:
-                    'Você é o Assistente BWild. Receba a pergunta original, os dados (JSON) e os insights pré-computados de uma consulta SQL. Responda em português brasileiro, com markdown, formatando moedas como R$ 1.234,56 e datas como DD/MM/AAAA. Estruture a resposta em três partes:\n1. **Resposta direta** (1 parágrafo curto, com os números principais).\n2. **Tabela/lista** quando houver mais de uma linha relevante.\n3. **Análise & próximos passos** com 1-3 bullets de leitura, riscos ou recomendações, baseando-se nos insights pré-computados quando úteis.\nSe vier vazio, diga claramente. Nunca invente dados.',
-                },
-                {
-                  role: 'user',
-                  content: `Pergunta: ${question}\nDomínio: ${domain}\nIntent: ${intent ?? '—'}\n\nInsights pré-computados:\n${insightsBrief || '—'}\n\nDados (até 50 linhas):\n${JSON.stringify(
-                    rows.slice(0, 50)
-                  )}\n\nTotal de linhas retornadas: ${rowsReturned}`,
-                },
+                { role: 'system', content: FORMATTER_SYSTEM_PROMPT },
+                { role: 'user', content: formatterUserMessage },
               ],
             }),
           });
@@ -546,9 +521,22 @@ async function runNonStreaming(opts: {
     if (status !== 'success') {
       finalAnswer = 'Não consegui executar a consulta. Tente reformular.';
     } else {
-      const insightsBrief = analysis
-        ? analysis.insights.slice(0, 5).map((i) => `- ${i.title} [${i.severity}]: ${i.summary}`).join('\n')
-        : '';
+      const formatterUserMessage = buildFormatterUserMessage({
+        question,
+        domain,
+        intent,
+        rows,
+        rowsReturned,
+        analysis: analysis
+          ? {
+              confidence: analysis.confidence,
+              insights: analysis.insights,
+              dataQuality: analysis.dataQuality,
+              limitations: analysis.limitations,
+              visualizations: analysis.visualizations,
+            }
+          : null,
+      });
 
       const formatResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
@@ -556,15 +544,8 @@ async function runNonStreaming(opts: {
         body: JSON.stringify({
           model: MODEL,
           messages: [
-            {
-              role: 'system',
-              content:
-                'Responda em PT-BR markdown. Estruture: resposta direta, tabela/lista, análise & próximos passos. Use insights pré-computados quando úteis.',
-            },
-            {
-              role: 'user',
-              content: `Pergunta: ${question}\nDomínio: ${domain}\nInsights pré-computados:\n${insightsBrief || '—'}\nDados: ${JSON.stringify(rows.slice(0, 50))}`,
-            },
+            { role: 'system', content: FORMATTER_SYSTEM_PROMPT },
+            { role: 'user', content: formatterUserMessage },
           ],
         }),
       });
