@@ -70,6 +70,8 @@ export interface PainelObra {
   /** Nome do responsável (resolvido em runtime via useStaffUsers). */
   responsavel_nome: string | null;
   ultima_atualizacao: string;
+  /** True quando a obra ainda está em fase de projeto (sem execução em campo). */
+  is_project_phase: boolean;
 
   // Métricas (do summary)
   progress_percentage: number | null;
