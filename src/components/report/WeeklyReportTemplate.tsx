@@ -152,9 +152,6 @@ const WeeklyReportTemplate = ({
           <ClientDecisionsSection decisions={safeData.clientDecisions} />
         )}
 
-        {safeData.gallery.length > 0 && (
-          <PhotoGallery photos={safeData.gallery} />
-        )}
 
         <div className="pt-2 border-t border-border/50">
           <ReportFooter data={safeData} />
