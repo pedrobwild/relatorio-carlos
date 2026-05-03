@@ -620,13 +620,13 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
 
           {/* Dias e horários permitidos */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Clock className="h-5 w-5 text-muted-foreground" />
                 Dias e horários permitidos para trabalho
               </CardTitle>
               <CardDescription>
-                Selecione os dias da semana e a janela de horário liberada pelo condomínio
+                Selecione os dias da semana e a janela de horário liberada pelo condomínio.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
