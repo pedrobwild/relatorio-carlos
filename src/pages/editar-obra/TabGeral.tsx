@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { countBusinessDaysInclusive } from '@/lib/businessDays';
 import type { Project, Customer, Activity } from './types';
 import { ScheduleSyncAlert } from './ScheduleSyncAlert';
+import { WeeklyRecalcPreviewDialog } from './WeeklyRecalcPreviewDialog';
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
   active: 'A obra está em execução. O cliente pode acompanhar atualizações pelo portal.',
@@ -53,6 +54,7 @@ export function TabGeral({
   }, [project.planned_start_date, project.planned_end_date]);
 
   const [durationInput, setDurationInput] = useState<string>(derivedDuration);
+  const [previewOpen, setPreviewOpen] = useState(false);
   useEffect(() => {
     setDurationInput(derivedDuration);
   }, [derivedDuration]);
@@ -240,13 +242,25 @@ export function TabGeral({
               <Button
                 type="button"
                 variant="outline"
-                onClick={onRecalculateWeekly}
+                onClick={() => setPreviewOpen(true)}
                 disabled={!project.planned_start_date || isSaving}
                 className="sm:w-auto whitespace-nowrap"
               >
-                Recalcular semana a semana
+                Pré-visualizar recálculo
               </Button>
             </div>
+          )}
+
+          {onRecalculateWeekly && (
+            <WeeklyRecalcPreviewDialog
+              open={previewOpen}
+              onOpenChange={setPreviewOpen}
+              activities={activities}
+              startDate={project.planned_start_date}
+              currentEndDate={project.planned_end_date}
+              isBusy={isSaving}
+              onConfirm={onRecalculateWeekly}
+            />
           )}
         </CardContent>
       </Card>
