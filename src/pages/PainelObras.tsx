@@ -1186,26 +1186,26 @@ interface ObraRowProps {
 // shadcn) e respeitam a densidade selecionada para alinhar com a tabela final.
 
 const TABLE_COLS: { width: string; align?: 'right' | 'center' }[] = [
-  { width: 'w-[240px] min-w-[240px] max-w-[240px]' }, // Cliente / Obra (sticky)
-  { width: 'w-[60px]', align: 'center' },              // Dados
-  { width: 'min-w-[140px]' },                          // Status
-  { width: 'min-w-[160px]' },                          // Etapa
-  { width: 'min-w-[140px]', align: 'right' },          // Progresso
-  { width: 'min-w-[120px]' },                          // Início Of.
-  { width: 'min-w-[120px]' },                          // Entrega Of.
-  { width: 'min-w-[120px]' },                          // Início Real
-  { width: 'min-w-[120px]' },                          // Entrega Real
-  { width: 'min-w-[150px]' },                          // Relacionamento
-  { width: 'min-w-[180px]' },                          // Responsável
-  { width: 'min-w-[120px]', align: 'right' },          // Atraso
-  { width: 'w-16' },                                    // Ações
+  { width: 'w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px]' }, // Cliente / Obra (sticky)
+  { width: 'w-[52px] sm:w-[60px]', align: 'center' },        // Dados
+  { width: 'min-w-[112px] sm:min-w-[140px]' },               // Status
+  { width: 'min-w-[128px] sm:min-w-[160px]' },               // Etapa
+  { width: 'min-w-[112px] sm:min-w-[140px]', align: 'right' }, // Progresso
+  { width: 'min-w-[96px] sm:min-w-[120px]' },                // Início Of.
+  { width: 'min-w-[96px] sm:min-w-[120px]' },                // Entrega Of.
+  { width: 'min-w-[96px] sm:min-w-[120px]' },                // Início Real
+  { width: 'min-w-[96px] sm:min-w-[120px]' },                // Entrega Real
+  { width: 'min-w-[120px] sm:min-w-[150px]' },               // Relacionamento
+  { width: 'min-w-[140px] sm:min-w-[180px]' },               // Responsável
+  { width: 'min-w-[96px] sm:min-w-[120px]', align: 'right' }, // Atraso
+  { width: 'w-12 sm:w-16' },                                  // Ações
 ];
 
 function TableSkeleton({ densityTableClass, rows = 8 }: { densityTableClass: string; rows?: number }) {
   return (
     <SectionCard flush>
       <div className="overflow-x-auto" aria-busy="true" aria-live="polite" aria-label="Carregando obras">
-        <Table className={cn('min-w-max text-sm [&_th]:px-3 [&_td]:px-3 [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
+        <Table className={cn('min-w-max text-sm [&_th]:px-2 sm:[&_th]:px-3 [&_td]:px-2 sm:[&_td]:px-3 [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border-subtle">
               {TABLE_COLS.map((c, i) => (
