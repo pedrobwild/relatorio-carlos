@@ -19,6 +19,7 @@ import {
   ChevronsUpDown,
   ChevronRight,
   ChevronLeft,
+  ClipboardList,
   Search,
   Headset,
   ArrowRight,
@@ -692,6 +693,8 @@ export default function PainelObras() {
             onOpenDados={(o) => setDadosTarget(o)}
             onDeleteRequest={(o) => setDeleteTarget(o)}
             onCreate={() => navigate('/gestao/nova-obra')}
+            expandedIds={expandedIds}
+            onToggleExpanded={toggleExpanded}
           />
 
           {/* ── Desktop: toolbar + tabela/board/kanban (preserva comportamento) ── */}
@@ -2786,6 +2789,9 @@ interface MobilePainelViewProps {
   onOpenDados: (o: PainelObra) => void;
   onDeleteRequest: (o: PainelObra) => void;
   onCreate: () => void;
+  /** Conjunto de obras com painel de "planejar atividades" aberto (compartilhado com a tabela desktop). */
+  expandedIds: Set<string>;
+  onToggleExpanded: (id: string) => void;
 }
 
 function statusChipTone(s: PainelStatus | null): NonNullable<MobileRecordCardChip['tone']> {
@@ -2833,6 +2839,8 @@ function MobilePainelView({
   onOpenDados,
   onDeleteRequest,
   onCreate,
+  expandedIds,
+  onToggleExpanded,
 }: MobilePainelViewProps) {
   return (
     <div className="md:hidden">
@@ -3015,8 +3023,16 @@ function MobilePainelView({
               </span>
             );
 
+            const isExpanded = expandedIds.has(o.id);
             return (
-              <li key={o.id}>
+              <li
+                key={o.id}
+                className={cn(
+                  'border-b border-border-subtle last:border-b-0',
+                  isExpanded && 'bg-accent/15',
+                )}
+                data-expanded={isExpanded ? 'true' : 'false'}
+              >
                 <MobileRecordCard
                   title={o.customer_name ?? 'Sem cliente'}
                   subtitle={o.nome ?? '—'}
@@ -3025,6 +3041,7 @@ function MobilePainelView({
                   tone={tone}
                   onClick={() => onOpen(o.id)}
                   ariaLabel={`Abrir obra ${o.nome ?? ''} de ${o.customer_name ?? 'cliente sem nome'}`}
+                  className="border-b-0 bg-transparent"
                   overflowMenu={
                     <>
                       <DropdownMenuItem
@@ -3033,6 +3050,13 @@ function MobilePainelView({
                       >
                         <ExternalLink className="h-4 w-4" />
                         Abrir obra
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onToggleExpanded(o.id)}
+                        className="text-sm gap-2"
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                        {isExpanded ? 'Recolher atividades' : 'Planejar atividades'}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onOpenDados(o)}
@@ -3052,6 +3076,43 @@ function MobilePainelView({
                     </>
                   }
                 />
+                {/* Toggle "Planejar atividades" — alinhado ao expand inline da tabela
+                    desktop, otimizado para toque (alvo de 44px de altura). */}
+                <button
+                  type="button"
+                  onClick={() => onToggleExpanded(o.id)}
+                  aria-expanded={isExpanded}
+                  aria-controls={`obra-atividades-${o.id}`}
+                  aria-label={isExpanded ? 'Recolher atividades' : 'Planejar atividades'}
+                  className={cn(
+                    'flex w-full items-center justify-between gap-2 px-4 py-2.5 min-h-[44px] text-[13px] font-medium',
+                    'border-t border-dashed border-border-subtle transition-colors',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                    isExpanded
+                      ? 'bg-primary/5 text-primary hover:bg-primary/10'
+                      : 'text-muted-foreground hover:bg-muted/40 active:bg-muted',
+                  )}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <ClipboardList className="h-3.5 w-3.5" aria-hidden="true" />
+                    {isExpanded ? 'Recolher atividades' : 'Planejar atividades'}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      'h-4 w-4 transition-transform duration-200',
+                      isExpanded && 'rotate-180',
+                    )}
+                    aria-hidden="true"
+                  />
+                </button>
+                {isExpanded && (
+                  <div
+                    id={`obra-atividades-${o.id}`}
+                    className="border-t border-primary/20 animate-fade-in motion-reduce:animate-none"
+                  >
+                    <DailyLogInline projectId={o.id} />
+                  </div>
+                )}
               </li>
             );
           })}
