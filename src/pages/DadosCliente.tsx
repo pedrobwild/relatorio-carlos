@@ -131,6 +131,9 @@ interface StudioData {
   allowed_work_days: string[] | null;
   allowed_work_start_time: string | null;
   allowed_work_end_time: string | null;
+  key_location: string | null;
+  electronic_lock_password: string | null;
+  provider_access_instructions: string | null;
 }
 
 interface ProjectBasic {
