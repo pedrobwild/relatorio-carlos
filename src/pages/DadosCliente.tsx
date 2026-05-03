@@ -7,31 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Save, User, Building2, Loader2, Search, FileText } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Save, Building2, Loader2, Search, FileText, UserCog, Users, Clock } from 'lucide-react';
 import { ProjectInfoDoc } from '@/components/project/ProjectInfoDoc';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
-import { formatCpf, formatRg, isValidCpf, isValidRg } from '@/lib/documentValidation';
 import {
   ResponsiveTabsRoot,
   ResponsiveTabsList,
   ResponsiveTabsTrigger,
 } from '@/components/mobile';
 import { cn } from '@/lib/utils';
-
-interface CustomerData {
-  id: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string | null;
-  nacionalidade: string | null;
-  estado_civil: string | null;
-  profissao: string | null;
-  cpf: string | null;
-  rg: string | null;
-  endereco_residencial: string | null;
-  cidade: string | null;
-  estado: string | null;
-}
 
 interface StudioData {
   project_id: string;
@@ -44,6 +29,15 @@ interface StudioData {
   tamanho_imovel_m2: number | null;
   tipo_de_locacao: string | null;
   data_recebimento_chaves: string | null;
+  building_manager_name: string | null;
+  building_manager_email: string | null;
+  building_manager_phone: string | null;
+  syndic_name: string | null;
+  syndic_email: string | null;
+  syndic_phone: string | null;
+  allowed_work_days: string[] | null;
+  allowed_work_start_time: string | null;
+  allowed_work_end_time: string | null;
 }
 
 interface ProjectBasic {
@@ -52,31 +46,26 @@ interface ProjectBasic {
 }
 
 interface DadosClienteProps {
-  /**
-   * ID da obra. Quando ausente, é lido de `useParams` (uso como rota).
-   * Quando informado (ex.: dentro de um Dialog no Painel de Obras),
-   * o componente ignora o roteador e funciona como widget embutido.
-   */
   projectId?: string;
-  /**
-   * Quando true, o componente é tratado como widget embutido em
-   * Dialog/Sheet: o cabeçalho duplicado ("Dados do Cliente" + ação Salvar
-   * inline) é omitido e a ação Salvar fica em uma barra sticky no rodapé,
-   * compatível com a viewport mobile e safe areas.
-   *
-   * Use sempre que renderizar dentro de `DadosClienteDialog` ou
-   * `MobileFullscreenSheet` — o invólucro já provê título/descrição.
-   */
   embedded?: boolean;
 }
+
+const WEEK_DAYS: { value: string; label: string; short: string }[] = [
+  { value: 'mon', label: 'Segunda', short: 'Seg' },
+  { value: 'tue', label: 'Terça', short: 'Ter' },
+  { value: 'wed', label: 'Quarta', short: 'Qua' },
+  { value: 'thu', label: 'Quinta', short: 'Qui' },
+  { value: 'fri', label: 'Sexta', short: 'Sex' },
+  { value: 'sat', label: 'Sábado', short: 'Sáb' },
+  { value: 'sun', label: 'Domingo', short: 'Dom' },
+];
 
 export default function DadosCliente({ projectId: propProjectId, embedded = false }: DadosClienteProps = {}) {
   const params = useParams<{ projectId: string }>();
   const projectId = propProjectId ?? params.projectId;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'contratante' | 'imovel' | 'info'>('contratante');
-  const [customer, setCustomer] = useState<CustomerData | null>(null);
+  const [activeTab, setActiveTab] = useState<'imovel' | 'info'>('imovel');
   const [studio, setStudio] = useState<StudioData | null>(null);
   const [project, setProject] = useState<ProjectBasic | null>(null);
   const { lookup: lookupCep, loading: cepLoading } = useCepLookup();
@@ -88,13 +77,11 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [customerRes, studioRes, projectRes] = await Promise.all([
-        supabase.from('project_customers').select('*').eq('project_id', projectId!).maybeSingle(),
+      const [studioRes, projectRes] = await Promise.all([
         supabase.from('project_studio_info').select('*').eq('project_id', projectId!).maybeSingle(),
         supabase.from('projects').select('name, unit_name').eq('id', projectId!).single(),
       ]);
 
-      if (customerRes.data) setCustomer(customerRes.data as CustomerData);
       if (studioRes.data) {
         setStudio(studioRes.data as StudioData);
       } else {
@@ -109,6 +96,15 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
           tamanho_imovel_m2: null,
           tipo_de_locacao: null,
           data_recebimento_chaves: null,
+          building_manager_name: null,
+          building_manager_email: null,
+          building_manager_phone: null,
+          syndic_name: null,
+          syndic_email: null,
+          syndic_phone: null,
+          allowed_work_days: null,
+          allowed_work_start_time: null,
+          allowed_work_end_time: null,
         });
       }
       if (projectRes.data) setProject(projectRes.data);
@@ -122,38 +118,8 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
 
   const handleSave = async () => {
     if (!projectId) return;
-    // Validate CPF/RG before saving
-    if (customer?.cpf && !isValidCpf(customer.cpf)) {
-      toast.error('CPF inválido. Corrija antes de salvar.');
-      return;
-    }
-    if (customer?.rg && !isValidRg(customer.rg)) {
-      toast.error('RG inválido. Corrija antes de salvar.');
-      return;
-    }
     setSaving(true);
     try {
-      if (customer) {
-        const { id, ...rest } = customer;
-        const { error: custErr } = await supabase
-          .from('project_customers')
-          .update({
-            customer_name: rest.customer_name,
-            customer_email: rest.customer_email,
-            customer_phone: rest.customer_phone,
-            nacionalidade: rest.nacionalidade,
-            estado_civil: rest.estado_civil,
-            profissao: rest.profissao,
-            cpf: rest.cpf,
-            rg: rest.rg,
-            endereco_residencial: rest.endereco_residencial,
-            cidade: rest.cidade,
-            estado: rest.estado,
-          })
-          .eq('id', id);
-        if (custErr) throw custErr;
-      }
-
       if (studio) {
         const { error: studioErr } = await supabase
           .from('project_studio_info')
@@ -168,7 +134,16 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
             tamanho_imovel_m2: studio.tamanho_imovel_m2,
             tipo_de_locacao: studio.tipo_de_locacao,
             data_recebimento_chaves: studio.data_recebimento_chaves,
-          }, { onConflict: 'project_id' });
+            building_manager_name: studio.building_manager_name,
+            building_manager_email: studio.building_manager_email,
+            building_manager_phone: studio.building_manager_phone,
+            syndic_name: studio.syndic_name,
+            syndic_email: studio.syndic_email,
+            syndic_phone: studio.syndic_phone,
+            allowed_work_days: studio.allowed_work_days,
+            allowed_work_start_time: studio.allowed_work_start_time,
+            allowed_work_end_time: studio.allowed_work_end_time,
+          } as any, { onConflict: 'project_id' });
         if (studioErr) throw studioErr;
       }
 
@@ -181,12 +156,7 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
     }
   };
 
-  const updateCustomer = (field: keyof CustomerData, value: string | null) => {
-    if (!customer) return;
-    setCustomer({ ...customer, [field]: value });
-  };
-
-  const updateStudio = (field: keyof StudioData, value: string | number | null) => {
+  const updateStudio = (field: keyof StudioData, value: string | number | string[] | null) => {
     if (!studio) return;
     setStudio({ ...studio, [field]: value });
   };
@@ -195,7 +165,6 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
     const formatted = formatCep(rawValue);
     updateStudio('cep', formatted || null);
 
-    // Auto-lookup when 8 digits entered
     const digits = rawValue.replace(/\D/g, '');
     if (digits.length === 8) {
       lookupCep(digits).then((result) => {
@@ -247,22 +216,16 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
     <div
       className={cn(
         'mx-auto w-full',
-        // Quando embutido (dialog/sheet) o invólucro já tem padding e
-        // largura; aqui só damos um respiro lateral consistente. Quando
-        // usado como página standalone, mantemos o layout original.
         embedded ? 'max-w-3xl px-4 pt-3 pb-4 md:px-6 md:pt-4' : 'max-w-4xl p-4 md:p-6',
-        // Reserva espaço inferior para a sticky bar de Salvar não cobrir
-        // o último campo. ~80px = 64px barra + 16px folga (mais safe-area).
         'pb-[calc(80px+env(safe-area-inset-bottom,0px))]',
       )}
     >
-      {/* Header inline — só quando NÃO está embutido (rota /obra/:id/dados-cliente). */}
       {!embedded && (
         <div className="flex items-center justify-between mb-5">
           <div className="min-w-0">
             <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">Dados do Cliente</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Informações cadastrais do contratante e do imóvel
+              Informações do imóvel e do projeto
             </p>
           </div>
         </div>
@@ -270,14 +233,10 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
 
       <ResponsiveTabsRoot
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as 'contratante' | 'imovel' | 'info')}
+        onValueChange={(v) => setActiveTab(v as 'imovel' | 'info')}
         className="w-full"
       >
         <ResponsiveTabsList ariaLabel="Seções dos dados do cliente" className="md:w-auto">
-          <ResponsiveTabsTrigger value="contratante">
-            <User className="h-4 w-4" />
-            Contratante
-          </ResponsiveTabsTrigger>
           <ResponsiveTabsTrigger value="imovel">
             <Building2 className="h-4 w-4" />
             Imóvel
@@ -291,127 +250,7 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
 
       <div className="mt-4 space-y-6">
 
-      {/* ── Cliente (Contratante) ── */}
-      {activeTab === 'contratante' && (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Contratante
-          </CardTitle>
-          <CardDescription>Dados pessoais e de contato do cliente</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {customer ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
-                <Label>Nome completo *</Label>
-                <Input
-                  value={customer.customer_name}
-                  onChange={(e) => updateCustomer('customer_name', e.target.value)}
-                  placeholder="Nome completo"
-                />
-              </div>
-              <div>
-                <Label>Nacionalidade</Label>
-                <Input
-                  value={customer.nacionalidade || ''}
-                  onChange={(e) => updateCustomer('nacionalidade', e.target.value || null)}
-                  placeholder="Ex: brasileira"
-                />
-              </div>
-              <div>
-                <Label>Estado civil</Label>
-                <Input
-                  value={customer.estado_civil || ''}
-                  onChange={(e) => updateCustomer('estado_civil', e.target.value || null)}
-                  placeholder="Ex: casada"
-                />
-              </div>
-              <div>
-                <Label>Profissão</Label>
-                <Input
-                  value={customer.profissao || ''}
-                  onChange={(e) => updateCustomer('profissao', e.target.value || null)}
-                  placeholder="Ex: engenheira civil"
-                />
-              </div>
-              <div>
-                <Label>CPF *</Label>
-                <Input
-                  value={customer.cpf || ''}
-                  onChange={(e) => updateCustomer('cpf', formatCpf(e.target.value) || null)}
-                  placeholder="000.000.000-00"
-                  maxLength={14}
-                  className={customer.cpf && !isValidCpf(customer.cpf) ? 'border-destructive' : ''}
-                />
-                {customer.cpf && !isValidCpf(customer.cpf) && (
-                  <p className="text-xs text-destructive mt-1">CPF inválido</p>
-                )}
-              </div>
-              <div>
-                <Label>RG *</Label>
-                <Input
-                  value={customer.rg || ''}
-                  onChange={(e) => updateCustomer('rg', formatRg(e.target.value) || null)}
-                  placeholder="00.000.000-0"
-                  maxLength={12}
-                  className={customer.rg && !isValidRg(customer.rg) ? 'border-destructive' : ''}
-                />
-                {customer.rg && !isValidRg(customer.rg) && (
-                  <p className="text-xs text-destructive mt-1">RG inválido</p>
-                )}
-              </div>
-              <div className="sm:col-span-2">
-                <Label>Endereço residencial *</Label>
-                <Input
-                  value={customer.endereco_residencial || ''}
-                  onChange={(e) => updateCustomer('endereco_residencial', e.target.value || null)}
-                  placeholder="Rua, número, bairro, cidade/UF, CEP"
-                />
-              </div>
-              <div>
-                <Label>Cidade</Label>
-                <Input
-                  value={customer.cidade || ''}
-                  onChange={(e) => updateCustomer('cidade', e.target.value || null)}
-                  placeholder="Ex: São Paulo"
-                />
-              </div>
-              <div>
-                <Label>Estado</Label>
-                <Input
-                  value={customer.estado || ''}
-                  onChange={(e) => updateCustomer('estado', e.target.value || null)}
-                  placeholder="Ex: SP"
-                />
-              </div>
-              <div>
-                <Label>E-mail *</Label>
-                <Input
-                  type="email"
-                  value={customer.customer_email}
-                  onChange={(e) => updateCustomer('customer_email', e.target.value)}
-                  placeholder="seu@email.com"
-                />
-              </div>
-              <div>
-                <Label>Telefone</Label>
-                <Input
-                  value={customer.customer_phone || ''}
-                  onChange={(e) => updateCustomer('customer_phone', e.target.value || null)}
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">Nenhum cliente cadastrado para esta obra.</p>
-          )}
-        </CardContent>
-      </Card>
-      )}
-
-      {/* ── Obra (Imóvel) ── */}
+      {/* ── Imóvel ── */}
       {activeTab === 'imovel' && (
       <Card>
         <CardHeader>
@@ -451,7 +290,6 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
               />
             </div>
 
-            {/* CEP with auto-fill */}
             <div>
               <Label>CEP</Label>
               <div className="flex gap-2">
@@ -546,15 +384,154 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
 
       {/* ── Informações do Projeto ── */}
       {activeTab === 'info' && projectId && (
-        <ProjectInfoDoc projectId={projectId} />
+        <div className="space-y-6">
+          {/* Contato gerente predial */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCog className="h-5 w-5" />
+                Contato gerente predial
+              </CardTitle>
+              <CardDescription>Responsável pela administração do edifício</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <Label>Nome</Label>
+                  <Input
+                    value={studio?.building_manager_name || ''}
+                    onChange={(e) => updateStudio('building_manager_name', e.target.value || null)}
+                    placeholder="Nome completo"
+                  />
+                </div>
+                <div>
+                  <Label>E-mail</Label>
+                  <Input
+                    type="email"
+                    value={studio?.building_manager_email || ''}
+                    onChange={(e) => updateStudio('building_manager_email', e.target.value || null)}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+                <div>
+                  <Label>Telefone</Label>
+                  <Input
+                    value={studio?.building_manager_phone || ''}
+                    onChange={(e) => updateStudio('building_manager_phone', e.target.value || null)}
+                    placeholder="(11) 99999-9999"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contato síndico */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Contato síndico
+              </CardTitle>
+              <CardDescription>Síndico do condomínio</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <Label>Nome</Label>
+                  <Input
+                    value={studio?.syndic_name || ''}
+                    onChange={(e) => updateStudio('syndic_name', e.target.value || null)}
+                    placeholder="Nome completo"
+                  />
+                </div>
+                <div>
+                  <Label>E-mail</Label>
+                  <Input
+                    type="email"
+                    value={studio?.syndic_email || ''}
+                    onChange={(e) => updateStudio('syndic_email', e.target.value || null)}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+                <div>
+                  <Label>Telefone</Label>
+                  <Input
+                    value={studio?.syndic_phone || ''}
+                    onChange={(e) => updateStudio('syndic_phone', e.target.value || null)}
+                    placeholder="(11) 99999-9999"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dias e horários permitidos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Dias e horários permitidos para trabalho
+              </CardTitle>
+              <CardDescription>
+                Selecione os dias da semana e a janela de horário liberada pelo condomínio
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="mb-2 block">Dias da semana</Label>
+                <ToggleGroup
+                  type="multiple"
+                  value={studio?.allowed_work_days || []}
+                  onValueChange={(value) =>
+                    updateStudio('allowed_work_days', value.length ? value : null)
+                  }
+                  className="flex flex-wrap justify-start gap-2"
+                >
+                  {WEEK_DAYS.map((day) => (
+                    <ToggleGroupItem
+                      key={day.value}
+                      value={day.value}
+                      aria-label={day.label}
+                      className="min-w-[56px]"
+                    >
+                      {day.short}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>Horário de início</Label>
+                  <Input
+                    type="time"
+                    value={studio?.allowed_work_start_time || ''}
+                    onChange={(e) =>
+                      updateStudio('allowed_work_start_time', e.target.value || null)
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Horário de término</Label>
+                  <Input
+                    type="time"
+                    value={studio?.allowed_work_end_time || ''}
+                    onChange={(e) =>
+                      updateStudio('allowed_work_end_time', e.target.value || null)
+                    }
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Rich text livre */}
+          <ProjectInfoDoc projectId={projectId} />
+        </div>
       )}
       </div>
 
-      {/* ── Sticky save bar ──────────────────────────────────────────────
-          Mantém "Salvar" sempre acessível mesmo em formulários longos no
-          mobile. Em DadosClienteDialog (mobile full-screen), esta barra
-          fica colada acima da safe-area inferior; no desktop standalone,
-          fica colada ao rodapé do scroller dentro do container. */}
+      {/* ── Sticky save bar ── */}
       <div
         className={cn(
           'sticky bottom-0 -mx-4 md:-mx-6 mt-6',
