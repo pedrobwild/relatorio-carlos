@@ -6649,6 +6649,12 @@ export type Database = {
         Returns: undefined
       }
       restore_project: { Args: { p_project_id: string }; Returns: undefined }
+      resync_projects_planned_dates: {
+        Args: never
+        Returns: {
+          updated_count: number
+        }[]
+      }
       save_project_baseline: {
         Args: { p_project_id: string }
         Returns: undefined
