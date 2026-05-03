@@ -152,8 +152,23 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
     }
   };
 
+  const contactErrors: ContactErrors = {
+    building_manager_name: validateContactName(studio?.building_manager_name ?? null) ?? undefined,
+    building_manager_email: validateContactEmail(studio?.building_manager_email ?? null) ?? undefined,
+    building_manager_phone: validateContactPhone(studio?.building_manager_phone ?? null) ?? undefined,
+    syndic_name: validateContactName(studio?.syndic_name ?? null) ?? undefined,
+    syndic_email: validateContactEmail(studio?.syndic_email ?? null) ?? undefined,
+    syndic_phone: validateContactPhone(studio?.syndic_phone ?? null) ?? undefined,
+  };
+  const hasContactErrors = Object.values(contactErrors).some(Boolean);
+
   const handleSave = async () => {
     if (!projectId) return;
+    if (hasContactErrors) {
+      toast.error('Corrija os campos de contato destacados antes de salvar');
+      setActiveTab('info');
+      return;
+    }
     setSaving(true);
     try {
       if (studio) {
