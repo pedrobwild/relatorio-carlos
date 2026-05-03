@@ -258,6 +258,26 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       ? `${Math.floor(workWindowMinutes / 60)}h${workWindowMinutes % 60 ? ` ${workWindowMinutes % 60}min` : ''}`
       : '';
 
+  // ── Validação do editor "Como liberar prestadores" ──
+  const PROVIDER_ACCESS_MAX = 4000;
+  const providerAccessHtml = studio?.provider_access_instructions ?? '';
+  const providerAccessText = providerAccessHtml
+    .replace(/<br\s*\/?>(?!\n)/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
+  const providerAccessFilled = providerAccessText.length > 0;
+  let providerAccessError: string | null = null;
+  if (providerAccessHtml.length > PROVIDER_ACCESS_MAX) {
+    providerAccessError = `Texto muito longo (limite de ${PROVIDER_ACCESS_MAX.toLocaleString('pt-BR')} caracteres). Reduza para salvar.`;
+  } else if (providerAccessHtml.trim().length > 0 && !providerAccessFilled) {
+    providerAccessError = 'O texto está vazio. Escreva o procedimento ou limpe o campo.';
+  }
+
   const handleSave = async () => {
     if (!projectId) return;
     if (hasContactErrors) {
