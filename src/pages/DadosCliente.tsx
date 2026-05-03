@@ -885,11 +885,11 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
           <Button
             type="button"
             onClick={handleSave}
-            disabled={saving || hasContactErrors || !!workWindowError}
+            disabled={saving || hasContactErrors || !!workWindowError || !!providerAccessError}
             title={
               hasContactErrors
                 ? 'Corrija os campos de contato destacados'
-                : workWindowError ?? undefined
+                : workWindowError ?? providerAccessError ?? undefined
             }
             size="lg"
             className="min-w-[140px] h-11"
