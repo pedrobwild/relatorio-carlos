@@ -226,11 +226,27 @@ export default function Auth() {
     >
       {/* Form – centered on mobile, left on desktop */}
       <div className="flex flex-col justify-center items-stretch w-full md:max-w-lg px-5 sm:px-12 md:px-16 py-10 sm:py-16 safe-area-top safe-area-bottom mx-auto md:mx-0">
-        <img
-          src={workflowLogo}
-          alt="Bwild Workflow Manager"
-          className="block w-full max-w-[260px] sm:max-w-[320px] md:max-w-[380px] h-auto object-contain mb-8 sm:mb-10 self-center md:self-start"
-        />
+        <div className="w-full max-w-[260px] sm:max-w-[320px] md:max-w-[380px] mb-8 sm:mb-10 self-center md:self-start">
+          <img
+            src={workflowLogo}
+            alt="Bwild Workflow Manager"
+            className="block w-full h-auto object-contain"
+            onError={(e) => {
+              const img = e.currentTarget;
+              img.style.display = 'none';
+              const fallback = img.nextElementSibling as HTMLElement | null;
+              if (fallback) fallback.style.display = 'flex';
+            }}
+          />
+          <div
+            role="img"
+            aria-label="Bwild Workflow Manager"
+            style={{ display: 'none' }}
+            className="w-full h-16 sm:h-20 md:h-24 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white text-lg sm:text-xl md:text-2xl font-semibold tracking-tight"
+          >
+            Bwild<span className="text-[#366478]">.</span>
+          </div>
+        </div>
 
         {isDemoPrefill && (
           <div
