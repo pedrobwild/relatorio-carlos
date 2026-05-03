@@ -1115,21 +1115,21 @@ export default function PainelObras() {
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
-                    <Table className={cn('w-full text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
+                    <Table className={cn('min-w-max text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_td]:whitespace-nowrap [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
                           <TableHead className="w-[60px] text-center" aria-label="Dados do cliente">Dados</TableHead>
-                          <TableHead data-testid="painel-obras-th-status" className="min-w-[120px]">Status</TableHead>
-                          <TableHead className="min-w-[140px]">Etapa</TableHead>
-                          <TableHead className="min-w-[120px] text-right">Progresso</TableHead>
-                          <TableHead className="min-w-[100px]"><SortableHeader label="Início Of." sortKey="inicio_oficial" /></TableHead>
-                          <TableHead className="min-w-[100px]"><SortableHeader label="Entrega Of." sortKey="entrega_oficial" /></TableHead>
-                          <TableHead className="min-w-[100px]"><SortableHeader label="Início Real" sortKey="inicio_real" /></TableHead>
-                          <TableHead className="min-w-[100px]"><SortableHeader label="Entrega Real" sortKey="entrega_real" /></TableHead>
-                          <TableHead className="min-w-[130px]">Relacionamento</TableHead>
-                          <TableHead className="min-w-[150px]"><SortableHeader label="Responsável" sortKey="responsavel_nome" /></TableHead>
-                          <TableHead className="min-w-[110px] text-right"><SortableHeader label="Atraso" sortKey="atraso" /></TableHead>
+                          <TableHead data-testid="painel-obras-th-status" className="min-w-[140px]">Status</TableHead>
+                          <TableHead className="min-w-[160px]">Etapa</TableHead>
+                          <TableHead className="min-w-[140px] text-right">Progresso</TableHead>
+                          <TableHead className="min-w-[120px]"><SortableHeader label="Início Of." sortKey="inicio_oficial" /></TableHead>
+                          <TableHead className="min-w-[120px]"><SortableHeader label="Entrega Of." sortKey="entrega_oficial" /></TableHead>
+                          <TableHead className="min-w-[120px]"><SortableHeader label="Início Real" sortKey="inicio_real" /></TableHead>
+                          <TableHead className="min-w-[120px]"><SortableHeader label="Entrega Real" sortKey="entrega_real" /></TableHead>
+                          <TableHead className="min-w-[150px]">Relacionamento</TableHead>
+                          <TableHead className="min-w-[180px]"><SortableHeader label="Responsável" sortKey="responsavel_nome" /></TableHead>
+                          <TableHead className="min-w-[120px] text-right"><SortableHeader label="Atraso" sortKey="atraso" /></TableHead>
                           <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
