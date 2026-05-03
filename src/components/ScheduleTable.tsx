@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
-import { CalendarDays, AlertTriangle, ChevronDown } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { CalendarDays, AlertTriangle, ChevronDown, Rows3, Rows2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import {
