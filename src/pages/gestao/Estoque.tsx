@@ -129,6 +129,16 @@ const movementSchema = z
       path: ["item_id"],
       message: "Informe o item",
     },
+  )
+  .refine(
+    (v) =>
+      v.movement_type === "entrada" && !v.item_id && v.new_item_name && v.new_item_name.length >= 2
+        ? !!(v.new_item_unit && v.new_item_unit.trim().length >= 1)
+        : true,
+    {
+      path: ["new_item_unit"],
+      message: "Unidade obrigatória ao cadastrar novo item",
+    },
   );
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -254,7 +264,7 @@ export default function Estoque() {
           .from("stock_items")
           .insert({
             name: input.new_item_name.trim(),
-            unit: (input.new_item_unit || "un").trim() || "un",
+            unit: (input.new_item_unit || "").trim(),
             created_by: user?.id ?? null,
           })
           .select("id")
@@ -1144,7 +1154,7 @@ function NewMovementDialog({
                 </p>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="mov-new-unit">Unidade</Label>
+                <Label htmlFor="mov-new-unit">Unidade *</Label>
                 <Input
                   id="mov-new-unit"
                   value={form.new_item_unit}
@@ -1153,7 +1163,11 @@ function NewMovementDialog({
                   }
                   placeholder="un, kg, m"
                   maxLength={20}
+                  aria-invalid={!!errors.new_item_unit}
                 />
+                {errors.new_item_unit && (
+                  <p className="text-xs text-destructive">{errors.new_item_unit}</p>
+                )}
               </div>
             </div>
           ) : (
