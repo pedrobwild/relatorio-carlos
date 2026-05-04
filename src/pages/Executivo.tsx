@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, ExternalLink, FileText, Award, Ruler, ClipboardList, CheckCircle2, Loader2, Layers, MessageSquareWarning } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,26 +13,92 @@ import { ExecutivoVersionsModal } from "@/components/executivo/ExecutivoVersions
 import { RelatedDocPDFModal } from "@/components/executivo/RelatedDocPDFModal";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 // ── Tacit Approval Banner ──────────────────────────────────────────────
-function TacitApprovalNotice({ formalizacoesPath }: { formalizacoesPath: string }) {
+interface TacitApprovalNoticeProps {
+  formalizacoesPath: string;
+  /** ISO timestamp em que a tácita foi registrada. Quando ausente, o texto
+   *  cai num fallback genérico (compatibilidade com docs legados). */
+  registeredAt?: string | null;
+  /** Hash SHA-256 do PDF aprovado tacitamente (rastreabilidade jurídica). */
+  documentHash?: string | null;
+  /** Dias contratuais sem manifestação que dispararam a tácita. */
+  daysSilent?: number | null;
+}
+
+/**
+ * Banner de aprovação tácita rastreável: usa tokens semânticos (warning) em
+ * vez de literais Tailwind para respeitar dark mode e acessibilidade. Quando
+ * recebe `registeredAt` + `daysSilent`, gera o texto humano completo
+ * exigido pelo Bloco 1 (DD/MM, HH:MM, dias). Hash do PDF é exposto em
+ * mono pequena para auditoria sem poluir o copy.
+ */
+function TacitApprovalNotice({
+  formalizacoesPath,
+  registeredAt,
+  documentHash,
+  daysSilent,
+}: TacitApprovalNoticeProps) {
+  const description = useMemo(() => {
+    if (!registeredAt) {
+      return (
+        <>
+          Este projeto executivo foi considerado <strong>aprovado tacitamente</strong>,
+          pois não houve manifestação do cliente dentro do prazo estipulado em contrato.
+        </>
+      );
+    }
+    const parsed = parseISO(registeredAt);
+    const dateStr = Number.isNaN(parsed.getTime())
+      ? null
+      : format(parsed, "dd/MM 'às' HH:mm", { locale: ptBR });
+    const days = typeof daysSilent === 'number' && daysSilent > 0 ? daysSilent : null;
+    if (dateStr && days) {
+      return (
+        <>
+          Aprovação automática registrada em <strong>{dateStr}</strong> porque o prazo
+          contratual de <strong>{days} dia(s)</strong> venceu sem manifestação.
+        </>
+      );
+    }
+    if (dateStr) {
+      return (
+        <>
+          Aprovação automática registrada em <strong>{dateStr}</strong> porque o prazo
+          contratual venceu sem manifestação.
+        </>
+      );
+    }
+    return (
+      <>
+        Este projeto executivo foi considerado <strong>aprovado tacitamente</strong>,
+        pois não houve manifestação do cliente dentro do prazo estipulado em contrato.
+      </>
+    );
+  }, [registeredAt, daysSilent]);
+
   return (
-    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4">
+    <div
+      role="status"
+      className="rounded-lg border border-warning/30 bg-warning/10 p-3 sm:p-4"
+    >
       <div className="flex items-start gap-3">
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 shrink-0 mt-0.5">
-          <CheckCircle2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-warning/20 shrink-0 mt-0.5">
+          <CheckCircle2 className="w-4 h-4 text-warning" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-h3 text-amber-800 dark:text-amber-200 mb-1">Aprovação Tácita</h3>
-          <p className="text-caption text-amber-700 dark:text-amber-300">
-            Este projeto executivo foi considerado <strong>aprovado tacitamente</strong>,
-            pois não houve manifestação do cliente dentro do prazo estipulado em contrato.
-          </p>
+          <h3 className="text-h3 text-warning mb-1">Aprovação Tácita</h3>
+          <p className="text-caption text-foreground/85">{description}</p>
+          {documentHash && (
+            <p className="mt-1 text-tiny font-mono text-muted-foreground truncate" title={documentHash}>
+              hash: {documentHash}
+            </p>
+          )}
           <Link
             to={formalizacoesPath}
-            className="inline-flex items-center gap-1.5 mt-2 text-caption text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline underline-offset-2"
+            className="inline-flex items-center gap-1.5 mt-2 text-caption text-warning hover:text-warning/80 underline underline-offset-2"
           >
             <FileText className="w-3.5 h-3.5" />
             Ver formalização completa
@@ -274,7 +340,11 @@ const Executivo = () => {
             <div className="hidden lg:grid lg:grid-cols-[1fr_340px] lg:gap-6">
               <div className="space-y-4">
                 {executivoDoc.status === 'approved' && (
-                  <TacitApprovalNotice formalizacoesPath={paths.formalizacoes} />
+                  <TacitApprovalNotice
+                    formalizacoesPath={paths.formalizacoes}
+                    registeredAt={executivoDoc.approved_at}
+                    documentHash={executivoDoc.checksum}
+                  />
                 )}
                 <div className="h-[calc(100vh-260px)]">
                   <PDFViewer url={executivoDoc.url!} title="Projeto Executivo" />

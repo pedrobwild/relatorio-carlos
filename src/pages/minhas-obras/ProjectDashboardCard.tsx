@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { ChevronRight, AlertCircle, ClipboardSignature, FileText } from 'lucide-react';
+import { ChevronRight, AlertCircle, ClipboardSignature, FileText, Compass } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SCurveSparkline } from '@/components/scurve/SCurveSparkline';
+import { StatusBadge } from '@/components/ui-premium';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import type { Activity } from '@/types/report';
 
@@ -27,9 +28,55 @@ const statusVariants: Record<string, string> = {
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
+/**
+ * Resume a próxima ação do projeto a partir dos contadores agregados em
+ * ProjectSummary. Determina título humano e dono da bola sem consultar
+ * dados extras (mantém o card barato de renderizar em listagens longas).
+ */
+function deriveNextAction(project: ProjectSummary): {
+  label: string;
+  owner: 'client' | 'bwild';
+  tone: 'warning' | 'info' | 'success' | 'muted';
+} {
+  if (!project) return { label: 'Aguardando atualização', owner: 'bwild', tone: 'muted' };
+  if (project.status !== 'active') {
+    return { label: 'Sem ações pendentes nesta obra', owner: 'bwild', tone: 'muted' };
+  }
+  if ((project.overdue_count ?? 0) > 0) {
+    return {
+      label: `Resolver ${project.overdue_count} pendência(s) atrasada(s)`,
+      owner: 'client',
+      tone: 'warning',
+    };
+  }
+  if ((project.unsigned_formalizations ?? 0) > 0) {
+    return {
+      label: `Assinar ${project.unsigned_formalizations} formalização(ões)`,
+      owner: 'client',
+      tone: 'warning',
+    };
+  }
+  if ((project.pending_count ?? 0) > 0) {
+    return {
+      label: `Decidir ${project.pending_count} item(ns) pendente(s)`,
+      owner: 'client',
+      tone: 'warning',
+    };
+  }
+  if ((project.pending_documents ?? 0) > 0) {
+    return {
+      label: `Aguardando ${project.pending_documents} documento(s) da BWild`,
+      owner: 'bwild',
+      tone: 'info',
+    };
+  }
+  return { label: 'Tudo em dia — acompanhar evolução', owner: 'bwild', tone: 'success' };
+}
+
 export function ProjectDashboardCard({ project, onClick, activities }: ProjectDashboardCardProps) {
   const isActive = project.status === 'active';
   const progress = project.progress_percentage || 0;
+  const nextAction = useMemo(() => deriveNextAction(project), [project]);
 
   const alerts = useMemo(() => {
     const items: Array<{ icon: React.ElementType; label: string; accent: string }> = [];
@@ -97,7 +144,21 @@ export function ProjectDashboardCard({ project, onClick, activities }: ProjectDa
           </div>
         )}
 
-        {/* Row 3: Alerts / Action Items */}
+        {/* Row 3: Próxima ação + responsável */}
+        {isActive && (
+          <div className="flex items-center gap-2 text-caption text-muted-foreground">
+            <Compass className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+            <span className="truncate flex-1">
+              <span className="font-medium text-foreground/80">Próxima ação:</span>{' '}
+              {nextAction.label}
+            </span>
+            <StatusBadge tone={nextAction.tone === 'success' ? 'success' : nextAction.tone === 'info' ? 'info' : nextAction.tone === 'warning' ? 'warning' : 'muted'} size="sm" showDot={false}>
+              {nextAction.owner === 'client' ? 'Você' : 'BWild'}
+            </StatusBadge>
+          </div>
+        )}
+
+        {/* Row 4: Alerts / Action Items */}
         {alerts.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {alerts.map((alert, i) => (
