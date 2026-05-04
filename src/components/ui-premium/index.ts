@@ -44,3 +44,14 @@ export {
   PremiumDialogFooter,
   PremiumDialogBody,
 } from './PremiumDialogHeader';
+export { BottomCTA, type BottomCTAAction } from './BottomCTA';
+export { BottomSheet, type BottomSheetActionItem } from './BottomSheet';
+export {
+  ResponsiveTable,
+  type ResponsiveTableMobileItem,
+} from './ResponsiveTable';
+export {
+  PhotoCaptureButton,
+  type PhotoCaptureButtonProps,
+  type CapturedPhoto,
+} from './PhotoCaptureButton';
