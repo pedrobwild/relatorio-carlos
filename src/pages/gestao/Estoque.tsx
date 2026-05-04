@@ -383,7 +383,6 @@ export default function Estoque() {
             </Button>
             <Button
               onClick={() => setMovDialogOpen(true)}
-              disabled={noItems}
               className="gap-2"
             >
               <ArrowDownToLine className="h-4 w-4" />
