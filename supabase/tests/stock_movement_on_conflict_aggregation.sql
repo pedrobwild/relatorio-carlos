@@ -172,6 +172,15 @@ BEGIN
       v_problems := array_append(v_problems, format('%s: AUSENTE', r->>'name'));
       v_ddls     := array_append(v_ddls, r->>'ddl');
       RAISE NOTICE '  ✗ % — AUSENTE', r->>'name';
+      v_report := v_report || jsonb_build_array(jsonb_build_object(
+        'name',              r->>'name',
+        'status',            'missing',
+        'unique_expected',   (r->>'unique')::bool,
+        'columns_expected',  r->'columns',
+        'predicate_expected', r->>'predicate',
+        'reasons',           jsonb_build_array('índice ausente'),
+        'suggested_ddl',     r->>'ddl'
+      ));
       CONTINUE;
     END IF;
 
