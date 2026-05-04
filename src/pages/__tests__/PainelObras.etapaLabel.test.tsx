@@ -121,28 +121,30 @@ describe('PainelObras — paridade rótulo renderizado × formatEtapaLabel', () 
     const desktopTable = desktopTh!.closest('table')!;
     const rows = within(desktopTable).getAllByTestId('painel-obras-row');
 
-    // Mapa cliente → rótulo renderizado (via data-attribute estável).
-    const renderedByCliente = new Map<string, string>();
+    // Mapa "texto da célula cliente" → rótulo renderizado (data-attribute estável).
+    const rendered: Array<{ cliente: string; label: string }> = [];
     for (const row of rows) {
       const cliente = within(row)
         .getByTestId('painel-obras-cell-cliente')
         .textContent?.trim() ?? '';
       const cell = within(row).getByTestId('painel-obras-cell-etapa');
-      renderedByCliente.set(cliente, cell.getAttribute('data-etapa-label') ?? '');
+      rendered.push({ cliente, label: cell.getAttribute('data-etapa-label') ?? '' });
     }
 
-    // Para cada obra do fixture, o rótulo da UI deve ser idêntico ao puro.
+    // Para cada obra do fixture, achar a linha correspondente pelo customer_name
+    // (textContent inclui também `obra.nome`, então usamos `includes`).
     for (const obra of obrasFixture) {
       const expected = obra.etapa ? (formatEtapaLabel(obra, TODAY) ?? '') : '';
-      const rendered = renderedByCliente.get(obra.customer_name ?? '');
+      const match = rendered.find((r) => r.cliente.includes(obra.customer_name ?? ''));
+      expect(match, `linha de "${obra.customer_name}" não encontrada`).toBeTruthy();
       expect(
-        rendered,
+        match!.label,
         `linha de "${obra.customer_name}" deveria exibir "${expected}"`,
       ).toBe(expected);
     }
 
-    // Sanidade: garante que pelo menos uma S{N} apareceu.
-    expect([...renderedByCliente.values()].some((v) => /^Execução - S\d+$/.test(v))).toBe(true);
+    // Sanidade: pelo menos uma obra com rótulo S{N} foi renderizada.
+    expect(rendered.some((r) => /^Execução - S\d+$/.test(r.label))).toBe(true);
   });
 
   it('board: cada grupo de Execução tem label === formatEtapaLabel da obra', () => {
