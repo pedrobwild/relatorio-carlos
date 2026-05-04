@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
-import { ThemeToggleMenu } from '@/components/theme/ThemeToggle';
 
 /**
  * Compact user menu — avatar icon that opens a dropdown with:
@@ -91,7 +90,6 @@ export function UserMenu() {
             Configurações
           </DropdownMenuItem>
         )}
-        <ThemeToggleMenu />
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
