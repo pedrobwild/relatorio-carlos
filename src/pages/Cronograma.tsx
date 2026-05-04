@@ -4,6 +4,7 @@ import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCar
 import { isHoliday } from '@/lib/businessDays';
 import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
 import { useScheduleAlerts } from '@/hooks/useScheduleAlerts';
+import { useScheduleAlertPrefs } from '@/hooks/useScheduleAlertPrefs';
 import { Badge } from '@/components/ui/badge';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
@@ -159,6 +160,9 @@ function WeightSummary({ total }: { total: number }) {
 const Cronograma = () => {
   const navigate = useNavigate();
   const { summary: alertsSummary } = useScheduleAlerts();
+  const { prefs: alertPrefs } = useScheduleAlertPrefs();
+  const showAlertBadge =
+    alertPrefs.enabled && alertPrefs.channels.inApp && alertsSummary.total > 0;
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const isMobile = useIsMobile();
@@ -622,7 +626,7 @@ const Cronograma = () => {
           />
           <Link
             to={`/gestao/alertas-cronograma${projectId ? `?project=${projectId}` : ''}`}
-            aria-label={`Abrir alertas do cronograma${alertsSummary.total > 0 ? ` (${alertsSummary.total} pendente${alertsSummary.total === 1 ? '' : 's'})` : ''}`}
+            aria-label={`Abrir alertas do cronograma${showAlertBadge ? ` (${alertsSummary.total} pendente${alertsSummary.total === 1 ? '' : 's'})` : ''}`}
           >
             <Button
               variant="outline"
@@ -630,9 +634,9 @@ const Cronograma = () => {
               className="text-xs relative"
               title="Abrir alertas do cronograma"
             >
-              <BellRing className={cn('w-4 h-4 mr-1.5', alertsSummary.total > 0 && 'text-destructive')} />
+              <BellRing className={cn('w-4 h-4 mr-1.5', showAlertBadge && 'text-destructive')} />
               <span className="hidden sm:inline">Alertas</span>
-              {alertsSummary.total > 0 && (
+              {showAlertBadge && (
                 <Badge
                   variant="destructive"
                   className="ml-1.5 h-4 min-w-[1rem] px-1 text-[10px] leading-none rounded-full"
