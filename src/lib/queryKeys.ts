@@ -226,6 +226,18 @@ export const queryKeys = {
     all: ['staff-profiles'] as const,
     lookup: () => [...queryKeys.staffProfiles.all, 'lookup'] as const,
   },
+
+  // ============================================================================
+  // BWild Agent (Assessor stateful)
+  // Spec: docs/BWILD_AI_AGENTS_SPEC.yaml
+  // ============================================================================
+  agent: {
+    all: ['bwild-agent'] as const,
+    state: (projectId: string | undefined) =>
+      [...queryKeys.agent.all, 'state', projectId] as const,
+    events: (projectId: string | undefined, limit?: number) =>
+      [...queryKeys.agent.all, 'events', projectId, limit] as const,
+  },
 } as const;
 
 // ============================================================================
