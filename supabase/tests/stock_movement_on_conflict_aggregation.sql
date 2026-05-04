@@ -15,6 +15,20 @@
 --
 -- Como rodar:
 --   psql "$DATABASE_URL" -f supabase/tests/stock_movement_on_conflict_aggregation.sql
+--
+-- Modo DRY-RUN (apenas reporta índices ausentes/divergentes e o DDL
+-- sugerido, sem abortar e sem inserir nenhum movimento):
+--   psql "$DATABASE_URL" -v dry_run=1 -f supabase/tests/stock_movement_on_conflict_aggregation.sql
+
+-- Garante que :'dry_run' sempre exista
+\if :{?dry_run}
+\else
+  \set dry_run 0
+\endif
+-- Propaga o flag para uma GUC custom acessível pelos blocos DO via current_setting()
+SELECT set_config('regress.dry_run',
+                  CASE WHEN lower(:'dry_run') IN ('1','on','true','yes','y') THEN 'on' ELSE 'off' END,
+                  false);
 
 BEGIN;
 
