@@ -16,6 +16,9 @@ import { useStaffUsers } from './useStaffUsers';
 import type { ProjectWithCustomer } from '@/infra/repositories/projects.repository';
 
 export type PainelEtapa =
+  | 'Projeto 3D'
+  | 'Projeto Executivo'
+  | 'Executivo Aprovado'
   | 'Medição'
   | 'Executivo'
   | 'Emissão RRT'
