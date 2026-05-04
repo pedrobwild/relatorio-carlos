@@ -241,9 +241,7 @@ BEGIN
                      FROM unnest(i.indkey) WITH ORDINALITY AS k(attnum, ord)
                      JOIN pg_attribute a ON a.attrelid=i.indrelid AND a.attnum=k.attnum
                     ORDER BY k.ord),
-                 trim(lower(regexp_replace(
-                   COALESCE(pg_get_expr(i.indpred, i.indrelid), ''),
-                   '\s+', ' ', 'g')))
+                 pg_temp.norm_pred(pg_get_expr(i.indpred, i.indrelid))
             INTO v_uunique, v_ucols, v_upred
             FROM pg_index i
             JOIN pg_class c ON c.oid=i.indexrelid
