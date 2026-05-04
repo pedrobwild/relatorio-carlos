@@ -6497,6 +6497,7 @@ export type Database = {
           source: string
         }[]
       }
+      check_stock_balance_indexes: { Args: never; Returns: Json }
       complete_inspection: {
         Args: { p_inspection_id: string }
         Returns: undefined
