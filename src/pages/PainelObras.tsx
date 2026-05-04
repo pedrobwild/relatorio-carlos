@@ -548,12 +548,22 @@ export default function PainelObras() {
         return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
       });
     } else {
-      // Ordenação padrão: entrega oficial mais próxima / já atrasada primeiro.
-      // Obras já entregues (com entrega_real) e sem data vão para o final.
+      // Ordenação padrão: pela etapa canônica e, dentro de Execução, pela
+      // semana S{N} (S1 → S2 → ...). Empata por entrega oficial mais próxima.
+      const etapaIndex = new Map<PainelEtapa, number>(
+        ETAPA_OPTIONS.map((e, i) => [e, i] as const),
+      );
       rows = [...rows].sort((a, b) => {
-        const aDelivered = !!a.entrega_real;
-        const bDelivered = !!b.entrega_real;
-        if (aDelivered !== bDelivered) return aDelivered ? 1 : -1;
+        const ai = a.etapa ? (etapaIndex.get(a.etapa) ?? ETAPA_OPTIONS.length) : ETAPA_OPTIONS.length + 1;
+        const bi = b.etapa ? (etapaIndex.get(b.etapa) ?? ETAPA_OPTIONS.length) : ETAPA_OPTIONS.length + 1;
+        if (ai !== bi) return ai - bi;
+        const aw = getEtapaWeek(a);
+        const bw = getEtapaWeek(b);
+        if (aw != null || bw != null) {
+          if (aw == null) return 1;
+          if (bw == null) return -1;
+          if (aw !== bw) return aw - bw;
+        }
         const av = a.entrega_oficial ?? '';
         const bv = b.entrega_oficial ?? '';
         if (!av && !bv) return 0;
