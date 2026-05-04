@@ -1368,7 +1368,7 @@ function NewMovementDialog({
                     alt="Pré-visualização"
                     className="h-32 w-32 object-cover"
                   />
-                  {loading && (
+                  {isBusy && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/70">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
