@@ -116,9 +116,44 @@ const STATE_SECTION_LABEL: Record<keyof ProjectState, string> = {
 };
 
 const Assessor = () => {
-  const { projectId } = useParams<{ projectId: string }>();
   const { paths } = useProjectNavigation();
   const canUse = useCanFeature('assessor:use');
+
+  if (!canUse) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PageHeader
+          title="Assessor BWild"
+          backTo={paths.relatorio}
+          maxWidth="xl"
+          breadcrumbs={[
+            { label: 'Painel de Obras', href: '/gestao/painel-obras' },
+            { label: 'Obra', href: paths.relatorio },
+            { label: 'Assessor' },
+          ]}
+        />
+        <ProjectSubNav />
+        <main className="py-6">
+          <PageContainer maxWidth="xl">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Sem permissão</AlertTitle>
+              <AlertDescription>
+                Seu perfil não tem acesso ao Assessor BWild.
+              </AlertDescription>
+            </Alert>
+          </PageContainer>
+        </main>
+      </div>
+    );
+  }
+
+  return <AssessorContent />;
+};
+
+const AssessorContent = () => {
+  const { projectId } = useParams<{ projectId: string }>();
+  const { paths } = useProjectNavigation();
 
   const [eventType, setEventType] = useState<AgentEventType>('field_problem');
   const [source, setSource] = useState<AgentEventSource | 'none'>('gestor');
@@ -132,7 +167,7 @@ const Assessor = () => {
   const lastEvent: BwildAgentEvent | undefined = eventsQuery.data?.[0];
 
   const trimmed = content.trim();
-  const canSubmit = canUse && trimmed.length > 0 && !mutation.isPending && !!projectId;
+  const canSubmit = trimmed.length > 0 && !mutation.isPending && !!projectId;
 
   const submit = () => {
     if (!canSubmit) return;
@@ -202,16 +237,6 @@ const Assessor = () => {
 
       <main className="py-6">
         <PageContainer maxWidth="xl">
-          {!canUse && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Sem permissão</AlertTitle>
-              <AlertDescription>
-                Seu perfil não tem acesso ao Assessor BWild.
-              </AlertDescription>
-            </Alert>
-          )}
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -269,7 +294,7 @@ const Assessor = () => {
                     rows={8}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    disabled={!canUse || mutation.isPending}
+                    disabled={mutation.isPending}
                   />
                 </div>
 

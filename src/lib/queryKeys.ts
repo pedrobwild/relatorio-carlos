@@ -235,8 +235,12 @@ export const queryKeys = {
     all: ['bwild-agent'] as const,
     state: (projectId: string | undefined) =>
       [...queryKeys.agent.all, 'state', projectId] as const,
-    events: (projectId: string | undefined, limit?: number) =>
-      [...queryKeys.agent.all, 'events', projectId, limit] as const,
+    /** Prefix for all event lists of a project — use to invalidate every limit at once. */
+    events: (projectId: string | undefined) =>
+      [...queryKeys.agent.all, 'events', projectId] as const,
+    /** Concrete event list cached by limit. */
+    eventsList: (projectId: string | undefined, limit: number) =>
+      [...queryKeys.agent.events(projectId), limit] as const,
   },
 } as const;
 

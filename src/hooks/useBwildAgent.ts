@@ -53,7 +53,7 @@ export function useAgentEventsQuery(
   const { user } = useAuth();
 
   return useQuery<BwildAgentEvent[]>({
-    queryKey: queryKeys.agent.events(projectId, limit),
+    queryKey: queryKeys.agent.eventsList(projectId, limit),
     queryFn: async () => {
       if (!projectId) return [];
       const result = await agentMemoryRepo.listAgentEvents(projectId, { limit });
