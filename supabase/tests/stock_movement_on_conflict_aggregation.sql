@@ -15,6 +15,34 @@
 --
 -- Como rodar:
 --   psql "$DATABASE_URL" -f supabase/tests/stock_movement_on_conflict_aggregation.sql
+--
+-- Modo DRY-RUN (apenas reporta índices ausentes/divergentes e o DDL
+-- sugerido, sem abortar e sem inserir nenhum movimento):
+--   psql "$DATABASE_URL" -v dry_run=1 -f supabase/tests/stock_movement_on_conflict_aggregation.sql
+--
+-- Modo AUTO-FIX (default ON): recria automaticamente índices ausentes/
+-- divergentes antes de inserir movimentos. Para desligar:
+--   psql "$DATABASE_URL" -v auto_fix=0 -f supabase/tests/stock_movement_on_conflict_aggregation.sql
+
+-- Defaults para variáveis psql
+\if :{?dry_run}
+\else
+  \set dry_run 0
+\endif
+\if :{?auto_fix}
+\else
+  \set auto_fix 1
+\endif
+
+-- Propaga flags para GUCs custom acessíveis pelos blocos DO via current_setting()
+SELECT
+  set_config('regress.dry_run',
+             CASE WHEN lower(:'dry_run') IN ('1','on','true','yes','y') THEN 'on' ELSE 'off' END,
+             false),
+  set_config('regress.auto_fix',
+             CASE WHEN lower(:'auto_fix') IN ('1','on','true','yes','y') THEN 'on' ELSE 'off' END,
+             false);
+
 
 BEGIN;
 
@@ -128,11 +156,82 @@ BEGIN
     FOR i IN 1..array_length(v_ddls,1) LOOP
       RAISE NOTICE '%', v_ddls[i];
     END LOOP;
-    RAISE EXCEPTION 'PRECHECK FAIL (% problema(s)): %',
-      array_length(v_problems,1), array_to_string(v_problems, ' | ');
+
+    IF current_setting('regress.dry_run', true) = 'on' THEN
+      RAISE NOTICE '⚠ DRY-RUN: % problema(s) detectado(s) — abort SUPRIMIDO. Nenhum movimento será inserido.',
+        array_length(v_problems,1);
+
+    ELSIF current_setting('regress.auto_fix', true) = 'on' THEN
+      -- ── AUTO-FIX: recria cada índice problemático no lugar ──
+      RAISE NOTICE '────── AUTO-FIX: recriando % índice(s) ──────', array_length(v_problems,1);
+      FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
+        -- Só age sobre os que constam em v_problems
+        IF EXISTS (
+          SELECT 1 FROM unnest(v_problems) p
+           WHERE p LIKE (r->>'name') || ':%'
+        ) THEN
+          RAISE NOTICE '  ↻ DROP + CREATE: %', r->>'name';
+          EXECUTE format('DROP INDEX IF EXISTS public.%I', r->>'name');
+          EXECUTE r->>'ddl';
+        END IF;
+      END LOOP;
+
+      -- Re-valida: tudo precisa estar OK depois do fix
+      DECLARE
+        v_still_bad text[] := ARRAY[]::text[];
+        v_ucols text[]; v_uunique bool; v_upred text;
+      BEGIN
+        FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
+          v_exp_cols := ARRAY(SELECT jsonb_array_elements_text(r->'columns'));
+          v_exp_pred := r->>'predicate';
+          SELECT i.indisunique,
+                 ARRAY(
+                   SELECT a.attname
+                     FROM unnest(i.indkey) WITH ORDINALITY AS k(attnum, ord)
+                     JOIN pg_attribute a ON a.attrelid=i.indrelid AND a.attnum=k.attnum
+                    ORDER BY k.ord),
+                 trim(lower(regexp_replace(
+                   COALESCE(pg_get_expr(i.indpred, i.indrelid), ''),
+                   '\s+', ' ', 'g')))
+            INTO v_uunique, v_ucols, v_upred
+            FROM pg_index i
+            JOIN pg_class c ON c.oid=i.indexrelid
+            JOIN pg_class t ON t.oid=i.indrelid
+            JOIN pg_namespace n ON n.oid=t.relnamespace
+           WHERE n.nspname='public' AND t.relname='stock_balances'
+             AND c.relname=(r->>'name');
+          IF NOT FOUND
+             OR ((r->>'unique')::bool AND NOT v_uunique)
+             OR v_ucols IS DISTINCT FROM v_exp_cols
+             OR v_upred IS DISTINCT FROM v_exp_pred THEN
+            v_still_bad := array_append(v_still_bad, r->>'name');
+          END IF;
+        END LOOP;
+        IF array_length(v_still_bad,1) > 0 THEN
+          RAISE EXCEPTION 'AUTO-FIX FAIL: índices ainda divergentes após recriação: %',
+            array_to_string(v_still_bad, ', ');
+        END IF;
+        RAISE NOTICE '✓ AUTO-FIX concluído: todos os índices conformes';
+      END;
+
+    ELSE
+      RAISE EXCEPTION 'PRECHECK FAIL (% problema(s)): %  [dica: rode com -v auto_fix=1]',
+        array_length(v_problems,1), array_to_string(v_problems, ' | ');
+    END IF;
   END IF;
   RAISE NOTICE '──────────────────────────────────────────────────────';
 END $$;
+
+-- ═══════════════════════════════════════════════════════════════════
+-- DRY-RUN gate: encerra aqui sem inserir nada nem rodar cenários.
+-- Útil para healthcheck / CI: roda o relatório de índices e sai limpo.
+-- ═══════════════════════════════════════════════════════════════════
+\if :dry_run
+  \echo '── DRY-RUN ativo: pulando cleanup, setup e cenários de teste ──'
+  ROLLBACK;
+  \echo '── Fim do dry-run (transação revertida, banco intocado) ──'
+  \quit
+\endif
 
 -- ─── Cleanup PRÉ-execução (idempotente, baseado em prefixo) ─────────
 -- Pega tudo que tenha o prefixo de teste, não só o item exato — protege
@@ -300,6 +399,5 @@ BEGIN
   END IF;
   RAISE NOTICE '✓ Estado do banco preservado: nenhum resíduo de teste';
 END $$;
-
 
 COMMIT;
