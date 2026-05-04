@@ -1,6 +1,7 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { mapError } from '@/lib/errorMapping';
 
 function softNavigate(to: string, options?: { replace?: boolean }) {
   if (typeof window === 'undefined') return;
@@ -177,35 +178,18 @@ function isAuthErrorCode(error: unknown): boolean {
 
 /**
  * Get user-friendly message from error
- * Exported for use in custom error handling
+ * Exported for use in custom error handling.
+ *
+ * Delegated to `mapError` (src/lib/errorMapping.ts) — fonte única da verdade
+ * para humanização de erros. Mantemos a função aqui apenas como atalho
+ * histórico para callers existentes.
  */
 export function getUserFriendlyMessage(error: unknown): string {
-  const errorString = String(error).toLowerCase();
-  
-  // Check each known error pattern
-  for (const [pattern, message] of Object.entries(errorMessages)) {
-    if (errorString.includes(pattern.toLowerCase())) {
-      return message;
-    }
-  }
-  
-  // Extract Supabase/PostgreSQL error message if available
-  if (error && typeof error === 'object') {
-    const err = error as { message?: string; code?: string; details?: string; hint?: string };
-    
-    // Check error code first
-    if (err.code && errorMessages[err.code]) {
-      return errorMessages[err.code];
-    }
-    
-    // If it has a readable message and it's not too technical
-    if (err.message && !err.message.includes('PGRST') && err.message.length < 100) {
-      return err.message;
-    }
-  }
-  
-  return 'Ocorreu um erro inesperado. Tente novamente.';
+  return mapError(error).userMessage;
 }
+
+// Mantém o objeto `errorMessages` apenas para referência (não usado em runtime).
+void errorMessages;
 
 // Check if error is an auth/permission error requiring logout
 function isAuthError(error: unknown): boolean {

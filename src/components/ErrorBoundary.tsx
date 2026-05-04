@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { logError, generateCorrelationId } from '@/lib/errorLogger';
 import { captureError } from '@/lib/errorMonitoring';
+import { mapError } from '@/lib/errorMapping';
+import { ErrorView } from '@/components/ui-premium/ErrorView';
 
 interface Props {
   children: ReactNode;
@@ -91,61 +93,37 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      const userError = this.state.error ? mapError(this.state.error) : null;
+      const technicalDetails = this.state.error
+        ? `${this.state.error.name}: ${this.state.error.message}\n\n${this.state.error.stack ?? ''}`
+        : undefined;
+
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="max-w-md w-full text-center space-y-6">
-            <div className="flex justify-center">
-              <div className="p-4 rounded-full bg-destructive/10">
-                <AlertTriangle className="h-12 w-12 text-destructive" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-foreground">
-                Algo deu errado
-              </h1>
-              <p className="text-muted-foreground">
-                Ocorreu um erro inesperado. Por favor, tente novamente.
-              </p>
-              {this.state.errorId && (
-                <p className="text-xs text-muted-foreground/60 font-mono">
-                  ID: {this.state.errorId}
-                </p>
-              )}
-            </div>
-
+          <div className="max-w-md w-full space-y-6">
+            <ErrorView
+              kind={userError?.kind ?? 'unknown'}
+              title="Algo deu errado"
+              description={
+                userError?.userMessage ??
+                'Ocorreu um erro inesperado. Tente novamente em instantes.'
+              }
+              onRetry={this.handleRetry}
+              correlationId={this.state.errorId}
+              technicalDetails={technicalDetails}
+              size="lg"
+              bare
+            />
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={this.handleRetry} variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Tentar novamente
-              </Button>
               <Button onClick={this.handleGoHome} variant="outline">
                 <Home className="h-4 w-4 mr-2" />
                 Ir para início
               </Button>
-              <Button onClick={this.handleReload}>
+              <Button onClick={this.handleReload} variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Recarregar página
               </Button>
             </div>
-
-            {import.meta.env.DEV && this.state.error && (
-              <details className="mt-6 text-left">
-                <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
-                  Detalhes técnicos (apenas dev)
-                </summary>
-                <div className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-auto max-h-60 space-y-2">
-                  <div>
-                    <span className="font-semibold text-destructive">{this.state.error.name}:</span>{' '}
-                    {this.state.error.message}
-                  </div>
-                  {this.state.error.stack && (
-                    <pre className="whitespace-pre-wrap text-muted-foreground">
-                      {this.state.error.stack}
-                    </pre>
-                  )}
-                </div>
-              </details>
-            )}
           </div>
         </div>
       );
