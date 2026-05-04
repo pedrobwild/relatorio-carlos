@@ -15,6 +15,7 @@ export * as filesRepo from './files.repository';
 export * as auditoriaRepo from './auditoria.repository';
 export * as journeyRepo from './journey.repository';
 export * as formalizationsRepo from './formalizations.repository';
+export * as agentMemoryRepo from './agentMemory.repository';
 
 // Re-export types for convenience
 export type { 
@@ -41,3 +42,14 @@ export type {
   CreateFileInput,
   FileFilters,
 } from './files.repository';
+
+export type {
+  AgentEventType,
+  AgentEventSource,
+  AgentEventStatus,
+  RoutedAgent,
+  ProjectStateMemory,
+  ProjectState,
+  BwildAgentEvent,
+  CreateAgentEventInput,
+} from './agentMemory.repository';
