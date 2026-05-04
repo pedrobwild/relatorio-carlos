@@ -277,6 +277,23 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
     providerAccessError = 'O texto está vazio. Escreva o procedimento ou limpe o campo.';
   }
 
+  // ── Validação dos campos de acesso à obra ──
+  const KEY_LOCATION_MAX = 300;
+  const LOCK_PASSWORD_MAX = 50;
+  const keyLocationRaw = studio?.key_location ?? '';
+  const lockPasswordRaw = studio?.electronic_lock_password ?? '';
+  let keyLocationError: string | null = null;
+  if (keyLocationRaw.length > 0 && keyLocationRaw.trim().length === 0) {
+    keyLocationError = 'Não use apenas espaços. Descreva o local ou limpe o campo.';
+  } else if (keyLocationRaw.trim().length > KEY_LOCATION_MAX) {
+    keyLocationError = `Texto muito longo (limite de ${KEY_LOCATION_MAX} caracteres).`;
+  }
+  let lockPasswordError: string | null = null;
+  if (lockPasswordRaw.length > 0 && lockPasswordRaw.trim().length === 0) {
+    lockPasswordError = 'Não use apenas espaços. Informe a senha ou limpe o campo.';
+  } else if (lockPasswordRaw.trim().length > LOCK_PASSWORD_MAX) {
+    lockPasswordError = `Senha muito longa (limite de ${LOCK_PASSWORD_MAX} caracteres).`;
+  }
   const handleSave = async () => {
     if (!projectId) return;
     if (hasContactErrors) {
