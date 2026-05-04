@@ -436,7 +436,10 @@ describe('Supplier Modal — Legacy Compatibility', () => {
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByRole('button', { name: /salvar/i }));
 
-    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Categoria é obrigatória' }));
+    // The legacy `categoria: 'materiais'` infers supplier_type='produtos',
+    // so only the subcategory remains missing — that's the gate the user
+    // hits when saving an unclassified legacy supplier.
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Subcategoria é obrigatória' }));
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 });

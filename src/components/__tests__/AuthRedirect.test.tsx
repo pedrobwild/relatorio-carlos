@@ -26,6 +26,12 @@ vi.mock('@/lib/debugAuth', () => ({
   debugNav: vi.fn(),
 }));
 
+// AuthRedirect calls useProjectsQuery which would need a real QueryClient.
+// Stub it so the redirect logic runs without TanStack wiring.
+vi.mock('@/hooks/useProjectsQuery', () => ({
+  useProjectsQuery: () => ({ data: [], isLoading: false, error: null }),
+}));
+
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole, type AppRole } from '@/hooks/useUserRole';
 
