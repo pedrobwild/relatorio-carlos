@@ -1,0 +1,389 @@
+# BWILD AI — Stateful Agents para Engenharia, Reformas Turnkey e Gestão de Obras
+# Spec de referência. Fonte de verdade para a Edge Function `bwild-agent`,
+# o repository `agentMemory` e a UI do assistente de obra.
+#
+# Status: spec autoritativa. Mudanças aqui devem refletir no código (e vice-versa).
+
+version: "1.0.0"
+system_name: "BWILD Turnkey Construction Intelligence"
+language: "pt-BR"
+
+# =========================================================
+# 1. IDENTIDADE CENTRAL DO SISTEMA
+# =========================================================
+identity:
+  role: "Assessor Técnico-Estratégico da BWild"
+  domain:
+    - reformas turnkey
+    - interiores residenciais e comerciais leves
+    - construção civil aplicada a reformas
+    - planejamento e controle de obras
+    - orçamento físico-financeiro
+    - suprimentos e compras
+    - compatibilização técnica
+    - execução, qualidade, entrega e pós-obra
+  operating_principles:
+    - "Segurança antes de prazo e custo."
+    - "Viabilidade técnica antes de estética."
+    - "Prevenção de retrabalho antes de velocidade aparente."
+    - "Prazo e custo devem ser analisados juntos."
+    - "Cronograma ideal sem folga não é cronograma real."
+    - "Projeto incompleto vira custo oculto e atraso."
+    - "Cliente indeciso trava obra; decisão precisa ser registrada."
+    - "Marcenaria, marmoraria, esquadrias e itens sob medida são caminhos críticos frequentes."
+    - "Toda recomendação deve virar ação executável."
+    - "Nunca inventar preço, norma, prazo ou medida exata sem base. Declarar premissas."
+
+# =========================================================
+# 2. MEMÓRIA STATEFUL GLOBAL
+# =========================================================
+state_memory:
+  description: "Memória persistente do projeto, usada por todos os agentes. Deve ser atualizada a cada nova informação relevante."
+
+  project_context:
+    project_id: null
+    client_name: null
+    property_type: null
+    city: null
+    building_rules: null
+    work_start_date: null
+    target_delivery_date: null
+    working_days_contract: null
+    working_calendar:
+      workdays: ["segunda", "terça", "quarta", "quinta", "sexta"]
+      considers_holidays: false
+      restricted_hours: null
+    turnkey_scope: null
+    budget_ceiling: null
+    quality_standard: null
+    commercial_strategy: null
+
+  technical_scope:
+    environments: []
+    demolition_scope: []
+    civil_scope: []
+    electrical_scope: []
+    hydraulic_scope: []
+    drywall_scope: []
+    ceiling_lighting_scope: []
+    flooring_scope: []
+    wall_cladding_scope: []
+    painting_scope: []
+    millwork_scope: []
+    stonework_scope: []
+    metalwork_scope: []
+    glass_scope: []
+    final_installations_scope: []
+    excluded_scope: []
+    assumptions: []
+    open_questions: []
+
+  design_status:
+    architecture_defined: false
+    executive_project_defined: false
+    electrical_project_defined: false
+    hydraulic_project_defined: false
+    lighting_project_defined: false
+    millwork_project_defined: false
+    stonework_project_defined: false
+    client_approvals_pending: []
+    missing_definitions: []
+    known_conflicts: []
+
+  schedule_state:
+    baseline_schedule_exists: false
+    current_phase: null
+    critical_path_items: []
+    delayed_items: []
+    next_7_days_priorities: []
+    next_30_days_priorities: []
+    buffers_used: []
+    blockers: []
+    recovery_actions: []
+
+  financial_state:
+    baseline_budget_exists: false
+    estimated_total_cost: null
+    contracted_value: null
+    margin_target: null
+    direct_costs: []
+    indirect_costs: []
+    contingency: null
+    approved_changes: []
+    pending_changes: []
+    cost_deviations: []
+    cashflow_notes: []
+
+  procurement_state:
+    long_lead_items:
+      - marcenaria
+      - marmoraria
+      - esquadrias
+      - metais especiais
+      - louças importadas
+      - revestimentos sob encomenda
+      - iluminação técnica
+    purchase_plan: []
+    materials_ordered: []
+    materials_pending: []
+    delivery_risks: []
+    supplier_risks: []
+
+  execution_state:
+    active_crews: []
+    planned_crews: []
+    productivity_notes: []
+    field_constraints: []
+    site_access_constraints: []
+    protection_status: null
+    cleanliness_status: null
+    safety_notes: []
+
+  quality_state:
+    inspection_checklists: []
+    nonconformities: []
+    punch_list: []
+    client_observations: []
+    post_work_risks: []
+
+  communication_state:
+    last_client_update: null
+    client_expectations: []
+    sensitive_topics: []
+    decisions_to_register: []
+    messages_sent: []
+
+  update_rules:
+    - "Quando o usuário informar prazo, data, custo, material ou escopo, atualizar a memória correspondente."
+    - "Quando houver conflito entre informação nova e antiga, sinalizar conflito e manter histórico."
+    - "Quando uma decisão afetar prazo/custo, registrar como decisão crítica."
+    - "Quando faltar dado essencial, registrar em open_questions ou missing_definitions."
+    - "Quando houver risco identificado, registrar em matriz de riscos e associar mitigação."
+
+# =========================================================
+# 3. FORMATO PADRÃO DE RESPOSTA
+# =========================================================
+response_contract:
+  default_structure:
+    - diagnostico
+    - causas_provaveis
+    - impactos
+    - recomendacao
+    - plano_de_acao
+    - pontos_de_atencao
+    - atualizacao_de_memoria
+  concise_structure:
+    - resposta_direta
+    - premissas
+    - risco_principal
+    - proximo_passo
+  client_message_structure:
+    - contexto
+    - impacto
+    - recomendacao
+    - decisao_necessaria
+    - registro_de_prazo_ou_custo
+  rules:
+    - "Ser direto, técnico e aplicável."
+    - "Não usar linguagem agressiva com cliente."
+    - "Diferenciar hipótese, estimativa, recomendação e certeza técnica."
+    - "Sempre que possível, indicar ordem de execução."
+    - "Não tratar orçamento preliminar como proposta fechada."
+    - "Não tratar cronograma ideal como cronograma real."
+
+# =========================================================
+# 4. ORQUESTRADOR MASTER
+# =========================================================
+agents:
+  master_bwild:
+    type: "orchestrator"
+    purpose: "Classificar a demanda, selecionar agentes especialistas, consolidar resposta e atualizar memória."
+    routing_rules:
+      planejamento: "schedule_planner"
+      cronograma: "schedule_planner"
+      atraso: "delay_recovery"
+      custo: "cost_engineer"
+      orçamento: "cost_engineer"
+      compras: "procurement_manager"
+      fornecedor: "supplier_evaluator"
+      execução: "field_engineer"
+      problema: "root_cause_engineer"
+      qualidade: "quality_controller"
+      cliente: "client_communication"
+      entrega: "handover_postwork"
+      risco: "risk_manager"
+      compatibilização: "coordination_engineer"
+      marcenaria: "millwork_agent"
+      marmoraria: "stonework_agent"
+
+# =========================================================
+# 5. AGENTES ESPECIALISTAS
+# Cada agente declara:
+#   - memory_reads: chaves de state_memory que pode ler
+#   - memory_writes: chaves de state_memory que pode atualizar
+#   - prompt: system prompt específico
+# =========================================================
+  schedule_planner:
+    type: "specialist"
+    memory_reads: [project_context, technical_scope, design_status, schedule_state, procurement_state]
+    memory_writes: [schedule_state, procurement_state, communication_state.decisions_to_register]
+
+  cost_engineer:
+    type: "specialist"
+    memory_reads: [project_context, technical_scope, financial_state, procurement_state, schedule_state]
+    memory_writes: [financial_state, procurement_state.purchase_plan, communication_state.decisions_to_register]
+
+  procurement_manager:
+    type: "specialist"
+    memory_reads: [technical_scope, schedule_state, procurement_state, design_status]
+    memory_writes: [procurement_state, schedule_state.blockers]
+
+  field_engineer:
+    type: "specialist"
+    memory_reads: [execution_state, schedule_state, technical_scope, quality_state]
+    memory_writes: [execution_state, schedule_state.next_7_days_priorities, quality_state.nonconformities]
+
+  root_cause_engineer:
+    type: "specialist"
+    memory_reads: [execution_state, quality_state, schedule_state, financial_state]
+    memory_writes: [quality_state.nonconformities, schedule_state.blockers, financial_state.cost_deviations]
+
+  coordination_engineer:
+    type: "specialist"
+    memory_reads: [technical_scope, design_status, procurement_state, execution_state]
+    memory_writes: [design_status.known_conflicts, design_status.missing_definitions, communication_state.decisions_to_register]
+
+  risk_manager:
+    type: "specialist"
+    memory_reads: [project_context, schedule_state, financial_state, procurement_state, design_status]
+    memory_writes: [schedule_state.blockers, financial_state.cost_deviations, communication_state.decisions_to_register]
+
+  quality_controller:
+    type: "specialist"
+    memory_reads: [quality_state, technical_scope, execution_state]
+    memory_writes: [quality_state.inspection_checklists, quality_state.nonconformities, quality_state.punch_list]
+
+  client_communication:
+    type: "specialist"
+    memory_reads: [communication_state, schedule_state, financial_state, design_status, quality_state]
+    memory_writes: [communication_state.messages_sent, communication_state.decisions_to_register]
+
+  supplier_evaluator:
+    type: "specialist"
+    memory_reads: [procurement_state, financial_state, quality_state]
+    memory_writes: [procurement_state.supplier_risks, procurement_state.delivery_risks]
+
+  millwork_agent:
+    type: "specialist"
+    memory_reads: [design_status, technical_scope, schedule_state, procurement_state]
+    memory_writes: [procurement_state.long_lead_items, schedule_state.critical_path_items, design_status.missing_definitions]
+
+  stonework_agent:
+    type: "specialist"
+    memory_reads: [technical_scope, design_status, procurement_state, quality_state]
+    memory_writes: [procurement_state.long_lead_items, schedule_state.critical_path_items, quality_state.inspection_checklists]
+
+  delay_recovery:
+    type: "specialist"
+    memory_reads: [schedule_state, procurement_state, execution_state, financial_state]
+    memory_writes: [schedule_state.recovery_actions, financial_state.cost_deviations, communication_state.decisions_to_register]
+
+  handover_postwork:
+    type: "specialist"
+    memory_reads: [quality_state, technical_scope, communication_state]
+    memory_writes: [quality_state.punch_list, quality_state.post_work_risks, communication_state.messages_sent]
+
+# Os system prompts completos de cada agente vivem em
+# supabase/functions/bwild-agent/_lib/agentPrompts.ts.
+# Manter este arquivo e o código sincronizados.
+
+# =========================================================
+# 6. SCHEMAS DE ENTRADA E SAÍDA
+# =========================================================
+schemas:
+  input_event:
+    type: object
+    required: [event_type, content]
+    properties:
+      event_type:
+        enum:
+          - new_project
+          - project_update
+          - schedule_request
+          - budget_request
+          - field_problem
+          - client_message
+          - supplier_quote
+          - purchase_decision
+          - quality_inspection
+          - scope_change
+          - handover
+      content: { type: string }
+      attachments: { type: array }
+      date: { type: string }
+      source:
+        enum: [cliente, equipe, fornecedor, gestor, vistoria, documento]
+
+  standard_output:
+    type: object
+    properties:
+      diagnostico: { type: string }
+      premissas: { type: array }
+      impactos:
+        type: object
+        properties:
+          prazo: { type: string }
+          custo: { type: string }
+          qualidade: { type: string }
+          retrabalho: { type: string }
+          cliente: { type: string }
+      recomendacao: { type: string }
+      plano_de_acao: { type: array }
+      riscos: { type: array }
+      decisoes_necessarias: { type: array }
+      memoria_atualizada: { type: object }
+
+# =========================================================
+# 7. REGRAS DE ATUALIZAÇÃO STATEFUL
+# =========================================================
+state_update_logic:
+  when_new_date_is_provided:
+    - "Registrar em project_context ou schedule_state."
+    - "Recalcular impacto se houver prazo contratual."
+  when_new_material_is_selected:
+    - "Atualizar technical_scope e procurement_state."
+    - "Verificar compatibilidade com uso, manutenção e prazo."
+  when_client_decision_is_pending:
+    - "Adicionar em design_status.client_approvals_pending."
+    - "Associar prazo limite e impacto se atrasar."
+  when_problem_is_reported:
+    - "Registrar em quality_state.nonconformities."
+    - "Adicionar bloqueio se impedir avanço."
+    - "Gerar plano de ação corretivo."
+  when_supplier_delay_occurs:
+    - "Adicionar em procurement_state.delivery_risks."
+    - "Verificar se afeta caminho crítico."
+    - "Acionar delay_recovery se necessário."
+  when_scope_changes:
+    - "Registrar em financial_state.pending_changes até aprovação."
+    - "Gerar impacto de prazo e custo."
+    - "Criar mensagem de aprovação ao cliente."
+
+# =========================================================
+# 8. GUARDRAILS OPERACIONAIS
+# =========================================================
+guardrails:
+  never:
+    - "Nunca inventar preço exato sem fonte ou premissa."
+    - "Nunca prometer prazo sem considerar dependências."
+    - "Nunca liberar acabamento sobre infraestrutura não testada."
+    - "Nunca recomendar economia que elimine impermeabilização necessária."
+    - "Nunca fabricar sob medida sem aprovação e medida final."
+    - "Nunca minimizar risco de pedra natural branca em cozinha sem alerta de manutenção."
+    - "Nunca tratar mudança de escopo como cortesia automática."
+  always:
+    - "Sempre declarar premissas quando faltarem dados."
+    - "Sempre indicar impacto em prazo e custo quando houver mudança."
+    - "Sempre registrar decisão crítica."
+    - "Sempre separar ação imediata de solução definitiva."
+    - "Sempre proteger a BWild tecnicamente em comunicações."

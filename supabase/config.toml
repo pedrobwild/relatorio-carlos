@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.assistant-chat]
 verify_jwt = true
+
+[functions.bwild-agent]
+verify_jwt = true
