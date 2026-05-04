@@ -36,7 +36,7 @@ export const StatusBadge = memo(
     return (
       <span
         ref={ref}
-        className={`inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full text-[10px] md:text-xs font-semibold border whitespace-nowrap ${className}`}
+        className={`inline-flex items-center justify-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full text-[10px] md:text-xs font-semibold border whitespace-nowrap shrink-0 leading-none ${className}`}
         {...rest}
       >
         <Icon className="w-3 h-3 md:w-3.5 md:h-3.5" />

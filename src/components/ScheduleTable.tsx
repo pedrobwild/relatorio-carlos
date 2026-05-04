@@ -344,8 +344,8 @@ const ScheduleTable = ({
                         ? <EditableDateCell value={activity.actualEnd} baseYear={baseYear} activityId={activity.id} field="actual_end" onSave={onUpdateActivityDates} />
                         : <span className="text-sm font-medium tabular-nums text-foreground">{formatDate(activity.actualEnd, baseYear)}</span>}
                     </TableCell>
-                    <TableCell className="py-3.5 pr-4 text-center">
-                      <StatusBadge status={status} />
+                    <TableCell className="py-3.5 pr-4 text-center w-[1%] whitespace-nowrap">
+                      <div className="inline-flex justify-center"><StatusBadge status={status} /></div>
                     </TableCell>
                   </TableRow>
                 );
