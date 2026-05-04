@@ -1087,6 +1087,7 @@ function NewMovementDialog({
     <Dialog
       open={open}
       onOpenChange={(v) => {
+        if (loading && !v) return;
         onOpenChange(v);
         if (!v) {
           reset();
