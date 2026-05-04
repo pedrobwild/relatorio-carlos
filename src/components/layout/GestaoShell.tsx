@@ -45,7 +45,7 @@ export function GestaoShell({ children }: GestaoShellProps) {
             </div>
           </header>
 
-          <div className="pb-bottom-nav">{children}</div>
+          <main id="main-content" className="pb-bottom-nav">{children}</main>
         </div>
       </div>
       <MobileBottomNav />

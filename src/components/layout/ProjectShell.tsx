@@ -81,7 +81,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
             <ProjectMobileHeader />
             <ProjectSlimHeader />
             {isSwitching && <ProjectSwitchOverlay />}
-            <main className="flex-1 overflow-y-auto pb-bottom-nav">{children}</main>
+            <main id="main-content" className="flex-1 overflow-y-auto pb-bottom-nav">{children}</main>
           </div>
         </div>
       </SidebarProvider>
