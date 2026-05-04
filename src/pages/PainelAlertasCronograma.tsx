@@ -11,7 +11,7 @@
  * com data de hoje) ou abrir o cronograma da obra para replanejar.
  */
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -109,9 +109,29 @@ export default function PainelAlertasCronograma() {
     markCompleted,
   } = useScheduleAlerts();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterProject, setFilterProject] = useState<string>(ALL);
-  const [filterKind, setFilterKind] = useState<AlertFilter>('all');
+  // Estado sincronizado com a URL (?q=&project=&kind=).
+  // Mantém filtros ao sair/voltar para a página e permite atalhos pré-filtrados.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') ?? '';
+  const filterProject = searchParams.get('project') ?? ALL;
+  const filterKindRaw = searchParams.get('kind');
+  const filterKind: AlertFilter =
+    filterKindRaw === 'missing_start' || filterKindRaw === 'missing_end' ? filterKindRaw : 'all';
+
+  const updateParam = (key: 'q' | 'project' | 'kind', value: string, defaultValue: string) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (!value || value === defaultValue) next.delete(key);
+        else next.set(key, value);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+  const setSearchQuery = (v: string) => updateParam('q', v, '');
+  const setFilterProject = (v: string) => updateParam('project', v, ALL);
+  const setFilterKind = (v: AlertFilter) => updateParam('kind', v, 'all');
 
   const projectOptions = useMemo(() => {
     const map = new Map<string, string>();
