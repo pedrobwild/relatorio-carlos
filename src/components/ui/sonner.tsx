@@ -1,16 +1,14 @@
-import { useTheme } from "next-themes";
 import { Toaster as Sonner, toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
   const isMobile = useIsMobile();
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme="light"
       // Mobile: top-center keeps toasts visible above bottom nav and within thumb-reach.
       // Desktop: top-right keeps the screen readable and out of the FAB area.
       position={isMobile ? "top-center" : "top-right"}
