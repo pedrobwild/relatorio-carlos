@@ -190,6 +190,28 @@ const computeOverdueDays = (obra: {
 };
 
 /**
+ * Número da semana de execução (S{N}) a partir de `inicio_etapa` (fallback
+ * `inicio_oficial`). Semana 1 = primeiros 7 dias corridos. Retorna null
+ * quando não é etapa de Execução ou faltam dados.
+ */
+const getEtapaWeek = (obra: {
+  etapa: PainelEtapa | null;
+  inicio_etapa: string | null;
+  inicio_oficial: string | null;
+}): number | null => {
+  if (obra.etapa !== 'Execução') return null;
+  const startIso = obra.inicio_etapa ?? obra.inicio_oficial;
+  if (!startIso) return null;
+  const start = parseISO(startIso);
+  if (Number.isNaN(start.getTime())) return null;
+  const today = new Date();
+  const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diffDays = Math.floor((todayMid.getTime() - startMid.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(1, Math.floor(diffDays / 7) + 1);
+};
+
+/**
  * Rótulo exibido para a etapa. Para `Execução`, anexa `- S{N}` onde N é a
  * semana corrente desde o início da execução (inicio_etapa, com fallback
  * para inicio_oficial). Semana 1 corresponde aos primeiros 7 dias corridos.
@@ -200,16 +222,8 @@ const formatEtapaLabel = (obra: {
   inicio_oficial: string | null;
 }): string | null => {
   if (!obra.etapa) return null;
-  if (obra.etapa !== 'Execução') return obra.etapa;
-  const startIso = obra.inicio_etapa ?? obra.inicio_oficial;
-  if (!startIso) return obra.etapa;
-  const start = parseISO(startIso);
-  if (Number.isNaN(start.getTime())) return obra.etapa;
-  const today = new Date();
-  const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const diffDays = Math.floor((todayMid.getTime() - startMid.getTime()) / (1000 * 60 * 60 * 24));
-  const week = Math.max(1, Math.floor(diffDays / 7) + 1);
+  const week = getEtapaWeek(obra);
+  if (week == null) return obra.etapa;
   return `Execução - S${week}`;
 };
 
