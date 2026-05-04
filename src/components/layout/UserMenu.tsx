@@ -90,7 +90,6 @@ export function UserMenu() {
             Configurações
           </DropdownMenuItem>
         )}
-        <ThemeToggleMenu />
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
