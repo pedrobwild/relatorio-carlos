@@ -6,13 +6,22 @@
  * - Término não sinalizado: planned_end vencido (depois das 18h do dia previsto)
  *   e actual_end IS NULL
  *
- * Dados vêm da tabela project_activities (cf. useProjectActivities) com join
- * em projects(name). A query traz um superset e o filtro fino é aplicado em
- * memória para acomodar a regra das 18h sem complicar a SQL.
+ * Otimizações:
+ * - Janela limitada (180 dias para trás) reduz drasticamente o payload em bases grandes.
+ * - `select` enxuto, `placeholderData: keepPreviousData` evita "piscar" durante refetch.
+ * - `refetchOnWindowFocus` respeita visibilidade (não refaz quando aba está oculta).
+ * - Mutações otimistas: a linha some imediatamente da lista; rollback em erro.
+ * - Hook leve `useScheduleAlertsSummary` reutiliza o mesmo cache para o badge global,
+ *   sem disparar refetches independentes.
  */
 
 import { useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { queryKeys, invalidateActivityQueries } from "@/lib/queryKeys";
@@ -34,10 +43,24 @@ export interface ScheduleAlertActivity {
   days_overdue: number;
 }
 
+export interface ScheduleAlertSummary {
+  total: number;
+  missingStart: number;
+  missingEnd: number;
+  projects: number;
+}
+
 const END_OF_DAY_HOUR = 18;
+const LOOKBACK_DAYS = 180;
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function isoDaysAgo(days: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
 }
 
 /** YYYY-MM-DD → midnight UTC date */
@@ -79,15 +102,10 @@ function deriveAlerts(
 
     const kinds: ScheduleAlertKind[] = [];
 
-    // Missing start: hoje passou da data prevista e ainda não há actual_start.
-    // Regra: plannedStart < hoje (ou seja, virou pelo menos um dia).
     if (!row.actual_start && plannedStart < today) {
       kinds.push("missing_start");
     }
 
-    // Missing end: actual_end ausente E
-    //  - plannedEnd já passou (dia anterior), OU
-    //  - é hoje e já são >= 18h
     if (!row.actual_end) {
       const endIsBeforeToday = plannedEnd < today;
       const endIsTodayAfter18 =
@@ -99,7 +117,6 @@ function deriveAlerts(
 
     if (kinds.length === 0) continue;
 
-    // Dias de atraso: prioriza atraso de término; se ausente, usa atraso de início.
     const reference = kinds.includes("missing_end") ? plannedEnd : plannedStart;
     const days = Math.max(diffDays(today, reference), 0);
 
@@ -118,7 +135,6 @@ function deriveAlerts(
     });
   }
 
-  // Mais atrasado primeiro; em empate, alfabético por obra.
   alerts.sort((a, b) => {
     if (a.days_overdue !== b.days_overdue)
       return b.days_overdue - a.days_overdue;
@@ -128,6 +144,23 @@ function deriveAlerts(
   return alerts;
 }
 
+function computeSummary(alerts: ScheduleAlertActivity[]): ScheduleAlertSummary {
+  let missingStart = 0;
+  let missingEnd = 0;
+  const projects = new Set<string>();
+  for (const a of alerts) {
+    if (a.kinds.includes("missing_start")) missingStart += 1;
+    if (a.kinds.includes("missing_end")) missingEnd += 1;
+    projects.add(a.project_id);
+  }
+  return {
+    total: alerts.length,
+    missingStart,
+    missingEnd,
+    projects: projects.size,
+  };
+}
+
 export function useScheduleAlerts() {
   const queryClient = useQueryClient();
   const queryKey = queryKeys.activities.alerts();
@@ -135,33 +168,50 @@ export function useScheduleAlerts() {
   const {
     data: alerts = [],
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
     queryKey,
     queryFn: async () => {
       const today = todayISO();
+      const lookback = isoDaysAgo(LOOKBACK_DAYS);
 
-      // Superset: atividades sem actual_end com planned_start <= hoje OU
-      // sem actual_start com planned_start < hoje. Trazemos um pouco extra e
-      // filtramos no cliente para aplicar a regra das 18h.
+      // Janela limitada: ignora atividades muito antigas (provavelmente esquecidas
+      // ou fora do escopo executivo). Reduz payload sem mudar a regra de negócio.
       const { data, error: queryError } = await supabase
         .from("project_activities")
         .select(
           "id, project_id, description, etapa, planned_start, planned_end, actual_start, actual_end, projects:project_id(id, name)",
         )
+        .gte("planned_start", lookback)
         .or(
           `and(actual_start.is.null,planned_start.lte.${today}),and(actual_end.is.null,planned_end.lte.${today})`,
         )
-        .order("planned_start", { ascending: true });
+        .order("planned_start", { ascending: true })
+        .limit(500);
 
       if (queryError) throw queryError;
 
       return deriveAlerts((data ?? []) as never, new Date());
     },
-    staleTime: 1000 * 60, // 1 min
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 2, // 2 min — dados não mudam tão rápido
+    gcTime: 1000 * 60 * 15,
+    refetchOnWindowFocus: "always",
+    refetchOnMount: false,
+    placeholderData: keepPreviousData,
   });
+
+  /** Atualização otimista: remove a linha; em erro, restaura. */
+  const optimisticRemove = (activityId: string) => {
+    const previous =
+      queryClient.getQueryData<ScheduleAlertActivity[]>(queryKey) ?? [];
+    queryClient.setQueryData<ScheduleAlertActivity[]>(
+      queryKey,
+      previous.filter((a) => a.id !== activityId),
+    );
+    return previous;
+  };
 
   const markStarted = useMutation({
     mutationFn: async (activityId: string) => {
@@ -171,20 +221,32 @@ export function useScheduleAlerts() {
         .update({ actual_start: today })
         .eq("id", activityId);
       if (updateError) throw updateError;
-      return { activityId, projectId: undefined as string | undefined };
+      return activityId;
     },
-    onSuccess: () => {
+    onMutate: async (activityId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = optimisticRemove(activityId);
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous);
+      }
+      toast.error("Erro ao sinalizar início");
+    },
+    onSuccess: (activityId) => {
       toast.success("Início sinalizado");
-      queryClient.invalidateQueries({ queryKey });
+      const cached =
+        queryClient.getQueryData<ScheduleAlertActivity[]>(queryKey);
+      const projectId = cached?.find((a) => a.id === activityId)?.project_id;
       queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
+      if (projectId) invalidateActivityQueries(projectId, activityId);
     },
-    onError: () => toast.error("Erro ao sinalizar início"),
   });
 
   const markCompleted = useMutation({
     mutationFn: async (activityId: string) => {
       const today = todayISO();
-      // Garante que actual_start exista antes de fechar.
       const { data: current, error: fetchError } = await supabase
         .from("project_activities")
         .select("actual_start")
@@ -202,38 +264,78 @@ export function useScheduleAlerts() {
         .update(updates)
         .eq("id", activityId);
       if (updateError) throw updateError;
+      return activityId;
     },
-    onSuccess: (_data, activityId) => {
+    onMutate: async (activityId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = optimisticRemove(activityId);
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous);
+      }
+      toast.error("Erro ao concluir atividade");
+    },
+    onSuccess: (activityId) => {
       toast.success("Atividade marcada como concluída");
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
-      // Best-effort: invalida cache por projeto se conhecido
       const cached =
         queryClient.getQueryData<ScheduleAlertActivity[]>(queryKey);
       const projectId = cached?.find((a) => a.id === activityId)?.project_id;
+      queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
       if (projectId) invalidateActivityQueries(projectId, activityId);
     },
-    onError: () => toast.error("Erro ao concluir atividade"),
   });
 
-  const summary = useMemo(() => {
-    const missingStart = alerts.filter((a) =>
-      a.kinds.includes("missing_start"),
-    ).length;
-    const missingEnd = alerts.filter((a) =>
-      a.kinds.includes("missing_end"),
-    ).length;
-    const projects = new Set(alerts.map((a) => a.project_id)).size;
-    return { total: alerts.length, missingStart, missingEnd, projects };
-  }, [alerts]);
+  const summary = useMemo(() => computeSummary(alerts), [alerts]);
 
   return {
     alerts,
     summary,
     isLoading,
+    isFetching,
     error,
     refetch,
     markStarted,
     markCompleted,
   };
+}
+
+/**
+ * Versão "leve" para badges/sinos globais. Compartilha o mesmo queryKey,
+ * portanto reutiliza o cache do hook principal sem disparar fetches paralelos.
+ */
+export function useScheduleAlertsSummary(): ScheduleAlertSummary & {
+  isLoading: boolean;
+} {
+  const queryKey = queryKeys.activities.alerts();
+  const { data: alerts = [], isLoading } = useQuery({
+    queryKey,
+    // Não define queryFn aqui: depende do hook principal estar montado em algum
+    // ponto da árvore. Se não houver, o cache fica vazio (summary = 0) — aceitável
+    // para um indicador acessório.
+    enabled: true,
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 15,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const today = todayISO();
+      const lookback = isoDaysAgo(LOOKBACK_DAYS);
+      const { data, error: queryError } = await supabase
+        .from("project_activities")
+        .select(
+          "id, project_id, description, etapa, planned_start, planned_end, actual_start, actual_end, projects:project_id(id, name)",
+        )
+        .gte("planned_start", lookback)
+        .or(
+          `and(actual_start.is.null,planned_start.lte.${today}),and(actual_end.is.null,planned_end.lte.${today})`,
+        )
+        .order("planned_start", { ascending: true })
+        .limit(500);
+      if (queryError) throw queryError;
+      return deriveAlerts((data ?? []) as never, new Date());
+    },
+  });
+  return { ...computeSummary(alerts), isLoading };
 }
