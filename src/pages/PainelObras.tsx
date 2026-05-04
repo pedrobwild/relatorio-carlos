@@ -1871,6 +1871,9 @@ function getColumnAccent(groupBy: KanbanGroupBy, key: KanbanColKey): string {
     }
   }
   switch (key as PainelEtapa) {
+    case 'Projeto 3D':         return 'bg-cyan-400';
+    case 'Projeto Executivo':  return 'bg-blue-500';
+    case 'Executivo Aprovado': return 'bg-emerald-400';
     case 'Medição':            return 'bg-sky-400';
     case 'Executivo':          return 'bg-indigo-400';
     case 'Emissão RRT':        return 'bg-violet-400';
