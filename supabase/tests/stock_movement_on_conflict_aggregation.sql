@@ -296,25 +296,37 @@ BEGIN
         array_length(v_problems,1);
 
     ELSIF current_setting('regress.auto_fix', true) = 'on' THEN
-      -- ── AUTO-FIX: recria cada índice problemático no lugar ──
-      RAISE NOTICE '────── AUTO-FIX: recriando % índice(s) ──────', array_length(v_problems,1);
-      FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
-        -- Só age sobre os que constam em v_problems
-        IF EXISTS (
-          SELECT 1 FROM unnest(v_problems) p
-           WHERE p LIKE (r->>'name') || ':%'
-        ) THEN
-          RAISE NOTICE '  ↻ DROP + CREATE: %', r->>'name';
-          EXECUTE format('DROP INDEX IF EXISTS public.%I', r->>'name');
-          EXECUTE r->>'ddl';
-        END IF;
-      END LOOP;
-
-      -- Re-valida: tudo precisa estar OK depois do fix
+      -- ── AUTO-FIX TRANSACIONAL ────────────────────────────────────
+      -- Toda recriação + revalidação ocorre dentro de uma SUBTRANSAÇÃO
+      -- (BEGIN…EXCEPTION…END do PL/pgSQL = SAVEPOINT implícito). Se
+      -- qualquer DDL falhar, ou a revalidação detectar índices ainda
+      -- divergentes, fazemos rollback do SAVEPOINT (descartando os
+      -- DROP/CREATE deste bloco) e RE-RAISE — o que aborta também a
+      -- transação externa do teste, garantindo ROLLBACK total e zero
+      -- mudança parcial no banco.
       DECLARE
         v_still_bad text[] := ARRAY[]::text[];
-        v_ucols text[]; v_uunique bool; v_upred text;
+        v_ucols     text[];
+        v_uunique   bool;
+        v_upred     text;
+        v_err_msg   text;
+        v_err_ctx   text;
       BEGIN
+        RAISE NOTICE '────── AUTO-FIX (subtransação): recriando % índice(s) ──────',
+          array_length(v_problems,1);
+
+        FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
+          IF EXISTS (
+            SELECT 1 FROM unnest(v_problems) p
+             WHERE p LIKE (r->>'name') || ':%'
+          ) THEN
+            RAISE NOTICE '  ↻ DROP + CREATE: %', r->>'name';
+            EXECUTE format('DROP INDEX IF EXISTS public.%I', r->>'name');
+            EXECUTE r->>'ddl';
+          END IF;
+        END LOOP;
+
+        -- Revalidação dentro da MESMA subtransação
         FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
           v_exp_cols := ARRAY(SELECT jsonb_array_elements_text(r->'columns'));
           v_exp_pred := r->>'predicate';
@@ -339,11 +351,27 @@ BEGIN
             v_still_bad := array_append(v_still_bad, r->>'name');
           END IF;
         END LOOP;
+
         IF array_length(v_still_bad,1) > 0 THEN
-          RAISE EXCEPTION 'AUTO-FIX FAIL: índices ainda divergentes após recriação: %',
-            array_to_string(v_still_bad, ', ');
+          -- Dispara para o handler abaixo → rollback do SAVEPOINT + abort externo
+          RAISE EXCEPTION 'revalidação falhou para: %',
+            array_to_string(v_still_bad, ', ')
+            USING ERRCODE = 'data_exception';
         END IF;
-        RAISE NOTICE '✓ AUTO-FIX concluído: todos os índices conformes';
+
+        RAISE NOTICE '✓ AUTO-FIX concluído: todos os índices conformes (subtransação commit)';
+
+      EXCEPTION WHEN OTHERS THEN
+        -- Subtransação revertida automaticamente pelo PL/pgSQL.
+        GET STACKED DIAGNOSTICS
+          v_err_msg = MESSAGE_TEXT,
+          v_err_ctx = PG_EXCEPTION_CONTEXT;
+        RAISE NOTICE '✗ AUTO-FIX FAIL — SAVEPOINT revertido. Motivo: %', v_err_msg;
+        RAISE NOTICE '  contexto: %', v_err_ctx;
+        -- Re-raise para abortar a transação externa do teste (ROLLBACK total)
+        RAISE EXCEPTION 'AUTO-FIX ROLLBACK: %  [transação do teste será revertida — nenhuma mudança persistida]',
+          v_err_msg
+          USING ERRCODE = 'data_exception';
       END;
 
     ELSE
