@@ -1018,9 +1018,17 @@ function NewMovementDialog({
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const photoInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset local submitting flag when parent mutation finishes
+  useEffect(() => {
+    if (!loading) setSubmitting(false);
+  }, [loading]);
+
+  const isBusy = loading || submitting;
 
   useEffect(() => {
     return () => {
