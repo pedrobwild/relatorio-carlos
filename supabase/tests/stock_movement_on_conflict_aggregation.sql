@@ -131,6 +131,14 @@ DECLARE
   v_problems   text[] := ARRAY[]::text[];
   v_ddls       text[] := ARRAY[]::text[];
   v_reasons    text[];
+  -- Validação estrutural posicional via pg_index
+  v_natts      int;     -- total de atributos no índice (key + INCLUDE)
+  v_nkeyatts   int;     -- atributos da CHAVE (sem INCLUDE)
+  v_indkey     int2[];  -- attnums na ordem real do índice
+  v_pos_attnum int2;
+  v_pos_name   text;
+  v_pos        int;
+  v_exp_len    int;
 BEGIN
   RAISE NOTICE '────── Stock balance index report (estrutural) ──────';
   FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
@@ -146,8 +154,9 @@ BEGIN
                JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = k.attnum
               ORDER BY k.ord
            ),
-           pg_get_expr(i.indpred, i.indrelid)
-      INTO v_oid, v_unique, v_cols, v_pred_raw
+           pg_get_expr(i.indpred, i.indrelid),
+           i.indnatts, i.indnkeyatts, i.indkey::int2[]
+      INTO v_oid, v_unique, v_cols, v_pred_raw, v_natts, v_nkeyatts, v_indkey
       FROM pg_index i
       JOIN pg_class c ON c.oid = i.indexrelid
       JOIN pg_class t ON t.oid = i.indrelid
@@ -163,13 +172,51 @@ BEGIN
       CONTINUE;
     END IF;
 
-    -- Normaliza o predicado para comparação tolerante a espaços/casing
     -- Normaliza o predicado real para a mesma forma canônica do esperado
     v_pred_norm := pg_temp.norm_pred(v_pred_raw);
 
     IF (r->>'unique')::bool AND NOT v_unique THEN
       v_reasons := array_append(v_reasons, 'não é UNIQUE');
     END IF;
+
+    -- ── Validação POSICIONAL via pg_index.indkey/indnkeyatts ──────
+    -- Garante (a) nº exato de colunas-chave, (b) sem INCLUDE columns,
+    -- (c) cada posição com o attnum/nome esperado — não basta ver que
+    -- o conjunto bate; a ORDEM importa para o ON CONFLICT do trigger.
+    v_exp_len := COALESCE(array_length(v_exp_cols, 1), 0);
+    IF v_nkeyatts <> v_exp_len THEN
+      v_reasons := array_append(v_reasons,
+        format('nº de colunas-chave divergente (esperado=%s, atual=%s)',
+               v_exp_len, v_nkeyatts));
+    END IF;
+    IF v_natts <> v_nkeyatts THEN
+      v_reasons := array_append(v_reasons,
+        format('índice possui %s coluna(s) INCLUDE — nenhuma é esperada',
+               v_natts - v_nkeyatts));
+    END IF;
+    -- Compara posição-a-posição (somente até o menor comprimento; a
+    -- divergência de tamanho já foi reportada acima)
+    FOR v_pos IN 1..LEAST(v_exp_len, v_nkeyatts) LOOP
+      v_pos_attnum := v_indkey[v_pos];
+      IF v_pos_attnum = 0 THEN
+        v_reasons := array_append(v_reasons,
+          format('posição %s é uma EXPRESSÃO (esperado coluna %L)',
+                 v_pos, v_exp_cols[v_pos]));
+        CONTINUE;
+      END IF;
+      SELECT a.attname INTO v_pos_name
+        FROM pg_attribute a
+       WHERE a.attrelid = (SELECT indrelid FROM pg_index WHERE indexrelid = v_oid)
+         AND a.attnum = v_pos_attnum;
+      IF v_pos_name IS DISTINCT FROM v_exp_cols[v_pos] THEN
+        v_reasons := array_append(v_reasons,
+          format('posição %s: esperado %L, atual %L (attnum=%s)',
+                 v_pos, v_exp_cols[v_pos], v_pos_name, v_pos_attnum));
+      END IF;
+    END LOOP;
+
+    -- Mantém a comparação por array como rede de segurança redundante
+    -- (pega casos esquisitos onde indkey/atributos saem de sincronia)
     IF v_cols IS DISTINCT FROM v_exp_cols THEN
       v_reasons := array_append(v_reasons,
         format('colunas divergem (esperado=%L, atual=%L)', v_exp_cols, v_cols));
