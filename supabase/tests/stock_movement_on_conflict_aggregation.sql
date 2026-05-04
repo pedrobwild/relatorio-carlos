@@ -142,8 +142,13 @@ BEGIN
     FOR i IN 1..array_length(v_ddls,1) LOOP
       RAISE NOTICE '%', v_ddls[i];
     END LOOP;
-    RAISE EXCEPTION 'PRECHECK FAIL (% problema(s)): %',
-      array_length(v_problems,1), array_to_string(v_problems, ' | ');
+    IF current_setting('regress.dry_run', true) = 'on' THEN
+      RAISE NOTICE '⚠ DRY-RUN: % problema(s) detectado(s) — abort SUPRIMIDO. Nenhum movimento será inserido.',
+        array_length(v_problems,1);
+    ELSE
+      RAISE EXCEPTION 'PRECHECK FAIL (% problema(s)): %',
+        array_length(v_problems,1), array_to_string(v_problems, ' | ');
+    END IF;
   END IF;
   RAISE NOTICE '──────────────────────────────────────────────────────';
 END $$;
