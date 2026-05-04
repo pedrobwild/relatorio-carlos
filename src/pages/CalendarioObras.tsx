@@ -1155,6 +1155,7 @@ function WeekListView({
                     key={a.id}
                     role="button"
                     tabIndex={0}
+                    aria-label={`Abrir atividade ${a.description}`}
                     onClick={() => onActivityClick(a)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {

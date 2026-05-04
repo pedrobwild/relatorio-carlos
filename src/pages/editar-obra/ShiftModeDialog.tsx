@@ -116,17 +116,8 @@ export function ShiftModeDialog({
 
         <RadioGroup value={mode} onValueChange={(v) => setMode(v as ShiftMode)} className="space-y-3 py-2">
           <div
-            role="button"
-            tabIndex={0}
-            aria-pressed={mode === 'preserve-duration'}
-            className="flex items-start gap-3 p-3 rounded-md border border-border hover:bg-muted/50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex items-start gap-3 p-3 rounded-md border border-border hover:bg-muted/50 cursor-pointer"
             onClick={() => setMode('preserve-duration')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setMode('preserve-duration');
-              }
-            }}
           >
             <RadioGroupItem value="preserve-duration" id="preserve" className="mt-0.5" />
             <div className="flex-1">
@@ -140,17 +131,8 @@ export function ShiftModeDialog({
           </div>
 
           <div
-            role="button"
-            tabIndex={0}
-            aria-pressed={mode === 'proportional'}
-            className="flex items-start gap-3 p-3 rounded-md border border-border hover:bg-muted/50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex items-start gap-3 p-3 rounded-md border border-border hover:bg-muted/50 cursor-pointer"
             onClick={() => setMode('proportional')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setMode('proportional');
-              }
-            }}
           >
             <RadioGroupItem value="proportional" id="proportional" className="mt-0.5" />
             <div className="flex-1">
