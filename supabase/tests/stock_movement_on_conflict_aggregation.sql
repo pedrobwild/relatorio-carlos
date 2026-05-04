@@ -86,10 +86,9 @@ BEGIN
   s := regexp_replace(s, '\s*\)\s*', ')', 'g');
   s := regexp_replace(s, '\s+is\s+not\s+null\b', ' is not null', 'gi');
   s := regexp_replace(s, '\s+is\s+null\b',       ' is null',     'gi');
-  s := regexp_replace(s, '\s+and\s+', ' and ', 'gi');
-  s := regexp_replace(s, '\s+or\s+',  ' or ',  'gi');
-  RETURN btrim(s, ' ;');
-END $fn$;
+  -- normaliza palavras-chave booleanas mesmo coladas a parênteses
+  s := regexp_replace(s, '\s*\band\b\s*', ' and ', 'gi');
+  s := regexp_replace(s, '\s*\bor\b\s*',  ' or ',  'gi');
 
 DO $$
 DECLARE
