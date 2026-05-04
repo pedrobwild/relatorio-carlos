@@ -11,6 +11,7 @@ import { Bell, BellOff, Mail, Smartphone, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -161,9 +162,11 @@ export function ScheduleAlertPrefsDialog({ trigger }: Props) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => undefined} type="button" asChild>
-            <button data-dismiss>Fechar</button>
-          </Button>
+          <DialogClose asChild>
+            <Button variant="outline" type="button">
+              Fechar
+            </Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
