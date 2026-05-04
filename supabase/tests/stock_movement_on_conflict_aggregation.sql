@@ -1,124 +1,159 @@
--- Integration test: ON CONFLICT aggregation em stock_balances
+-- Integration test: cobertura explícita dos DOIS caminhos do trigger
+-- apply_stock_movement_to_balance, validando o saldo final em cada um:
 --
--- Garante que múltiplas entradas para o mesmo (item, location_type, project_id)
--- são acumuladas em UMA ÚNICA linha de saldo via ON CONFLICT DO UPDATE,
--- e que combinações distintas (estoque vs obras diferentes) ficam isoladas.
+--   • Cenário ESTOQUE (location_type='estoque', project_id IS NULL)
+--       índice: uniq_balance_estoque
+--       entradas: 5 + 10 + 2.5 + 0.5 = 18  → 1 linha de saldo
+--
+--   • Cenário OBRA (location_type='obra', project_id IS NOT NULL)
+--       índice: uniq_balance_obra
+--       Obra A: 3 + 4 = 7   → 1 linha
+--       Obra B: 1 + 1 + 1 = 3 → 1 linha (isolada da A)
+--
+-- Cada cenário é avaliado em bloco próprio com mensagens claras de FAIL.
+-- Roda em transação; se algo falhar, nada é persistido.
 --
 -- Como rodar:
 --   psql "$DATABASE_URL" -f supabase/tests/stock_movement_on_conflict_aggregation.sql
 
 BEGIN;
 
--- Pré-checagem: índices parciais exigidos pelo trigger
+-- ─── Pré-checagem: índices parciais necessários ─────────────────────
 DO $$
 DECLARE v_missing text[] := ARRAY[]::text[];
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_indexes
                   WHERE schemaname='public' AND tablename='stock_balances'
                     AND indexname='uniq_balance_estoque') THEN
-    v_missing := array_append(v_missing, 'uniq_balance_estoque');
+    v_missing := array_append(v_missing,'uniq_balance_estoque');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_indexes
                   WHERE schemaname='public' AND tablename='stock_balances'
                     AND indexname='uniq_balance_obra') THEN
-    v_missing := array_append(v_missing, 'uniq_balance_obra');
+    v_missing := array_append(v_missing,'uniq_balance_obra');
   END IF;
   IF array_length(v_missing,1) > 0 THEN
     RAISE EXCEPTION 'PRECHECK FAIL: índices ausentes: %', array_to_string(v_missing,', ');
   END IF;
 END $$;
 
--- Cleanup de execuções anteriores
+-- ─── Cleanup de execuções anteriores ────────────────────────────────
 DELETE FROM public.stock_movements
- WHERE item_id IN (SELECT id FROM public.stock_items WHERE name = '__regress_onconflict_item__');
+ WHERE item_id IN (SELECT id FROM public.stock_items WHERE name='__regress_onconflict_item__');
 DELETE FROM public.stock_balances
- WHERE item_id IN (SELECT id FROM public.stock_items WHERE name = '__regress_onconflict_item__');
-DELETE FROM public.stock_items WHERE name = '__regress_onconflict_item__';
+ WHERE item_id IN (SELECT id FROM public.stock_items WHERE name='__regress_onconflict_item__');
+DELETE FROM public.stock_items WHERE name='__regress_onconflict_item__';
 
+-- ─── Setup: item de teste + duas obras (se houver) ──────────────────
 DO $$
 DECLARE
-  v_item       uuid;
-  v_proj_a     uuid;
-  v_proj_b     uuid;
-  v_qty        numeric;
-  v_count      int;
+  v_item   uuid;
+  v_proj_a uuid;
+  v_proj_b uuid;
+  v_qty    numeric;
+  v_count  int;
 BEGIN
-  -- Item de teste
   INSERT INTO public.stock_items (name, unit, description)
-  VALUES ('__regress_onconflict_item__', 'un', 'on-conflict aggregation test')
+  VALUES ('__regress_onconflict_item__', 'un', 'two-path on-conflict test')
   RETURNING id INTO v_item;
 
-  -- Duas obras distintas (se existirem)
   SELECT id INTO v_proj_a FROM public.projects WHERE deleted_at IS NULL ORDER BY created_at LIMIT 1;
   SELECT id INTO v_proj_b FROM public.projects WHERE deleted_at IS NULL AND id <> v_proj_a
                                                 ORDER BY created_at LIMIT 1;
 
-  -- ─── Cenário 1: 4 entradas no estoque central ───────────────────────
-  -- 5 + 10 + 2.5 + 0.5 = 18, em UMA única linha de stock_balances
-  INSERT INTO public.stock_movements (item_id, movement_type, quantity, movement_date, location_type)
-  VALUES
-    (v_item, 'entrada',  5,   CURRENT_DATE, 'estoque'),
-    (v_item, 'entrada', 10,   CURRENT_DATE, 'estoque'),
-    (v_item, 'entrada',  2.5, CURRENT_DATE, 'estoque'),
-    (v_item, 'entrada',  0.5, CURRENT_DATE, 'estoque');
+  -- ═══════════════════════════════════════════════════════════════════
+  -- CENÁRIO 1 — location_type = 'estoque' (project_id NULL)
+  -- ═══════════════════════════════════════════════════════════════════
+  INSERT INTO public.stock_movements (item_id, movement_type, quantity, movement_date, location_type) VALUES
+    (v_item,'entrada', 5,  CURRENT_DATE,'estoque'),
+    (v_item,'entrada',10,  CURRENT_DATE,'estoque'),
+    (v_item,'entrada', 2.5,CURRENT_DATE,'estoque'),
+    (v_item,'entrada', 0.5,CURRENT_DATE,'estoque');
 
-  SELECT COUNT(*), COALESCE(SUM(quantity),0)
-    INTO v_count, v_qty
-    FROM public.stock_balances
-   WHERE item_id = v_item AND location_type = 'estoque' AND project_id IS NULL;
-
+  -- (1.a) Deve existir EXATAMENTE 1 linha de saldo no estoque central
+  SELECT COUNT(*) INTO v_count FROM public.stock_balances
+   WHERE item_id=v_item AND location_type='estoque' AND project_id IS NULL;
   IF v_count <> 1 THEN
-    RAISE EXCEPTION 'FAIL estoque: esperava 1 linha agregada, obteve %', v_count;
+    RAISE EXCEPTION 'CENÁRIO ESTOQUE FAIL: esperava 1 linha agregada, obteve %', v_count;
   END IF;
+
+  -- (1.b) Saldo final = 18
+  SELECT quantity INTO v_qty FROM public.stock_balances
+   WHERE item_id=v_item AND location_type='estoque' AND project_id IS NULL;
   IF v_qty <> 18 THEN
-    RAISE EXCEPTION 'FAIL estoque: saldo esperado 18, obteve %', v_qty;
+    RAISE EXCEPTION 'CENÁRIO ESTOQUE FAIL: saldo esperado 18, obteve %', v_qty;
   END IF;
 
-  -- ─── Cenário 2: entradas em duas obras distintas ────────────────────
-  IF v_proj_a IS NOT NULL AND v_proj_b IS NOT NULL THEN
-    -- Obra A: 3 + 4 = 7
-    INSERT INTO public.stock_movements (item_id, movement_type, quantity, movement_date, location_type, project_id)
-    VALUES
-      (v_item, 'entrada', 3, CURRENT_DATE, 'obra', v_proj_a),
-      (v_item, 'entrada', 4, CURRENT_DATE, 'obra', v_proj_a);
-    -- Obra B: 1 + 1 + 1 = 3
-    INSERT INTO public.stock_movements (item_id, movement_type, quantity, movement_date, location_type, project_id)
-    VALUES
-      (v_item, 'entrada', 1, CURRENT_DATE, 'obra', v_proj_b),
-      (v_item, 'entrada', 1, CURRENT_DATE, 'obra', v_proj_b),
-      (v_item, 'entrada', 1, CURRENT_DATE, 'obra', v_proj_b);
+  -- (1.c) NÃO deve ter vazado nada para location_type='obra'
+  SELECT COUNT(*) INTO v_count FROM public.stock_balances
+   WHERE item_id=v_item AND location_type='obra';
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'CENÁRIO ESTOQUE FAIL: vazou % linha(s) para location_type=obra', v_count;
+  END IF;
+  RAISE NOTICE '✓ CENÁRIO ESTOQUE: 1 linha, saldo=18, nenhum vazamento';
 
-    -- Cada obra tem exatamente 1 linha; saldos isolados
+  -- ═══════════════════════════════════════════════════════════════════
+  -- CENÁRIO 2 — location_type = 'obra' (project_id NOT NULL)
+  -- ═══════════════════════════════════════════════════════════════════
+  IF v_proj_a IS NULL OR v_proj_b IS NULL THEN
+    RAISE NOTICE '⚠ Pulando CENÁRIO OBRA: precisa de pelo menos 2 obras ativas';
+  ELSE
+    -- Obra A: 3 + 4 = 7
+    INSERT INTO public.stock_movements (item_id, movement_type, quantity, movement_date, location_type, project_id) VALUES
+      (v_item,'entrada',3,CURRENT_DATE,'obra',v_proj_a),
+      (v_item,'entrada',4,CURRENT_DATE,'obra',v_proj_a);
+    -- Obra B: 1 + 1 + 1 = 3
+    INSERT INTO public.stock_movements (item_id, movement_type, quantity, movement_date, location_type, project_id) VALUES
+      (v_item,'entrada',1,CURRENT_DATE,'obra',v_proj_b),
+      (v_item,'entrada',1,CURRENT_DATE,'obra',v_proj_b),
+      (v_item,'entrada',1,CURRENT_DATE,'obra',v_proj_b);
+
+    -- (2.a) Obra A: 1 linha, saldo=7
     SELECT COUNT(*), COALESCE(SUM(quantity),0) INTO v_count, v_qty
       FROM public.stock_balances
      WHERE item_id=v_item AND location_type='obra' AND project_id=v_proj_a;
-    IF v_count <> 1 OR v_qty <> 7 THEN
-      RAISE EXCEPTION 'FAIL obra A: esperava 1 linha com 7, obteve % linha(s) com %', v_count, v_qty;
+    IF v_count <> 1 THEN
+      RAISE EXCEPTION 'CENÁRIO OBRA-A FAIL: esperava 1 linha, obteve %', v_count;
+    END IF;
+    IF v_qty <> 7 THEN
+      RAISE EXCEPTION 'CENÁRIO OBRA-A FAIL: saldo esperado 7, obteve %', v_qty;
     END IF;
 
+    -- (2.b) Obra B: 1 linha, saldo=3
     SELECT COUNT(*), COALESCE(SUM(quantity),0) INTO v_count, v_qty
       FROM public.stock_balances
      WHERE item_id=v_item AND location_type='obra' AND project_id=v_proj_b;
-    IF v_count <> 1 OR v_qty <> 3 THEN
-      RAISE EXCEPTION 'FAIL obra B: esperava 1 linha com 3, obteve % linha(s) com %', v_count, v_qty;
+    IF v_count <> 1 THEN
+      RAISE EXCEPTION 'CENÁRIO OBRA-B FAIL: esperava 1 linha, obteve %', v_count;
+    END IF;
+    IF v_qty <> 3 THEN
+      RAISE EXCEPTION 'CENÁRIO OBRA-B FAIL: saldo esperado 3, obteve %', v_qty;
     END IF;
 
-    -- Total geral do item: 18 (estoque) + 7 (A) + 3 (B) = 28, em 3 linhas
-    SELECT COUNT(*), COALESCE(SUM(quantity),0) INTO v_count, v_qty
-      FROM public.stock_balances WHERE item_id=v_item;
-    IF v_count <> 3 OR v_qty <> 28 THEN
-      RAISE EXCEPTION 'FAIL agregação total: esperava 3 linhas/28, obteve %/% ', v_count, v_qty;
+    -- (2.c) Isolamento: saldo de A não pode contaminar B
+    SELECT COUNT(*) INTO v_count FROM public.stock_balances
+     WHERE item_id=v_item AND location_type='obra'
+       AND project_id NOT IN (v_proj_a, v_proj_b);
+    IF v_count <> 0 THEN
+      RAISE EXCEPTION 'CENÁRIO OBRA FAIL: % linha(s) inesperada(s)', v_count;
     END IF;
-  ELSE
-    RAISE NOTICE 'Pulando cenário 2: precisa de pelo menos 2 obras ativas';
+
+    -- (2.d) Estoque central NÃO foi alterado (continua em 18)
+    SELECT quantity INTO v_qty FROM public.stock_balances
+     WHERE item_id=v_item AND location_type='estoque' AND project_id IS NULL;
+    IF v_qty <> 18 THEN
+      RAISE EXCEPTION 'CENÁRIO OBRA FAIL: estoque central foi alterado: %', v_qty;
+    END IF;
+
+    RAISE NOTICE '✓ CENÁRIO OBRA-A: saldo=7 | OBRA-B: saldo=3 | estoque preservado=18';
   END IF;
 
   -- Cleanup
-  DELETE FROM public.stock_movements WHERE item_id = v_item;
-  DELETE FROM public.stock_balances  WHERE item_id = v_item;
-  DELETE FROM public.stock_items     WHERE id = v_item;
+  DELETE FROM public.stock_movements WHERE item_id=v_item;
+  DELETE FROM public.stock_balances  WHERE item_id=v_item;
+  DELETE FROM public.stock_items     WHERE id=v_item;
 
-  RAISE NOTICE 'OK: ON CONFLICT agrega corretamente entradas duplicadas';
+  RAISE NOTICE 'ALL OK: ambos os caminhos do ON CONFLICT validados';
 END $$;
 
 COMMIT;
