@@ -264,7 +264,7 @@ export default function Estoque() {
           .from("stock_items")
           .insert({
             name: input.new_item_name.trim(),
-            unit: (input.new_item_unit || "un").trim() || "un",
+            unit: (input.new_item_unit || "").trim(),
             created_by: user?.id ?? null,
           })
           .select("id")
