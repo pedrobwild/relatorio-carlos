@@ -89,6 +89,8 @@ BEGIN
   -- normaliza palavras-chave booleanas mesmo coladas a parênteses
   s := regexp_replace(s, '\s*\band\b\s*', ' and ', 'gi');
   s := regexp_replace(s, '\s*\bor\b\s*',  ' or ',  'gi');
+  RETURN btrim(s, ' ;');
+END $fn$;
 
 DO $$
 DECLARE
