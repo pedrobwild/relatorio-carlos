@@ -161,12 +161,48 @@ BEGIN
     RAISE NOTICE '✓ CENÁRIO OBRA-A: saldo=7 | OBRA-B: saldo=3 | estoque preservado=18';
   END IF;
 
-  -- Cleanup
-  DELETE FROM public.stock_movements WHERE item_id=v_item;
-  DELETE FROM public.stock_balances  WHERE item_id=v_item;
-  DELETE FROM public.stock_items     WHERE id=v_item;
+  -- ─── Cleanup PÓS-execução (sempre roda, inclusive em falha) ────────
+  -- Embarca em sub-bloco com EXCEPTION para garantir limpeza mesmo se
+  -- algum assert acima abortar.
+  BEGIN
+    DELETE FROM public.stock_movements WHERE item_id = v_item;
+    DELETE FROM public.stock_balances  WHERE item_id = v_item;
+    DELETE FROM public.stock_items     WHERE id = v_item;
+  EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'cleanup pós falhou: %', SQLERRM;
+  END;
 
   RAISE NOTICE 'ALL OK: ambos os caminhos do ON CONFLICT validados';
+EXCEPTION WHEN OTHERS THEN
+  -- Falha de assert: limpa antes de propagar para que próxima execução
+  -- comece em estado limpo. Usa o mesmo predicado do cleanup pré.
+  DELETE FROM public.stock_movements
+   WHERE item_id IN (SELECT id FROM public.stock_items WHERE name LIKE '__regress\_%' ESCAPE '\');
+  DELETE FROM public.stock_balances
+   WHERE item_id IN (SELECT id FROM public.stock_items WHERE name LIKE '__regress\_%' ESCAPE '\');
+  DELETE FROM public.stock_items WHERE name LIKE '__regress\_%' ESCAPE '\';
+  RAISE;
 END $$;
+
+-- ─── Verificação PÓS-execução: zero resíduos ────────────────────────
+DO $$
+DECLARE v_items int; v_bal int; v_mov int;
+BEGIN
+  SELECT COUNT(*) INTO v_items FROM public.stock_items
+    WHERE name LIKE '__regress\_%' ESCAPE '\';
+  SELECT COUNT(*) INTO v_bal FROM public.stock_balances b
+   WHERE NOT EXISTS (SELECT 1 FROM public.stock_items i WHERE i.id = b.item_id);
+  SELECT COUNT(*) INTO v_mov FROM public.stock_movements m
+   WHERE NOT EXISTS (SELECT 1 FROM public.stock_items i WHERE i.id = m.item_id);
+
+  IF v_items <> 0 THEN
+    RAISE EXCEPTION 'CLEANUP PÓS FAIL: % item(ns) de teste residuais', v_items;
+  END IF;
+  IF v_bal <> 0 OR v_mov <> 0 THEN
+    RAISE EXCEPTION 'CLEANUP PÓS FAIL: saldos órfãos=%, movimentos órfãos=%', v_bal, v_mov;
+  END IF;
+  RAISE NOTICE '✓ Estado do banco preservado: nenhum resíduo de teste';
+END $$;
+
 
 COMMIT;
