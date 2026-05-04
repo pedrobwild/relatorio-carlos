@@ -423,7 +423,10 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       className={cn(
         'mx-auto w-full',
         embedded ? 'max-w-3xl px-4 pt-3 pb-4 md:px-6 md:pt-4' : 'max-w-4xl p-4 md:p-6',
-        'pb-[calc(80px+env(safe-area-inset-bottom,0px))]',
+        // Reserva espaço para a sticky save bar + bottom nav (mobile) / safe-area (iOS).
+        embedded
+          ? 'pb-[calc(80px+env(safe-area-inset-bottom,0px))]'
+          : 'pb-[calc(80px+var(--bottom-nav-offset,0px))]',
       )}
     >
       {!embedded && (
