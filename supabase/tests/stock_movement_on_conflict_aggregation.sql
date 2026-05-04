@@ -19,16 +19,30 @@
 -- Modo DRY-RUN (apenas reporta índices ausentes/divergentes e o DDL
 -- sugerido, sem abortar e sem inserir nenhum movimento):
 --   psql "$DATABASE_URL" -v dry_run=1 -f supabase/tests/stock_movement_on_conflict_aggregation.sql
+--
+-- Modo AUTO-FIX (default ON): recria automaticamente índices ausentes/
+-- divergentes antes de inserir movimentos. Para desligar:
+--   psql "$DATABASE_URL" -v auto_fix=0 -f supabase/tests/stock_movement_on_conflict_aggregation.sql
 
--- Garante que :'dry_run' sempre exista
+-- Defaults para variáveis psql
 \if :{?dry_run}
 \else
   \set dry_run 0
 \endif
--- Propaga o flag para uma GUC custom acessível pelos blocos DO via current_setting()
-SELECT set_config('regress.dry_run',
-                  CASE WHEN lower(:'dry_run') IN ('1','on','true','yes','y') THEN 'on' ELSE 'off' END,
-                  false);
+\if :{?auto_fix}
+\else
+  \set auto_fix 1
+\endif
+
+-- Propaga flags para GUCs custom acessíveis pelos blocos DO via current_setting()
+SELECT
+  set_config('regress.dry_run',
+             CASE WHEN lower(:'dry_run') IN ('1','on','true','yes','y') THEN 'on' ELSE 'off' END,
+             false),
+  set_config('regress.auto_fix',
+             CASE WHEN lower(:'auto_fix') IN ('1','on','true','yes','y') THEN 'on' ELSE 'off' END,
+             false);
+
 
 BEGIN;
 
