@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { ResponsiveTable, type ResponsiveTableMobileItem } from "../ResponsiveTable";
+import {
+  ResponsiveTable,
+  type ResponsiveTableMobileItem,
+} from "../ResponsiveTable";
 
 interface Row {
   id: number;
@@ -41,7 +44,9 @@ describe("ResponsiveTable", () => {
     );
 
     expect(screen.getAllByTestId("desktop-row")).toHaveLength(2);
-    expect(document.querySelector('[data-component="responsive-table-mobile"]')).toBeNull();
+    expect(
+      document.querySelector('[data-component="responsive-table-mobile"]'),
+    ).toBeNull();
   });
 
   it("renders the mobile list when forced to mobile", () => {
@@ -54,7 +59,9 @@ describe("ResponsiveTable", () => {
       />,
     );
 
-    expect(document.querySelector('[data-component="responsive-table-mobile"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-component="responsive-table-mobile"]'),
+    ).not.toBeNull();
     expect(screen.getByText("Compra A")).toBeInTheDocument();
     expect(screen.getByText("Compra B")).toBeInTheDocument();
     expect(screen.queryByTestId("desktop")).toBeNull();

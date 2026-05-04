@@ -11,7 +11,11 @@ interface ContentSkeletonProps {
  * Consistent skeleton loading states for different content types.
  * Reserves height to prevent layout shift.
  */
-export function ContentSkeleton({ variant = "list", className, rows = 5 }: ContentSkeletonProps) {
+export function ContentSkeleton({
+  variant = "list",
+  className,
+  rows = 5,
+}: ContentSkeletonProps) {
   switch (variant) {
     case "chart":
       return (
@@ -45,8 +49,8 @@ export function ContentSkeleton({ variant = "list", className, rows = 5 }: Conte
             {Array.from({ length: Math.min(rows, 8) }).map((_, i) => (
               <div key={i} className="flex items-center gap-4">
                 <Skeleton className="h-4 w-32 shrink-0" />
-                <Skeleton 
-                  className="h-6 rounded" 
+                <Skeleton
+                  className="h-6 rounded"
                   style={{ width: `${30 + Math.random() * 50}%` }}
                 />
               </div>
@@ -90,7 +94,12 @@ export function ContentSkeleton({ variant = "list", className, rows = 5 }: Conte
 
     case "cards":
       return (
-        <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4", className)}>
+        <div
+          className={cn(
+            "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
+            className,
+          )}
+        >
           {Array.from({ length: Math.min(rows, 6) }).map((_, i) => (
             <div key={i} className="bg-card border rounded-lg p-4 space-y-3">
               <div className="flex items-start gap-3">
@@ -136,7 +145,10 @@ export function ContentSkeleton({ variant = "list", className, rows = 5 }: Conte
       return (
         <div className={cn("space-y-3", className)}>
           {Array.from({ length: rows }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 p-3 border rounded-lg">
+            <div
+              key={i}
+              className="flex items-center gap-3 p-3 border rounded-lg"
+            >
               <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-3/4" />
@@ -165,7 +177,11 @@ export function PageSkeleton({ message }: { message?: string }) {
 /**
  * Skeleton for tab content - maintains layout stability
  */
-export function TabContentSkeleton({ variant = "chart" }: { variant?: "chart" | "table" | "report" }) {
+export function TabContentSkeleton({
+  variant = "chart",
+}: {
+  variant?: "chart" | "table" | "report";
+}) {
   return (
     <div className="min-h-[400px] animate-pulse">
       <ContentSkeleton variant={variant} />

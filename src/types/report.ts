@@ -39,7 +39,7 @@ export interface ReportIncident {
   cause: string;
   action: string;
   impact: string;
-  status: 'aberto' | 'em andamento' | 'resolvido';
+  status: "aberto" | "em andamento" | "resolvido";
   expectedResolutionDate: string;
   photos?: ReportIncidentPhoto[];
 }

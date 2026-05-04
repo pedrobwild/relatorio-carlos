@@ -3,11 +3,7 @@ import { Camera, Plus, Trash2, X, Loader2, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStagePhotos, StagePhoto } from "@/hooks/useStagePhotos";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 interface StagePhotoGalleryProps {
@@ -16,9 +12,20 @@ interface StagePhotoGalleryProps {
   isAdmin: boolean;
 }
 
-export function StagePhotoGallery({ stageId, projectId, isAdmin }: StagePhotoGalleryProps) {
-  const { photos, isLoading, upload, isUploading, deletePhoto, isDeleting, updateCaption } =
-    useStagePhotos(stageId, projectId);
+export function StagePhotoGallery({
+  stageId,
+  projectId,
+  isAdmin,
+}: StagePhotoGalleryProps) {
+  const {
+    photos,
+    isLoading,
+    upload,
+    isUploading,
+    deletePhoto,
+    isDeleting,
+    updateCaption,
+  } = useStagePhotos(stageId, projectId);
   const fileRef = useRef<HTMLInputElement>(null);
   const [lightbox, setLightbox] = useState<StagePhoto | null>(null);
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
@@ -108,7 +115,9 @@ export function StagePhotoGallery({ stageId, projectId, isAdmin }: StagePhotoGal
               )}
               {photo.caption && (
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-1.5">
-                  <p className="text-[10px] text-white line-clamp-1">{photo.caption}</p>
+                  <p className="text-[10px] text-white line-clamp-1">
+                    {photo.caption}
+                  </p>
                 </div>
               )}
             </div>
@@ -117,7 +126,10 @@ export function StagePhotoGallery({ stageId, projectId, isAdmin }: StagePhotoGal
       )}
 
       {/* Lightbox */}
-      <Dialog open={!!lightbox} onOpenChange={(open) => !open && setLightbox(null)}>
+      <Dialog
+        open={!!lightbox}
+        onOpenChange={(open) => !open && setLightbox(null)}
+      >
         <DialogContent className="max-w-3xl p-0 overflow-hidden bg-background">
           <DialogTitle className="sr-only">Visualizar foto</DialogTitle>
           {lightbox && (
@@ -160,7 +172,7 @@ export function StagePhotoGallery({ stageId, projectId, isAdmin }: StagePhotoGal
                   <p
                     className={cn(
                       "text-sm cursor-pointer hover:text-primary transition-colors",
-                      !lightbox.caption && "text-muted-foreground italic"
+                      !lightbox.caption && "text-muted-foreground italic",
                     )}
                     onClick={() => startEditCaption(lightbox)}
                   >

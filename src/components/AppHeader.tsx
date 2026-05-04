@@ -1,10 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, User, LogIn } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { NotificationBell } from '@/components/notifications/NotificationBell';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import bwildLogo from '@/assets/bwild-logo-dark.png';
+import { Link, useNavigate } from "react-router-dom";
+import { LogOut, User, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import bwildLogo from "@/assets/bwild-logo-dark.png";
 
 interface AppHeaderProps {
   showBackButton?: boolean;
@@ -12,10 +12,13 @@ interface AppHeaderProps {
   children?: React.ReactNode;
 }
 
-export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) {
+export function AppHeader({
+  showBackButton,
+  onBack,
+  children,
+}: AppHeaderProps) {
   const navigate = useNavigate();
   const { user, loading, signOut, isAuthenticated } = useAuth();
-  
 
   const handleSignOut = async () => {
     // CRITICAL: signOut already cleans up local state and the onAuthStateChange
@@ -24,11 +27,11 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
     try {
       await signOut();
       // Only navigate after signOut fully completes (state already cleared)
-      navigate('/auth', { replace: true });
+      navigate("/auth", { replace: true });
     } catch (error) {
       // Even on error, signOut's finally block clears local state, so we can navigate
-      console.warn('Sign out error (non-blocking):', error);
-      navigate('/auth', { replace: true });
+      console.warn("Sign out error (non-blocking):", error);
+      navigate("/auth", { replace: true });
     }
   };
 
@@ -61,7 +64,11 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
                 </svg>
               </Button>
             )}
-            <Link to="/" className="shrink-0 inline-flex items-center" aria-label="Início">
+            <Link
+              to="/"
+              className="shrink-0 inline-flex items-center"
+              aria-label="Início"
+            >
               <img src={bwildLogo} alt="Bwild" className="h-7 sm:h-8" />
             </Link>
             {children}
@@ -72,7 +79,11 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
               <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
             ) : isAuthenticated ? (
               <>
-                <ErrorBoundary name="NotificationBell" feature="general" fallback={null}>
+                <ErrorBoundary
+                  name="NotificationBell"
+                  feature="general"
+                  fallback={null}
+                >
                   <NotificationBell />
                 </ErrorBoundary>
 
@@ -94,7 +105,12 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
               </>
             ) : (
               <Link to="/auth">
-                <Button variant="outline" size="sm" aria-label="Entrar" className="h-10 sm:h-9">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  aria-label="Entrar"
+                  className="h-10 sm:h-9"
+                >
                   <LogIn className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Entrar</span>
                 </Button>

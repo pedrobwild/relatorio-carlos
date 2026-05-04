@@ -1,9 +1,9 @@
 /// <reference types="vitest/globals" />
-import '@testing-library/jest-dom/vitest';
-import { vi } from 'vitest';
+import "@testing-library/jest-dom/vitest";
+import { vi } from "vitest";
 
 // Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
     matches: false,

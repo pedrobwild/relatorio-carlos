@@ -1,5 +1,9 @@
 import { differenceInDays, format } from "date-fns";
-import { getTodayLocal, parseLocalDate, type ActivityStatus } from "@/lib/activityStatus";
+import {
+  getTodayLocal,
+  parseLocalDate,
+  type ActivityStatus,
+} from "@/lib/activityStatus";
 
 export type CronogramaStatusTabela = "CONCLUIDO" | "EM_ANDAMENTO" | "PENDENTE";
 
@@ -163,7 +167,9 @@ export function mapCronogramaParaGantt(
         const terminoPrev = parseLocalDate(plannedEnd);
         const total = differenceInDays(terminoPrev, inicioReal) + 1;
         const elapsed = differenceInDays(referenceDate, inicioReal) + 1;
-        progress = clampProgress(Math.round((elapsed / Math.max(total, 1)) * 100));
+        progress = clampProgress(
+          Math.round((elapsed / Math.max(total, 1)) * 100),
+        );
         // Nunca 0% ou 100% enquanto estiver em andamento
         progress = Math.min(99, Math.max(1, progress));
       }

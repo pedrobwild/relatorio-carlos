@@ -5,23 +5,24 @@
  * Replaces the legacy useProjects hook with better caching and error handling.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as projectsRepo from '@/infra/repositories/projects.repository';
-import { useAuth } from './useAuth';
-import { useUserRole } from './useUserRole';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import type { ProjectStatus } from '@/infra/repositories/projects.repository';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import * as projectsRepo from "@/infra/repositories/projects.repository";
+import { useAuth } from "./useAuth";
+import { useUserRole } from "./useUserRole";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import type { ProjectStatus } from "@/infra/repositories/projects.repository";
 
 // Query keys for cache management
 export const projectKeys = {
-  all: ['projects'] as const,
-  lists: () => [...projectKeys.all, 'list'] as const,
+  all: ["projects"] as const,
+  lists: () => [...projectKeys.all, "list"] as const,
   list: (filters: { status?: ProjectStatus; userId?: string }) =>
     [...projectKeys.lists(), filters] as const,
-  details: () => [...projectKeys.all, 'detail'] as const,
+  details: () => [...projectKeys.all, "detail"] as const,
   detail: (id: string) => [...projectKeys.details(), id] as const,
-  summary: (userId?: string) => [...projectKeys.all, 'summary', userId ?? 'anonymous'] as const,
+  summary: (userId?: string) =>
+    [...projectKeys.all, "summary", userId ?? "anonymous"] as const,
 };
 
 /**
@@ -39,7 +40,7 @@ export function useProjectsQuery(filters?: { status?: ProjectStatus }) {
       if (isStaff) {
         const result = await projectsRepo.getStaffProjects();
         if (result.error) throw result.error;
-        
+
         // Apply status filter if provided
         let projects = result.data;
         if (filters?.status) {
@@ -51,7 +52,7 @@ export function useProjectsQuery(filters?: { status?: ProjectStatus }) {
       if (isCustomer) {
         const result = await projectsRepo.getCustomerProjects(user.id);
         if (result.error) throw result.error;
-        
+
         let projects = result.data;
         if (filters?.status) {
           projects = projects.filter((p) => p.status === filters.status);
@@ -74,7 +75,7 @@ export function useProjectQuery(projectId: string | undefined) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: projectKeys.detail(projectId ?? ''),
+    queryKey: projectKeys.detail(projectId ?? ""),
     queryFn: async () => {
       if (!projectId) return null;
       const result = await projectsRepo.getProjectById(projectId);
@@ -110,7 +111,7 @@ export function useProjectAccessQuery(projectId: string | undefined) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: [...projectKeys.detail(projectId ?? ''), 'access'],
+    queryKey: [...projectKeys.detail(projectId ?? ""), "access"],
     queryFn: async () => {
       if (!projectId || !user) return false;
       return projectsRepo.checkProjectAccess(user.id, projectId);
@@ -135,17 +136,17 @@ export function useUpdateProjectStatusMutation() {
       status: ProjectStatus;
     }) => {
       const { data, error } = await supabase
-        .from('projects')
+        .from("projects")
         .update({ status })
-        .eq('id', projectId)
+        .eq("id", projectId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
     onSuccess: (_, variables) => {
-      toast.success('Status do projeto atualizado');
+      toast.success("Status do projeto atualizado");
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
       queryClient.invalidateQueries({
@@ -153,7 +154,7 @@ export function useUpdateProjectStatusMutation() {
       });
     },
     onError: () => {
-      toast.error('Erro ao atualizar status do projeto');
+      toast.error("Erro ao atualizar status do projeto");
     },
   });
 }

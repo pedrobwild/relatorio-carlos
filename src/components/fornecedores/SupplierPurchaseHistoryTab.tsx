@@ -3,7 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Package, TrendingUp } from "lucide-react";
 
@@ -23,7 +28,13 @@ interface PurchaseRecord {
   projects: { name: string } | null;
 }
 
-const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const STATUS_MAP: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   pending: { label: "Pendente", variant: "outline" },
   ordered: { label: "Pedido", variant: "secondary" },
   in_transit: { label: "Em trânsito", variant: "default" },
@@ -32,18 +43,26 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 };
 
 const formatCurrency = (v: number | null) =>
-  v != null ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—";
+  v != null
+    ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+    : "—";
 
 const formatDate = (d: string | null) =>
   d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 
-export function SupplierPurchaseHistoryTab({ fornecedorId }: { fornecedorId: string }) {
+export function SupplierPurchaseHistoryTab({
+  fornecedorId,
+}: {
+  fornecedorId: string;
+}) {
   const { data: purchases = [], isLoading } = useQuery({
     queryKey: ["fornecedor-purchases", fornecedorId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("project_purchases")
-        .select("id, item_name, quantity, unit, estimated_cost, actual_cost, status, order_date, actual_delivery_date, required_by_date, category, project_id, projects(name)")
+        .select(
+          "id, item_name, quantity, unit, estimated_cost, actual_cost, status, order_date, actual_delivery_date, required_by_date, category, project_id, projects(name)",
+        )
         .eq("fornecedor_id", fornecedorId)
         .order("order_date", { ascending: false, nullsFirst: false });
       if (error) throw error;
@@ -52,7 +71,10 @@ export function SupplierPurchaseHistoryTab({ fornecedorId }: { fornecedorId: str
     enabled: !!fornecedorId,
   });
 
-  const totalEstimated = purchases.reduce((s, p) => s + (p.estimated_cost || 0), 0);
+  const totalEstimated = purchases.reduce(
+    (s, p) => s + (p.estimated_cost || 0),
+    0,
+  );
   const totalActual = purchases.reduce((s, p) => s + (p.actual_cost || 0), 0);
   const delivered = purchases.filter((p) => p.status === "delivered").length;
 
@@ -70,7 +92,9 @@ export function SupplierPurchaseHistoryTab({ fornecedorId }: { fornecedorId: str
     return (
       <div className="text-center py-12 text-muted-foreground">
         <Package className="h-10 w-10 mx-auto mb-3 opacity-30" />
-        <p className="text-sm">Nenhuma compra registrada para este fornecedor.</p>
+        <p className="text-sm">
+          Nenhuma compra registrada para este fornecedor.
+        </p>
         <p className="text-xs mt-1">
           Vincule este fornecedor ao criar itens no módulo de Compras.
         </p>
@@ -85,7 +109,11 @@ export function SupplierPurchaseHistoryTab({ fornecedorId }: { fornecedorId: str
         <SummaryCard label="Total de itens" value={String(purchases.length)} />
         <SummaryCard label="Entregues" value={String(delivered)} />
         <SummaryCard label="Estimado" value={formatCurrency(totalEstimated)} />
-        <SummaryCard label="Custo Real" value={formatCurrency(totalActual)} highlight />
+        <SummaryCard
+          label="Custo Real"
+          value={formatCurrency(totalActual)}
+          highlight
+        />
       </div>
 
       {/* Table */}
@@ -104,14 +132,19 @@ export function SupplierPurchaseHistoryTab({ fornecedorId }: { fornecedorId: str
           </TableHeader>
           <TableBody>
             {purchases.map((p) => {
-              const st = STATUS_MAP[p.status] || { label: p.status, variant: "outline" as const };
+              const st = STATUS_MAP[p.status] || {
+                label: p.status,
+                variant: "outline" as const,
+              };
               return (
                 <TableRow key={p.id}>
                   <TableCell>
                     <div>
                       <p className="font-medium text-sm">{p.item_name}</p>
                       {p.category && (
-                        <p className="text-xs text-muted-foreground">{p.category}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.category}
+                        </p>
                       )}
                     </div>
                   </TableCell>
@@ -145,11 +178,25 @@ export function SupplierPurchaseHistoryTab({ fornecedorId }: { fornecedorId: str
   );
 }
 
-function SummaryCard({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function SummaryCard({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
-    <div className={`rounded-lg border p-3 ${highlight ? "bg-primary/5" : "bg-card"}`}>
+    <div
+      className={`rounded-lg border p-3 ${highlight ? "bg-primary/5" : "bg-card"}`}
+    >
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`text-lg font-semibold mt-0.5 ${highlight ? "text-primary" : ""}`}>{value}</p>
+      <p
+        className={`text-lg font-semibold mt-0.5 ${highlight ? "text-primary" : ""}`}
+      >
+        {value}
+      </p>
     </div>
   );
 }

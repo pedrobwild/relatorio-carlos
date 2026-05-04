@@ -1,8 +1,14 @@
-import { X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { getActiveFilterChips, removeFilterChip, isFiltersEmpty, emptyFilters, type AdvancedFilters } from './types';
+import { X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+  getActiveFilterChips,
+  removeFilterChip,
+  isFiltersEmpty,
+  emptyFilters,
+  type AdvancedFilters,
+} from "./types";
 
 interface ActiveFilterChipsProps {
   filters: AdvancedFilters;
@@ -13,7 +19,10 @@ interface ActiveFilterChipsProps {
  * Horizontal row of active filter chips with individual dismiss.
  * Renders nothing if no filters are active.
  */
-export function ActiveFilterChips({ filters, onFiltersChange }: ActiveFilterChipsProps) {
+export function ActiveFilterChips({
+  filters,
+  onFiltersChange,
+}: ActiveFilterChipsProps) {
   if (isFiltersEmpty(filters)) return null;
 
   const chips = getActiveFilterChips(filters);
@@ -23,7 +32,7 @@ export function ActiveFilterChips({ filters, onFiltersChange }: ActiveFilterChip
       <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
         Filtros:
       </span>
-      {chips.map(chip => (
+      {chips.map((chip) => (
         <Badge
           key={chip.key}
           variant="secondary"

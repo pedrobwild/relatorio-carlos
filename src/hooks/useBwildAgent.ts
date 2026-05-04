@@ -7,21 +7,21 @@
  * Spec autoritativa: docs/BWILD_AI_AGENTS_SPEC.yaml
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import {
   invokeBwildAgent,
   type BwildAgentRequest,
   type BwildAgentResponse,
-} from '@/infra/edgeFunctions';
-import { agentMemoryRepo } from '@/infra/repositories';
+} from "@/infra/edgeFunctions";
+import { agentMemoryRepo } from "@/infra/repositories";
 import type {
   BwildAgentEvent,
   ProjectStateMemory,
-} from '@/infra/repositories/agentMemory.repository';
-import { queryKeys } from '@/lib/queryKeys';
-import { useAuth } from './useAuth';
+} from "@/infra/repositories/agentMemory.repository";
+import { queryKeys } from "@/lib/queryKeys";
+import { useAuth } from "./useAuth";
 
 /**
  * Snapshot atual da memória stateful do projeto.
@@ -46,17 +46,16 @@ export function useProjectStateMemoryQuery(projectId: string | undefined) {
 /**
  * Histórico de eventos do agente (últimos N, mais recentes primeiro).
  */
-export function useAgentEventsQuery(
-  projectId: string | undefined,
-  limit = 20,
-) {
+export function useAgentEventsQuery(projectId: string | undefined, limit = 20) {
   const { user } = useAuth();
 
   return useQuery<BwildAgentEvent[]>({
     queryKey: queryKeys.agent.eventsList(projectId, limit),
     queryFn: async () => {
       if (!projectId) return [];
-      const result = await agentMemoryRepo.listAgentEvents(projectId, { limit });
+      const result = await agentMemoryRepo.listAgentEvents(projectId, {
+        limit,
+      });
       if (result.error) throw result.error;
       return result.data;
     },
@@ -72,10 +71,14 @@ export function useAgentEventsQuery(
 export function useBwildAgentMutation(projectId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation<BwildAgentResponse, Error, Omit<BwildAgentRequest, 'project_id'>>({
+  return useMutation<
+    BwildAgentResponse,
+    Error,
+    Omit<BwildAgentRequest, "project_id">
+  >({
     mutationFn: async (input) => {
       if (!projectId) {
-        throw new Error('projectId obrigatório para chamar o assessor BWild');
+        throw new Error("projectId obrigatório para chamar o assessor BWild");
       }
       const { data, error } = await invokeBwildAgent({
         project_id: projectId,
@@ -86,19 +89,23 @@ export function useBwildAgentMutation(projectId: string | undefined) {
         throw new Error(message);
       }
       if (!data) {
-        throw new Error('Resposta vazia do assessor BWild');
+        throw new Error("Resposta vazia do assessor BWild");
       }
-      if (data.status !== 'success') {
+      if (data.status !== "success") {
         throw new Error(data.error ?? `Status do assessor: ${data.status}`);
       }
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.agent.state(projectId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.agent.events(projectId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.agent.state(projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.agent.events(projectId),
+      });
     },
     onError: (err) => {
-      toast.error(err.message || 'Falha ao consultar o assessor BWild');
+      toast.error(err.message || "Falha ao consultar o assessor BWild");
     },
   });
 }

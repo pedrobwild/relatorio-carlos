@@ -1,6 +1,6 @@
 /**
  * Structured Error Logger
- * 
+ *
  * Centralized error logging with correlation IDs and context.
  * In production, this could be extended to send to external services.
  */
@@ -16,7 +16,7 @@ export interface ErrorContext {
 
 export interface LogEntry {
   timestamp: string;
-  level: 'info' | 'warn' | 'error';
+  level: "info" | "warn" | "error";
   message: string;
   context: ErrorContext;
   error?: {
@@ -48,9 +48,9 @@ export function getSessionCorrelationId(): string {
 /**
  * Format error for logging
  */
-function formatError(error: unknown): LogEntry['error'] | undefined {
+function formatError(error: unknown): LogEntry["error"] | undefined {
   if (!error) return undefined;
-  
+
   if (error instanceof Error) {
     return {
       name: error.name,
@@ -58,9 +58,9 @@ function formatError(error: unknown): LogEntry['error'] | undefined {
       stack: error.stack,
     };
   }
-  
+
   return {
-    name: 'UnknownError',
+    name: "UnknownError",
     message: String(error),
   };
 }
@@ -69,10 +69,10 @@ function formatError(error: unknown): LogEntry['error'] | undefined {
  * Create a structured log entry
  */
 function createLogEntry(
-  level: LogEntry['level'],
+  level: LogEntry["level"],
   message: string,
   context: ErrorContext = {},
-  error?: unknown
+  error?: unknown,
 ): LogEntry {
   return {
     timestamp: new Date().toISOString(),
@@ -80,7 +80,8 @@ function createLogEntry(
     message,
     context: {
       correlationId: context.correlationId || getSessionCorrelationId(),
-      route: typeof window !== 'undefined' ? window.location.pathname : undefined,
+      route:
+        typeof window !== "undefined" ? window.location.pathname : undefined,
       ...context,
     },
     error: formatError(error),
@@ -91,12 +92,12 @@ function createLogEntry(
  * Log an info message
  */
 export function logInfo(message: string, context: ErrorContext = {}): void {
-  const entry = createLogEntry('info', message, context);
-  
+  const entry = createLogEntry("info", message, context);
+
   if (import.meta.env.DEV) {
-    console.log('[INFO]', entry.message, entry.context);
+    console.log("[INFO]", entry.message, entry.context);
   }
-  
+
   // In production, could send to external logging service
 }
 
@@ -104,10 +105,10 @@ export function logInfo(message: string, context: ErrorContext = {}): void {
  * Log a warning
  */
 export function logWarn(message: string, context: ErrorContext = {}): void {
-  const entry = createLogEntry('warn', message, context);
-  
-  console.warn('[WARN]', entry.message, entry.context);
-  
+  const entry = createLogEntry("warn", message, context);
+
+  console.warn("[WARN]", entry.message, entry.context);
+
   // In production, could send to external logging service
 }
 
@@ -117,15 +118,15 @@ export function logWarn(message: string, context: ErrorContext = {}): void {
 export function logError(
   message: string,
   error: unknown,
-  context: ErrorContext = {}
+  context: ErrorContext = {},
 ): void {
-  const entry = createLogEntry('error', message, context, error);
-  
-  console.error('[ERROR]', entry.message, {
+  const entry = createLogEntry("error", message, context, error);
+
+  console.error("[ERROR]", entry.message, {
     ...entry.context,
     error: entry.error,
   });
-  
+
   // In production, could send to external logging service like Sentry
   // Example: Sentry.captureException(error, { extra: entry.context });
 }
@@ -147,15 +148,14 @@ export function createLogger(component: string) {
 /**
  * Wrap async function with error logging
  */
-export function withErrorLogging<T extends (...args: unknown[]) => Promise<unknown>>(
-  fn: T,
-  context: ErrorContext = {}
-): T {
+export function withErrorLogging<
+  T extends (...args: unknown[]) => Promise<unknown>,
+>(fn: T, context: ErrorContext = {}): T {
   return (async (...args: Parameters<T>) => {
     try {
       return await fn(...args);
     } catch (error) {
-      logError('Async operation failed', error, context);
+      logError("Async operation failed", error, context);
       throw error;
     }
   }) as T;

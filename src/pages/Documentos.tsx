@@ -1,11 +1,43 @@
 import { useState, useCallback, useMemo, memo } from "react";
-import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, MessageSquare, ChevronRight, Share2, ExternalLink } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  Box,
+  Ruler,
+  Award,
+  ClipboardList,
+  Receipt,
+  Shield,
+  Building,
+  CheckSquare,
+  FilePlus,
+  Loader2,
+  History,
+  ShieldCheck,
+  Plus,
+  MessageSquare,
+  ChevronRight,
+  Share2,
+  ExternalLink,
+} from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -14,7 +46,12 @@ import { DocumentViewer } from "@/components/DocumentViewer";
 import { DocumentComments } from "@/components/DocumentComments";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
-import { useDocuments, DOCUMENT_CATEGORIES, DocumentCategory, ProjectDocument } from "@/hooks/useDocuments";
+import {
+  useDocuments,
+  DOCUMENT_CATEGORIES,
+  DocumentCategory,
+  ProjectDocument,
+} from "@/hooks/useDocuments";
 import { useJourneyVersionDocuments } from "@/hooks/useJourneyVersionDocuments";
 import { useDocumentComments } from "@/hooks/useDocumentComments";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -42,14 +79,14 @@ const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
   termo_entrega: <CheckSquare className="w-5 h-5" />,
 };
 
-const DocumentCard = ({ 
-  doc, 
+const DocumentCard = ({
+  doc,
   onViewHistory,
   onVersionUploaded,
   isStaff,
   onOpenViewer,
-}: { 
-  doc: ProjectDocument; 
+}: {
+  doc: ProjectDocument;
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
   isStaff: boolean;
@@ -70,7 +107,7 @@ const DocumentCard = ({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch {
-      window.open(doc.url, '_blank');
+      window.open(doc.url, "_blank");
     }
   };
 
@@ -78,14 +115,18 @@ const DocumentCard = ({
     e?.stopPropagation();
     if (!doc.url) return;
     if (navigator.share) {
-      try { await navigator.share({ title: doc.name, url: doc.url }); } catch { /* cancelled */ }
+      try {
+        await navigator.share({ title: doc.name, url: doc.url });
+      } catch {
+        /* cancelled */
+      }
     } else {
       try {
         await navigator.clipboard.writeText(doc.url);
-        const { toast } = await import('sonner');
-        toast.success('Link copiado');
+        const { toast } = await import("sonner");
+        toast.success("Link copiado");
       } catch {
-        window.open(doc.url, '_blank');
+        window.open(doc.url, "_blank");
       }
     }
   };
@@ -96,7 +137,7 @@ const DocumentCard = ({
       tabIndex={0}
       onClick={() => onOpenViewer(doc)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onOpenViewer(doc);
         }
@@ -113,11 +154,16 @@ const DocumentCard = ({
           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
             <span>v{doc.version}</span>
             <span>•</span>
-            <span>{format(new Date(doc.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+            <span>
+              {format(new Date(doc.created_at), "dd/MM/yyyy", { locale: ptBR })}
+            </span>
             {doc.checksum && (
               <>
                 <span>•</span>
-                <span className="flex items-center gap-1" title={`SHA256: ${doc.checksum}`}>
+                <span
+                  className="flex items-center gap-1"
+                  title={`SHA256: ${doc.checksum}`}
+                >
                   <ShieldCheck className="w-3 h-3" />
                   Verificado
                 </span>
@@ -125,7 +171,9 @@ const DocumentCard = ({
             )}
           </div>
           {doc.description && (
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{doc.description}</p>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+              {doc.description}
+            </p>
           )}
         </div>
         {/* Quick actions — always visible on mobile, on-hover on desktop */}
@@ -155,15 +203,15 @@ const DocumentCard = ({
   );
 };
 
-const CategorySection = ({ 
-  category, 
+const CategorySection = ({
+  category,
   documents,
   onViewHistory,
   onVersionUploaded,
   isStaff,
   onOpenViewer,
-}: { 
-  category: DocumentCategory; 
+}: {
+  category: DocumentCategory;
   documents: ProjectDocument[];
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
@@ -179,13 +227,15 @@ const CategorySection = ({
           {categoryIcons[category]}
         </div>
         <h2 className="text-h3">{DOCUMENT_CATEGORIES[category].label}</h2>
-        <Badge variant="outline" className="ml-auto">{documents.length}</Badge>
+        <Badge variant="outline" className="ml-auto">
+          {documents.length}
+        </Badge>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {documents.map(doc => (
-          <DocumentCard 
-            key={doc.id} 
-            doc={doc} 
+        {documents.map((doc) => (
+          <DocumentCard
+            key={doc.id}
+            doc={doc}
             onViewHistory={onViewHistory}
             onVersionUploaded={onVersionUploaded}
             isStaff={isStaff}
@@ -199,9 +249,20 @@ const CategorySection = ({
 
 const Documentos = () => {
   const { projectId } = useParams();
-  const { project, loading: projectLoading, error: projectError } = useProject();
+  const {
+    project,
+    loading: projectLoading,
+    error: projectError,
+  } = useProject();
   const { paths } = useProjectNavigation();
-  const { documents: dbDocuments, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
+  const {
+    documents: dbDocuments,
+    loading,
+    error,
+    getLatestByCategory,
+    getVersionHistory,
+    refetch,
+  } = useDocuments(projectId);
   const { data: journeyDocs = [] } = useJourneyVersionDocuments(projectId);
 
   const documents = useMemo(() => {
@@ -209,19 +270,22 @@ const Documentos = () => {
     return [...dbDocuments, ...journeyDocs];
   }, [dbDocuments, journeyDocs]);
 
-  const getLatestByCategoryMerged = useCallback((category: DocumentCategory) => {
-    const base = getLatestByCategory(category);
-    const extra = journeyDocs.filter(d => d.document_type === category);
-    return extra.length > 0 ? [...base, ...extra] : base;
-  }, [getLatestByCategory, journeyDocs]);
+  const getLatestByCategoryMerged = useCallback(
+    (category: DocumentCategory) => {
+      const base = getLatestByCategory(category);
+      const extra = journeyDocs.filter((d) => d.document_type === category);
+      return extra.length > 0 ? [...base, ...extra] : base;
+    },
+    [getLatestByCategory, journeyDocs],
+  );
   const { isStaff } = useUserRole();
   const { can } = useCan();
   const isMobile = useIsMobile();
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [historyDocId, setHistoryDocId] = useState<string | null>(null);
   const [viewerDoc, setViewerDoc] = useState<ProjectDocument | null>(null);
-  
-  const canUpload = can('documents:upload');
+
+  const canUpload = can("documents:upload");
 
   const handleViewHistory = (docId: string) => {
     setHistoryDocId(docId);
@@ -260,17 +324,24 @@ const Documentos = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">{projectError || error}</p>
-          <Link to="/minhas-obras" className="text-primary underline">Voltar</Link>
+          <Link to="/minhas-obras" className="text-primary underline">
+            Voltar
+          </Link>
         </div>
       </div>
     );
   }
 
   const categories = Object.keys(DOCUMENT_CATEGORIES) as DocumentCategory[];
-  const categoriesWithDocs = categories.filter(cat => getLatestByCategoryMerged(cat).length > 0);
+  const categoriesWithDocs = categories.filter(
+    (cat) => getLatestByCategoryMerged(cat).length > 0,
+  );
 
   return (
-    <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col" data-testid="documents-page">
+    <div
+      className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col"
+      data-testid="documents-page"
+    >
       {/* Header */}
       <PageHeader
         title="Documentos"
@@ -314,12 +385,16 @@ const Documentos = () => {
               )}
             </EmptyState>
           ) : (
-            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+            <Tabs
+              value={selectedTab}
+              onValueChange={setSelectedTab}
+              className="space-y-6"
+            >
               <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto p-1 bg-muted/50">
                 <TabsTrigger value="all" className="shrink-0">
                   Todos ({documents.length})
                 </TabsTrigger>
-                {categoriesWithDocs.map(cat => (
+                {categoriesWithDocs.map((cat) => (
                   <TabsTrigger key={cat} value={cat} className="shrink-0">
                     {DOCUMENT_CATEGORIES[cat].label}
                   </TabsTrigger>
@@ -327,10 +402,10 @@ const Documentos = () => {
               </TabsList>
 
               <TabsContent value="all" className="space-y-8 mt-6">
-                {categoriesWithDocs.map(cat => (
-                  <CategorySection 
-                    key={cat} 
-                    category={cat} 
+                {categoriesWithDocs.map((cat) => (
+                  <CategorySection
+                    key={cat}
+                    category={cat}
                     documents={getLatestByCategoryMerged(cat)}
                     onViewHistory={handleViewHistory}
                     onVersionUploaded={refetch}
@@ -340,13 +415,13 @@ const Documentos = () => {
                 ))}
               </TabsContent>
 
-              {categoriesWithDocs.map(cat => (
+              {categoriesWithDocs.map((cat) => (
                 <TabsContent key={cat} value={cat} className="mt-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {getLatestByCategoryMerged(cat).map(doc => (
-                      <DocumentCard 
-                        key={doc.id} 
-                        doc={doc} 
+                    {getLatestByCategoryMerged(cat).map((doc) => (
+                      <DocumentCard
+                        key={doc.id}
+                        doc={doc}
                         onViewHistory={handleViewHistory}
                         onVersionUploaded={refetch}
                         isStaff={isStaff}
@@ -362,7 +437,10 @@ const Documentos = () => {
       </div>
 
       {/* Version History Dialog */}
-      <Dialog open={!!historyDocId} onOpenChange={(open) => !open && setHistoryDocId(null)}>
+      <Dialog
+        open={!!historyDocId}
+        onOpenChange={(open) => !open && setHistoryDocId(null)}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -372,18 +450,28 @@ const Documentos = () => {
           </DialogHeader>
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             {historyDocs.map((doc, index) => (
-              <div 
-                key={doc.id} 
-                className={`p-3 rounded-lg border ${index === 0 ? 'border-primary bg-primary/5' : 'border-border'}`}
+              <div
+                key={doc.id}
+                className={`p-3 rounded-lg border ${index === 0 ? "border-primary bg-primary/5" : "border-border"}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-body font-medium">Versão {doc.version}</span>
-                      {index === 0 && <Badge variant="outline" className="text-xs">Atual</Badge>}
+                      <span className="text-body font-medium">
+                        Versão {doc.version}
+                      </span>
+                      {index === 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          Atual
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-caption text-muted-foreground">
-                      {format(new Date(doc.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      {format(
+                        new Date(doc.created_at),
+                        "dd/MM/yyyy 'às' HH:mm",
+                        { locale: ptBR },
+                      )}
                     </p>
                   </div>
                 </div>
@@ -405,25 +493,39 @@ const Documentos = () => {
           </div>
           {isStaff && historyDocs[0] && (
             <div className="pt-4 border-t">
-              <DocumentVersionUpload document={historyDocs[0]} onSuccess={refetch} />
+              <DocumentVersionUpload
+                document={historyDocs[0]}
+                onSuccess={refetch}
+              />
             </div>
           )}
         </DialogContent>
       </Dialog>
 
       {/* Document Viewer — Sheet on mobile, Dialog on desktop */}
-      {viewerDoc && (
-        isMobile ? (
-          <Sheet open={!!viewerDoc} onOpenChange={(open) => !open && setViewerDoc(null)}>
-            <SheetContent side="bottom" className="h-[95dvh] flex flex-col p-0 rounded-t-2xl">
+      {viewerDoc &&
+        (isMobile ? (
+          <Sheet
+            open={!!viewerDoc}
+            onOpenChange={(open) => !open && setViewerDoc(null)}
+          >
+            <SheetContent
+              side="bottom"
+              className="h-[95dvh] flex flex-col p-0 rounded-t-2xl"
+            >
               <div className="shrink-0 border-b border-border px-4 pt-4 pb-3">
                 <SheetHeader className="p-0">
-                  <SheetTitle className="text-left text-base line-clamp-1">{viewerDoc.name}</SheetTitle>
+                  <SheetTitle className="text-left text-base line-clamp-1">
+                    {viewerDoc.name}
+                  </SheetTitle>
                 </SheetHeader>
                 <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                   <span>v{viewerDoc.version}</span>
                   {viewerDoc.checksum && (
-                    <span className="font-mono truncate" title={viewerDoc.checksum}>
+                    <span
+                      className="font-mono truncate"
+                      title={viewerDoc.checksum}
+                    >
                       SHA256: {viewerDoc.checksum.substring(0, 8)}…
                     </span>
                   )}
@@ -431,8 +533,8 @@ const Documentos = () => {
               </div>
               <div className="flex-1 overflow-hidden min-h-0">
                 {viewerDoc.url ? (
-                  <DocumentViewer 
-                    url={viewerDoc.url} 
+                  <DocumentViewer
+                    url={viewerDoc.url}
                     title={viewerDoc.name}
                     mimeType={viewerDoc.mime_type}
                     className="h-full rounded-none border-0"
@@ -440,8 +542,14 @@ const Documentos = () => {
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full gap-3 px-4">
                     <FileText className="w-12 h-12 text-muted-foreground/30" />
-                    <p className="text-sm text-muted-foreground text-center">Pré-visualização não disponível</p>
-                    <Button variant="outline" onClick={() => window.location.reload()} className="gap-2 h-11 touch-manipulation">
+                    <p className="text-sm text-muted-foreground text-center">
+                      Pré-visualização não disponível
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => window.location.reload()}
+                      className="gap-2 h-11 touch-manipulation"
+                    >
                       Recarregar
                     </Button>
                   </div>
@@ -458,7 +566,10 @@ const Documentos = () => {
                   Histórico
                 </Button>
                 {isStaff && (
-                  <DocumentVersionUpload document={viewerDoc} onSuccess={refetch} />
+                  <DocumentVersionUpload
+                    document={viewerDoc}
+                    onSuccess={refetch}
+                  />
                 )}
                 <Button
                   className="flex-1 h-11 touch-manipulation gap-2 text-sm"
@@ -476,7 +587,7 @@ const Documentos = () => {
                       document.body.removeChild(a);
                       window.URL.revokeObjectURL(blobUrl);
                     } catch {
-                      window.open(viewerDoc.url, '_blank');
+                      window.open(viewerDoc.url, "_blank");
                     }
                   }}
                 >
@@ -487,27 +598,47 @@ const Documentos = () => {
             </SheetContent>
           </Sheet>
         ) : (
-          <Dialog open={!!viewerDoc} onOpenChange={(open) => !open && setViewerDoc(null)}>
+          <Dialog
+            open={!!viewerDoc}
+            onOpenChange={(open) => !open && setViewerDoc(null)}
+          >
             <DialogContent className="max-w-4xl w-[95vw] h-[90dvh] max-h-[95dvh] p-0 flex flex-col">
               <DialogHeader className="p-4 border-b border-border shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <DialogTitle className="text-base">{viewerDoc.name}</DialogTitle>
+                    <DialogTitle className="text-base">
+                      {viewerDoc.name}
+                    </DialogTitle>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground">Versão {viewerDoc.version}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Versão {viewerDoc.version}
+                      </span>
                       {viewerDoc.checksum && (
-                        <span className="text-xs text-muted-foreground font-mono" title={viewerDoc.checksum}>
+                        <span
+                          className="text-xs text-muted-foreground font-mono"
+                          title={viewerDoc.checksum}
+                        >
                           SHA256: {viewerDoc.checksum.substring(0, 8)}...
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="gap-2" onClick={() => handleViewHistory(viewerDoc.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => handleViewHistory(viewerDoc.id)}
+                    >
                       <History className="w-4 h-4" />
                       Histórico
                     </Button>
-                    {isStaff && <DocumentVersionUpload document={viewerDoc} onSuccess={refetch} />}
+                    {isStaff && (
+                      <DocumentVersionUpload
+                        document={viewerDoc}
+                        onSuccess={refetch}
+                      />
+                    )}
                     <Button
                       size="sm"
                       className="gap-2"
@@ -525,7 +656,7 @@ const Documentos = () => {
                           document.body.removeChild(a);
                           window.URL.revokeObjectURL(blobUrl);
                         } catch {
-                          window.open(viewerDoc.url, '_blank');
+                          window.open(viewerDoc.url, "_blank");
                         }
                       }}
                     >
@@ -537,8 +668,8 @@ const Documentos = () => {
               </DialogHeader>
               <div className="flex-1 overflow-hidden">
                 {viewerDoc.url ? (
-                  <DocumentViewer 
-                    url={viewerDoc.url} 
+                  <DocumentViewer
+                    url={viewerDoc.url}
                     title={viewerDoc.name}
                     mimeType={viewerDoc.mime_type}
                     className="h-full rounded-none border-0"
@@ -547,16 +678,23 @@ const Documentos = () => {
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
                       <FileText className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-                      <p className="text-body text-muted-foreground">Pré-visualização não disponível</p>
-                      <Button variant="outline" onClick={() => window.location.reload()} className="gap-2 mt-4">Recarregar</Button>
+                      <p className="text-body text-muted-foreground">
+                        Pré-visualização não disponível
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => window.location.reload()}
+                        className="gap-2 mt-4"
+                      >
+                        Recarregar
+                      </Button>
                     </div>
                   </div>
                 )}
               </div>
             </DialogContent>
           </Dialog>
-        )
-      )}
+        ))}
     </div>
   );
 };

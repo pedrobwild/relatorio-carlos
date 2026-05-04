@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Copy, Loader2, Building2, User, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useState, useEffect } from "react";
+import { Copy, Loader2, Building2, User, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -12,11 +12,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { projectsRepo, type ProjectWithCustomer } from '@/infra/repositories';
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { projectsRepo, type ProjectWithCustomer } from "@/infra/repositories";
 
 interface DuplicateProjectModalProps {
   project: ProjectWithCustomer | null;
@@ -43,19 +43,19 @@ export function DuplicateProjectModal({
   const [loading, setLoading] = useState(false);
 
   // Form fields
-  const [projectName, setProjectName] = useState('');
-  const [unitName, setUnitName] = useState('');
-  const [address, setAddress] = useState('');
-  const [plannedStartDate, setPlannedStartDate] = useState('');
-  const [plannedEndDate, setPlannedEndDate] = useState('');
+  const [projectName, setProjectName] = useState("");
+  const [unitName, setUnitName] = useState("");
+  const [address, setAddress] = useState("");
+  const [plannedStartDate, setPlannedStartDate] = useState("");
+  const [plannedEndDate, setPlannedEndDate] = useState("");
   const [isProjectPhase, setIsProjectPhase] = useState(false);
   const [startDateUndefined, setStartDateUndefined] = useState(false);
   const [endDateUndefined, setEndDateUndefined] = useState(false);
 
   // Customer fields
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
 
   // Options
   const [options, setOptions] = useState<DuplicationOptions>({
@@ -69,16 +69,16 @@ export function DuplicateProjectModal({
   useEffect(() => {
     if (project && open) {
       setProjectName(`${project.name} (Cópia)`);
-      setUnitName(project.unit_name || '');
-      setAddress(project.address || '');
-      setPlannedStartDate(project.planned_start_date || '');
-      setPlannedEndDate(project.planned_end_date || '');
+      setUnitName(project.unit_name || "");
+      setAddress(project.address || "");
+      setPlannedStartDate(project.planned_start_date || "");
+      setPlannedEndDate(project.planned_end_date || "");
       setIsProjectPhase(project.is_project_phase || false);
       setStartDateUndefined(!project.planned_start_date);
       setEndDateUndefined(!project.planned_end_date);
-      setCustomerName(project.customer_name || '');
-      setCustomerEmail(project.customer_email || '');
-      setCustomerPhone('');
+      setCustomerName(project.customer_name || "");
+      setCustomerEmail(project.customer_email || "");
+      setCustomerPhone("");
     }
   }, [project, open]);
 
@@ -86,12 +86,15 @@ export function DuplicateProjectModal({
     if (!project || !user) return;
 
     if (!projectName.trim()) {
-      toast({ title: 'Nome do projeto é obrigatório', variant: 'destructive' });
+      toast({ title: "Nome do projeto é obrigatório", variant: "destructive" });
       return;
     }
 
     if (!customerName.trim() || !customerEmail.trim()) {
-      toast({ title: 'Dados do cliente são obrigatórios', variant: 'destructive' });
+      toast({
+        title: "Dados do cliente são obrigatórios",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -103,8 +106,8 @@ export function DuplicateProjectModal({
         newName: projectName.trim(),
         unitName: unitName.trim() || null,
         address: address.trim() || null,
-        plannedStartDate: startDateUndefined ? null : (plannedStartDate || null),
-        plannedEndDate: endDateUndefined ? null : (plannedEndDate || null),
+        plannedStartDate: startDateUndefined ? null : plannedStartDate || null,
+        plannedEndDate: endDateUndefined ? null : plannedEndDate || null,
         contractValue: project.contract_value,
         isProjectPhase,
         orgId: project.org_id,
@@ -120,18 +123,18 @@ export function DuplicateProjectModal({
       if (error) throw error;
 
       toast({
-        title: 'Obra duplicada com sucesso!',
+        title: "Obra duplicada com sucesso!",
         description: `A obra "${projectName}" foi criada.`,
       });
 
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
-      console.error('Error duplicating project:', err);
+      console.error("Error duplicating project:", err);
       toast({
-        title: 'Erro ao duplicar obra',
+        title: "Erro ao duplicar obra",
         description: err.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -147,7 +150,8 @@ export function DuplicateProjectModal({
             Duplicar Obra
           </DialogTitle>
           <DialogDescription>
-            Crie uma nova obra baseada em "{project?.name}" com toda a configuração existente.
+            Crie uma nova obra baseada em "{project?.name}" com toda a
+            configuração existente.
           </DialogDescription>
         </DialogHeader>
 
@@ -194,11 +198,15 @@ export function DuplicateProjectModal({
               {/* Project Phase Toggle */}
               <div className="flex items-center justify-between rounded-lg border-2 border-primary/30 p-4 bg-primary/5">
                 <div className="space-y-0.5">
-                  <Label htmlFor="dup-is-project-phase" className="text-sm font-medium">
+                  <Label
+                    htmlFor="dup-is-project-phase"
+                    className="text-sm font-medium"
+                  >
                     🏗️ Obra em fase de projeto
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Marque se a obra ainda está na fase de aprovação (Projeto 3D → Executivo)
+                    Marque se a obra ainda está na fase de aprovação (Projeto 3D
+                    → Executivo)
                   </p>
                 </div>
                 <Switch
@@ -229,10 +237,13 @@ export function DuplicateProjectModal({
                       checked={startDateUndefined}
                       onCheckedChange={(checked) => {
                         setStartDateUndefined(!!checked);
-                        if (checked) setPlannedStartDate('');
+                        if (checked) setPlannedStartDate("");
                       }}
                     />
-                    <Label htmlFor="start-undefined" className="text-xs text-muted-foreground cursor-pointer">
+                    <Label
+                      htmlFor="start-undefined"
+                      className="text-xs text-muted-foreground cursor-pointer"
+                    >
                       Em definição
                     </Label>
                   </div>
@@ -261,10 +272,13 @@ export function DuplicateProjectModal({
                       checked={endDateUndefined}
                       onCheckedChange={(checked) => {
                         setEndDateUndefined(!!checked);
-                        if (checked) setPlannedEndDate('');
+                        if (checked) setPlannedEndDate("");
                       }}
                     />
-                    <Label htmlFor="end-undefined" className="text-xs text-muted-foreground cursor-pointer">
+                    <Label
+                      htmlFor="end-undefined"
+                      className="text-xs text-muted-foreground cursor-pointer"
+                    >
                       Em definição
                     </Label>
                   </div>
@@ -345,7 +359,10 @@ export function DuplicateProjectModal({
                     setOptions((o) => ({ ...o, includeActivities: !!checked }))
                   }
                 />
-                <Label htmlFor="opt-activities" className="text-sm cursor-pointer">
+                <Label
+                  htmlFor="opt-activities"
+                  className="text-sm cursor-pointer"
+                >
                   Cronograma de atividades (datas planejadas)
                 </Label>
               </div>
@@ -359,7 +376,10 @@ export function DuplicateProjectModal({
                       setOptions((o) => ({ ...o, includeProgress: !!checked }))
                     }
                   />
-                  <Label htmlFor="opt-progress" className="text-sm cursor-pointer text-muted-foreground">
+                  <Label
+                    htmlFor="opt-progress"
+                    className="text-sm cursor-pointer text-muted-foreground"
+                  >
                     Incluir progresso real (datas de início/término reais)
                   </Label>
                 </div>
@@ -373,7 +393,10 @@ export function DuplicateProjectModal({
                     setOptions((o) => ({ ...o, includePayments: !!checked }))
                   }
                 />
-                <Label htmlFor="opt-payments" className="text-sm cursor-pointer">
+                <Label
+                  htmlFor="opt-payments"
+                  className="text-sm cursor-pointer"
+                >
                   Plano de pagamentos (parcelas sem marcação de pago)
                 </Label>
               </div>
@@ -395,7 +418,11 @@ export function DuplicateProjectModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancelar
           </Button>
           <Button onClick={handleDuplicate} disabled={loading}>

@@ -103,7 +103,9 @@ const schema = z
 
 // ─── Página ──────────────────────────────────────────────────────────────────
 
-export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean } = {}) {
+export default function EstoqueSaidas({
+  embedded = false,
+}: { embedded?: boolean } = {}) {
   const { user } = useAuth();
   const qc = useQueryClient();
 
@@ -200,7 +202,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
     if (!form.item_id) return null;
     const list = balancesQ.data ?? [];
     if (form.location_type === "estoque") {
-      return list.find((b) => b.item_id === form.item_id && b.location_type === "estoque");
+      return list.find(
+        (b) => b.item_id === form.item_id && b.location_type === "estoque",
+      );
     }
     if (form.project_id) {
       return list.find(
@@ -216,7 +220,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
   const selectedItem = form.item_id ? itemMap.get(form.item_id) : null;
   const qtyNum = Number(form.quantity || 0);
   const willGoNegative =
-    !!availableBalance && qtyNum > 0 && qtyNum > Number(availableBalance.quantity);
+    !!availableBalance &&
+    qtyNum > 0 &&
+    qtyNum > Number(availableBalance.quantity);
 
   const createSaida = useMutation({
     mutationFn: async () => {
@@ -228,7 +234,8 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
         quantity: form.quantity,
         movement_date: form.movement_date,
         location_type: form.location_type,
-        project_id: form.location_type === "obra" ? form.project_id || null : null,
+        project_id:
+          form.location_type === "obra" ? form.project_id || null : null,
         responsible_user_id: form.responsible_user_id,
         reason: finalReason,
         notes: form.notes,
@@ -236,7 +243,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
 
       if (!parsed.success) {
         const errs: Record<string, string> = {};
-        parsed.error.issues.forEach((i) => (errs[i.path.join(".")] = i.message));
+        parsed.error.issues.forEach(
+          (i) => (errs[i.path.join(".")] = i.message),
+        );
         setErrors(errs);
         throw new Error("Verifique os campos do formulário.");
       }
@@ -260,7 +269,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["stock", "balances"] });
       qc.invalidateQueries({ queryKey: ["stock", "movements"] });
-      qc.invalidateQueries({ queryKey: ["stock", "movements", "saidas-recent"] });
+      qc.invalidateQueries({
+        queryKey: ["stock", "movements", "saidas-recent"],
+      });
       toast.success("Saída registrada — saldo atualizado");
       setForm((f) => ({
         ...f,
@@ -281,11 +292,20 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
 
   const Wrapper: any = embedded ? "div" : "main";
   return (
-    <Wrapper className={embedded ? "space-y-6" : "max-w-6xl mx-auto px-4 py-6 space-y-6"}>
+    <Wrapper
+      className={
+        embedded ? "space-y-6" : "max-w-6xl mx-auto px-4 py-6 space-y-6"
+      }
+    >
       {!embedded && (
         <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
-            <Button asChild variant="ghost" size="sm" className="gap-2 mb-2 -ml-2">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="gap-2 mb-2 -ml-2"
+            >
               <Link to="/gestao/estoque">
                 <ArrowLeft className="h-4 w-4" /> Voltar ao Estoque
               </Link>
@@ -295,8 +315,8 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
               Saídas de materiais
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Registre a retirada de materiais do estoque ou da obra. O saldo é reduzido
-              automaticamente.
+              Registre a retirada de materiais do estoque ou da obra. O saldo é
+              reduzido automaticamente.
             </p>
           </div>
         </header>
@@ -321,7 +341,8 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
             <CardHeader>
               <CardTitle className="text-base">Nova saída</CardTitle>
               <CardDescription>
-                Informe o material, quantidade, responsável e o motivo da retirada.
+                Informe o material, quantidade, responsável e o motivo da
+                retirada.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -331,17 +352,27 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     type="button"
-                    variant={form.location_type === "obra" ? "default" : "outline"}
-                    onClick={() => setForm((f) => ({ ...f, location_type: "obra" }))}
+                    variant={
+                      form.location_type === "obra" ? "default" : "outline"
+                    }
+                    onClick={() =>
+                      setForm((f) => ({ ...f, location_type: "obra" }))
+                    }
                     className="gap-2"
                   >
                     <Building2 className="h-4 w-4" /> Obra
                   </Button>
                   <Button
                     type="button"
-                    variant={form.location_type === "estoque" ? "default" : "outline"}
+                    variant={
+                      form.location_type === "estoque" ? "default" : "outline"
+                    }
                     onClick={() =>
-                      setForm((f) => ({ ...f, location_type: "estoque", project_id: "" }))
+                      setForm((f) => ({
+                        ...f,
+                        location_type: "estoque",
+                        project_id: "",
+                      }))
                     }
                     className="gap-2"
                   >
@@ -355,7 +386,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                   <Label>Obra *</Label>
                   <Select
                     value={form.project_id}
-                    onValueChange={(v) => setForm((f) => ({ ...f, project_id: v }))}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, project_id: v }))
+                    }
                   >
                     <SelectTrigger aria-invalid={!!errors.project_id}>
                       <SelectValue placeholder="Selecione a obra" />
@@ -369,7 +402,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                     </SelectContent>
                   </Select>
                   {errors.project_id && (
-                    <p className="text-xs text-destructive">{errors.project_id}</p>
+                    <p className="text-xs text-destructive">
+                      {errors.project_id}
+                    </p>
                   )}
                 </div>
               )}
@@ -388,7 +423,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                     {(itemsQ.data ?? []).map((it) => (
                       <SelectItem key={it.id} value={it.id}>
                         {it.name}{" "}
-                        <span className="text-muted-foreground">({it.unit})</span>
+                        <span className="text-muted-foreground">
+                          ({it.unit})
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -400,14 +437,19 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                   <p
                     className={cn(
                       "text-xs mt-1",
-                      willGoNegative ? "text-destructive" : "text-muted-foreground",
+                      willGoNegative
+                        ? "text-destructive"
+                        : "text-muted-foreground",
                     )}
                   >
                     Saldo disponível:{" "}
                     <span className="font-mono tabular-nums">
-                      {Number(availableBalance?.quantity ?? 0).toLocaleString("pt-BR", {
-                        maximumFractionDigits: 3,
-                      })}{" "}
+                      {Number(availableBalance?.quantity ?? 0).toLocaleString(
+                        "pt-BR",
+                        {
+                          maximumFractionDigits: 3,
+                        },
+                      )}{" "}
                       {selectedItem.unit}
                     </span>
                     {willGoNegative && " — saída deixará o saldo negativo"}
@@ -426,12 +468,16 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                     step="0.001"
                     min="0"
                     value={form.quantity}
-                    onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, quantity: e.target.value }))
+                    }
                     placeholder="0"
                     aria-invalid={!!errors.quantity}
                   />
                   {errors.quantity && (
-                    <p className="text-xs text-destructive">{errors.quantity}</p>
+                    <p className="text-xs text-destructive">
+                      {errors.quantity}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-1.5">
@@ -469,7 +515,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                   </SelectContent>
                 </Select>
                 {errors.responsible_user_id && (
-                  <p className="text-xs text-destructive">{errors.responsible_user_id}</p>
+                  <p className="text-xs text-destructive">
+                    {errors.responsible_user_id}
+                  </p>
                 )}
               </div>
 
@@ -514,7 +562,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                 <Textarea
                   id="notes"
                   value={form.notes}
-                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, notes: e.target.value }))
+                  }
                   placeholder="Opcional"
                   maxLength={500}
                   rows={2}
@@ -542,7 +592,9 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="text-base">Últimas saídas</CardTitle>
-              <CardDescription>20 movimentações mais recentes do tipo saída.</CardDescription>
+              <CardDescription>
+                20 movimentações mais recentes do tipo saída.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {(recentQ.data?.length ?? 0) === 0 ? (
@@ -576,14 +628,20 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                               )}
                             </TableCell>
                             <TableCell className="text-xs">
-                              <div className="font-medium">{item?.name ?? "—"}</div>
+                              <div className="font-medium">
+                                {item?.name ?? "—"}
+                              </div>
                               <div className="text-muted-foreground">
                                 {m.location_type === "obra"
-                                  ? projectMap.get(m.project_id ?? "") ?? "Obra"
+                                  ? (projectMap.get(m.project_id ?? "") ??
+                                    "Obra")
                                   : "Estoque central"}
                               </div>
                               {m.reason && (
-                                <Badge variant="outline" className="mt-1 text-[10px]">
+                                <Badge
+                                  variant="outline"
+                                  className="mt-1 text-[10px]"
+                                >
                                   {m.reason}
                                 </Badge>
                               )}
@@ -592,11 +650,13 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
                               {Number(m.quantity).toLocaleString("pt-BR", {
                                 maximumFractionDigits: 3,
                               })}{" "}
-                              <span className="text-muted-foreground">{item?.unit}</span>
+                              <span className="text-muted-foreground">
+                                {item?.unit}
+                              </span>
                             </TableCell>
                             <TableCell className="text-xs">
                               {m.responsible_user_id
-                                ? staffMap.get(m.responsible_user_id) ?? "—"
+                                ? (staffMap.get(m.responsible_user_id) ?? "—")
                                 : "—"}
                             </TableCell>
                           </TableRow>

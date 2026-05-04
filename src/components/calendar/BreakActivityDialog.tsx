@@ -14,7 +14,7 @@
  *    para Admin/Engineer mostra os children no lugar da mãe).
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
 import {
   format,
   parseISO,
@@ -22,8 +22,8 @@ import {
   differenceInCalendarDays,
   areIntervalsOverlapping,
   eachDayOfInterval,
-} from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   AlertTriangle,
   CalendarIcon,
@@ -38,7 +38,7 @@ import {
   Trash2,
   Undo2,
   Wand2,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,7 +48,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -56,21 +56,31 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
-import { isNonBusinessDay } from '@/lib/businessDays';
-import { useNonWorkingDays } from '@/hooks/useNonWorkingDays';
-import type { WeekActivity, SubActivityInput } from '@/hooks/useWeekActivities';
-import { useStaffUsers } from '@/hooks/useStaffUsers';
-import { useFornecedoresPrestadores } from '@/hooks/useFornecedoresPrestadores';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { isNonBusinessDay } from "@/lib/businessDays";
+import { useNonWorkingDays } from "@/hooks/useNonWorkingDays";
+import type { WeekActivity, SubActivityInput } from "@/hooks/useWeekActivities";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import { useFornecedoresPrestadores } from "@/hooks/useFornecedoresPrestadores";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Row {
   description: string;
@@ -84,14 +94,17 @@ interface Row {
   fornecedor_id: string | null;
 }
 
-const NO_RESPONSIBLE = '__none__';
-const NO_FORNECEDOR = '__none__';
+const NO_RESPONSIBLE = "__none__";
+const NO_FORNECEDOR = "__none__";
 
 interface Props {
   parent: WeekActivity | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (parent: WeekActivity, subs: SubActivityInput[]) => Promise<unknown>;
+  onConfirm: (
+    parent: WeekActivity,
+    subs: SubActivityInput[],
+  ) => Promise<unknown>;
   isSubmitting: boolean;
   /**
    * Quantidade de micro-etapas (children) já existentes para a atividade-mãe.
@@ -108,10 +121,12 @@ interface Props {
   isUndoing?: boolean;
 }
 
-const fmtDate = (d: Date) => format(d, 'yyyy-MM-dd');
+const fmtDate = (d: Date) => format(d, "yyyy-MM-dd");
 const labelDate = (d: Date) => format(d, "dd 'de' MMM", { locale: ptBR });
 const shortWeekday = (d: Date) =>
-  format(d, 'EEE', { locale: ptBR }).replace('.', '').replace(/^./, (c) => c.toUpperCase());
+  format(d, "EEE", { locale: ptBR })
+    .replace(".", "")
+    .replace(/^./, (c) => c.toUpperCase());
 
 export function BreakActivityDialog({
   parent,
@@ -129,11 +144,15 @@ export function BreakActivityDialog({
   /** Tamanho (em dias úteis) de cada bloco gerado pelo "Cobrir 100%". */
   const [chunkSize, setChunkSize] = useState<number>(2);
   const { data: staffUsers = [], isLoading: loadingStaff } = useStaffUsers();
-  const { data: prestadores = [], isLoading: loadingPrestadores } = useFornecedoresPrestadores();
-  const { isNonWorking: isCustomNonWorking, reasonFor } = useNonWorkingDays(parent?.project_id);
+  const { data: prestadores = [], isLoading: loadingPrestadores } =
+    useFornecedoresPrestadores();
+  const { isNonWorking: isCustomNonWorking, reasonFor } = useNonWorkingDays(
+    parent?.project_id,
+  );
 
   /** True quando o dia é fim de semana, feriado SP/nacional OU custom (folga/feriado obra). */
-  const isBlockedDay = (d: Date): boolean => isNonBusinessDay(d) || isCustomNonWorking(d);
+  const isBlockedDay = (d: Date): boolean =>
+    isNonBusinessDay(d) || isCustomNonWorking(d);
 
   /** Lista os dias bloqueados que caem dentro do intervalo informado. */
   const blockedDaysInRange = (start: Date, end: Date): Date[] => {
@@ -153,11 +172,31 @@ export function BreakActivityDialog({
       if (totalDays >= 2) {
         const mid = Math.floor(totalDays / 2);
         setRows([
-          { description: '', planned_start: ps, planned_end: addDays(ps, mid - 1), responsible_user_id: inheritedResp, fornecedor_id: inheritedForn },
-          { description: '', planned_start: addDays(ps, mid), planned_end: pe, responsible_user_id: inheritedResp, fornecedor_id: inheritedForn },
+          {
+            description: "",
+            planned_start: ps,
+            planned_end: addDays(ps, mid - 1),
+            responsible_user_id: inheritedResp,
+            fornecedor_id: inheritedForn,
+          },
+          {
+            description: "",
+            planned_start: addDays(ps, mid),
+            planned_end: pe,
+            responsible_user_id: inheritedResp,
+            fornecedor_id: inheritedForn,
+          },
         ]);
       } else {
-        setRows([{ description: '', planned_start: ps, planned_end: pe, responsible_user_id: inheritedResp, fornecedor_id: inheritedForn }]);
+        setRows([
+          {
+            description: "",
+            planned_start: ps,
+            planned_end: pe,
+            responsible_user_id: inheritedResp,
+            fornecedor_id: inheritedForn,
+          },
+        ]);
       }
     }
   }, [parent?.id, open]);
@@ -173,37 +212,39 @@ export function BreakActivityDialog({
    * feedback inline em cada cartão.
    */
   type RowIssue =
-    | { kind: 'no-title' }
-    | { kind: 'inverted' }
-    | { kind: 'before-parent' }
-    | { kind: 'after-parent' }
-    | { kind: 'blocked-days'; days: Date[] }
-    | { kind: 'overlap'; withIndex: number };
+    | { kind: "no-title" }
+    | { kind: "inverted" }
+    | { kind: "before-parent" }
+    | { kind: "after-parent" }
+    | { kind: "blocked-days"; days: Date[] }
+    | { kind: "overlap"; withIndex: number };
 
   const rowIssues = useMemo<RowIssue[][]>(() => {
     const issues: RowIssue[][] = rows.map(() => []);
     rows.forEach((r, i) => {
-      if (!r.description.trim()) issues[i].push({ kind: 'no-title' });
-      if (r.planned_end < r.planned_start) issues[i].push({ kind: 'inverted' });
-      if (ps && r.planned_start < ps) issues[i].push({ kind: 'before-parent' });
-      if (pe && r.planned_end > pe) issues[i].push({ kind: 'after-parent' });
+      if (!r.description.trim()) issues[i].push({ kind: "no-title" });
+      if (r.planned_end < r.planned_start) issues[i].push({ kind: "inverted" });
+      if (ps && r.planned_start < ps) issues[i].push({ kind: "before-parent" });
+      if (pe && r.planned_end > pe) issues[i].push({ kind: "after-parent" });
       const blocked = blockedDaysInRange(r.planned_start, r.planned_end);
-      if (blocked.length > 0) issues[i].push({ kind: 'blocked-days', days: blocked });
+      if (blocked.length > 0)
+        issues[i].push({ kind: "blocked-days", days: blocked });
     });
     // Detecção de sobreposição entre pares
     for (let i = 0; i < rows.length; i++) {
       for (let j = i + 1; j < rows.length; j++) {
         const a = rows[i];
         const b = rows[j];
-        if (a.planned_end < a.planned_start || b.planned_end < b.planned_start) continue;
+        if (a.planned_end < a.planned_start || b.planned_end < b.planned_start)
+          continue;
         const overlaps = areIntervalsOverlapping(
           { start: a.planned_start, end: a.planned_end },
           { start: b.planned_start, end: b.planned_end },
           { inclusive: true },
         );
         if (overlaps) {
-          issues[i].push({ kind: 'overlap', withIndex: j });
-          issues[j].push({ kind: 'overlap', withIndex: i });
+          issues[i].push({ kind: "overlap", withIndex: j });
+          issues[j].push({ kind: "overlap", withIndex: i });
         }
       }
     }
@@ -218,7 +259,9 @@ export function BreakActivityDialog({
   // Métricas de cobertura para exibição no rodapé.
   const businessDaysInParent = useMemo(() => {
     if (!ps || !pe || pe < ps) return 0;
-    return eachDayOfInterval({ start: ps, end: pe }).filter((d) => !isBlockedDay(d)).length;
+    return eachDayOfInterval({ start: ps, end: pe }).filter(
+      (d) => !isBlockedDay(d),
+    ).length;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ps?.getTime(), pe?.getTime(), isCustomNonWorking]);
 
@@ -226,8 +269,11 @@ export function BreakActivityDialog({
     const set = new Set<string>();
     for (const r of rows) {
       if (r.planned_end < r.planned_start) continue;
-      for (const d of eachDayOfInterval({ start: r.planned_start, end: r.planned_end })) {
-        if (!isBlockedDay(d)) set.add(format(d, 'yyyy-MM-dd'));
+      for (const d of eachDayOfInterval({
+        start: r.planned_start,
+        end: r.planned_end,
+      })) {
+        if (!isBlockedDay(d)) set.add(format(d, "yyyy-MM-dd"));
       }
     }
     return set.size;
@@ -235,17 +281,29 @@ export function BreakActivityDialog({
   }, [rows, isCustomNonWorking]);
 
   const updateRow = (i: number, patch: Partial<Row>) =>
-    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+    setRows((prev) =>
+      prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)),
+    );
 
   const addRow = () => {
     if (!pe) return;
     const last = rows[rows.length - 1];
     const start = last ? addDays(last.planned_end, 1) : ps!;
     const safeStart = start > pe ? pe : start;
-    setRows((prev) => [...prev, { description: '', planned_start: safeStart, planned_end: pe, responsible_user_id: parent?.responsible_user_id ?? null, fornecedor_id: parent?.fornecedor_id ?? null }]);
+    setRows((prev) => [
+      ...prev,
+      {
+        description: "",
+        planned_start: safeStart,
+        planned_end: pe,
+        responsible_user_id: parent?.responsible_user_id ?? null,
+        fornecedor_id: parent?.fornecedor_id ?? null,
+      },
+    ]);
   };
 
-  const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
+  const removeRow = (i: number) =>
+    setRows((prev) => prev.filter((_, idx) => idx !== i));
 
   /**
    * Avança/recua uma data em N dias *úteis*, pulando fins de semana, feriados
@@ -292,12 +350,14 @@ export function BreakActivityDialog({
     const prev = rows[i - 1];
     if (prev.planned_end >= pe) return;
     let nextStart = addDays(prev.planned_end, 1);
-    while (nextStart <= pe && isBlockedDay(nextStart)) nextStart = addDays(nextStart, 1);
+    while (nextStart <= pe && isBlockedDay(nextStart))
+      nextStart = addDays(nextStart, 1);
     if (nextStart > pe) return;
     const current = rows[i];
     const currentSpan =
       current.planned_end >= current.planned_start
-        ? differenceInCalendarDays(current.planned_end, current.planned_start) + 1
+        ? differenceInCalendarDays(current.planned_end, current.planned_start) +
+          1
         : 1;
     let nextEnd = addDays(nextStart, currentSpan - 1);
     if (nextEnd > pe) nextEnd = pe;
@@ -310,7 +370,8 @@ export function BreakActivityDialog({
     const perChunk = Math.max(1, Math.floor(totalDays / rows.length));
     const next: Row[] = rows.map((r, i) => {
       const start = addDays(ps, i * perChunk);
-      const end = i === rows.length - 1 ? pe : addDays(ps, (i + 1) * perChunk - 1);
+      const end =
+        i === rows.length - 1 ? pe : addDays(ps, (i + 1) * perChunk - 1);
       return { ...r, planned_start: start, planned_end: end };
     });
     setRows(next);
@@ -385,13 +446,14 @@ export function BreakActivityDialog({
               )}
             </span>
             <span className="block text-xs">
-              Período da atividade-mãe:{' '}
+              Período da atividade-mãe:{" "}
               <strong>
                 {ps && labelDate(ps)} → {pe && labelDate(pe)}
-              </strong>{' '}
-              ({totalDays} dia{totalDays > 1 ? 's' : ''} corridos · {businessDaysInParent} útei
-              {businessDaysInParent !== 1 ? 's' : ''}). Fins de semana, feriados e folgas marcadas
-              não podem ser cobertos.
+              </strong>{" "}
+              ({totalDays} dia{totalDays > 1 ? "s" : ""} corridos ·{" "}
+              {businessDaysInParent} útei
+              {businessDaysInParent !== 1 ? "s" : ""}). Fins de semana, feriados
+              e folgas marcadas não podem ser cobertos.
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -400,7 +462,7 @@ export function BreakActivityDialog({
           <div className="space-y-3 pb-2">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Label className="text-xs text-muted-foreground">
-                {rows.length} micro-etapa{rows.length !== 1 ? 's' : ''}
+                {rows.length} micro-etapa{rows.length !== 1 ? "s" : ""}
               </Label>
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Gerador automático: cobre 100% dos dias úteis em blocos de N dias */}
@@ -409,7 +471,9 @@ export function BreakActivityDialog({
                   title="Gera micro-etapas cobrindo 100% dos dias úteis da atividade-mãe, em blocos do tamanho escolhido. Pula fins de semana, feriados e folgas."
                 >
                   <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[11px] text-muted-foreground">Cobrir 100% em blocos de</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    Cobrir 100% em blocos de
+                  </span>
                   <Input
                     type="number"
                     min={1}
@@ -422,15 +486,23 @@ export function BreakActivityDialog({
                     className="h-7 w-14 px-2 text-xs"
                   />
                   <span className="text-[11px] text-muted-foreground">
-                    dia{chunkSize !== 1 ? 's' : ''} úte{chunkSize !== 1 ? 'is' : 'l'}
+                    dia{chunkSize !== 1 ? "s" : ""} úte
+                    {chunkSize !== 1 ? "is" : "l"}
                     {businessDaysInParent > 0 && (
                       <>
-                        {' '}
-                        ·{' '}
+                        {" "}
+                        ·{" "}
                         <strong className="text-foreground">
-                          {Math.ceil(businessDaysInParent / Math.max(1, chunkSize))}
-                        </strong>{' '}
-                        bloco{Math.ceil(businessDaysInParent / Math.max(1, chunkSize)) !== 1 ? 's' : ''}
+                          {Math.ceil(
+                            businessDaysInParent / Math.max(1, chunkSize),
+                          )}
+                        </strong>{" "}
+                        bloco
+                        {Math.ceil(
+                          businessDaysInParent / Math.max(1, chunkSize),
+                        ) !== 1
+                          ? "s"
+                          : ""}
                       </>
                     )}
                   </span>
@@ -463,31 +535,41 @@ export function BreakActivityDialog({
               const hasError = issues.length > 0;
               const span =
                 row.planned_end >= row.planned_start
-                  ? differenceInCalendarDays(row.planned_end, row.planned_start) + 1
+                  ? differenceInCalendarDays(
+                      row.planned_end,
+                      row.planned_start,
+                    ) + 1
                   : 0;
               return (
                 <div
                   key={i}
                   className={cn(
-                    'rounded-lg border bg-card p-3 grid grid-cols-12 gap-2 items-end transition-colors',
-                    hasError && 'border-destructive/40 bg-destructive/5',
+                    "rounded-lg border bg-card p-3 grid grid-cols-12 gap-2 items-end transition-colors",
+                    hasError && "border-destructive/40 bg-destructive/5",
                   )}
                 >
                   <div className="col-span-12 md:col-span-5">
-                    <Label htmlFor={`desc-${i}`} className="text-[11px] text-muted-foreground">
+                    <Label
+                      htmlFor={`desc-${i}`}
+                      className="text-[11px] text-muted-foreground"
+                    >
                       Título da micro-etapa {i + 1}
                     </Label>
                     <Input
                       id={`desc-${i}`}
                       value={row.description}
-                      onChange={(e) => updateRow(i, { description: e.target.value })}
+                      onChange={(e) =>
+                        updateRow(i, { description: e.target.value })
+                      }
                       placeholder={`Ex.: Parte ${i + 1} – descrição interna`}
                       className="mt-1"
                     />
                   </div>
 
                   <div className="col-span-6 md:col-span-3">
-                    <Label className="text-[11px] text-muted-foreground">Início</Label>
+                    <Label className="text-[11px] text-muted-foreground">
+                      Início
+                    </Label>
                     <div className="flex items-center gap-1 mt-1">
                       <Button
                         type="button"
@@ -501,7 +583,9 @@ export function BreakActivityDialog({
                       </Button>
                       <DatePopover
                         value={row.planned_start}
-                        onChange={(d) => d && updateRow(i, { planned_start: d })}
+                        onChange={(d) =>
+                          d && updateRow(i, { planned_start: d })
+                        }
                         min={ps ?? undefined}
                         max={pe ?? undefined}
                         isBlocked={isBlockedDay}
@@ -521,7 +605,9 @@ export function BreakActivityDialog({
                   </div>
 
                   <div className="col-span-6 md:col-span-3">
-                    <Label className="text-[11px] text-muted-foreground">Fim</Label>
+                    <Label className="text-[11px] text-muted-foreground">
+                      Fim
+                    </Label>
                     <div className="flex items-center gap-1 mt-1">
                       <Button
                         type="button"
@@ -572,7 +658,10 @@ export function BreakActivityDialog({
                       indicado direto aqui para não exigir um segundo modal. */}
                   <div className="col-span-12 md:col-span-6">
                     <Label className="text-[11px] text-muted-foreground">
-                      Prestador <span className="text-muted-foreground/70">(quem executa)</span>
+                      Prestador{" "}
+                      <span className="text-muted-foreground/70">
+                        (quem executa)
+                      </span>
                     </Label>
                     <Select
                       value={row.fornecedor_id ?? NO_FORNECEDOR}
@@ -586,17 +675,24 @@ export function BreakActivityDialog({
                       <SelectTrigger className="mt-1 h-9">
                         <SelectValue
                           placeholder={
-                            loadingPrestadores ? 'Carregando...' : 'Selecionar prestador'
+                            loadingPrestadores
+                              ? "Carregando..."
+                              : "Selecionar prestador"
                           }
                         />
                       </SelectTrigger>
                       <SelectContent position="popper">
-                        <SelectItem value={NO_FORNECEDOR}>Sem prestador</SelectItem>
+                        <SelectItem value={NO_FORNECEDOR}>
+                          Sem prestador
+                        </SelectItem>
                         {prestadores.map((p) => (
                           <SelectItem key={p.id} value={p.id}>
                             {p.nome}
                             {p.categoria && (
-                              <span className="text-muted-foreground"> · {p.categoria}</span>
+                              <span className="text-muted-foreground">
+                                {" "}
+                                · {p.categoria}
+                              </span>
                             )}
                           </SelectItem>
                         ))}
@@ -608,22 +704,34 @@ export function BreakActivityDialog({
                       acompanhamento da equipe. */}
                   <div className="col-span-12 md:col-span-6">
                     <Label className="text-[11px] text-muted-foreground">
-                      Responsável <span className="text-muted-foreground/70">(equipe interna)</span>
+                      Responsável{" "}
+                      <span className="text-muted-foreground/70">
+                        (equipe interna)
+                      </span>
                     </Label>
                     <Select
                       value={row.responsible_user_id ?? NO_RESPONSIBLE}
                       onValueChange={(value) =>
                         updateRow(i, {
-                          responsible_user_id: value === NO_RESPONSIBLE ? null : value,
+                          responsible_user_id:
+                            value === NO_RESPONSIBLE ? null : value,
                         })
                       }
                       disabled={loadingStaff}
                     >
                       <SelectTrigger className="mt-1 h-9">
-                        <SelectValue placeholder={loadingStaff ? 'Carregando...' : 'Selecionar responsável'} />
+                        <SelectValue
+                          placeholder={
+                            loadingStaff
+                              ? "Carregando..."
+                              : "Selecionar responsável"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent position="popper">
-                        <SelectItem value={NO_RESPONSIBLE}>Sem responsável</SelectItem>
+                        <SelectItem value={NO_RESPONSIBLE}>
+                          Sem responsável
+                        </SelectItem>
                         {staffUsers.map((u) => (
                           <SelectItem key={u.id} value={u.id}>
                             {u.nome}
@@ -643,34 +751,39 @@ export function BreakActivityDialog({
                           <CheckCircle2 className="h-3 w-3 text-green-600" />
                         )}
                         <strong className="text-foreground">
-                          {shortWeekday(row.planned_start)}–{shortWeekday(row.planned_end)}
-                        </strong>{' '}
-                        ({format(row.planned_start, 'dd/MM')} → {format(row.planned_end, 'dd/MM')})
-                        · {span} dia{span !== 1 ? 's' : ''}
+                          {shortWeekday(row.planned_start)}–
+                          {shortWeekday(row.planned_end)}
+                        </strong>{" "}
+                        ({format(row.planned_start, "dd/MM")} →{" "}
+                        {format(row.planned_end, "dd/MM")}) · {span} dia
+                        {span !== 1 ? "s" : ""}
                       </span>
                     )}
                     {issues.map((iss, k) => (
                       <IssueBadge key={k} issue={iss} />
                     ))}
                     {/* Atalho contextual: aparece quando a linha sobrepõe a anterior */}
-                    {i > 0 && issues.some((iss) => iss.kind === 'overlap' && iss.withIndex === i - 1) && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-6 px-2 text-[10px] gap-1"
-                        onClick={() => snapAfterPrevious(i)}
-                        title={`Mover esta micro-etapa para logo após o fim da #${i}`}
-                      >
-                        <CornerDownRight className="h-3 w-3" />
-                        Encaixar após #{i}
-                      </Button>
-                    )}
+                    {i > 0 &&
+                      issues.some(
+                        (iss) =>
+                          iss.kind === "overlap" && iss.withIndex === i - 1,
+                      ) && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-6 px-2 text-[10px] gap-1"
+                          onClick={() => snapAfterPrevious(i)}
+                          title={`Mover esta micro-etapa para logo após o fim da #${i}`}
+                        >
+                          <CornerDownRight className="h-3 w-3" />
+                          Encaixar após #{i}
+                        </Button>
+                      )}
                   </div>
                 </div>
               );
             })}
-
 
             <Button
               type="button"
@@ -687,14 +800,16 @@ export function BreakActivityDialog({
             {ps && pe && businessDaysInParent > 0 && (
               <div className="text-[11px] text-muted-foreground flex items-center gap-2">
                 <CheckCircle2 className="h-3 w-3" />
-                Cobertura:{' '}
+                Cobertura:{" "}
                 <strong className="text-foreground">
                   {businessDaysCovered} de {businessDaysInParent} dia
-                  {businessDaysInParent !== 1 ? 's' : ''} útei{businessDaysInParent !== 1 ? 's' : ''}
+                  {businessDaysInParent !== 1 ? "s" : ""} útei
+                  {businessDaysInParent !== 1 ? "s" : ""}
                 </strong>
                 {businessDaysCovered < businessDaysInParent && (
                   <span className="text-amber-600">
-                    · {businessDaysInParent - businessDaysCovered} dia(s) sem cobertura
+                    · {businessDaysInParent - businessDaysCovered} dia(s) sem
+                    cobertura
                   </span>
                 )}
               </div>
@@ -719,13 +834,19 @@ export function BreakActivityDialog({
               title={`Remove as ${existingChildrenCount} micro-etapa(s) e mantém apenas a atividade original.`}
             >
               <Undo2 className="h-4 w-4 mr-1" />
-              {isUndoing ? 'Desfazendo…' : `Desfazer quebra (${existingChildrenCount})`}
+              {isUndoing
+                ? "Desfazendo…"
+                : `Desfazer quebra (${existingChildrenCount})`}
             </Button>
           ) : (
             <span />
           )}
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting || isUndoing}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting || isUndoing}
+            >
               Cancelar
             </Button>
             <Button onClick={handleConfirm} disabled={!canSubmit || isUndoing}>
@@ -740,18 +861,21 @@ export function BreakActivityDialog({
       <AlertDialog open={confirmUndoOpen} onOpenChange={setConfirmUndoOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Desfazer quebra em micro-etapas?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Desfazer quebra em micro-etapas?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Isto vai remover {existingChildrenCount} micro-etapa
-              {existingChildrenCount !== 1 ? 's' : ''} de
-              {' '}
-              <strong>{parent?.description}</strong> e restaurar a atividade original como única
-              no cronograma. As datas e responsáveis das micro-etapas serão perdidos. Esta ação
-              não pode ser desfeita.
+              {existingChildrenCount !== 1 ? "s" : ""} de{" "}
+              <strong>{parent?.description}</strong> e restaurar a atividade
+              original como única no cronograma. As datas e responsáveis das
+              micro-etapas serão perdidos. Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isUndoing}>Manter micro-etapas</AlertDialogCancel>
+            <AlertDialogCancel disabled={isUndoing}>
+              Manter micro-etapas
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={async (e) => {
                 e.preventDefault();
@@ -768,7 +892,7 @@ export function BreakActivityDialog({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               <Undo2 className="h-4 w-4 mr-1" />
-              {isUndoing ? 'Desfazendo…' : 'Desfazer quebra'}
+              {isUndoing ? "Desfazendo…" : "Desfazer quebra"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -781,50 +905,65 @@ function IssueBadge({
   issue,
 }: {
   issue:
-    | { kind: 'no-title' }
-    | { kind: 'inverted' }
-    | { kind: 'before-parent' }
-    | { kind: 'after-parent' }
-    | { kind: 'blocked-days'; days: Date[] }
-    | { kind: 'overlap'; withIndex: number };
+    | { kind: "no-title" }
+    | { kind: "inverted" }
+    | { kind: "before-parent" }
+    | { kind: "after-parent" }
+    | { kind: "blocked-days"; days: Date[] }
+    | { kind: "overlap"; withIndex: number };
 }) {
   switch (issue.kind) {
-    case 'no-title':
+    case "no-title":
       return (
-        <Badge variant="outline" className="text-[10px] border-destructive/40 text-destructive">
+        <Badge
+          variant="outline"
+          className="text-[10px] border-destructive/40 text-destructive"
+        >
           Título obrigatório
         </Badge>
       );
-    case 'inverted':
+    case "inverted":
       return (
-        <Badge variant="outline" className="text-[10px] border-destructive/40 text-destructive">
+        <Badge
+          variant="outline"
+          className="text-[10px] border-destructive/40 text-destructive"
+        >
           Fim antes do início
         </Badge>
       );
-    case 'before-parent':
+    case "before-parent":
       return (
-        <Badge variant="outline" className="text-[10px] border-destructive/40 text-destructive">
+        <Badge
+          variant="outline"
+          className="text-[10px] border-destructive/40 text-destructive"
+        >
           Início fora da mãe
         </Badge>
       );
-    case 'after-parent':
+    case "after-parent":
       return (
-        <Badge variant="outline" className="text-[10px] border-destructive/40 text-destructive">
+        <Badge
+          variant="outline"
+          className="text-[10px] border-destructive/40 text-destructive"
+        >
           Fim fora da mãe
         </Badge>
       );
-    case 'overlap':
+    case "overlap":
       return (
-        <Badge variant="outline" className="text-[10px] border-destructive/40 text-destructive">
+        <Badge
+          variant="outline"
+          className="text-[10px] border-destructive/40 text-destructive"
+        >
           Sobrepõe a #{issue.withIndex + 1}
         </Badge>
       );
-    case 'blocked-days': {
+    case "blocked-days": {
       const preview = issue.days
         .slice(0, 3)
-        .map((d) => format(d, 'dd/MM'))
-        .join(', ');
-      const more = issue.days.length > 3 ? ` +${issue.days.length - 3}` : '';
+        .map((d) => format(d, "dd/MM"))
+        .join(", ");
+      const more = issue.days.length > 3 ? ` +${issue.days.length - 3}` : "";
       return (
         <Badge
           variant="outline"
@@ -863,12 +1002,12 @@ function DatePopover({
           variant="outline"
           size="sm"
           className={cn(
-            'w-full justify-start text-left font-normal mt-1',
-            valueIsBlocked && 'border-destructive/40 text-destructive',
+            "w-full justify-start text-left font-normal mt-1",
+            valueIsBlocked && "border-destructive/40 text-destructive",
           )}
           title={
             valueIsBlocked
-              ? `Dia não útil${reason ? ` — ${reason}` : ' (fim de semana/feriado)'}`
+              ? `Dia não útil${reason ? ` — ${reason}` : " (fim de semana/feriado)"}`
               : undefined
           }
         >
@@ -877,7 +1016,7 @@ function DatePopover({
           ) : (
             <CalendarIcon className="h-3.5 w-3.5 mr-2" />
           )}
-          {format(value, 'dd/MM/yyyy')}
+          {format(value, "dd/MM/yyyy")}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -894,11 +1033,11 @@ function DatePopover({
           modifiers={{ blocked: (d) => isBlocked(d) }}
           modifiersClassNames={{
             blocked:
-              'line-through text-destructive/70 opacity-90 hover:text-destructive',
+              "line-through text-destructive/70 opacity-90 hover:text-destructive",
           }}
           initialFocus
           locale={ptBR}
-          className={cn('p-3 pointer-events-auto')}
+          className={cn("p-3 pointer-events-auto")}
         />
       </PopoverContent>
     </Popover>

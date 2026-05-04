@@ -39,24 +39,32 @@ const calculateProgressAtDate = (
 const generateWeeklyProgressData = (
   activities: WeeklyReportActivitySnapshot[],
   currentWeek: number,
-  projectStartDate: string
+  projectStartDate: string,
 ) => {
-  const data: Array<{ week: string; previsto: number; realizado: number; desvio: number }> = [];
+  const data: Array<{
+    week: string;
+    previsto: number;
+    realizado: number;
+    desvio: number;
+  }> = [];
   const startDate = parseLocalDate(projectStartDate);
-  
+
   for (let week = 1; week <= currentWeek; week++) {
     // Get the end of each week
-    const weekEndDate = addWeeks(startOfWeek(startDate, { weekStartsOn: 1 }), week);
-    
+    const weekEndDate = addWeeks(
+      startOfWeek(startDate, { weekStartsOn: 1 }),
+      week,
+    );
+
     // Calculate planned progress at this week
     const previsto = calculateProgressAtDate(activities, weekEndDate, false);
-    
+
     // Calculate actual progress at this week
     const realizado = calculateProgressAtDate(activities, weekEndDate, true);
-    
+
     // Calculate deviation: positive = ahead, negative = behind
     const desvio = realizado - previsto;
-    
+
     data.push({
       week: `S${week}`,
       previsto,
@@ -64,7 +72,7 @@ const generateWeeklyProgressData = (
       desvio,
     });
   }
-  
+
   return data;
 };
 
@@ -72,9 +80,9 @@ const generateWeeklyProgressData = (
 const CustomDot = (props: any) => {
   const { cx, cy, payload } = props;
   if (!cx || !cy) return null;
-  
+
   const color = payload.desvio >= 0 ? "#22c55e" : "#ef4444";
-  
+
   return (
     <circle
       cx={cx}
@@ -90,9 +98,9 @@ const CustomDot = (props: any) => {
 const CustomActiveDot = (props: any) => {
   const { cx, cy, payload } = props;
   if (!cx || !cy) return null;
-  
+
   const color = payload.desvio >= 0 ? "#22c55e" : "#ef4444";
-  
+
   return (
     <circle
       cx={cx}
@@ -105,12 +113,16 @@ const CustomActiveDot = (props: any) => {
   );
 };
 
-const ProgressEvolutionChart = ({ 
-  activities, 
+const ProgressEvolutionChart = ({
+  activities,
   currentWeek,
-  projectStartDate = "2025-07-01" 
+  projectStartDate = "2025-07-01",
 }: ProgressEvolutionChartProps) => {
-  const data = generateWeeklyProgressData(activities, currentWeek, projectStartDate);
+  const data = generateWeeklyProgressData(
+    activities,
+    currentWeek,
+    projectStartDate,
+  );
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
@@ -135,22 +147,34 @@ const ProgressEvolutionChart = ({
               margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
             >
               <defs>
-                <linearGradient id="positiveGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="positiveGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="5%" stopColor="#22c55e" stopOpacity={0.4} />
                   <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05} />
                 </linearGradient>
-                <linearGradient id="negativeGradient" x1="0" y1="1" x2="0" y2="0">
+                <linearGradient
+                  id="negativeGradient"
+                  x1="0"
+                  y1="1"
+                  x2="0"
+                  y2="0"
+                >
                   <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              
-              <CartesianGrid 
-                strokeDasharray="3 3" 
-                stroke="hsl(var(--border))" 
+
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
                 vertical={false}
               />
-              
+
               <XAxis
                 dataKey="week"
                 axisLine={false}
@@ -158,16 +182,16 @@ const ProgressEvolutionChart = ({
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
                 dy={6}
               />
-              
+
               <YAxis
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
-                tickFormatter={(value) => `${value > 0 ? '+' : ''}${value}%`}
-                domain={['auto', 'auto']}
+                tickFormatter={(value) => `${value > 0 ? "+" : ""}${value}%`}
+                domain={["auto", "auto"]}
                 width={40}
               />
-              
+
               <Tooltip
                 contentStyle={{
                   backgroundColor: "hsl(var(--card))",
@@ -177,21 +201,25 @@ const ProgressEvolutionChart = ({
                   fontSize: "12px",
                   padding: "8px 12px",
                 }}
-                labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, fontSize: "11px" }}
+                labelStyle={{
+                  color: "hsl(var(--foreground))",
+                  fontWeight: 600,
+                  fontSize: "11px",
+                }}
                 formatter={(value: number) => [
-                  `${value > 0 ? '+' : ''}${value}%`,
+                  `${value > 0 ? "+" : ""}${value}%`,
                   value >= 0 ? "Adiantado" : "Atrasado",
                 ]}
               />
-              
+
               {/* Reference line at 0 */}
-              <ReferenceLine 
-                y={0} 
-                stroke="hsl(var(--muted-foreground))" 
+              <ReferenceLine
+                y={0}
+                stroke="hsl(var(--muted-foreground))"
                 strokeDasharray="4 4"
                 strokeWidth={1}
               />
-              
+
               {/* Deviation bars with dynamic colors */}
               <Bar dataKey="desvio" radius={[3, 3, 0, 0]}>
                 {data.map((entry, index) => (
@@ -202,7 +230,7 @@ const ProgressEvolutionChart = ({
                   />
                 ))}
               </Bar>
-              
+
               {/* Deviation line with custom dots */}
               <Line
                 type="monotone"

@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from "react";
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,16 +28,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   useAllCorrectiveActionTemplates,
   useCreateTemplate,
   useUpdateTemplate,
   useDeleteTemplate,
   type CorrectiveActionTemplate,
-} from '@/hooks/useCorrectiveActionTemplates';
-import { NC_CATEGORIES } from './ncConstants';
+} from "@/hooks/useCorrectiveActionTemplates";
+import { NC_CATEGORIES } from "./ncConstants";
 
 interface FormState {
   category: string;
@@ -45,7 +45,7 @@ interface FormState {
   template_text: string;
 }
 
-const emptyForm: FormState = { category: '', title: '', template_text: '' };
+const emptyForm: FormState = { category: "", title: "", template_text: "" };
 
 export function CorrectiveActionTemplatesAdmin() {
   const { data: templates = [], isLoading } = useAllCorrectiveActionTemplates();
@@ -66,14 +66,22 @@ export function CorrectiveActionTemplatesAdmin() {
 
   const openEdit = (t: CorrectiveActionTemplate) => {
     setEditingId(t.id);
-    setForm({ category: t.category, title: t.title, template_text: t.template_text });
+    setForm({
+      category: t.category,
+      title: t.title,
+      template_text: t.template_text,
+    });
     setDialogOpen(true);
   };
 
   const handleSave = () => {
-    if (!form.category || !form.title.trim() || !form.template_text.trim()) return;
+    if (!form.category || !form.title.trim() || !form.template_text.trim())
+      return;
     if (editingId) {
-      updateMut.mutate({ id: editingId, ...form }, { onSuccess: () => setDialogOpen(false) });
+      updateMut.mutate(
+        { id: editingId, ...form },
+        { onSuccess: () => setDialogOpen(false) },
+      );
     } else {
       createMut.mutate(form, { onSuccess: () => setDialogOpen(false) });
     }
@@ -90,8 +98,10 @@ export function CorrectiveActionTemplatesAdmin() {
   };
 
   // Group by category
-  const grouped = NC_CATEGORIES.reduce<Record<string, CorrectiveActionTemplate[]>>((acc, cat) => {
-    const items = templates.filter(t => t.category === cat);
+  const grouped = NC_CATEGORIES.reduce<
+    Record<string, CorrectiveActionTemplate[]>
+  >((acc, cat) => {
+    const items = templates.filter((t) => t.category === cat);
     if (items.length > 0) acc[cat] = items;
     return acc;
   }, {});
@@ -121,18 +131,20 @@ export function CorrectiveActionTemplatesAdmin() {
             <CardTitle className="text-sm">{category}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {items.map(t => (
+            {items.map((t) => (
               <div
                 key={t.id}
                 className={`flex items-start justify-between gap-3 p-2 rounded-lg border ${
-                  t.is_active ? 'bg-background' : 'bg-muted/50 opacity-60'
+                  t.is_active ? "bg-background" : "bg-muted/50 opacity-60"
                 }`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{t.title}</span>
                     {!t.is_active && (
-                      <Badge variant="outline" className="text-[9px]">Inativo</Badge>
+                      <Badge variant="outline" className="text-[9px]">
+                        Inativo
+                      </Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
@@ -145,12 +157,13 @@ export function CorrectiveActionTemplatesAdmin() {
                     size="icon"
                     className="h-8 w-8"
                     onClick={() => handleToggle(t)}
-                    title={t.is_active ? 'Desativar' : 'Ativar'}
+                    title={t.is_active ? "Desativar" : "Ativar"}
                   >
-                    {t.is_active
-                      ? <ToggleRight className="h-4 w-4 text-primary" />
-                      : <ToggleLeft className="h-4 w-4 text-muted-foreground" />
-                    }
+                    {t.is_active ? (
+                      <ToggleRight className="h-4 w-4 text-primary" />
+                    ) : (
+                      <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                    )}
                   </Button>
                   <Button
                     variant="ghost"
@@ -185,18 +198,27 @@ export function CorrectiveActionTemplatesAdmin() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Editar Template' : 'Novo Template'}</DialogTitle>
+            <DialogTitle>
+              {editingId ? "Editar Template" : "Novo Template"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Categoria</Label>
-              <Select value={form.category} onValueChange={(v) => setForm(prev => ({ ...prev, category: v }))}>
+              <Select
+                value={form.category}
+                onValueChange={(v) =>
+                  setForm((prev) => ({ ...prev, category: v }))
+                }
+              >
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="Selecionar..." />
                 </SelectTrigger>
                 <SelectContent position="popper" sideOffset={4}>
-                  {NC_CATEGORIES.map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  {NC_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -205,7 +227,9 @@ export function CorrectiveActionTemplatesAdmin() {
               <Label className="text-xs font-medium">Título</Label>
               <Input
                 value={form.title}
-                onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, title: e.target.value }))
+                }
                 placeholder="Ex: Retrabalho de pintura"
                 className="h-10"
               />
@@ -214,20 +238,39 @@ export function CorrectiveActionTemplatesAdmin() {
               <Label className="text-xs font-medium">Texto do template</Label>
               <Textarea
                 value={form.template_text}
-                onChange={(e) => setForm(prev => ({ ...prev, template_text: e.target.value }))}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    template_text: e.target.value,
+                  }))
+                }
                 placeholder="Descreva os passos da ação corretiva..."
                 rows={4}
                 className="min-h-[80px]"
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
               <Button
                 size="sm"
                 onClick={handleSave}
-                disabled={!form.category || !form.title.trim() || !form.template_text.trim() || createMut.isPending || updateMut.isPending}
+                disabled={
+                  !form.category ||
+                  !form.title.trim() ||
+                  !form.template_text.trim() ||
+                  createMut.isPending ||
+                  updateMut.isPending
+                }
               >
-                {(createMut.isPending || updateMut.isPending) ? 'Salvando...' : 'Salvar'}
+                {createMut.isPending || updateMut.isPending
+                  ? "Salvando..."
+                  : "Salvar"}
               </Button>
             </div>
           </div>
@@ -235,17 +278,24 @@ export function CorrectiveActionTemplatesAdmin() {
       </Dialog>
 
       {/* Delete confirmation */}
-      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir template?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O template será removido permanentemente.
+              Esta ação não pode ser desfeita. O template será removido
+              permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

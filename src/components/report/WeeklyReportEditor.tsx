@@ -21,8 +21,20 @@ interface WeeklyReportEditorProps {
   isSaving?: boolean;
 }
 
-const WeeklyReportEditor = ({ data, projectId, onAutoSave, onSaveAndClose, onCancel, isSaving: externalIsSaving }: WeeklyReportEditorProps) => {
-  const state = useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSaving });
+const WeeklyReportEditor = ({
+  data,
+  projectId,
+  onAutoSave,
+  onSaveAndClose,
+  onCancel,
+  isSaving: externalIsSaving,
+}: WeeklyReportEditorProps) => {
+  const state = useEditorState({
+    data,
+    onAutoSave,
+    onSaveAndClose,
+    externalIsSaving,
+  });
 
   const handleAIGenerated = (updatedData: WeeklyReportData) => {
     state.setFormData(updatedData);
@@ -57,7 +69,11 @@ const WeeklyReportEditor = ({ data, projectId, onAutoSave, onSaveAndClose, onCan
         </div>
       )}
 
-      <Accordion type="multiple" defaultValue={["summary", "lookahead"]} className="space-y-2">
+      <Accordion
+        type="multiple"
+        defaultValue={["summary", "lookahead"]}
+        className="space-y-2"
+      >
         <SummarySection
           weekNumber={state.formData.weekNumber}
           executiveSummary={state.formData.executiveSummary}
@@ -101,7 +117,9 @@ const WeeklyReportEditor = ({ data, projectId, onAutoSave, onSaveAndClose, onCan
 
       <div className="flex justify-end gap-2 pt-4 border-t border-border">
         {onCancel && (
-          <Button variant="outline" onClick={onCancel}>Cancelar</Button>
+          <Button variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
         )}
         <Button onClick={state.handleSave} disabled={state.isSaving}>
           <Save className="w-4 h-4 mr-2" />

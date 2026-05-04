@@ -58,17 +58,30 @@ const FONT_SIZES = [
 ];
 
 const TEXT_COLORS = [
-  "#1a1a1a", "#374151", "#6b7280",
-  "#7c3aed", "#6d28d9", "#4c1d95",
-  "#dc2626", "#ea580c", "#d97706",
-  "#16a34a", "#0891b2", "#2563eb",
+  "#1a1a1a",
+  "#374151",
+  "#6b7280",
+  "#7c3aed",
+  "#6d28d9",
+  "#4c1d95",
+  "#dc2626",
+  "#ea580c",
+  "#d97706",
+  "#16a34a",
+  "#0891b2",
+  "#2563eb",
 ];
 
 const HIGHLIGHT_COLORS = [
   "transparent",
-  "#fef08a", "#fed7aa", "#fecaca",
-  "#bbf7d0", "#bae6fd", "#ddd6fe",
-  "#fbcfe8", "#e5e7eb",
+  "#fef08a",
+  "#fed7aa",
+  "#fecaca",
+  "#bbf7d0",
+  "#bae6fd",
+  "#ddd6fe",
+  "#fbcfe8",
+  "#e5e7eb",
 ];
 
 function ToolbarButton({
@@ -94,7 +107,7 @@ function ToolbarButton({
         "p-1.5 rounded-md transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center",
         active
           ? "bg-primary/15 text-primary"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
       {children}
@@ -229,7 +242,9 @@ export function RichTextEditorModal({
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-3" align="start">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Cor do texto</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            Cor do texto
+          </p>
           <div className="grid grid-cols-6 gap-1.5">
             {TEXT_COLORS.map((color) => (
               <button
@@ -260,7 +275,9 @@ export function RichTextEditorModal({
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-3" align="start">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Cor de destaque</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            Cor de destaque
+          </p>
           <div className="grid grid-cols-5 gap-1.5">
             {HIGHLIGHT_COLORS.map((color) => (
               <button
@@ -272,10 +289,19 @@ export function RichTextEditorModal({
                 }}
                 className={cn(
                   "w-6 h-6 rounded-md border border-border hover:scale-110 transition-transform",
-                  color === "transparent" && "bg-[repeating-conic-gradient(#ccc_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]"
+                  color === "transparent" &&
+                    "bg-[repeating-conic-gradient(#ccc_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]",
                 )}
-                style={color !== "transparent" ? { backgroundColor: color } : undefined}
-                aria-label={color === "transparent" ? "Remover destaque" : `Destacar com ${color}`}
+                style={
+                  color !== "transparent"
+                    ? { backgroundColor: color }
+                    : undefined
+                }
+                aria-label={
+                  color === "transparent"
+                    ? "Remover destaque"
+                    : `Destacar com ${color}`
+                }
               />
             ))}
           </div>
@@ -285,23 +311,35 @@ export function RichTextEditorModal({
       <div className="w-px h-5 bg-border mx-1" />
 
       {/* Lists */}
-      <ToolbarButton onClick={() => exec("insertUnorderedList")} title="Lista com marcadores">
+      <ToolbarButton
+        onClick={() => exec("insertUnorderedList")}
+        title="Lista com marcadores"
+      >
         <List className="w-4 h-4" />
       </ToolbarButton>
-      <ToolbarButton onClick={() => exec("insertOrderedList")} title="Lista numerada">
+      <ToolbarButton
+        onClick={() => exec("insertOrderedList")}
+        title="Lista numerada"
+      >
         <ListOrdered className="w-4 h-4" />
       </ToolbarButton>
 
       <div className="w-px h-5 bg-border mx-1" />
 
       {/* Alignment */}
-      <ToolbarButton onClick={() => exec("justifyLeft")} title="Alinhar à esquerda">
+      <ToolbarButton
+        onClick={() => exec("justifyLeft")}
+        title="Alinhar à esquerda"
+      >
         <AlignLeft className="w-4 h-4" />
       </ToolbarButton>
       <ToolbarButton onClick={() => exec("justifyCenter")} title="Centralizar">
         <AlignCenter className="w-4 h-4" />
       </ToolbarButton>
-      <ToolbarButton onClick={() => exec("justifyRight")} title="Alinhar à direita">
+      <ToolbarButton
+        onClick={() => exec("justifyRight")}
+        title="Alinhar à direita"
+      >
         <AlignRight className="w-4 h-4" />
       </ToolbarButton>
     </div>
@@ -321,7 +359,7 @@ export function RichTextEditorModal({
         className="flex-1 min-w-0 flex items-center gap-0.5 px-2 py-1.5 overflow-x-auto scrollbar-hide"
         // Reserva tap-target confortável e evita que o scroll horizontal
         // capture gestos verticais de rolagem do conteúdo.
-        style={{ overscrollBehaviorX: 'contain' }}
+        style={{ overscrollBehaviorX: "contain" }}
       >
         <ToolbarButton onClick={() => exec("bold")} title="Negrito">
           <Bold className="w-5 h-5" />
@@ -333,10 +371,16 @@ export function RichTextEditorModal({
           <Underline className="w-5 h-5" />
         </ToolbarButton>
         <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden />
-        <ToolbarButton onClick={() => exec("insertUnorderedList")} title="Lista">
+        <ToolbarButton
+          onClick={() => exec("insertUnorderedList")}
+          title="Lista"
+        >
           <List className="w-5 h-5" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => exec("insertOrderedList")} title="Lista numerada">
+        <ToolbarButton
+          onClick={() => exec("insertOrderedList")}
+          title="Lista numerada"
+        >
           <ListOrdered className="w-5 h-5" />
         </ToolbarButton>
         <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden />
@@ -368,73 +412,110 @@ export function RichTextEditorModal({
             collisionPadding={12}
             className="w-[min(calc(100vw-1.5rem),320px)] p-3 space-y-3"
           >
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Tamanho</p>
-            <Select value={fontSize} onValueChange={handleFontSize}>
-              <SelectTrigger className="h-10 text-sm">
-                <Type className="w-4 h-4 mr-2 shrink-0" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FONT_SIZES.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                Tamanho
+              </p>
+              <Select value={fontSize} onValueChange={handleFontSize}>
+                <SelectTrigger className="h-10 text-sm">
+                  <Type className="w-4 h-4 mr-2 shrink-0" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FONT_SIZES.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                Estilo
+              </p>
+              <div className="flex items-center gap-1">
+                <ToolbarButton
+                  onClick={() => exec("strikeThrough")}
+                  title="Riscado"
+                >
+                  <Strikethrough className="w-5 h-5" />
+                </ToolbarButton>
+                <ToolbarButton
+                  onClick={() => exec("justifyLeft")}
+                  title="Alinhar à esquerda"
+                >
+                  <AlignLeft className="w-5 h-5" />
+                </ToolbarButton>
+                <ToolbarButton
+                  onClick={() => exec("justifyCenter")}
+                  title="Centralizar"
+                >
+                  <AlignCenter className="w-5 h-5" />
+                </ToolbarButton>
+                <ToolbarButton
+                  onClick={() => exec("justifyRight")}
+                  title="Alinhar à direita"
+                >
+                  <AlignRight className="w-5 h-5" />
+                </ToolbarButton>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                Cor do texto
+              </p>
+              <div className="grid grid-cols-6 gap-2">
+                {TEXT_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleTextColor(color);
+                    }}
+                    className="w-7 h-7 rounded-md border border-border"
+                    style={{ backgroundColor: color }}
+                    aria-label={`Cor ${color}`}
+                  />
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Estilo</p>
-            <div className="flex items-center gap-1">
-              <ToolbarButton onClick={() => exec("strikeThrough")} title="Riscado">
-                <Strikethrough className="w-5 h-5" />
-              </ToolbarButton>
-              <ToolbarButton onClick={() => exec("justifyLeft")} title="Alinhar à esquerda">
-                <AlignLeft className="w-5 h-5" />
-              </ToolbarButton>
-              <ToolbarButton onClick={() => exec("justifyCenter")} title="Centralizar">
-                <AlignCenter className="w-5 h-5" />
-              </ToolbarButton>
-              <ToolbarButton onClick={() => exec("justifyRight")} title="Alinhar à direita">
-                <AlignRight className="w-5 h-5" />
-              </ToolbarButton>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Cor do texto</p>
-            <div className="grid grid-cols-6 gap-2">
-              {TEXT_COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onMouseDown={(e) => { e.preventDefault(); handleTextColor(color); }}
-                  className="w-7 h-7 rounded-md border border-border"
-                  style={{ backgroundColor: color }}
-                  aria-label={`Cor ${color}`}
-                />
-              ))}
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                Destaque
+              </p>
+              <div className="grid grid-cols-5 gap-2">
+                {HIGHLIGHT_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleHighlight(color);
+                    }}
+                    className={cn(
+                      "w-7 h-7 rounded-md border border-border",
+                      color === "transparent" &&
+                        "bg-[repeating-conic-gradient(#ccc_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]",
+                    )}
+                    style={
+                      color !== "transparent"
+                        ? { backgroundColor: color }
+                        : undefined
+                    }
+                    aria-label={
+                      color === "transparent"
+                        ? "Remover destaque"
+                        : `Destacar com ${color}`
+                    }
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Destaque</p>
-            <div className="grid grid-cols-5 gap-2">
-              {HIGHLIGHT_COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onMouseDown={(e) => { e.preventDefault(); handleHighlight(color); }}
-                  className={cn(
-                    "w-7 h-7 rounded-md border border-border",
-                    color === "transparent" && "bg-[repeating-conic-gradient(#ccc_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]"
-                  )}
-                  style={color !== "transparent" ? { backgroundColor: color } : undefined}
-                  aria-label={color === "transparent" ? "Remover destaque" : `Destacar com ${color}`}
-                />
-              ))}
-            </div>
-          </div>
           </PopoverContent>
         </Popover>
       </div>
@@ -455,7 +536,7 @@ export function RichTextEditorModal({
         "text-foreground leading-[1.7]",
         "[&_p]:mb-3 [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-1",
         "[&_p]:text-sm [&_li]:text-sm",
-        "focus:outline-none"
+        "focus:outline-none",
       )}
     />
   );
@@ -490,9 +571,7 @@ export function RichTextEditorModal({
         <div className="sticky top-0 z-shell bg-background">
           {MobileToolbar}
         </div>
-        <div className="px-4 py-3">
-          {EditorArea}
-        </div>
+        <div className="px-4 py-3">{EditorArea}</div>
       </MobileFullscreenSheet>
     );
   }

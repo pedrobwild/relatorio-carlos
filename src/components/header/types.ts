@@ -11,7 +11,13 @@ export interface MilestoneDates {
   contractSigningDate?: string | null;
 }
 
-export type MilestoneKey = 'dateBriefingArch' | 'dateApproval3d' | 'dateApprovalExec' | 'dateApprovalObra' | 'dateMobilizationStart' | 'contractSigningDate';
+export type MilestoneKey =
+  | "dateBriefingArch"
+  | "dateApproval3d"
+  | "dateApprovalExec"
+  | "dateApprovalObra"
+  | "dateMobilizationStart"
+  | "contractSigningDate";
 
 export interface ReportHeaderProps {
   projectName: string;
@@ -24,7 +30,10 @@ export interface ReportHeaderProps {
   isProjectPhase?: boolean;
   milestoneDates?: MilestoneDates;
   canEditMilestones?: boolean;
-  onMilestoneDateChange?: (key: MilestoneKey, date: string | null) => Promise<void>;
+  onMilestoneDateChange?: (
+    key: MilestoneKey,
+    date: string | null,
+  ) => Promise<void>;
 }
 
 export interface LegacyTeamContact {

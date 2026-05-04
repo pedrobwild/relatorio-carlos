@@ -45,7 +45,9 @@ export function BottomSheetPicker({
         )}
       >
         <SheetHeader className="pb-3 border-b border-border-subtle mb-3 text-left">
-          <SheetTitle className="text-base font-bold text-foreground">{title}</SheetTitle>
+          <SheetTitle className="text-base font-bold text-foreground">
+            {title}
+          </SheetTitle>
           {description && (
             <SheetDescription className="text-[13px] text-muted-foreground">
               {description}

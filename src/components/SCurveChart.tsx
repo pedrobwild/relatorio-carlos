@@ -1,5 +1,12 @@
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import { TrendingUp, Maximize2, Minimize2 } from "lucide-react";
 import { useState, useMemo } from "react";
@@ -19,32 +26,49 @@ const SCurveChart = ({
   showFullChart: controlledShowFull,
   onShowFullChartChange,
 }: SCurveChartProps) => {
-  const { data: chartData, milestones } = generateChartData(activities, reportDate, projectStartDate, projectEndDate);
+  const { data: chartData, milestones } = generateChartData(
+    activities,
+    reportDate,
+    projectStartDate,
+    projectEndDate,
+  );
 
-  const currentActivity = activities.find(a => a.actualStart && !a.actualEnd);
+  const currentActivity = activities.find((a) => a.actualStart && !a.actualEnd);
 
   const todayRealizado = useMemo(
-    () => calcWeightedProgress(activities.map(a => ({ weight: a.weight, actualEnd: a.actualEnd }))),
+    () =>
+      calcWeightedProgress(
+        activities.map((a) => ({ weight: a.weight, actualEnd: a.actualEnd })),
+      ),
     [activities],
   );
 
   const [internalShowFull, setInternalShowFull] = useState(false);
-  const showFullChart = controlledShowFull !== undefined ? controlledShowFull : internalShowFull;
+  const showFullChart =
+    controlledShowFull !== undefined ? controlledShowFull : internalShowFull;
 
   const handleToggleFullChart = () => {
     const newValue = !showFullChart;
-    if (onShowFullChartChange) { onShowFullChartChange(newValue); } else { setInternalShowFull(newValue); }
+    if (onShowFullChartChange) {
+      onShowFullChartChange(newValue);
+    } else {
+      setInternalShowFull(newValue);
+    }
   };
 
   const windowedData = useMemo(() => {
     if (showFullChart) return chartData;
     const t = milestones.today;
-    return chartData.filter(d => d.timestamp >= t - 30 && d.timestamp <= t + 15);
+    return chartData.filter(
+      (d) => d.timestamp >= t - 30 && d.timestamp <= t + 15,
+    );
   }, [chartData, milestones.today, showFullChart]);
 
   const hasMoreData = useMemo(() => {
     const t = milestones.today;
-    const windowedLength = chartData.filter(d => d.timestamp >= t - 30 && d.timestamp <= t + 15).length;
+    const windowedLength = chartData.filter(
+      (d) => d.timestamp >= t - 30 && d.timestamp <= t + 15,
+    ).length;
     return chartData.length > windowedLength;
   }, [chartData, milestones.today]);
 
@@ -73,15 +97,28 @@ const SCurveChart = ({
               )}
             </div>
             <p className="text-[9px] md:text-xs text-muted-foreground hidden md:block">
-              {showFullChart ? "Visão completa do projeto" : "Janela de 45 dias (-30 a +15 dias do hoje)"}
+              {showFullChart
+                ? "Visão completa do projeto"
+                : "Janela de 45 dias (-30 a +15 dias do hoje)"}
             </p>
           </div>
           {hasMoreData && (
-            <Button variant="outline" size="sm" className="h-7 text-[10px] md:text-xs gap-1 px-2" onClick={handleToggleFullChart}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-[10px] md:text-xs gap-1 px-2"
+              onClick={handleToggleFullChart}
+            >
               {showFullChart ? (
-                <><Minimize2 className="h-3 w-3" /><span className="hidden sm:inline">30 dias</span></>
+                <>
+                  <Minimize2 className="h-3 w-3" />
+                  <span className="hidden sm:inline">30 dias</span>
+                </>
               ) : (
-                <><Maximize2 className="h-3 w-3" /><span className="hidden sm:inline">Ver tudo</span></>
+                <>
+                  <Maximize2 className="h-3 w-3" />
+                  <span className="hidden sm:inline">Ver tudo</span>
+                </>
               )}
             </Button>
           )}
@@ -94,58 +131,170 @@ const SCurveChart = ({
       </div>
 
       {/* Chart */}
-      <div key={showFullChart ? "full" : "windowed"} className="bg-secondary/30 rounded-xl p-2.5 sm:p-4 md:p-6 border border-border/50 animate-fade-in">
+      <div
+        key={showFullChart ? "full" : "windowed"}
+        className="bg-secondary/30 rounded-xl p-2.5 sm:p-4 md:p-6 border border-border/50 animate-fade-in"
+      >
         <div className="h-[200px] sm:h-[280px] md:h-[360px] lg:h-[400px] w-full transition-all duration-300 ease-out">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={windowedData} margin={{ top: 20, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} vertical={false} />
-              <XAxis
-                dataKey="timestamp" type="number" scale="linear" domain={["dataMin", "dataMax"]}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }} tickLine={false}
-                axisLine={{ stroke: "hsl(var(--border))", strokeOpacity: 0.5 }}
-                tickFormatter={v => chartData.find(d => d.timestamp === v)?.date || ""}
-                ticks={windowedData.map(d => d.timestamp)} angle={-45} textAnchor="end" height={40} dy={6}
+            <LineChart
+              data={windowedData}
+              margin={{ top: 20, right: 8, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+                strokeOpacity={0.5}
+                vertical={false}
               />
-              <ReferenceLine x={milestones.start} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeOpacity={0.6} label={<ReferenceLabel label="Início" />} />
-              <ReferenceLine x={milestones.today} stroke="hsl(var(--primary))" strokeDasharray="4 4" strokeOpacity={0.8} label={<ReferenceLabel label={`${todayRealizado}% Execução`} highlight />} />
-              <ReferenceLine x={milestones.end} stroke="hsl(var(--success))" strokeDasharray="4 4" strokeOpacity={0.6} label={<ReferenceLabel label="Entrega" />} />
+              <XAxis
+                dataKey="timestamp"
+                type="number"
+                scale="linear"
+                domain={["dataMin", "dataMax"]}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+                tickLine={false}
+                axisLine={{ stroke: "hsl(var(--border))", strokeOpacity: 0.5 }}
+                tickFormatter={(v) =>
+                  chartData.find((d) => d.timestamp === v)?.date || ""
+                }
+                ticks={windowedData.map((d) => d.timestamp)}
+                angle={-45}
+                textAnchor="end"
+                height={40}
+                dy={6}
+              />
+              <ReferenceLine
+                x={milestones.start}
+                stroke="hsl(var(--muted-foreground))"
+                strokeDasharray="4 4"
+                strokeOpacity={0.6}
+                label={<ReferenceLabel label="Início" />}
+              />
+              <ReferenceLine
+                x={milestones.today}
+                stroke="hsl(var(--primary))"
+                strokeDasharray="4 4"
+                strokeOpacity={0.8}
+                label={
+                  <ReferenceLabel
+                    label={`${todayRealizado}% Execução`}
+                    highlight
+                  />
+                }
+              />
+              <ReferenceLine
+                x={milestones.end}
+                stroke="hsl(var(--success))"
+                strokeDasharray="4 4"
+                strokeOpacity={0.6}
+                label={<ReferenceLabel label="Entrega" />}
+              />
               <YAxis
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }} tickLine={false} axisLine={false}
-                tickFormatter={v => `${v}%`} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={38}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v) => `${v}%`}
+                domain={[0, 100]}
+                ticks={[0, 25, 50, 75, 100]}
+                width={38}
               />
               <Tooltip
                 content={<ChartTooltip />}
-                cursor={{ stroke: "hsl(var(--primary))", strokeOpacity: 0.2, strokeWidth: 1 }}
-                wrapperStyle={{ zIndex: 50, transition: "transform 150ms ease-out, opacity 150ms ease-out" }}
-                animationDuration={150} animationEasing="ease-out"
+                cursor={{
+                  stroke: "hsl(var(--primary))",
+                  strokeOpacity: 0.2,
+                  strokeWidth: 1,
+                }}
+                wrapperStyle={{
+                  zIndex: 50,
+                  transition:
+                    "transform 150ms ease-out, opacity 150ms ease-out",
+                }}
+                animationDuration={150}
+                animationEasing="ease-out"
               />
               <Line
-                type="monotone" dataKey="previsto" name="previsto" stroke="hsl(var(--primary))"
-                strokeWidth={2} strokeOpacity={0.5} strokeDasharray="6 4"
-                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 2, opacity: 0.6 }}
+                type="monotone"
+                dataKey="previsto"
+                name="previsto"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                strokeOpacity={0.5}
+                strokeDasharray="6 4"
+                dot={{
+                  fill: "hsl(var(--primary))",
+                  strokeWidth: 0,
+                  r: 2,
+                  opacity: 0.6,
+                }}
                 activeDot={(props: any) => {
                   const { cx, cy } = props;
                   return (
                     <g>
-                      <circle cx={cx} cy={cy} r={10} fill="hsl(var(--primary))" opacity={0.15} />
-                      <circle cx={cx} cy={cy} r={5} fill="hsl(var(--primary))" stroke="hsl(var(--card))" strokeWidth={2} />
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={10}
+                        fill="hsl(var(--primary))"
+                        opacity={0.15}
+                      />
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={5}
+                        fill="hsl(var(--primary))"
+                        stroke="hsl(var(--card))"
+                        strokeWidth={2}
+                      />
                     </g>
                   );
                 }}
               />
               <Line
-                type="monotone" dataKey="realizado" name="realizado" stroke="#22c55e" strokeWidth={3.5}
+                type="monotone"
+                dataKey="realizado"
+                name="realizado"
+                stroke="#22c55e"
+                strokeWidth={3.5}
                 dot={(props: Record<string, unknown>) => {
-                  const { cx, cy, payload } = props as { cx: number; cy: number; payload: { realizado: number | null } };
+                  const { cx, cy, payload } = props as {
+                    cx: number;
+                    cy: number;
+                    payload: { realizado: number | null };
+                  };
                   if (payload.realizado === null) return <></>;
-                  return <circle cx={cx} cy={cy} r={4} fill="#22c55e" stroke="white" strokeWidth={2} />;
+                  return (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={4}
+                      fill="#22c55e"
+                      stroke="white"
+                      strokeWidth={2}
+                    />
+                  );
                 }}
                 activeDot={(props: any) => {
                   const { cx, cy } = props;
                   return (
                     <g>
-                      <circle cx={cx} cy={cy} r={14} fill="#22c55e" opacity={0.2} />
-                      <circle cx={cx} cy={cy} r={7} fill="#22c55e" stroke="white" strokeWidth={2} className="drop-shadow-lg" />
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={14}
+                        fill="#22c55e"
+                        opacity={0.2}
+                      />
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={7}
+                        fill="#22c55e"
+                        stroke="white"
+                        strokeWidth={2}
+                        className="drop-shadow-lg"
+                      />
                     </g>
                   );
                 }}

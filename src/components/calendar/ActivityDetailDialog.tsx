@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { format, parseISO, differenceInCalendarDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useEffect, useState } from "react";
+import { format, parseISO, differenceInCalendarDays } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   CalendarIcon,
   Clock,
@@ -12,7 +12,7 @@ import {
   Trash2,
   UserRound,
   X,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,20 +20,24 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,13 +47,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { cn } from '@/lib/utils';
-import type { WeekActivity } from '@/hooks/useWeekActivities';
-import { useStaffUsers } from '@/hooks/useStaffUsers';
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+import type { WeekActivity } from "@/hooks/useWeekActivities";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
 
 /** Valor sentinela para representar "sem responsável" no Select (Radix não aceita value=""). */
-const NO_RESPONSIBLE = '__none__';
+const NO_RESPONSIBLE = "__none__";
 
 interface ActivityDetailDialogProps {
   activity: WeekActivity | null;
@@ -84,7 +88,7 @@ interface ActivityDetailDialogProps {
 }
 
 const toDate = (s: string | null | undefined) => (s ? parseISO(s) : undefined);
-const fromDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
+const fromDate = (d: Date | undefined) => (d ? format(d, "yyyy-MM-dd") : null);
 
 export function ActivityDetailDialog({
   activity,
@@ -103,7 +107,9 @@ export function ActivityDetailDialog({
 }: ActivityDetailDialogProps) {
   const [actualStart, setActualStart] = useState<Date | undefined>();
   const [actualEnd, setActualEnd] = useState<Date | undefined>();
-  const [responsibleUserId, setResponsibleUserId] = useState<string | null>(null);
+  const [responsibleUserId, setResponsibleUserId] = useState<string | null>(
+    null,
+  );
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [confirmMergeOpen, setConfirmMergeOpen] = useState(false);
@@ -148,38 +154,42 @@ export function ActivityDetailDialog({
   };
 
   const formatPreview = (d: Date | undefined) =>
-    d ? format(d, "dd 'de' MMM 'de' yyyy", { locale: ptBR }) : '—';
+    d ? format(d, "dd 'de' MMM 'de' yyyy", { locale: ptBR }) : "—";
 
   // Build inline history from available signals
-  type Event = { date: string; label: string; tone: 'muted' | 'info' | 'success' | 'warn' };
+  type Event = {
+    date: string;
+    label: string;
+    tone: "muted" | "info" | "success" | "warn";
+  };
   const history: Event[] = [];
   history.push({
     date: activity.created_at,
-    label: 'Atividade criada no cronograma',
-    tone: 'muted',
+    label: "Atividade criada no cronograma",
+    tone: "muted",
   });
   if (activity.baseline_saved_at) {
     history.push({
       date: activity.baseline_saved_at,
-      label: `Baseline registrado (${format(parseISO(activity.baseline_start!), 'dd/MM')} → ${format(
+      label: `Baseline registrado (${format(parseISO(activity.baseline_start!), "dd/MM")} → ${format(
         parseISO(activity.baseline_end!),
-        'dd/MM',
+        "dd/MM",
       )})`,
-      tone: 'info',
+      tone: "info",
     });
   }
   if (activity.actual_start) {
     history.push({
       date: activity.actual_start,
-      label: 'Início real registrado',
-      tone: 'info',
+      label: "Início real registrado",
+      tone: "info",
     });
   }
   if (activity.actual_end) {
     history.push({
       date: activity.actual_end,
-      label: 'Conclusão real registrada',
-      tone: 'success',
+      label: "Conclusão real registrada",
+      tone: "success",
     });
   }
   if (
@@ -189,17 +199,19 @@ export function ActivityDetailDialog({
   ) {
     history.push({
       date: activity.updated_at,
-      label: 'Atividade atualizada',
-      tone: 'muted',
+      label: "Atividade atualizada",
+      tone: "muted",
     });
   }
-  history.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  history.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
 
-  const toneClass: Record<Event['tone'], string> = {
-    muted: 'bg-muted-foreground',
-    info: 'bg-blue-500',
-    success: 'bg-green-500',
-    warn: 'bg-amber-500',
+  const toneClass: Record<Event["tone"], string> = {
+    muted: "bg-muted-foreground",
+    info: "bg-blue-500",
+    success: "bg-green-500",
+    warn: "bg-amber-500",
   };
 
   return (
@@ -219,7 +231,7 @@ export function ActivityDetailDialog({
               <DialogDescription className="mt-1 text-xs">
                 {activity.project_name}
                 {activity.client_name && ` · Cliente: ${activity.client_name}`}
-                {' · '}Peso {activity.weight}%
+                {" · "}Peso {activity.weight}%
               </DialogDescription>
             </div>
           </div>
@@ -235,13 +247,17 @@ export function ActivityDetailDialog({
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <div className="text-[11px] text-muted-foreground">Início previsto</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Início previsto
+                  </div>
                   <div className="font-medium">
                     {format(ps, "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[11px] text-muted-foreground">Fim previsto</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Fim previsto
+                  </div>
                   <div className="font-medium">
                     {format(pe, "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
                   </div>
@@ -259,25 +275,37 @@ export function ActivityDetailDialog({
                   <UserRound className="h-3.5 w-3.5" />
                   Responsável
                 </div>
-                {activity.responsible_name && responsibleUserId === activity.responsible_user_id && (
-                  <span className="text-[10.5px] text-muted-foreground">
-                    Atual: <strong className="text-foreground">{activity.responsible_name}</strong>
-                  </span>
-                )}
+                {activity.responsible_name &&
+                  responsibleUserId === activity.responsible_user_id && (
+                    <span className="text-[10.5px] text-muted-foreground">
+                      Atual:{" "}
+                      <strong className="text-foreground">
+                        {activity.responsible_name}
+                      </strong>
+                    </span>
+                  )}
               </div>
               <Select
                 value={responsibleUserId ?? NO_RESPONSIBLE}
-                onValueChange={(v) => setResponsibleUserId(v === NO_RESPONSIBLE ? null : v)}
+                onValueChange={(v) =>
+                  setResponsibleUserId(v === NO_RESPONSIBLE ? null : v)
+                }
                 disabled={loadingStaff}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue
-                    placeholder={loadingStaff ? 'Carregando equipe...' : 'Selecionar responsável'}
+                    placeholder={
+                      loadingStaff
+                        ? "Carregando equipe..."
+                        : "Selecionar responsável"
+                    }
                   />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-72">
                   <SelectItem value={NO_RESPONSIBLE}>
-                    <span className="text-muted-foreground italic">Sem responsável</span>
+                    <span className="text-muted-foreground italic">
+                      Sem responsável
+                    </span>
                   </SelectItem>
                   {staffUsers.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
@@ -292,8 +320,8 @@ export function ActivityDetailDialog({
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1.5">
-                Membro da equipe interna responsável por executar esta{' '}
-                {activity.parent_activity_id ? 'micro-etapa' : 'atividade'}.
+                Membro da equipe interna responsável por executar esta{" "}
+                {activity.parent_activity_id ? "micro-etapa" : "atividade"}.
               </p>
             </div>
 
@@ -376,21 +404,26 @@ export function ActivityDetailDialog({
                           className="h-7 text-xs"
                         >
                           <Split className="h-3 w-3 mr-1" />
-                          {subActivities.length > 0 ? 'Adicionar' : 'Quebrar em micro-etapas'}
+                          {subActivities.length > 0
+                            ? "Adicionar"
+                            : "Quebrar em micro-etapas"}
                         </Button>
                       )}
                     </div>
                   </div>
                   {subActivities.length === 0 ? (
                     <p className="text-xs text-muted-foreground">
-                      Quebre esta atividade em micro-etapas para detalhar o que acontece em cada
-                      dia. O cliente continuará vendo apenas esta atividade-mãe.
+                      Quebre esta atividade em micro-etapas para detalhar o que
+                      acontece em cada dia. O cliente continuará vendo apenas
+                      esta atividade-mãe.
                     </p>
                   ) : (
                     <ul className="space-y-1.5">
                       {subActivities
                         .slice()
-                        .sort((a, b) => a.planned_start.localeCompare(b.planned_start))
+                        .sort((a, b) =>
+                          a.planned_start.localeCompare(b.planned_start),
+                        )
                         .map((s) => (
                           <li
                             key={s.id}
@@ -402,10 +435,12 @@ export function ActivityDetailDialog({
                               className="flex-1 text-left min-w-0 hover:text-primary"
                               title="Abrir micro-etapa"
                             >
-                              <div className="font-medium truncate">{s.description}</div>
+                              <div className="font-medium truncate">
+                                {s.description}
+                              </div>
                               <div className="text-muted-foreground">
-                                {format(parseISO(s.planned_start), 'dd/MM')} →{' '}
-                                {format(parseISO(s.planned_end), 'dd/MM')}
+                                {format(parseISO(s.planned_start), "dd/MM")} →{" "}
+                                {format(parseISO(s.planned_end), "dd/MM")}
                               </div>
                             </button>
                             {onRemoveSub && (
@@ -432,8 +467,9 @@ export function ActivityDetailDialog({
             {activity.parent_activity_id && (
               <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
                 <Layers className="inline h-3.5 w-3.5 mr-1" />
-                Esta é uma <strong>micro-etapa interna</strong>. Visível apenas para Admin e
-                Engenheiro no Calendário; clientes veem só a atividade-mãe.
+                Esta é uma <strong>micro-etapa interna</strong>. Visível apenas
+                para Admin e Engenheiro no Calendário; clientes veem só a
+                atividade-mãe.
               </div>
             )}
 
@@ -447,7 +483,12 @@ export function ActivityDetailDialog({
                 {history.map((ev, idx) => (
                   <li key={idx} className="flex gap-3">
                     <div className="flex flex-col items-center">
-                      <span className={cn('h-2 w-2 rounded-full mt-1.5', toneClass[ev.tone])} />
+                      <span
+                        className={cn(
+                          "h-2 w-2 rounded-full mt-1.5",
+                          toneClass[ev.tone],
+                        )}
+                      />
                       {idx < history.length - 1 && (
                         <span className="flex-1 w-px bg-border mt-1" />
                       )}
@@ -455,7 +496,9 @@ export function ActivityDetailDialog({
                     <div className="flex-1 pb-1">
                       <div className="text-sm">{ev.label}</div>
                       <div className="text-[11px] text-muted-foreground">
-                        {format(parseISO(ev.date), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
+                        {format(parseISO(ev.date), "dd 'de' MMM 'de' yyyy", {
+                          locale: ptBR,
+                        })}
                       </div>
                     </div>
                   </li>
@@ -470,14 +513,20 @@ export function ActivityDetailDialog({
             variant="ghost"
             size="sm"
             onClick={() => setConfirmClearOpen(true)}
-            disabled={isUpdating || (!activity.actual_start && !activity.actual_end)}
+            disabled={
+              isUpdating || (!activity.actual_start && !activity.actual_end)
+            }
             className="text-muted-foreground hover:text-destructive"
           >
             <Trash2 className="h-4 w-4 mr-1" />
             Limpar datas
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+            >
               Cancelar
             </Button>
             <Button
@@ -500,18 +549,27 @@ export function ActivityDetailDialog({
       <AlertDialog open={confirmSaveOpen} onOpenChange={setConfirmSaveOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar alteração de datas reais</AlertDialogTitle>
+            <AlertDialogTitle>
+              Confirmar alteração de datas reais
+            </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm">
-                <p>Você está prestes a registrar as seguintes datas reais para esta atividade:</p>
+                <p>
+                  Você está prestes a registrar as seguintes datas reais para
+                  esta atividade:
+                </p>
                 <div className="rounded-md border bg-muted/40 p-3 space-y-1">
                   <div>
                     <span className="text-muted-foreground">Início real: </span>
-                    <strong className="text-foreground">{formatPreview(actualStart)}</strong>
+                    <strong className="text-foreground">
+                      {formatPreview(actualStart)}
+                    </strong>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Fim real: </span>
-                    <strong className="text-foreground">{formatPreview(actualEnd)}</strong>
+                    <strong className="text-foreground">
+                      {formatPreview(actualEnd)}
+                    </strong>
                   </div>
                 </div>
                 <p className="text-muted-foreground">
@@ -521,7 +579,9 @@ export function ActivityDetailDialog({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isUpdating}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isUpdating}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction onClick={handleSave} disabled={isUpdating}>
               Confirmar e salvar
             </AlertDialogAction>
@@ -535,12 +595,15 @@ export function ActivityDetailDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Limpar datas reais?</AlertDialogTitle>
             <AlertDialogDescription>
-              Isso removerá o início e o fim reais já registrados. A atividade voltará a ser tratada
-              como pendente segundo o planejamento. Esta ação não pode ser desfeita.
+              Isso removerá o início e o fim reais já registrados. A atividade
+              voltará a ser tratada como pendente segundo o planejamento. Esta
+              ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isUpdating}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isUpdating}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleClear}
               disabled={isUpdating}
@@ -558,9 +621,9 @@ export function ActivityDetailDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Mesclar micro-etapas?</AlertDialogTitle>
             <AlertDialogDescription>
-              Isso removerá todas as {subActivities.length} micro-etapa(s) internas e a
-              atividade-mãe voltará a ocupar todo o intervalo planejado. Esta ação não pode ser
-              desfeita.
+              Isso removerá todas as {subActivities.length} micro-etapa(s)
+              internas e a atividade-mãe voltará a ocupar todo o intervalo
+              planejado. Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -592,7 +655,9 @@ interface DateFieldProps {
 function DateField({ label, value, onChange, onClear }: DateFieldProps) {
   return (
     <div>
-      <label className="text-[11px] text-muted-foreground block mb-1">{label}</label>
+      <label className="text-[11px] text-muted-foreground block mb-1">
+        {label}
+      </label>
       <div className="flex gap-1">
         <Popover>
           <PopoverTrigger asChild>
@@ -600,12 +665,14 @@ function DateField({ label, value, onChange, onClear }: DateFieldProps) {
               variant="outline"
               size="sm"
               className={cn(
-                'flex-1 justify-start text-left font-normal',
-                !value && 'text-muted-foreground',
+                "flex-1 justify-start text-left font-normal",
+                !value && "text-muted-foreground",
               )}
             >
               <CalendarIcon className="h-3.5 w-3.5 mr-2" />
-              {value ? format(value, "dd 'de' MMM 'de' yyyy", { locale: ptBR }) : 'Selecionar'}
+              {value
+                ? format(value, "dd 'de' MMM 'de' yyyy", { locale: ptBR })
+                : "Selecionar"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -615,7 +682,7 @@ function DateField({ label, value, onChange, onClear }: DateFieldProps) {
               onSelect={onChange}
               initialFocus
               locale={ptBR}
-              className={cn('p-3 pointer-events-auto')}
+              className={cn("p-3 pointer-events-auto")}
             />
           </PopoverContent>
         </Popover>

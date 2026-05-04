@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { recommendVisualizations, profileColumns } from "../visualizationRecommender";
+import {
+  recommendVisualizations,
+  profileColumns,
+} from "../visualizationRecommender";
 
 describe("profileColumns", () => {
   it("identifies numeric and date columns", () => {

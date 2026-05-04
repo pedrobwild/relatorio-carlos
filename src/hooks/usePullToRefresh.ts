@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void> | void;
@@ -21,20 +21,26 @@ export function usePullToRefresh({
   const startY = useRef(0);
   const isDragging = useRef(false);
 
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (!enabled || window.scrollY > 0) return;
-    startY.current = e.touches[0].clientY;
-    isDragging.current = true;
-  }, [enabled]);
+  const handleTouchStart = useCallback(
+    (e: TouchEvent) => {
+      if (!enabled || window.scrollY > 0) return;
+      startY.current = e.touches[0].clientY;
+      isDragging.current = true;
+    },
+    [enabled],
+  );
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isDragging.current || !enabled) return;
-    const diff = e.touches[0].clientY - startY.current;
-    if (diff > 0 && window.scrollY <= 0) {
-      setPulling(true);
-      setPullDistance(Math.min(diff * 0.5, threshold * 1.5));
-    }
-  }, [enabled, threshold]);
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!isDragging.current || !enabled) return;
+      const diff = e.touches[0].clientY - startY.current;
+      if (diff > 0 && window.scrollY <= 0) {
+        setPulling(true);
+        setPullDistance(Math.min(diff * 0.5, threshold * 1.5));
+      }
+    },
+    [enabled, threshold],
+  );
 
   const handleTouchEnd = useCallback(async () => {
     if (!isDragging.current || !pulling) {
@@ -59,13 +65,15 @@ export function usePullToRefresh({
 
   useEffect(() => {
     if (!enabled) return;
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchmove', handleTouchMove, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
+    document.addEventListener("touchmove", handleTouchMove, { passive: true });
+    document.addEventListener("touchend", handleTouchEnd);
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
     };
   }, [enabled, handleTouchStart, handleTouchMove, handleTouchEnd]);
 

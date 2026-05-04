@@ -27,7 +27,10 @@ interface ProjectSubNavProps {
  * Shows only secondary sections (Contrato, Projeto 3D, Executivo, Jornada).
  * Primary sections are now tabs in the main content area.
  */
-export function ProjectSubNav({ className, showStaffItems = false }: ProjectSubNavProps) {
+export function ProjectSubNav({
+  className,
+  showStaffItems = false,
+}: ProjectSubNavProps) {
   const { paths, projectId } = useProjectNavigation();
   const { project } = useProject();
   const { hasShell } = useProjectLayout();
@@ -40,7 +43,12 @@ export function ProjectSubNav({ className, showStaffItems = false }: ProjectSubN
   const isProjectPhase = project?.is_project_phase === true;
 
   const navItems: NavItem[] = [
-    { label: "Jornada", path: paths.jornada, icon: Map, projectPhaseOnly: true },
+    {
+      label: "Jornada",
+      path: paths.jornada,
+      icon: Map,
+      projectPhaseOnly: true,
+    },
   ];
 
   const visibleItems = navItems
@@ -51,7 +59,7 @@ export function ProjectSubNav({ className, showStaffItems = false }: ProjectSubN
     <div
       className={cn(
         "sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border",
-        className
+        className,
       )}
     >
       <div className="max-w-5xl mx-auto">

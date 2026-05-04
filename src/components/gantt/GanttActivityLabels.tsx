@@ -1,11 +1,15 @@
-import { Info } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { getStatusLabel } from '@/lib/activityStatus';
-import { Activity } from '@/types/report';
-import { useResponsive } from '@/hooks/use-mobile';
-import { getTaskDisplayData } from './utils';
-import type { GanttTask } from './types';
+import { Info } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { getStatusLabel } from "@/lib/activityStatus";
+import { Activity } from "@/types/report";
+import { useResponsive } from "@/hooks/use-mobile";
+import { getTaskDisplayData } from "./utils";
+import type { GanttTask } from "./types";
 
 interface GanttActivityLabelsProps {
   activities: Activity[];
@@ -36,7 +40,9 @@ export function GanttActivityLabels({
 
         const labelContent = (
           <span className="text-xs font-medium truncate cursor-default flex items-center gap-1.5 flex-1 min-w-0">
-            <span className="font-mono text-[10px] text-primary/60 shrink-0">{index + 1}</span>
+            <span className="font-mono text-[10px] text-primary/60 shrink-0">
+              {index + 1}
+            </span>
             <span className="truncate">
               {activity.description}
               {activity.etapa && (
@@ -52,7 +58,9 @@ export function GanttActivityLabels({
               />
             )}
             {activity.predecessorIds && activity.predecessorIds.length > 0 && (
-              <span className="text-[10px] text-muted-foreground shrink-0">←{activity.predecessorIds.length}</span>
+              <span className="text-[10px] text-muted-foreground shrink-0">
+                ←{activity.predecessorIds.length}
+              </span>
             )}
           </span>
         );
@@ -65,9 +73,11 @@ export function GanttActivityLabels({
               onActivitySelect && "cursor-pointer",
               isSelected
                 ? "bg-primary/10 border-l-2 border-l-primary"
-                : "hover:bg-muted/20"
+                : "hover:bg-muted/20",
             )}
-            onClick={() => onActivitySelect?.(isSelected ? null : activity.id || null)}
+            onClick={() =>
+              onActivitySelect?.(isSelected ? null : activity.id || null)
+            }
           >
             {isDesktop ? (
               <Tooltip>
@@ -75,24 +85,34 @@ export function GanttActivityLabels({
                 <TooltipContent side="right" className="max-w-xs">
                   <p className="font-medium">{activity.description}</p>
                   {activity.etapa && (
-                    <p className="text-xs text-muted-foreground">Etapa: {activity.etapa}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Etapa: {activity.etapa}
+                    </p>
                   )}
-                  <p className="text-xs text-muted-foreground">Peso: {activity.weight}%</p>
+                  <p className="text-xs text-muted-foreground">
+                    Peso: {activity.weight}%
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     Status: {getStatusLabel(computed.status)}
-                    {computed.isDelayed && computed.delayDays > 0 && ` (${computed.delayDays} dias)`}
+                    {computed.isDelayed &&
+                      computed.delayDays > 0 &&
+                      ` (${computed.delayDays} dias)`}
                   </p>
-                  <p className="text-xs text-muted-foreground">Progresso: {computed.progress}%</p>
+                  <p className="text-xs text-muted-foreground">
+                    Progresso: {computed.progress}%
+                  </p>
                   {hasDetail && (
                     <p className="text-xs text-muted-foreground mt-1 border-t border-border/40 pt-1 line-clamp-3">
                       {activity.detailed_description}
                     </p>
                   )}
-                  {activity.predecessorIds && activity.predecessorIds.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Depende de: {activity.predecessorIds.length} atividade(s)
-                    </p>
-                  )}
+                  {activity.predecessorIds &&
+                    activity.predecessorIds.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Depende de: {activity.predecessorIds.length}{" "}
+                        atividade(s)
+                      </p>
+                    )}
                 </TooltipContent>
               </Tooltip>
             ) : (

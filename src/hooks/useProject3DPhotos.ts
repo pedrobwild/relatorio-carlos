@@ -38,11 +38,14 @@ export function useProject3DPhotos(projectId: string | undefined) {
             .from(BUCKET)
             .createSignedUrl(photo.storage_path, 3600);
           return { ...photo, url: urlData?.signedUrl || "" } as Project3DPhoto;
-        })
+        }),
       );
 
       return withUrls
-        .filter((r): r is PromiseFulfilledResult<Project3DPhoto> => r.status === "fulfilled")
+        .filter(
+          (r): r is PromiseFulfilledResult<Project3DPhoto> =>
+            r.status === "fulfilled",
+        )
         .map((r) => r.value);
     },
     enabled: !!projectId,
@@ -52,7 +55,9 @@ export function useProject3DPhotos(projectId: string | undefined) {
   const uploadMutation = useMutation({
     mutationFn: async (files: File[]) => {
       if (!projectId) throw new Error("Projeto inválido");
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
       const uploaded: Project3DPhoto[] = [];

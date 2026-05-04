@@ -81,16 +81,12 @@ export function BottomCTA({
   className,
 }: BottomCTAProps) {
   const isMobile = useIsMobile();
-  const renderFixed =
-    mode === "fixed" || (mode === "auto" && isMobile);
+  const renderFixed = mode === "fixed" || (mode === "auto" && isMobile);
 
   if (!renderFixed) {
     return (
       <div
-        className={cn(
-          "flex items-center justify-end gap-2 pt-4",
-          className,
-        )}
+        className={cn("flex items-center justify-end gap-2 pt-4", className)}
       >
         {secondary && renderAction(secondary, false)}
         {renderAction(primary, true)}

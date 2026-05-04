@@ -1,4 +1,9 @@
-import { generateInsights, metricsFromRow, buildExecutiveSummary, suggestFollowUps } from "./resultInterpreter";
+import {
+  generateInsights,
+  metricsFromRow,
+  buildExecutiveSummary,
+  suggestFollowUps,
+} from "./resultInterpreter";
 import { recommendVisualizations } from "./visualizationRecommender";
 import { analyzeDataQuality } from "./dataQualityAnalyzer";
 import { rankInsights, scoreConfidence } from "./confidenceScoring";
@@ -54,9 +59,14 @@ export function buildAnalysis(input: InsightEngineInput): AnalysisResult {
   });
 
   const limitations: string[] = [];
-  if (rows.length === 0) limitations.push("Nenhum registro retornado para os filtros aplicados.");
-  if (rows.length >= 200) limitations.push("Resultado truncado em 200 linhas pela RPC de segurança.");
-  if (dataQuality.length > 0) limitations.push("Foram detectadas inconsistências de dados — veja a seção de qualidade.");
+  if (rows.length === 0)
+    limitations.push("Nenhum registro retornado para os filtros aplicados.");
+  if (rows.length >= 200)
+    limitations.push("Resultado truncado em 200 linhas pela RPC de segurança.");
+  if (dataQuality.length > 0)
+    limitations.push(
+      "Foram detectadas inconsistências de dados — veja a seção de qualidade.",
+    );
   if (!input.sql) limitations.push("Sem SQL gerado para auditoria.");
 
   return {

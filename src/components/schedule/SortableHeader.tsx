@@ -11,7 +11,14 @@ interface SortableHeaderProps {
   className?: string;
 }
 
-export function SortableHeader({ field, currentField, direction, onSort, children, className = "" }: SortableHeaderProps) {
+export function SortableHeader({
+  field,
+  currentField,
+  direction,
+  onSort,
+  children,
+  className = "",
+}: SortableHeaderProps) {
   const isActive = currentField === field;
   return (
     <TableHead
@@ -21,7 +28,11 @@ export function SortableHeader({ field, currentField, direction, onSort, childre
       <div className="flex items-center justify-center gap-1">
         <span className="truncate">{children}</span>
         {isActive ? (
-          direction === "asc" ? <ArrowUp className="w-3 h-3 shrink-0" /> : <ArrowDown className="w-3 h-3 shrink-0" />
+          direction === "asc" ? (
+            <ArrowUp className="w-3 h-3 shrink-0" />
+          ) : (
+            <ArrowDown className="w-3 h-3 shrink-0" />
+          )
         ) : (
           <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 shrink-0 transition-opacity" />
         )}

@@ -27,7 +27,7 @@ export interface PendingItemWithContext {
   resolver_name: string | null;
   resolution_notes: string | null;
   days_overdue: number;
-  urgency_level: 'overdue' | 'urgent' | 'approaching' | 'normal';
+  urgency_level: "overdue" | "urgent" | "approaching" | "normal";
 }
 
 export interface ProjectActivityEvent {
@@ -130,16 +130,22 @@ export interface UserProjectSummary {
 /**
  * Fetch pending items with full context in a single optimized query
  */
-export function usePendingItemsWithContext(projectId?: string, includeCompleted = false) {
+export function usePendingItemsWithContext(
+  projectId?: string,
+  includeCompleted = false,
+) {
   const { user } = useAuth();
 
   return useQuery({
     queryKey: ["pending-items-context", projectId, includeCompleted],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_pending_items_with_context", {
-        p_project_id: projectId,
-        p_include_completed: includeCompleted,
-      });
+      const { data, error } = await supabase.rpc(
+        "get_pending_items_with_context",
+        {
+          p_project_id: projectId,
+          p_include_completed: includeCompleted,
+        },
+      );
 
       if (error) throw error;
       return (data || []) as PendingItemWithContext[];
@@ -151,19 +157,26 @@ export function usePendingItemsWithContext(projectId?: string, includeCompleted 
 /**
  * Fetch project activity timeline with actor details
  */
-export function useProjectActivityTimeline(projectId: string | undefined, limit = 20, offset = 0) {
+export function useProjectActivityTimeline(
+  projectId: string | undefined,
+  limit = 20,
+  offset = 0,
+) {
   const { user } = useAuth();
 
   return useQuery({
     queryKey: ["project-activity", projectId, limit, offset],
     queryFn: async () => {
       if (!projectId) return [];
-      
-      const { data, error } = await supabase.rpc("get_project_activity_timeline", {
-        p_project_id: projectId,
-        p_limit: limit,
-        p_offset: offset,
-      });
+
+      const { data, error } = await supabase.rpc(
+        "get_project_activity_timeline",
+        {
+          p_project_id: projectId,
+          p_limit: limit,
+          p_offset: offset,
+        },
+      );
 
       if (error) throw error;
       return (data || []) as ProjectActivityEvent[];
@@ -182,13 +195,15 @@ export function useFormalizationComplete(formalizationId: string | undefined) {
     queryKey: ["formalization-complete", formalizationId],
     queryFn: async () => {
       if (!formalizationId) return null;
-      
+
       const { data, error } = await supabase.rpc("get_formalization_complete", {
         p_formalization_id: formalizationId,
       });
 
       if (error) throw error;
-      return (data && data.length > 0) ? data[0] as FormalizationComplete : null;
+      return data && data.length > 0
+        ? (data[0] as FormalizationComplete)
+        : null;
     },
     enabled: !!user && !!formalizationId,
   });
@@ -222,7 +237,7 @@ export function useProjectDashboardSummary(projectId: string | undefined) {
     queryKey: ["project-dashboard-summary", projectId],
     queryFn: async () => {
       if (!projectId) return null;
-      
+
       const { data, error } = await supabase
         .from("project_dashboard_summary")
         .select("*")

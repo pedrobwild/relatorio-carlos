@@ -12,23 +12,23 @@
  */
 
 export type UserErrorKind =
-  | 'forbidden'
-  | 'auth'
-  | 'server'
-  | 'network'
-  | 'conflict'
-  | 'not_found'
-  | 'validation'
-  | 'rate_limit'
-  | 'storage'
-  | 'unknown';
+  | "forbidden"
+  | "auth"
+  | "server"
+  | "network"
+  | "conflict"
+  | "not_found"
+  | "validation"
+  | "rate_limit"
+  | "storage"
+  | "unknown";
 
 export type SuggestedAction =
-  | 'retry'
-  | 'redirect_auth'
-  | 'contact_support'
-  | 'check_data'
-  | 'wait';
+  | "retry"
+  | "redirect_auth"
+  | "contact_support"
+  | "check_data"
+  | "wait";
 
 export interface UserError {
   /** Categoria do erro — direciona ícone/cor na UI. */
@@ -57,119 +57,129 @@ interface PatternRule {
 const PATTERNS: PatternRule[] = [
   // --- Auth (precisa vir antes de RLS/forbidden, pois "JWT" pode aparecer junto) ---
   {
-    pattern: /jwt\s*expired|invalid_token|session\s*expired|jwt\s*malformed|invalid\s*jwt/i,
-    kind: 'auth',
-    userMessage: 'Sua sessão expirou. Entre novamente para continuar.',
-    suggestedAction: 'redirect_auth',
+    pattern:
+      /jwt\s*expired|invalid_token|session\s*expired|jwt\s*malformed|invalid\s*jwt/i,
+    kind: "auth",
+    userMessage: "Sua sessão expirou. Entre novamente para continuar.",
+    suggestedAction: "redirect_auth",
   },
   {
     pattern: /not\s*authenticated|no\s*api\s*key/i,
-    kind: 'auth',
-    userMessage: 'Você precisa entrar na sua conta para fazer isso.',
-    suggestedAction: 'redirect_auth',
+    kind: "auth",
+    userMessage: "Você precisa entrar na sua conta para fazer isso.",
+    suggestedAction: "redirect_auth",
   },
 
   // --- Forbidden / RLS ---
   {
-    pattern: /row[\s-]level\s*security|violates?\s*row|new\s*row\s*violates|\brls\b|policy/i,
-    kind: 'forbidden',
-    userMessage: 'Você não tem permissão para acessar este conteúdo. Fale com o gestor da obra.',
-    suggestedAction: 'contact_support',
+    pattern:
+      /row[\s-]level\s*security|violates?\s*row|new\s*row\s*violates|\brls\b|policy/i,
+    kind: "forbidden",
+    userMessage:
+      "Você não tem permissão para acessar este conteúdo. Fale com o gestor da obra.",
+    suggestedAction: "contact_support",
   },
   {
     pattern: /permission\s*denied|unauthorized|forbidden|\b403\b/i,
-    kind: 'forbidden',
-    userMessage: 'Você não tem permissão para esta ação.',
-    suggestedAction: 'contact_support',
+    kind: "forbidden",
+    userMessage: "Você não tem permissão para esta ação.",
+    suggestedAction: "contact_support",
   },
 
   // --- Network / offline / timeout ---
   {
     pattern: /failed\s*to\s*fetch|network\s*error|networkerror|net::err/i,
-    kind: 'network',
-    userMessage: 'Não foi possível conectar ao servidor. Verifique sua internet.',
-    suggestedAction: 'retry',
+    kind: "network",
+    userMessage:
+      "Não foi possível conectar ao servidor. Verifique sua internet.",
+    suggestedAction: "retry",
   },
   {
     pattern: /timeout|timed\s*out|etimedout/i,
-    kind: 'network',
-    userMessage: 'A conexão está lenta. Tente de novo em alguns segundos.',
-    suggestedAction: 'retry',
+    kind: "network",
+    userMessage: "A conexão está lenta. Tente de novo em alguns segundos.",
+    suggestedAction: "retry",
   },
   {
     pattern: /offline|econnrefused|enotfound|abort(ed)?/i,
-    kind: 'network',
-    userMessage: 'Sem conexão. Quando voltar a internet, tente novamente.',
-    suggestedAction: 'wait',
+    kind: "network",
+    userMessage: "Sem conexão. Quando voltar a internet, tente novamente.",
+    suggestedAction: "wait",
   },
 
   // --- Rate limit ---
   {
     pattern: /rate\s*limit|too\s*many\s*requests|\b429\b/i,
-    kind: 'rate_limit',
-    userMessage: 'Muitas tentativas em pouco tempo. Aguarde alguns segundos.',
-    suggestedAction: 'wait',
+    kind: "rate_limit",
+    userMessage: "Muitas tentativas em pouco tempo. Aguarde alguns segundos.",
+    suggestedAction: "wait",
   },
 
   // --- Validation / business constraints ---
   {
     pattern: /duplicate\s*key|unique\s*constraint|unique_violation|\b23505\b/i,
-    kind: 'conflict',
-    userMessage: 'Já existe um registro com esses dados.',
-    suggestedAction: 'check_data',
+    kind: "conflict",
+    userMessage: "Já existe um registro com esses dados.",
+    suggestedAction: "check_data",
   },
   {
     pattern: /foreign\s*key|foreign_key_violation|\b23503\b/i,
-    kind: 'conflict',
-    userMessage: 'Esta operação não é permitida porque há dados relacionados em uso.',
-    suggestedAction: 'check_data',
+    kind: "conflict",
+    userMessage:
+      "Esta operação não é permitida porque há dados relacionados em uso.",
+    suggestedAction: "check_data",
   },
   {
     pattern: /check_violation|\b23514\b/i,
-    kind: 'validation',
-    userMessage: 'Os dados informados não estão no formato esperado.',
-    suggestedAction: 'check_data',
+    kind: "validation",
+    userMessage: "Os dados informados não estão no formato esperado.",
+    suggestedAction: "check_data",
   },
   {
     pattern: /not_null_violation|\b23502\b|null\s*value/i,
-    kind: 'validation',
-    userMessage: 'Preencha todos os campos obrigatórios.',
-    suggestedAction: 'check_data',
+    kind: "validation",
+    userMessage: "Preencha todos os campos obrigatórios.",
+    suggestedAction: "check_data",
   },
 
   // --- Not found / storage ---
   {
     pattern: /\b404\b|not\s*found|object\s*not\s*found/i,
-    kind: 'not_found',
-    userMessage: 'Não encontramos esse item. Talvez tenha sido movido ou removido.',
+    kind: "not_found",
+    userMessage:
+      "Não encontramos esse item. Talvez tenha sido movido ou removido.",
   },
   {
     pattern: /payload\s*too\s*large|\b413\b/i,
-    kind: 'storage',
-    userMessage: 'Arquivo muito grande. Reduza o tamanho e tente de novo.',
-    suggestedAction: 'check_data',
+    kind: "storage",
+    userMessage: "Arquivo muito grande. Reduza o tamanho e tente de novo.",
+    suggestedAction: "check_data",
   },
   {
     pattern: /bucket\s*not\s*found|storage/i,
-    kind: 'storage',
-    userMessage: 'Não conseguimos acessar o armazenamento. Tente novamente em instantes.',
-    suggestedAction: 'retry',
+    kind: "storage",
+    userMessage:
+      "Não conseguimos acessar o armazenamento. Tente novamente em instantes.",
+    suggestedAction: "retry",
   },
 
   // --- Server / 5xx ---
   {
-    pattern: /\b5\d{2}\b|server\s*error|internal\s*error|service\s*unavailable|bad\s*gateway/i,
-    kind: 'server',
-    userMessage: 'Tivemos um problema no servidor. Estamos trabalhando para resolver.',
-    suggestedAction: 'retry',
+    pattern:
+      /\b5\d{2}\b|server\s*error|internal\s*error|service\s*unavailable|bad\s*gateway/i,
+    kind: "server",
+    userMessage:
+      "Tivemos um problema no servidor. Estamos trabalhando para resolver.",
+    suggestedAction: "retry",
   },
 
   // --- Generic Postgres / PGRST (vazamentos) ---
   {
     pattern: /pgrst|postgres|postgrest/i,
-    kind: 'server',
-    userMessage: 'Algo não funcionou como esperado. Tente novamente em instantes.',
-    suggestedAction: 'retry',
+    kind: "server",
+    userMessage:
+      "Algo não funcionou como esperado. Tente novamente em instantes.",
+    suggestedAction: "retry",
   },
 ];
 
@@ -182,11 +192,11 @@ function serializeError(error: unknown): {
   code?: string;
   status?: number;
 } {
-  if (!error) return { text: '' };
+  if (!error) return { text: "" };
 
-  if (typeof error === 'string') return { text: error };
+  if (typeof error === "string") return { text: error };
 
-  if (typeof error === 'object') {
+  if (typeof error === "object") {
     const err = error as {
       message?: string;
       details?: string;
@@ -210,7 +220,7 @@ function serializeError(error: unknown): {
     ].filter(Boolean);
 
     return {
-      text: parts.join(' | '),
+      text: parts.join(" | "),
       code: err.code != null ? String(err.code) : err.error?.code,
       status: err.status ?? err.statusCode,
     };
@@ -229,54 +239,57 @@ export function mapError(error: unknown): UserError {
   if (status != null) {
     if (status === 401) {
       return {
-        kind: 'auth',
-        userMessage: 'Sua sessão expirou. Entre novamente para continuar.',
+        kind: "auth",
+        userMessage: "Sua sessão expirou. Entre novamente para continuar.",
         technicalDetails: text,
-        suggestedAction: 'redirect_auth',
+        suggestedAction: "redirect_auth",
         code,
       };
     }
     if (status === 403) {
       return {
-        kind: 'forbidden',
-        userMessage: 'Você não tem permissão para esta ação.',
+        kind: "forbidden",
+        userMessage: "Você não tem permissão para esta ação.",
         technicalDetails: text,
-        suggestedAction: 'contact_support',
+        suggestedAction: "contact_support",
         code,
       };
     }
     if (status === 404) {
       return {
-        kind: 'not_found',
-        userMessage: 'Não encontramos esse item. Talvez tenha sido movido ou removido.',
+        kind: "not_found",
+        userMessage:
+          "Não encontramos esse item. Talvez tenha sido movido ou removido.",
         technicalDetails: text,
         code,
       };
     }
     if (status === 413) {
       return {
-        kind: 'storage',
-        userMessage: 'Arquivo muito grande. Reduza o tamanho e tente de novo.',
+        kind: "storage",
+        userMessage: "Arquivo muito grande. Reduza o tamanho e tente de novo.",
         technicalDetails: text,
-        suggestedAction: 'check_data',
+        suggestedAction: "check_data",
         code,
       };
     }
     if (status === 429) {
       return {
-        kind: 'rate_limit',
-        userMessage: 'Muitas tentativas em pouco tempo. Aguarde alguns segundos.',
+        kind: "rate_limit",
+        userMessage:
+          "Muitas tentativas em pouco tempo. Aguarde alguns segundos.",
         technicalDetails: text,
-        suggestedAction: 'wait',
+        suggestedAction: "wait",
         code,
       };
     }
     if (status >= 500 && status <= 599) {
       return {
-        kind: 'server',
-        userMessage: 'Tivemos um problema no servidor. Estamos trabalhando para resolver.',
+        kind: "server",
+        userMessage:
+          "Tivemos um problema no servidor. Estamos trabalhando para resolver.",
         technicalDetails: text,
-        suggestedAction: 'retry',
+        suggestedAction: "retry",
         code,
       };
     }
@@ -295,10 +308,10 @@ export function mapError(error: unknown): UserError {
   }
 
   return {
-    kind: 'unknown',
-    userMessage: 'Algo não saiu como esperado. Tente de novo em instantes.',
+    kind: "unknown",
+    userMessage: "Algo não saiu como esperado. Tente de novo em instantes.",
     technicalDetails: text || undefined,
-    suggestedAction: 'retry',
+    suggestedAction: "retry",
     code,
   };
 }
@@ -315,13 +328,13 @@ export function getUserMessage(error: unknown): string {
  * Sentinelas para detectar tipos especiais sem expor implementação.
  */
 export function isAuthError(error: unknown): boolean {
-  return mapError(error).kind === 'auth';
+  return mapError(error).kind === "auth";
 }
 
 export function isForbiddenError(error: unknown): boolean {
-  return mapError(error).kind === 'forbidden';
+  return mapError(error).kind === "forbidden";
 }
 
 export function isNetworkError(error: unknown): boolean {
-  return mapError(error).kind === 'network';
+  return mapError(error).kind === "network";
 }

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Loader2, Calendar, ArrowRight, Building2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react";
+import { Loader2, Calendar, ArrowRight, Building2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -10,14 +10,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
-import { projectsRepo } from '@/infra/repositories';
-import { useAuth } from '@/hooks/useAuth';
-import { useCompleteStage } from '@/hooks/useProjectJourney';
-import { addBusinessDays } from '@/lib/businessDays';
-import { useQueryClient } from '@tanstack/react-query';
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { projectsRepo } from "@/infra/repositories";
+import { useAuth } from "@/hooks/useAuth";
+import { useCompleteStage } from "@/hooks/useProjectJourney";
+import { addBusinessDays } from "@/lib/businessDays";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface MobilizacaoCompletionModalProps {
   open: boolean;
@@ -28,7 +28,7 @@ interface MobilizacaoCompletionModalProps {
 }
 
 function formatDateForInput(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 export function MobilizacaoCompletionModal({
@@ -42,7 +42,7 @@ export function MobilizacaoCompletionModal({
   const completeStage = useCompleteStage();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
-  const [plannedStartDate, setPlannedStartDate] = useState('');
+  const [plannedStartDate, setPlannedStartDate] = useState("");
   const [projectData, setProjectData] = useState<{
     name: string;
     unit_name: string | null;
@@ -74,19 +74,33 @@ export function MobilizacaoCompletionModal({
 
     (async () => {
       try {
-        const { project, customer, stages } = await projectsRepo.getProjectWithCustomerAndStages(projectId);
+        const { project, customer, stages } =
+          await projectsRepo.getProjectWithCustomerAndStages(projectId);
         if (cancelled) return;
 
         if (project) {
-          const stageMap = new Map(stages.map((s: { name: string; confirmed_end: string | null }) => [s.name.toLowerCase(), s.confirmed_end]));
+          const stageMap = new Map(
+            stages.map((s: { name: string; confirmed_end: string | null }) => [
+              s.name.toLowerCase(),
+              s.confirmed_end,
+            ]),
+          );
 
           const milestoneDates = {
-            contract_signing_date: project.contract_signing_date ?? stageMap.get('boas-vindas') ?? null,
-            date_briefing_arch: stageMap.get('briefing arquitetônico') as string | null ?? null,
-            date_approval_3d: stageMap.get('projeto 3d') as string | null ?? null,
-            date_approval_exec: stageMap.get('projeto executivo') as string | null ?? null,
-            date_approval_obra: stageMap.get('liberação da obra') as string | null ?? null,
-            date_mobilization_start: stageMap.get('mobilização') as string | null ?? null,
+            contract_signing_date:
+              project.contract_signing_date ??
+              stageMap.get("boas-vindas") ??
+              null,
+            date_briefing_arch:
+              (stageMap.get("briefing arquitetônico") as string | null) ?? null,
+            date_approval_3d:
+              (stageMap.get("projeto 3d") as string | null) ?? null,
+            date_approval_exec:
+              (stageMap.get("projeto executivo") as string | null) ?? null,
+            date_approval_obra:
+              (stageMap.get("liberação da obra") as string | null) ?? null,
+            date_mobilization_start:
+              (stageMap.get("mobilização") as string | null) ?? null,
           };
 
           setProjectData({
@@ -97,21 +111,23 @@ export function MobilizacaoCompletionModal({
             cep: project.cep,
             contract_value: project.contract_value,
             org_id: project.org_id,
-            customer_name: customer?.customer_name || '',
-            customer_email: customer?.customer_email || '',
+            customer_name: customer?.customer_name || "",
+            customer_email: customer?.customer_email || "",
             customer_phone: customer?.customer_phone || null,
             milestoneDates,
           });
         }
       } catch (err) {
         if (!cancelled) {
-          console.error('Failed to load project data for mobilization:', err);
-          toast.error('Erro ao carregar dados do projeto');
+          console.error("Failed to load project data for mobilization:", err);
+          toast.error("Erro ao carregar dados do projeto");
         }
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [open, projectId]);
 
   const handleConfirm = async () => {
@@ -135,34 +151,36 @@ export function MobilizacaoCompletionModal({
           contract_value: projectData.contract_value,
           org_id: projectData.org_id,
           planned_start_date: plannedStartDate,
-          status: 'active',
+          status: "active",
           created_by: user.id,
           is_project_phase: false,
-          contract_signing_date: projectData.milestoneDates.contract_signing_date,
+          contract_signing_date:
+            projectData.milestoneDates.contract_signing_date,
           date_briefing_arch: projectData.milestoneDates.date_briefing_arch,
           date_approval_3d: projectData.milestoneDates.date_approval_3d,
           date_approval_exec: projectData.milestoneDates.date_approval_exec,
           date_approval_obra: projectData.milestoneDates.date_approval_obra,
-          date_mobilization_start: projectData.milestoneDates.date_mobilization_start,
+          date_mobilization_start:
+            projectData.milestoneDates.date_mobilization_start,
         },
-        user.id
+        user.id,
       );
 
       if (error) throw error;
 
       // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['staff-projects'] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["staff-projects"] });
 
-      toast.success('Obra de acompanhamento criada com sucesso!', {
+      toast.success("Obra de acompanhamento criada com sucesso!", {
         description: `A obra "${projectData.name}" está pronta para acompanhamento.`,
       });
 
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
-      console.error('Error creating construction project:', err);
-      toast.error('Erro ao criar obra de acompanhamento', {
+      console.error("Error creating construction project:", err);
+      toast.error("Erro ao criar obra de acompanhamento", {
         description: err.message,
       });
     } finally {
@@ -179,8 +197,9 @@ export function MobilizacaoCompletionModal({
             Concluir Mobilização
           </DialogTitle>
           <DialogDescription>
-            Ao concluir esta etapa, uma nova obra de acompanhamento será criada com os dados do cliente e empreendimento. 
-            Documentos, financeiro, formalizações e pendências serão mantidos.
+            Ao concluir esta etapa, uma nova obra de acompanhamento será criada
+            com os dados do cliente e empreendimento. Documentos, financeiro,
+            formalizações e pendências serão mantidos.
           </DialogDescription>
         </DialogHeader>
 
@@ -192,7 +211,9 @@ export function MobilizacaoCompletionModal({
             <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
               <p className="text-sm font-medium">{projectData.name}</p>
               {projectData.unit_name && (
-                <p className="text-xs text-muted-foreground">{projectData.unit_name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {projectData.unit_name}
+                </p>
               )}
               <p className="text-xs text-muted-foreground">
                 Cliente: {projectData.customer_name}
@@ -202,7 +223,10 @@ export function MobilizacaoCompletionModal({
 
           {/* Start date picker */}
           <div className="space-y-2">
-            <Label htmlFor="mob-start-date" className="flex items-center gap-1.5">
+            <Label
+              htmlFor="mob-start-date"
+              className="flex items-center gap-1.5"
+            >
               <Calendar className="h-3.5 w-3.5" />
               Data de início da obra *
             </Label>
@@ -225,19 +249,22 @@ export function MobilizacaoCompletionModal({
             </p>
             <div className="grid grid-cols-2 gap-1.5">
               {[
-                'Dados do cliente',
-                'Dados do empreendimento',
-                'Cronograma (atividades)',
-                'Financeiro (parcelas)',
-                'Documentos',
-                'Formalizações',
-                'Pendências',
-                'Compras',
-                'Equipe do projeto',
-                'Projeto 3D',
-                'Marcos do projeto',
+                "Dados do cliente",
+                "Dados do empreendimento",
+                "Cronograma (atividades)",
+                "Financeiro (parcelas)",
+                "Documentos",
+                "Formalizações",
+                "Pendências",
+                "Compras",
+                "Equipe do projeto",
+                "Projeto 3D",
+                "Marcos do projeto",
               ].map((item) => (
-                <div key={item} className="flex items-center gap-1.5 text-xs text-foreground">
+                <div
+                  key={item}
+                  className="flex items-center gap-1.5 text-xs text-foreground"
+                >
                   <ArrowRight className="h-3 w-3 text-primary shrink-0" />
                   {item}
                 </div>
@@ -266,9 +293,7 @@ export function MobilizacaoCompletionModal({
                 Criando obra...
               </>
             ) : (
-              <>
-                Concluir e criar obra
-              </>
+              <>Concluir e criar obra</>
             )}
           </Button>
         </DialogFooter>

@@ -1,7 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { User, Phone, Mail, ChevronDown, Pencil } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { User, Phone, Mail, ChevronDown, Pencil } from "lucide-react";
 
 interface TeamContactPopoverProps {
   role: string;
@@ -38,7 +42,7 @@ export function TeamContactPopover({
             </AvatarFallback>
           </Avatar>
           <div>
-            <span className="font-medium text-xs text-foreground">{role}:</span>{' '}
+            <span className="font-medium text-xs text-foreground">{role}:</span>{" "}
             <span className="text-xs text-muted-foreground">{name}</span>
           </div>
           <ChevronDown className="w-3 h-3 text-muted-foreground" />
@@ -54,7 +58,9 @@ export function TeamContactPopover({
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+            <p className="text-sm font-semibold text-foreground truncate">
+              {name}
+            </p>
             <p className="text-xs text-muted-foreground">{role}</p>
           </div>
           {isStaff && (
@@ -81,7 +87,7 @@ export function TeamContactPopover({
           )}
           {phone && (
             <a
-              href={`tel:+55${phone.replace(/\D/g, '')}`}
+              href={`tel:+55${phone.replace(/\D/g, "")}`}
               className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <Phone className="w-3 h-3 flex-shrink-0" />

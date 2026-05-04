@@ -11,10 +11,10 @@
 
 /** Normaliza uma string para comparação (sem acento, lowercase, trim). */
 export function normalizeSearch(value: string | null | undefined): string {
-  if (!value) return '';
+  if (!value) return "";
   return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 }
@@ -29,6 +29,6 @@ export function matchesSearch(
 ): boolean {
   const q = normalizeSearch(query);
   if (!q) return true;
-  const haystack = normalizeSearch(fields.filter(Boolean).join(' '));
+  const haystack = normalizeSearch(fields.filter(Boolean).join(" "));
   return haystack.includes(q);
 }

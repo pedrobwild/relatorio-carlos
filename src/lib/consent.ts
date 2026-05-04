@@ -90,7 +90,10 @@ export function isAllowed(category: ConsentCategory): boolean {
 }
 
 /** Salva uma decisão completa (usado pelo banner / dialog de preferências). */
-export function setConsent(decision: { analytics: boolean; sessionReplay: boolean }) {
+export function setConsent(decision: {
+  analytics: boolean;
+  sessionReplay: boolean;
+}) {
   currentState = {
     analytics: decision.analytics,
     // Session replay só faz sentido se analytics estiver ligado.

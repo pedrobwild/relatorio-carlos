@@ -13,15 +13,15 @@
  *   (usePendencias / useClientDashboard / useFormalizacoes). Sem novos
  *   queries ad-hoc — cache e invalidation já existem nos hooks-fonte.
  */
-import { useMemo } from 'react';
-import { differenceInCalendarDays, parseISO } from 'date-fns';
-import { useClientDashboard, type UpcomingPayment } from './useClientDashboard';
-import { usePendencias, type PendingItem } from './usePendencias';
-import { useFormalizacoes } from './useFormalizacoes';
+import { useMemo } from "react";
+import { differenceInCalendarDays, parseISO } from "date-fns";
+import { useClientDashboard, type UpcomingPayment } from "./useClientDashboard";
+import { usePendencias, type PendingItem } from "./usePendencias";
+import { useFormalizacoes } from "./useFormalizacoes";
 
-export type NextActionType = 'overdue' | 'tacit' | 'payment' | 'approval';
-export type NextActionUrgency = 'critical' | 'high' | 'medium';
-export type NextActionOwner = 'client' | 'bwild';
+export type NextActionType = "overdue" | "tacit" | "payment" | "approval";
+export type NextActionUrgency = "critical" | "high" | "medium";
+export type NextActionOwner = "client" | "bwild";
 
 export interface NextAction {
   id: string;
@@ -56,10 +56,10 @@ const TYPE_TIEBREAKER: Record<NextActionType, number> = {
 const formatDeadline = (daysToDeadline: number): string => {
   if (daysToDeadline < 0) {
     const abs = Math.abs(daysToDeadline);
-    return abs === 1 ? 'há 1 dia' : `há ${abs} dias`;
+    return abs === 1 ? "há 1 dia" : `há ${abs} dias`;
   }
-  if (daysToDeadline === 0) return 'hoje';
-  if (daysToDeadline === 1) return 'em 1 dia';
+  if (daysToDeadline === 0) return "hoje";
+  if (daysToDeadline === 1) return "em 1 dia";
   return `em ${daysToDeadline} dias`;
 };
 
@@ -67,56 +67,61 @@ const buildPendingCta = (
   item: PendingItem,
   projectId: string | undefined,
 ): { label: string; href: string } => {
-  const pendenciasHref = projectId ? `/obra/${projectId}/pendencias` : '/minhas-obras';
+  const pendenciasHref = projectId
+    ? `/obra/${projectId}/pendencias`
+    : "/minhas-obras";
   const targetHref = item.actionUrl ?? pendenciasHref;
   switch (item.type) {
-    case 'approval_3d':
-      return { label: 'Aprovar 3D', href: targetHref };
-    case 'approval_exec':
-      return { label: 'Aprovar projeto', href: targetHref };
-    case 'signature':
-      return { label: 'Assinar agora', href: targetHref };
-    case 'invoice':
-      return { label: 'Enviar comprovante', href: targetHref };
-    case 'extra_purchase':
-      return { label: 'Decidir compra', href: targetHref };
-    case 'decision':
+    case "approval_3d":
+      return { label: "Aprovar 3D", href: targetHref };
+    case "approval_exec":
+      return { label: "Aprovar projeto", href: targetHref };
+    case "signature":
+      return { label: "Assinar agora", href: targetHref };
+    case "invoice":
+      return { label: "Enviar comprovante", href: targetHref };
+    case "extra_purchase":
+      return { label: "Decidir compra", href: targetHref };
+    case "decision":
     default:
-      return { label: 'Decidir agora', href: targetHref };
+      return { label: "Decidir agora", href: targetHref };
   }
 };
 
 const buildPendingTitle = (item: PendingItem): string =>
-  item.title?.trim() || 'Pendência aberta';
+  item.title?.trim() || "Pendência aberta";
 
-const buildPendingImpact = (item: PendingItem, daysToDeadline: number): string => {
+const buildPendingImpact = (
+  item: PendingItem,
+  daysToDeadline: number,
+): string => {
   if (item.impact?.trim()) return item.impact.trim();
   if (daysToDeadline < 0)
     return `Vencida ${formatDeadline(daysToDeadline)} — risco de impacto no cronograma.`;
   if (daysToDeadline <= 2)
     return `Prazo ${formatDeadline(daysToDeadline)} — sem decisão a obra para de avançar.`;
-  return 'Sem decisão, etapas dependentes ficam bloqueadas.';
+  return "Sem decisão, etapas dependentes ficam bloqueadas.";
 };
 
 const pickPendingUrgency = (daysToDeadline: number): NextActionUrgency => {
-  if (daysToDeadline < 0) return 'critical';
-  if (daysToDeadline <= 2) return 'high';
-  return 'medium';
+  if (daysToDeadline < 0) return "critical";
+  if (daysToDeadline <= 2) return "high";
+  return "medium";
 };
 
 const pendingOwner = (item: PendingItem): NextActionOwner => {
   // Aprovações, assinaturas, decisões e envio de comprovante são do cliente.
   // Compras extras são propostas pela BWild — cliente decide. Default = client.
   switch (item.type) {
-    case 'approval_3d':
-    case 'approval_exec':
-    case 'signature':
-    case 'decision':
-    case 'invoice':
-    case 'extra_purchase':
-      return 'client';
+    case "approval_3d":
+    case "approval_exec":
+    case "signature":
+    case "decision":
+    case "invoice":
+    case "extra_purchase":
+      return "client";
     default:
-      return 'bwild';
+      return "bwild";
   }
 };
 
@@ -140,17 +145,20 @@ export function rankNextActions(inputs: RankInputs): NextAction[] {
   const actions: NextAction[] = [];
 
   for (const item of inputs.pendingItems) {
-    if (item.status !== 'pending') continue;
+    if (item.status !== "pending") continue;
     if (!item.dueDate) continue;
     const due = parseISO(item.dueDate);
     if (Number.isNaN(due.getTime())) continue;
     const days = differenceInCalendarDays(due, now);
     // Ignora itens com folga grande — não competem por slot no cockpit.
     if (days > 7) continue;
-    const projectId = item.referenceType === 'project' ? item.referenceId : inputs.scopedProjectId;
+    const projectId =
+      item.referenceType === "project"
+        ? item.referenceId
+        : inputs.scopedProjectId;
     actions.push({
       id: `pending:${item.id}`,
-      type: days < 0 ? 'overdue' : 'approval',
+      type: days < 0 ? "overdue" : "approval",
       urgency: pickPendingUrgency(days),
       title: buildPendingTitle(item),
       impact: buildPendingImpact(item, days),
@@ -168,18 +176,18 @@ export function rankNextActions(inputs: RankInputs): NextAction[] {
     if (days > TACIT_THRESHOLD_DAYS) continue;
     const href = tacit.project_id
       ? `/obra/${tacit.project_id}/formalizacoes/${tacit.id}`
-      : '/minhas-obras';
+      : "/minhas-obras";
     actions.push({
       id: `tacit:${tacit.id}`,
-      type: 'tacit',
-      urgency: days <= 0 ? 'critical' : 'high',
-      title: tacit.title?.trim() || 'Aprovação tácita iminente',
+      type: "tacit",
+      urgency: days <= 0 ? "critical" : "high",
+      title: tacit.title?.trim() || "Aprovação tácita iminente",
       impact:
         days <= 0
-          ? 'O prazo contratual venceu — o documento será aprovado automaticamente.'
+          ? "O prazo contratual venceu — o documento será aprovado automaticamente."
           : `Sem manifestação ${formatDeadline(days)}, o documento é aprovado automaticamente.`,
-      cta: { label: 'Aprovar ou solicitar revisão', href },
-      owner: 'client',
+      cta: { label: "Aprovar ou solicitar revisão", href },
+      owner: "client",
       daysToDeadline: days,
       projectId: tacit.project_id ?? undefined,
     });
@@ -192,18 +200,20 @@ export function rankNextActions(inputs: RankInputs): NextAction[] {
     const days = differenceInCalendarDays(due, now);
     if (days > PAYMENT_THRESHOLD_DAYS) continue;
     const projectId = payment.project_id ?? inputs.scopedProjectId;
-    const href = projectId ? `/obra/${projectId}?tab=financeiro` : '/minhas-obras';
+    const href = projectId
+      ? `/obra/${projectId}?tab=financeiro`
+      : "/minhas-obras";
     actions.push({
       id: `payment:${payment.id}`,
-      type: days < 0 ? 'overdue' : 'payment',
-      urgency: days < 0 ? 'critical' : days <= 2 ? 'high' : 'medium',
+      type: days < 0 ? "overdue" : "payment",
+      urgency: days < 0 ? "critical" : days <= 2 ? "high" : "medium",
       title: `Pagamento ${payment.description || `#${payment.installment_number}`}`,
       impact:
         days < 0
           ? `Vencido ${formatDeadline(days)} — pode gerar juros e multa contratual.`
           : `Vence ${formatDeadline(days)} — evite multa por atraso.`,
-      cta: { label: 'Ver no Financeiro', href },
-      owner: 'client',
+      cta: { label: "Ver no Financeiro", href },
+      owner: "client",
       daysToDeadline: days,
       projectId,
     });
@@ -235,7 +245,9 @@ export interface UseNextActionsResult {
  * agrega pendências e pagamentos de todas as obras do cliente.
  */
 export function useNextActions(projectId?: string): UseNextActionsResult {
-  const { pendingItems, isLoading: pendenciasLoading } = usePendencias({ projectId });
+  const { pendingItems, isLoading: pendenciasLoading } = usePendencias({
+    projectId,
+  });
   const dashboard = useClientDashboard();
   const formalizacoes = useFormalizacoes(projectId ? { projectId } : undefined);
 
@@ -248,7 +260,7 @@ export function useNextActions(projectId?: string): UseNextActionsResult {
       deadline_iso: string;
     }> = [];
     for (const row of rows) {
-      if (row.status !== 'pending_signatures') continue;
+      if (row.status !== "pending_signatures") continue;
       if (!row.id) continue;
       // O prazo de tácita vem da view; usamos locked_at / last_activity_at /
       // created_at como fallback enquanto o backend não expõe deadline_iso.
@@ -282,7 +294,8 @@ export function useNextActions(projectId?: string): UseNextActionsResult {
     [pendingItems, dashboard.upcomingPayments, tacitFormalizations, projectId],
   );
 
-  const isLoading = pendenciasLoading || dashboard.isLoading || formalizacoes.isLoading;
+  const isLoading =
+    pendenciasLoading || dashboard.isLoading || formalizacoes.isLoading;
 
   return {
     actions,

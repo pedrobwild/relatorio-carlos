@@ -39,7 +39,9 @@ describe("BottomCTA", () => {
 
   it("invokes the primary onClick handler", () => {
     const onClick = vi.fn();
-    render(<BottomCTA primary={{ label: "Confirmar", onClick }} mode="fixed" />);
+    render(
+      <BottomCTA primary={{ label: "Confirmar", onClick }} mode="fixed" />,
+    );
     fireEvent.click(screen.getByRole("button", { name: /confirmar/i }));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
@@ -53,11 +55,15 @@ describe("BottomCTA", () => {
       />,
     );
     expect(screen.getByRole("button", { name: /salvar/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /cancelar/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /cancelar/i }),
+    ).toBeInTheDocument();
   });
 
   it("disables the button while loading and shows the spinner", () => {
-    render(<BottomCTA primary={{ label: "Salvar", loading: true }} mode="fixed" />);
+    render(
+      <BottomCTA primary={{ label: "Salvar", loading: true }} mode="fixed" />,
+    );
     const button = screen.getByRole("button", { name: /salvar/i });
     expect(button).toBeDisabled();
   });
@@ -66,7 +72,9 @@ describe("BottomCTA", () => {
     setInnerWidth(375);
     setMatchMedia(true);
     render(<BottomCTA primary={{ label: "Acao" }} />);
-    expect(document.querySelector('[data-component="bottom-cta"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-component="bottom-cta"]'),
+    ).not.toBeNull();
   });
 
   it("renders inline (no fixed bar) in desktop mode", () => {

@@ -19,12 +19,28 @@ const fakeHash = (seed: string) =>
 const seedUuid = (prefix: string, formalizationId: string) => {
   // Create a valid UUID v4 format using the formalization ID's first 8 chars
   const base = formalizationId.substring(0, 8).replace(/[^a-f0-9]/gi, "0");
-  const prefixCode = prefix === "customer" ? "c000" : prefix === "company" ? "d000" : prefix === "ack-c" ? "e000" : prefix === "ack-d" ? "f000" : prefix === "evt" ? "a000" : "b000";
+  const prefixCode =
+    prefix === "customer"
+      ? "c000"
+      : prefix === "company"
+        ? "d000"
+        : prefix === "ack-c"
+          ? "e000"
+          : prefix === "ack-d"
+            ? "f000"
+            : prefix === "evt"
+              ? "a000"
+              : "b000";
   return `${base}-${prefixCode}-4000-8000-000000000000`;
 };
 
 // Helper to create party objects
-const createParties = (formalizationId: string, customerSigned: boolean, companySigned: boolean, customerMustSign: boolean = true) => [
+const createParties = (
+  formalizationId: string,
+  customerSigned: boolean,
+  companySigned: boolean,
+  customerMustSign: boolean = true,
+) => [
   {
     id: seedUuid("customer", formalizationId),
     formalization_id: formalizationId,
@@ -51,11 +67,11 @@ const createParties = (formalizationId: string, customerSigned: boolean, company
 
 // Helper to create acknowledgements
 const createAcknowledgements = (
-  formalizationId: string, 
-  customerSigned: boolean, 
+  formalizationId: string,
+  customerSigned: boolean,
   companySigned: boolean,
   customerDaysAgo: number = 5,
-  companyDaysAgo: number = 5
+  companyDaysAgo: number = 5,
 ) => {
   const acks: Array<Record<string, unknown>> = [];
   if (customerSigned) {
@@ -94,7 +110,11 @@ const createAcknowledgements = (
 };
 
 // Helper to create events
-const createEvents = (formalizationId: string, status: string, lockedDaysAgo: number | null) => {
+const createEvents = (
+  formalizationId: string,
+  status: string,
+  lockedDaysAgo: number | null,
+) => {
   const base = formalizationId.substring(0, 8).replace(/[^a-f0-9]/gi, "0");
   const events = [
     {
@@ -106,8 +126,8 @@ const createEvents = (formalizationId: string, status: string, lockedDaysAgo: nu
       created_at: iso(daysAgo(15)),
     },
   ];
-  
-  if (status !== 'draft') {
+
+  if (status !== "draft") {
     events.push({
       id: `${base}-0002-4000-8000-000000000000`,
       formalization_id: formalizationId,
@@ -117,7 +137,7 @@ const createEvents = (formalizationId: string, status: string, lockedDaysAgo: nu
       created_at: iso(daysAgo(lockedDaysAgo ?? 10)),
     });
   }
-  
+
   if (lockedDaysAgo !== null) {
     events.push({
       id: `${base}-0003-4000-8000-000000000000`,
@@ -128,7 +148,7 @@ const createEvents = (formalizationId: string, status: string, lockedDaysAgo: nu
       created_at: iso(daysAgo(lockedDaysAgo)),
     });
   }
-  
+
   return events;
 };
 
@@ -157,11 +177,23 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     last_activity_at: iso(daysAgo(1)),
     locked_at: iso(daysAgo(2)),
     locked_hash: fakeHash("a1b2c3"),
-    acknowledgements: createAcknowledgements("a1b2c3d4-e5f6-7890-abcd-ef1234567890", false, false) as any,
+    acknowledgements: createAcknowledgements(
+      "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      false,
+      false,
+    ) as any,
     attachments: null,
-    events: createEvents("a1b2c3d4-e5f6-7890-abcd-ef1234567890", "pending_signatures", 2) as any,
+    events: createEvents(
+      "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "pending_signatures",
+      2,
+    ) as any,
     evidence_links: null,
-    parties: createParties("a1b2c3d4-e5f6-7890-abcd-ef1234567890", false, false) as any,
+    parties: createParties(
+      "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      false,
+      false,
+    ) as any,
     parties_signed: 0,
     parties_total: 2,
   },
@@ -172,7 +204,8 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     unit_id: null,
     type: "meeting_minutes",
     title: "Ata de Reunião - Definição de Acabamentos",
-    summary: "Registro das decisões tomadas na reunião de 05/12/2025 sobre acabamentos finais.",
+    summary:
+      "Registro das decisões tomadas na reunião de 05/12/2025 sobre acabamentos finais.",
     body_md:
       "## Ata de Reunião\n\n**Data:** 05/12/2025\n**Horário:** 14:00 - 15:30\n\n### Participantes\n- Pedro Alves (Cliente)\n- Lucas Mendes (Engenheiro Bwild)\n- Mariana Costa (Arquiteta)\n\n### Decisões\n1. **Pintura:** Branco Neve (Suvinil) em todos os ambientes\n2. **Metais:** Deca Aspen (cromado) para banheiros e cozinha\n3. **Iluminação:** Spots embutidos na sala e pendentes sobre a mesa de jantar\n\n### Próximos Passos\n- Confirmar disponibilidade de estoque dos metais escolhidos\n- Agendar visita para definição de pontos de iluminação",
     data: { meetingDate: "2025-12-05", decisions: 3 } as any,
@@ -182,11 +215,25 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     last_activity_at: iso(daysAgo(10)),
     locked_at: iso(daysAgo(10)),
     locked_hash: fakeHash("b2c3d4"),
-    acknowledgements: createAcknowledgements("b2c3d4e5-f6a7-8901-bcde-f12345678901", true, true, 10, 10) as any,
+    acknowledgements: createAcknowledgements(
+      "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      true,
+      true,
+      10,
+      10,
+    ) as any,
     attachments: null,
-    events: createEvents("b2c3d4e5-f6a7-8901-bcde-f12345678901", "signed", 10) as any,
+    events: createEvents(
+      "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "signed",
+      10,
+    ) as any,
     evidence_links: null,
-    parties: createParties("b2c3d4e5-f6a7-8901-bcde-f12345678901", true, true) as any,
+    parties: createParties(
+      "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      true,
+      true,
+    ) as any,
     parties_signed: 2,
     parties_total: 2,
   },
@@ -197,7 +244,8 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     unit_id: null,
     type: "exception_custody",
     title: "Termo de Guarda - Chaves do Imóvel",
-    summary: "Registro de entrega temporária das chaves ao cliente para visita com designer.",
+    summary:
+      "Registro de entrega temporária das chaves ao cliente para visita com designer.",
     body_md:
       "## Termo de Guarda de Exceção\n\n**Data de Entrega:** 10/12/2025\n**Previsão de Devolução:** 12/12/2025\n\n### Itens Entregues\n- 3 (três) cópias de chave da porta principal\n- 1 (um) controle de acesso ao edifício\n\n### Finalidade\nAcesso ao imóvel para visita técnica com designer de interiores para projeto de mobiliário.\n\n### Responsabilidades\nO cliente se responsabiliza pela guarda e conservação dos itens durante o período de posse.",
     data: { itemType: "keys", quantity: 3 } as any,
@@ -209,9 +257,17 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     locked_hash: null,
     acknowledgements: null,
     attachments: null,
-    events: createEvents("c3d4e5f6-a7b8-9012-cdef-123456789012", "draft", null) as any,
+    events: createEvents(
+      "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "draft",
+      null,
+    ) as any,
     evidence_links: null,
-    parties: createParties("c3d4e5f6-a7b8-9012-cdef-123456789012", false, false) as any,
+    parties: createParties(
+      "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      false,
+      false,
+    ) as any,
     parties_signed: 0,
     parties_total: 2,
   },
@@ -222,7 +278,8 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     unit_id: null,
     type: "scope_change",
     title: "Alteração de Escopo - Closet Adicional",
-    summary: "Inclusão de closet planejado no segundo dormitório conforme nova solicitação.",
+    summary:
+      "Inclusão de closet planejado no segundo dormitório conforme nova solicitação.",
     body_md:
       "## Alteração de Escopo\n\n### Descrição\nInclusão de closet planejado no segundo dormitório, conforme solicitação do cliente em reunião de 25/11/2025.\n\n### Especificações\n- Closet linear de 2,50m de largura\n- 2 módulos com portas de correr em MDF branco\n- Iluminação LED interna\n- Gavetas com corrediças telescópicas\n\n### Impacto Financeiro\n- Valor adicional: **R$ 12.800,00**\n\n### Impacto no Prazo\n- Prazo adicional: **8 dias úteis**\n- Nova data prevista de entrega: 22/09/2025",
     data: { additionalCost: 12800, additionalDays: 8 } as any,
@@ -232,11 +289,25 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     last_activity_at: iso(daysAgo(5)),
     locked_at: iso(daysAgo(6)),
     locked_hash: fakeHash("d4e5f6"),
-    acknowledgements: createAcknowledgements("d4e5f6a7-b8c9-0123-def0-234567890123", false, true, 0, 5) as any,
+    acknowledgements: createAcknowledgements(
+      "d4e5f6a7-b8c9-0123-def0-234567890123",
+      false,
+      true,
+      0,
+      5,
+    ) as any,
     attachments: null,
-    events: createEvents("d4e5f6a7-b8c9-0123-def0-234567890123", "pending_signatures", 6) as any,
+    events: createEvents(
+      "d4e5f6a7-b8c9-0123-def0-234567890123",
+      "pending_signatures",
+      6,
+    ) as any,
     evidence_links: null,
-    parties: createParties("d4e5f6a7-b8c9-0123-def0-234567890123", false, true) as any,
+    parties: createParties(
+      "d4e5f6a7-b8c9-0123-def0-234567890123",
+      false,
+      true,
+    ) as any,
     parties_signed: 1,
     parties_total: 2,
   },
@@ -247,21 +318,39 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     unit_id: null,
     type: "general",
     title: "Autorização para Instalação de Ar-Condicionado",
-    summary: "Autorização do cliente para execução de infraestrutura de ar-condicionado.",
+    summary:
+      "Autorização do cliente para execução de infraestrutura de ar-condicionado.",
     body_md:
       "## Autorização Geral\n\nO cliente **Pedro Alves** autoriza a execução de infraestrutura para instalação de ar-condicionado split nos seguintes ambientes:\n\n### Ambientes\n1. Sala de estar/jantar\n2. Suíte master\n3. Dormitório 2\n\n### Especificações Técnicas\n- Tubulação de cobre isolada\n- Dreno com caimento adequado\n- Ponto elétrico exclusivo 220V para cada unidade\n\n### Garantia\n- **2 anos** para a infraestrutura executada pela Bwild\n- Instalação dos equipamentos por conta do cliente",
-    data: { subject: "Infraestrutura ar-condicionado", warranty: "2 anos" } as any,
+    data: {
+      subject: "Infraestrutura ar-condicionado",
+      warranty: "2 anos",
+    } as any,
     status: "signed",
     created_at: iso(daysAgo(30)),
     updated_at: iso(daysAgo(28)),
     last_activity_at: iso(daysAgo(28)),
     locked_at: iso(daysAgo(28)),
     locked_hash: fakeHash("e5f6a7"),
-    acknowledgements: createAcknowledgements("e5f6a7b8-c9d0-1234-ef01-345678901234", true, true, 28, 28) as any,
+    acknowledgements: createAcknowledgements(
+      "e5f6a7b8-c9d0-1234-ef01-345678901234",
+      true,
+      true,
+      28,
+      28,
+    ) as any,
     attachments: null,
-    events: createEvents("e5f6a7b8-c9d0-1234-ef01-345678901234", "signed", 28) as any,
+    events: createEvents(
+      "e5f6a7b8-c9d0-1234-ef01-345678901234",
+      "signed",
+      28,
+    ) as any,
     evidence_links: null,
-    parties: createParties("e5f6a7b8-c9d0-1234-ef01-345678901234", true, true) as any,
+    parties: createParties(
+      "e5f6a7b8-c9d0-1234-ef01-345678901234",
+      true,
+      true,
+    ) as any,
     parties_signed: 2,
     parties_total: 2,
   },
@@ -272,7 +361,8 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     unit_id: null,
     type: "exception_custody",
     title: "Uso Antecipado da Unidade – 12 a 15/08",
-    summary: "Cliente utilizará a unidade antes da entrega oficial, com acréscimo de 3 dias no prazo de entrega.",
+    summary:
+      "Cliente utilizará a unidade antes da entrega oficial, com acréscimo de 3 dias no prazo de entrega.",
     body_md:
       "## Termo de Uso Antecipado da Unidade\n\nO cliente **Pedro Alves**, titular da unidade **Hub Brooklyn – 502**, solicita e declara ciência das condições abaixo:\n\n### Período de Uso\n- **Data de início:** 12/08/2025\n- **Data de término:** 15/08/2025\n- **Duração total:** 3 (três) dias\n\n### Condições Acordadas\n\n1. **Acréscimo no prazo de entrega:** Em razão do uso antecipado, serão acrescidos **3 (três) dias úteis** à data de entrega final prevista em contrato.\n\n2. **Isenção de responsabilidade:** A Bwild **não se responsabiliza** por quaisquer danos, avarias, furtos ou ocorrências durante o período de uso antecipado, ficando o cliente como único responsável pela guarda e conservação do imóvel e seus componentes.\n\n3. **Estado do imóvel:** O cliente declara estar ciente de que o imóvel ainda se encontra em fase de acabamento e que poderá haver atividades de obra remanescentes após o período de uso.\n\n4. **Consumo:** Eventuais consumos de água, luz e gás durante o período serão de responsabilidade do cliente.\n\n---\n\nEste termo formaliza a ciência mútua das condições acordadas.",
     data: {
@@ -286,11 +376,25 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     last_activity_at: iso(daysAgo(1)),
     locked_at: iso(daysAgo(1)),
     locked_hash: fakeHash("f6a7b8"),
-    acknowledgements: createAcknowledgements("f6a7b8c9-d0e1-2345-f012-456789012345", false, true, 0, 1) as any,
+    acknowledgements: createAcknowledgements(
+      "f6a7b8c9-d0e1-2345-f012-456789012345",
+      false,
+      true,
+      0,
+      1,
+    ) as any,
     attachments: null,
-    events: createEvents("f6a7b8c9-d0e1-2345-f012-456789012345", "pending_signatures", 1) as any,
+    events: createEvents(
+      "f6a7b8c9-d0e1-2345-f012-456789012345",
+      "pending_signatures",
+      1,
+    ) as any,
     evidence_links: null,
-    parties: createParties("f6a7b8c9-d0e1-2345-f012-456789012345", false, true) as any,
+    parties: createParties(
+      "f6a7b8c9-d0e1-2345-f012-456789012345",
+      false,
+      true,
+    ) as any,
     parties_signed: 1,
     parties_total: 2,
   },
@@ -301,9 +405,9 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     unit_id: null,
     type: "general",
     title: "Aprovação Tácita – Projeto Executivo",
-    summary: "Registro formal de aprovação tácita do Projeto Executivo conforme cláusula 10.4 do contrato.",
-    body_md:
-      `## Registro de Aprovação Tácita
+    summary:
+      "Registro formal de aprovação tácita do Projeto Executivo conforme cláusula 10.4 do contrato.",
+    body_md: `## Registro de Aprovação Tácita
 
 ### Documento
 **Projeto Executivo** – Hub Brooklyn 502
@@ -350,12 +454,13 @@ Desta forma, em conformidade com a cláusula contratual supracitada, o documento
         acknowledged_at: "2025-06-25T10:00:00.000Z",
         acknowledged_by_user_id: null,
         acknowledged_by_email: "lucas@bwild.com.br",
-        signature_text: "Registro e atesto a aprovação tácita do Projeto Executivo conforme cláusula 10.4 do contrato.",
+        signature_text:
+          "Registro e atesto a aprovação tácita do Projeto Executivo conforme cláusula 10.4 do contrato.",
         signature_hash: fakeHash("ack-company-g7b8c9d0"),
         ip_address: "189.12.45.67",
         user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
         created_at: "2025-06-25T10:00:00.000Z",
-      }
+      },
     ] as any,
     attachments: null,
     events: [
@@ -382,7 +487,7 @@ Desta forma, em conformidade com a cláusula contratual supracitada, o documento
         actor_user_id: null,
         meta: { locked_hash: fakeHash("g7b8c9") },
         created_at: "2025-06-25T10:00:00.000Z",
-      }
+      },
     ] as any,
     evidence_links: null,
     parties: [
@@ -407,7 +512,7 @@ Desta forma, em conformidade com a cláusula contratual supracitada, o documento
         must_sign: true,
         user_id: null,
         created_at: "2025-06-25T09:30:00.000Z",
-      }
+      },
     ] as any,
     parties_signed: 1,
     parties_total: 1, // Apenas 1 parte precisa assinar (company)

@@ -1,14 +1,17 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database, Json } from '@/integrations/supabase/types';
-import { EVENT_TYPES } from './useDomainEvents';
-import { queryKeys, invalidateFormalizacaoQueries } from '@/lib/queryKeys';
-import { QUERY_TIMING } from '@/lib/queryClient';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database, Json } from "@/integrations/supabase/types";
+import { EVENT_TYPES } from "./useDomainEvents";
+import { queryKeys, invalidateFormalizacaoQueries } from "@/lib/queryKeys";
+import { QUERY_TIMING } from "@/lib/queryClient";
 
-type Formalization = Database['public']['Tables']['formalizations']['Row'];
-type FormalizationInsert = Database['public']['Tables']['formalizations']['Insert'];
-type FormalizationUpdate = Database['public']['Tables']['formalizations']['Update'];
-type FormalizationWithDetails = Database['public']['Views']['formalizations_public_customer']['Row'];
+type Formalization = Database["public"]["Tables"]["formalizations"]["Row"];
+type FormalizationInsert =
+  Database["public"]["Tables"]["formalizations"]["Insert"];
+type FormalizationUpdate =
+  Database["public"]["Tables"]["formalizations"]["Update"];
+type FormalizationWithDetails =
+  Database["public"]["Views"]["formalizations_public_customer"]["Row"];
 
 // Helper to log domain events
 async function logDomainEvent(params: {
@@ -20,25 +23,25 @@ async function logDomainEvent(params: {
   payload?: Record<string, unknown>;
 }) {
   try {
-    await supabase.rpc('log_domain_event', {
+    await supabase.rpc("log_domain_event", {
       _org_id: params.orgId,
-      _project_id: params.projectId || '',
+      _project_id: params.projectId || "",
       _entity_type: params.entityType,
       _entity_id: params.entityId,
       _event_type: params.eventType,
       _payload: (params.payload ?? {}) as Json,
       _ip_address: undefined,
-      _user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      _user_agent:
+        typeof navigator !== "undefined" ? navigator.userAgent : undefined,
     });
   } catch (e) {
-    console.warn('Failed to log domain event:', e);
+    console.warn("Failed to log domain event:", e);
   }
 }
 
-
 export function useFormalizacoes(filters?: {
-  status?: Database['public']['Enums']['formalization_status'];
-  type?: Database['public']['Enums']['formalization_type'];
+  status?: Database["public"]["Enums"]["formalization_status"];
+  type?: Database["public"]["Enums"]["formalization_type"];
   projectId?: string;
 }) {
   return useQuery({
@@ -47,18 +50,18 @@ export function useFormalizacoes(filters?: {
     gcTime: QUERY_TIMING.formalizacoes.gcTime,
     queryFn: async () => {
       let query = supabase
-        .from('formalizations_public_customer')
-        .select('*')
-        .order('last_activity_at', { ascending: false });
+        .from("formalizations_public_customer")
+        .select("*")
+        .order("last_activity_at", { ascending: false });
 
       if (filters?.status) {
-        query = query.eq('status', filters.status);
+        query = query.eq("status", filters.status);
       }
       if (filters?.type) {
-        query = query.eq('type', filters.type);
+        query = query.eq("type", filters.type);
       }
       if (filters?.projectId) {
-        query = query.eq('project_id', filters.projectId);
+        query = query.eq("project_id", filters.projectId);
       }
 
       const { data, error } = await query;
@@ -80,12 +83,12 @@ export function useFormalizacao(id: string | undefined) {
       if (!id) return null;
 
       const { data, error } = await supabase
-        .from('formalizations_public_customer')
-        .select('*')
-        .eq('id', id)
+        .from("formalizations_public_customer")
+        .select("*")
+        .eq("id", id)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error && error.code !== "PGRST116") {
         throw error;
       }
 
@@ -101,7 +104,7 @@ export function useCreateFormalizacao() {
   return useMutation({
     mutationFn: async (data: FormalizationInsert) => {
       const { data: result, error } = await supabase
-        .from('formalizations')
+        .from("formalizations")
         .insert(data)
         .select()
         .single();
@@ -112,7 +115,7 @@ export function useCreateFormalizacao() {
       await logDomainEvent({
         orgId: result.customer_org_id,
         projectId: result.project_id,
-        entityType: 'formalization',
+        entityType: "formalization",
         entityId: result.id,
         eventType: EVENT_TYPES.FORMALIZATION_CREATED,
         payload: {
@@ -128,9 +131,13 @@ export function useCreateFormalizacao() {
       // Scope invalidation to the affected project to avoid refetch storms
       // across unrelated obras open in other tabs.
       queryClient.invalidateQueries({
-        queryKey: queryKeys.formalizacoes.list({ projectId: result.project_id ?? undefined }),
+        queryKey: queryKeys.formalizacoes.list({
+          projectId: result.project_id ?? undefined,
+        }),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.lists() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formalizacoes.lists(),
+      });
     },
   });
 }
@@ -139,24 +146,33 @@ export function useUpdateFormalizacao() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: FormalizationUpdate }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: FormalizationUpdate;
+    }) => {
       // Get current formalization for org_id and change tracking
       const { data: current } = await supabase
-        .from('formalizations')
-        .select('customer_org_id, project_id, title, summary, status')
-        .eq('id', id)
+        .from("formalizations")
+        .select("customer_org_id, project_id, title, summary, status")
+        .eq("id", id)
         .maybeSingle();
 
       const { data: result, error } = await supabase
-        .from('formalizations')
+        .from("formalizations")
         .update(data)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .maybeSingle();
 
       if (error) throw error;
 
-      if (!result) throw new Error('Formalização não encontrada ou sem permissão de acesso');
+      if (!result)
+        throw new Error(
+          "Formalização não encontrada ou sem permissão de acesso",
+        );
 
       // Log domain event for update
       if (current) {
@@ -174,7 +190,7 @@ export function useUpdateFormalizacao() {
         await logDomainEvent({
           orgId: current.customer_org_id,
           projectId: current.project_id,
-          entityType: 'formalization',
+          entityType: "formalization",
           entityId: id,
           eventType: EVENT_TYPES.FORMALIZATION_UPDATED,
           payload: {
@@ -189,9 +205,13 @@ export function useUpdateFormalizacao() {
     onSuccess: (result, { id }) => {
       // Detail covers the edited record; lists() refreshes any list view
       // without nuking the cache of unrelated projects.
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(id) });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.formalizacoes.list({ projectId: result?.project_id ?? undefined }),
+        queryKey: queryKeys.formalizacoes.detail(id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formalizacoes.list({
+          projectId: result?.project_id ?? undefined,
+        }),
       });
     },
   });
@@ -204,26 +224,28 @@ export function useSendForSignature() {
     mutationFn: async (id: string) => {
       // Get formalization for org_id
       const { data: formalization } = await supabase
-        .from('formalizations')
-        .select('customer_org_id, project_id, title')
-        .eq('id', id)
+        .from("formalizations")
+        .select("customer_org_id, project_id, title")
+        .eq("id", id)
         .single();
 
       // Compute hash to lock the content
-      const { data: hash, error: hashError } = await supabase
-        .rpc('compute_formalization_hash', { p_formalization_id: id });
+      const { data: hash, error: hashError } = await supabase.rpc(
+        "compute_formalization_hash",
+        { p_formalization_id: id },
+      );
 
       if (hashError) throw hashError;
 
       // Update status and set locked_hash
       const { data: result, error } = await supabase
-        .from('formalizations')
+        .from("formalizations")
         .update({
-          status: 'pending_signatures',
+          status: "pending_signatures",
           locked_hash: hash,
           locked_at: new Date().toISOString(),
         })
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
 
@@ -232,9 +254,9 @@ export function useSendForSignature() {
       const userId = (await supabase.auth.getUser()).data.user?.id;
 
       // Add formalization event
-      await supabase.from('formalization_events').insert({
+      await supabase.from("formalization_events").insert({
         formalization_id: id,
-        event_type: 'sent_for_signature',
+        event_type: "sent_for_signature",
         actor_user_id: userId,
         meta: { locked_hash: hash },
       });
@@ -244,7 +266,7 @@ export function useSendForSignature() {
         await logDomainEvent({
           orgId: formalization.customer_org_id,
           projectId: formalization.project_id,
-          entityType: 'formalization',
+          entityType: "formalization",
           entityId: id,
           eventType: EVENT_TYPES.FORMALIZATION_SENT,
           payload: {
@@ -257,22 +279,29 @@ export function useSendForSignature() {
       // Send email notifications to parties
       const portalUrl = window.location.origin;
       try {
-        const { error: emailError } = await supabase.functions.invoke('send-signature-request', {
-          body: { formalizationId: id, portalUrl },
-        });
+        const { error: emailError } = await supabase.functions.invoke(
+          "send-signature-request",
+          {
+            body: { formalizationId: id, portalUrl },
+          },
+        );
         if (emailError) {
-          console.warn('Failed to send signature request emails:', emailError);
+          console.warn("Failed to send signature request emails:", emailError);
         }
       } catch (e) {
-        console.warn('Error invoking send-signature-request:', e);
+        console.warn("Error invoking send-signature-request:", e);
       }
 
       return result;
     },
     onSuccess: (result, id) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(id) });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.formalizacoes.list({ projectId: result?.project_id ?? undefined }),
+        queryKey: queryKeys.formalizacoes.detail(id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formalizacoes.list({
+          projectId: result?.project_id ?? undefined,
+        }),
       });
     },
   });
@@ -282,9 +311,11 @@ export function useAddParty() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Database['public']['Tables']['formalization_parties']['Insert']) => {
+    mutationFn: async (
+      data: Database["public"]["Tables"]["formalization_parties"]["Insert"],
+    ) => {
       const { data: result, error } = await supabase
-        .from('formalization_parties')
+        .from("formalization_parties")
         .insert(data)
         .select()
         .single();
@@ -293,19 +324,21 @@ export function useAddParty() {
       return result;
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(result.formalization_id) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formalizacoes.detail(result.formalization_id),
+      });
     },
   });
 }
 
 async function getClientIp(): Promise<string> {
   try {
-    const { data, error } = await supabase.functions.invoke('get-client-ip');
+    const { data, error } = await supabase.functions.invoke("get-client-ip");
     if (error) throw error;
-    return data?.ip || 'unknown';
+    return data?.ip || "unknown";
   } catch (e) {
-    console.warn('Could not get client IP:', e);
-    return 'unknown';
+    console.warn("Could not get client IP:", e);
+    return "unknown";
   }
 }
 
@@ -313,34 +346,34 @@ export function useAcknowledge() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      formalizationId, 
+    mutationFn: async ({
+      formalizationId,
       partyId,
-      signatureText 
-    }: { 
-      formalizationId: string; 
+      signatureText,
+    }: {
+      formalizationId: string;
       partyId: string;
       signatureText?: string;
     }) => {
       const user = (await supabase.auth.getUser()).data.user;
-      
+
       // Get formalization data for domain event
       const { data: formalization } = await supabase
-        .from('formalizations')
-        .select('customer_org_id, project_id, title, locked_hash')
-        .eq('id', formalizationId)
+        .from("formalizations")
+        .select("customer_org_id, project_id, title, locked_hash")
+        .eq("id", formalizationId)
         .single();
-      
+
       // Get party display name
       const { data: party } = await supabase
-        .from('formalization_parties')
-        .select('display_name, party_type')
-        .eq('id', partyId)
+        .from("formalization_parties")
+        .select("display_name, party_type")
+        .eq("id", partyId)
         .single();
-      
+
       const clientIp = await getClientIp();
       const timestamp = new Date().toISOString();
-      
+
       // Create signature hash
       const signatureData = [
         formalization?.locked_hash || formalizationId,
@@ -348,17 +381,19 @@ export function useAcknowledge() {
         timestamp,
         user?.id || user?.email,
         clientIp,
-        navigator.userAgent
-      ].join('|');
-      
+        navigator.userAgent,
+      ].join("|");
+
       const encoder = new TextEncoder();
       const data = encoder.encode(signatureData);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const signatureHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      const signatureHash = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
 
       const { data: result, error } = await supabase
-        .from('formalization_acknowledgements')
+        .from("formalization_acknowledgements")
         .insert({
           formalization_id: formalizationId,
           party_id: partyId,
@@ -377,12 +412,12 @@ export function useAcknowledge() {
       if (error) throw error;
 
       // Add formalization event
-      await supabase.from('formalization_events').insert({
+      await supabase.from("formalization_events").insert({
         formalization_id: formalizationId,
-        event_type: 'signed_by_party',
+        event_type: "signed_by_party",
         actor_user_id: user?.id,
-        meta: { 
-          party_id: partyId, 
+        meta: {
+          party_id: partyId,
           signature_hash: signatureHash,
           ip_address: clientIp,
           user_agent: navigator.userAgent,
@@ -395,7 +430,7 @@ export function useAcknowledge() {
         await logDomainEvent({
           orgId: formalization.customer_org_id,
           projectId: formalization.project_id,
-          entityType: 'formalization',
+          entityType: "formalization",
           entityId: formalizationId,
           eventType: EVENT_TYPES.FORMALIZATION_SIGNED,
           payload: {
@@ -411,8 +446,12 @@ export function useAcknowledge() {
       return result;
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(result.formalization_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.lists() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formalizacoes.detail(result.formalization_id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formalizacoes.lists(),
+      });
       // Invalidate pending items so the Pendências tab updates immediately
       queryClient.invalidateQueries({ queryKey: queryKeys.pendingItems.all });
     },
@@ -426,16 +465,16 @@ export function useDeleteFormalizacao() {
     mutationFn: async (id: string) => {
       // Get formalization for domain event logging
       const { data: formalization } = await supabase
-        .from('formalizations')
-        .select('customer_org_id, project_id, title')
-        .eq('id', id)
+        .from("formalizations")
+        .select("customer_org_id, project_id, title")
+        .eq("id", id)
         .single();
 
       // Child records are deleted automatically via ON DELETE CASCADE
       const { error } = await supabase
-        .from('formalizations')
+        .from("formalizations")
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
 
@@ -444,9 +483,9 @@ export function useDeleteFormalizacao() {
         await logDomainEvent({
           orgId: formalization.customer_org_id,
           projectId: formalization.project_id,
-          entityType: 'formalization',
+          entityType: "formalization",
           entityId: id,
-          eventType: 'formalization.deleted',
+          eventType: "formalization.deleted",
           payload: {
             title: formalization.title,
           },

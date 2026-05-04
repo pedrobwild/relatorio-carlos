@@ -9,7 +9,7 @@
  *
  * Use junto com `useCanPerform` para travar ações destrutivas em offline persistente.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 export interface OnlineStatus {
   online: boolean;
@@ -26,7 +26,7 @@ interface Options {
 }
 
 function getInitialOnline(): boolean {
-  if (typeof navigator === 'undefined') return true;
+  if (typeof navigator === "undefined") return true;
   return navigator.onLine;
 }
 
@@ -47,11 +47,11 @@ export function useOnlineStatus(options: Options = {}): OnlineStatus {
       setLastChange(new Date());
     };
 
-    window.addEventListener('online', goOnline);
-    window.addEventListener('offline', goOffline);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
     return () => {
-      window.removeEventListener('online', goOnline);
-      window.removeEventListener('offline', goOffline);
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
     };
   }, []);
 

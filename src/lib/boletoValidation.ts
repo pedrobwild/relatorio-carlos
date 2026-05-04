@@ -12,7 +12,7 @@
 export interface BoletoValidationResult {
   valid: boolean;
   error?: string;
-  type?: 'cobranca' | 'arrecadacao';
+  type?: "cobranca" | "arrecadacao";
   digits?: string;
 }
 
@@ -65,10 +65,10 @@ function lineToBarcode(line47: string): string {
 }
 
 export function validateBoletoLine(rawValue: string): BoletoValidationResult {
-  const digits = (rawValue ?? '').replace(/\D/g, '');
+  const digits = (rawValue ?? "").replace(/\D/g, "");
 
   if (digits.length === 0) {
-    return { valid: false, error: 'Informe a linha digitável do boleto.' };
+    return { valid: false, error: "Informe a linha digitável do boleto." };
   }
 
   if (digits.length !== 47 && digits.length !== 48) {
@@ -81,7 +81,7 @@ export function validateBoletoLine(rawValue: string): BoletoValidationResult {
 
   // Arrecadação/convênio (48 dígitos) — mantemos validação simplificada
   if (digits.length === 48) {
-    return { valid: true, type: 'arrecadacao', digits };
+    return { valid: true, type: "arrecadacao", digits };
   }
 
   // Cobrança (47 dígitos) — valida DVs
@@ -98,20 +98,40 @@ export function validateBoletoLine(rawValue: string): BoletoValidationResult {
   const dv3 = mod10(field3);
 
   if (dv1 !== dv1Inf) {
-    return { valid: false, error: 'Dígito verificador do 1º campo inválido.', digits, type: 'cobranca' };
+    return {
+      valid: false,
+      error: "Dígito verificador do 1º campo inválido.",
+      digits,
+      type: "cobranca",
+    };
   }
   if (dv2 !== dv2Inf) {
-    return { valid: false, error: 'Dígito verificador do 2º campo inválido.', digits, type: 'cobranca' };
+    return {
+      valid: false,
+      error: "Dígito verificador do 2º campo inválido.",
+      digits,
+      type: "cobranca",
+    };
   }
   if (dv3 !== dv3Inf) {
-    return { valid: false, error: 'Dígito verificador do 3º campo inválido.', digits, type: 'cobranca' };
+    return {
+      valid: false,
+      error: "Dígito verificador do 3º campo inválido.",
+      digits,
+      type: "cobranca",
+    };
   }
 
   const barcode = lineToBarcode(digits);
   const dvGeralCalc = mod11Barcode(barcode);
   if (dvGeralCalc !== dvGeralInf) {
-    return { valid: false, error: 'Dígito verificador geral (módulo 11) inválido.', digits, type: 'cobranca' };
+    return {
+      valid: false,
+      error: "Dígito verificador geral (módulo 11) inválido.",
+      digits,
+      type: "cobranca",
+    };
   }
 
-  return { valid: true, type: 'cobranca', digits };
+  return { valid: true, type: "cobranca", digits };
 }

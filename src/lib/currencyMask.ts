@@ -10,14 +10,14 @@
  */
 export function formatCurrencyBRL(value: string): string {
   // Remove tudo exceto dígitos
-  const digits = value.replace(/\D/g, '');
-  if (!digits) return '';
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
 
   // Converte para centavos
   const cents = parseInt(digits, 10);
   const reais = cents / 100;
 
-  return reais.toLocaleString('pt-BR', {
+  return reais.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -29,11 +29,11 @@ export function formatCurrencyBRL(value: string): string {
  * E.g. "" → ""
  */
 export function parseCurrencyBRL(formatted: string): string {
-  if (!formatted) return '';
+  if (!formatted) return "";
   // Remove dots (thousands separator), replace comma with dot (decimal)
-  const cleaned = formatted.replace(/\./g, '').replace(',', '.');
+  const cleaned = formatted.replace(/\./g, "").replace(",", ".");
   const num = parseFloat(cleaned);
-  if (isNaN(num)) return '';
+  if (isNaN(num)) return "";
   return num.toString();
 }
 

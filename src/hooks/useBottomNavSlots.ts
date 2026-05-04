@@ -29,24 +29,74 @@ export interface NavSlot {
 }
 
 export const ALL_NAV_OPTIONS: NavSlot[] = [
-  { key: "pendencias", label: "Pendências", icon: AlertCircle, pathKey: "pendencias" },
-  { key: "cronograma", label: "Cronograma", icon: GanttChartSquare, pathKey: "cronograma" },
-  { key: "atividades", label: "Atividades", icon: CheckSquare, pathKey: "atividades" },
+  {
+    key: "pendencias",
+    label: "Pendências",
+    icon: AlertCircle,
+    pathKey: "pendencias",
+  },
+  {
+    key: "cronograma",
+    label: "Cronograma",
+    icon: GanttChartSquare,
+    pathKey: "cronograma",
+  },
+  {
+    key: "atividades",
+    label: "Atividades",
+    icon: CheckSquare,
+    pathKey: "atividades",
+  },
   { key: "executivo", label: "Executivo", icon: Ruler, pathKey: "executivo" },
-  { key: "financeiro", label: "Financeiro", icon: DollarSign, pathKey: "financeiro" },
+  {
+    key: "financeiro",
+    label: "Financeiro",
+    icon: DollarSign,
+    pathKey: "financeiro",
+  },
   { key: "jornada", label: "Jornada", icon: Map, pathKey: "jornada" },
   { key: "compras", label: "Compras", icon: ShoppingCart, pathKey: "compras" },
   { key: "vistorias", label: "Vistorias", icon: Eye, pathKey: "vistorias" },
-  { key: "naoConformidades", label: "Não Conformidades", icon: AlertTriangle, pathKey: "naoConformidades" },
-  { key: "documentos", label: "Documentos", icon: FolderOpen, pathKey: "documentos" },
-  { key: "formalizacoes", label: "Formalizações", icon: ClipboardSignature, pathKey: "formalizacoes" },
+  {
+    key: "naoConformidades",
+    label: "Não Conformidades",
+    icon: AlertTriangle,
+    pathKey: "naoConformidades",
+  },
+  {
+    key: "documentos",
+    label: "Documentos",
+    icon: FolderOpen,
+    pathKey: "documentos",
+  },
+  {
+    key: "formalizacoes",
+    label: "Formalizações",
+    icon: ClipboardSignature,
+    pathKey: "formalizacoes",
+  },
   { key: "contrato", label: "Contrato", icon: FileText, pathKey: "contrato" },
   { key: "projeto3D", label: "Projeto 3D", icon: Box, pathKey: "projeto3D" },
-  { key: "dadosCliente", label: "Dados do Cliente", icon: Users, pathKey: "dadosCliente" },
-  { key: "orcamento", label: "Orçamento", icon: ClipboardList, pathKey: "orcamento" },
+  {
+    key: "dadosCliente",
+    label: "Dados do Cliente",
+    icon: Users,
+    pathKey: "dadosCliente",
+  },
+  {
+    key: "orcamento",
+    label: "Orçamento",
+    icon: ClipboardList,
+    pathKey: "orcamento",
+  },
 ];
 
-const DEFAULT_STAFF_KEYS = ["pendencias", "cronograma", "executivo", "financeiro"];
+const DEFAULT_STAFF_KEYS = [
+  "pendencias",
+  "cronograma",
+  "executivo",
+  "financeiro",
+];
 
 function loadSlots(): string[] | null {
   try {
@@ -54,19 +104,23 @@ function loadSlots(): string[] | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length === MAX_SLOTS) return parsed;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return null;
 }
 
 function saveSlots(keys: string[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 export function useBottomNavSlots() {
   const [slotKeys, setSlotKeys] = useState<string[]>(
-    () => loadSlots() ?? DEFAULT_STAFF_KEYS
+    () => loadSlots() ?? DEFAULT_STAFF_KEYS,
   );
 
   useEffect(() => {
@@ -87,5 +141,11 @@ export function useBottomNavSlots() {
     setSlotKeys(DEFAULT_STAFF_KEYS);
   }, []);
 
-  return { slots, slotKeys, updateSlots, resetToDefault, allOptions: ALL_NAV_OPTIONS };
+  return {
+    slots,
+    slotKeys,
+    updateSlots,
+    resetToDefault,
+    allOptions: ALL_NAV_OPTIONS,
+  };
 }

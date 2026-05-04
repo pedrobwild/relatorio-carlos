@@ -17,7 +17,11 @@ const isDev = import.meta.env.DEV;
 const marks = new Map<string, number>();
 
 // Store for measurements history (for debugging)
-const measurements: Array<{ label: string; duration: number; timestamp: number }> = [];
+const measurements: Array<{
+  label: string;
+  duration: number;
+  timestamp: number;
+}> = [];
 
 /**
  * Create a performance mark
@@ -31,7 +35,11 @@ function mark(name: string): void {
  * Measure time since a mark and log it
  * Returns duration in ms
  */
-function measure(label: string, startMark: string, options?: { log?: boolean }): number {
+function measure(
+  label: string,
+  startMark: string,
+  options?: { log?: boolean },
+): number {
   if (!isDev) return 0;
 
   const startTime = marks.get(startMark);
@@ -51,7 +59,14 @@ function measure(label: string, startMark: string, options?: { log?: boolean }):
   }
 
   if (options?.log !== false) {
-    const emoji = duration < 100 ? '⚡' : duration < 500 ? '✓' : duration < 1000 ? '⚠️' : '🐢';
+    const emoji =
+      duration < 100
+        ? "⚡"
+        : duration < 500
+          ? "✓"
+          : duration < 1000
+            ? "⚠️"
+            : "🐢";
     console.log(`[Perf] ${emoji} ${label}: ${duration}ms`);
   }
 
@@ -71,7 +86,7 @@ function time<T>(label: string, fn: () => T): T {
   const result = fn();
   const duration = Math.round(performance.now() - start);
 
-  const emoji = duration < 100 ? '⚡' : duration < 500 ? '✓' : '⚠️';
+  const emoji = duration < 100 ? "⚡" : duration < 500 ? "✓" : "⚠️";
   console.log(`[Perf] ${emoji} ${label}: ${duration}ms`);
 
   return result;
@@ -87,7 +102,14 @@ async function timeAsync<T>(label: string, fn: () => Promise<T>): Promise<T> {
   const result = await fn();
   const duration = Math.round(performance.now() - start);
 
-  const emoji = duration < 100 ? '⚡' : duration < 500 ? '✓' : duration < 1000 ? '⚠️' : '🐢';
+  const emoji =
+    duration < 100
+      ? "⚡"
+      : duration < 500
+        ? "✓"
+        : duration < 1000
+          ? "⚠️"
+          : "🐢";
   console.log(`[Perf] ${emoji} ${label}: ${duration}ms`);
 
   return result;

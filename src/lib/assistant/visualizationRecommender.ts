@@ -1,4 +1,7 @@
-import type { InsightVisualizationHint, VisualizationType } from "./insightTypes";
+import type {
+  InsightVisualizationHint,
+  VisualizationType,
+} from "./insightTypes";
 
 export interface ColumnProfile {
   name: string;
@@ -7,13 +10,16 @@ export interface ColumnProfile {
   totalNonNull: number;
 }
 
-const NUMERIC_HINTS = /^(amount|valor|total|cost|estimated|actual|count|qtd|quantity|tempo|days|tokens|score|nota|progresso|peso|weight|price)/i;
+const NUMERIC_HINTS =
+  /^(amount|valor|total|cost|estimated|actual|count|qtd|quantity|tempo|days|tokens|score|nota|progresso|peso|weight|price)/i;
 const DATE_HINTS = /(date|_at|deadline|paid|start|end)$/i;
 
 /**
  * Profile each column in a result set so we can pick the right chart.
  */
-export function profileColumns(rows: Record<string, unknown>[]): ColumnProfile[] {
+export function profileColumns(
+  rows: Record<string, unknown>[],
+): ColumnProfile[] {
   if (!rows.length) return [];
   const keys = new Set<string>();
   for (const r of rows) for (const k of Object.keys(r)) keys.add(k);
@@ -24,10 +30,17 @@ export function profileColumns(rows: Record<string, unknown>[]): ColumnProfile[]
     let type: ColumnProfile["type"] = "unknown";
     if (nonNull.length === 0) type = "unknown";
     else if (
-      nonNull.every((v) => typeof v === "number" || (!Number.isNaN(Number(v)) && typeof v === "string" && v !== ""))
+      nonNull.every(
+        (v) =>
+          typeof v === "number" ||
+          (!Number.isNaN(Number(v)) && typeof v === "string" && v !== ""),
+      )
     ) {
       type = "number";
-    } else if (DATE_HINTS.test(name) && nonNull.every((v) => !Number.isNaN(Date.parse(String(v))))) {
+    } else if (
+      DATE_HINTS.test(name) &&
+      nonNull.every((v) => !Number.isNaN(Date.parse(String(v))))
+    ) {
       type = "date";
     } else if (nonNull.every((v) => typeof v === "boolean")) {
       type = "boolean";
@@ -35,7 +48,10 @@ export function profileColumns(rows: Record<string, unknown>[]): ColumnProfile[]
       type = "text";
     }
 
-    if (NUMERIC_HINTS.test(name) && nonNull.every((v) => v == null || !Number.isNaN(Number(v)))) {
+    if (
+      NUMERIC_HINTS.test(name) &&
+      nonNull.every((v) => v == null || !Number.isNaN(Number(v)))
+    ) {
       type = "number";
     }
 
@@ -57,7 +73,9 @@ export interface RecommendationContext {
   intent?: "trend" | "distribution" | "ranking" | "share" | "kpi" | "compare";
 }
 
-export function recommendVisualizations(ctx: RecommendationContext): InsightVisualizationHint[] {
+export function recommendVisualizations(
+  ctx: RecommendationContext,
+): InsightVisualizationHint[] {
   const { rows, intent } = ctx;
   if (!rows || rows.length === 0) return [];
 

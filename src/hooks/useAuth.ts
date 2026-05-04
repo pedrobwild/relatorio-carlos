@@ -1,17 +1,17 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { debugAuth, logAuthState } from '@/lib/debugAuth';
-import { clearRoleCache } from './useUserRole';
-import { useLinkCustomerOnLogin } from './useLinkCustomerOnLogin';
-import { queryClient } from '@/lib/queryClient';
-import { clearPersistedCache } from '@/lib/queryPersister';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { debugAuth, logAuthState } from "@/lib/debugAuth";
+import { clearRoleCache } from "./useUserRole";
+import { useLinkCustomerOnLogin } from "./useLinkCustomerOnLogin";
+import { queryClient } from "@/lib/queryClient";
+import { clearPersistedCache } from "@/lib/queryPersister";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Track if initial session has been set to avoid unnecessary state updates
   const initialSessionSet = useRef(false);
   // Track session ID to prevent duplicate updates for same session
@@ -34,14 +34,15 @@ export function useAuth() {
       }
     };
 
-    debugAuth('useAuth mount');
+    debugAuth("useAuth mount");
 
     // Check for existing session first
-    supabase.auth.getSession()
+    supabase.auth
+      .getSession()
       .then(({ data: { session: initialSession } }) => {
         if (!isMounted) return;
 
-        debugAuth('getSession result', {
+        debugAuth("getSession result", {
           hasSession: !!initialSession,
           userId: initialSession?.user?.id,
         });
@@ -56,16 +57,18 @@ export function useAuth() {
           isAuthenticated: !!initialSession,
           loading: false,
           userId: initialSession?.user?.id,
-          event: 'getSession',
+          event: "getSession",
         });
       })
       .catch((error) => {
         if (!isMounted) return;
 
         const message = error instanceof Error ? error.message : String(error);
-        const isInvalidRefreshToken = message.toLowerCase().includes('refresh token not found');
+        const isInvalidRefreshToken = message
+          .toLowerCase()
+          .includes("refresh token not found");
 
-        debugAuth('getSession error', { message, isInvalidRefreshToken });
+        debugAuth("getSession error", { message, isInvalidRefreshToken });
 
         // Recover cleanly from stale local tokens so app doesn't crash-loop.
         if (isInvalidRefreshToken) {
@@ -83,92 +86,101 @@ export function useAuth() {
           isAuthenticated: false,
           loading: false,
           userId: undefined,
-          event: 'getSessionError',
+          event: "getSessionError",
         });
       });
 
     // Set up auth state listener - only handle meaningful events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        if (!isMounted) return;
-        
-        debugAuth('onAuthStateChange', { 
-          event, 
-          hasSession: !!newSession,
-          userId: newSession?.user?.id,
-          isSameSession: newSession?.access_token === lastSessionId.current,
-        });
-        
-        // TOKEN_REFRESHED: only sync the cached access token, no re-render needed.
-        // We must NOT skip this entirely — if another tab signed out, the token
-        // here may differ and we need to update lastSessionId to keep tabs in sync.
-        if (event === 'TOKEN_REFRESHED') {
-          if (newSession?.access_token === lastSessionId.current) {
-            debugAuth('Ignoring TOKEN_REFRESHED for same access token');
-            return;
-          }
-          lastSessionId.current = newSession?.access_token ?? null;
-          debugAuth('TOKEN_REFRESHED with new access token, updated ref');
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (!isMounted) return;
+
+      debugAuth("onAuthStateChange", {
+        event,
+        hasSession: !!newSession,
+        userId: newSession?.user?.id,
+        isSameSession: newSession?.access_token === lastSessionId.current,
+      });
+
+      // TOKEN_REFRESHED: only sync the cached access token, no re-render needed.
+      // We must NOT skip this entirely — if another tab signed out, the token
+      // here may differ and we need to update lastSessionId to keep tabs in sync.
+      if (event === "TOKEN_REFRESHED") {
+        if (newSession?.access_token === lastSessionId.current) {
+          debugAuth("Ignoring TOKEN_REFRESHED for same access token");
           return;
         }
-        
-        // Only update state for meaningful auth events
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-          // Prevent duplicate updates for same session
-          if (event === 'SIGNED_IN' && newSession?.access_token === lastSessionId.current) {
-            debugAuth('Ignoring duplicate SIGNED_IN for same session');
-            return;
-          }
-
-          // CRITICAL: Cancel in-flight queries BEFORE clearing cache to prevent
-          // responses from the previous user landing in the next user's cache.
-          if (event === 'SIGNED_OUT') {
-            queryClient.cancelQueries().catch(() => { /* ignore */ });
-            queryClient.clear();
-            clearPersistedCache();
-            clearRoleCache();
-          }
-          
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-          setLoading(false);
-          lastSessionId.current = newSession?.access_token ?? null;
-          
-          logAuthState({
-            isAuthenticated: !!newSession,
-            loading: false,
-            userId: newSession?.user?.id,
-            event,
-          });
-        }
-        
-        // For INITIAL_SESSION, only set if we haven't set initial session yet
-        if (event === 'INITIAL_SESSION' && !initialSessionSet.current) {
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-          setLoading(false);
-          initialSessionSet.current = true;
-          lastSessionId.current = newSession?.access_token ?? null;
-          
-          logAuthState({
-            isAuthenticated: !!newSession,
-            loading: false,
-            userId: newSession?.user?.id,
-            event: 'INITIAL_SESSION',
-          });
-        }
+        lastSessionId.current = newSession?.access_token ?? null;
+        debugAuth("TOKEN_REFRESHED with new access token, updated ref");
+        return;
       }
-    );
+
+      // Only update state for meaningful auth events
+      if (
+        event === "SIGNED_IN" ||
+        event === "SIGNED_OUT" ||
+        event === "USER_UPDATED"
+      ) {
+        // Prevent duplicate updates for same session
+        if (
+          event === "SIGNED_IN" &&
+          newSession?.access_token === lastSessionId.current
+        ) {
+          debugAuth("Ignoring duplicate SIGNED_IN for same session");
+          return;
+        }
+
+        // CRITICAL: Cancel in-flight queries BEFORE clearing cache to prevent
+        // responses from the previous user landing in the next user's cache.
+        if (event === "SIGNED_OUT") {
+          queryClient.cancelQueries().catch(() => {
+            /* ignore */
+          });
+          queryClient.clear();
+          clearPersistedCache();
+          clearRoleCache();
+        }
+
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        setLoading(false);
+        lastSessionId.current = newSession?.access_token ?? null;
+
+        logAuthState({
+          isAuthenticated: !!newSession,
+          loading: false,
+          userId: newSession?.user?.id,
+          event,
+        });
+      }
+
+      // For INITIAL_SESSION, only set if we haven't set initial session yet
+      if (event === "INITIAL_SESSION" && !initialSessionSet.current) {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        setLoading(false);
+        initialSessionSet.current = true;
+        lastSessionId.current = newSession?.access_token ?? null;
+
+        logAuthState({
+          isAuthenticated: !!newSession,
+          loading: false,
+          userId: newSession?.user?.id,
+          event: "INITIAL_SESSION",
+        });
+      }
+    });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
-      debugAuth('useAuth unmount');
+      debugAuth("useAuth unmount");
     };
   }, []);
 
   const signOut = useCallback(async () => {
-    debugAuth('signOut called');
+    debugAuth("signOut called");
     clearRoleCache();
     // CRITICAL: Cancel in-flight queries first, then clear the cache.
     // Without cancelQueries, a fetch already on the wire would settle
@@ -192,12 +204,12 @@ export function useAuth() {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        debugAuth('signOut error', { error: error.message });
+        debugAuth("signOut error", { error: error.message });
       } else {
-        debugAuth('signOut successful');
+        debugAuth("signOut successful");
       }
     } catch (error) {
-      debugAuth('signOut threw (will fallback to local cleanup)', {
+      debugAuth("signOut threw (will fallback to local cleanup)", {
         error: error instanceof Error ? error.message : String(error),
       });
     }
@@ -217,8 +229,8 @@ export function useAuth() {
     setUser(null);
     lastSessionId.current = null;
     initialSessionSet.current = false;
-    
-    debugAuth('signOut cleanup complete, state cleared');
+
+    debugAuth("signOut cleanup complete, state cleared");
   }, []);
 
   return {

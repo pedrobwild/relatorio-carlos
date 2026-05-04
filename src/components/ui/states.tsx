@@ -1,5 +1,10 @@
 import { ReactNode } from "react";
-import { AlertTriangle, RefreshCw, WifiOff, type LucideIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  RefreshCw,
+  WifiOff,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -14,12 +19,18 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+  className,
+}: EmptyStateProps) {
   return (
     <div
       className={cn(
         "rounded-xl border border-dashed border-border/50 bg-gradient-to-b from-muted/20 to-transparent p-10 md:p-16 text-center",
-        className
+        className,
       )}
       role="status"
     >
@@ -52,16 +63,24 @@ interface ErrorStateProps {
   className?: string;
 }
 
-export function ErrorState({ error, onRetry, title, description, className }: ErrorStateProps) {
+export function ErrorState({
+  error,
+  onRetry,
+  title,
+  description,
+  className,
+}: ErrorStateProps) {
   const isNetworkError =
     error instanceof Error &&
-    (error.message.includes("fetch") || error.message.includes("network") || error.message.includes("Failed"));
+    (error.message.includes("fetch") ||
+      error.message.includes("network") ||
+      error.message.includes("Failed"));
 
   return (
     <div
       className={cn(
         "rounded-xl border border-destructive/15 bg-destructive/[0.03] p-8 md:p-10 text-center",
-        className
+        className,
       )}
       role="alert"
     >
@@ -69,11 +88,17 @@ export function ErrorState({ error, onRetry, title, description, className }: Er
         {isNetworkError ? (
           <WifiOff className="h-7 w-7 text-destructive/60" aria-hidden="true" />
         ) : (
-          <AlertTriangle className="h-7 w-7 text-destructive/60" aria-hidden="true" />
+          <AlertTriangle
+            className="h-7 w-7 text-destructive/60"
+            aria-hidden="true"
+          />
         )}
       </div>
       <h3 className="text-sm font-semibold text-foreground mb-1">
-        {title ?? (isNetworkError ? "Sem conexão com o servidor" : "Erro ao carregar dados")}
+        {title ??
+          (isNetworkError
+            ? "Sem conexão com o servidor"
+            : "Erro ao carregar dados")}
       </h3>
       <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-5 leading-relaxed">
         {description ??
@@ -101,9 +126,16 @@ interface PageSkeletonProps {
   className?: string;
 }
 
-export function PageSkeleton({ rows = 5, header = true, className }: PageSkeletonProps) {
+export function PageSkeleton({
+  rows = 5,
+  header = true,
+  className,
+}: PageSkeletonProps) {
   return (
-    <div className={cn("space-y-4 animate-in fade-in duration-300", className)} aria-busy="true">
+    <div
+      className={cn("space-y-4 animate-in fade-in duration-300", className)}
+      aria-busy="true"
+    >
       {header && (
         <div className="flex items-center gap-3">
           <Skeleton className="h-8 w-48" />

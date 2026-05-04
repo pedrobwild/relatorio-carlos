@@ -7,8 +7,8 @@
  *
  * Persistido em localStorage via useScheduleAlertPrefs.
  */
-import { Bell, BellOff, Mail, Smartphone, Inbox } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Bell, BellOff, Mail, Smartphone, Inbox } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -18,15 +18,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import {
   useScheduleAlertPrefs,
   type ScheduleAlertChannel,
-} from '@/hooks/useScheduleAlertPrefs';
+} from "@/hooks/useScheduleAlertPrefs";
 
 interface ChannelRowProps {
   id: string;
@@ -52,8 +52,8 @@ function ChannelRow({
   return (
     <div
       className={cn(
-        'flex items-start justify-between gap-3 rounded-lg border border-border bg-card/40 p-3',
-        disabled && 'opacity-60',
+        "flex items-start justify-between gap-3 rounded-lg border border-border bg-card/40 p-3",
+        disabled && "opacity-60",
       )}
     >
       <div className="flex items-start gap-3 min-w-0">
@@ -112,7 +112,10 @@ export function ScheduleAlertPrefsDialog({ trigger }: Props) {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
             <div className="min-w-0">
-              <Label htmlFor="alerts-enabled" className="text-sm font-medium cursor-pointer">
+              <Label
+                htmlFor="alerts-enabled"
+                className="text-sm font-medium cursor-pointer"
+              >
                 Receber alertas de cronograma
               </Label>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -136,7 +139,7 @@ export function ScheduleAlertPrefsDialog({ trigger }: Props) {
               description="Badge na barra de ferramentas e painel de alertas."
               checked={prefs.channels.inApp}
               disabled={!prefs.enabled}
-              onCheckedChange={handleChannel('inApp')}
+              onCheckedChange={handleChannel("inApp")}
             />
             <ChannelRow
               id="ch-email"
@@ -145,7 +148,7 @@ export function ScheduleAlertPrefsDialog({ trigger }: Props) {
               description="Resumo diário enviado para o e-mail da sua conta."
               checked={prefs.channels.email}
               disabled={!prefs.enabled}
-              onCheckedChange={handleChannel('email')}
+              onCheckedChange={handleChannel("email")}
               badge="Em breve"
             />
             <ChannelRow
@@ -155,7 +158,7 @@ export function ScheduleAlertPrefsDialog({ trigger }: Props) {
               description="Notificações nativas quando o portal estiver aberto."
               checked={prefs.channels.push}
               disabled={!prefs.enabled}
-              onCheckedChange={handleChannel('push')}
+              onCheckedChange={handleChannel("push")}
               badge="Em breve"
             />
           </div>

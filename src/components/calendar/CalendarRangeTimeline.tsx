@@ -3,20 +3,36 @@
  * date range. Each project is a row; activities are bars positioned by their
  * planned interval clipped to the range. Click a bar to open detail dialog.
  */
-import { useMemo, useRef, useEffect, useState, useId } from 'react';
-import { differenceInCalendarDays, eachDayOfInterval, format, isSameDay, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Building2, CalendarDays, Split, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { getProjectColor } from '@/lib/taskUtils';
-import type { WeekActivity } from '@/hooks/useWeekActivities';
-import { EmptyState } from '@/components/ui/states';
-import { computeEffectiveStatus, type ActivityStatus } from '@/lib/activityStatus';
+import { useMemo, useRef, useEffect, useState, useId } from "react";
+import {
+  differenceInCalendarDays,
+  eachDayOfInterval,
+  format,
+  isSameDay,
+  parseISO,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  Building2,
+  CalendarDays,
+  Split,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getProjectColor } from "@/lib/taskUtils";
+import type { WeekActivity } from "@/hooks/useWeekActivities";
+import { EmptyState } from "@/components/ui/states";
+import {
+  computeEffectiveStatus,
+  type ActivityStatus,
+} from "@/lib/activityStatus";
 
-const MIN_DAY_WIDTH = 28;     // px
-const ROW_BASE_PADDING = 12;  // py-1.5 * 2 dentro do container
-const LANE_HEIGHT = 28;       // 24px da barra (h-6) + 4px de gap (mb-1)
-const MIN_LANES = 1;          // mínimo de faixas mesmo quando a obra não tem atividades no range
+const MIN_DAY_WIDTH = 28; // px
+const ROW_BASE_PADDING = 12; // py-1.5 * 2 dentro do container
+const LANE_HEIGHT = 28; // 24px da barra (h-6) + 4px de gap (mb-1)
+const MIN_LANES = 1; // mínimo de faixas mesmo quando a obra não tem atividades no range
 const PROJECT_LABEL_WIDTH = 200;
 
 /**
@@ -28,26 +44,29 @@ const PROJECT_LABEL_WIDTH = 200;
  * Estilo padrão (modo normal): tons semânticos suaves com texto escuro
  * (`text-foreground`) — bom contraste em ambiente claro.
  */
-const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
+const STATUS_BAR_STYLE: Record<
+  ActivityStatus,
+  { bar: string; icon: typeof CheckCircle2; icon_color: string }
+> = {
   completed: {
-    bar: 'bg-success/25 border-success/60 text-foreground',
+    bar: "bg-success/25 border-success/60 text-foreground",
     icon: CheckCircle2,
-    icon_color: 'text-success',
+    icon_color: "text-success",
   },
-  'in-progress': {
-    bar: 'bg-info/25 border-info/60 text-foreground',
+  "in-progress": {
+    bar: "bg-info/25 border-info/60 text-foreground",
     icon: Clock,
-    icon_color: 'text-info',
+    icon_color: "text-info",
   },
   delayed: {
-    bar: 'bg-destructive border-destructive text-destructive-foreground',
+    bar: "bg-destructive border-destructive text-destructive-foreground",
     icon: AlertTriangle,
-    icon_color: 'text-destructive-foreground',
+    icon_color: "text-destructive-foreground",
   },
   pending: {
-    bar: 'bg-muted border-border text-foreground',
+    bar: "bg-muted border-border text-foreground",
     icon: Clock,
-    icon_color: 'text-muted-foreground',
+    icon_color: "text-muted-foreground",
   },
 };
 
@@ -57,34 +76,37 @@ const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof Check
  * com brilho baixo ou para usuários com baixa visão. Usa apenas tokens
  * semânticos (sem cor hard-coded).
  */
-const STATUS_BAR_STYLE_HC: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
+const STATUS_BAR_STYLE_HC: Record<
+  ActivityStatus,
+  { bar: string; icon: typeof CheckCircle2; icon_color: string }
+> = {
   completed: {
-    bar: 'bg-success border-success text-success-foreground',
+    bar: "bg-success border-success text-success-foreground",
     icon: CheckCircle2,
-    icon_color: 'text-success-foreground',
+    icon_color: "text-success-foreground",
   },
-  'in-progress': {
-    bar: 'bg-info border-info text-info-foreground',
+  "in-progress": {
+    bar: "bg-info border-info text-info-foreground",
     icon: Clock,
-    icon_color: 'text-info-foreground',
+    icon_color: "text-info-foreground",
   },
   delayed: {
-    bar: 'bg-destructive border-destructive text-destructive-foreground',
+    bar: "bg-destructive border-destructive text-destructive-foreground",
     icon: AlertTriangle,
-    icon_color: 'text-destructive-foreground',
+    icon_color: "text-destructive-foreground",
   },
   pending: {
-    bar: 'bg-foreground border-foreground text-background',
+    bar: "bg-foreground border-foreground text-background",
     icon: Clock,
-    icon_color: 'text-background',
+    icon_color: "text-background",
   },
 };
 
 const STATUS_LABEL: Record<ActivityStatus, string> = {
-  completed: 'Concluído',
-  'in-progress': 'Em andamento',
-  delayed: 'Atrasado',
-  pending: 'Previsto',
+  completed: "Concluído",
+  "in-progress": "Em andamento",
+  delayed: "Atrasado",
+  pending: "Previsto",
 };
 
 /**
@@ -166,8 +188,8 @@ function computeLanes(
       // Maior duração primeiro (barra mais longa em cima)
       if (a.span !== b.span) return b.span - a.span;
       // Fallback estável por descrição e id
-      const da = a.activity.description ?? '';
-      const db = b.activity.description ?? '';
+      const da = a.activity.description ?? "";
+      const db = b.activity.description ?? "";
       if (da !== db) return da.localeCompare(db);
       return a.activity.id.localeCompare(b.activity.id);
     })
@@ -205,7 +227,10 @@ interface Props {
    * Recebe o status-alvo: 'in-progress' inicia (define actual_start),
    * 'completed' conclui (define actual_end), 'pending' reseta as datas reais.
    */
-  onQuickToggle?: (a: WeekActivity, next: 'pending' | 'in-progress' | 'completed') => void;
+  onQuickToggle?: (
+    a: WeekActivity,
+    next: "pending" | "in-progress" | "completed",
+  ) => void;
   /**
    * Quando `true`, ativa o modo de alto contraste das barras e chips.
    * Persistência fica a cargo do componente pai (ex.: localStorage).
@@ -213,8 +238,16 @@ interface Props {
   highContrast?: boolean;
 }
 
-export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActivityClick, canBreak, onBreak, onQuickToggle, highContrast = false }: Props) {
-
+export function CalendarRangeTimeline({
+  rangeStart,
+  rangeEnd,
+  byProject,
+  onActivityClick,
+  canBreak,
+  onBreak,
+  onQuickToggle,
+  highContrast = false,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const legendId = useId();
@@ -247,13 +280,16 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
       <EmptyState
         icon={CalendarDays}
         title="Nenhuma atividade no período"
-        description={`Não há atividades planejadas entre ${format(rangeStart, 'dd/MM')} e ${format(rangeEnd, 'dd/MM/yyyy')}.`}
+        description={`Não há atividades planejadas entre ${format(rangeStart, "dd/MM")} e ${format(rangeEnd, "dd/MM/yyyy")}.`}
       />
     );
   }
 
   return (
-    <div ref={containerRef} className="rounded-lg border overflow-hidden bg-card">
+    <div
+      ref={containerRef}
+      className="rounded-lg border overflow-hidden bg-card"
+    >
       {/* Legenda de status — visível sempre, não rola com o eixo X.
           Cada item tem id único, referenciado por aria-describedby nas barras
           da timeline para vincular semanticamente status ↔ legenda. */}
@@ -266,8 +302,12 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
         <span id={legendTitleId} className="sr-only">
           Legenda de status das atividades
         </span>
-        {(['pending', 'in-progress', 'completed', 'delayed'] as ActivityStatus[]).map((s) => {
-          const style = (highContrast ? STATUS_BAR_STYLE_HC : STATUS_BAR_STYLE)[s];
+        {(
+          ["pending", "in-progress", "completed", "delayed"] as ActivityStatus[]
+        ).map((s) => {
+          const style = (highContrast ? STATUS_BAR_STYLE_HC : STATUS_BAR_STYLE)[
+            s
+          ];
           const Icon = style.icon;
           return (
             <span
@@ -279,12 +319,12 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
             >
               <span
                 className={cn(
-                  'inline-flex items-center justify-center h-3.5 w-3.5 rounded-sm border',
+                  "inline-flex items-center justify-center h-3.5 w-3.5 rounded-sm border",
                   style.bar,
                 )}
                 aria-hidden="true"
               >
-                <Icon className={cn('h-2.5 w-2.5', style.icon_color)} />
+                <Icon className={cn("h-2.5 w-2.5", style.icon_color)} />
               </span>
               <span>{STATUS_LABEL[s]}</span>
             </span>
@@ -322,13 +362,15 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                     key={i}
                     style={{ width: dayWidth }}
                     className={cn(
-                      'shrink-0 text-center text-[10px] py-2 border-r last:border-r-0',
-                      isToday && 'bg-primary/10 text-primary font-semibold',
-                      isMonthStart && 'border-l border-l-foreground/20',
+                      "shrink-0 text-center text-[10px] py-2 border-r last:border-r-0",
+                      isToday && "bg-primary/10 text-primary font-semibold",
+                      isMonthStart && "border-l border-l-foreground/20",
                     )}
                   >
-                    <div className="font-medium">{format(d, 'd')}</div>
-                    <div className="text-muted-foreground">{format(d, 'EEEEE', { locale: ptBR })}</div>
+                    <div className="font-medium">{format(d, "d")}</div>
+                    <div className="text-muted-foreground">
+                      {format(d, "EEEEE", { locale: ptBR })}
+                    </div>
                   </div>
                 );
               })}
@@ -346,17 +388,28 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
               const laneCount = Math.max(MIN_LANES, lanes.length);
               const rowHeight = ROW_BASE_PADDING + laneCount * LANE_HEIGHT;
               return (
-                <div key={g.project_id} className="flex border-b last:border-b-0 hover:bg-muted/20">
+                <div
+                  key={g.project_id}
+                  className="flex border-b last:border-b-0 hover:bg-muted/20"
+                >
                   <div
                     style={{ width: PROJECT_LABEL_WIDTH }}
                     className="shrink-0 px-3 py-2 border-r flex items-center gap-2 min-w-0"
                   >
-                    <span className={cn('inline-flex h-6 w-6 items-center justify-center rounded-md shrink-0', color.bg)}>
+                    <span
+                      className={cn(
+                        "inline-flex h-6 w-6 items-center justify-center rounded-md shrink-0",
+                        color.bg,
+                      )}
+                    >
                       <Building2 className="h-3 w-3" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <div className="text-xs font-medium truncate" title={g.project_name}>
+                        <div
+                          className="text-xs font-medium truncate"
+                          title={g.project_name}
+                        >
                           {g.project_name}
                         </div>
                         {(() => {
@@ -365,10 +418,13 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                           // (data real de início) cai dentro do range visível.
                           // Usa token semântico `info` (mesma cor das barras
                           // 'in-progress') para reforçar consistência visual.
-                          const rs = format(rangeStart, 'yyyy-MM-dd');
-                          const re = format(rangeEnd, 'yyyy-MM-dd');
+                          const rs = format(rangeStart, "yyyy-MM-dd");
+                          const re = format(rangeEnd, "yyyy-MM-dd");
                           const isActiveInRange = g.items.some(
-                            (a) => !!a.actual_start && a.actual_start >= rs && a.actual_start <= re,
+                            (a) =>
+                              !!a.actual_start &&
+                              a.actual_start >= rs &&
+                              a.actual_start <= re,
                           );
                           if (!isActiveInRange) return null;
                           return (
@@ -377,7 +433,10 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                               title="Esta obra teve atividade iniciada dentro do período visível"
                               aria-label="Obra em andamento nesta semana"
                             >
-                              <span className="h-1.5 w-1.5 rounded-full bg-info" aria-hidden="true" />
+                              <span
+                                className="h-1.5 w-1.5 rounded-full bg-info"
+                                aria-hidden="true"
+                              />
                               Em andamento
                             </span>
                           );
@@ -409,8 +468,8 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                             key={i}
                             style={{ width: dayWidth }}
                             className={cn(
-                              'border-r last:border-r-0',
-                              isToday && 'bg-primary/5',
+                              "border-r last:border-r-0",
+                              isToday && "bg-primary/5",
                             )}
                           />
                         );
@@ -459,7 +518,10 @@ function ProjectBars({
   onActivityClick: (a: WeekActivity) => void;
   canBreak?: boolean;
   onBreak?: (a: WeekActivity) => void;
-  onQuickToggle?: (a: WeekActivity, next: 'pending' | 'in-progress' | 'completed') => void;
+  onQuickToggle?: (
+    a: WeekActivity,
+    next: "pending" | "in-progress" | "completed",
+  ) => void;
   statusItemId?: (s: ActivityStatus) => string;
   highContrast?: boolean;
 }) {
@@ -483,15 +545,20 @@ function ProjectBars({
             const statusLabel = STATUS_LABEL[status];
             // Quick-toggle disponível apenas para micro-etapas (filhas).
             // Ciclo: pending → in-progress → completed → pending.
-            const showQuickToggle = isChild && !!onQuickToggle && barWidth >= 28;
-            const nextStatus: 'pending' | 'in-progress' | 'completed' =
-              status === 'completed' ? 'pending'
-              : status === 'in-progress' ? 'completed'
-              : 'in-progress';
+            const showQuickToggle =
+              isChild && !!onQuickToggle && barWidth >= 28;
+            const nextStatus: "pending" | "in-progress" | "completed" =
+              status === "completed"
+                ? "pending"
+                : status === "in-progress"
+                  ? "completed"
+                  : "in-progress";
             const nextLabel =
-              nextStatus === 'in-progress' ? 'Marcar como em andamento'
-              : nextStatus === 'completed' ? 'Marcar como concluído'
-              : 'Reabrir (limpar datas reais)';
+              nextStatus === "in-progress"
+                ? "Marcar como em andamento"
+                : nextStatus === "completed"
+                  ? "Marcar como concluído"
+                  : "Reabrir (limpar datas reais)";
             return (
               <div
                 key={seg.activity.id}
@@ -500,48 +567,67 @@ function ProjectBars({
                   left: seg.startOffset * dayWidth + 2,
                   width: barWidth,
                   top: 0,
-                  height: '100%',
+                  height: "100%",
                 }}
               >
                 <button
                   type="button"
                   onClick={() => onActivityClick(seg.activity)}
-                  aria-label={`${seg.activity.description}${isChild ? ' (micro-etapa)' : ''} — ${statusLabel}${seg.activity.fornecedor_nome ? ` — Prestador: ${seg.activity.fornecedor_nome}` : ''}`}
+                  aria-label={`${seg.activity.description}${isChild ? " (micro-etapa)" : ""} — ${statusLabel}${seg.activity.fornecedor_nome ? ` — Prestador: ${seg.activity.fornecedor_nome}` : ""}`}
                   aria-describedby={statusItemId?.(status)}
                   data-status={status}
                   title={(() => {
-                    const fmt = (iso: string) => format(parseISO(iso), 'dd/MM/yyyy');
+                    const fmt = (iso: string) =>
+                      format(parseISO(iso), "dd/MM/yyyy");
                     const planned = `Previsto: ${fmt(seg.activity.planned_start)} → ${fmt(seg.activity.planned_end)}`;
                     const as = seg.activity.actual_start;
                     const ae = seg.activity.actual_end;
-                    let real = '';
+                    let real = "";
                     if (as && ae) real = `\nReal: ${fmt(as)} → ${fmt(ae)}`;
                     else if (as) real = `\nReal: ${fmt(as)} → em andamento`;
                     else if (ae) real = `\nReal: concluído em ${fmt(ae)}`;
-                    const tag = isChild ? ' (micro-etapa)' : '';
-                    const prest = seg.activity.fornecedor_nome ? `\nPrestador: ${seg.activity.fornecedor_nome}` : '';
+                    const tag = isChild ? " (micro-etapa)" : "";
+                    const prest = seg.activity.fornecedor_nome
+                      ? `\nPrestador: ${seg.activity.fornecedor_nome}`
+                      : "";
                     return `${seg.activity.description}${tag}\n${statusLabel}\n${planned}${real}${prest}`;
                   })()}
                   className={cn(
-                    'w-full h-full rounded-sm border text-[12px] font-semibold tracking-tight px-1.5 leading-6 truncate text-left',
-                    'hover:ring-2 hover:ring-primary/40 transition-shadow',
-                    'flex items-center gap-1',
+                    "w-full h-full rounded-sm border text-[12px] font-semibold tracking-tight px-1.5 leading-6 truncate text-left",
+                    "hover:ring-2 hover:ring-primary/40 transition-shadow",
+                    "flex items-center gap-1",
                     // Para status pendente, usa o estilo neutro (texto escuro sobre fundo muted)
                     // — não usamos mais a cor do projeto como fundo da barra para preservar contraste.
                     statusStyle.bar,
-                    isChild && 'border-l-2 border-l-primary border-dashed',
-                    status === 'completed' && 'opacity-90',
-                    seg.startsBefore && 'rounded-l-none border-l-0',
-                    seg.endsAfter && 'rounded-r-none border-r-0',
+                    isChild && "border-l-2 border-l-primary border-dashed",
+                    status === "completed" && "opacity-90",
+                    seg.startsBefore && "rounded-l-none border-l-0",
+                    seg.endsAfter && "rounded-r-none border-r-0",
                   )}
                 >
                   <StatusIcon
-                    className={cn('h-3.5 w-3.5 shrink-0', statusStyle.icon_color)}
+                    className={cn(
+                      "h-3.5 w-3.5 shrink-0",
+                      statusStyle.icon_color,
+                    )}
                     aria-hidden="true"
                   />
                   <span className="sr-only">{`Status: ${statusLabel}.`}</span>
-                  {isChild && <span aria-hidden="true" className="text-primary font-bold shrink-0">└</span>}
-                  <span aria-hidden="true" className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
+                  {isChild && (
+                    <span
+                      aria-hidden="true"
+                      className="text-primary font-bold shrink-0"
+                    >
+                      └
+                    </span>
+                  )}
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "truncate",
+                      status === "completed" && "line-through decoration-1",
+                    )}
+                  >
                     {seg.activity.description}
                   </span>
                   {seg.activity.fornecedor_nome && barWidth >= 90 && (
@@ -564,14 +650,16 @@ function ProjectBars({
                     title={`${statusLabel} • Clique para: ${nextLabel.toLowerCase()}`}
                     aria-label={nextLabel}
                     className={cn(
-                      'absolute top-1/2 -translate-y-1/2 left-0.5',
-                      'inline-flex items-center justify-center h-5 w-5 rounded',
-                      'bg-background/95 border border-border shadow-sm',
-                      'hover:scale-110 hover:border-primary focus:border-primary',
-                      'transition-transform',
+                      "absolute top-1/2 -translate-y-1/2 left-0.5",
+                      "inline-flex items-center justify-center h-5 w-5 rounded",
+                      "bg-background/95 border border-border shadow-sm",
+                      "hover:scale-110 hover:border-primary focus:border-primary",
+                      "transition-transform",
                     )}
                   >
-                    <StatusIcon className={cn('h-3 w-3', statusStyle.icon_color)} />
+                    <StatusIcon
+                      className={cn("h-3 w-3", statusStyle.icon_color)}
+                    />
                   </button>
                 )}
                 {showBreak && barWidth >= 60 && (
@@ -584,12 +672,12 @@ function ProjectBars({
                     title="Quebrar em micro-etapas"
                     aria-label={`Quebrar atividade ${seg.activity.description} em micro-etapas`}
                     className={cn(
-                      'absolute top-1/2 -translate-y-1/2 right-1',
-                      'opacity-0 group-hover:opacity-100 focus:opacity-100',
-                      'inline-flex items-center justify-center h-5 w-5 rounded',
-                      'bg-background/90 border border-border shadow-sm',
-                      'text-foreground hover:bg-primary hover:text-primary-foreground',
-                      'transition-opacity',
+                      "absolute top-1/2 -translate-y-1/2 right-1",
+                      "opacity-0 group-hover:opacity-100 focus:opacity-100",
+                      "inline-flex items-center justify-center h-5 w-5 rounded",
+                      "bg-background/90 border border-border shadow-sm",
+                      "text-foreground hover:bg-primary hover:text-primary-foreground",
+                      "transition-opacity",
                     )}
                   >
                     <Split className="h-3 w-3" />

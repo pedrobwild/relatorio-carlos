@@ -14,18 +14,18 @@
  * timezone offset, `parseISO` from `date-fns` is safe.
  */
 
-import { format as formatFn, parse as parseFn, parseISO } from 'date-fns';
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
-import { ptBR } from 'date-fns/locale';
+import { format as formatFn, parse as parseFn, parseISO } from "date-fns";
+import { formatInTimeZone, toZonedTime } from "date-fns-tz";
+import { ptBR } from "date-fns/locale";
 
-export const SP_TIMEZONE = 'America/Sao_Paulo';
+export const SP_TIMEZONE = "America/Sao_Paulo";
 
 /**
  * Parse a `YYYY-MM-DD` string as a local-calendar date (no timezone shift).
  * Returns a Date whose components match the intended calendar day.
  */
 export function parseLocalDate(value: string): Date {
-  const [y, m, d] = value.split('-').map(Number);
+  const [y, m, d] = value.split("-").map(Number);
   return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
@@ -33,10 +33,13 @@ export function parseLocalDate(value: string): Date {
  * Format a date (or ISO string) in São Paulo timezone using `pt-BR`.
  * Default pattern is `dd/MM/yyyy`.
  */
-export function formatBR(value: Date | string | null | undefined, pattern = 'dd/MM/yyyy'): string {
-  if (!value) return '';
-  const date = typeof value === 'string' ? parseISO(value) : value;
-  if (Number.isNaN(date.getTime())) return '';
+export function formatBR(
+  value: Date | string | null | undefined,
+  pattern = "dd/MM/yyyy",
+): string {
+  if (!value) return "";
+  const date = typeof value === "string" ? parseISO(value) : value;
+  if (Number.isNaN(date.getTime())) return "";
   return formatInTimeZone(date, SP_TIMEZONE, pattern, { locale: ptBR });
 }
 
@@ -45,8 +48,8 @@ export function formatBR(value: Date | string | null | undefined, pattern = 'dd/
  * shape for dates persisted in `date` columns in Postgres.
  */
 export function toIsoDateSP(value: Date | string): string {
-  const date = typeof value === 'string' ? parseISO(value) : value;
-  return formatInTimeZone(date, SP_TIMEZONE, 'yyyy-MM-dd');
+  const date = typeof value === "string" ? parseISO(value) : value;
+  return formatInTimeZone(date, SP_TIMEZONE, "yyyy-MM-dd");
 }
 
 /**
@@ -54,7 +57,7 @@ export function toIsoDateSP(value: Date | string): string {
  * need to read calendar fields (year/month/day) of a server timestamp.
  */
 export function toSPDate(value: Date | string): Date {
-  const date = typeof value === 'string' ? parseISO(value) : value;
+  const date = typeof value === "string" ? parseISO(value) : value;
   return toZonedTime(date, SP_TIMEZONE);
 }
 
@@ -64,7 +67,7 @@ export function toSPDate(value: Date | string): Date {
  * silently used the browser timezone instead of São Paulo.
  */
 export function combineDateAndTimeISO(date: Date, time: string): string {
-  const [h = 0, m = 0] = time.split(':').map(Number);
+  const [h = 0, m = 0] = time.split(":").map(Number);
   const out = new Date(date);
   out.setHours(h, m, 0, 0);
   return out.toISOString();
@@ -76,8 +79,8 @@ export function combineDateAndTimeISO(date: Date, time: string): string {
  * on every keystroke — does not throw on partial input.
  */
 export function maskBRDate(input: string | null | undefined): string {
-  if (!input) return '';
-  const digits = String(input).replace(/\D/g, '').slice(0, 8);
+  if (!input) return "";
+  const digits = String(input).replace(/\D/g, "").slice(0, 8);
   if (digits.length <= 2) return digits;
   if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
@@ -96,7 +99,9 @@ export function maskBRDate(input: string | null | undefined): string {
  *
  * Two-digit years are expanded as `20yy`.
  */
-export function parseFlexibleBRDate(input: string | null | undefined): string | null {
+export function parseFlexibleBRDate(
+  input: string | null | undefined,
+): string | null {
   if (input == null) return null;
   const value = String(input).trim();
   if (!value) return null;
@@ -134,8 +139,8 @@ export function parseFlexibleBRDate(input: string | null | undefined): string | 
     return null;
   }
 
-  const mm = String(month).padStart(2, '0');
-  const dd = String(day).padStart(2, '0');
+  const mm = String(month).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
   return `${year}-${mm}-${dd}`;
 }
 

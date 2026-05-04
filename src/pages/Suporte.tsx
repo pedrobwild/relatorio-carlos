@@ -1,4 +1,14 @@
-import { ArrowLeft, FileText, Plus, Filter, Search, FileSignature, ChevronRight, CheckCircle2, Clock } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Plus,
+  Filter,
+  Search,
+  FileSignature,
+  ChevronRight,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,11 +16,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
-import { 
-  FormalizationStatus, 
+import {
+  FormalizationStatus,
   FormalizationType,
-  FORMALIZATION_TYPE_LABELS, 
-  FORMALIZATION_STATUS_LABELS 
+  FORMALIZATION_TYPE_LABELS,
+  FORMALIZATION_STATUS_LABELS,
 } from "@/types/formalization";
 import {
   getStatusIcon,
@@ -56,11 +66,16 @@ const mockFormalizations = [
   },
 ];
 
-
 const Suporte = () => {
-  const signedCount = mockFormalizations.filter(f => f.status === "signed").length;
-  const pendingCount = mockFormalizations.filter(f => f.status === "pending_signatures").length;
-  const draftCount = mockFormalizations.filter(f => f.status === "draft").length;
+  const signedCount = mockFormalizations.filter(
+    (f) => f.status === "signed",
+  ).length;
+  const pendingCount = mockFormalizations.filter(
+    (f) => f.status === "pending_signatures",
+  ).length;
+  const draftCount = mockFormalizations.filter(
+    (f) => f.status === "draft",
+  ).length;
 
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
@@ -69,7 +84,11 @@ const Suporte = () => {
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/relatorio">
-              <Button variant="ghost" size="icon" className="shrink-0 h-11 w-11 rounded-full hover:bg-primary/10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 h-11 w-11 rounded-full hover:bg-primary/10"
+              >
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
@@ -95,7 +114,9 @@ const Suporte = () => {
               <CardContent className="p-4 flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-[hsl(var(--success))]" />
-                  <span className="text-2xl font-bold text-[hsl(var(--success))]">{signedCount}</span>
+                  <span className="text-2xl font-bold text-[hsl(var(--success))]">
+                    {signedCount}
+                  </span>
                 </div>
                 <span className="text-caption mt-1">Assinadas</span>
               </CardContent>
@@ -104,7 +125,9 @@ const Suporte = () => {
               <CardContent className="p-4 flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-[hsl(var(--warning))]" />
-                  <span className="text-2xl font-bold text-[hsl(var(--warning))]">{pendingCount}</span>
+                  <span className="text-2xl font-bold text-[hsl(var(--warning))]">
+                    {pendingCount}
+                  </span>
                 </div>
                 <span className="text-caption mt-1">Pendentes</span>
               </CardContent>
@@ -113,7 +136,9 @@ const Suporte = () => {
               <CardContent className="p-4 flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-2xl font-bold text-foreground">{draftCount}</span>
+                  <span className="text-2xl font-bold text-foreground">
+                    {draftCount}
+                  </span>
                 </div>
                 <span className="text-caption mt-1">Rascunhos</span>
               </CardContent>
@@ -124,8 +149,8 @@ const Suporte = () => {
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar formalizações..." 
+              <Input
+                placeholder="Buscar formalizações..."
                 className="pl-9 h-11"
               />
             </div>
@@ -142,25 +167,45 @@ const Suporte = () => {
               <TabsTrigger value="signed">Assinadas</TabsTrigger>
               <TabsTrigger value="draft">Rascunhos</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="all" className="mt-4 space-y-3">
               {mockFormalizations.map((formalization) => (
-                <Card key={formalization.id} className="hover:bg-muted/50 transition-colors cursor-pointer">
+                <Card
+                  key={formalization.id}
+                  className="hover:bg-muted/50 transition-colors cursor-pointer"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className="text-2xl">{getTypeIcon(formalization.type)}</div>
+                      <div className="text-2xl">
+                        {getTypeIcon(formalization.type)}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-body font-medium truncate">{formalization.title}</h3>
-                            <p className="text-caption line-clamp-1 mt-0.5">{formalization.summary}</p>
+                            <h3 className="text-body font-medium truncate">
+                              {formalization.title}
+                            </h3>
+                            <p className="text-caption line-clamp-1 mt-0.5">
+                              {formalization.summary}
+                            </p>
                           </div>
                           <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                         </div>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge variant={getStatusBadgeVariant(formalization.status)} className="gap-1">
+                          <Badge
+                            variant={getStatusBadgeVariant(
+                              formalization.status,
+                            )}
+                            className="gap-1"
+                          >
                             {getStatusIcon(formalization.status)}
-                            <span>{FORMALIZATION_STATUS_LABELS[formalization.status]}</span>
+                            <span>
+                              {
+                                FORMALIZATION_STATUS_LABELS[
+                                  formalization.status
+                                ]
+                              }
+                            </span>
                           </Badge>
                           <Badge variant="outline" className="text-xs">
                             {FORMALIZATION_TYPE_LABELS[formalization.type]}
@@ -171,7 +216,8 @@ const Suporte = () => {
                           {formalization.status !== "draft" && (
                             <span className="text-tiny flex items-center gap-1">
                               <FileSignature className="w-3 h-3" />
-                              {formalization.parties_signed}/{formalization.parties_total}
+                              {formalization.parties_signed}/
+                              {formalization.parties_total}
                             </span>
                           )}
                         </div>
@@ -181,96 +227,163 @@ const Suporte = () => {
                 </Card>
               ))}
             </TabsContent>
-            
+
             <TabsContent value="pending" className="mt-4 space-y-3">
-              {mockFormalizations.filter(f => f.status === "pending_signatures").map((formalization) => (
-                <Card key={formalization.id} className="hover:bg-muted/50 transition-colors cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="text-2xl">{getTypeIcon(formalization.type)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-body font-medium truncate">{formalization.title}</h3>
-                            <p className="text-caption line-clamp-1 mt-0.5">{formalization.summary}</p>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              {mockFormalizations
+                .filter((f) => f.status === "pending_signatures")
+                .map((formalization) => (
+                  <Card
+                    key={formalization.id}
+                    className="hover:bg-muted/50 transition-colors cursor-pointer"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="text-2xl">
+                          {getTypeIcon(formalization.type)}
                         </div>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge variant={getStatusBadgeVariant(formalization.status)} className="gap-1">
-                            {getStatusIcon(formalization.status)}
-                            <span>{FORMALIZATION_STATUS_LABELS[formalization.status]}</span>
-                          </Badge>
-                          <span className="text-tiny flex items-center gap-1">
-                            <FileSignature className="w-3 h-3" />
-                            {formalization.parties_signed}/{formalization.parties_total}
-                          </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-body font-medium truncate">
+                                {formalization.title}
+                              </h3>
+                              <p className="text-caption line-clamp-1 mt-0.5">
+                                {formalization.summary}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                          </div>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <Badge
+                              variant={getStatusBadgeVariant(
+                                formalization.status,
+                              )}
+                              className="gap-1"
+                            >
+                              {getStatusIcon(formalization.status)}
+                              <span>
+                                {
+                                  FORMALIZATION_STATUS_LABELS[
+                                    formalization.status
+                                  ]
+                                }
+                              </span>
+                            </Badge>
+                            <span className="text-tiny flex items-center gap-1">
+                              <FileSignature className="w-3 h-3" />
+                              {formalization.parties_signed}/
+                              {formalization.parties_total}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
             </TabsContent>
-            
+
             <TabsContent value="signed" className="mt-4 space-y-3">
-              {mockFormalizations.filter(f => f.status === "signed").map((formalization) => (
-                <Card key={formalization.id} className="hover:bg-muted/50 transition-colors cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="text-2xl">{getTypeIcon(formalization.type)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-body font-medium truncate">{formalization.title}</h3>
-                            <p className="text-caption line-clamp-1 mt-0.5">{formalization.summary}</p>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              {mockFormalizations
+                .filter((f) => f.status === "signed")
+                .map((formalization) => (
+                  <Card
+                    key={formalization.id}
+                    className="hover:bg-muted/50 transition-colors cursor-pointer"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="text-2xl">
+                          {getTypeIcon(formalization.type)}
                         </div>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge variant={getStatusBadgeVariant(formalization.status)} className="gap-1">
-                            {getStatusIcon(formalization.status)}
-                            <span>{FORMALIZATION_STATUS_LABELS[formalization.status]}</span>
-                          </Badge>
-                          <span className="text-tiny">
-                            Assinado em {formatDate(formalization.locked_at!)}
-                          </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-body font-medium truncate">
+                                {formalization.title}
+                              </h3>
+                              <p className="text-caption line-clamp-1 mt-0.5">
+                                {formalization.summary}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                          </div>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <Badge
+                              variant={getStatusBadgeVariant(
+                                formalization.status,
+                              )}
+                              className="gap-1"
+                            >
+                              {getStatusIcon(formalization.status)}
+                              <span>
+                                {
+                                  FORMALIZATION_STATUS_LABELS[
+                                    formalization.status
+                                  ]
+                                }
+                              </span>
+                            </Badge>
+                            <span className="text-tiny">
+                              Assinado em {formatDate(formalization.locked_at!)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
             </TabsContent>
-            
+
             <TabsContent value="draft" className="mt-4 space-y-3">
-              {mockFormalizations.filter(f => f.status === "draft").map((formalization) => (
-                <Card key={formalization.id} className="hover:bg-muted/50 transition-colors cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="text-2xl">{getTypeIcon(formalization.type)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-body font-medium truncate">{formalization.title}</h3>
-                            <p className="text-caption line-clamp-1 mt-0.5">{formalization.summary}</p>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              {mockFormalizations
+                .filter((f) => f.status === "draft")
+                .map((formalization) => (
+                  <Card
+                    key={formalization.id}
+                    className="hover:bg-muted/50 transition-colors cursor-pointer"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="text-2xl">
+                          {getTypeIcon(formalization.type)}
                         </div>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge variant={getStatusBadgeVariant(formalization.status)} className="gap-1">
-                            {getStatusIcon(formalization.status)}
-                            <span>{FORMALIZATION_STATUS_LABELS[formalization.status]}</span>
-                          </Badge>
-                          <span className="text-tiny">
-                            Criado em {formatDate(formalization.created_at)}
-                          </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-body font-medium truncate">
+                                {formalization.title}
+                              </h3>
+                              <p className="text-caption line-clamp-1 mt-0.5">
+                                {formalization.summary}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                          </div>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <Badge
+                              variant={getStatusBadgeVariant(
+                                formalization.status,
+                              )}
+                              className="gap-1"
+                            >
+                              {getStatusIcon(formalization.status)}
+                              <span>
+                                {
+                                  FORMALIZATION_STATUS_LABELS[
+                                    formalization.status
+                                  ]
+                                }
+                              </span>
+                            </Badge>
+                            <span className="text-tiny">
+                              Criado em {formatDate(formalization.created_at)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
             </TabsContent>
           </Tabs>
 
@@ -284,12 +397,14 @@ const Suporte = () => {
             </CardHeader>
             <CardContent className="text-body text-muted-foreground space-y-2">
               <p>
-                Formalizações são documentos que registram acordos, atas de reunião e alterações de escopo 
-                com comprovação de ciência de ambas as partes.
+                Formalizações são documentos que registram acordos, atas de
+                reunião e alterações de escopo com comprovação de ciência de
+                ambas as partes.
               </p>
               <p>
-                Após a assinatura de todas as partes, o documento é bloqueado e recebe um hash de 
-                integridade para garantir que não foi alterado.
+                Após a assinatura de todas as partes, o documento é bloqueado e
+                recebe um hash de integridade para garantir que não foi
+                alterado.
               </p>
             </CardContent>
           </Card>

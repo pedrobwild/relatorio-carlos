@@ -8,8 +8,8 @@
  * Sticky por padrão (top: var(--header-height)) para que filtros sigam o
  * scroll em listas longas — comportamento Linear/Notion.
  */
-import type { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface PageToolbarProps {
   search?: ReactNode;
@@ -31,9 +31,9 @@ export function PageToolbar({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-2 py-3 border-b border-border-subtle',
+        "flex flex-wrap items-center gap-2 py-3 border-b border-border-subtle",
         sticky &&
-          'sticky top-0 z-30 -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 surface-glass',
+          "sticky top-0 z-30 -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 surface-glass",
         className,
       )}
     >

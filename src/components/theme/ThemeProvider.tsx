@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 /**
  * Tema claro é o único tema suportado no Portal BWild.

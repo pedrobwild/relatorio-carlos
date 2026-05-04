@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useRef, type RefObject } from "react";
-import { useScopedSwipe, type ScopedSwipeOptions } from "@/hooks/useScopedSwipe";
+import {
+  useScopedSwipe,
+  type ScopedSwipeOptions,
+} from "@/hooks/useScopedSwipe";
 
 type Touch = { clientX: number; clientY: number };
 
@@ -57,8 +60,12 @@ describe("useScopedSwipe", () => {
     const { node, cleanup } = setup({ onSwipeLeft, onSwipeRight });
 
     act(() => {
-      node.dispatchEvent(makeTouchEvent("touchstart", [{ clientX: 300, clientY: 100 }], node, 0));
-      node.dispatchEvent(makeTouchEvent("touchend", [{ clientX: 100, clientY: 110 }], node, 200));
+      node.dispatchEvent(
+        makeTouchEvent("touchstart", [{ clientX: 300, clientY: 100 }], node, 0),
+      );
+      node.dispatchEvent(
+        makeTouchEvent("touchend", [{ clientX: 100, clientY: 110 }], node, 200),
+      );
     });
 
     expect(onSwipeLeft).toHaveBeenCalledTimes(1);
@@ -71,8 +78,12 @@ describe("useScopedSwipe", () => {
     const { node, cleanup } = setup({ onSwipeLeft, threshold: 120 });
 
     act(() => {
-      node.dispatchEvent(makeTouchEvent("touchstart", [{ clientX: 200, clientY: 100 }], node, 0));
-      node.dispatchEvent(makeTouchEvent("touchend", [{ clientX: 130, clientY: 105 }], node, 100));
+      node.dispatchEvent(
+        makeTouchEvent("touchstart", [{ clientX: 200, clientY: 100 }], node, 0),
+      );
+      node.dispatchEvent(
+        makeTouchEvent("touchend", [{ clientX: 130, clientY: 105 }], node, 100),
+      );
     });
 
     expect(onSwipeLeft).not.toHaveBeenCalled();
@@ -84,9 +95,18 @@ describe("useScopedSwipe", () => {
     const { node, cleanup } = setup({ onSwipeLeft, minVelocity: 0.4 });
 
     act(() => {
-      node.dispatchEvent(makeTouchEvent("touchstart", [{ clientX: 300, clientY: 100 }], node, 0));
+      node.dispatchEvent(
+        makeTouchEvent("touchstart", [{ clientX: 300, clientY: 100 }], node, 0),
+      );
       // 200px in 2000ms = 0.1 px/ms, below the 0.4 threshold
-      node.dispatchEvent(makeTouchEvent("touchend", [{ clientX: 100, clientY: 105 }], node, 2000));
+      node.dispatchEvent(
+        makeTouchEvent(
+          "touchend",
+          [{ clientX: 100, clientY: 105 }],
+          node,
+          2000,
+        ),
+      );
     });
 
     expect(onSwipeLeft).not.toHaveBeenCalled();
@@ -99,8 +119,12 @@ describe("useScopedSwipe", () => {
 
     act(() => {
       // Start at x=10, well inside the 24px edge buffer
-      node.dispatchEvent(makeTouchEvent("touchstart", [{ clientX: 10, clientY: 100 }], node, 0));
-      node.dispatchEvent(makeTouchEvent("touchend", [{ clientX: 220, clientY: 105 }], node, 200));
+      node.dispatchEvent(
+        makeTouchEvent("touchstart", [{ clientX: 10, clientY: 100 }], node, 0),
+      );
+      node.dispatchEvent(
+        makeTouchEvent("touchend", [{ clientX: 220, clientY: 105 }], node, 200),
+      );
     });
 
     expect(onSwipeRight).not.toHaveBeenCalled();
@@ -121,8 +145,22 @@ describe("useScopedSwipe", () => {
     const { cleanup } = setup({ onSwipeLeft, mountNode: node });
 
     act(() => {
-      node.dispatchEvent(makeTouchEvent("touchstart", [{ clientX: 300, clientY: 100 }], target, 0));
-      node.dispatchEvent(makeTouchEvent("touchend", [{ clientX: 100, clientY: 105 }], target, 200));
+      node.dispatchEvent(
+        makeTouchEvent(
+          "touchstart",
+          [{ clientX: 300, clientY: 100 }],
+          target,
+          0,
+        ),
+      );
+      node.dispatchEvent(
+        makeTouchEvent(
+          "touchend",
+          [{ clientX: 100, clientY: 105 }],
+          target,
+          200,
+        ),
+      );
     });
 
     expect(onSwipeLeft).not.toHaveBeenCalled();
@@ -135,8 +173,12 @@ describe("useScopedSwipe", () => {
     const { node, cleanup } = setup({ onSwipeLeft, disableWhen });
 
     act(() => {
-      node.dispatchEvent(makeTouchEvent("touchstart", [{ clientX: 300, clientY: 100 }], node, 0));
-      node.dispatchEvent(makeTouchEvent("touchend", [{ clientX: 100, clientY: 105 }], node, 200));
+      node.dispatchEvent(
+        makeTouchEvent("touchstart", [{ clientX: 300, clientY: 100 }], node, 0),
+      );
+      node.dispatchEvent(
+        makeTouchEvent("touchend", [{ clientX: 100, clientY: 105 }], node, 200),
+      );
     });
 
     expect(onSwipeLeft).not.toHaveBeenCalled();
@@ -149,9 +191,13 @@ describe("useScopedSwipe", () => {
     const { node, cleanup } = setup({ onSwipeLeft });
 
     act(() => {
-      node.dispatchEvent(makeTouchEvent("touchstart", [{ clientX: 300, clientY: 100 }], node, 0));
+      node.dispatchEvent(
+        makeTouchEvent("touchstart", [{ clientX: 300, clientY: 100 }], node, 0),
+      );
       // dx=-200, dy=200 → ratio above the default 0.6
-      node.dispatchEvent(makeTouchEvent("touchend", [{ clientX: 100, clientY: 300 }], node, 200));
+      node.dispatchEvent(
+        makeTouchEvent("touchend", [{ clientX: 100, clientY: 300 }], node, 200),
+      );
     });
 
     expect(onSwipeLeft).not.toHaveBeenCalled();

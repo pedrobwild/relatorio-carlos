@@ -2,7 +2,7 @@ export interface PartyRow {
   id: string;
   user_id: string | null;
   email: string | null;
-  party_type: 'customer' | 'company';
+  party_type: "customer" | "company";
   must_sign: boolean;
   display_name: string;
   role_label: string | null;
@@ -46,27 +46,29 @@ export interface EvidenceLinkRow {
   created_at: string;
 }
 
-export const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+export const getStatusBadgeVariant = (
+  status: string,
+): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
-    case 'signed':
-      return 'default';
-    case 'pending_signatures':
-      return 'secondary';
-    case 'voided':
-      return 'destructive';
+    case "signed":
+      return "default";
+    case "pending_signatures":
+      return "secondary";
+    case "voided":
+      return "destructive";
     default:
-      return 'outline';
+      return "outline";
   }
 };
 
 export const formatDate = (dateString: string | null) => {
-  if (!dateString) return '';
-  return new Date(dateString).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 

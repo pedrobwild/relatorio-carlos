@@ -1,16 +1,16 @@
-import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Home, Settings } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useNavigate } from "react-router-dom";
+import { LogOut, User, Home, Settings } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 
 /**
  * Compact user menu — avatar icon that opens a dropdown with:
@@ -25,31 +25,32 @@ export function UserMenu() {
   const { isAdmin, isStaff, roles } = useUserRole();
 
   const ROLE_LABELS: Record<string, string> = {
-    admin: 'Admin',
-    manager: 'Gestor',
-    engineer: 'Engenheiro',
-    arquitetura: 'Arquitetura',
-    gestor: 'Supervisor',
-    suprimentos: 'Suprimentos',
-    financeiro: 'Financeiro',
-    cs: 'Customer Success',
-    customer: 'Cliente',
+    admin: "Admin",
+    manager: "Gestor",
+    engineer: "Engenheiro",
+    arquitetura: "Arquitetura",
+    gestor: "Supervisor",
+    suprimentos: "Suprimentos",
+    financeiro: "Financeiro",
+    cs: "Customer Success",
+    customer: "Cliente",
   };
 
-  const primaryRoleLabel = roles.length > 0 ? ROLE_LABELS[roles[0]] || roles[0] : null;
+  const primaryRoleLabel =
+    roles.length > 0 ? ROLE_LABELS[roles[0]] || roles[0] : null;
 
   if (!isAuthenticated) return null;
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/auth', { replace: true });
+      navigate("/auth", { replace: true });
     } catch {
-      navigate('/auth', { replace: true });
+      navigate("/auth", { replace: true });
     }
   };
 
-  const homePath = isStaff ? '/gestao' : '/minhas-obras';
+  const homePath = isStaff ? "/gestao" : "/minhas-obras";
 
   return (
     <DropdownMenu>
@@ -67,10 +68,13 @@ export function UserMenu() {
         <div className="px-3 py-2">
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium truncate flex-1">
-              {user?.email?.split('@')[0]}
+              {user?.email?.split("@")[0]}
             </p>
             {primaryRoleLabel && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0 font-medium">
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0 h-4 shrink-0 font-medium"
+              >
                 {primaryRoleLabel}
               </Badge>
             )}
@@ -85,7 +89,7 @@ export function UserMenu() {
           Minhas Obras
         </DropdownMenuItem>
         {isAdmin && (
-          <DropdownMenuItem onClick={() => navigate('/admin')}>
+          <DropdownMenuItem onClick={() => navigate("/admin")}>
             <Settings className="mr-2 h-4 w-4" />
             Configurações
           </DropdownMenuItem>

@@ -1,49 +1,61 @@
-import { useState, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AppHeader } from '@/components/AppHeader';
-import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
-import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
-import { PortfolioCommandBar } from './PortfolioCommandBar';
-import { PortfolioKpiStrip, type ProjectFinancial } from './PortfolioKpiStrip';
-import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
-import { MobileProjectList } from './MobileProjectList';
-import { ProjectsListView } from '@/components/gestao/ProjectsListView';
-import { ProjectsCardView } from '@/components/gestao/ProjectsCardView';
-import { PortfolioAdvancedFilters } from './filters/PortfolioAdvancedFilters';
-import { ActiveFilterChips } from './filters/ActiveFilterChips';
-import { usePortfolioFilters } from './hooks/usePortfolioFilters';
-import { useDocumentTitle } from './hooks/useDocumentTitle';
-import { StaleProjectsDialog } from './StaleProjectsDialog';
+import { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { AppHeader } from "@/components/AppHeader";
 import {
-  PortfolioPageSkeleton, KpiStripSkeleton,
-  GridSkeleton, EmptyPortfolio, NoFilterResults,
-  PortfolioErrorState, StaleDataBanner,
-} from './PortfolioStates';
-import type { ProjectWithCustomer } from '@/infra/repositories';
+  useProjectsQuery,
+  useProjectSummaryQuery,
+} from "@/hooks/useProjectsQuery";
+import { DuplicateProjectModal } from "@/components/DuplicateProjectModal";
+import { PortfolioCommandBar } from "./PortfolioCommandBar";
+import { PortfolioKpiStrip, type ProjectFinancial } from "./PortfolioKpiStrip";
+import { WorkQuickPreviewDrawer } from "./WorkQuickPreviewDrawer";
+import { MobileProjectList } from "./MobileProjectList";
+import { ProjectsListView } from "@/components/gestao/ProjectsListView";
+import { ProjectsCardView } from "@/components/gestao/ProjectsCardView";
+import { PortfolioAdvancedFilters } from "./filters/PortfolioAdvancedFilters";
+import { ActiveFilterChips } from "./filters/ActiveFilterChips";
+import { usePortfolioFilters } from "./hooks/usePortfolioFilters";
+import { useDocumentTitle } from "./hooks/useDocumentTitle";
+import { StaleProjectsDialog } from "./StaleProjectsDialog";
+import {
+  PortfolioPageSkeleton,
+  KpiStripSkeleton,
+  GridSkeleton,
+  EmptyPortfolio,
+  NoFilterResults,
+  PortfolioErrorState,
+  StaleDataBanner,
+} from "./PortfolioStates";
+import type { ProjectWithCustomer } from "@/infra/repositories";
 
 export default function PortfolioPage() {
   const navigate = useNavigate();
 
   // ── Data queries ────────────────────────────────────────────────────────
   const {
-    data: projects = [], isLoading, error, refetch,
-    isRefetching, isStale,
+    data: projects = [],
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+    isStale,
   } = useProjectsQuery();
 
-  const {
-    data: summaries = [],
-    isLoading: summariesLoading,
-  } = useProjectSummaryQuery();
+  const { data: summaries = [], isLoading: summariesLoading } =
+    useProjectSummaryQuery();
 
   // ── Document title with alert count ─────────────────────────────────────
   // Count unique projects that need attention (not individual issues)
   const alertCount = useMemo(() => {
     const now = Date.now();
     let count = 0;
-    const summaryMap = new Map(summaries.map(s => [s.id, s]));
+    const summaryMap = new Map(summaries.map((s) => [s.id, s]));
     for (const p of projects) {
-      if (p.status !== 'active') continue;
-      const isOverdueDelivery = p.planned_end_date && new Date(p.planned_end_date).getTime() < now && !p.actual_end_date;
+      if (p.status !== "active") continue;
+      const isOverdueDelivery =
+        p.planned_end_date &&
+        new Date(p.planned_end_date).getTime() < now &&
+        !p.actual_end_date;
       const s = summaryMap.get(p.id);
       const hasOverdueActivities = s && s.overdue_count > 0;
       // Count each project only once even if it has multiple issues
@@ -61,61 +73,84 @@ export default function PortfolioPage() {
   const filters = usePortfolioFilters(projects, summaries, financials);
 
   // ── Preview drawer ──────────────────────────────────────────────────────
-  const [previewProject, setPreviewProject] = useState<ProjectWithCustomer | null>(null);
+  const [previewProject, setPreviewProject] =
+    useState<ProjectWithCustomer | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // ── Duplicate modal ─────────────────────────────────────────────────────
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
-  const [duplicateTarget, setDuplicateTarget] = useState<ProjectWithCustomer | null>(null);
+  const [duplicateTarget, setDuplicateTarget] =
+    useState<ProjectWithCustomer | null>(null);
 
   // ── Stale projects dialog ──────────────────────────────────────────────
   const [staleDialogOpen, setStaleDialogOpen] = useState(false);
 
-  const handleKpiFilterChange = useCallback((key: typeof filters.kpiFilter) => {
-    if (key === 'stale-7d') {
-      setStaleDialogOpen(true);
-      filters.setKpiFilter(key);
-    } else {
-      filters.setKpiFilter(key);
-    }
-  }, [filters]);
+  const handleKpiFilterChange = useCallback(
+    (key: typeof filters.kpiFilter) => {
+      if (key === "stale-7d") {
+        setStaleDialogOpen(true);
+        filters.setKpiFilter(key);
+      } else {
+        filters.setKpiFilter(key);
+      }
+    },
+    [filters],
+  );
 
   const displayedProjects = filters.filtered;
 
   // ── Export to CSV ───────────────────────────────────────────────────────
   const handleExportCSV = useCallback(() => {
     if (displayedProjects.length === 0) return;
-    const summaryMap = new Map(summaries.map(s => [s.id, s]));
+    const summaryMap = new Map(summaries.map((s) => [s.id, s]));
     const headers = [
-      'Nome', 'Status', 'Cliente', 'Responsável', 'Cidade',
-      'Início', 'Entrega Prevista', 'Entrega Real',
-      'Valor Contrato', 'Progresso (%)', 'Pendências', 'Atrasadas',
+      "Nome",
+      "Status",
+      "Cliente",
+      "Responsável",
+      "Cidade",
+      "Início",
+      "Entrega Prevista",
+      "Entrega Real",
+      "Valor Contrato",
+      "Progresso (%)",
+      "Pendências",
+      "Atrasadas",
     ];
     const escape = (v: unknown) => {
-      const s = v == null ? '' : String(v);
+      const s = v == null ? "" : String(v);
       return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
-    const rows = displayedProjects.map(p => {
+    const rows = displayedProjects.map((p) => {
       const s = summaryMap.get(p.id);
       return [
-        p.name, p.status, p.customer_name ?? '', p.engineer_name ?? '', p.cidade ?? '',
-        p.planned_start_date ?? '', p.planned_end_date ?? '', p.actual_end_date ?? '',
-        p.contract_value ?? '',
-        s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : '',
-        s?.pending_count ?? 0, s?.overdue_count ?? 0,
-      ].map(escape).join(';');
+        p.name,
+        p.status,
+        p.customer_name ?? "",
+        p.engineer_name ?? "",
+        p.cidade ?? "",
+        p.planned_start_date ?? "",
+        p.planned_end_date ?? "",
+        p.actual_end_date ?? "",
+        p.contract_value ?? "",
+        s?.progress_percentage != null
+          ? Math.round(Math.min(100, Number(s.progress_percentage)))
+          : "",
+        s?.pending_count ?? 0,
+        s?.overdue_count ?? 0,
+      ]
+        .map(escape)
+        .join(";");
     });
-    const csv = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const csv = "\uFEFF" + [headers.join(";"), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `obras_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `obras_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }, [displayedProjects, summaries]);
-
-
 
   // ── Full-page loading ───────────────────────────────────────────────────
   if (isLoading && projects.length === 0) {
@@ -143,10 +178,16 @@ export default function PortfolioPage() {
         </div>
       </AppHeader>
 
-      <main id="main-content" className="max-w-[1440px] mx-auto px-4 lg:px-6 py-3 space-y-2.5 md:pb-4">
+      <main
+        id="main-content"
+        className="max-w-[1440px] mx-auto px-4 lg:px-6 py-3 space-y-2.5 md:pb-4"
+      >
         {/* Stale data banner */}
         {isStale && !isLoading && projects.length > 0 && (
-          <StaleDataBanner onRefresh={() => refetch()} isRefetching={isRefetching} />
+          <StaleDataBanner
+            onRefresh={() => refetch()}
+            isRefetching={isRefetching}
+          />
         )}
 
         {/* Live region for filter count announcements */}
@@ -184,7 +225,9 @@ export default function PortfolioPage() {
         {filters.hasAnyFilter && displayedProjects.length > 0 && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="font-medium tabular-nums">
-              {displayedProjects.length} obra{displayedProjects.length !== 1 ? 's' : ''} encontrada{displayedProjects.length !== 1 ? 's' : ''}
+              {displayedProjects.length} obra
+              {displayedProjects.length !== 1 ? "s" : ""} encontrada
+              {displayedProjects.length !== 1 ? "s" : ""}
             </span>
             <span>·</span>
             <button
@@ -217,7 +260,9 @@ export default function PortfolioPage() {
           ) : error ? (
             <PortfolioErrorState error={error} onRetry={() => refetch()} />
           ) : projects.length === 0 ? (
-            <EmptyPortfolio onCreateProject={() => navigate('/gestao/nova-obra')} />
+            <EmptyPortfolio
+              onCreateProject={() => navigate("/gestao/nova-obra")}
+            />
           ) : displayedProjects.length === 0 ? (
             <NoFilterResults
               onClearFilters={filters.handleClearAll}
@@ -229,20 +274,29 @@ export default function PortfolioPage() {
               <div className="block md:hidden">
                 <MobileProjectList
                   projects={displayedProjects}
-                  onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                  onProjectClick={(p) => {
+                    setPreviewProject(p);
+                    setDrawerOpen(true);
+                  }}
                 />
               </div>
               {/* Desktop: respects view mode */}
               <div className="hidden md:block">
-                {filters.viewMode === 'cards' ? (
+                {filters.viewMode === "cards" ? (
                   <ProjectsCardView
                     projects={displayedProjects}
-                    onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                    onProjectClick={(p) => {
+                      setPreviewProject(p);
+                      setDrawerOpen(true);
+                    }}
                   />
                 ) : (
                   <ProjectsListView
                     projects={displayedProjects}
-                    onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                    onProjectClick={(p) => {
+                      setPreviewProject(p);
+                      setDrawerOpen(true);
+                    }}
                   />
                 )}
               </div>
@@ -262,7 +316,7 @@ export default function PortfolioPage() {
 
       <WorkQuickPreviewDrawer
         project={previewProject}
-        summary={summaries.find(s => s.id === previewProject?.id) ?? null}
+        summary={summaries.find((s) => s.id === previewProject?.id) ?? null}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
       />

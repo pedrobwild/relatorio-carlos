@@ -9,13 +9,20 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotionSafe } from "@/hooks/useReducedMotionSafe";
 
-const APPROVAL_TYPES = new Set(["approval_3d", "approval_exec", "decision", "extra_purchase"]);
+const APPROVAL_TYPES = new Set([
+  "approval_3d",
+  "approval_exec",
+  "decision",
+  "extra_purchase",
+]);
 
 interface FloatingApprovalBannerProps {
   projectId?: string;
 }
 
-export function FloatingApprovalBanner({ projectId }: FloatingApprovalBannerProps) {
+export function FloatingApprovalBanner({
+  projectId,
+}: FloatingApprovalBannerProps) {
   const [dismissed, setDismissed] = useState(false);
   const { sortedItems } = usePendencias({ projectId });
   const { paths } = useProjectNavigation();
@@ -32,7 +39,7 @@ export function FloatingApprovalBanner({ projectId }: FloatingApprovalBannerProp
   if (dismissed || urgentApprovals.length === 0) return null;
 
   const hasOverdue = urgentApprovals.some(
-    (i) => i.dueDate && getStatus(i.dueDate) === "atrasado"
+    (i) => i.dueDate && getStatus(i.dueDate) === "atrasado",
   );
 
   return (
@@ -52,7 +59,7 @@ export function FloatingApprovalBanner({ projectId }: FloatingApprovalBannerProp
           "bg-card border rounded-xl shadow-lg px-4 py-3",
           hasOverdue
             ? "border-destructive/40 shadow-destructive/10"
-            : "border-warning/40 shadow-warning/10"
+            : "border-warning/40 shadow-warning/10",
         )}
       >
         <div className="flex items-center gap-3">
@@ -61,7 +68,7 @@ export function FloatingApprovalBanner({ projectId }: FloatingApprovalBannerProp
               "flex items-center justify-center w-9 h-9 rounded-lg shrink-0",
               hasOverdue
                 ? "bg-destructive/15 text-destructive"
-                : "bg-warning/15 text-[hsl(var(--warning))]"
+                : "bg-warning/15 text-[hsl(var(--warning))]",
             )}
           >
             <AlertTriangle className="w-4.5 h-4.5" />
@@ -81,7 +88,11 @@ export function FloatingApprovalBanner({ projectId }: FloatingApprovalBannerProp
           </div>
 
           <Link to={paths.pendencias}>
-            <Button size="sm" variant={hasOverdue ? "destructive" : "default"} className="gap-1 shrink-0">
+            <Button
+              size="sm"
+              variant={hasOverdue ? "destructive" : "default"}
+              className="gap-1 shrink-0"
+            >
               Ver
               <ChevronRight className="w-3.5 h-3.5" />
             </Button>

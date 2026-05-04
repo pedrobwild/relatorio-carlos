@@ -5,87 +5,82 @@
  * so they can be used in hooks, components, and tests without side-effects.
  */
 
-import type { AppRole } from '@/hooks/useUserRole';
-import type { ModulePermission, ProjectPermission } from '@/types/permissions';
+import type { AppRole } from "@/hooks/useUserRole";
+import type { ModulePermission, ProjectPermission } from "@/types/permissions";
 
 // ── Module-level permission matrix ──────────────────────────────────────────
 
 const MODULE_PERMISSIONS: Record<AppRole, ModulePermission[]> = {
-  customer: ['works:read'],
+  customer: ["works:read"],
   engineer: [
-    'users:read',
-    'users:write',
-    'users:delete',
-    'works:read',
-    'works:write',
-    'works:delete',
-    'templates:read',
-    'templates:write',
-    'templates:delete',
-    'system:admin',
+    "users:read",
+    "users:write",
+    "users:delete",
+    "works:read",
+    "works:write",
+    "works:delete",
+    "templates:read",
+    "templates:write",
+    "templates:delete",
+    "system:admin",
   ],
   manager: [
-    'users:read',
-    'users:write',
-    'works:read',
-    'works:write',
-    'works:delete',
-    'templates:read',
-    'templates:write',
+    "users:read",
+    "users:write",
+    "works:read",
+    "works:write",
+    "works:delete",
+    "templates:read",
+    "templates:write",
   ],
   admin: [
-    'users:read',
-    'users:write',
-    'users:delete',
-    'works:read',
-    'works:write',
-    'works:delete',
-    'templates:read',
-    'templates:write',
-    'templates:delete',
-    'system:admin',
+    "users:read",
+    "users:write",
+    "users:delete",
+    "works:read",
+    "works:write",
+    "works:delete",
+    "templates:read",
+    "templates:write",
+    "templates:delete",
+    "system:admin",
   ],
   gestor: [
-    'users:read',
-    'users:write',
-    'users:delete',
-    'works:read',
-    'works:write',
-    'works:delete',
-    'templates:read',
-    'templates:write',
-    'templates:delete',
-    'system:admin',
+    "users:read",
+    "users:write",
+    "users:delete",
+    "works:read",
+    "works:write",
+    "works:delete",
+    "templates:read",
+    "templates:write",
+    "templates:delete",
+    "system:admin",
   ],
-  suprimentos: [
-    'works:read',
-    'works:write',
-  ],
-  financeiro: [
-    'works:read',
-  ],
+  suprimentos: ["works:read", "works:write"],
+  financeiro: ["works:read"],
   cs: [
-    'users:read',
-    'users:write',
-    'users:delete',
-    'works:read',
-    'works:write',
-    'works:delete',
-    'templates:read',
-    'templates:write',
-    'templates:delete',
-    'system:admin',
+    "users:read",
+    "users:write",
+    "users:delete",
+    "works:read",
+    "works:write",
+    "works:delete",
+    "templates:read",
+    "templates:write",
+    "templates:delete",
+    "system:admin",
   ],
   arquitetura: [
-    'users:read',
-    'users:write',
-    'works:read',
-    'works:write',
-    'works:delete',
-    'templates:read',
-    'templates:write',
-    'templates:delete',
-    'system:admin',
+    "users:read",
+    "users:write",
+    "works:read",
+    "works:write",
+    "works:delete",
+    "templates:read",
+    "templates:write",
+    "templates:delete",
+    "system:admin",
   ],
 };
 
@@ -117,23 +112,23 @@ export function hasAllModulePermissions(
  */
 const DEFAULT_PROJECT_PERMISSIONS: Record<string, ProjectPermission[]> = {
   owner: [
-    'obra:read',
-    'obra:write',
-    'obra:manage_members',
-    'obra:manage_documents',
-    'obra:manage_schedule',
-    'obra:manage_finances',
-    'obra:manage_formalizations',
+    "obra:read",
+    "obra:write",
+    "obra:manage_members",
+    "obra:manage_documents",
+    "obra:manage_schedule",
+    "obra:manage_finances",
+    "obra:manage_formalizations",
   ],
   engineer: [
-    'obra:read',
-    'obra:write',
-    'obra:manage_documents',
-    'obra:manage_schedule',
-    'obra:manage_finances',
-    'obra:manage_formalizations',
+    "obra:read",
+    "obra:write",
+    "obra:manage_documents",
+    "obra:manage_schedule",
+    "obra:manage_finances",
+    "obra:manage_formalizations",
   ],
-  viewer: ['obra:read'],
+  viewer: ["obra:read"],
 };
 
 /**
@@ -155,7 +150,9 @@ export function hasProjectPermission(
 
   // Fall back to role defaults
   if (!projectRole) return false;
-  return DEFAULT_PROJECT_PERMISSIONS[projectRole]?.includes(permission) ?? false;
+  return (
+    DEFAULT_PROJECT_PERMISSIONS[projectRole]?.includes(permission) ?? false
+  );
 }
 
 // ── Guards for use in route / component level ───────────────────────────────
@@ -175,7 +172,7 @@ export function checkPermission(
   permission: ModulePermission | ProjectPermission,
 ): boolean {
   // Admin bypass
-  if (ctx.roles.includes('admin')) return true;
+  if (ctx.roles.includes("admin")) return true;
 
   // Try module permission first
   if (isModulePermission(permission)) {
@@ -191,5 +188,10 @@ export function checkPermission(
 }
 
 function isModulePermission(p: string): p is ModulePermission {
-  return p.startsWith('users:') || p.startsWith('works:') || p.startsWith('templates:') || p === 'system:admin';
+  return (
+    p.startsWith("users:") ||
+    p.startsWith("works:") ||
+    p.startsWith("templates:") ||
+    p === "system:admin"
+  );
 }

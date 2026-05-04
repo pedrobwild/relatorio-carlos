@@ -17,16 +17,96 @@ const sampleReportData: ReportData = {
   endDate: "2025-09-14",
   reportDate: "2025-09-08",
   activities: [
-    { id: 'home-1', description: "Preparação e Mobilização", plannedStart: "2025-07-01", plannedEnd: "2025-07-05", actualStart: "2025-07-01", actualEnd: "2025-07-04", weight: 5 },
-    { id: 'home-2', description: "Proteções, demolições e infraestrutura", plannedStart: "2025-07-07", plannedEnd: "2025-07-18", actualStart: "2025-07-05", actualEnd: "2025-07-19", weight: 15 },
-    { id: 'home-3', description: "Pisos, revestimentos, bancadas e box", plannedStart: "2025-07-21", plannedEnd: "2025-08-03", actualStart: "2025-07-21", actualEnd: "2025-08-03", weight: 20 },
-    { id: 'home-4', description: "Pinturas e metais", plannedStart: "2025-08-04", plannedEnd: "2025-08-10", actualStart: "2025-08-06", actualEnd: "2025-08-12", weight: 10 },
-    { id: 'home-5', description: "Instalações e elétrica", plannedStart: "2025-08-11", plannedEnd: "2025-08-17", actualStart: "2025-08-14", actualEnd: "2025-08-17", weight: 10 },
-    { id: 'home-6', description: "Marcenaria", plannedStart: "2025-08-20", plannedEnd: "2025-09-05", actualStart: "2025-08-20", actualEnd: "2025-09-05", weight: 33 },
-    { id: 'home-7', description: "Etapa atual: Instalação de mobiliário e eletros", plannedStart: "2025-09-08", plannedEnd: "2025-09-10", actualStart: "2025-09-08", actualEnd: "", weight: 3 },
-    { id: 'home-8', description: "Limpeza fina", plannedStart: "2025-09-11", plannedEnd: "2025-09-11", actualStart: "", actualEnd: "", weight: 2 },
-    { id: 'home-9', description: "Vistoria de qualidade", plannedStart: "2025-09-12", plannedEnd: "2025-09-12", actualStart: "", actualEnd: "", weight: 1 },
-    { id: 'home-10', description: "Conclusão", plannedStart: "2025-09-14", plannedEnd: "2025-09-14", actualStart: "", actualEnd: "", weight: 1 },
+    {
+      id: "home-1",
+      description: "Preparação e Mobilização",
+      plannedStart: "2025-07-01",
+      plannedEnd: "2025-07-05",
+      actualStart: "2025-07-01",
+      actualEnd: "2025-07-04",
+      weight: 5,
+    },
+    {
+      id: "home-2",
+      description: "Proteções, demolições e infraestrutura",
+      plannedStart: "2025-07-07",
+      plannedEnd: "2025-07-18",
+      actualStart: "2025-07-05",
+      actualEnd: "2025-07-19",
+      weight: 15,
+    },
+    {
+      id: "home-3",
+      description: "Pisos, revestimentos, bancadas e box",
+      plannedStart: "2025-07-21",
+      plannedEnd: "2025-08-03",
+      actualStart: "2025-07-21",
+      actualEnd: "2025-08-03",
+      weight: 20,
+    },
+    {
+      id: "home-4",
+      description: "Pinturas e metais",
+      plannedStart: "2025-08-04",
+      plannedEnd: "2025-08-10",
+      actualStart: "2025-08-06",
+      actualEnd: "2025-08-12",
+      weight: 10,
+    },
+    {
+      id: "home-5",
+      description: "Instalações e elétrica",
+      plannedStart: "2025-08-11",
+      plannedEnd: "2025-08-17",
+      actualStart: "2025-08-14",
+      actualEnd: "2025-08-17",
+      weight: 10,
+    },
+    {
+      id: "home-6",
+      description: "Marcenaria",
+      plannedStart: "2025-08-20",
+      plannedEnd: "2025-09-05",
+      actualStart: "2025-08-20",
+      actualEnd: "2025-09-05",
+      weight: 33,
+    },
+    {
+      id: "home-7",
+      description: "Etapa atual: Instalação de mobiliário e eletros",
+      plannedStart: "2025-09-08",
+      plannedEnd: "2025-09-10",
+      actualStart: "2025-09-08",
+      actualEnd: "",
+      weight: 3,
+    },
+    {
+      id: "home-8",
+      description: "Limpeza fina",
+      plannedStart: "2025-09-11",
+      plannedEnd: "2025-09-11",
+      actualStart: "",
+      actualEnd: "",
+      weight: 2,
+    },
+    {
+      id: "home-9",
+      description: "Vistoria de qualidade",
+      plannedStart: "2025-09-12",
+      plannedEnd: "2025-09-12",
+      actualStart: "",
+      actualEnd: "",
+      weight: 1,
+    },
+    {
+      id: "home-10",
+      description: "Conclusão",
+      plannedStart: "2025-09-14",
+      plannedEnd: "2025-09-14",
+      actualStart: "",
+      actualEnd: "",
+      weight: 1,
+    },
   ],
 };
 
@@ -57,7 +137,7 @@ const Home = () => {
       {/* Subtle decorative elements - using Bwild purple tones */}
       <div className="absolute top-0 right-0 w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-gradient-radial from-primary/10 via-accent/5 to-transparent rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-gradient-radial from-primary/8 via-accent/3 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
-      
+
       {/* Header */}
       <AppHeader />
 
@@ -72,10 +152,9 @@ const Home = () => {
               </h1>
             </div>
             <p className="text-body text-muted-foreground max-w-md mx-auto leading-relaxed animate-fade-in [animation-delay:100ms] opacity-0 [animation-fill-mode:forwards] px-2">
-              {isDemoMode 
+              {isDemoMode
                 ? "Crie relatórios profissionais de acompanhamento de obra com curva S e cronograma detalhado."
-                : "Acompanhe suas obras com transparência e profissionalismo."
-              }
+                : "Acompanhe suas obras com transparência e profissionalismo."}
             </p>
           </div>
 
@@ -89,7 +168,13 @@ const Home = () => {
               </p>
             </div>
             <div className="min-w-[200px] md:min-w-0 p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:300ms] opacity-0 [animation-fill-mode:forwards] snap-start">
-              <svg className="w-7 h-7 md:w-8 md:h-8 text-primary mb-2 md:mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                className="w-7 h-7 md:w-8 md:h-8 text-primary mb-2 md:mb-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M3 3v18h18" />
                 <path d="M7 16c3-4 5-8 10-11" />
               </svg>
@@ -99,7 +184,13 @@ const Home = () => {
               </p>
             </div>
             <div className="min-w-[200px] md:min-w-0 p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:400ms] opacity-0 [animation-fill-mode:forwards] snap-start">
-              <svg className="w-7 h-7 md:w-8 md:h-8 text-primary mb-2 md:mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                className="w-7 h-7 md:w-8 md:h-8 text-primary mb-2 md:mb-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -138,7 +229,8 @@ const Home = () => {
               <div className="flex items-center gap-2 text-muted-foreground">
                 <AlertCircle className="h-5 w-5" />
                 <p className="text-body">
-                  Acesse suas obras pelo menu de navegação ou entre em contato com seu engenheiro.
+                  Acesse suas obras pelo menu de navegação ou entre em contato
+                  com seu engenheiro.
                 </p>
               </div>
               {isAuthenticated && (

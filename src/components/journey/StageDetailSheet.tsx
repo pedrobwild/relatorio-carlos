@@ -1,13 +1,19 @@
-import { useState } from 'react';
+import { useState } from "react";
+import { Edit2, CheckCircle2, ChevronDown, Loader2 } from "lucide-react";
 import {
-  Edit2, CheckCircle2, ChevronDown, Loader2,
-} from 'lucide-react';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Separator } from '@/components/ui/separator';
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,20 +24,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
-  JourneyStage,
-  useCompleteStage,
-} from '@/hooks/useProjectJourney';
-import { StageSummary } from './StageSummary';
-import { StageDetailsSections } from './StageDetailsSections';
-import { StageChecklist } from './StageChecklist';
-import { StageDatesPanel } from './StageDatesPanel';
-import { MeetingCTA } from './MeetingCTA';
-import { StageRegistry } from './StageRegistry';
-import { StageChat } from './StageChat';
-import { StagePhotoGallery } from './StagePhotoGallery';
-import { AdminEditForm } from './stage-detail/AdminEditForm';
+} from "@/components/ui/alert-dialog";
+import { JourneyStage, useCompleteStage } from "@/hooks/useProjectJourney";
+import { StageSummary } from "./StageSummary";
+import { StageDetailsSections } from "./StageDetailsSections";
+import { StageChecklist } from "./StageChecklist";
+import { StageDatesPanel } from "./StageDatesPanel";
+import { MeetingCTA } from "./MeetingCTA";
+import { StageRegistry } from "./StageRegistry";
+import { StageChat } from "./StageChat";
+import { StagePhotoGallery } from "./StagePhotoGallery";
+import { AdminEditForm } from "./stage-detail/AdminEditForm";
 
 interface StageDetailSheetProps {
   stage: JourneyStage | null;
@@ -55,7 +58,8 @@ export function StageDetailSheet({
 
   if (!stage) return null;
 
-  const canComplete = isAdmin && stage.status !== 'completed' && stage.status !== 'pending';
+  const canComplete =
+    isAdmin && stage.status !== "completed" && stage.status !== "pending";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -89,7 +93,7 @@ export function StageDetailSheet({
             {/* ① CTA — first, above the fold */}
             {!isEditing && stage.cta_visible && stage.cta_text && (
               <div className="space-y-2">
-                {stage.cta_text.toLowerCase().includes('reunião') ? (
+                {stage.cta_text.toLowerCase().includes("reunião") ? (
                   <MeetingCTA
                     stageId={stage.id}
                     stageName={stage.name}
@@ -103,7 +107,9 @@ export function StageDetailSheet({
                   </Button>
                 )}
                 {stage.microcopy && (
-                  <p className="text-xs text-muted-foreground">{stage.microcopy}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {stage.microcopy}
+                  </p>
                 )}
               </div>
             )}
@@ -220,11 +226,14 @@ export function StageDetailSheet({
                   <AlertDialogTitle>Concluir "{stage.name}"?</AlertDialogTitle>
                   <AlertDialogDescription>
                     A data de conclusão será registrada e a próxima etapa
-                    {nextStageName ? ` ("${nextStageName}")` : ''} será liberada automaticamente.
+                    {nextStageName ? ` ("${nextStageName}")` : ""} será liberada
+                    automaticamente.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="min-h-[44px]">Cancelar</AlertDialogCancel>
+                  <AlertDialogCancel className="min-h-[44px]">
+                    Cancelar
+                  </AlertDialogCancel>
                   <AlertDialogAction
                     className="min-h-[44px]"
                     onClick={() => {
@@ -238,7 +247,7 @@ export function StageDetailSheet({
             </AlertDialog>
           )}
 
-          {stage.status === 'completed' && (
+          {stage.status === "completed" && (
             <div className="ml-auto flex items-center gap-1.5 text-xs text-[hsl(var(--success))] font-medium">
               <CheckCircle2 className="h-4 w-4" />
               Etapa concluída
@@ -249,4 +258,3 @@ export function StageDetailSheet({
     </Sheet>
   );
 }
-

@@ -5,19 +5,19 @@
  * Avoids direct supabase imports in components for edge function calls.
  */
 
-import { supabase } from '@/infra/supabase';
+import { supabase } from "@/infra/supabase";
 import type {
   AgentEventSource,
   AgentEventType,
   RoutedAgent,
-} from '@/infra/repositories/agentMemory.repository';
+} from "@/infra/repositories/agentMemory.repository";
 
 /**
  * Invoke an edge function via supabase.functions.invoke
  */
 export async function invokeFunction<T = unknown>(
   functionName: string,
-  body?: Record<string, unknown>
+  body?: Record<string, unknown>,
 ): Promise<{ data: T | null; error: any }> {
   return supabase.functions.invoke<T>(functionName, { body });
 }
@@ -27,15 +27,17 @@ export async function invokeFunction<T = unknown>(
  */
 export async function invokeFunctionRaw(
   functionName: string,
-  options: RequestInit
+  options: RequestInit,
 ): Promise<Response> {
   const baseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const token = session?.access_token;
 
   const headers = new Headers(options.headers);
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   return fetch(`${baseUrl}/functions/v1/${functionName}`, {
@@ -48,7 +50,9 @@ export async function invokeFunctionRaw(
  * Get current auth session token
  */
 export async function getAccessToken(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return session?.access_token ?? null;
 }
 
@@ -68,7 +72,7 @@ export interface BwildAgentResponse {
   project_id: string;
   routed_agent: RoutedAgent;
   routing_reason: string;
-  status: 'success' | 'llm_error' | 'state_error' | 'other';
+  status: "success" | "llm_error" | "state_error" | "other";
   response: {
     diagnostico?: string;
     premissas?: string[];
@@ -92,5 +96,8 @@ export interface BwildAgentResponse {
 export async function invokeBwildAgent(
   request: BwildAgentRequest,
 ): Promise<{ data: BwildAgentResponse | null; error: unknown }> {
-  return invokeFunction<BwildAgentResponse>('bwild-agent', request as unknown as Record<string, unknown>);
+  return invokeFunction<BwildAgentResponse>(
+    "bwild-agent",
+    request as unknown as Record<string, unknown>,
+  );
 }

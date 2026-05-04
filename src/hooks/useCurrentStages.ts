@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { QUERY_TIMING } from '@/lib/queryClient';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { QUERY_TIMING } from "@/lib/queryClient";
 
 export interface CurrentStageInfo {
   description: string;
@@ -13,15 +13,17 @@ export interface CurrentStageInfo {
  */
 export function useCurrentStages(projectIds: string[]) {
   return useQuery({
-    queryKey: ['current-stages', [...projectIds].sort().join(',')],
+    queryKey: ["current-stages", [...projectIds].sort().join(",")],
     queryFn: async (): Promise<Map<string, CurrentStageInfo>> => {
       if (projectIds.length === 0) return new Map();
 
       const { data, error } = await supabase
-        .from('project_activities')
-        .select('project_id, description, planned_start, actual_end, sort_order')
-        .in('project_id', projectIds)
-        .order('sort_order', { ascending: true });
+        .from("project_activities")
+        .select(
+          "project_id, description, planned_start, actual_end, sort_order",
+        )
+        .in("project_id", projectIds)
+        .order("sort_order", { ascending: true });
 
       if (error) throw error;
 
@@ -41,17 +43,26 @@ export function useCurrentStages(projectIds: string[]) {
 
         const firstStart = activities[0]?.planned_start;
         if (firstStart && firstStart > today) {
-          map.set(projectId, { description: 'Aguardando liberação', isAwaitingStart: true });
+          map.set(projectId, {
+            description: "Aguardando liberação",
+            isAwaitingStart: true,
+          });
           continue;
         }
 
         // Find first activity without actual_end
-        const current = activities.find(a => !a.actual_end);
+        const current = activities.find((a) => !a.actual_end);
         if (current) {
-          map.set(projectId, { description: current.description, isAwaitingStart: false });
+          map.set(projectId, {
+            description: current.description,
+            isAwaitingStart: false,
+          });
         } else if (activities.length > 0) {
           // All completed
-          map.set(projectId, { description: 'Concluído', isAwaitingStart: false });
+          map.set(projectId, {
+            description: "Concluído",
+            isAwaitingStart: false,
+          });
         }
       }
 

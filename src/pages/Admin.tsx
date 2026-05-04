@@ -1,19 +1,31 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity, LayoutTemplate, Sparkles, BookOpen, ClipboardCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UsersTab } from '@/components/admin/UsersTab';
-import { ObrasTab } from '@/components/admin/ObrasTab';
-import { TemplatesTab } from '@/components/admin/TemplatesTab';
-import { FilesCleanupCard } from '@/components/admin/FilesCleanupCard';
-import { IntegrationMonitorCard } from '@/components/admin/IntegrationMonitorCard';
-import { InspectionTemplatesTab } from '@/components/admin/InspectionTemplatesTab';
-import bwildLogo from '@/assets/bwild-logo-dark.png';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  Users,
+  Building2,
+  Shield,
+  Settings,
+  History,
+  Activity,
+  LayoutTemplate,
+  Sparkles,
+  BookOpen,
+  ClipboardCheck,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UsersTab } from "@/components/admin/UsersTab";
+import { ObrasTab } from "@/components/admin/ObrasTab";
+import { TemplatesTab } from "@/components/admin/TemplatesTab";
+import { FilesCleanupCard } from "@/components/admin/FilesCleanupCard";
+import { IntegrationMonitorCard } from "@/components/admin/IntegrationMonitorCard";
+import { InspectionTemplatesTab } from "@/components/admin/InspectionTemplatesTab";
+import bwildLogo from "@/assets/bwild-logo-dark.png";
 
 export default function Admin() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('usuarios');
+  const [activeTab, setActiveTab] = useState("usuarios");
 
   return (
     <div className="min-h-screen bg-background">
@@ -22,10 +34,10 @@ export default function Admin() {
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
-                onClick={() => navigate('/gestao')}
+                onClick={() => navigate("/gestao")}
                 className="shrink-0"
                 aria-label="Voltar para gestão"
               >
@@ -47,7 +59,11 @@ export default function Admin() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-5 max-w-3xl">
             <TabsTrigger value="usuarios" className="gap-2">
               <Users className="h-4 w-4" />
@@ -91,7 +107,7 @@ export default function Admin() {
             <div className="space-y-6">
               <IntegrationMonitorCard />
               <FilesCleanupCard />
-              
+
               {/* Health & Diagnostics Link */}
               <div className="border rounded-lg p-4 bg-card">
                 <div className="flex items-center justify-between">
@@ -106,12 +122,15 @@ export default function Admin() {
                       </p>
                     </div>
                   </div>
-                  <Button onClick={() => navigate('/admin/health')} variant="outline">
+                  <Button
+                    onClick={() => navigate("/admin/health")}
+                    variant="outline"
+                  >
                     Ver Status
                   </Button>
                 </div>
               </div>
-              
+
               {/* UX Insights Link */}
               <div className="border rounded-lg p-4 bg-card">
                 <div className="flex items-center justify-between">
@@ -126,12 +145,15 @@ export default function Admin() {
                       </p>
                     </div>
                   </div>
-                  <Button onClick={() => navigate('/admin/ux-insights')} variant="outline">
+                  <Button
+                    onClick={() => navigate("/admin/ux-insights")}
+                    variant="outline"
+                  >
                     Gerar Insights
                   </Button>
                 </div>
               </div>
-              
+
               {/* Research Link */}
               <div className="border rounded-lg p-4 bg-card">
                 <div className="flex items-center justify-between">
@@ -142,16 +164,20 @@ export default function Admin() {
                     <div>
                       <h3 className="font-medium">Pesquisa de Referências</h3>
                       <p className="text-sm text-muted-foreground">
-                        Pesquise funcionalidades de softwares de gestão de obras com IA
+                        Pesquise funcionalidades de softwares de gestão de obras
+                        com IA
                       </p>
                     </div>
                   </div>
-                  <Button onClick={() => navigate('/admin/research')} variant="outline">
+                  <Button
+                    onClick={() => navigate("/admin/research")}
+                    variant="outline"
+                  >
                     Pesquisar
                   </Button>
                 </div>
               </div>
-              
+
               {/* Auditoria Link */}
               <div className="border rounded-lg p-4 bg-card">
                 <div className="flex items-center justify-between">
@@ -166,7 +192,7 @@ export default function Admin() {
                       </p>
                     </div>
                   </div>
-                  <Button onClick={() => navigate('/admin/auditoria')}>
+                  <Button onClick={() => navigate("/admin/auditoria")}>
                     Ver Registros
                   </Button>
                 </div>

@@ -1,6 +1,6 @@
-import { useMemo, useCallback } from 'react';
-import { useUserRole } from './useUserRole';
-import { can, canAny, canAll, type Feature } from '@/config/permissions';
+import { useMemo, useCallback } from "react";
+import { useUserRole } from "./useUserRole";
+import { can, canAny, canAll, type Feature } from "@/config/permissions";
 
 /**
  * Hook to check feature permissions based on user roles
@@ -16,7 +16,7 @@ export function useCan() {
       if (loading) return false;
       return canAny(roles, feature);
     },
-    [roles, loading]
+    [roles, loading],
   );
 
   /**
@@ -27,7 +27,7 @@ export function useCan() {
       if (loading) return false;
       return canAll(roles, features);
     },
-    [roles, loading]
+    [roles, loading],
   );
 
   /**
@@ -36,9 +36,9 @@ export function useCan() {
   const userCanAny = useCallback(
     (features: Feature[]): boolean => {
       if (loading) return false;
-      return features.some(feature => canAny(roles, feature));
+      return features.some((feature) => canAny(roles, feature));
     },
-    [roles, loading]
+    [roles, loading],
   );
 
   return {
@@ -56,7 +56,7 @@ export function useCan() {
  */
 export function useCanFeature(feature: Feature): boolean {
   const { roles, loading } = useUserRole();
-  
+
   return useMemo(() => {
     if (loading) return false;
     return canAny(roles, feature);

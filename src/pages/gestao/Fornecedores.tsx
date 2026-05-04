@@ -7,25 +7,51 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  Plus, Search, Star, Phone, Mail, MapPin, Pencil, Trash2, Building2, Filter,
+  Plus,
+  Search,
+  Star,
+  Phone,
+  Mail,
+  MapPin,
+  Pencil,
+  Trash2,
+  Building2,
+  Filter,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
-import { TableSkeleton, EmptyState as PremiumEmptyState } from "@/components/ui-premium";
+import {
+  TableSkeleton,
+  EmptyState as PremiumEmptyState,
+} from "@/components/ui-premium";
 import {
   SUPPLIER_TYPE_LABELS,
   SUPPLIER_TYPES,
@@ -36,7 +62,12 @@ import { SupplierTaxonomyFields } from "@/components/fornecedores/SupplierTaxono
 import { normalizeSupplierTaxonomy } from "@/components/fornecedores/supplierTaxonomy";
 
 // Legacy enum kept for backward compat with DB column `categoria`
-type LegacySupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
+type LegacySupplierCategory =
+  | "materiais"
+  | "mao_de_obra"
+  | "servicos"
+  | "equipamentos"
+  | "outros";
 
 interface Supplier {
   id: string;
@@ -110,11 +141,14 @@ export default function Fornecedores() {
     setSubcategoryFilter("all");
   };
 
-  const availableSubcategories = categoryFilter !== "all"
-    ? getSubcategoriesByType(categoryFilter)
-    : [];
+  const availableSubcategories =
+    categoryFilter !== "all" ? getSubcategoriesByType(categoryFilter) : [];
 
-  const hasActiveFilters = search || categoryFilter !== "all" || subcategoryFilter !== "all" || statusFilter !== "ativo";
+  const hasActiveFilters =
+    search ||
+    categoryFilter !== "all" ||
+    subcategoryFilter !== "all" ||
+    statusFilter !== "ativo";
 
   const clearAllFilters = () => {
     setSearch("");
@@ -144,23 +178,34 @@ export default function Fornecedores() {
           .eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("fornecedores").insert(data as any);
+        const { error } = await supabase
+          .from("fornecedores")
+          .insert(data as any);
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fornecedores"] });
-      toast({ title: editing ? "Fornecedor atualizado" : "Fornecedor cadastrado" });
+      toast({
+        title: editing ? "Fornecedor atualizado" : "Fornecedor cadastrado",
+      });
       closeDialog();
     },
     onError: (err: Error) => {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("fornecedores").delete().eq("id", id);
+      const { error } = await supabase
+        .from("fornecedores")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -169,7 +214,11 @@ export default function Fornecedores() {
       setDeleteConfirm(null);
     },
     onError: (err: Error) => {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -180,18 +229,22 @@ export default function Fornecedores() {
   };
 
   const LEGACY_CATEGORIA_TO_TYPE: Record<string, string> = {
-    mao_de_obra: 'prestadores',
-    servicos: 'prestadores',
-    materiais: 'produtos',
-    equipamentos: 'produtos',
-    outros: 'produtos',
+    mao_de_obra: "prestadores",
+    servicos: "prestadores",
+    materiais: "produtos",
+    equipamentos: "produtos",
+    outros: "produtos",
   };
 
   const openEdit = (s: Supplier) => {
-    const normalized = normalizeSupplierTaxonomy(s.supplier_type, s.supplier_subcategory);
-    const inferredType = normalized.supplier_type
-      ?? LEGACY_CATEGORIA_TO_TYPE[s.categoria ?? '']
-      ?? null;
+    const normalized = normalizeSupplierTaxonomy(
+      s.supplier_type,
+      s.supplier_subcategory,
+    );
+    const inferredType =
+      normalized.supplier_type ??
+      LEGACY_CATEGORIA_TO_TYPE[s.categoria ?? ""] ??
+      null;
     setEditing(s);
     setForm({
       ...s,
@@ -213,7 +266,10 @@ export default function Fornecedores() {
       return;
     }
 
-    const normalizedTaxonomy = normalizeSupplierTaxonomy(form.supplier_type, form.supplier_subcategory);
+    const normalizedTaxonomy = normalizeSupplierTaxonomy(
+      form.supplier_type,
+      form.supplier_subcategory,
+    );
 
     if (!normalizedTaxonomy.supplier_type) {
       toast({ title: "Categoria é obrigatória", variant: "destructive" });
@@ -225,15 +281,25 @@ export default function Fornecedores() {
     }
 
     const payload = { ...form, ...normalizedTaxonomy };
-    if (payload.prazo_entrega_dias === undefined || payload.prazo_entrega_dias === null) delete payload.prazo_entrega_dias;
-    if (payload.nota_avaliacao === undefined || payload.nota_avaliacao === null) delete payload.nota_avaliacao;
+    if (
+      payload.prazo_entrega_dias === undefined ||
+      payload.prazo_entrega_dias === null
+    )
+      delete payload.prazo_entrega_dias;
+    if (payload.nota_avaliacao === undefined || payload.nota_avaliacao === null)
+      delete payload.nota_avaliacao;
     saveMutation.mutate(payload);
   };
 
   const filtered = suppliers.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
-    if (categoryFilter !== "all" && s.supplier_type !== categoryFilter) return false;
-    if (subcategoryFilter !== "all" && s.supplier_subcategory !== subcategoryFilter) return false;
+    if (categoryFilter !== "all" && s.supplier_type !== categoryFilter)
+      return false;
+    if (
+      subcategoryFilter !== "all" &&
+      s.supplier_subcategory !== subcategoryFilter
+    )
+      return false;
     return matchesSearch(search, [
       s.nome,
       s.produtos_servicos,
@@ -244,7 +310,8 @@ export default function Fornecedores() {
   });
 
   const renderStars = (rating: number | null) => {
-    if (!rating) return <span className="text-muted-foreground text-xs">—</span>;
+    if (!rating)
+      return <span className="text-muted-foreground text-xs">—</span>;
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((i) => (
@@ -253,7 +320,9 @@ export default function Fornecedores() {
             className={`h-3.5 w-3.5 ${i <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`}
           />
         ))}
-        <span className="ml-1 text-xs text-muted-foreground">{rating.toFixed(1)}</span>
+        <span className="ml-1 text-xs text-muted-foreground">
+          {rating.toFixed(1)}
+        </span>
       </div>
     );
   };
@@ -263,7 +332,9 @@ export default function Fornecedores() {
     if (s.supplier_type && s.supplier_subcategory) {
       return {
         label: s.supplier_subcategory,
-        type: SUPPLIER_TYPE_LABELS[s.supplier_type as SupplierType] || s.supplier_type,
+        type:
+          SUPPLIER_TYPE_LABELS[s.supplier_type as SupplierType] ||
+          s.supplier_type,
       };
     }
     // Fallback to legacy
@@ -303,8 +374,14 @@ export default function Fornecedores() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
-                <SelectTrigger className="w-[160px]" aria-label="Filtrar por categoria">
+              <Select
+                value={categoryFilter}
+                onValueChange={handleCategoryFilterChange}
+              >
+                <SelectTrigger
+                  className="w-[160px]"
+                  aria-label="Filtrar por categoria"
+                >
                   <Filter className="h-4 w-4 mr-1" />
                   <SelectValue />
                 </SelectTrigger>
@@ -318,20 +395,31 @@ export default function Fornecedores() {
                 </SelectContent>
               </Select>
               {categoryFilter !== "all" && (
-                <Select value={subcategoryFilter} onValueChange={setSubcategoryFilter}>
-                  <SelectTrigger className="w-[180px]" aria-label="Filtrar por subcategoria">
+                <Select
+                  value={subcategoryFilter}
+                  onValueChange={setSubcategoryFilter}
+                >
+                  <SelectTrigger
+                    className="w-[180px]"
+                    aria-label="Filtrar por subcategoria"
+                  >
                     <SelectValue placeholder="Subcategoria" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas subcategorias</SelectItem>
                     {availableSubcategories.map((sub) => (
-                      <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                      <SelectItem key={sub} value={sub}>
+                        {sub}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[120px]" aria-label="Filtrar por status">
+                <SelectTrigger
+                  className="w-[120px]"
+                  aria-label="Filtrar por status"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -342,7 +430,12 @@ export default function Fornecedores() {
                 </SelectContent>
               </Select>
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" className="h-10 text-xs" onClick={clearAllFilters}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-10 text-xs"
+                  onClick={clearAllFilters}
+                >
                   Limpar filtros
                 </Button>
               )}
@@ -371,7 +464,10 @@ export default function Fornecedores() {
           <CardContent className="pt-4 pb-4">
             <p className="text-xs text-muted-foreground">Prestadores</p>
             <p className="text-2xl font-bold">
-              {suppliers.filter((s) => s.supplier_type === "prestadores").length}
+              {
+                suppliers.filter((s) => s.supplier_type === "prestadores")
+                  .length
+              }
             </p>
           </CardContent>
         </Card>
@@ -397,7 +493,11 @@ export default function Fornecedores() {
               icon={Building2}
               title="Nenhum fornecedor encontrado"
               description="Cadastre o primeiro fornecedor ou ajuste os filtros para ver resultados."
-              action={{ label: "Cadastrar fornecedor", onClick: openNew, icon: Plus }}
+              action={{
+                label: "Cadastrar fornecedor",
+                onClick: openNew,
+                icon: Plus,
+              }}
               bare
               size="md"
             />
@@ -406,9 +506,15 @@ export default function Fornecedores() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fornecedor</TableHead>
-                  <TableHead className="hidden md:table-cell">Categoria</TableHead>
-                  <TableHead className="hidden lg:table-cell">Contato</TableHead>
-                  <TableHead className="hidden lg:table-cell">Localidade</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Categoria
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Contato
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Localidade
+                  </TableHead>
                   <TableHead className="hidden md:table-cell">Prazo</TableHead>
                   <TableHead>Avaliação</TableHead>
                   <TableHead className="hidden sm:table-cell">Status</TableHead>
@@ -419,7 +525,11 @@ export default function Fornecedores() {
                 {filtered.map((s) => {
                   const catDisplay = getCategoryDisplay(s);
                   return (
-                    <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/gestao/fornecedores/${s.id}`)}>
+                    <TableRow
+                      key={s.id}
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/gestao/fornecedores/${s.id}`)}
+                    >
                       <TableCell>
                         <div>
                           <p className="font-medium">{s.nome}</p>
@@ -436,7 +546,9 @@ export default function Fornecedores() {
                             {catDisplay.label}
                           </Badge>
                           {catDisplay.type && (
-                            <span className="text-[10px] text-muted-foreground">{catDisplay.type}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {catDisplay.type}
+                            </span>
                           )}
                         </div>
                       </TableCell>
@@ -463,23 +575,43 @@ export default function Fornecedores() {
                         )}
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-sm">
-                        {s.prazo_entrega_dias ? `${s.prazo_entrega_dias}d` : "—"}
+                        {s.prazo_entrega_dias
+                          ? `${s.prazo_entrega_dias}d`
+                          : "—"}
                       </TableCell>
                       <TableCell>{renderStars(s.nota_avaliacao)}</TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <Badge
                           variant={
-                            s.status === "ativo" ? "default" :
-                            s.status === "rascunho" ? "outline" : "secondary"
+                            s.status === "ativo"
+                              ? "default"
+                              : s.status === "rascunho"
+                                ? "outline"
+                                : "secondary"
                           }
-                          className={s.status === "rascunho" ? "border-[hsl(var(--warning))] text-[hsl(var(--warning))]" : undefined}
+                          className={
+                            s.status === "rascunho"
+                              ? "border-[hsl(var(--warning))] text-[hsl(var(--warning))]"
+                              : undefined
+                          }
                         >
-                          {s.status === "ativo" ? "Ativo" : s.status === "rascunho" ? "Rascunho" : "Inativo"}
+                          {s.status === "ativo"
+                            ? "Ativo"
+                            : s.status === "rascunho"
+                              ? "Rascunho"
+                              : "Inativo"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(s)}>
+                        <div
+                          className="flex gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEdit(s)}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
@@ -509,7 +641,8 @@ export default function Fornecedores() {
               {editing ? "Editar Fornecedor" : "Novo Fornecedor"}
             </DialogTitle>
             <DialogDescription>
-              Preencha os dados do fornecedor e selecione a categoria principal com a subcategoria correspondente.
+              Preencha os dados do fornecedor e selecione a categoria principal
+              com a subcategoria correspondente.
             </DialogDescription>
           </DialogHeader>
 
@@ -521,170 +654,212 @@ export default function Fornecedores() {
             </TabsList>
 
             <TabsContent value="dados">
-          <div className="grid gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Nome *</Label>
-                <Input
-                  value={form.nome || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Razão Social</Label>
-                <Input
-                  value={form.razao_social || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, razao_social: e.target.value }))}
-                />
-              </div>
-            </div>
+              <div className="grid gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Nome *</Label>
+                    <Input
+                      value={form.nome || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, nome: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Razão Social</Label>
+                    <Input
+                      value={form.razao_social || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, razao_social: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
 
-            {/* Row 2: CNPJ + Taxonomy */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>CNPJ/CPF</Label>
-                <Input
-                  value={form.cnpj_cpf || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, cnpj_cpf: e.target.value }))}
-                />
-              </div>
-              <SupplierTaxonomyFields
-                supplierType={form.supplier_type}
-                supplierSubcategory={form.supplier_subcategory}
-                onSupplierTypeChange={(value) => setForm((p) => ({ ...p, supplier_type: value }))}
-                onSupplierSubcategoryChange={(value) => setForm((p) => ({ ...p, supplier_subcategory: value }))}
-              />
-            </div>
+                {/* Row 2: CNPJ + Taxonomy */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>CNPJ/CPF</Label>
+                    <Input
+                      value={form.cnpj_cpf || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, cnpj_cpf: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <SupplierTaxonomyFields
+                    supplierType={form.supplier_type}
+                    supplierSubcategory={form.supplier_subcategory}
+                    onSupplierTypeChange={(value) =>
+                      setForm((p) => ({ ...p, supplier_type: value }))
+                    }
+                    onSupplierSubcategoryChange={(value) =>
+                      setForm((p) => ({ ...p, supplier_subcategory: value }))
+                    }
+                  />
+                </div>
 
-            {/* Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>Status</Label>
-                <Select
-                  value={form.status || "ativo"}
-                  onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent position="popper">
-                    <SelectItem value="rascunho">Rascunho</SelectItem>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                {/* Status */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Status</Label>
+                    <Select
+                      value={form.status || "ativo"}
+                      onValueChange={(v) =>
+                        setForm((p) => ({ ...p, status: v }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent position="popper">
+                        <SelectItem value="rascunho">Rascunho</SelectItem>
+                        <SelectItem value="ativo">Ativo</SelectItem>
+                        <SelectItem value="inativo">Inativo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-            {/* Contact */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>Telefone</Label>
-                <Input
-                  value={form.telefone || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, telefone: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={form.email || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Site</Label>
-                <Input
-                  value={form.site || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, site: e.target.value }))}
-                />
-              </div>
-            </div>
+                {/* Contact */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Telefone</Label>
+                    <Input
+                      value={form.telefone || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, telefone: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      value={form.email || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, email: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Site</Label>
+                    <Input
+                      value={form.site || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, site: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
 
-            {/* Address */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Endereço</Label>
-                <Input
-                  value={form.endereco || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, endereco: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Cidade</Label>
-                <Input
-                  value={form.cidade || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, cidade: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Estado</Label>
-                <Input
-                  value={form.estado || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, estado: e.target.value }))}
-                  maxLength={2}
-                />
-              </div>
-            </div>
+                {/* Address */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Endereço</Label>
+                    <Input
+                      value={form.endereco || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, endereco: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Cidade</Label>
+                    <Input
+                      value={form.cidade || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, cidade: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Estado</Label>
+                    <Input
+                      value={form.estado || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, estado: e.target.value }))
+                      }
+                      maxLength={2}
+                    />
+                  </div>
+                </div>
 
-            {/* Products & Conditions */}
-            <div className="space-y-1.5">
-              <Label>Produtos / Serviços oferecidos</Label>
-              <Textarea
-                value={form.produtos_servicos || ""}
-                onChange={(e) => setForm((p) => ({ ...p, produtos_servicos: e.target.value }))}
-                rows={3}
-              />
-            </div>
+                {/* Products & Conditions */}
+                <div className="space-y-1.5">
+                  <Label>Produtos / Serviços oferecidos</Label>
+                  <Textarea
+                    value={form.produtos_servicos || ""}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        produtos_servicos: e.target.value,
+                      }))
+                    }
+                    rows={3}
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>Condições de Pagamento</Label>
-                <Input
-                  value={form.condicoes_pagamento || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, condicoes_pagamento: e.target.value }))}
-                  placeholder="Ex: 30/60/90 dias"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Prazo de Entrega (dias)</Label>
-                <Input
-                  type="number"
-                  value={form.prazo_entrega_dias || ""}
-                  onChange={(e) =>
-                    setForm((p) => ({
-                      ...p,
-                      prazo_entrega_dias: e.target.value ? Number(e.target.value) : undefined,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Nota (0 a 5)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={5}
-                  step={0.5}
-                  value={form.nota_avaliacao ?? ""}
-                  onChange={(e) =>
-                    setForm((p) => ({
-                      ...p,
-                      nota_avaliacao: e.target.value ? Number(e.target.value) : undefined,
-                    }))
-                  }
-                />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Condições de Pagamento</Label>
+                    <Input
+                      value={form.condicoes_pagamento || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          condicoes_pagamento: e.target.value,
+                        }))
+                      }
+                      placeholder="Ex: 30/60/90 dias"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Prazo de Entrega (dias)</Label>
+                    <Input
+                      type="number"
+                      value={form.prazo_entrega_dias || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          prazo_entrega_dias: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Nota (0 a 5)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={5}
+                      step={0.5}
+                      value={form.nota_avaliacao ?? ""}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          nota_avaliacao: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-1.5">
-              <Label>Observações</Label>
-              <Textarea
-                value={form.observacoes || ""}
-                onChange={(e) => setForm((p) => ({ ...p, observacoes: e.target.value }))}
-                rows={2}
-              />
-            </div>
-          </div>
+                <div className="space-y-1.5">
+                  <Label>Observações</Label>
+                  <Textarea
+                    value={form.observacoes || ""}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, observacoes: e.target.value }))
+                    }
+                    rows={2}
+                  />
+                </div>
+              </div>
             </TabsContent>
 
             {editing && (
@@ -705,20 +880,28 @@ export default function Fornecedores() {
               Cancelar
             </Button>
             <Button onClick={handleSave} disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? "Salvando..." : editing ? "Salvar" : "Cadastrar"}
+              {saveMutation.isPending
+                ? "Salvando..."
+                : editing
+                  ? "Salvar"
+                  : "Cadastrar"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete confirm */}
-      <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+      <Dialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar exclusão</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Tem certeza que deseja excluir este fornecedor? Esta ação não pode ser desfeita.
+            Tem certeza que deseja excluir este fornecedor? Esta ação não pode
+            ser desfeita.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
@@ -726,7 +909,9 @@ export default function Fornecedores() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}
+              onClick={() =>
+                deleteConfirm && deleteMutation.mutate(deleteConfirm)
+              }
               disabled={deleteMutation.isPending}
             >
               Excluir

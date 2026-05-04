@@ -18,16 +18,19 @@ export interface EmptyStateCopy {
 export const emptyStateLabels = {
   obras: {
     title: "Nenhuma obra cadastrada ainda",
-    description: "Comece pela primeira obra para acompanhar cronograma, compras e medições.",
+    description:
+      "Comece pela primeira obra para acompanhar cronograma, compras e medições.",
     cta: "Cadastrar primeira obra",
   },
   obrasCliente: {
     title: "Você ainda não tem obras vinculadas",
-    description: "Quando a equipe BWild liberar o acesso, sua obra aparece aqui.",
+    description:
+      "Quando a equipe BWild liberar o acesso, sua obra aparece aqui.",
   },
   compras: {
     title: "Nenhuma compra pendente — tudo em dia",
-    description: "Quando algo precisar de aprovação, pedido ou recebimento, aparece aqui.",
+    description:
+      "Quando algo precisar de aprovação, pedido ou recebimento, aparece aqui.",
   },
   comprasFiltradas: {
     title: "Nada bate com esse filtro",
@@ -36,36 +39,43 @@ export const emptyStateLabels = {
   },
   cronograma: {
     title: "Cronograma vazio",
-    description: "Adicione as primeiras atividades para visualizar a Curva S e o caminho crítico.",
+    description:
+      "Adicione as primeiras atividades para visualizar a Curva S e o caminho crítico.",
     cta: "Adicionar atividade",
   },
   calendario: {
     title: "Sem eventos no período",
-    description: "Marque entregas, vistorias e reuniões para acompanhar a agenda da obra.",
+    description:
+      "Marque entregas, vistorias e reuniões para acompanhar a agenda da obra.",
     cta: "Criar evento",
   },
   rdo: {
     title: "Nenhum RDO esta semana",
-    description: "Lance o diário de hoje para registrar mão de obra, clima e atividades.",
+    description:
+      "Lance o diário de hoje para registrar mão de obra, clima e atividades.",
     cta: "Lançar RDO de hoje",
   },
   medicoes: {
     title: "Nenhuma medição registrada",
-    description: "A primeira medição abre a cobrança proporcional ao executado.",
+    description:
+      "A primeira medição abre a cobrança proporcional ao executado.",
     cta: "Registrar medição",
   },
   indicadores: {
     title: "Sem dados para gerar indicadores",
-    description: "Os números aparecem assim que houver cronograma e medições registradas.",
+    description:
+      "Os números aparecem assim que houver cronograma e medições registradas.",
   },
   documentos: {
     title: "Nenhum documento ainda",
-    description: "Envie contrato, projeto e plantas para concentrar tudo num lugar só.",
+    description:
+      "Envie contrato, projeto e plantas para concentrar tudo num lugar só.",
     cta: "Enviar documento",
   },
   formalizacoes: {
     title: "Nenhuma aprovação pendente",
-    description: "Decisões importantes que precisam de ciência ficam listadas aqui.",
+    description:
+      "Decisões importantes que precisam de ciência ficam listadas aqui.",
   },
   pendencias: {
     title: "Nenhuma pendência — tudo em dia",
@@ -82,7 +92,8 @@ export const emptyStateLabels = {
   },
   fornecedores: {
     title: "Nenhum fornecedor cadastrado",
-    description: "Cadastre fornecedores recorrentes para agilizar pedidos de compra.",
+    description:
+      "Cadastre fornecedores recorrentes para agilizar pedidos de compra.",
     cta: "Cadastrar fornecedor",
   },
   busca: {
@@ -91,7 +102,8 @@ export const emptyStateLabels = {
   },
   configuracoes: {
     title: "Nada configurado ainda",
-    description: "Defina permissões, integrações e preferências da organização.",
+    description:
+      "Defina permissões, integrações e preferências da organização.",
   },
 } as const satisfies Record<string, EmptyStateCopy>;
 

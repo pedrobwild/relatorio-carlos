@@ -1,5 +1,5 @@
-import { AttachmentsCard } from './AttachmentsCard';
-import { EvidenceLinksCard } from './EvidenceLinksCard';
+import { AttachmentsCard } from "./AttachmentsCard";
+import { EvidenceLinksCard } from "./EvidenceLinksCard";
 
 interface FormalizacaoEvidenceProps {
   formalizationId: string;
@@ -21,11 +21,21 @@ interface FormalizacaoEvidenceProps {
   isLocked: boolean;
 }
 
-export function FormalizacaoEvidence({ formalizationId, attachments, evidenceLinks }: FormalizacaoEvidenceProps) {
+export function FormalizacaoEvidence({
+  formalizationId,
+  attachments,
+  evidenceLinks,
+}: FormalizacaoEvidenceProps) {
   return (
     <div className="space-y-6">
-      <AttachmentsCard formalizationId={formalizationId} attachments={attachments} />
-      <EvidenceLinksCard formalizationId={formalizationId} evidenceLinks={evidenceLinks} />
+      <AttachmentsCard
+        formalizationId={formalizationId}
+        attachments={attachments}
+      />
+      <EvidenceLinksCard
+        formalizationId={formalizationId}
+        evidenceLinks={evidenceLinks}
+      />
     </div>
   );
 }

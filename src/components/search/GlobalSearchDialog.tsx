@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, FileText, FolderOpen, DollarSign, ClipboardSignature, AlertCircle } from "lucide-react";
+import {
+  Search,
+  FileText,
+  FolderOpen,
+  DollarSign,
+  ClipboardSignature,
+  AlertCircle,
+} from "lucide-react";
 import {
   CommandDialog,
   CommandInput,
@@ -54,33 +61,34 @@ export function GlobalSearchDialog() {
       try {
         const searchTerm = `%${term}%`;
 
-        const [docsRes, formRes, pendingRes, filesRes] = await Promise.allSettled([
-          supabase
-            .from("project_documents")
-            .select("id, name, document_type")
-            .eq("project_id", projectId)
-            .ilike("name", searchTerm)
-            .limit(5),
-          supabase
-            .from("formalizations")
-            .select("id, title, type")
-            .eq("project_id", projectId)
-            .ilike("title", searchTerm)
-            .limit(5),
-          supabase
-            .from("pending_items")
-            .select("id, title, type")
-            .eq("project_id", projectId)
-            .ilike("title", searchTerm)
-            .limit(5),
-          supabase
-            .from("files")
-            .select("id, original_name, category")
-            .eq("project_id", projectId)
-            .eq("status", "active")
-            .ilike("original_name", searchTerm)
-            .limit(5),
-        ]);
+        const [docsRes, formRes, pendingRes, filesRes] =
+          await Promise.allSettled([
+            supabase
+              .from("project_documents")
+              .select("id, name, document_type")
+              .eq("project_id", projectId)
+              .ilike("name", searchTerm)
+              .limit(5),
+            supabase
+              .from("formalizations")
+              .select("id, title, type")
+              .eq("project_id", projectId)
+              .ilike("title", searchTerm)
+              .limit(5),
+            supabase
+              .from("pending_items")
+              .select("id, title, type")
+              .eq("project_id", projectId)
+              .ilike("title", searchTerm)
+              .limit(5),
+            supabase
+              .from("files")
+              .select("id, original_name, category")
+              .eq("project_id", projectId)
+              .eq("status", "active")
+              .ilike("original_name", searchTerm)
+              .limit(5),
+          ]);
 
         const items: SearchResult[] = [];
 
@@ -93,7 +101,7 @@ export function GlobalSearchDialog() {
               icon: FileText,
               path: `${paths.documentos}`,
               group: "Documentos",
-            })
+            }),
           );
         }
 
@@ -106,7 +114,7 @@ export function GlobalSearchDialog() {
               icon: ClipboardSignature,
               path: `${paths.formalizacoes}/${f.id}`,
               group: "Formalizações",
-            })
+            }),
           );
         }
 
@@ -119,7 +127,7 @@ export function GlobalSearchDialog() {
               icon: AlertCircle,
               path: paths.pendencias,
               group: "Pendências",
-            })
+            }),
           );
         }
 
@@ -132,7 +140,7 @@ export function GlobalSearchDialog() {
               icon: FolderOpen,
               path: paths.documentos,
               group: "Arquivos",
-            })
+            }),
           );
         }
 
@@ -143,7 +151,7 @@ export function GlobalSearchDialog() {
         setLoading(false);
       }
     },
-    [projectId, paths]
+    [projectId, paths],
   );
 
   useEffect(() => {
@@ -200,7 +208,9 @@ export function GlobalSearchDialog() {
         />
         <CommandList>
           {query.length < 2 ? (
-            <CommandEmpty>Digite ao menos 2 caracteres para buscar</CommandEmpty>
+            <CommandEmpty>
+              Digite ao menos 2 caracteres para buscar
+            </CommandEmpty>
           ) : loading ? (
             <CommandEmpty>Buscando…</CommandEmpty>
           ) : results.length === 0 ? (

@@ -9,7 +9,10 @@ interface UseLongPressOptions {
  * Hook to detect long-press (touch hold) on mobile.
  * Returns handlers to attach to the target element.
  */
-export function useLongPress({ onLongPress, delay = 500 }: UseLongPressOptions) {
+export function useLongPress({
+  onLongPress,
+  delay = 500,
+}: UseLongPressOptions) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressRef = useRef(false);
 

@@ -1,42 +1,60 @@
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
 
 const schema = z.object({
-  itemName: z.string().min(1, 'Nome do item é obrigatório'),
+  itemName: z.string().min(1, "Nome do item é obrigatório"),
   itemBrand: z.string().optional(),
   itemModel: z.string().optional(),
   itemSerial: z.string().optional(),
-  itemCondition: z.string().min(10, 'Descreva o estado do item'),
-  storageLocation: z.string().min(1, 'Local de guarda é obrigatório'),
-  estimatedDuration: z.string().min(1, 'Prazo estimado é obrigatório'),
-  responsibility: z.string().min(10, 'Descreva as responsabilidades e isenções'),
+  itemCondition: z.string().min(10, "Descreva o estado do item"),
+  storageLocation: z.string().min(1, "Local de guarda é obrigatório"),
+  estimatedDuration: z.string().min(1, "Prazo estimado é obrigatório"),
+  responsibility: z
+    .string()
+    .min(10, "Descreva as responsabilidades e isenções"),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 interface ExceptionCustodyFormProps {
-  onComplete: (data: { title: string; summary: string; body_md: string; data: Record<string, unknown> }) => void;
+  onComplete: (data: {
+    title: string;
+    summary: string;
+    body_md: string;
+    data: Record<string, unknown>;
+  }) => void;
   initialData?: { data: Record<string, unknown> };
 }
 
-export function ExceptionCustodyForm({ onComplete, initialData }: ExceptionCustodyFormProps) {
+export function ExceptionCustodyForm({
+  onComplete,
+  initialData,
+}: ExceptionCustodyFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      itemName: '',
-      itemBrand: '',
-      itemModel: '',
-      itemSerial: '',
-      itemCondition: '',
-      storageLocation: '',
-      estimatedDuration: '',
-      responsibility: '',
+      itemName: "",
+      itemBrand: "",
+      itemModel: "",
+      itemSerial: "",
+      itemCondition: "",
+      storageLocation: "",
+      estimatedDuration: "",
+      responsibility: "",
     },
   });
 
@@ -45,18 +63,20 @@ export function ExceptionCustodyForm({ onComplete, initialData }: ExceptionCusto
       values.itemName,
       values.itemBrand && `(${values.itemBrand})`,
       values.itemModel && `- ${values.itemModel}`,
-    ].filter(Boolean).join(' ');
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     const title = `Custódia de Item: ${values.itemName}`;
     const summary = `Formalização de custódia de ${itemDescription}. Local: ${values.storageLocation}. Prazo estimado: ${values.estimatedDuration}.`;
-    
+
     const body_md = `## Termo de Custódia de Item
 
 ### Identificação do Item
 - **Nome:** ${values.itemName}
-${values.itemBrand ? `- **Marca:** ${values.itemBrand}` : ''}
-${values.itemModel ? `- **Modelo:** ${values.itemModel}` : ''}
-${values.itemSerial ? `- **Número de Série:** ${values.itemSerial}` : ''}
+${values.itemBrand ? `- **Marca:** ${values.itemBrand}` : ""}
+${values.itemModel ? `- **Modelo:** ${values.itemModel}` : ""}
+${values.itemSerial ? `- **Número de Série:** ${values.itemSerial}` : ""}
 
 ### Estado do Item
 ${values.itemCondition}
@@ -106,7 +126,10 @@ ${values.responsibility}
                 <FormItem>
                   <FormLabel>Nome do Item</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Geladeira, Sofá, TV..." {...field} />
+                    <Input
+                      placeholder="Ex: Geladeira, Sofá, TV..."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -148,7 +171,8 @@ ${values.responsibility}
                     <Input placeholder="Se houver" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Importante para itens de alto valor ou que precisam de identificação única.
+                    Importante para itens de alto valor ou que precisam de
+                    identificação única.
                   </FormDescription>
                 </FormItem>
               )}
@@ -163,10 +187,10 @@ ${values.responsibility}
             <FormItem>
               <FormLabel>Estado do Item</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Descreva o estado atual do item (conservação, funcionamento, danos existentes...)"
                   className="min-h-[100px]"
-                  {...field} 
+                  {...field}
                 />
               </FormControl>
               <FormDescription>
@@ -184,9 +208,9 @@ ${values.responsibility}
             <FormItem>
               <FormLabel>Local de Guarda</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Ex: Depósito central, Apartamento 502..." 
-                  {...field} 
+                <Input
+                  placeholder="Ex: Depósito central, Apartamento 502..."
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -201,9 +225,9 @@ ${values.responsibility}
             <FormItem>
               <FormLabel>Prazo Estimado</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Ex: 30 dias, Até término da obra..." 
-                  {...field} 
+                <Input
+                  placeholder="Ex: 30 dias, Até término da obra..."
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -218,10 +242,10 @@ ${values.responsibility}
             <FormItem>
               <FormLabel>Responsabilidades e Isenções</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Descreva as responsabilidades de cada parte e eventuais isenções..."
                   className="min-h-[120px]"
-                  {...field} 
+                  {...field}
                 />
               </FormControl>
               <FormDescription>
@@ -232,7 +256,11 @@ ${values.responsibility}
           )}
         />
 
-        <Button type="submit" className="w-full min-h-[44px]" aria-label="Continuar para próximo passo">
+        <Button
+          type="submit"
+          className="w-full min-h-[44px]"
+          aria-label="Continuar para próximo passo"
+        >
           Continuar
         </Button>
       </form>

@@ -9,17 +9,37 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { SupplierTaxonomyFields } from "@/components/fornecedores/SupplierTaxonomyFields";
 import { normalizeSupplierTaxonomy } from "@/components/fornecedores/supplierTaxonomy";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, Pencil, Trash2, Star, Phone, Mail, MapPin, Globe, Clock, CreditCard, Save, X, RefreshCw,
+  ArrowLeft,
+  Pencil,
+  Trash2,
+  Star,
+  Phone,
+  Mail,
+  MapPin,
+  Globe,
+  Clock,
+  CreditCard,
+  Save,
+  X,
+  RefreshCw,
   Building2,
 } from "lucide-react";
 import { invokeFunction } from "@/infra/edgeFunctions";
@@ -36,7 +56,12 @@ import { useDialogDraft } from "@/hooks/useDialogDraft";
 import { AutosaveIndicator } from "@/components/ui/AutosaveIndicator";
 import { toast as sonnerToast } from "sonner";
 
-type LegacySupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
+type LegacySupplierCategory =
+  | "materiais"
+  | "mao_de_obra"
+  | "servicos"
+  | "equipamentos"
+  | "outros";
 
 interface Supplier {
   id: string;
@@ -96,15 +121,22 @@ export default function FornecedorDetalhe() {
     if (supplier && !editing) {
       setForm({
         ...supplier,
-        ...normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory),
+        ...normalizeSupplierTaxonomy(
+          supplier.supplier_type,
+          supplier.supplier_subcategory,
+        ),
       });
     }
   }, [supplier, editing]);
 
   // Autosave the in-progress edits to localStorage so the user doesn't lose data
   // if the tab is closed/refreshed mid-edit. Only active while in edit mode.
-  const { restored: draftRestored, clearDraft, lastSavedAt: draftLastSavedAt } = useDialogDraft<Partial<Supplier>>({
-    key: `fornecedor-edit-${id || 'new'}`,
+  const {
+    restored: draftRestored,
+    clearDraft,
+    lastSavedAt: draftLastSavedAt,
+  } = useDialogDraft<Partial<Supplier>>({
+    key: `fornecedor-edit-${id || "new"}`,
     enabled: editing,
     values: form,
     isDirty: () => editing, // any edit-mode value is worth persisting
@@ -115,8 +147,9 @@ export default function FornecedorDetalhe() {
 
   useEffect(() => {
     if (draftRestored) {
-      sonnerToast.info('Rascunho restaurado', {
-        description: 'Recuperamos as edições que você havia feito neste fornecedor.',
+      sonnerToast.info("Rascunho restaurado", {
+        description:
+          "Recuperamos as edições que você havia feito neste fornecedor.",
         duration: 4000,
       });
     }
@@ -124,7 +157,10 @@ export default function FornecedorDetalhe() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<Supplier>) => {
-      const { error } = await supabase.from("fornecedores").update(data as any).eq("id", id!);
+      const { error } = await supabase
+        .from("fornecedores")
+        .update(data as any)
+        .eq("id", id!);
       if (error) throw error;
       return data;
     },
@@ -141,12 +177,20 @@ export default function FornecedorDetalhe() {
       clearDraft();
       setEditing(false);
     },
-    onError: (err: Error) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+    onError: (err: Error) =>
+      toast({
+        title: "Erro",
+        description: err.message,
+        variant: "destructive",
+      }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("fornecedores").delete().eq("id", id!);
+      const { error } = await supabase
+        .from("fornecedores")
+        .delete()
+        .eq("id", id!);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -158,18 +202,25 @@ export default function FornecedorDetalhe() {
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await invokeFunction<{ success: boolean; target_id: string }>(
-        "sync-suppliers-outbound",
-        { supplier_id: id }
-      );
-      if (error) throw new Error(typeof error === "string" ? error : "Erro na sincronização");
+      const { data, error } = await invokeFunction<{
+        success: boolean;
+        target_id: string;
+      }>("sync-suppliers-outbound", { supplier_id: id });
+      if (error)
+        throw new Error(
+          typeof error === "string" ? error : "Erro na sincronização",
+        );
       return data;
     },
     onSuccess: () => {
       toast({ title: "Fornecedor sincronizado com Envision" });
     },
     onError: (err: Error) => {
-      toast({ title: "Erro ao sincronizar", description: err.message, variant: "destructive" });
+      toast({
+        title: "Erro ao sincronizar",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -177,7 +228,10 @@ export default function FornecedorDetalhe() {
     if (supplier) {
       setForm({
         ...supplier,
-        ...normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory),
+        ...normalizeSupplierTaxonomy(
+          supplier.supplier_type,
+          supplier.supplier_subcategory,
+        ),
       });
     }
     setEditing(true);
@@ -187,7 +241,10 @@ export default function FornecedorDetalhe() {
     if (supplier) {
       setForm({
         ...supplier,
-        ...normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory),
+        ...normalizeSupplierTaxonomy(
+          supplier.supplier_type,
+          supplier.supplier_subcategory,
+        ),
       });
     }
     clearDraft();
@@ -200,7 +257,10 @@ export default function FornecedorDetalhe() {
       return;
     }
 
-    const normalizedTaxonomy = normalizeSupplierTaxonomy(form.supplier_type, form.supplier_subcategory);
+    const normalizedTaxonomy = normalizeSupplierTaxonomy(
+      form.supplier_type,
+      form.supplier_subcategory,
+    );
 
     if (!normalizedTaxonomy.supplier_type) {
       toast({ title: "Categoria é obrigatória", variant: "destructive" });
@@ -214,13 +274,21 @@ export default function FornecedorDetalhe() {
     const payload = { ...form, ...normalizedTaxonomy };
     delete (payload as any).id;
     delete (payload as any).created_at;
-    if (payload.prazo_entrega_dias === undefined || payload.prazo_entrega_dias === null) delete payload.prazo_entrega_dias;
-    if (payload.nota_avaliacao === undefined || payload.nota_avaliacao === null) delete payload.nota_avaliacao;
+    if (
+      payload.prazo_entrega_dias === undefined ||
+      payload.prazo_entrega_dias === null
+    )
+      delete payload.prazo_entrega_dias;
+    if (payload.nota_avaliacao === undefined || payload.nota_avaliacao === null)
+      delete payload.nota_avaliacao;
     saveMutation.mutate(payload);
   };
 
   const renderStars = (rating: number | null) => {
-    if (!rating) return <span className="text-muted-foreground text-sm">Sem avaliação</span>;
+    if (!rating)
+      return (
+        <span className="text-muted-foreground text-sm">Sem avaliação</span>
+      );
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((i) => (
@@ -249,20 +317,37 @@ export default function FornecedorDetalhe() {
           icon={Building2}
           title="Fornecedor não encontrado"
           description="O cadastro solicitado não existe ou foi removido."
-          action={{ label: "Voltar para fornecedores", onClick: () => navigate("/gestao/fornecedores"), icon: ArrowLeft, variant: "outline" }}
+          action={{
+            label: "Voltar para fornecedores",
+            onClick: () => navigate("/gestao/fornecedores"),
+            icon: ArrowLeft,
+            variant: "outline",
+          }}
           size="md"
         />
       </div>
     );
   }
 
-  const InfoItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
+  const InfoItem = ({
+    icon: Icon,
+    label,
+    value,
+  }: {
+    icon: any;
+    label: string;
+    value: string | null | undefined;
+  }) => {
     return (
       <div className="flex items-start gap-2.5">
         <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
         <div>
           <p className="text-xs text-muted-foreground">{label}</p>
-          <p className={`text-sm ${!value ? "text-muted-foreground/50 italic" : ""}`}>{value || "Não informado"}</p>
+          <p
+            className={`text-sm ${!value ? "text-muted-foreground/50 italic" : ""}`}
+          >
+            {value || "Não informado"}
+          </p>
         </div>
       </div>
     );
@@ -270,18 +355,28 @@ export default function FornecedorDetalhe() {
 
   const s = editing ? form : supplier;
 
-  const normalizedSupplierTaxonomy = normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory);
+  const normalizedSupplierTaxonomy = normalizeSupplierTaxonomy(
+    supplier.supplier_type,
+    supplier.supplier_subcategory,
+  );
 
   /** Best available category display */
-  const categoryDisplay = normalizedSupplierTaxonomy.supplier_type && normalizedSupplierTaxonomy.supplier_subcategory
-    ? `${SUPPLIER_TYPE_LABELS[normalizedSupplierTaxonomy.supplier_type as SupplierType] || normalizedSupplierTaxonomy.supplier_type} › ${normalizedSupplierTaxonomy.supplier_subcategory}`
-    : LEGACY_CATEGORY_LABELS[supplier.categoria] || supplier.categoria;
+  const categoryDisplay =
+    normalizedSupplierTaxonomy.supplier_type &&
+    normalizedSupplierTaxonomy.supplier_subcategory
+      ? `${SUPPLIER_TYPE_LABELS[normalizedSupplierTaxonomy.supplier_type as SupplierType] || normalizedSupplierTaxonomy.supplier_type} › ${normalizedSupplierTaxonomy.supplier_subcategory}`
+      : LEGACY_CATEGORY_LABELS[supplier.categoria] || supplier.categoria;
 
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/gestao/fornecedores")} className="mt-0.5">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/gestao/fornecedores")}
+          className="mt-0.5"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
@@ -294,28 +389,46 @@ export default function FornecedorDetalhe() {
             />
           ) : (
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl font-bold tracking-tight">{supplier.nome}</h1>
-              <Badge variant={supplier.status === "ativo" ? "default" : "secondary"}>
+              <h1 className="text-2xl font-bold tracking-tight">
+                {supplier.nome}
+              </h1>
+              <Badge
+                variant={supplier.status === "ativo" ? "default" : "secondary"}
+              >
                 {supplier.status === "ativo" ? "Ativo" : "Inativo"}
               </Badge>
-              <Badge variant="secondary">
-                {categoryDisplay}
-              </Badge>
+              <Badge variant="secondary">{categoryDisplay}</Badge>
             </div>
           )}
           {!editing && supplier.razao_social && (
-            <p className="text-sm text-muted-foreground mt-0.5">{supplier.razao_social}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {supplier.razao_social}
+            </p>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {editing ? (
             <>
-              <AutosaveIndicator lastSavedAt={draftLastSavedAt} className="hidden sm:inline-flex mr-2" />
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={cancelEdit}>
+              <AutosaveIndicator
+                lastSavedAt={draftLastSavedAt}
+                className="hidden sm:inline-flex mr-2"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={cancelEdit}
+              >
                 <X className="h-4 w-4" /> Cancelar
               </Button>
-              <Button size="sm" className="gap-1.5" onClick={handleSave} disabled={saveMutation.isPending}>
-                <Save className="h-4 w-4" /> {saveMutation.isPending ? "Salvando..." : "Salvar"}
+              <Button
+                size="sm"
+                className="gap-1.5"
+                onClick={handleSave}
+                disabled={saveMutation.isPending}
+              >
+                <Save className="h-4 w-4" />{" "}
+                {saveMutation.isPending ? "Salvando..." : "Salvar"}
               </Button>
             </>
           ) : (
@@ -327,13 +440,25 @@ export default function FornecedorDetalhe() {
                 onClick={() => syncMutation.mutate()}
                 disabled={syncMutation.isPending}
               >
-                <RefreshCw className={`h-4 w-4 ${syncMutation.isPending ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${syncMutation.isPending ? "animate-spin" : ""}`}
+                />
                 {syncMutation.isPending ? "Sincronizando..." : "Sync Envision"}
               </Button>
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={startEdit}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={startEdit}
+              >
                 <Pencil className="h-4 w-4" /> Editar
               </Button>
-              <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => setDeleteConfirm(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-destructive hover:text-destructive"
+                onClick={() => setDeleteConfirm(true)}
+              >
                 <Trash2 className="h-4 w-4" /> Excluir
               </Button>
             </>
@@ -354,23 +479,44 @@ export default function FornecedorDetalhe() {
                 <>
                   <div className="space-y-1.5">
                     <Label>Razão Social</Label>
-                    <Input value={form.razao_social || ""} onChange={(e) => setForm((p) => ({ ...p, razao_social: e.target.value }))} />
+                    <Input
+                      value={form.razao_social || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, razao_social: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label>CNPJ/CPF</Label>
-                    <Input value={form.cnpj_cpf || ""} onChange={(e) => setForm((p) => ({ ...p, cnpj_cpf: e.target.value }))} />
+                    <Input
+                      value={form.cnpj_cpf || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, cnpj_cpf: e.target.value }))
+                      }
+                    />
                   </div>
                   {/* New taxonomy selects */}
                   <SupplierTaxonomyFields
                     supplierType={form.supplier_type}
                     supplierSubcategory={form.supplier_subcategory}
-                    onSupplierTypeChange={(value) => setForm((p) => ({ ...p, supplier_type: value }))}
-                    onSupplierSubcategoryChange={(value) => setForm((p) => ({ ...p, supplier_subcategory: value }))}
+                    onSupplierTypeChange={(value) =>
+                      setForm((p) => ({ ...p, supplier_type: value }))
+                    }
+                    onSupplierSubcategoryChange={(value) =>
+                      setForm((p) => ({ ...p, supplier_subcategory: value }))
+                    }
                   />
                   <div className="space-y-1.5">
                     <Label>Status</Label>
-                    <Select value={form.status || "ativo"} onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Select
+                      value={form.status || "ativo"}
+                      onValueChange={(v) =>
+                        setForm((p) => ({ ...p, status: v }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="ativo">Ativo</SelectItem>
                         <SelectItem value="inativo">Inativo</SelectItem>
@@ -379,48 +525,106 @@ export default function FornecedorDetalhe() {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Telefone</Label>
-                    <Input value={form.telefone || ""} onChange={(e) => setForm((p) => ({ ...p, telefone: e.target.value }))} />
+                    <Input
+                      value={form.telefone || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, telefone: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Email</Label>
-                    <Input type="email" value={form.email || ""} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
+                    <Input
+                      type="email"
+                      value={form.email || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, email: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Site</Label>
-                    <Input value={form.site || ""} onChange={(e) => setForm((p) => ({ ...p, site: e.target.value }))} />
+                    <Input
+                      value={form.site || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, site: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Endereço</Label>
-                    <Input value={form.endereco || ""} onChange={(e) => setForm((p) => ({ ...p, endereco: e.target.value }))} />
+                    <Input
+                      value={form.endereco || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, endereco: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label>Cidade</Label>
-                      <Input value={form.cidade || ""} onChange={(e) => setForm((p) => ({ ...p, cidade: e.target.value }))} />
+                      <Input
+                        value={form.cidade || ""}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, cidade: e.target.value }))
+                        }
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label>Estado</Label>
-                      <Input value={form.estado || ""} onChange={(e) => setForm((p) => ({ ...p, estado: e.target.value }))} maxLength={2} />
+                      <Input
+                        value={form.estado || ""}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, estado: e.target.value }))
+                        }
+                        maxLength={2}
+                      />
                     </div>
                   </div>
                 </>
               ) : (
                 <>
                   <div>
-                    <p className="text-xs text-muted-foreground">Razão Social</p>
-                    <p className={`text-sm ${!supplier.razao_social ? "text-muted-foreground/50 italic" : ""}`}>{supplier.razao_social || "Não informado"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Razão Social
+                    </p>
+                    <p
+                      className={`text-sm ${!supplier.razao_social ? "text-muted-foreground/50 italic" : ""}`}
+                    >
+                      {supplier.razao_social || "Não informado"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">CNPJ/CPF</p>
-                    <p className={`text-sm font-mono ${!supplier.cnpj_cpf ? "text-muted-foreground/50 italic" : ""}`}>{supplier.cnpj_cpf || "Não informado"}</p>
+                    <p
+                      className={`text-sm font-mono ${!supplier.cnpj_cpf ? "text-muted-foreground/50 italic" : ""}`}
+                    >
+                      {supplier.cnpj_cpf || "Não informado"}
+                    </p>
                   </div>
-                  <InfoItem icon={Phone} label="Telefone" value={supplier.telefone} />
+                  <InfoItem
+                    icon={Phone}
+                    label="Telefone"
+                    value={supplier.telefone}
+                  />
                   <InfoItem icon={Mail} label="Email" value={supplier.email} />
                   <InfoItem icon={Globe} label="Site" value={supplier.site} />
-                  <InfoItem icon={MapPin} label="Endereço" value={supplier.endereco} />
+                  <InfoItem
+                    icon={MapPin}
+                    label="Endereço"
+                    value={supplier.endereco}
+                  />
                   <div className="grid grid-cols-2 gap-4">
-                    <InfoItem icon={MapPin} label="Cidade" value={supplier.cidade} />
-                    <InfoItem icon={MapPin} label="Estado" value={supplier.estado} />
+                    <InfoItem
+                      icon={MapPin}
+                      label="Cidade"
+                      value={supplier.cidade}
+                    />
+                    <InfoItem
+                      icon={MapPin}
+                      label="Estado"
+                      value={supplier.estado}
+                    />
                   </div>
                   <InfoItem icon={MapPin} label="CEP" value={supplier.cep} />
                 </>
@@ -437,43 +641,114 @@ export default function FornecedorDetalhe() {
                 <>
                   <div className="space-y-1.5">
                     <Label>Nota (0 a 5)</Label>
-                    <Input type="number" min={0} max={5} step={0.5} value={form.nota_avaliacao ?? ""} onChange={(e) => setForm((p) => ({ ...p, nota_avaliacao: e.target.value ? Number(e.target.value) : undefined }))} />
+                    <Input
+                      type="number"
+                      min={0}
+                      max={5}
+                      step={0.5}
+                      value={form.nota_avaliacao ?? ""}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          nota_avaliacao: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        }))
+                      }
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Prazo de Entrega (dias)</Label>
-                    <Input type="number" value={form.prazo_entrega_dias || ""} onChange={(e) => setForm((p) => ({ ...p, prazo_entrega_dias: e.target.value ? Number(e.target.value) : undefined }))} />
+                    <Input
+                      type="number"
+                      value={form.prazo_entrega_dias || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          prazo_entrega_dias: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        }))
+                      }
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Condições de Pagamento</Label>
-                    <Input value={form.condicoes_pagamento || ""} onChange={(e) => setForm((p) => ({ ...p, condicoes_pagamento: e.target.value }))} placeholder="Ex: 30/60/90 dias" />
+                    <Input
+                      value={form.condicoes_pagamento || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          condicoes_pagamento: e.target.value,
+                        }))
+                      }
+                      placeholder="Ex: 30/60/90 dias"
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Produtos / Serviços</Label>
-                    <Textarea value={form.produtos_servicos || ""} onChange={(e) => setForm((p) => ({ ...p, produtos_servicos: e.target.value }))} rows={3} />
+                    <Textarea
+                      value={form.produtos_servicos || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          produtos_servicos: e.target.value,
+                        }))
+                      }
+                      rows={3}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Observações</Label>
-                    <Textarea value={form.observacoes || ""} onChange={(e) => setForm((p) => ({ ...p, observacoes: e.target.value }))} rows={2} />
+                    <Textarea
+                      value={form.observacoes || ""}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, observacoes: e.target.value }))
+                      }
+                      rows={2}
+                    />
                   </div>
                 </>
               ) : (
                 <>
                   <div>
                     <p className="text-xs text-muted-foreground">Avaliação</p>
-                    <div className="mt-1">{renderStars(supplier.nota_avaliacao)}</div>
+                    <div className="mt-1">
+                      {renderStars(supplier.nota_avaliacao)}
+                    </div>
                   </div>
-                  <InfoItem icon={Clock} label="Prazo de Entrega" value={supplier.prazo_entrega_dias ? `${supplier.prazo_entrega_dias} dias` : null} />
-                  <InfoItem icon={CreditCard} label="Condições de Pagamento" value={supplier.condicoes_pagamento} />
+                  <InfoItem
+                    icon={Clock}
+                    label="Prazo de Entrega"
+                    value={
+                      supplier.prazo_entrega_dias
+                        ? `${supplier.prazo_entrega_dias} dias`
+                        : null
+                    }
+                  />
+                  <InfoItem
+                    icon={CreditCard}
+                    label="Condições de Pagamento"
+                    value={supplier.condicoes_pagamento}
+                  />
                   {supplier.produtos_servicos && (
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Produtos / Serviços</p>
-                      <p className="text-sm whitespace-pre-wrap">{supplier.produtos_servicos}</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Produtos / Serviços
+                      </p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {supplier.produtos_servicos}
+                      </p>
                     </div>
                   )}
                   {supplier.observacoes && (
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Observações</p>
-                      <p className="text-sm whitespace-pre-wrap">{supplier.observacoes}</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Observações
+                      </p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {supplier.observacoes}
+                      </p>
                     </div>
                   )}
                 </>
@@ -492,7 +767,10 @@ export default function FornecedorDetalhe() {
                   <TabsTrigger value="anexos">Anexos</TabsTrigger>
                 </TabsList>
                 <TabsContent value="precos">
-                  <SupplierPricesTab fornecedorId={supplier.id} fornecedorNome={supplier.nome} />
+                  <SupplierPricesTab
+                    fornecedorId={supplier.id}
+                    fornecedorNome={supplier.nome}
+                  />
                 </TabsContent>
                 <TabsContent value="anexos">
                   <SupplierAttachmentsTab fornecedorId={supplier.id} />
@@ -519,11 +797,18 @@ export default function FornecedorDetalhe() {
             <DialogTitle>Confirmar exclusão</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Tem certeza que deseja excluir este fornecedor? Esta ação não pode ser desfeita.
+            Tem certeza que deseja excluir este fornecedor? Esta ação não pode
+            ser desfeita.
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(false)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
+            <Button variant="outline" onClick={() => setDeleteConfirm(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+            >
               Excluir
             </Button>
           </DialogFooter>

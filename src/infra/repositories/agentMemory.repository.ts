@@ -15,57 +15,57 @@ import {
   executeListQuery,
   type RepositoryResult,
   type RepositoryListResult,
-} from './base.repository';
-import type { Json } from '@/integrations/supabase/types';
+} from "./base.repository";
+import type { Json } from "@/integrations/supabase/types";
 
 // ============================================================================
 // Types — espelham a seção `state_memory` da spec
 // ============================================================================
 
 export type AgentEventType =
-  | 'new_project'
-  | 'project_update'
-  | 'schedule_request'
-  | 'budget_request'
-  | 'field_problem'
-  | 'client_message'
-  | 'supplier_quote'
-  | 'purchase_decision'
-  | 'quality_inspection'
-  | 'scope_change'
-  | 'handover';
+  | "new_project"
+  | "project_update"
+  | "schedule_request"
+  | "budget_request"
+  | "field_problem"
+  | "client_message"
+  | "supplier_quote"
+  | "purchase_decision"
+  | "quality_inspection"
+  | "scope_change"
+  | "handover";
 
 export type AgentEventSource =
-  | 'cliente'
-  | 'equipe'
-  | 'fornecedor'
-  | 'gestor'
-  | 'vistoria'
-  | 'documento';
+  | "cliente"
+  | "equipe"
+  | "fornecedor"
+  | "gestor"
+  | "vistoria"
+  | "documento";
 
 export type AgentEventStatus =
-  | 'success'
-  | 'llm_error'
-  | 'state_error'
-  | 'auth_error'
-  | 'other';
+  | "success"
+  | "llm_error"
+  | "state_error"
+  | "auth_error"
+  | "other";
 
 export type RoutedAgent =
-  | 'master_bwild'
-  | 'schedule_planner'
-  | 'cost_engineer'
-  | 'procurement_manager'
-  | 'field_engineer'
-  | 'root_cause_engineer'
-  | 'coordination_engineer'
-  | 'risk_manager'
-  | 'quality_controller'
-  | 'client_communication'
-  | 'supplier_evaluator'
-  | 'millwork_agent'
-  | 'stonework_agent'
-  | 'delay_recovery'
-  | 'handover_postwork';
+  | "master_bwild"
+  | "schedule_planner"
+  | "cost_engineer"
+  | "procurement_manager"
+  | "field_engineer"
+  | "root_cause_engineer"
+  | "coordination_engineer"
+  | "risk_manager"
+  | "quality_controller"
+  | "client_communication"
+  | "supplier_evaluator"
+  | "millwork_agent"
+  | "stonework_agent"
+  | "delay_recovery"
+  | "handover_postwork";
 
 export interface ProjectStateMemory {
   id: string;
@@ -135,8 +135,8 @@ export interface CreateAgentEventInput {
 // Repository functions
 // ============================================================================
 
-const STATE_TABLE = 'project_state_memory';
-const EVENTS_TABLE = 'bwild_agent_events';
+const STATE_TABLE = "project_state_memory";
+const EVENTS_TABLE = "bwild_agent_events";
 
 // Cast para contornar tipos não regenerados. Substituir ao regenerar Database types.
 const db = supabase as unknown as {
@@ -152,8 +152,8 @@ export async function getProjectState(
   return executeQuery(async () => {
     const { data, error } = await db
       .from(STATE_TABLE)
-      .select('*')
-      .eq('project_id', projectId)
+      .select("*")
+      .eq("project_id", projectId)
       .maybeSingle();
 
     return {
@@ -182,7 +182,7 @@ export async function ensureProjectState(
     const { data, error } = await db
       .from(STATE_TABLE)
       .insert({ project_id: projectId, state: {} })
-      .select('*')
+      .select("*")
       .single();
     return { data: data as unknown as ProjectStateMemory, error };
   });
@@ -201,9 +201,9 @@ export async function replaceProjectState(
       .from(STATE_TABLE)
       .upsert(
         { project_id: projectId, state: state as unknown as Json },
-        { onConflict: 'project_id' },
+        { onConflict: "project_id" },
       )
-      .select('*')
+      .select("*")
       .single();
     return { data: data as unknown as ProjectStateMemory, error };
   });
@@ -220,11 +220,14 @@ export async function listAgentEvents(
   return executeListQuery(async () => {
     const { data, error } = await db
       .from(EVENTS_TABLE)
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: false })
+      .select("*")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false })
       .limit(limit);
-    return { data: (data as unknown as BwildAgentEvent[] | null) ?? null, error };
+    return {
+      data: (data as unknown as BwildAgentEvent[] | null) ?? null,
+      error,
+    };
   });
 }
 
@@ -239,7 +242,7 @@ export async function recordAgentEvent(
     const { data, error } = await db
       .from(EVENTS_TABLE)
       .insert(input)
-      .select('*')
+      .select("*")
       .single();
     return { data: data as unknown as BwildAgentEvent, error };
   });

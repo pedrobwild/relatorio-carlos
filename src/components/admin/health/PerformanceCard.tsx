@@ -1,5 +1,5 @@
-import { Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PerformanceCardProps {
   totalLatencyMs: number;
@@ -7,9 +7,15 @@ interface PerformanceCardProps {
   lastRun: Date | null;
 }
 
-export const PerformanceCard = ({ totalLatencyMs, latencyHistory, lastRun }: PerformanceCardProps) => {
+export const PerformanceCard = ({
+  totalLatencyMs,
+  latencyHistory,
+  lastRun,
+}: PerformanceCardProps) => {
   const avgLatency = latencyHistory.length
-    ? Math.round(latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length)
+    ? Math.round(
+        latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length,
+      )
     : 0;
 
   return (
@@ -37,7 +43,7 @@ export const PerformanceCard = ({ totalLatencyMs, latencyHistory, lastRun }: Per
           <div>
             <p className="text-muted-foreground text-sm">Última atualização</p>
             <p className="text-sm font-medium">
-              {lastRun ? lastRun.toLocaleTimeString('pt-BR') : '-'}
+              {lastRun ? lastRun.toLocaleTimeString("pt-BR") : "-"}
             </p>
           </div>
         </div>
@@ -49,7 +55,7 @@ export const PerformanceCard = ({ totalLatencyMs, latencyHistory, lastRun }: Per
                 className="bg-primary rounded-t flex-1"
                 style={{
                   height: `${Math.min(100, (latency / Math.max(...latencyHistory)) * 100)}%`,
-                  minHeight: '4px',
+                  minHeight: "4px",
                 }}
                 title={`${latency}ms`}
               />

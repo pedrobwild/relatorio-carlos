@@ -27,9 +27,11 @@ const MIME_TYPE_LABELS: Record<string, string> = {
   "image/heic": "Imagem HEIC",
   "application/pdf": "PDF",
   "application/msword": "Word (DOC)",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "Word (DOCX)",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+    "Word (DOCX)",
   "application/vnd.ms-excel": "Excel (XLS)",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "Excel (XLSX)",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+    "Excel (XLSX)",
   "application/zip": "ZIP",
   "application/x-zip-compressed": "ZIP",
 };
@@ -61,7 +63,10 @@ function sanitizeFilename(filename: string): string {
 /**
  * Generate unique storage path for attachment
  */
-function generateStoragePath(formalizationId: string, filename: string): string {
+function generateStoragePath(
+  formalizationId: string,
+  filename: string,
+): string {
   const uuid = crypto.randomUUID();
   const sanitized = sanitizeFilename(filename);
   return `formalizations/${formalizationId}/${uuid}-${sanitized}`;
@@ -96,7 +101,7 @@ export function validateFile(file: File): ValidationResult {
  */
 export async function uploadFormalizationAttachment(
   formalizationId: string,
-  file: File
+  file: File,
 ): Promise<UploadResult> {
   // Validate file first
   const validation = validateFile(file);
@@ -105,7 +110,10 @@ export async function uploadFormalizationAttachment(
   }
 
   // Get current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
   if (userError || !user) {
     return { success: false, error: "Usuário não autenticado" };
   }
@@ -124,7 +132,10 @@ export async function uploadFormalizationAttachment(
 
     if (uploadError) {
       console.error("Upload error:", uploadError);
-      return { success: false, error: `Erro no upload: ${uploadError.message}` };
+      return {
+        success: false,
+        error: `Erro no upload: ${uploadError.message}`,
+      };
     }
 
     // Create attachment record in database
@@ -146,7 +157,10 @@ export async function uploadFormalizationAttachment(
       // Try to clean up uploaded file
       await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
       console.error("DB error:", dbError);
-      return { success: false, error: `Erro ao registrar anexo: ${dbError.message}` };
+      return {
+        success: false,
+        error: `Erro ao registrar anexo: ${dbError.message}`,
+      };
     }
 
     // Insert event
@@ -174,7 +188,9 @@ export async function uploadFormalizationAttachment(
 /**
  * Get signed URL for downloading/viewing attachment
  */
-export async function getAttachmentUrl(storagePath: string): Promise<string | null> {
+export async function getAttachmentUrl(
+  storagePath: string,
+): Promise<string | null> {
   const { data, error } = await supabase.storage
     .from(BUCKET_NAME)
     .createSignedUrl(storagePath, 3600); // 1 hour expiry
@@ -192,7 +208,7 @@ export async function getAttachmentUrl(storagePath: string): Promise<string | nu
  */
 export async function downloadAttachment(
   storagePath: string,
-  originalFilename: string
+  originalFilename: string,
 ): Promise<boolean> {
   const url = await getAttachmentUrl(storagePath);
   if (!url) {
@@ -214,7 +230,7 @@ export async function downloadAttachment(
  * List attachments for a formalization
  */
 export async function listFormalizationAttachments(
-  formalizationId: string
+  formalizationId: string,
 ): Promise<FormalizationAttachment[]> {
   const { data, error } = await supabase
     .from("formalization_attachments")
@@ -234,7 +250,7 @@ export async function listFormalizationAttachments(
  * Delete attachment (staff+ only, before lock)
  */
 export async function deleteFormalizationAttachment(
-  attachmentId: string
+  attachmentId: string,
 ): Promise<{ success: boolean; error?: string }> {
   // Get attachment details
   const { data: attachment, error: fetchError } = await supabase
@@ -254,7 +270,10 @@ export async function deleteFormalizationAttachment(
 
   if (storageError) {
     console.error("Storage delete error:", storageError);
-    return { success: false, error: `Erro ao deletar arquivo: ${storageError.message}` };
+    return {
+      success: false,
+      error: `Erro ao deletar arquivo: ${storageError.message}`,
+    };
   }
 
   // Delete record from database
@@ -265,7 +284,10 @@ export async function deleteFormalizationAttachment(
 
   if (dbError) {
     console.error("DB delete error:", dbError);
-    return { success: false, error: `Erro ao deletar registro: ${dbError.message}` };
+    return {
+      success: false,
+      error: `Erro ao deletar registro: ${dbError.message}`,
+    };
   }
 
   return { success: true };

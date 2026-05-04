@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
-import { toast } from 'sonner';
+import { useState, useCallback, useRef } from "react";
+import { toast } from "sonner";
 
 interface RetryOptions {
   maxRetries?: number;
@@ -18,22 +18,22 @@ const isNetworkError = (error: unknown): boolean => {
   if (!error) return false;
   const errorString = String(error).toLowerCase();
   const networkPatterns = [
-    'failed to fetch',
-    'network error',
-    'networkerror',
-    'timeout',
-    'aborted',
-    'net::err',
-    'econnrefused',
-    'enotfound',
-    'etimedout',
+    "failed to fetch",
+    "network error",
+    "networkerror",
+    "timeout",
+    "aborted",
+    "net::err",
+    "econnrefused",
+    "enotfound",
+    "etimedout",
   ];
-  return networkPatterns.some(pattern => errorString.includes(pattern));
+  return networkPatterns.some((pattern) => errorString.includes(pattern));
 };
 
 export function useRetryWithFeedback<T>(
   operation: () => Promise<T>,
-  options: RetryOptions = {}
+  options: RetryOptions = {},
 ) {
   const {
     maxRetries = 3,
@@ -67,7 +67,7 @@ export function useRetryWithFeedback<T>(
           setState({ isRetrying: true, attempt, maxAttempts: maxRetries });
           toastIdRef.current = toast.loading(
             `Reconectando... Tentativa ${attempt} de ${maxRetries}`,
-            { id: toastIdRef.current }
+            { id: toastIdRef.current },
           );
         }
 
@@ -75,7 +75,7 @@ export function useRetryWithFeedback<T>(
 
         if (attempt > 0) {
           dismissToast();
-          toast.success('Conexão restabelecida!');
+          toast.success("Conexão restabelecida!");
         }
 
         setState({ isRetrying: false, attempt: 0, maxAttempts: maxRetries });
@@ -90,13 +90,20 @@ export function useRetryWithFeedback<T>(
         }
 
         // Wait before next retry with exponential backoff
-        await new Promise(resolve => setTimeout(resolve, currentDelay));
+        await new Promise((resolve) => setTimeout(resolve, currentDelay));
         currentDelay = Math.min(currentDelay * backoffMultiplier, maxDelay);
       }
     }
 
     throw lastError;
-  }, [operation, maxRetries, initialDelay, maxDelay, backoffMultiplier, dismissToast]);
+  }, [
+    operation,
+    maxRetries,
+    initialDelay,
+    maxDelay,
+    backoffMultiplier,
+    dismissToast,
+  ]);
 
   const reset = useCallback(() => {
     dismissToast();
@@ -113,58 +120,71 @@ export function useRetryWithFeedback<T>(
 // Hook for mutation operations with automatic retry
 export function useMutationWithRetry<TData, TVariables>(
   mutationFn: (variables: TVariables) => Promise<TData>,
-  options: RetryOptions = {}
+  options: RetryOptions = {},
 ) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const { execute: executeWithRetry, isRetrying, attempt, maxAttempts, reset } = 
-    useRetryWithFeedback(() => Promise.resolve(), options);
+  const {
+    execute: executeWithRetry,
+    isRetrying,
+    attempt,
+    maxAttempts,
+    reset,
+  } = useRetryWithFeedback(() => Promise.resolve(), options);
 
-  const mutate = useCallback(async (variables: TVariables): Promise<TData> => {
-    setIsLoading(true);
-    setError(null);
+  const mutate = useCallback(
+    async (variables: TVariables): Promise<TData> => {
+      setIsLoading(true);
+      setError(null);
 
-    const { maxRetries = 3, initialDelay = 1000, maxDelay = 10000, backoffMultiplier = 2 } = options;
-    let lastError: unknown;
-    let currentDelay = initialDelay;
-    let toastId: string | number | undefined;
+      const {
+        maxRetries = 3,
+        initialDelay = 1000,
+        maxDelay = 10000,
+        backoffMultiplier = 2,
+      } = options;
+      let lastError: unknown;
+      let currentDelay = initialDelay;
+      let toastId: string | number | undefined;
 
-    for (let attemptNum = 0; attemptNum <= maxRetries; attemptNum++) {
-      try {
-        if (attemptNum > 0) {
-          toastId = toast.loading(
-            `Reconectando... Tentativa ${attemptNum} de ${maxRetries}`,
-            { id: toastId }
-          );
-        }
+      for (let attemptNum = 0; attemptNum <= maxRetries; attemptNum++) {
+        try {
+          if (attemptNum > 0) {
+            toastId = toast.loading(
+              `Reconectando... Tentativa ${attemptNum} de ${maxRetries}`,
+              { id: toastId },
+            );
+          }
 
-        const result = await mutationFn(variables);
+          const result = await mutationFn(variables);
 
-        if (attemptNum > 0) {
-          toast.dismiss(toastId);
-          toast.success('Operação concluída após reconexão!');
-        }
+          if (attemptNum > 0) {
+            toast.dismiss(toastId);
+            toast.success("Operação concluída após reconexão!");
+          }
 
-        setIsLoading(false);
-        return result;
-      } catch (err) {
-        lastError = err;
-
-        if (!isNetworkError(err) || attemptNum === maxRetries) {
-          if (toastId) toast.dismiss(toastId);
           setIsLoading(false);
-          setError(err instanceof Error ? err : new Error(String(err)));
-          throw err;
+          return result;
+        } catch (err) {
+          lastError = err;
+
+          if (!isNetworkError(err) || attemptNum === maxRetries) {
+            if (toastId) toast.dismiss(toastId);
+            setIsLoading(false);
+            setError(err instanceof Error ? err : new Error(String(err)));
+            throw err;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, currentDelay));
+          currentDelay = Math.min(currentDelay * backoffMultiplier, maxDelay);
         }
-
-        await new Promise(resolve => setTimeout(resolve, currentDelay));
-        currentDelay = Math.min(currentDelay * backoffMultiplier, maxDelay);
       }
-    }
 
-    throw lastError;
-  }, [mutationFn, options]);
+      throw lastError;
+    },
+    [mutationFn, options],
+  );
 
   return {
     mutate,

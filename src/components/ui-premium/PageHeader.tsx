@@ -14,8 +14,8 @@
  *
  * Acessibilidade: title é sempre <h1>, ações têm aria-label exigida.
  */
-import type { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   eyebrow?: ReactNode;
@@ -40,8 +40,8 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        'flex flex-col gap-3 pt-6 pb-5 md:pt-8 md:pb-6',
-        !flush && 'border-b border-border-subtle',
+        "flex flex-col gap-3 pt-6 pb-5 md:pt-8 md:pb-6",
+        !flush && "border-b border-border-subtle",
         className,
       )}
     >
@@ -60,7 +60,9 @@ export function PageHeader({
               {description}
             </p>
           )}
-          {meta && <div className="flex flex-wrap items-center gap-2 mt-1">{meta}</div>}
+          {meta && (
+            <div className="flex flex-wrap items-center gap-2 mt-1">{meta}</div>
+          )}
         </div>
         {actions && (
           <div className="flex flex-wrap items-center gap-2 shrink-0 md:pt-0.5">

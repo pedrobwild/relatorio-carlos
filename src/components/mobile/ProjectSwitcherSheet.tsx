@@ -24,7 +24,8 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_BADGE_STYLES: Record<string, string> = {
   draft: "bg-slate-500/15 text-slate-600 border-slate-400/25",
   active: "bg-primary/15 text-primary border-primary/25",
-  paused: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/25",
+  paused:
+    "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/25",
   completed: "bg-emerald-500/15 text-emerald-600 border-emerald-500/25",
   cancelled: "bg-muted text-muted-foreground border-border",
 };
@@ -69,7 +70,9 @@ export function ProjectSwitcherSheet({
         <h1 className="text-[15px] font-bold leading-tight text-foreground truncate">
           {currentProjectName} – {unitName}
         </h1>
-        {clientName && <p className="text-caption mt-0.5">Cliente: {clientName}</p>}
+        {clientName && (
+          <p className="text-caption mt-0.5">Cliente: {clientName}</p>
+        )}
       </div>
     );
   }
@@ -82,12 +85,17 @@ export function ProjectSwitcherSheet({
             <h1 className="text-[15px] font-bold leading-tight text-foreground group-hover:text-primary transition-colors truncate">
               {currentProjectName} – {unitName}
             </h1>
-            {clientName && <p className="text-caption mt-0.5">Cliente: {clientName}</p>}
+            {clientName && (
+              <p className="text-caption mt-0.5">Cliente: {clientName}</p>
+            )}
           </div>
           <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
         </button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="rounded-t-3xl pt-7 pb-safe max-h-[80dvh] flex flex-col">
+      <SheetContent
+        side="bottom"
+        className="rounded-t-3xl pt-7 pb-safe max-h-[80dvh] flex flex-col"
+      >
         <SheetHeader className="pb-2 shrink-0 text-left">
           <SheetTitle className="text-base font-bold flex items-center gap-2">
             <Building2 className="h-4 w-4" aria-hidden="true" />
@@ -115,11 +123,16 @@ export function ProjectSwitcherSheet({
               <div className="flex items-center gap-2 mb-2">
                 <Badge
                   variant="outline"
-                  className={cn("text-[10px] px-1.5 py-0 h-5", STATUS_BADGE_STYLES[status])}
+                  className={cn(
+                    "text-[10px] px-1.5 py-0 h-5",
+                    STATUS_BADGE_STYLES[status],
+                  )}
                 >
                   {STATUS_LABELS[status] ?? status}
                 </Badge>
-                <span className="text-[10px] text-muted-foreground">{projects.length}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {projects.length}
+                </span>
               </div>
               <div className="space-y-1">
                 {projects.map((project) => (

@@ -5,55 +5,55 @@
  * nível para páginas internas e dashboards. Todos os tokens vêm de
  * src/index.css — nada hardcoded.
  */
-export { PageHeader } from './PageHeader';
-export { PageToolbar } from './PageToolbar';
-export { MetricCard, MetricRail, type MetricAccent } from './MetricCard';
-export { SectionCard } from './SectionCard';
+export { PageHeader } from "./PageHeader";
+export { PageToolbar } from "./PageToolbar";
+export { MetricCard, MetricRail, type MetricAccent } from "./MetricCard";
+export { SectionCard } from "./SectionCard";
 export {
   StatusBadge,
   type StatusTone,
   type StatusVariant,
   type StatusSize,
-} from './StatusBadge';
-export { FilterPill } from './FilterPill';
+} from "./StatusBadge";
+export { FilterPill } from "./FilterPill";
 export {
   DataTable,
   type DataTableColumn,
   type SortState,
   type ColumnAlign,
   type TableDensity,
-} from './DataTable';
+} from "./DataTable";
 export {
   useTablePreferences,
   type TablePreferencesState,
   type UseTablePreferencesOptions,
   type UseTablePreferencesReturn,
-} from './useTablePreferences';
-export { DataTableSettings } from './DataTableSettings';
-export { EmptyState } from './EmptyState';
-export { ErrorView, ErrorViewFromUserError } from './ErrorView';
+} from "./useTablePreferences";
+export { DataTableSettings } from "./DataTableSettings";
+export { EmptyState } from "./EmptyState";
+export { ErrorView, ErrorViewFromUserError } from "./ErrorView";
 export {
   SkeletonBlock,
   TableSkeleton,
   CardsSkeleton,
   MetricRailSkeleton,
   PageSkeleton,
-} from './LoadingState';
+} from "./LoadingState";
 export {
   PremiumDialogHeader,
   PremiumSheetHeader,
   PremiumDialogFooter,
   PremiumDialogBody,
-} from './PremiumDialogHeader';
-export { BottomCTA, type BottomCTAAction } from './BottomCTA';
-export { BottomSheet, type BottomSheetActionItem } from './BottomSheet';
+} from "./PremiumDialogHeader";
+export { BottomCTA, type BottomCTAAction } from "./BottomCTA";
+export { BottomSheet, type BottomSheetActionItem } from "./BottomSheet";
 export {
   ResponsiveTable,
   type ResponsiveTableMobileItem,
-} from './ResponsiveTable';
+} from "./ResponsiveTable";
 export {
   PhotoCaptureButton,
   type PhotoCaptureButtonProps,
   type CapturedPhoto,
-} from './PhotoCaptureButton';
-export { Glossary, type GlossaryProps } from './Glossary';
+} from "./PhotoCaptureButton";
+export { Glossary, type GlossaryProps } from "./Glossary";

@@ -1,5 +1,12 @@
 import * as React from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetClose,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 export interface BottomSheetActionItem {
@@ -72,7 +79,9 @@ export function BottomSheet({
         )}
       >
         <SheetHeader className="px-4 pb-3 border-b border-border-subtle text-left">
-          <SheetTitle className="text-base font-bold text-foreground">{title}</SheetTitle>
+          <SheetTitle className="text-base font-bold text-foreground">
+            {title}
+          </SheetTitle>
           <SheetDescription
             className={cn(
               "text-[13px] text-muted-foreground",

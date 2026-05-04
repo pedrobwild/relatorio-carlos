@@ -1,14 +1,28 @@
-import { useParams } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { queryKeys } from '@/lib/queryKeys';
-import { Loader2, FileText, Upload, FileSpreadsheet, CheckCircle2, X, Sparkles } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { toast } from 'sonner';
-import OrcamentoDetalhe from '@/pages/gestao/OrcamentoDetalhe';
+import { useParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/queryKeys";
+import {
+  Loader2,
+  FileText,
+  Upload,
+  FileSpreadsheet,
+  CheckCircle2,
+  X,
+  Sparkles,
+} from "lucide-react";
+import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
+import OrcamentoDetalhe from "@/pages/gestao/OrcamentoDetalhe";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -24,16 +38,16 @@ export default function OrcamentoProjeto() {
   const [dragActive, setDragActive] = useState(false);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState('');
+  const [statusText, setStatusText] = useState("");
 
   const { data: project } = useQuery({
     queryKey: queryKeys.projects.detail(projectId),
     queryFn: async () => {
       if (!projectId) return null;
       const { data, error } = await supabase
-        .from('projects')
-        .select('name, client_name')
-        .eq('id', projectId)
+        .from("projects")
+        .select("name, client_name")
+        .eq("id", projectId)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -46,10 +60,10 @@ export default function OrcamentoProjeto() {
     queryFn: async () => {
       if (!projectId) return null;
       const { data, error } = await supabase
-        .from('orcamentos')
-        .select('id')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false })
+        .from("orcamentos")
+        .select("id")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
@@ -60,12 +74,17 @@ export default function OrcamentoProjeto() {
 
   const handleFile = (f: File) => {
     const ext = f.name.toLowerCase();
-    if (!ext.endsWith('.pdf') && !ext.endsWith('.xlsx') && !ext.endsWith('.xls') && !ext.endsWith('.csv')) {
-      toast.error('Formato não suportado. Use PDF, Excel ou CSV.');
+    if (
+      !ext.endsWith(".pdf") &&
+      !ext.endsWith(".xlsx") &&
+      !ext.endsWith(".xls") &&
+      !ext.endsWith(".csv")
+    ) {
+      toast.error("Formato não suportado. Use PDF, Excel ou CSV.");
       return;
     }
     if (f.size > 20 * 1024 * 1024) {
-      toast.error('Arquivo muito grande. Máximo: 20MB');
+      toast.error("Arquivo muito grande. Máximo: 20MB");
       return;
     }
     setFile(f);
@@ -83,55 +102,60 @@ export default function OrcamentoProjeto() {
 
     setImporting(true);
     setProgress(10);
-    setStatusText('Enviando arquivo...');
+    setStatusText("Enviando arquivo...");
 
     try {
       // 1. Upload to storage
       const storagePath = `${projectId}/orcamento-import/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
-        .from('project-documents')
+        .from("project-documents")
         .upload(storagePath, file);
 
       if (uploadError) {
-        throw new Error('Falha no upload: ' + uploadError.message);
+        throw new Error("Falha no upload: " + uploadError.message);
       }
 
       setProgress(30);
-      setStatusText('Analisando orçamento com IA...');
+      setStatusText("Analisando orçamento com IA...");
 
       // 2. Call edge function
-      const { data, error } = await supabase.functions.invoke('parse-budget-pdf', {
-        body: {
-          project_id: projectId,
-          storage_path: storagePath,
-          project_name: project?.name || '',
-          client_name: project?.client_name || '',
+      const { data, error } = await supabase.functions.invoke(
+        "parse-budget-pdf",
+        {
+          body: {
+            project_id: projectId,
+            storage_path: storagePath,
+            project_name: project?.name || "",
+            client_name: project?.client_name || "",
+          },
         },
-      });
+      );
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
       setProgress(90);
-      setStatusText('Finalizando importação...');
+      setStatusText("Finalizando importação...");
 
       // 3. Invalidate cache
-      await queryClient.invalidateQueries({ queryKey: queryKeys.orcamentos.byProject(projectId) });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.orcamentos.byProject(projectId),
+      });
 
       setProgress(100);
-      setStatusText('Concluído!');
-      toast.success(data.message || 'Orçamento importado com sucesso!');
+      setStatusText("Concluído!");
+      toast.success(data.message || "Orçamento importado com sucesso!");
     } catch (err: any) {
-      console.error('Import error:', err);
-      toast.error(err.message || 'Erro ao importar orçamento');
+      console.error("Import error:", err);
+      toast.error(err.message || "Erro ao importar orçamento");
       setProgress(0);
-      setStatusText('');
+      setStatusText("");
     } finally {
       setTimeout(() => {
         setImporting(false);
         setFile(null);
         setProgress(0);
-        setStatusText('');
+        setStatusText("");
       }, 1500);
     }
   };
@@ -151,9 +175,12 @@ export default function OrcamentoProjeto() {
           <FileText className="h-8 w-8 text-muted-foreground" />
         </div>
         <div className="text-center">
-          <h2 className="text-lg font-semibold text-foreground">Nenhum orçamento vinculado</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            Nenhum orçamento vinculado
+          </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Importe um orçamento em PDF e a IA irá adaptá-lo ao modelo do sistema automaticamente.
+            Importe um orçamento em PDF e a IA irá adaptá-lo ao modelo do
+            sistema automaticamente.
           </p>
         </div>
 
@@ -164,7 +191,8 @@ export default function OrcamentoProjeto() {
               Importar Orçamento com IA
             </CardTitle>
             <CardDescription>
-              Envie o PDF do orçamento — a IA extrairá seções e itens automaticamente.
+              Envie o PDF do orçamento — a IA extrairá seções e itens
+              automaticamente.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -176,7 +204,7 @@ export default function OrcamentoProjeto() {
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) handleFile(f);
-                e.target.value = '';
+                e.target.value = "";
               }}
             />
 
@@ -190,19 +218,26 @@ export default function OrcamentoProjeto() {
               </div>
             ) : !file ? (
               <div
-                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragActive(true);
+                }}
                 onDragLeave={() => setDragActive(false)}
                 onDrop={handleDrop}
                 onClick={() => inputRef.current?.click()}
                 className={`
                   flex flex-col items-center justify-center gap-3 p-8 rounded-lg border-2 border-dashed cursor-pointer transition-colors
-                  ${dragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50'}
+                  ${dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50"}
                 `}
               >
                 <Upload className="h-8 w-8 text-muted-foreground" />
                 <div className="text-center">
-                  <p className="text-sm font-medium">Clique ou arraste o arquivo aqui</p>
-                  <p className="text-xs text-muted-foreground mt-1">PDF, Excel ou CSV · Máx. 20MB</p>
+                  <p className="text-sm font-medium">
+                    Clique ou arraste o arquivo aqui
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PDF, Excel ou CSV · Máx. 20MB
+                  </p>
                 </div>
               </div>
             ) : (
@@ -212,7 +247,9 @@ export default function OrcamentoProjeto() {
                   <FileSpreadsheet className="h-6 w-6 text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatFileSize(file.size)}
+                    </p>
                   </div>
                   <Button
                     type="button"
@@ -235,7 +272,8 @@ export default function OrcamentoProjeto() {
         </Card>
 
         <p className="text-xs text-muted-foreground text-center">
-          O orçamento também pode ser sincronizado automaticamente pelo sistema comercial.
+          O orçamento também pode ser sincronizado automaticamente pelo sistema
+          comercial.
         </p>
       </div>
     );

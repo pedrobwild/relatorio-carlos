@@ -1,8 +1,8 @@
-import { CalendarClock, DollarSign, ChevronRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { parseISO, differenceInDays, format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import type { UpcomingPayment } from '@/hooks/useClientDashboard';
+import { CalendarClock, DollarSign, ChevronRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { parseISO, differenceInDays, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { UpcomingPayment } from "@/hooks/useClientDashboard";
 
 interface UpcomingPaymentsCardProps {
   payments: UpcomingPayment[];
@@ -10,7 +10,10 @@ interface UpcomingPaymentsCardProps {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
 }
 
 function parseDueDate(value: string): Date | null {
@@ -27,26 +30,29 @@ function getDaysUntilDueDate(dueDate: string): number | null {
 
 function getUrgencyClass(dueDate: string): string {
   const days = getDaysUntilDueDate(dueDate);
-  if (days === null) return 'text-muted-foreground';
-  if (days < 0) return 'text-muted-foreground';
-  if (days <= 2) return 'text-[hsl(var(--warning))] font-medium';
-  return 'text-muted-foreground';
+  if (days === null) return "text-muted-foreground";
+  if (days < 0) return "text-muted-foreground";
+  if (days <= 2) return "text-[hsl(var(--warning))] font-medium";
+  return "text-muted-foreground";
 }
 
 function getUrgencyLabel(dueDate: string): string {
   const days = getDaysUntilDueDate(dueDate);
-  if (days === null) return 'Data a confirmar';
-  if (days < 0) return 'Vencimento pendente';
-  if (days === 0) return 'Vence hoje';
-  if (days === 1) return 'Amanhã';
+  if (days === null) return "Data a confirmar";
+  if (days < 0) return "Vencimento pendente";
+  if (days === 0) return "Vence hoje";
+  if (days === 1) return "Amanhã";
   if (days <= 7) return `Em ${days} dias`;
 
   const parsed = parseDueDate(dueDate);
-  if (!parsed) return 'Data a confirmar';
+  if (!parsed) return "Data a confirmar";
   return format(parsed, "dd 'de' MMM", { locale: ptBR });
 }
 
-export function UpcomingPaymentsCard({ payments, onPaymentClick }: UpcomingPaymentsCardProps) {
+export function UpcomingPaymentsCard({
+  payments,
+  onPaymentClick,
+}: UpcomingPaymentsCardProps) {
   if (payments.length === 0) return null;
 
   return (
@@ -69,11 +75,17 @@ export function UpcomingPaymentsCard({ payments, onPaymentClick }: UpcomingPayme
                 <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-caption font-medium truncate">{payment.description}</p>
-                <p className="text-tiny text-muted-foreground truncate">{payment.project_name}</p>
+                <p className="text-caption font-medium truncate">
+                  {payment.description}
+                </p>
+                <p className="text-tiny text-muted-foreground truncate">
+                  {payment.project_name}
+                </p>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-caption font-semibold">{formatCurrency(payment.amount)}</p>
+                <p className="text-caption font-semibold">
+                  {formatCurrency(payment.amount)}
+                </p>
                 <p className={`text-tiny ${getUrgencyClass(payment.due_date)}`}>
                   {getUrgencyLabel(payment.due_date)}
                 </p>

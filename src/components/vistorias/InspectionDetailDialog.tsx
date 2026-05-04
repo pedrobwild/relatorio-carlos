@@ -1,24 +1,33 @@
-import { useState, useMemo, useCallback } from 'react';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CheckCircle2, XCircle, MinusCircle, Clock, AlertTriangle, User, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useMemo, useCallback } from "react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  CheckCircle2,
+  XCircle,
+  MinusCircle,
+  Clock,
+  AlertTriangle,
+  User,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
+} from "@/components/ui/sheet";
 import {
   useInspectionItems,
   useUpdateInspectionItem,
@@ -26,21 +35,40 @@ import {
   type Inspection,
   type InspectionItem,
   type InspectionItemResult,
-} from '@/hooks/useInspections';
-import { EvidenceUpload } from './EvidenceUpload';
-import { InspectionPdfExport } from './InspectionPdfExport';
-import { useCan } from '@/hooks/useCan';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { toast } from 'sonner';
-import { getInspectionTypeConfig } from './inspectionConstants';
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+} from "@/hooks/useInspections";
+import { EvidenceUpload } from "./EvidenceUpload";
+import { InspectionPdfExport } from "./InspectionPdfExport";
+import { useCan } from "@/hooks/useCan";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
+import { getInspectionTypeConfig } from "./inspectionConstants";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
-const resultConfig: Record<InspectionItemResult, { icon: React.ReactNode; label: string; className: string }> = {
-  pending: { icon: <Clock className="h-4 w-4" />, label: 'Pendente', className: 'text-muted-foreground' },
-  approved: { icon: <CheckCircle2 className="h-4 w-4" />, label: 'OK', className: 'text-green-600' },
-  rejected: { icon: <XCircle className="h-4 w-4" />, label: 'NC', className: 'text-destructive' },
-  not_applicable: { icon: <MinusCircle className="h-4 w-4" />, label: 'N/A', className: 'text-muted-foreground' },
+const resultConfig: Record<
+  InspectionItemResult,
+  { icon: React.ReactNode; label: string; className: string }
+> = {
+  pending: {
+    icon: <Clock className="h-4 w-4" />,
+    label: "Pendente",
+    className: "text-muted-foreground",
+  },
+  approved: {
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    label: "OK",
+    className: "text-green-600",
+  },
+  rejected: {
+    icon: <XCircle className="h-4 w-4" />,
+    label: "NC",
+    className: "text-destructive",
+  },
+  not_applicable: {
+    icon: <MinusCircle className="h-4 w-4" />,
+    label: "N/A",
+    className: "text-muted-foreground",
+  },
 };
 
 interface Props {
@@ -78,7 +106,10 @@ function ItemCard({
   setItemNotes: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   itemPhotos: Record<string, string[]>;
   getPhotos: (item: InspectionItem) => string[];
-  handleResultChange: (item: InspectionItem, result: InspectionItemResult) => void;
+  handleResultChange: (
+    item: InspectionItem,
+    result: InspectionItemResult,
+  ) => void;
   handleNotesBlur: (item: InspectionItem) => void;
   handlePhotosChange: (item: InspectionItem, paths: string[]) => void;
   onCreateNc?: (item: InspectionItem) => void;
@@ -90,15 +121,23 @@ function ItemCard({
   return (
     <div
       className={cn(
-        'border rounded-lg p-3 space-y-3 transition-colors',
-        item.result === 'rejected' && 'border-destructive/30 bg-destructive/5',
-        isMobile && 'p-4'
+        "border rounded-lg p-3 space-y-3 transition-colors",
+        item.result === "rejected" && "border-destructive/30 bg-destructive/5",
+        isMobile && "p-4",
       )}
     >
       {/* Description */}
       <div className="flex items-start gap-2 min-w-0">
-        <span className="text-xs text-muted-foreground font-mono mt-0.5 shrink-0">{index + 1}.</span>
-        <span className={cn('text-sm font-medium', cfg.className, isMobile && 'text-base')}>
+        <span className="text-xs text-muted-foreground font-mono mt-0.5 shrink-0">
+          {index + 1}.
+        </span>
+        <span
+          className={cn(
+            "text-sm font-medium",
+            cfg.className,
+            isMobile && "text-base",
+          )}
+        >
           {item.description}
         </span>
       </div>
@@ -108,13 +147,33 @@ function ItemCard({
         <>
           {/* Desktop: individual buttons */}
           <div className="hidden sm:flex items-center gap-1.5">
-            <Button variant={item.result === 'approved' ? 'default' : 'outline'} size="icon" className="h-8 w-8" onClick={() => handleResultChange(item, 'approved')} title="Aprovado">
+            <Button
+              variant={item.result === "approved" ? "default" : "outline"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleResultChange(item, "approved")}
+              title="Aprovado"
+            >
               <CheckCircle2 className="h-4 w-4" />
             </Button>
-            <Button variant={item.result === 'rejected' ? 'destructive' : 'outline'} size="icon" className="h-8 w-8" onClick={() => handleResultChange(item, 'rejected')} title="Reprovado">
+            <Button
+              variant={item.result === "rejected" ? "destructive" : "outline"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleResultChange(item, "rejected")}
+              title="Reprovado"
+            >
               <XCircle className="h-4 w-4" />
             </Button>
-            <Button variant={item.result === 'not_applicable' ? 'secondary' : 'outline'} size="icon" className="h-8 w-8" onClick={() => handleResultChange(item, 'not_applicable')} title="N/A">
+            <Button
+              variant={
+                item.result === "not_applicable" ? "secondary" : "outline"
+              }
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleResultChange(item, "not_applicable")}
+              title="N/A"
+            >
               <MinusCircle className="h-4 w-4" />
             </Button>
           </div>
@@ -122,17 +181,32 @@ function ItemCard({
           {/* Mobile: large segmented toggle */}
           <div className="flex sm:hidden w-full">
             <div className="inline-flex rounded-xl border bg-muted/50 p-1 w-full gap-1">
-              {([
-                { value: 'approved' as InspectionItemResult, label: '✅ OK', activeClass: 'bg-green-600 text-white shadow-sm' },
-                { value: 'rejected' as InspectionItemResult, label: '❌ NC', activeClass: 'bg-destructive text-destructive-foreground shadow-sm' },
-                { value: 'not_applicable' as InspectionItemResult, label: '➖ N/A', activeClass: 'bg-muted-foreground text-background shadow-sm' },
-              ]).map(opt => (
+              {[
+                {
+                  value: "approved" as InspectionItemResult,
+                  label: "✅ OK",
+                  activeClass: "bg-green-600 text-white shadow-sm",
+                },
+                {
+                  value: "rejected" as InspectionItemResult,
+                  label: "❌ NC",
+                  activeClass:
+                    "bg-destructive text-destructive-foreground shadow-sm",
+                },
+                {
+                  value: "not_applicable" as InspectionItemResult,
+                  label: "➖ N/A",
+                  activeClass: "bg-muted-foreground text-background shadow-sm",
+                },
+              ].map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
                   className={cn(
-                    'flex-1 py-3 text-sm font-medium rounded-lg transition-all min-h-[48px] touch-manipulation',
-                    item.result === opt.value ? opt.activeClass : 'text-muted-foreground active:scale-95'
+                    "flex-1 py-3 text-sm font-medium rounded-lg transition-all min-h-[48px] touch-manipulation",
+                    item.result === opt.value
+                      ? opt.activeClass
+                      : "text-muted-foreground active:scale-95",
                   )}
                   onClick={() => handleResultChange(item, opt.value)}
                 >
@@ -145,7 +219,12 @@ function ItemCard({
       )}
 
       {isCompleted && (
-        <div className={cn('flex items-center gap-1 text-xs font-medium', cfg.className)}>
+        <div
+          className={cn(
+            "flex items-center gap-1 text-xs font-medium",
+            cfg.className,
+          )}
+        >
           {cfg.icon}
           {cfg.label}
         </div>
@@ -157,8 +236,10 @@ function ItemCard({
           placeholder="Observações do item..."
           className="text-xs min-h-[44px] resize-none"
           rows={1}
-          value={itemNotes[item.id] ?? item.notes ?? ''}
-          onChange={(e) => setItemNotes(prev => ({ ...prev, [item.id]: e.target.value }))}
+          value={itemNotes[item.id] ?? item.notes ?? ""}
+          onChange={(e) =>
+            setItemNotes((prev) => ({ ...prev, [item.id]: e.target.value }))
+          }
           onBlur={() => handleNotesBlur(item)}
         />
       ) : item.notes ? (
@@ -171,12 +252,12 @@ function ItemCard({
         entityId={item.id}
         value={photos}
         onChange={(paths) => handlePhotosChange(item, paths)}
-        required={item.result === 'rejected'}
+        required={item.result === "rejected"}
         disabled={!isEditable}
       />
 
       {/* Create NC button */}
-      {item.result === 'rejected' && onCreateNc && (
+      {item.result === "rejected" && onCreateNc && (
         <Button
           variant="outline"
           size="sm"
@@ -191,9 +272,15 @@ function ItemCard({
   );
 }
 
-export function InspectionDetailDialog({ inspection, projectId, open, onOpenChange, onCreateNc }: Props) {
+export function InspectionDetailDialog({
+  inspection,
+  projectId,
+  open,
+  onOpenChange,
+  onCreateNc,
+}: Props) {
   const { can } = useCan();
-  const canEdit = can('inspections:edit');
+  const canEdit = can("inspections:edit");
   const isMobile = useIsMobile();
   const { data: items = [], isLoading } = useInspectionItems(inspection.id);
   const updateItem = useUpdateInspectionItem();
@@ -201,9 +288,9 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [itemPhotos, setItemPhotos] = useState<Record<string, string[]>>({});
   const [mobileItemIndex, setMobileItemIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'step' | 'list'>('step');
+  const [viewMode, setViewMode] = useState<"step" | "list">("step");
 
-  const isCompleted = inspection.status === 'completed';
+  const isCompleted = inspection.status === "completed";
   const isEditable = !isCompleted && canEdit;
 
   const getPhotos = (item: InspectionItem): string[] => {
@@ -211,16 +298,23 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
   };
 
   const handlePhotosChange = (item: InspectionItem, paths: string[]) => {
-    setItemPhotos(prev => ({ ...prev, [item.id]: paths }));
-    updateItem.mutate({ id: item.id, inspection_id: inspection.id, photo_paths: paths });
+    setItemPhotos((prev) => ({ ...prev, [item.id]: paths }));
+    updateItem.mutate({
+      id: item.id,
+      inspection_id: inspection.id,
+      photo_paths: paths,
+    });
   };
 
-  const handleResultChange = (item: InspectionItem, result: InspectionItemResult) => {
+  const handleResultChange = (
+    item: InspectionItem,
+    result: InspectionItemResult,
+  ) => {
     if (isCompleted) return;
-    if (result === 'rejected') {
+    if (result === "rejected") {
       const photos = getPhotos(item);
       if (photos.length === 0) {
-        toast.error('Adicione pelo menos uma foto antes de reprovar o item');
+        toast.error("Adicione pelo menos uma foto antes de reprovar o item");
         return;
       }
     }
@@ -229,72 +323,89 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
 
   const handleNotesBlur = (item: InspectionItem) => {
     const notes = itemNotes[item.id];
-    if (notes !== undefined && notes !== (item.notes || '')) {
-      updateItem.mutate({ id: item.id, inspection_id: inspection.id, notes: notes || null });
+    if (notes !== undefined && notes !== (item.notes || "")) {
+      updateItem.mutate({
+        id: item.id,
+        inspection_id: inspection.id,
+        notes: notes || null,
+      });
     }
   };
 
   const hasRejectedWithoutPhotos = useMemo(() => {
-    return items.some(i => {
-      if (i.result !== 'rejected') return false;
+    return items.some((i) => {
+      if (i.result !== "rejected") return false;
       const photos = getPhotos(i);
       return photos.length === 0;
     });
   }, [items, itemPhotos]);
 
   const handleComplete = () => {
-    const pendingItems = items.filter(i => i.result === 'pending');
+    const pendingItems = items.filter((i) => i.result === "pending");
     if (pendingItems.length > 0) {
       toast.error(`Ainda há ${pendingItems.length} itens pendentes`);
       return;
     }
     if (hasRejectedWithoutPhotos) {
-      toast.error('Todos os itens reprovados devem ter pelo menos uma foto de evidência');
+      toast.error(
+        "Todos os itens reprovados devem ter pelo menos uma foto de evidência",
+      );
       return;
     }
     completeInspection.mutate({ id: inspection.id, project_id: projectId });
   };
 
-  const approvedCount = items.filter(i => i.result === 'approved').length;
-  const rejectedCount = items.filter(i => i.result === 'rejected').length;
-  const pendingCount = items.filter(i => i.result === 'pending').length;
+  const approvedCount = items.filter((i) => i.result === "approved").length;
+  const rejectedCount = items.filter((i) => i.result === "rejected").length;
+  const pendingCount = items.filter((i) => i.result === "pending").length;
   const evaluatedCount = items.length - pendingCount;
-  const progressPercent = items.length > 0 ? Math.round((evaluatedCount / items.length) * 100) : 0;
+  const progressPercent =
+    items.length > 0 ? Math.round((evaluatedCount / items.length) * 100) : 0;
 
   const goToNextItem = useCallback(() => {
-    if (mobileItemIndex < items.length - 1) setMobileItemIndex(prev => prev + 1);
+    if (mobileItemIndex < items.length - 1)
+      setMobileItemIndex((prev) => prev + 1);
   }, [mobileItemIndex, items.length]);
 
   const goToPrevItem = useCallback(() => {
-    if (mobileItemIndex > 0) setMobileItemIndex(prev => prev - 1);
+    if (mobileItemIndex > 0) setMobileItemIndex((prev) => prev - 1);
   }, [mobileItemIndex]);
 
   // Find next pending item
   const goToNextPending = useCallback(() => {
-    const nextPending = items.findIndex((item, idx) => idx > mobileItemIndex && item.result === 'pending');
+    const nextPending = items.findIndex(
+      (item, idx) => idx > mobileItemIndex && item.result === "pending",
+    );
     if (nextPending >= 0) {
       setMobileItemIndex(nextPending);
     } else {
       // Wrap around
-      const firstPending = items.findIndex(item => item.result === 'pending');
+      const firstPending = items.findIndex((item) => item.result === "pending");
       if (firstPending >= 0) setMobileItemIndex(firstPending);
     }
   }, [items, mobileItemIndex]);
 
-  const typeConfig = getInspectionTypeConfig(inspection.inspection_type || 'rotina');
+  const typeConfig = getInspectionTypeConfig(
+    inspection.inspection_type || "rotina",
+  );
 
   const headerContent = (
     <>
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold text-base">
-            Vistoria — {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}
+            Vistoria —{" "}
+            {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", {
+              locale: ptBR,
+            })}
           </span>
-          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${typeConfig.color}`}>
+          <span
+            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${typeConfig.color}`}
+          >
             {typeConfig.emoji} {typeConfig.label}
           </span>
-          <Badge variant={isCompleted ? 'secondary' : 'default'}>
-            {isCompleted ? 'Concluída' : 'Em andamento'}
+          <Badge variant={isCompleted ? "secondary" : "default"}>
+            {isCompleted ? "Concluída" : "Em andamento"}
           </Badge>
         </div>
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -306,7 +417,8 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
           )}
           {inspection.client_present && (
             <span className="flex items-center gap-1">
-              🏠 Cliente{inspection.client_name ? `: ${inspection.client_name}` : ''}
+              🏠 Cliente
+              {inspection.client_name ? `: ${inspection.client_name}` : ""}
             </span>
           )}
         </div>
@@ -317,10 +429,14 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
   const progressBar = (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{evaluatedCount}/{items.length} avaliados</span>
+        <span>
+          {evaluatedCount}/{items.length} avaliados
+        </span>
         <div className="flex gap-3">
           <span className="text-green-600 font-medium">{approvedCount} ✓</span>
-          <span className="text-destructive font-medium">{rejectedCount} ✗</span>
+          <span className="text-destructive font-medium">
+            {rejectedCount} ✗
+          </span>
           <span>{pendingCount} ⏳</span>
         </div>
       </div>
@@ -350,12 +466,18 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
 
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[95dvh] flex flex-col p-0 rounded-t-2xl">
+        <SheetContent
+          side="bottom"
+          className="h-[95dvh] flex flex-col p-0 rounded-t-2xl"
+        >
           {/* Sticky header */}
           <div className="shrink-0 border-b border-border px-4 pt-4 pb-3 space-y-3">
             <SheetHeader className="p-0">
               <SheetTitle className="text-left text-base">
-                {typeConfig.emoji} Vistoria {format(parseISO(inspection.inspection_date), "dd/MM", { locale: ptBR })}
+                {typeConfig.emoji} Vistoria{" "}
+                {format(parseISO(inspection.inspection_date), "dd/MM", {
+                  locale: ptBR,
+                })}
               </SheetTitle>
             </SheetHeader>
             {progressBar}
@@ -366,24 +488,28 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                 <div className="flex gap-1">
                   <button
                     className={cn(
-                      'px-3 py-1.5 text-xs rounded-lg transition-colors touch-manipulation',
-                      viewMode === 'step' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      "px-3 py-1.5 text-xs rounded-lg transition-colors touch-manipulation",
+                      viewMode === "step"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground",
                     )}
-                    onClick={() => setViewMode('step')}
+                    onClick={() => setViewMode("step")}
                   >
                     Passo a passo
                   </button>
                   <button
                     className={cn(
-                      'px-3 py-1.5 text-xs rounded-lg transition-colors touch-manipulation',
-                      viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      "px-3 py-1.5 text-xs rounded-lg transition-colors touch-manipulation",
+                      viewMode === "list"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground",
                     )}
-                    onClick={() => setViewMode('list')}
+                    onClick={() => setViewMode("list")}
                   >
                     Lista
                   </button>
                 </div>
-                {viewMode === 'step' && (
+                {viewMode === "step" && (
                   <span className="text-xs text-muted-foreground font-mono">
                     {mobileItemIndex + 1} / {items.length}
                   </span>
@@ -402,7 +528,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
               <div className="flex flex-col items-center justify-center h-32 text-muted-foreground text-sm">
                 Nenhum item no checklist
               </div>
-            ) : viewMode === 'step' && isEditable ? (
+            ) : viewMode === "step" && isEditable ? (
               /* Step-by-step mode */
               <AnimatePresence mode="wait">
                 {currentItem && (
@@ -413,7 +539,11 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.15 }}
                   >
-                    <ItemCard item={currentItem} index={mobileItemIndex} {...itemCardProps} />
+                    <ItemCard
+                      item={currentItem}
+                      index={mobileItemIndex}
+                      {...itemCardProps}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -421,10 +551,17 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
               /* List mode / completed view */
               <div className="space-y-3">
                 {inspection.notes && (
-                  <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">{inspection.notes}</p>
+                  <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+                    {inspection.notes}
+                  </p>
                 )}
                 {items.map((item, i) => (
-                  <ItemCard key={item.id} item={item} index={i} {...itemCardProps} />
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    index={i}
+                    {...itemCardProps}
+                  />
                 ))}
               </div>
             )}
@@ -432,7 +569,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
 
           {/* Sticky footer */}
           <div className="shrink-0 border-t border-border px-4 py-3 pb-safe bg-card/95 backdrop-blur-md space-y-2">
-            {viewMode === 'step' && isEditable && items.length > 0 && (
+            {viewMode === "step" && isEditable && items.length > 0 && (
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -444,7 +581,8 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
 
-                {pendingCount > 0 && items[mobileItemIndex]?.result !== 'pending' ? (
+                {pendingCount > 0 &&
+                items[mobileItemIndex]?.result !== "pending" ? (
                   <Button
                     variant="secondary"
                     className="flex-1 h-11 touch-manipulation text-sm"
@@ -478,15 +616,25 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
             {isEditable ? (
               <Button
                 onClick={handleComplete}
-                disabled={pendingCount > 0 || hasRejectedWithoutPhotos || completeInspection.isPending}
+                disabled={
+                  pendingCount > 0 ||
+                  hasRejectedWithoutPhotos ||
+                  completeInspection.isPending
+                }
                 className="w-full h-12 text-sm font-medium rounded-xl touch-manipulation"
               >
-                {completeInspection.isPending ? 'Finalizando...' : `Finalizar Vistoria (${evaluatedCount}/${items.length})`}
+                {completeInspection.isPending
+                  ? "Finalizando..."
+                  : `Finalizar Vistoria (${evaluatedCount}/${items.length})`}
               </Button>
             ) : (
               <div className="flex gap-2">
                 <InspectionPdfExport inspection={inspection} items={items} />
-                <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 h-11 touch-manipulation">
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="flex-1 h-11 touch-manipulation"
+                >
                   Fechar
                 </Button>
               </div>
@@ -510,7 +658,9 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
         {progressBar}
 
         {inspection.notes && (
-          <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">{inspection.notes}</p>
+          <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+            {inspection.notes}
+          </p>
         )}
 
         {/* Items checklist */}
@@ -521,19 +671,31 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
         </div>
 
         <DialogFooter className="gap-2">
-          {isCompleted && <InspectionPdfExport inspection={inspection} items={items} />}
+          {isCompleted && (
+            <InspectionPdfExport inspection={inspection} items={items} />
+          )}
           {isEditable ? (
             <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Fechar
+              </Button>
               <Button
                 onClick={handleComplete}
-                disabled={pendingCount > 0 || hasRejectedWithoutPhotos || completeInspection.isPending}
+                disabled={
+                  pendingCount > 0 ||
+                  hasRejectedWithoutPhotos ||
+                  completeInspection.isPending
+                }
               >
-                {completeInspection.isPending ? 'Finalizando...' : 'Finalizar Vistoria'}
+                {completeInspection.isPending
+                  ? "Finalizando..."
+                  : "Finalizar Vistoria"}
               </Button>
             </>
           ) : (
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Fechar
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>

@@ -4,7 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Download, FileText, Image, File, Eye, X } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Download,
+  FileText,
+  Image,
+  File,
+  Eye,
+  X,
+} from "lucide-react";
 
 interface Attachment {
   id: string;
@@ -51,13 +60,13 @@ function AttachmentPreview({ att }: { att: Attachment }) {
       .then(({ data }) => {
         if (!cancelled && data?.signedUrl) setUrl(data.signedUrl);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [att.file_path]);
 
   if (!url) {
-    return (
-      <div className="h-32 w-full rounded-md bg-muted/50 animate-pulse" />
-    );
+    return <div className="h-32 w-full rounded-md bg-muted/50 animate-pulse" />;
   }
 
   if (isImage(att.mime_type)) {
@@ -141,7 +150,10 @@ export function SupplierAttachmentsTab({ fornecedorId }: Props) {
   const deleteMut = useMutation({
     mutationFn: async (att: Attachment) => {
       await supabase.storage.from("fornecedor-anexos").remove([att.file_path]);
-      const { error } = await supabase.from("fornecedor_anexos").delete().eq("id", att.id);
+      const { error } = await supabase
+        .from("fornecedor_anexos")
+        .delete()
+        .eq("id", att.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -156,7 +168,9 @@ export function SupplierAttachmentsTab({ fornecedorId }: Props) {
 
     setUploading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
       for (const file of Array.from(files)) {
@@ -168,22 +182,28 @@ export function SupplierAttachmentsTab({ fornecedorId }: Props) {
           .upload(path, file);
         if (uploadErr) throw uploadErr;
 
-        const { error: dbErr } = await supabase.from("fornecedor_anexos").insert({
-          fornecedor_id: fornecedorId,
-          file_name: file.name,
-          file_path: path,
-          file_size: file.size,
-          mime_type: file.type || null,
-          tipo: "outro",
-          uploaded_by: user.id,
-        });
+        const { error: dbErr } = await supabase
+          .from("fornecedor_anexos")
+          .insert({
+            fornecedor_id: fornecedorId,
+            file_name: file.name,
+            file_path: path,
+            file_size: file.size,
+            mime_type: file.type || null,
+            tipo: "outro",
+            uploaded_by: user.id,
+          });
         if (dbErr) throw dbErr;
       }
 
       qc.invalidateQueries({ queryKey: qk });
       toast({ title: `${files.length} anexo(s) enviado(s)` });
     } catch (err: any) {
-      toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" });
+      toast({
+        title: "Erro ao enviar",
+        description: err.message,
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -205,10 +225,23 @@ export function SupplierAttachmentsTab({ fornecedorId }: Props) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Anexos</Label>
-        <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading} className="gap-1">
-          <Plus className="h-3.5 w-3.5" /> {uploading ? "Enviando..." : "Anexar Arquivo"}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="gap-1"
+        >
+          <Plus className="h-3.5 w-3.5" />{" "}
+          {uploading ? "Enviando..." : "Anexar Arquivo"}
         </Button>
-        <input ref={inputRef} type="file" multiple className="hidden" onChange={handleUpload} />
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleUpload}
+        />
       </div>
 
       {isLoading ? (
@@ -229,16 +262,31 @@ export function SupplierAttachmentsTab({ fornecedorId }: Props) {
               </div>
               <div className="flex items-center gap-2 px-3 py-2 border-t bg-muted/20">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{att.file_name}</p>
+                  <p className="text-sm font-medium truncate">
+                    {att.file_name}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatBytes(att.file_size)} · {new Date(att.created_at!).toLocaleDateString("pt-BR")}
+                    {formatBytes(att.file_size)} ·{" "}
+                    {new Date(att.created_at!).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownload(att)} title="Baixar">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => handleDownload(att)}
+                    title="Baixar"
+                  >
                     <Download className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteMut.mutate(att)} title="Remover">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-destructive"
+                    onClick={() => deleteMut.mutate(att)}
+                    title="Remover"
+                  >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>

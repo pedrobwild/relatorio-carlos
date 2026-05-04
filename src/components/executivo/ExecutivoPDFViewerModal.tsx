@@ -1,16 +1,32 @@
-import { useState, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Loader2, FileText, Send, Trash2, MessageSquare, User, Download } from 'lucide-react';
-import { useExecutivoFile, useExecutivoComments } from '@/hooks/useExecutivoVersions';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import PDFViewer from '@/components/PDFViewer';
+import { useState, useCallback } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Loader2,
+  FileText,
+  Send,
+  Trash2,
+  MessageSquare,
+  User,
+  Download,
+} from "lucide-react";
+import {
+  useExecutivoFile,
+  useExecutivoComments,
+} from "@/hooks/useExecutivoVersions";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import PDFViewer from "@/components/PDFViewer";
 
 interface Props {
   versionId: string;
@@ -18,13 +34,22 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props) {
+export function ExecutivoPDFViewerModal({
+  versionId,
+  open,
+  onOpenChange,
+}: Props) {
   const { data: file, isLoading: fileLoading } = useExecutivoFile(versionId);
   const fileId = file?.id;
-  const { comments, loading: commentsLoading, addComment, deleteComment } = useExecutivoComments(fileId);
+  const {
+    comments,
+    loading: commentsLoading,
+    addComment,
+    deleteComment,
+  } = useExecutivoComments(fileId);
   const { user } = useAuth();
   const { isStaff } = useUserRole();
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText] = useState("");
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -33,25 +58,31 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
     setSaving(true);
     try {
       await addComment({ fileId, text: commentText.trim() });
-      setCommentText('');
-    } catch { /* error handled by mutation */ }
-    finally { setSaving(false); }
+      setCommentText("");
+    } catch {
+      /* error handled by mutation */
+    } finally {
+      setSaving(false);
+    }
   }, [commentText, fileId, addComment]);
 
-  const canDelete = useCallback((authorId: string) => {
-    return authorId === user?.id || isStaff;
-  }, [user, isStaff]);
+  const canDelete = useCallback(
+    (authorId: string) => {
+      return authorId === user?.id || isStaff;
+    },
+    [user, isStaff],
+  );
 
   const handleDownload = useCallback(async () => {
     if (!file?.storage_path) return;
     setDownloading(true);
     try {
       const { data: blob, error } = await supabase.storage
-        .from('project-documents')
+        .from("project-documents")
         .download(file.storage_path);
-      if (error || !blob) throw new Error('Erro ao baixar');
+      if (error || !blob) throw new Error("Erro ao baixar");
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `projeto-executivo.pdf`;
       document.body.appendChild(a);
@@ -59,7 +90,7 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      toast.error(err?.message || 'Erro ao baixar arquivo');
+      toast.error(err?.message || "Erro ao baixar arquivo");
     } finally {
       setDownloading(false);
     }
@@ -86,7 +117,11 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
                 disabled={downloading}
                 onClick={handleDownload}
               >
-                {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
                 Baixar PDF
               </Button>
             )}
@@ -117,7 +152,9 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
                 <MessageSquare className="h-4 w-4 text-primary" />
                 Comentários
                 {comments.length > 0 && (
-                  <span className="text-xs text-muted-foreground">({comments.length})</span>
+                  <span className="text-xs text-muted-foreground">
+                    ({comments.length})
+                  </span>
                 )}
               </h3>
             </div>
@@ -131,19 +168,28 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
               ) : comments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <MessageSquare className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                  <p className="text-xs text-muted-foreground">Nenhum comentário ainda</p>
+                  <p className="text-xs text-muted-foreground">
+                    Nenhum comentário ainda
+                  </p>
                 </div>
               ) : (
                 comments.map((comment) => (
-                  <div key={comment.id} className="group rounded-lg bg-muted/50 p-3 space-y-1.5">
+                  <div
+                    key={comment.id}
+                    className="group rounded-lg bg-muted/50 p-3 space-y-1.5"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <User className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs font-medium text-foreground">{comment.author_name}</span>
+                        <span className="text-xs font-medium text-foreground">
+                          {comment.author_name}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] text-muted-foreground">
-                          {format(new Date(comment.created_at), "dd/MM HH:mm", { locale: ptBR })}
+                          {format(new Date(comment.created_at), "dd/MM HH:mm", {
+                            locale: ptBR,
+                          })}
                         </span>
                         {canDelete(comment.author_user_id) && (
                           <Button
@@ -157,7 +203,9 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
                         )}
                       </div>
                     </div>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">
+                      {comment.text}
+                    </p>
                   </div>
                 ))
               )}
@@ -172,7 +220,7 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
                   onChange={(e) => setCommentText(e.target.value)}
                   className="min-h-[44px] max-h-[100px] text-sm resize-none flex-1"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
                       handleSendComment();
                     }
@@ -184,7 +232,11 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
                   disabled={saving || !commentText.trim() || !fileId}
                   onClick={handleSendComment}
                 >
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>

@@ -27,7 +27,13 @@ interface DesktopPaymentCardProps {
   isPending: boolean;
 }
 
-export function DesktopPaymentCard({ payment, isAdmin, projectId, onTogglePaid, isPending }: DesktopPaymentCardProps) {
+export function DesktopPaymentCard({
+  payment,
+  isAdmin,
+  projectId,
+  onTogglePaid,
+  isPending,
+}: DesktopPaymentCardProps) {
   const daysLabel = getDaysLabel(payment);
   const urgency = getUrgency(payment);
 
@@ -46,7 +52,9 @@ export function DesktopPaymentCard({ payment, isAdmin, projectId, onTogglePaid, 
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <p className="text-body font-medium truncate">{payment.description}</p>
+            <p className="text-body font-medium truncate">
+              {payment.description}
+            </p>
           </div>
           <div className="flex items-center gap-3 text-caption">
             {payment.paid_at ? (
@@ -57,25 +65,40 @@ export function DesktopPaymentCard({ payment, isAdmin, projectId, onTogglePaid, 
             ) : (
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5" />
-                Vencimento: {payment.due_date ? formatDate(payment.due_date) : 'Em definição'}
+                Vencimento:{" "}
+                {payment.due_date
+                  ? formatDate(payment.due_date)
+                  : "Em definição"}
               </span>
             )}
             {daysLabel && (
-              <span className={`font-medium ${daysLabel.color}`}>{daysLabel.text}</span>
+              <span className={`font-medium ${daysLabel.color}`}>
+                {daysLabel.text}
+              </span>
             )}
           </div>
         </div>
 
         <div className="text-right shrink-0 flex flex-col items-end gap-2">
-          <p className="text-h3 tabular-nums">{formatCurrency(payment.amount)}</p>
+          <p className="text-h3 tabular-nums">
+            {formatCurrency(payment.amount)}
+          </p>
 
           {isAdmin ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">{payment.paid_at ? "Pago" : "Pendente"}</span>
-              <Switch checked={!!payment.paid_at} onCheckedChange={() => onTogglePaid(payment)} disabled={isPending} />
+              <span className="text-xs text-muted-foreground">
+                {payment.paid_at ? "Pago" : "Pendente"}
+              </span>
+              <Switch
+                checked={!!payment.paid_at}
+                onCheckedChange={() => onTogglePaid(payment)}
+                disabled={isPending}
+              />
             </div>
           ) : payment.paid_at ? (
-            <Badge variant="secondary" className="text-tiny">Quitado</Badge>
+            <Badge variant="secondary" className="text-tiny">
+              Quitado
+            </Badge>
           ) : payment.boleto_path ? (
             <Button
               variant="outline"
@@ -87,11 +110,20 @@ export function DesktopPaymentCard({ payment, isAdmin, projectId, onTogglePaid, 
               Boleto
             </Button>
           ) : (
-            <Badge variant="outline" className="text-tiny text-muted-foreground">Aguardando boleto</Badge>
+            <Badge
+              variant="outline"
+              className="text-tiny text-muted-foreground"
+            >
+              Aguardando boleto
+            </Badge>
           )}
 
           {isAdmin && !payment.paid_at && (
-            <BoletoUploadButton paymentId={payment.id} projectId={projectId} boletoPath={payment.boleto_path} />
+            <BoletoUploadButton
+              paymentId={payment.id}
+              projectId={projectId}
+              boletoPath={payment.boleto_path}
+            />
           )}
 
           {isAdmin && payment.boleto_path && (
@@ -118,14 +150,22 @@ interface MobilePaymentCardProps {
   isPending: boolean;
 }
 
-export function MobilePaymentCard({ payment, isAdmin, projectId, onTogglePaid, isPending }: MobilePaymentCardProps) {
+export function MobilePaymentCard({
+  payment,
+  isAdmin,
+  projectId,
+  onTogglePaid,
+  isPending,
+}: MobilePaymentCardProps) {
   const daysLabel = getDaysLabel(payment);
 
   return (
     <div className="px-4 py-4 hover:bg-muted/30 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-body font-medium truncate mb-1">{payment.description}</p>
+          <p className="text-body font-medium truncate mb-1">
+            {payment.description}
+          </p>
           <div className="flex items-center gap-2 text-caption">
             {payment.paid_at ? (
               <>
@@ -135,22 +175,37 @@ export function MobilePaymentCard({ payment, isAdmin, projectId, onTogglePaid, i
             ) : (
               <>
                 <Clock className="w-3.5 h-3.5" />
-                <span>Vencimento: {payment.due_date ? formatDate(payment.due_date) : 'Em definição'}</span>
+                <span>
+                  Vencimento:{" "}
+                  {payment.due_date
+                    ? formatDate(payment.due_date)
+                    : "Em definição"}
+                </span>
               </>
             )}
           </div>
           {daysLabel && (
-            <p className={`text-caption mt-1 font-medium ${daysLabel.color}`}>{daysLabel.text}</p>
+            <p className={`text-caption mt-1 font-medium ${daysLabel.color}`}>
+              {daysLabel.text}
+            </p>
           )}
         </div>
 
         <div className="text-right shrink-0">
-          <p className="text-h3 tabular-nums">{formatCurrency(payment.amount)}</p>
+          <p className="text-h3 tabular-nums">
+            {formatCurrency(payment.amount)}
+          </p>
 
           {isAdmin ? (
             <div className="flex items-center gap-2 mt-2 justify-end">
-              <span className="text-xs text-muted-foreground">{payment.paid_at ? "Pago" : "Pend."}</span>
-              <Switch checked={!!payment.paid_at} onCheckedChange={() => onTogglePaid(payment)} disabled={isPending} />
+              <span className="text-xs text-muted-foreground">
+                {payment.paid_at ? "Pago" : "Pend."}
+              </span>
+              <Switch
+                checked={!!payment.paid_at}
+                onCheckedChange={() => onTogglePaid(payment)}
+                disabled={isPending}
+              />
             </div>
           ) : payment.paid_at ? (
             <span className="text-caption">Quitado</span>
@@ -165,12 +220,18 @@ export function MobilePaymentCard({ payment, isAdmin, projectId, onTogglePaid, i
               Boleto
             </Button>
           ) : (
-            <span className="text-tiny text-muted-foreground">Aguardando boleto</span>
+            <span className="text-tiny text-muted-foreground">
+              Aguardando boleto
+            </span>
           )}
 
           {isAdmin && !payment.paid_at && (
             <div className="mt-1">
-              <BoletoUploadButton paymentId={payment.id} projectId={projectId} boletoPath={payment.boleto_path} />
+              <BoletoUploadButton
+                paymentId={payment.id}
+                projectId={projectId}
+                boletoPath={payment.boleto_path}
+              />
             </div>
           )}
         </div>

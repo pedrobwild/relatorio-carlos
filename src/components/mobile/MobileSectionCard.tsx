@@ -68,13 +68,20 @@ export function MobileSectionCard({
         <div className="flex items-center gap-3 min-w-0">
           {Icon && (
             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 shrink-0">
-              <Icon className="h-[18px] w-[18px] text-primary" aria-hidden="true" />
+              <Icon
+                className="h-[18px] w-[18px] text-primary"
+                aria-hidden="true"
+              />
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="text-[14px] font-semibold text-foreground truncate">{title}</h3>
+            <h3 className="text-[14px] font-semibold text-foreground truncate">
+              {title}
+            </h3>
             {subtitle && (
-              <p className="text-[12px] text-muted-foreground mt-0.5 line-clamp-2">{subtitle}</p>
+              <p className="text-[12px] text-muted-foreground mt-0.5 line-clamp-2">
+                {subtitle}
+              </p>
             )}
           </div>
           {action && <div className="shrink-0">{action}</div>}

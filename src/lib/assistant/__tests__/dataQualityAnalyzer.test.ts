@@ -8,7 +8,10 @@ describe("analyzeDataQuality", () => {
 
   it("flags negative monetary amounts", () => {
     const w = analyzeDataQuality([{ amount: -150 }, { amount: 200 }]);
-    expect(w.find((x) => x.issue === "negative_value" && x.field === "amount")?.count).toBe(1);
+    expect(
+      w.find((x) => x.issue === "negative_value" && x.field === "amount")
+        ?.count,
+    ).toBe(1);
   });
 
   it("flags purchases without supplier", () => {
@@ -29,7 +32,10 @@ describe("analyzeDataQuality", () => {
   });
 
   it("flags missing planned_end", () => {
-    const w = analyzeDataQuality([{ planned_end: null }, { planned_end: "2026-01-01" }]);
+    const w = analyzeDataQuality([
+      { planned_end: null },
+      { planned_end: "2026-01-01" },
+    ]);
     expect(w.find((x) => x.issue === "missing_planning")?.count).toBe(1);
   });
 });

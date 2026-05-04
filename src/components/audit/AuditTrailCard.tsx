@@ -1,25 +1,25 @@
 /**
  * Contextual Audit Trail Card
- * 
+ *
  * Shows the last N audit entries for a specific entity.
  * Use in Documents, Formalizations, Activities pages.
  */
 
-import { History, User, Clock, AlertCircle, ChevronRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
+import { History, User, Clock, AlertCircle, ChevronRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { useEntityAuditTrail } from '@/hooks/useAuditoria';
-import type { AuditoriaWithUser } from '@/infra/repositories/auditoria.repository';
+} from "@/components/ui/dialog";
+import { useEntityAuditTrail } from "@/hooks/useAuditoria";
+import type { AuditoriaWithUser } from "@/infra/repositories/auditoria.repository";
 
 interface AuditTrailCardProps {
   entidade: string;
@@ -37,29 +37,41 @@ const formatDate = (dateString: string) => {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Agora';
+  if (diffMins < 1) return "Agora";
   if (diffMins < 60) return `${diffMins}min`;
   if (diffHours < 24) return `${diffHours}h`;
   if (diffDays < 7) return `${diffDays}d`;
-  
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
+
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
   });
 };
 
-const getActionConfig = (acao: string): { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } => {
-  const configs: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-    create: { label: 'Criado', variant: 'default' },
-    update: { label: 'Atualizado', variant: 'secondary' },
-    delete: { label: 'Removido', variant: 'destructive' },
+const getActionConfig = (
+  acao: string,
+): {
+  label: string;
+  variant: "default" | "secondary" | "destructive" | "outline";
+} => {
+  const configs: Record<
+    string,
+    {
+      label: string;
+      variant: "default" | "secondary" | "destructive" | "outline";
+    }
+  > = {
+    create: { label: "Criado", variant: "default" },
+    update: { label: "Atualizado", variant: "secondary" },
+    delete: { label: "Removido", variant: "destructive" },
   };
-  return configs[acao] || { label: acao, variant: 'outline' };
+  return configs[acao] || { label: acao, variant: "outline" };
 };
 
 function AuditItem({ audit }: { audit: AuditoriaWithUser }) {
   const actionConfig = getActionConfig(audit.acao);
-  const userName = audit.users_profile?.nome || audit.users_profile?.email || 'Sistema';
+  const userName =
+    audit.users_profile?.nome || audit.users_profile?.email || "Sistema";
 
   return (
     <div className="flex items-start gap-3 py-2 border-b last:border-0">
@@ -86,12 +98,17 @@ function AuditItem({ audit }: { audit: AuditoriaWithUser }) {
 
 function AuditDetailDialog({ audit }: { audit: AuditoriaWithUser }) {
   const actionConfig = getActionConfig(audit.acao);
-  const userName = audit.users_profile?.nome || audit.users_profile?.email || 'Sistema';
+  const userName =
+    audit.users_profile?.nome || audit.users_profile?.email || "Sistema";
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-11 w-11 min-h-[44px] min-w-[44px] p-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-11 w-11 min-h-[44px] min-w-[44px] p-0"
+        >
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
       </DialogTrigger>
@@ -110,7 +127,7 @@ function AuditDetailDialog({ audit }: { audit: AuditoriaWithUser }) {
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Data/Hora</p>
-              <p>{new Date(audit.created_at).toLocaleString('pt-BR')}</p>
+              <p>{new Date(audit.created_at).toLocaleString("pt-BR")}</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Usuário</p>
@@ -121,10 +138,12 @@ function AuditDetailDialog({ audit }: { audit: AuditoriaWithUser }) {
               <p className="capitalize">{audit.entidade}</p>
             </div>
           </div>
-          
+
           {audit.diff && (
             <div>
-              <p className="text-muted-foreground text-xs mb-2">Alterações (diff)</p>
+              <p className="text-muted-foreground text-xs mb-2">
+                Alterações (diff)
+              </p>
               <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-48">
                 {JSON.stringify(audit.diff, null, 2)}
               </pre>
@@ -139,11 +158,15 @@ function AuditDetailDialog({ audit }: { audit: AuditoriaWithUser }) {
 export function AuditTrailCard({
   entidade,
   entidadeId,
-  title = 'Histórico',
+  title = "Histórico",
   maxItems = 10,
-  className = '',
+  className = "",
 }: AuditTrailCardProps) {
-  const { data: audits = [], isLoading, error } = useEntityAuditTrail(entidade, entidadeId, maxItems);
+  const {
+    data: audits = [],
+    isLoading,
+    error,
+  } = useEntityAuditTrail(entidade, entidadeId, maxItems);
 
   return (
     <Card className={className}>
@@ -174,12 +197,16 @@ export function AuditTrailCard({
         ) : error ? (
           <div className="text-center py-4">
             <AlertCircle className="h-6 w-6 text-destructive/50 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">Erro ao carregar histórico</p>
+            <p className="text-xs text-muted-foreground">
+              Erro ao carregar histórico
+            </p>
           </div>
         ) : audits.length === 0 ? (
           <div className="text-center py-4">
             <History className="h-6 w-6 text-muted-foreground/30 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">Nenhuma alteração registrada</p>
+            <p className="text-xs text-muted-foreground">
+              Nenhuma alteração registrada
+            </p>
           </div>
         ) : (
           <ScrollArea className="max-h-[250px]">
@@ -212,7 +239,11 @@ export function AuditTrailInline({
   entidadeId: string;
   maxItems?: number;
 }) {
-  const { data: audits = [], isLoading } = useEntityAuditTrail(entidade, entidadeId, maxItems);
+  const { data: audits = [], isLoading } = useEntityAuditTrail(
+    entidade,
+    entidadeId,
+    maxItems,
+  );
 
   if (isLoading) {
     return (
@@ -236,11 +267,14 @@ export function AuditTrailInline({
         const actionConfig = getActionConfig(audit.acao);
         return (
           <div key={audit.id} className="flex items-center gap-2 text-xs">
-            <Badge variant={actionConfig.variant} className="text-[10px] h-4 px-1">
+            <Badge
+              variant={actionConfig.variant}
+              className="text-[10px] h-4 px-1"
+            >
               {actionConfig.label}
             </Badge>
             <span className="text-muted-foreground truncate">
-              {audit.users_profile?.nome || 'Sistema'}
+              {audit.users_profile?.nome || "Sistema"}
             </span>
             <span className="text-muted-foreground ml-auto">
               {formatDate(audit.created_at)}

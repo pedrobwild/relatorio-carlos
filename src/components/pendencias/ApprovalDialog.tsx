@@ -20,8 +20,16 @@ import {
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { type PendingItem, getStatus, getDaysOverdue } from "@/hooks/usePendencias";
-import { getTypeLabel, getTypeIcon, getTypeColor } from "@/components/tabs/PendenciaItemCard";
+import {
+  type PendingItem,
+  getStatus,
+  getDaysOverdue,
+} from "@/hooks/usePendencias";
+import {
+  getTypeLabel,
+  getTypeIcon,
+  getTypeColor,
+} from "@/components/tabs/PendenciaItemCard";
 import { cn } from "@/lib/utils";
 
 type ApprovalMode = "idle" | "approve" | "adjust";
@@ -36,7 +44,9 @@ interface ApprovalDialogProps {
 }
 
 const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+    value,
+  );
 
 export function ApprovalDialog({
   item,
@@ -78,7 +88,7 @@ export function ApprovalDialog({
             <div
               className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
-                getTypeColor(item.type)
+                getTypeColor(item.type),
               )}
             >
               {getTypeIcon(item.type)}
@@ -149,7 +159,9 @@ export function ApprovalDialog({
               <span>
                 Prazo:{" "}
                 <span className="font-medium text-foreground">
-                  {format(parseISO(item.dueDate), "dd 'de' MMMM", { locale: ptBR })}
+                  {format(parseISO(item.dueDate), "dd 'de' MMMM", {
+                    locale: ptBR,
+                  })}
                 </span>
               </span>
             </div>
@@ -216,7 +228,7 @@ export function ApprovalDialog({
                   "gap-2",
                   mode === "approve"
                     ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                    : "bg-[hsl(var(--warning))] hover:bg-[hsl(var(--warning))]/90 text-[hsl(var(--warning-foreground))]"
+                    : "bg-[hsl(var(--warning))] hover:bg-[hsl(var(--warning))]/90 text-[hsl(var(--warning-foreground))]",
                 )}
               >
                 {isSubmitting ? (

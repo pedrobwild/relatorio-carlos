@@ -15,16 +15,14 @@ import { cn } from "@/lib/utils";
 const Projeto3D = () => {
   const { projectId } = useParams();
   const { paths } = useProjectNavigation();
-  const { project, loading: projectLoading, error: projectError } = useProject();
-  const { isStaff } = useUserRole();
   const {
-    photos,
-    isLoading,
-    upload,
-    isUploading,
-    deletePhoto,
-    updateCaption,
-  } = useProject3DPhotos(projectId);
+    project,
+    loading: projectLoading,
+    error: projectError,
+  } = useProject();
+  const { isStaff } = useUserRole();
+  const { photos, isLoading, upload, isUploading, deletePhoto, updateCaption } =
+    useProject3DPhotos(projectId);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [lightbox, setLightbox] = useState<Project3DPhoto | null>(null);
@@ -61,7 +59,9 @@ const Projeto3D = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">{projectError}</p>
-          <Link to="/minhas-obras" className="text-primary underline">Voltar</Link>
+          <Link to="/minhas-obras" className="text-primary underline">
+            Voltar
+          </Link>
         </div>
       </div>
     );
@@ -90,7 +90,9 @@ const Projeto3D = () => {
             ) : (
               <Plus className="w-4 h-4" />
             )}
-            <span className="hidden sm:inline">{isUploading ? "Enviando..." : "Adicionar fotos"}</span>
+            <span className="hidden sm:inline">
+              {isUploading ? "Enviando..." : "Adicionar fotos"}
+            </span>
           </Button>
         )}
         <input
@@ -112,7 +114,9 @@ const Projeto3D = () => {
                 <Camera className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-semibold text-foreground">Galeria do Projeto 3D</h2>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Galeria do Projeto 3D
+                </h2>
                 <p className="text-xs text-muted-foreground">
                   {photos.length > 0
                     ? `${photos.length} ${photos.length === 1 ? "foto" : "fotos"}`
@@ -186,7 +190,9 @@ const Projeto3D = () => {
                       )}
                       {photo.caption && (
                         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                          <p className="text-[11px] text-white line-clamp-2">{photo.caption}</p>
+                          <p className="text-[11px] text-white line-clamp-2">
+                            {photo.caption}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -199,9 +205,14 @@ const Projeto3D = () => {
       </div>
 
       {/* Lightbox */}
-      <Dialog open={!!lightbox} onOpenChange={(open) => !open && setLightbox(null)}>
+      <Dialog
+        open={!!lightbox}
+        onOpenChange={(open) => !open && setLightbox(null)}
+      >
         <DialogContent className="max-w-4xl p-0 overflow-hidden bg-background">
-          <DialogTitle className="sr-only">Visualizar foto do Projeto 3D</DialogTitle>
+          <DialogTitle className="sr-only">
+            Visualizar foto do Projeto 3D
+          </DialogTitle>
           {lightbox && (
             <div className="flex flex-col">
               <img
@@ -243,11 +254,14 @@ const Projeto3D = () => {
                     className={cn(
                       "text-sm transition-colors",
                       isStaff && "cursor-pointer hover:text-primary",
-                      !lightbox.caption && "text-muted-foreground italic"
+                      !lightbox.caption && "text-muted-foreground italic",
                     )}
                     onClick={() => isStaff && startEditCaption(lightbox)}
                   >
-                    {lightbox.caption || (isStaff ? "Clique para adicionar legenda..." : "Sem legenda")}
+                    {lightbox.caption ||
+                      (isStaff
+                        ? "Clique para adicionar legenda..."
+                        : "Sem legenda")}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">

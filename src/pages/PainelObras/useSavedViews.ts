@@ -11,9 +11,12 @@
  * `columns` — este hook só persiste e expõe CRUD.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
-export interface SavedView<TFilters = Record<string, unknown>, TColumns = string[]> {
+export interface SavedView<
+  TFilters = Record<string, unknown>,
+  TColumns = string[],
+> {
   id: string;
   name: string;
   filters: TFilters;
@@ -26,13 +29,13 @@ export interface SavedView<TFilters = Record<string, unknown>, TColumns = string
 
 export interface UseSavedViewsResult<TFilters, TColumns> {
   views: Array<SavedView<TFilters, TColumns>>;
-  saveView: (view: Omit<SavedView<TFilters, TColumns>, 'updatedAt'>) => void;
+  saveView: (view: Omit<SavedView<TFilters, TColumns>, "updatedAt">) => void;
   deleteView: (id: string) => void;
   renameView: (id: string, name: string) => void;
   reset: () => void;
 }
 
-const STORAGE_PREFIX = 'painelObras.views.';
+const STORAGE_PREFIX = "painelObras.views.";
 
 function storageKey(userId: string) {
   return `${STORAGE_PREFIX}${userId}`;
@@ -41,7 +44,7 @@ function storageKey(userId: string) {
 function readFromStorage<TFilters, TColumns>(
   userId: string,
 ): Array<SavedView<TFilters, TColumns>> {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(storageKey(userId));
     if (!raw) return [];
@@ -57,7 +60,7 @@ function writeToStorage<TFilters, TColumns>(
   userId: string,
   views: Array<SavedView<TFilters, TColumns>>,
 ) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(storageKey(userId), JSON.stringify(views));
   } catch {
@@ -71,8 +74,8 @@ export function useSavedViews<
   TFilters = Record<string, unknown>,
   TColumns = string[],
 >(userId: string | null | undefined): UseSavedViewsResult<TFilters, TColumns> {
-  const [views, setViews] = useState<Array<SavedView<TFilters, TColumns>>>(() =>
-    userId ? readFromStorage<TFilters, TColumns>(userId) : [],
+  const [views, setViews] = useState<Array<SavedView<TFilters, TColumns>>>(
+    () => (userId ? readFromStorage<TFilters, TColumns>(userId) : []),
   );
 
   // Reload when userId changes (login/logout) — avoids leaking views across users.
@@ -93,7 +96,7 @@ export function useSavedViews<
   );
 
   const saveView = useCallback(
-    (view: Omit<SavedView<TFilters, TColumns>, 'updatedAt'>) => {
+    (view: Omit<SavedView<TFilters, TColumns>, "updatedAt">) => {
       const updatedAt = new Date().toISOString();
       setViews((current) => {
         const existing = current.findIndex((v) => v.id === view.id);

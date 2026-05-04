@@ -1,6 +1,6 @@
 /**
  * Build Information Helper
- * 
+ *
  * Provides access to build-time information like git commit, branch, and environment.
  * Values are injected at build time via Vite's define or env variables.
  */
@@ -9,7 +9,7 @@ export interface BuildInfo {
   commit: string;
   branch: string;
   buildDate: string;
-  environment: 'development' | 'staging' | 'production';
+  environment: "development" | "staging" | "production";
   baseUrl: string;
   version: string;
 }
@@ -17,20 +17,21 @@ export interface BuildInfo {
 /**
  * Get the current environment based on URL and env vars
  */
-function detectEnvironment(): BuildInfo['environment'] {
+function detectEnvironment(): BuildInfo["environment"] {
   // Check explicit env var first
   const envMode = import.meta.env.MODE;
-  
-  if (envMode === 'production') {
+
+  if (envMode === "production") {
     // Check if it's staging based on URL
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-    if (hostname.includes('staging') || hostname.includes('preview')) {
-      return 'staging';
+    const hostname =
+      typeof window !== "undefined" ? window.location.hostname : "";
+    if (hostname.includes("staging") || hostname.includes("preview")) {
+      return "staging";
     }
-    return 'production';
+    return "production";
   }
-  
-  return 'development';
+
+  return "development";
 }
 
 /**
@@ -38,12 +39,12 @@ function detectEnvironment(): BuildInfo['environment'] {
  */
 export function getBuildInfo(): BuildInfo {
   return {
-    commit: import.meta.env.VITE_GIT_COMMIT || 'unknown',
-    branch: import.meta.env.VITE_GIT_BRANCH || 'unknown',
+    commit: import.meta.env.VITE_GIT_COMMIT || "unknown",
+    branch: import.meta.env.VITE_GIT_BRANCH || "unknown",
     buildDate: import.meta.env.VITE_BUILD_DATE || new Date().toISOString(),
     environment: detectEnvironment(),
-    baseUrl: import.meta.env.VITE_SUPABASE_URL || 'unknown',
-    version: import.meta.env.VITE_APP_VERSION || '1.0.0-beta',
+    baseUrl: import.meta.env.VITE_SUPABASE_URL || "unknown",
+    version: import.meta.env.VITE_APP_VERSION || "1.0.0-beta",
   };
 }
 
@@ -51,7 +52,7 @@ export function getBuildInfo(): BuildInfo {
  * Get shortened commit hash for display
  */
 export function getShortCommit(): string {
-  const commit = import.meta.env.VITE_GIT_COMMIT || 'unknown';
+  const commit = import.meta.env.VITE_GIT_COMMIT || "unknown";
   return commit.substring(0, 7);
 }
 
@@ -66,7 +67,7 @@ export function isDev(): boolean {
  * Check if running in production
  */
 export function isProd(): boolean {
-  return import.meta.env.PROD && !window.location.hostname.includes('preview');
+  return import.meta.env.PROD && !window.location.hostname.includes("preview");
 }
 
 /**

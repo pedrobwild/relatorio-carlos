@@ -1,8 +1,24 @@
 import { useMemo, useState } from "react";
-import { Download, ExternalLink, FileText, Award, Ruler, ClipboardList, CheckCircle2, Loader2, Layers, MessageSquareWarning } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  FileText,
+  Award,
+  Ruler,
+  ClipboardList,
+  CheckCircle2,
+  Loader2,
+  Layers,
+  MessageSquareWarning,
+} from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import PDFViewer from "@/components/PDFViewer";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
@@ -45,8 +61,9 @@ function TacitApprovalNotice({
     if (!registeredAt) {
       return (
         <>
-          Este projeto executivo foi considerado <strong>aprovado tacitamente</strong>,
-          pois não houve manifestação do cliente dentro do prazo estipulado em contrato.
+          Este projeto executivo foi considerado{" "}
+          <strong>aprovado tacitamente</strong>, pois não houve manifestação do
+          cliente dentro do prazo estipulado em contrato.
         </>
       );
     }
@@ -54,27 +71,30 @@ function TacitApprovalNotice({
     const dateStr = Number.isNaN(parsed.getTime())
       ? null
       : format(parsed, "dd/MM 'às' HH:mm", { locale: ptBR });
-    const days = typeof daysSilent === 'number' && daysSilent > 0 ? daysSilent : null;
+    const days =
+      typeof daysSilent === "number" && daysSilent > 0 ? daysSilent : null;
     if (dateStr && days) {
       return (
         <>
-          Aprovação automática registrada em <strong>{dateStr}</strong> porque o prazo
-          contratual de <strong>{days} dia(s)</strong> venceu sem manifestação.
+          Aprovação automática registrada em <strong>{dateStr}</strong> porque o
+          prazo contratual de <strong>{days} dia(s)</strong> venceu sem
+          manifestação.
         </>
       );
     }
     if (dateStr) {
       return (
         <>
-          Aprovação automática registrada em <strong>{dateStr}</strong> porque o prazo
-          contratual venceu sem manifestação.
+          Aprovação automática registrada em <strong>{dateStr}</strong> porque o
+          prazo contratual venceu sem manifestação.
         </>
       );
     }
     return (
       <>
-        Este projeto executivo foi considerado <strong>aprovado tacitamente</strong>,
-        pois não houve manifestação do cliente dentro do prazo estipulado em contrato.
+        Este projeto executivo foi considerado{" "}
+        <strong>aprovado tacitamente</strong>, pois não houve manifestação do
+        cliente dentro do prazo estipulado em contrato.
       </>
     );
   }, [registeredAt, daysSilent]);
@@ -92,7 +112,10 @@ function TacitApprovalNotice({
           <h3 className="text-h3 text-warning mb-1">Aprovação Tácita</h3>
           <p className="text-caption text-foreground/85">{description}</p>
           {documentHash && (
-            <p className="mt-1 text-tiny font-mono text-muted-foreground truncate" title={documentHash}>
+            <p
+              className="mt-1 text-tiny font-mono text-muted-foreground truncate"
+              title={documentHash}
+            >
               hash: {documentHash}
             </p>
           )}
@@ -194,29 +217,39 @@ function DesktopDocCard({
 const Executivo = () => {
   const { projectId } = useParams();
   const { paths } = useProjectNavigation();
-  const { project, loading: projectLoading, error: projectError } = useProject();
+  const {
+    project,
+    loading: projectLoading,
+    error: projectError,
+  } = useProject();
   const { loading: docsLoading, getLatestByCategory } = useDocuments(projectId);
   const { isStaff } = useUserRole();
   const { versions } = useExecutivoVersions(projectId);
 
-  const executivoDoc = getLatestByCategory('executivo')[0];
-  const artDoc = getLatestByCategory('art_rrt')[0];
-  const planoReformaDoc = getLatestByCategory('plano_reforma')[0];
+  const executivoDoc = getLatestByCategory("executivo")[0];
+  const artDoc = getLatestByCategory("art_rrt")[0];
+  const planoReformaDoc = getLatestByCategory("plano_reforma")[0];
 
   // Aprovação tácita = aprovado sem actor humano (approved_by IS NULL).
   // Aprovação manual também marca approved_at, então não basta olhar status.
   const isTacitApproval = useMemo(() => {
     if (!executivoDoc) return false;
-    return executivoDoc.status === 'approved'
-      && !!executivoDoc.approved_at
-      && !executivoDoc.approved_by;
+    return (
+      executivoDoc.status === "approved" &&
+      !!executivoDoc.approved_at &&
+      !executivoDoc.approved_by
+    );
   }, [executivoDoc]);
 
   // Proxy de "dias silentes": intervalo entre upload e aprovação tácita —
   // mesmo cálculo usado pelo trigger DB log_executive_tacit_approval para
   // garantir paridade visual com o domain_event registrado.
   const tacitDaysSilent = useMemo(() => {
-    if (!isTacitApproval || !executivoDoc?.created_at || !executivoDoc?.approved_at) {
+    if (
+      !isTacitApproval ||
+      !executivoDoc?.created_at ||
+      !executivoDoc?.approved_at
+    ) {
       return null;
     }
     const days = differenceInCalendarDays(
@@ -231,9 +264,11 @@ const Executivo = () => {
   const [artModalOpen, setArtModalOpen] = useState(false);
   const [planoReformaModalOpen, setPlanoReformaModalOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
-  const [revisionDetailVersion, setRevisionDetailVersion] = useState<number | null>(null);
+  const [revisionDetailVersion, setRevisionDetailVersion] = useState<
+    number | null
+  >(null);
 
-  const pendingRevisions = versions.filter(v => v.revision_requested_at);
+  const pendingRevisions = versions.filter((v) => v.revision_requested_at);
 
   const handleDownload = async (doc: ProjectDocument) => {
     if (!doc.url) return;
@@ -266,7 +301,9 @@ const Executivo = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">{projectError}</p>
-          <Link to="/minhas-obras" className="text-primary underline">Voltar</Link>
+          <Link to="/minhas-obras" className="text-primary underline">
+            Voltar
+          </Link>
         </div>
       </div>
     );
@@ -298,7 +335,11 @@ const Executivo = () => {
             >
               <ExternalLink className="w-4 h-4" />
             </Button>
-            <Button onClick={() => handleDownload(executivoDoc)} size="sm" className="gap-2 h-9">
+            <Button
+              onClick={() => handleDownload(executivoDoc)}
+              size="sm"
+              className="gap-2 h-9"
+            >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Download</span>
             </Button>
@@ -318,11 +359,20 @@ const Executivo = () => {
                     <Layers className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Versões do Projeto Executivo</h3>
-                    <p className="text-xs text-muted-foreground">PDFs com comentários e revisão</p>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Versões do Projeto Executivo
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      PDFs com comentários e revisão
+                    </p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setVersionsOpen(true)} className="gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setVersionsOpen(true)}
+                  className="gap-1.5"
+                >
                   <Layers className="h-4 w-4" />
                   Gerenciar
                 </Button>
@@ -343,14 +393,21 @@ const Executivo = () => {
                         Solicitação de Revisão — Versão {version.version_number}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Solicitada em {format(new Date(version.revision_requested_at!), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        Solicitada em{" "}
+                        {format(
+                          new Date(version.revision_requested_at!),
+                          "dd/MM/yyyy 'às' HH:mm",
+                          { locale: ptBR },
+                        )}
                       </p>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       className="shrink-0 gap-1.5"
-                      onClick={() => setRevisionDetailVersion(version.version_number)}
+                      onClick={() =>
+                        setRevisionDetailVersion(version.version_number)
+                      }
                     >
                       Ver detalhes
                     </Button>
@@ -371,7 +428,10 @@ const Executivo = () => {
                   />
                 )}
                 <div className="h-[calc(100vh-260px)]">
-                  <PDFViewer url={executivoDoc.url!} title="Projeto Executivo" />
+                  <PDFViewer
+                    url={executivoDoc.url!}
+                    title="Projeto Executivo"
+                  />
                 </div>
               </div>
 
@@ -381,17 +441,30 @@ const Executivo = () => {
                     <h2 className="text-h2 mb-4">Documentos Relacionados</h2>
                     <div className="space-y-3">
                       {hasArt && (
-                        <DesktopDocCard doc={artDoc} icon={Award} subtitle="Responsabilidade Técnica" modalOpen={artModalOpen} setModalOpen={setArtModalOpen} />
+                        <DesktopDocCard
+                          doc={artDoc}
+                          icon={Award}
+                          subtitle="Responsabilidade Técnica"
+                          modalOpen={artModalOpen}
+                          setModalOpen={setArtModalOpen}
+                        />
                       )}
                       {hasPlanoReforma && (
-                        <DesktopDocCard doc={planoReformaDoc} icon={ClipboardList} subtitle="Planejamento da reforma" modalOpen={planoReformaModalOpen} setModalOpen={setPlanoReformaModalOpen} />
+                        <DesktopDocCard
+                          doc={planoReformaDoc}
+                          icon={ClipboardList}
+                          subtitle="Planejamento da reforma"
+                          modalOpen={planoReformaModalOpen}
+                          setModalOpen={setPlanoReformaModalOpen}
+                        />
                       )}
                     </div>
                   </div>
                 )}
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                   <p className="text-caption text-foreground/80">
-                    <strong>Dica:</strong> Clique em um documento para visualizá-lo ou fazer download.
+                    <strong>Dica:</strong> Clique em um documento para
+                    visualizá-lo ou fazer download.
                   </p>
                 </div>
               </div>
@@ -411,10 +484,22 @@ const Executivo = () => {
                 <PDFViewer url={executivoDoc.url!} title="Projeto Executivo" />
               </div>
               {hasArt && (
-                <RelatedDocCard doc={artDoc} icon={Award} subtitle="Documento de responsabilidade técnica" modalOpen={artModalOpen} setModalOpen={setArtModalOpen} />
+                <RelatedDocCard
+                  doc={artDoc}
+                  icon={Award}
+                  subtitle="Documento de responsabilidade técnica"
+                  modalOpen={artModalOpen}
+                  setModalOpen={setArtModalOpen}
+                />
               )}
               {hasPlanoReforma && (
-                <RelatedDocCard doc={planoReformaDoc} icon={ClipboardList} subtitle="Documento de planejamento da reforma" modalOpen={planoReformaModalOpen} setModalOpen={setPlanoReformaModalOpen} />
+                <RelatedDocCard
+                  doc={planoReformaDoc}
+                  icon={ClipboardList}
+                  subtitle="Documento de planejamento da reforma"
+                  modalOpen={planoReformaModalOpen}
+                  setModalOpen={setPlanoReformaModalOpen}
+                />
               )}
             </div>
           </div>
@@ -434,8 +519,12 @@ const Executivo = () => {
               </div>
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                <p className="text-body text-muted-foreground">Documento em preparação</p>
-                <p className="text-caption mt-1">O arquivo será disponibilizado em breve</p>
+                <p className="text-body text-muted-foreground">
+                  Documento em preparação
+                </p>
+                <p className="text-caption mt-1">
+                  O arquivo será disponibilizado em breve
+                </p>
               </div>
             </div>
           </div>
@@ -443,11 +532,20 @@ const Executivo = () => {
       )}
 
       {projectId && (
-        <ExecutivoVersionsModal projectId={projectId} open={versionsOpen} onOpenChange={setVersionsOpen} />
+        <ExecutivoVersionsModal
+          projectId={projectId}
+          open={versionsOpen}
+          onOpenChange={setVersionsOpen}
+        />
       )}
 
       {/* Revision Detail Modal */}
-      <Dialog open={revisionDetailVersion !== null} onOpenChange={(o) => { if (!o) setRevisionDetailVersion(null); }}>
+      <Dialog
+        open={revisionDetailVersion !== null}
+        onOpenChange={(o) => {
+          if (!o) setRevisionDetailVersion(null);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -455,28 +553,50 @@ const Executivo = () => {
               Solicitação de Revisão
             </DialogTitle>
           </DialogHeader>
-          {revisionDetailVersion !== null && (() => {
-            const version = pendingRevisions.find(v => v.version_number === revisionDetailVersion);
-            if (!version) return <p className="text-sm text-muted-foreground">Versão não encontrada.</p>;
-            return (
-              <div className="space-y-4">
-                <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                  <p className="text-sm font-medium">Versão {version.version_number}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Solicitada em {format(new Date(version.revision_requested_at!), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+          {revisionDetailVersion !== null &&
+            (() => {
+              const version = pendingRevisions.find(
+                (v) => v.version_number === revisionDetailVersion,
+              );
+              if (!version)
+                return (
+                  <p className="text-sm text-muted-foreground">
+                    Versão não encontrada.
                   </p>
+                );
+              return (
+                <div className="space-y-4">
+                  <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                    <p className="text-sm font-medium">
+                      Versão {version.version_number}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Solicitada em{" "}
+                      {format(
+                        new Date(version.revision_requested_at!),
+                        "dd 'de' MMMM 'de' yyyy 'às' HH:mm",
+                        { locale: ptBR },
+                      )}
+                    </p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    O cliente finalizou os apontamentos e solicitou a revisão
+                    desta versão do Projeto Executivo. Acesse a versão para
+                    conferir os comentários e realizar os ajustes necessários.
+                  </p>
+                  <Button
+                    className="w-full gap-2"
+                    onClick={() => {
+                      setRevisionDetailVersion(null);
+                      setVersionsOpen(true);
+                    }}
+                  >
+                    <Layers className="h-4 w-4" />
+                    Abrir versões
+                  </Button>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  O cliente finalizou os apontamentos e solicitou a revisão desta versão do Projeto Executivo.
-                  Acesse a versão para conferir os comentários e realizar os ajustes necessários.
-                </p>
-                <Button className="w-full gap-2" onClick={() => { setRevisionDetailVersion(null); setVersionsOpen(true); }}>
-                  <Layers className="h-4 w-4" />
-                  Abrir versões
-                </Button>
-              </div>
-            );
-          })()}
+              );
+            })()}
         </DialogContent>
       </Dialog>
     </div>

@@ -14,7 +14,6 @@ import {
   Map,
   ShoppingCart,
   Package,
-
   ClipboardCheck,
   ChevronDown,
   LucideIcon,
@@ -38,8 +37,16 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { usePendencias } from "@/hooks/usePendencias";
@@ -263,7 +270,9 @@ export function ProjectSidebar() {
   };
 
   // Track open state for client-collapsible groups
-  const [clientGroupOpen, setClientGroupOpen] = useState<Record<string, boolean>>({});
+  const [clientGroupOpen, setClientGroupOpen] = useState<
+    Record<string, boolean>
+  >({});
 
   /** Render a single nav item */
   const renderNavItem = (item: SidebarNavItem) => {
@@ -284,17 +293,25 @@ export function ProjectSidebar() {
             {!collapsed && <span className="truncate">{item.label}</span>}
           </div>
         ) : (
-          <NavLink to={item.path} className="flex items-center gap-2 w-full" activeClassName="">
+          <NavLink
+            to={item.path}
+            className="flex items-center gap-2 w-full"
+            activeClassName=""
+          >
             <Icon className="h-4 w-4 shrink-0" />
             {!collapsed && (
               <>
                 <span className="truncate flex-1">{item.label}</span>
                 {badgeCount > 0 && (
                   <Badge
-                    variant={isBadgeUrgent(item.badgeKey) ? "destructive" : "secondary"}
+                    variant={
+                      isBadgeUrgent(item.badgeKey) ? "destructive" : "secondary"
+                    }
                     className={cn(
                       "min-w-5 h-5 px-1.5 text-xs font-bold",
-                      isBadgeUrgent(item.badgeKey) && item.badgeKey !== "pendencias" && "animate-pulse"
+                      isBadgeUrgent(item.badgeKey) &&
+                        item.badgeKey !== "pendencias" &&
+                        "animate-pulse",
                     )}
                   >
                     {badgeCount}
@@ -312,7 +329,9 @@ export function ProjectSidebar() {
         {disabled ? (
           <Tooltip>
             <TooltipTrigger asChild>{button}</TooltipTrigger>
-            <TooltipContent side="right">Disponível quando a obra estiver em execução</TooltipContent>
+            <TooltipContent side="right">
+              Disponível quando a obra estiver em execução
+            </TooltipContent>
           </Tooltip>
         ) : (
           button
@@ -335,7 +354,8 @@ export function ProjectSidebar() {
           if (visibleItems.length === 0) return null;
 
           // For clients, collapse secondary groups under a "Mais" toggle
-          const shouldCollapse = !isStaff && group.clientCollapsible && !collapsed;
+          const shouldCollapse =
+            !isStaff && group.clientCollapsible && !collapsed;
           // Auto-open if any item in the group is active
           const hasActiveItem = visibleItems.some(isActive);
 
@@ -343,11 +363,24 @@ export function ProjectSidebar() {
             const isOpen = clientGroupOpen[group.label] ?? hasActiveItem;
             return (
               <SidebarGroup key={group.label}>
-                <Collapsible open={isOpen} onOpenChange={(open) => setClientGroupOpen(prev => ({ ...prev, [group.label]: open }))}>
+                <Collapsible
+                  open={isOpen}
+                  onOpenChange={(open) =>
+                    setClientGroupOpen((prev) => ({
+                      ...prev,
+                      [group.label]: open,
+                    }))
+                  }
+                >
                   <CollapsibleTrigger className="w-full">
                     <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs font-semibold uppercase tracking-wider flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/80 transition-colors">
                       <span>{group.label}</span>
-                      <ChevronDown className={cn("h-3 w-3 transition-transform", isOpen && "rotate-180")} />
+                      <ChevronDown
+                        className={cn(
+                          "h-3 w-3 transition-transform",
+                          isOpen && "rotate-180",
+                        )}
+                      />
                     </SidebarGroupLabel>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
@@ -368,9 +401,7 @@ export function ProjectSidebar() {
                 {group.label}
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
-                  {visibleItems.map(renderNavItem)}
-                </SidebarMenu>
+                <SidebarMenu>{visibleItems.map(renderNavItem)}</SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           );

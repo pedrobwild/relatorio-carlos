@@ -1,7 +1,16 @@
-import { ReactNode } from 'react';
-import { LucideIcon, FileX, FolderOpen, Calendar, ClipboardList, ShoppingCart, CreditCard, HelpCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { ReactNode } from "react";
+import {
+  LucideIcon,
+  FileX,
+  FolderOpen,
+  Calendar,
+  ClipboardList,
+  ShoppingCart,
+  CreditCard,
+  HelpCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /**
  * @deprecated Use `EmptyState` de `@/components/ui-premium` para novos usos.
@@ -10,13 +19,13 @@ import { cn } from '@/lib/utils';
  * a versão premium tem padrões consistentes com o design system (tokens,
  * tamanhos, container) e suporta `bare`, `size` e `footer`.
  */
-export type EmptyStateVariant = 
-  | 'documents'
-  | 'formalizations'
-  | 'schedule'
-  | 'purchases'
-  | 'payments'
-  | 'generic';
+export type EmptyStateVariant =
+  | "documents"
+  | "formalizations"
+  | "schedule"
+  | "purchases"
+  | "payments"
+  | "generic";
 
 interface EmptyStateProps {
   /** Variant determines the icon and default messaging */
@@ -66,7 +75,7 @@ const variantIcons: Record<EmptyStateVariant, LucideIcon> = {
  * @deprecated Use o `EmptyState` de `@/components/ui-premium`.
  */
 export function EmptyState({
-  variant = 'generic',
+  variant = "generic",
   icon,
   title,
   description,
@@ -84,23 +93,23 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center text-center',
-        compact ? 'py-8 px-4' : 'py-16 px-6',
-        className
+        "flex flex-col items-center justify-center text-center",
+        compact ? "py-8 px-4" : "py-16 px-6",
+        className,
       )}
       role="status"
       aria-label={title}
     >
       <div
         className={cn(
-          'rounded-full bg-muted/50 flex items-center justify-center mb-4',
-          compact ? 'h-12 w-12' : 'h-16 w-16'
+          "rounded-full bg-muted/50 flex items-center justify-center mb-4",
+          compact ? "h-12 w-12" : "h-16 w-16",
         )}
       >
         <Icon
           className={cn(
-            'text-muted-foreground/50',
-            compact ? 'h-6 w-6' : 'h-8 w-8'
+            "text-muted-foreground/50",
+            compact ? "h-6 w-6" : "h-8 w-8",
           )}
           aria-hidden="true"
         />
@@ -108,8 +117,8 @@ export function EmptyState({
 
       <h3
         className={cn(
-          'font-medium text-foreground',
-          compact ? 'text-sm' : 'text-base'
+          "font-medium text-foreground",
+          compact ? "text-sm" : "text-base",
         )}
       >
         {title}
@@ -118,8 +127,8 @@ export function EmptyState({
       {description && (
         <p
           className={cn(
-            'text-muted-foreground mt-1 max-w-sm',
-            compact ? 'text-xs' : 'text-sm'
+            "text-muted-foreground mt-1 max-w-sm",
+            compact ? "text-xs" : "text-sm",
           )}
         >
           {description}
@@ -127,10 +136,12 @@ export function EmptyState({
       )}
 
       {hint && (
-        <div className={cn(
-          "mt-3 max-w-sm rounded-lg bg-info-light border border-info/10 text-info",
-          compact ? "px-3 py-2 text-xs" : "px-4 py-2.5 text-sm"
-        )}>
+        <div
+          className={cn(
+            "mt-3 max-w-sm rounded-lg bg-info-light border border-info/10 text-info",
+            compact ? "px-3 py-2 text-xs" : "px-4 py-2.5 text-sm",
+          )}
+        >
           <p className="leading-relaxed">{hint}</p>
         </div>
       )}
@@ -142,7 +153,7 @@ export function EmptyState({
           rel="noopener noreferrer"
           className={cn(
             "inline-flex items-center gap-1.5 mt-3 text-primary hover:text-primary/80 transition-colors font-medium",
-            compact ? "text-xs" : "text-sm"
+            compact ? "text-xs" : "text-sm",
           )}
         >
           <HelpCircle className="h-3.5 w-3.5" />
@@ -155,7 +166,7 @@ export function EmptyState({
           {action && (
             <Button
               onClick={action.onClick}
-              size={compact ? 'sm' : 'default'}
+              size={compact ? "sm" : "default"}
               className="gap-2"
             >
               {ActionIcon && <ActionIcon className="h-4 w-4" />}
@@ -165,7 +176,7 @@ export function EmptyState({
           {secondaryAction && (
             <Button
               variant="ghost"
-              size={compact ? 'sm' : 'default'}
+              size={compact ? "sm" : "default"}
               onClick={secondaryAction.onClick}
             >
               {secondaryAction.label}

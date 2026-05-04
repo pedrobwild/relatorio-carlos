@@ -12,10 +12,16 @@
  * Reutiliza integralmente a página `DadosCliente` passando `projectId`
  * via prop, sem duplicar lógica de fetch/save.
  */
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { MobileFullscreenSheet } from '@/components/mobile';
-import DadosCliente from '@/pages/DadosCliente';
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { MobileFullscreenSheet } from "@/components/mobile";
+import DadosCliente from "@/pages/DadosCliente";
 
 interface DadosClienteDialogProps {
   open: boolean;
@@ -25,10 +31,14 @@ interface DadosClienteDialogProps {
   customerName?: string | null;
 }
 
-function buildSubtitle(customerName?: string | null, projectName?: string | null) {
-  if (!customerName && !projectName) return 'Informações cadastrais e do projeto';
+function buildSubtitle(
+  customerName?: string | null,
+  projectName?: string | null,
+) {
+  if (!customerName && !projectName)
+    return "Informações cadastrais e do projeto";
   if (customerName && projectName) return `${customerName} · ${projectName}`;
-  return customerName ?? projectName ?? '';
+  return customerName ?? projectName ?? "";
 }
 
 export function DadosClienteDialog({
@@ -56,7 +66,9 @@ export function DadosClienteDialog({
         {projectId ? (
           <DadosCliente projectId={projectId} embedded />
         ) : (
-          <p className="p-6 text-sm text-muted-foreground">Selecione uma obra.</p>
+          <p className="p-6 text-sm text-muted-foreground">
+            Selecione uma obra.
+          </p>
         )}
       </MobileFullscreenSheet>
     );
@@ -65,23 +77,31 @@ export function DadosClienteDialog({
   // ── Desktop: dialog centralizado (preserva o comportamento original).
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-[min(960px,calc(100vw-2rem))] max-h-[90vh] overflow-y-auto p-0 gap-0"
-      >
+      <DialogContent className="max-w-[min(960px,calc(100vw-2rem))] max-h-[90vh] overflow-y-auto p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-3 border-b border-border-subtle sticky top-0 bg-background z-10">
           <DialogTitle className="text-lg">Dados do cliente</DialogTitle>
           <DialogDescription className="text-xs truncate">
-            {customerName ? <span className="font-medium text-foreground">{customerName}</span> : null}
-            {customerName && projectName ? <span className="opacity-50"> · </span> : null}
+            {customerName ? (
+              <span className="font-medium text-foreground">
+                {customerName}
+              </span>
+            ) : null}
+            {customerName && projectName ? (
+              <span className="opacity-50"> · </span>
+            ) : null}
             {projectName ? <span>{projectName}</span> : null}
-            {!customerName && !projectName ? 'Informações cadastrais e do projeto' : null}
+            {!customerName && !projectName
+              ? "Informações cadastrais e do projeto"
+              : null}
           </DialogDescription>
         </DialogHeader>
 
         {projectId ? (
           <DadosCliente projectId={projectId} embedded />
         ) : (
-          <p className="p-6 text-sm text-muted-foreground">Selecione uma obra.</p>
+          <p className="p-6 text-sm text-muted-foreground">
+            Selecione uma obra.
+          </p>
         )}
       </DialogContent>
     </Dialog>

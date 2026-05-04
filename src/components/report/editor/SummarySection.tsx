@@ -1,7 +1,11 @@
 import DOMPurify from "dompurify";
 import { MessageSquare, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { RichTextEditorModal } from "../RichTextEditorModal";
 
 interface SummarySectionProps {
@@ -12,8 +16,17 @@ interface SummarySectionProps {
   onUpdate: (value: string) => void;
 }
 
-const SummarySection = ({ weekNumber, executiveSummary, richTextOpen, setRichTextOpen, onUpdate }: SummarySectionProps) => (
-  <AccordionItem value="summary" className="bg-card border border-border rounded-lg overflow-hidden">
+const SummarySection = ({
+  weekNumber,
+  executiveSummary,
+  richTextOpen,
+  setRichTextOpen,
+  onUpdate,
+}: SummarySectionProps) => (
+  <AccordionItem
+    value="summary"
+    className="bg-card border border-border rounded-lg overflow-hidden"
+  >
     <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
       <div className="flex items-center gap-2">
         <MessageSquare className="w-4 h-4 text-primary" />
@@ -27,14 +40,21 @@ const SummarySection = ({ weekNumber, executiveSummary, richTextOpen, setRichTex
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(
             executiveSummary
-              ? (/<[a-z][\s\S]*>/i.test(executiveSummary)
+              ? /<[a-z][\s\S]*>/i.test(executiveSummary)
                 ? executiveSummary
-                : executiveSummary.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>'))
-              : '<span class="text-muted-foreground">Clique para editar o resumo executivo...</span>'
+                : executiveSummary
+                    .replace(/\n\n/g, "<br><br>")
+                    .replace(/\n/g, "<br>")
+              : '<span class="text-muted-foreground">Clique para editar o resumo executivo...</span>',
           ),
         }}
       />
-      <Button variant="outline" size="sm" onClick={() => setRichTextOpen(true)} className="w-full">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setRichTextOpen(true)}
+        className="w-full"
+      >
         <Pencil className="w-4 h-4 mr-2" />
         Abrir Editor de Texto
       </Button>

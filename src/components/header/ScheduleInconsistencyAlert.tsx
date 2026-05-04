@@ -16,11 +16,17 @@ interface Props {
  * - Início previsto posterior ao Fim previsto (nível projeto)
  * - Atividades com plannedStart > plannedEnd
  */
-export function ScheduleInconsistencyAlert({ startDate, endDate, activities, cronogramaPath, canFix }: Props) {
+export function ScheduleInconsistencyAlert({
+  startDate,
+  endDate,
+  activities,
+  cronogramaPath,
+  canFix,
+}: Props) {
   const projectInverted = !!(startDate && endDate && startDate > endDate);
 
   const invertedActivities = activities.filter(
-    (a) => a.plannedStart && a.plannedEnd && a.plannedStart > a.plannedEnd
+    (a) => a.plannedStart && a.plannedEnd && a.plannedStart > a.plannedEnd,
   );
 
   if (!projectInverted && invertedActivities.length === 0) return null;
@@ -38,9 +44,9 @@ export function ScheduleInconsistencyAlert({ startDate, endDate, activities, cro
       <AlertDescription className="text-xs space-y-1.5 mt-1">
         {projectInverted && (
           <p>
-            O <strong>Início previsto</strong> ({formatDateShort(startDate!)}) está depois do{" "}
-            <strong>Fim previsto</strong> ({formatDateShort(endDate!)}). Revise as datas do
-            projeto.
+            O <strong>Início previsto</strong> ({formatDateShort(startDate!)})
+            está depois do <strong>Fim previsto</strong> (
+            {formatDateShort(endDate!)}). Revise as datas do projeto.
           </p>
         )}
         {invertedActivities.length > 0 && (
@@ -55,7 +61,8 @@ export function ScheduleInconsistencyAlert({ startDate, endDate, activities, cro
                 <li key={a.id ?? a.description} className="truncate">
                   <span className="font-medium">{a.description}</span>{" "}
                   <span className="text-muted-foreground tabular-nums">
-                    ({formatDateShort(a.plannedStart)} → {formatDateShort(a.plannedEnd)})
+                    ({formatDateShort(a.plannedStart)} →{" "}
+                    {formatDateShort(a.plannedEnd)})
                   </span>
                 </li>
               ))}

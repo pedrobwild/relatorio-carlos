@@ -1,10 +1,10 @@
-import { parseISO, isPast } from 'date-fns';
-import { CalendarIcon, CheckCircle2, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatBR } from '@/lib/dates';
-import { useStageDates, type StageDate } from '@/hooks/useStageDates';
-import { Skeleton } from '@/components/ui/skeleton';
-import { journeyCopy } from '@/constants/journeyCopy';
+import { parseISO, isPast } from "date-fns";
+import { CalendarIcon, CheckCircle2, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { formatBR } from "@/lib/dates";
+import { useStageDates, type StageDate } from "@/hooks/useStageDates";
+import { Skeleton } from "@/components/ui/skeleton";
+import { journeyCopy } from "@/constants/journeyCopy";
 
 interface UpcomingDatesBarProps {
   projectId: string;
@@ -54,7 +54,7 @@ export function UpcomingDatesBar({ projectId }: UpcomingDatesBarProps) {
           const isConfirmed = !!sd.bwild_confirmed_at;
           const effDate = getEffectiveDate(sd)!;
           const typeInfo = journeyCopy.dates.types[sd.date_type];
-          const emoji = typeInfo?.emoji || '📌';
+          const emoji = typeInfo?.emoji || "📌";
 
           return (
             <div
@@ -63,13 +63,15 @@ export function UpcomingDatesBar({ projectId }: UpcomingDatesBarProps) {
                 "flex items-center gap-1.5 shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors",
                 isConfirmed
                   ? "bg-[hsl(var(--success-light))] border-[hsl(var(--success)/0.2)] text-[hsl(var(--success))]"
-                  : "bg-[hsl(var(--warning-light))] border-[hsl(var(--warning)/0.2)] text-[hsl(var(--warning))]"
+                  : "bg-[hsl(var(--warning-light))] border-[hsl(var(--warning)/0.2)] text-[hsl(var(--warning))]",
               )}
             >
               <span aria-hidden>{emoji}</span>
-              <span className="font-medium truncate max-w-[120px]">{sd.title}</span>
+              <span className="font-medium truncate max-w-[120px]">
+                {sd.title}
+              </span>
               <span className="text-[11px] tabular-nums whitespace-nowrap">
-                {formatBR(effDate, 'dd/MM')}
+                {formatBR(effDate, "dd/MM")}
               </span>
               {isConfirmed ? (
                 <CheckCircle2 className="h-3 w-3 shrink-0" />

@@ -57,7 +57,14 @@ interface BuildInsightArgs {
   sql?: string;
 }
 
-const NUMERIC_KEYS = ["amount", "valor", "total", "estimated_cost", "actual_cost", "value"];
+const NUMERIC_KEYS = [
+  "amount",
+  "valor",
+  "total",
+  "estimated_cost",
+  "actual_cost",
+  "value",
+];
 
 function findFirstNumericKey(row: Record<string, unknown>): string | null {
   for (const k of Object.keys(row)) {
@@ -83,7 +90,10 @@ function extractTotalAmount(rows: Record<string, unknown>[]): number | null {
   return any ? sum : null;
 }
 
-function severityForMonetary(amount: number, domain: InsightDomain): InsightSeverity {
+function severityForMonetary(
+  amount: number,
+  domain: InsightDomain,
+): InsightSeverity {
   if (domain !== "financeiro" && domain !== "compras") return "low";
   if (amount >= 50_000) return "critical";
   if (amount >= 10_000) return "high";
@@ -115,7 +125,9 @@ export function generateInsights({
         evidence: [{ label: "Linhas", value: 0 }],
         severity: "info",
         confidence: 0.7,
-        suggestedQuestions: ["Tente ampliar o período para os últimos 30 dias."],
+        suggestedQuestions: [
+          "Tente ampliar o período para os últimos 30 dias.",
+        ],
         sqlUsed: sql,
       },
     ];
@@ -168,14 +180,23 @@ export function generateInsights({
     if (numericKey) {
       const sorted = [...rows]
         .filter((r) => isFiniteNumber(toNumber(r[numericKey])))
-        .sort((a, b) => (toNumber(b[numericKey]) ?? 0) - (toNumber(a[numericKey]) ?? 0))
+        .sort(
+          (a, b) =>
+            (toNumber(b[numericKey]) ?? 0) - (toNumber(a[numericKey]) ?? 0),
+        )
         .slice(0, 5);
       if (sorted.length > 0) {
         const labelKey =
           Object.keys(rows[0]).find((k) =>
-            ["name", "obra", "project_name", "title", "description", "item_name", "supplier_name"].includes(
-              k.toLowerCase(),
-            ),
+            [
+              "name",
+              "obra",
+              "project_name",
+              "title",
+              "description",
+              "item_name",
+              "supplier_name",
+            ].includes(k.toLowerCase()),
           ) ?? Object.keys(rows[0])[0];
         insights.push({
           id: "topn",
@@ -189,7 +210,12 @@ export function generateInsights({
           })),
           severity: "low",
           confidence: 0.8,
-          visualization: { type: "bar", title: "Top 5", x: labelKey, y: numericKey },
+          visualization: {
+            type: "bar",
+            title: "Top 5",
+            x: labelKey,
+            y: numericKey,
+          },
           sqlUsed: sql,
         });
       }
@@ -197,9 +223,12 @@ export function generateInsights({
   }
 
   // Detect overdue rows when due_date / deadline exists.
-  const overdueKey = ["due_date", "deadline", "required_by_date", "planned_end"].find((k) =>
-    Object.prototype.hasOwnProperty.call(rows[0], k),
-  );
+  const overdueKey = [
+    "due_date",
+    "deadline",
+    "required_by_date",
+    "planned_end",
+  ].find((k) => Object.prototype.hasOwnProperty.call(rows[0], k));
   if (overdueKey) {
     const todayMs = Date.now();
     const overdue = rows.filter((r) => {
@@ -222,7 +251,8 @@ export function generateInsights({
         ],
         severity: overdue.length > total * 0.3 ? "high" : "medium",
         confidence: 0.85,
-        recommendedAction: "Revise prioridades e cobre/replaneje os itens com data passada.",
+        recommendedAction:
+          "Revise prioridades e cobre/replaneje os itens com data passada.",
         suggestedQuestions: [
           "Liste os atrasados ordenados pelo maior tempo de atraso.",
           "Quais responsáveis concentram esses atrasos?",
@@ -233,7 +263,15 @@ export function generateInsights({
   }
 
   // Concentration insight (Pareto-like) when categorical columns exist.
-  const groupCandidates = ["project_name", "name", "obra", "supplier_name", "category", "etapa", "responsible"]
+  const groupCandidates = [
+    "project_name",
+    "name",
+    "obra",
+    "supplier_name",
+    "category",
+    "etapa",
+    "responsible",
+  ]
     .map((c) => Object.keys(rows[0]).find((k) => k.toLowerCase() === c))
     .filter(Boolean) as string[];
   const groupKey = groupCandidates[0];
@@ -242,7 +280,10 @@ export function generateInsights({
     const grouped = new Map<string, number>();
     for (const r of rows) {
       const k = String(r[groupKey] ?? "—");
-      grouped.set(k, (grouped.get(k) ?? 0) + (toNumber(r[numericForGroup]) ?? 0));
+      grouped.set(
+        k,
+        (grouped.get(k) ?? 0) + (toNumber(r[numericForGroup]) ?? 0),
+      );
     }
     const items = [...grouped.entries()].sort((a, b) => b[1] - a[1]);
     const grandTotal = items.reduce((s, [, v]) => s + v, 0);
@@ -270,7 +311,12 @@ export function generateInsights({
           severity: "medium",
           confidence: 0.78,
           recommendedAction: `Priorize ações nos ${n} maiores grupos para impacto máximo.`,
-          visualization: { type: "bar", title: "Concentração 80/20", x: groupKey, y: numericForGroup },
+          visualization: {
+            type: "bar",
+            title: "Concentração 80/20",
+            x: groupKey,
+            y: numericForGroup,
+          },
           sqlUsed: sql,
         });
       }
@@ -284,7 +330,9 @@ export function generateInsights({
  * Build a flat list of metric snapshots from a row when the result represents
  * a single aggregated row (e.g. SUM/COUNT/AVG). Returns [] for list-style results.
  */
-export function metricsFromRow(rows: Record<string, unknown>[]): MetricSnapshot[] {
+export function metricsFromRow(
+  rows: Record<string, unknown>[],
+): MetricSnapshot[] {
   if (rows.length !== 1) return [];
   const row = rows[0];
   const out: MetricSnapshot[] = [];
@@ -356,11 +404,23 @@ export function suggestFollowUps(domain: InsightDomain): string[] {
         ...generic,
       ];
     case "ncs":
-      return ["Quais NCs críticas estão abertas?", "Quais obras concentram mais NCs?", ...generic];
+      return [
+        "Quais NCs críticas estão abertas?",
+        "Quais obras concentram mais NCs?",
+        ...generic,
+      ];
     case "pendencias":
-      return ["Quais pendências bloqueiam obras?", "Quais vencem nos próximos 7 dias?", ...generic];
+      return [
+        "Quais pendências bloqueiam obras?",
+        "Quais vencem nos próximos 7 dias?",
+        ...generic,
+      ];
     case "cs":
-      return ["Quais tickets críticos estão abertos?", "Tickets sem responsável.", ...generic];
+      return [
+        "Quais tickets críticos estão abertos?",
+        "Tickets sem responsável.",
+        ...generic,
+      ];
     default:
       return generic;
   }

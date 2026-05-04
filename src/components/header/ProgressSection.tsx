@@ -5,7 +5,12 @@ import { useMemo } from "react";
 import { Activity } from "@/types/report";
 import { format, addMonths, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 
 interface Milestone {
   label: string;
@@ -17,7 +22,7 @@ interface Milestone {
 function computeMilestones(
   activities: Activity[],
   startDate: string,
-  endDate: string
+  endDate: string,
 ): Milestone[] {
   if (!activities.length || !startDate || !endDate) return [];
 
@@ -26,7 +31,7 @@ function computeMilestones(
   const totalDuration = end.getTime() - start.getTime();
   if (totalDuration <= 0) return [];
 
-  const hasWeights = activities.some(a => a.weight !== undefined);
+  const hasWeights = activities.some((a) => a.weight !== undefined);
   const totalWeight = hasWeights
     ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
     : activities.length;
@@ -37,13 +42,14 @@ function computeMilestones(
   // Generate one milestone per month boundary
   let current = addMonths(startOfMonth(start), 1); // first full month end
   while (current < end) {
-    const position = ((current.getTime() - start.getTime()) / totalDuration) * 100;
+    const position =
+      ((current.getTime() - start.getTime()) / totalDuration) * 100;
 
     // Calculate expected % at this date based on planned end dates
     const plannedWeight = activities.reduce((sum, a) => {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
       if (plannedEnd <= current) {
-        return sum + (hasWeights ? (a.weight || 0) : 1);
+        return sum + (hasWeights ? a.weight || 0 : 1);
       }
       return sum;
     }, 0);
@@ -90,19 +96,25 @@ export function ProgressSection({
   projectEndDate,
 }: ProgressSectionProps) {
   const milestones = useMemo(
-    () => computeMilestones(activities, projectStartDate || "", projectEndDate || ""),
-    [activities, projectStartDate, projectEndDate]
+    () =>
+      computeMilestones(
+        activities,
+        projectStartDate || "",
+        projectEndDate || "",
+      ),
+    [activities, projectStartDate, projectEndDate],
   );
 
   // HOJE position = planned progress at today, same scale as green bar
   const todayPosition = useMemo(() => {
-    if (!projectStartDate || !projectEndDate || activities.length === 0) return null;
+    if (!projectStartDate || !projectEndDate || activities.length === 0)
+      return null;
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const start = new Date(projectStartDate + "T00:00:00");
     if (now < start) return null;
 
-    const hasWeights = activities.some(a => a.weight !== undefined);
+    const hasWeights = activities.some((a) => a.weight !== undefined);
     const totalWeight = hasWeights
       ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
       : activities.length;
@@ -111,7 +123,7 @@ export function ProgressSection({
     const plannedWeightByNow = activities.reduce((sum, a) => {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
       if (plannedEnd <= now) {
-        return sum + (hasWeights ? (a.weight || 0) : 1);
+        return sum + (hasWeights ? a.weight || 0 : 1);
       }
       return sum;
     }, 0);
@@ -123,7 +135,12 @@ export function ProgressSection({
 
   return (
     <section className="mt-4" aria-label="Progresso">
-      <div role="progressbar" aria-valuenow={Math.round(actualProgress)} aria-valuemin={0} aria-valuemax={100}>
+      <div
+        role="progressbar"
+        aria-valuenow={Math.round(actualProgress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         {/* Title row */}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-card-label">Progresso de obra</h3>
@@ -138,10 +155,14 @@ export function ProgressSection({
                 <Pencil className="w-3.5 h-3.5" />
               </Link>
             )}
-            <span className={cn(
-              "text-lg font-bold tabular-nums",
-              isOnTrack ? "text-success" : "text-warning"
-            )}>{actualProgress}%</span>
+            <span
+              className={cn(
+                "text-lg font-bold tabular-nums",
+                isOnTrack ? "text-success" : "text-warning",
+              )}
+            >
+              {actualProgress}%
+            </span>
           </div>
         </div>
 
@@ -152,7 +173,7 @@ export function ProgressSection({
             <div
               className={cn(
                 "h-full rounded-full transition-all duration-700 ease-out",
-                isOnTrack ? "bg-success" : "bg-warning"
+                isOnTrack ? "bg-success" : "bg-warning",
               )}
               style={{ width: `${Math.min(actualProgress, 100)}%` }}
             />
@@ -165,7 +186,10 @@ export function ProgressSection({
                 <TooltipTrigger asChild>
                   <div
                     className="absolute top-0 flex flex-col items-center"
-                    style={{ left: `${m.position}%`, transform: "translateX(-50%)" }}
+                    style={{
+                      left: `${m.position}%`,
+                      transform: "translateX(-50%)",
+                    }}
                   >
                     {/* Tick mark on bar */}
                     <div className="w-px h-3 bg-foreground/20" />
@@ -182,7 +206,6 @@ export function ProgressSection({
               </Tooltip>
             ))}
           </TooltipProvider>
-
         </div>
 
         {/* Labels */}

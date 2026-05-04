@@ -13,8 +13,8 @@
  *  - default: padding interno
  *  - flush:   sem padding (para tabelas que ocupam o card inteiro)
  */
-import type { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface SectionCardProps {
   title?: ReactNode;
@@ -41,7 +41,7 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        'surface-card rounded-xl border border-border-subtle elevation-xs overflow-hidden',
+        "surface-card rounded-xl border border-border-subtle elevation-xs overflow-hidden",
         className,
       )}
     >
@@ -58,14 +58,18 @@ export function SectionCard({
                 {description}
               </p>
             )}
-            {meta && <div className="flex flex-wrap items-center gap-2 mt-2">{meta}</div>}
+            {meta && (
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                {meta}
+              </div>
+            )}
           </div>
           {actions && (
             <div className="flex items-center gap-1.5 shrink-0">{actions}</div>
           )}
         </header>
       )}
-      <div className={cn(!flush && 'p-5 md:p-6', contentClassName)}>
+      <div className={cn(!flush && "p-5 md:p-6", contentClassName)}>
         {children}
       </div>
     </section>

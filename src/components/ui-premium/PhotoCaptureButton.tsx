@@ -44,7 +44,10 @@ const DEFAULT_COMPRESSION = {
   initialQuality: 0.82,
 };
 
-async function compressPhoto(file: File, options: typeof DEFAULT_COMPRESSION): Promise<File> {
+async function compressPhoto(
+  file: File,
+  options: typeof DEFAULT_COMPRESSION,
+): Promise<File> {
   try {
     const mod = await import("browser-image-compression");
     return await mod.default(file, options);
@@ -102,7 +105,9 @@ export function PhotoCaptureButton({
       }
       setPending((prev) => (multiple ? [...prev, ...next] : next));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Falha ao processar a imagem");
+      setError(
+        err instanceof Error ? err.message : "Falha ao processar a imagem",
+      );
     } finally {
       setIsProcessing(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -162,7 +167,10 @@ export function PhotoCaptureButton({
         <div className="rounded-lg border border-border bg-card p-3 space-y-3">
           <ul className="grid grid-cols-3 gap-2">
             {pending.map((photo, idx) => (
-              <li key={photo.previewUrl} className="relative aspect-square overflow-hidden rounded-md bg-muted">
+              <li
+                key={photo.previewUrl}
+                className="relative aspect-square overflow-hidden rounded-md bg-muted"
+              >
                 <img
                   src={photo.previewUrl}
                   alt={`Foto ${idx + 1}`}

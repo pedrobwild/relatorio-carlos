@@ -17,12 +17,12 @@
  * Visibilidade de colunas: controlada externamente via `visibleColumnIds`,
  * permitindo persistência via localStorage no consumidor.
  */
-import { Fragment, type KeyboardEvent, type ReactNode, useMemo } from 'react';
-import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Fragment, type KeyboardEvent, type ReactNode, useMemo } from "react";
+import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export type ColumnAlign = 'left' | 'center' | 'right';
-export type TableDensity = 'compact' | 'comfortable' | 'spacious';
+export type ColumnAlign = "left" | "center" | "right";
+export type TableDensity = "compact" | "comfortable" | "spacious";
 
 export interface DataTableColumn<T> {
   /** Identificador único da coluna (usado para visibilidade/sort). */
@@ -51,7 +51,7 @@ export interface DataTableColumn<T> {
 
 export interface SortState {
   columnId: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 }
 
 interface DataTableProps<T> {
@@ -80,34 +80,34 @@ interface DataTableProps<T> {
 }
 
 const densityRow: Record<TableDensity, string> = {
-  compact: 'h-9',
-  comfortable: 'h-12',
-  spacious: 'h-14',
+  compact: "h-9",
+  comfortable: "h-12",
+  spacious: "h-14",
 };
 
 const densityCell: Record<TableDensity, string> = {
-  compact: 'px-3 py-1.5 text-[13px]',
-  comfortable: 'px-4 py-3 text-sm',
-  spacious: 'px-5 py-4 text-sm',
+  compact: "px-3 py-1.5 text-[13px]",
+  comfortable: "px-4 py-3 text-sm",
+  spacious: "px-5 py-4 text-sm",
 };
 
 const densityHeader: Record<TableDensity, string> = {
-  compact: 'h-8 px-3 text-[11px]',
-  comfortable: 'h-10 px-4 text-[11px]',
-  spacious: 'h-11 px-5 text-xs',
+  compact: "h-8 px-3 text-[11px]",
+  comfortable: "h-10 px-4 text-[11px]",
+  spacious: "h-11 px-5 text-xs",
 };
 
 const alignClass: Record<ColumnAlign, string> = {
-  left: 'text-left',
-  center: 'text-center',
-  right: 'text-right',
+  left: "text-left",
+  center: "text-center",
+  right: "text-right",
 };
 
 export function DataTable<T>({
   columns,
   data,
   rowKey,
-  density = 'comfortable',
+  density = "comfortable",
   visibleColumnIds,
   sort,
   onSortChange,
@@ -125,19 +125,21 @@ export function DataTable<T>({
     // mantém ordem de visibleColumnIds, mas garante required sempre presentes
     const requiredIds = columns.filter((c) => c.required).map((c) => c.id);
     const finalIds = [...new Set([...visibleColumnIds, ...requiredIds])];
-    return finalIds
-      .map((id) => columns.find((c) => c.id === id))
-      .filter((c): c is DataTableColumn<T> => !!c)
-      // se id não está no set mas é required, ainda inclui no fim
-      .concat(columns.filter((c) => c.required && !set.has(c.id)));
+    return (
+      finalIds
+        .map((id) => columns.find((c) => c.id === id))
+        .filter((c): c is DataTableColumn<T> => !!c)
+        // se id não está no set mas é required, ainda inclui no fim
+        .concat(columns.filter((c) => c.required && !set.has(c.id)))
+    );
   }, [columns, visibleColumnIds]);
 
   const handleSort = (col: DataTableColumn<T>) => {
     if (!col.sortable || !onSortChange) return;
     if (!sort || sort.columnId !== col.id) {
-      onSortChange({ columnId: col.id, direction: 'asc' });
-    } else if (sort.direction === 'asc') {
-      onSortChange({ columnId: col.id, direction: 'desc' });
+      onSortChange({ columnId: col.id, direction: "asc" });
+    } else if (sort.direction === "asc") {
+      onSortChange({ columnId: col.id, direction: "desc" });
     } else {
       onSortChange(null);
     }
@@ -146,16 +148,16 @@ export function DataTable<T>({
   return (
     <div
       className={cn(
-        'relative w-full overflow-auto rounded-xl border border-border-subtle bg-surface elevation-xs',
+        "relative w-full overflow-auto rounded-xl border border-border-subtle bg-surface elevation-xs",
         className,
       )}
     >
-      <table className="w-full caption-bottom border-collapse" aria-label={ariaLabel}>
+      <table
+        className="w-full caption-bottom border-collapse"
+        aria-label={ariaLabel}
+      >
         <thead
-          className={cn(
-            'surface-sunken',
-            stickyHeader && 'sticky top-0 z-10',
-          )}
+          className={cn("surface-sunken", stickyHeader && "sticky top-0 z-10")}
         >
           <tr className="border-b border-border-subtle">
             {visibleColumns.map((col) => {
@@ -164,7 +166,7 @@ export function DataTable<T>({
                 ? null
                 : !isSorted
                   ? ChevronsUpDown
-                  : sort.direction === 'asc'
+                  : sort.direction === "asc"
                     ? ChevronUp
                     : ChevronDown;
               return (
@@ -174,13 +176,17 @@ export function DataTable<T>({
                   style={col.width ? { width: col.width } : undefined}
                   className={cn(
                     densityHeader[density],
-                    'font-semibold uppercase tracking-[0.06em] text-muted-foreground/90 align-middle whitespace-nowrap',
-                    alignClass[col.align ?? 'left'],
-                    col.sticky && 'sticky left-0 z-[11] surface-sunken',
+                    "font-semibold uppercase tracking-[0.06em] text-muted-foreground/90 align-middle whitespace-nowrap",
+                    alignClass[col.align ?? "left"],
+                    col.sticky && "sticky left-0 z-[11] surface-sunken",
                     col.headerClassName,
                   )}
                   aria-sort={
-                    isSorted ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'
+                    isSorted
+                      ? sort.direction === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : "none"
                   }
                 >
                   {col.sortable ? (
@@ -188,20 +194,20 @@ export function DataTable<T>({
                       type="button"
                       onClick={() => handleSort(col)}
                       aria-label={
-                        typeof col.header === 'string'
+                        typeof col.header === "string"
                           ? `Ordenar por ${col.header}${
                               isSorted
-                                ? sort.direction === 'asc'
-                                  ? ' (crescente)'
-                                  : ' (decrescente)'
-                                : ''
+                                ? sort.direction === "asc"
+                                  ? " (crescente)"
+                                  : " (decrescente)"
+                                : ""
                             }`
                           : undefined
                       }
                       className={cn(
-                        'inline-flex items-center gap-1 transition-colors hover:text-foreground rounded',
-                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-                        col.align === 'right' && 'flex-row-reverse',
+                        "inline-flex items-center gap-1 transition-colors hover:text-foreground rounded",
+                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                        col.align === "right" && "flex-row-reverse",
                       )}
                     >
                       <span>{col.header}</span>
@@ -209,8 +215,10 @@ export function DataTable<T>({
                         <Icon
                           aria-hidden="true"
                           className={cn(
-                            'h-3 w-3 shrink-0',
-                            isSorted ? 'opacity-100 text-foreground' : 'opacity-40',
+                            "h-3 w-3 shrink-0",
+                            isSorted
+                              ? "opacity-100 text-foreground"
+                              : "opacity-40",
                           )}
                         />
                       )}
@@ -230,7 +238,7 @@ export function DataTable<T>({
             const interactive = !!onRowClick;
             const handleKey = interactive
               ? (e: KeyboardEvent<HTMLTableRowElement>) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
+                  if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     onRowClick?.(row, idx);
                   }
@@ -239,18 +247,20 @@ export function DataTable<T>({
             return (
               <Fragment key={key}>
                 <tr
-                  onClick={interactive ? () => onRowClick?.(row, idx) : undefined}
+                  onClick={
+                    interactive ? () => onRowClick?.(row, idx) : undefined
+                  }
                   onKeyDown={handleKey}
                   tabIndex={interactive ? 0 : undefined}
-                  role={interactive ? 'button' : undefined}
+                  role={interactive ? "button" : undefined}
                   aria-expanded={expandedContent ? expanded : undefined}
                   className={cn(
                     densityRow[density],
-                    'border-b border-border-subtle transition-colors',
-                    'last:border-b-0',
-                    zebra && idx % 2 === 1 && 'bg-surface-sunken/40',
+                    "border-b border-border-subtle transition-colors",
+                    "last:border-b-0",
+                    zebra && idx % 2 === 1 && "bg-surface-sunken/40",
                     interactive &&
-                      'cursor-pointer hover:bg-accent/50 focus:outline-none focus-visible:bg-accent/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                      "cursor-pointer hover:bg-accent/50 focus:outline-none focus-visible:bg-accent/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                   )}
                 >
                   {visibleColumns.map((col) => (
@@ -258,9 +268,9 @@ export function DataTable<T>({
                       key={col.id}
                       className={cn(
                         densityCell[density],
-                        'align-middle text-foreground',
-                        alignClass[col.align ?? 'left'],
-                        col.sticky && 'sticky left-0 z-[1] bg-surface',
+                        "align-middle text-foreground",
+                        alignClass[col.align ?? "left"],
+                        col.sticky && "sticky left-0 z-[1] bg-surface",
                         col.className,
                       )}
                     >

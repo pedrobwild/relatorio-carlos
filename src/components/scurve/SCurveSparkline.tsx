@@ -1,21 +1,24 @@
 /**
  * Mini S-Curve Sparkline
- * 
+ *
  * A compact, tooltip-free sparkline showing planned vs actual progress curves.
  * Designed for dashboard cards — no axes, no labels, just the visual shape.
  */
 
-import { useMemo } from 'react';
-import { AreaChart, Area, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { generateChartData } from '@/components/scurve/generateChartData';
-import type { Activity } from '@/types/report';
+import { useMemo } from "react";
+import { AreaChart, Area, ResponsiveContainer, ReferenceLine } from "recharts";
+import { generateChartData } from "@/components/scurve/generateChartData";
+import type { Activity } from "@/types/report";
 
 interface SCurveSparklineProps {
   activities: Activity[];
   height?: number;
 }
 
-export function SCurveSparkline({ activities, height = 48 }: SCurveSparklineProps) {
+export function SCurveSparkline({
+  activities,
+  height = 48,
+}: SCurveSparklineProps) {
   const chartData = useMemo(() => {
     if (!activities.length) return [];
     const { data } = generateChartData(activities);
@@ -34,17 +37,36 @@ export function SCurveSparkline({ activities, height = 48 }: SCurveSparklineProp
   if (chartData.length < 2) return null;
 
   return (
-    <div style={{ width: '100%', height }} className="opacity-80">
+    <div style={{ width: "100%", height }} className="opacity-80">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+        <AreaChart
+          data={chartData}
+          margin={{ top: 2, right: 0, bottom: 0, left: 0 }}
+        >
           <defs>
             <linearGradient id="sparkPrevisto" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.15} />
-              <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.02} />
+              <stop
+                offset="0%"
+                stopColor="hsl(var(--muted-foreground))"
+                stopOpacity={0.15}
+              />
+              <stop
+                offset="100%"
+                stopColor="hsl(var(--muted-foreground))"
+                stopOpacity={0.02}
+              />
             </linearGradient>
             <linearGradient id="sparkRealizado" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+              <stop
+                offset="0%"
+                stopColor="hsl(var(--primary))"
+                stopOpacity={0.3}
+              />
+              <stop
+                offset="100%"
+                stopColor="hsl(var(--primary))"
+                stopOpacity={0.05}
+              />
             </linearGradient>
           </defs>
           <Area

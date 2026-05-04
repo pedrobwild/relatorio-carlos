@@ -15,8 +15,8 @@
  * Mensagens de erro passam por `getUserMessage` quando o input é um Error/objeto,
  * garantindo voz BWild e evitando "Row Level Security policy violated" na UI.
  */
-import { toast as sonner, type ExternalToast } from 'sonner';
-import { getUserMessage, mapError, type UserError } from './errorMapping';
+import { toast as sonner, type ExternalToast } from "sonner";
+import { getUserMessage, mapError, type UserError } from "./errorMapping";
 
 type ToastOpts = ExternalToast;
 
@@ -37,8 +37,8 @@ interface ErrorOpts extends ToastOpts {
  * - Error/PostgrestError/objeto: passa por mapError
  */
 function resolveErrorMessage(input: unknown, raw: boolean): string {
-  if (raw && typeof input === 'string') return input;
-  if (typeof input === 'string') return input;
+  if (raw && typeof input === "string") return input;
+  if (typeof input === "string") return input;
   return getUserMessage(input);
 }
 
@@ -68,7 +68,9 @@ export const notify = {
     return sonner.error(message, {
       duration: Infinity,
       closeButton: true,
-      ...(action ? { action: { label: action.label, onClick: action.onClick } } : {}),
+      ...(action
+        ? { action: { label: action.label, onClick: action.onClick } }
+        : {}),
       ...rest,
     });
   },
@@ -95,8 +97,8 @@ export const notify = {
       loading: messages.loading,
       success: messages.success,
       error: (err) => {
-        if (typeof messages.error === 'function') return messages.error(err);
-        if (typeof messages.error === 'string') return messages.error;
+        if (typeof messages.error === "function") return messages.error(err);
+        if (typeof messages.error === "string") return messages.error;
         return getUserMessage(err);
       },
     });

@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-type Politeness = 'polite' | 'assertive' | 'off';
+type Politeness = "polite" | "assertive" | "off";
 
 interface LiveStatusProps {
   /** Mensagem a anunciar. Vazio = silêncio. */
@@ -28,7 +28,7 @@ interface LiveStatusProps {
  */
 export function LiveStatus({
   children,
-  politeness = 'polite',
+  politeness = "polite",
   atomic = true,
   visuallyHidden = true,
   className,
@@ -37,11 +37,9 @@ export function LiveStatus({
     <div
       role="status"
       aria-live={politeness}
-      aria-atomic={atomic ? 'true' : 'false'}
+      aria-atomic={atomic ? "true" : "false"}
       className={
-        visuallyHidden
-          ? `sr-only ${className ?? ''}`.trim()
-          : className
+        visuallyHidden ? `sr-only ${className ?? ""}`.trim() : className
       }
     >
       {children}
@@ -57,16 +55,14 @@ export function LiveAlert({
   children,
   visuallyHidden = false,
   className,
-}: Omit<LiveStatusProps, 'politeness' | 'atomic'>) {
+}: Omit<LiveStatusProps, "politeness" | "atomic">) {
   return (
     <div
       role="alert"
       aria-live="assertive"
       aria-atomic="true"
       className={
-        visuallyHidden
-          ? `sr-only ${className ?? ''}`.trim()
-          : className
+        visuallyHidden ? `sr-only ${className ?? ""}`.trim() : className
       }
     >
       {children}

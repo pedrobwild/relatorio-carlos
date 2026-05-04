@@ -5,9 +5,9 @@
  * Quando `ticket` é informado, o diálogo entra em modo edição e mantém
  * `project_id` imutável (não faz sentido mover ticket entre obras).
  */
-import { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useMemo, useState } from "react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -15,10 +15,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -26,17 +30,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   CS_SEVERITY_OPTIONS,
   CS_STATUS_OPTIONS,
@@ -46,11 +50,11 @@ import {
   type CsTicketStatus,
   useCreateCsTicket,
   useUpdateCsTicket,
-} from '@/hooks/useCsTickets';
-import { useStaffUsers } from '@/hooks/useStaffUsers';
-import { useProjectsQuery } from '@/hooks/useProjectsQuery';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileFullscreenSheet } from '@/components/mobile';
+} from "@/hooks/useCsTickets";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import { useProjectsQuery } from "@/hooks/useProjectsQuery";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileFullscreenSheet } from "@/components/mobile";
 
 interface CsTicketDialogProps {
   open: boolean;
@@ -61,7 +65,7 @@ interface CsTicketDialogProps {
   defaultProjectId?: string;
 }
 
-const NONE = '__none__';
+const NONE = "__none__";
 
 export function CsTicketDialog({
   open,
@@ -74,18 +78,21 @@ export function CsTicketDialog({
   const create = useCreateCsTicket();
   const update = useUpdateCsTicket();
   const { data: staff = [] } = useStaffUsers();
-  const { data: projects = [], isLoading: loadingProjects } = useProjectsQuery();
+  const { data: projects = [], isLoading: loadingProjects } =
+    useProjectsQuery();
 
-  const [projectId, setProjectId] = useState<string>('');
-  const [situation, setSituation] = useState('');
-  const [description, setDescription] = useState('');
-  const [severity, setSeverity] = useState<CsTicketSeverity>('media');
-  const [status, setStatus] = useState<CsTicketStatus>('aberto');
-  const [actionPlan, setActionPlan] = useState('');
+  const [projectId, setProjectId] = useState<string>("");
+  const [situation, setSituation] = useState("");
+  const [description, setDescription] = useState("");
+  const [severity, setSeverity] = useState<CsTicketSeverity>("media");
+  const [status, setStatus] = useState<CsTicketStatus>("aberto");
+  const [actionPlan, setActionPlan] = useState("");
   const [responsible, setResponsible] = useState<string>(NONE);
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
   // Modo de busca: 'tokens' (todas as palavras, em qualquer ordem) ou 'substring' (qualquer parte contígua)
-  const [projectSearchMode, setProjectSearchMode] = useState<'tokens' | 'substring'>('tokens');
+  const [projectSearchMode, setProjectSearchMode] = useState<
+    "tokens" | "substring"
+  >("tokens");
 
   const selectedProject = useMemo(
     () => (projects as any[]).find((p) => p.id === projectId) ?? null,
@@ -93,7 +100,7 @@ export function CsTicketDialog({
   );
 
   const projectLabel = (p: any) =>
-    `${p?.name ?? ''}${p?.customer_name ? ` — ${p.customer_name}` : ''}`.trim();
+    `${p?.name ?? ""}${p?.customer_name ? ` — ${p.customer_name}` : ""}`.trim();
 
   // Reset / hidrata estado ao abrir
   useEffect(() => {
@@ -101,18 +108,18 @@ export function CsTicketDialog({
     if (ticket) {
       setProjectId(ticket.project_id);
       setSituation(ticket.situation);
-      setDescription(ticket.description ?? '');
+      setDescription(ticket.description ?? "");
       setSeverity(ticket.severity);
       setStatus(ticket.status);
-      setActionPlan(ticket.action_plan ?? '');
+      setActionPlan(ticket.action_plan ?? "");
       setResponsible(ticket.responsible_user_id ?? NONE);
     } else {
-      setProjectId(defaultProjectId ?? '');
-      setSituation('');
-      setDescription('');
-      setSeverity('media');
-      setStatus('aberto');
-      setActionPlan('');
+      setProjectId(defaultProjectId ?? "");
+      setSituation("");
+      setDescription("");
+      setSeverity("media");
+      setStatus("aberto");
+      setActionPlan("");
       setResponsible(NONE);
     }
   }, [open, ticket, defaultProjectId]);
@@ -151,10 +158,10 @@ export function CsTicketDialog({
     onOpenChange(false);
   };
 
-  const headerTitle = isEdit ? 'Editar ticket' : 'Novo ticket de CS';
+  const headerTitle = isEdit ? "Editar ticket" : "Novo ticket de CS";
   const headerDescription =
-    'Registre a situação relatada, severidade e plano de ação. O cliente não tem visibilidade destes tickets.';
-  const submitLabel = isEdit ? 'Salvar alterações' : 'Criar ticket';
+    "Registre a situação relatada, severidade e plano de ação. O cliente não tem visibilidade destes tickets.";
+  const submitLabel = isEdit ? "Salvar alterações" : "Criar ticket";
 
   // Campos compartilhados entre Dialog (desktop) e MobileFullscreenSheet
   // (mobile). No mobile a grid colapsa para 1 coluna naturalmente
@@ -162,192 +169,204 @@ export function CsTicketDialog({
   const fields = (
     <div
       className={cn(
-        'grid grid-cols-1 md:grid-cols-2 gap-4',
-        isMobile ? 'px-4 py-4' : 'px-4 sm:px-6 py-2',
+        "grid grid-cols-1 md:grid-cols-2 gap-4",
+        isMobile ? "px-4 py-4" : "px-4 sm:px-6 py-2",
       )}
     >
       {/* Obra */}
       <div className="md:col-span-2 space-y-1.5">
         <Label htmlFor="cs-project">Obra / Cliente *</Label>
-            <Popover open={projectPickerOpen} onOpenChange={setProjectPickerOpen} modal>
-              <PopoverTrigger asChild>
-                <Button
-                  id="cs-project"
-                  type="button"
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={projectPickerOpen}
-                  disabled={isEdit || loadingProjects}
-                  className={cn(
-                    'w-full justify-between font-normal',
-                    !selectedProject && 'text-muted-foreground',
-                  )}
-                >
-                  <span className="truncate text-left">
-                    {loadingProjects
-                      ? 'Carregando obras…'
-                      : selectedProject
-                        ? projectLabel(selectedProject)
-                        : 'Selecione uma obra'}
+        <Popover
+          open={projectPickerOpen}
+          onOpenChange={setProjectPickerOpen}
+          modal
+        >
+          <PopoverTrigger asChild>
+            <Button
+              id="cs-project"
+              type="button"
+              variant="outline"
+              role="combobox"
+              aria-expanded={projectPickerOpen}
+              disabled={isEdit || loadingProjects}
+              className={cn(
+                "w-full justify-between font-normal",
+                !selectedProject && "text-muted-foreground",
+              )}
+            >
+              <span className="truncate text-left">
+                {loadingProjects
+                  ? "Carregando obras…"
+                  : selectedProject
+                    ? projectLabel(selectedProject)
+                    : "Selecione uma obra"}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="p-0 w-[--radix-popover-trigger-width] max-w-[calc(100vw-2rem)]"
+            align="start"
+          >
+            <Command
+              // Recria o filtro quando o modo muda para reavaliar a lista
+              key={projectSearchMode}
+              filter={(value, search) => {
+                const normalize = (s: string) =>
+                  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const haystack = normalize(value);
+                const needle = normalize(search.toLowerCase()).trim();
+                if (!needle) return 1;
+
+                if (projectSearchMode === "substring") {
+                  // Qualquer parte contígua do texto digitado
+                  return haystack.includes(needle) ? 1 : 0;
+                }
+                // tokens: todas as palavras precisam aparecer (qualquer ordem)
+                const tokens = needle.split(/\s+/).filter(Boolean);
+                return tokens.every((t) => haystack.includes(t)) ? 1 : 0;
+              }}
+            >
+              <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium">
+                    {projectSearchMode === "tokens"
+                      ? "Todas as palavras"
+                      : "Qualquer parte do texto"}
                   </span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="p-0 w-[--radix-popover-trigger-width] max-w-[calc(100vw-2rem)]"
-                align="start"
-              >
-                <Command
-                  // Recria o filtro quando o modo muda para reavaliar a lista
-                  key={projectSearchMode}
-                  filter={(value, search) => {
-                    const normalize = (s: string) =>
-                      s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                    const haystack = normalize(value);
-                    const needle = normalize(search.toLowerCase()).trim();
-                    if (!needle) return 1;
-
-                    if (projectSearchMode === 'substring') {
-                      // Qualquer parte contígua do texto digitado
-                      return haystack.includes(needle) ? 1 : 0;
+                  <span className="text-[11px] text-muted-foreground">
+                    {projectSearchMode === "tokens"
+                      ? 'Ex.: "ricardo macedo" casa em qualquer ordem'
+                      : 'Ex.: "ardo mac" casa por substring'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted-foreground">
+                    Substring
+                  </span>
+                  <Switch
+                    checked={projectSearchMode === "tokens"}
+                    onCheckedChange={(checked) =>
+                      setProjectSearchMode(checked ? "tokens" : "substring")
                     }
-                    // tokens: todas as palavras precisam aparecer (qualquer ordem)
-                    const tokens = needle.split(/\s+/).filter(Boolean);
-                    return tokens.every((t) => haystack.includes(t)) ? 1 : 0;
-                  }}
-                >
-                  <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium">
-                        {projectSearchMode === 'tokens'
-                          ? 'Todas as palavras'
-                          : 'Qualquer parte do texto'}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {projectSearchMode === 'tokens'
-                          ? 'Ex.: "ricardo macedo" casa em qualquer ordem'
-                          : 'Ex.: "ardo mac" casa por substring'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-muted-foreground">Substring</span>
-                      <Switch
-                        checked={projectSearchMode === 'tokens'}
-                        onCheckedChange={(checked) =>
-                          setProjectSearchMode(checked ? 'tokens' : 'substring')
-                        }
-                        aria-label="Alternar entre busca por palavras e por substring"
-                      />
-                    </div>
-                  </div>
-                  <CommandInput placeholder="Buscar obra ou cliente…" />
-                  <CommandList>
-                    <CommandEmpty>Nenhuma obra encontrada.</CommandEmpty>
-                    <CommandGroup>
-                      {(projects as any[]).map((p) => {
-                        const label = projectLabel(p);
-                        return (
-                          <CommandItem
-                            key={p.id}
-                            value={label}
-                            onSelect={() => {
-                              setProjectId(p.id);
-                              setProjectPickerOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                'mr-2 h-4 w-4',
-                                projectId === p.id ? 'opacity-100' : 'opacity-0',
-                              )}
-                            />
-                            <span className="truncate">{label}</span>
-                          </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
+                    aria-label="Alternar entre busca por palavras e por substring"
+                  />
+                </div>
+              </div>
+              <CommandInput placeholder="Buscar obra ou cliente…" />
+              <CommandList>
+                <CommandEmpty>Nenhuma obra encontrada.</CommandEmpty>
+                <CommandGroup>
+                  {(projects as any[]).map((p) => {
+                    const label = projectLabel(p);
+                    return (
+                      <CommandItem
+                        key={p.id}
+                        value={label}
+                        onSelect={() => {
+                          setProjectId(p.id);
+                          setProjectPickerOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            projectId === p.id ? "opacity-100" : "opacity-0",
+                          )}
+                        />
+                        <span className="truncate">{label}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
 
-          {/* Situação */}
-          <div className="md:col-span-2 space-y-1.5">
-            <Label htmlFor="cs-situation">Situação *</Label>
-            <Input
-              id="cs-situation"
-              value={situation}
-              onChange={(e) => setSituation(e.target.value)}
-              placeholder="Ex.: Cliente reclamou de atraso na entrega da bancada"
-              maxLength={200}
-            />
-          </div>
+      {/* Situação */}
+      <div className="md:col-span-2 space-y-1.5">
+        <Label htmlFor="cs-situation">Situação *</Label>
+        <Input
+          id="cs-situation"
+          value={situation}
+          onChange={(e) => setSituation(e.target.value)}
+          placeholder="Ex.: Cliente reclamou de atraso na entrega da bancada"
+          maxLength={200}
+        />
+      </div>
 
-          {/* Severidade */}
-          <div className="space-y-1.5">
-            <Label htmlFor="cs-severity">Severidade *</Label>
-            <Select value={severity} onValueChange={(v) => setSeverity(v as CsTicketSeverity)}>
-              <SelectTrigger id="cs-severity">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {CS_SEVERITY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Severidade */}
+      <div className="space-y-1.5">
+        <Label htmlFor="cs-severity">Severidade *</Label>
+        <Select
+          value={severity}
+          onValueChange={(v) => setSeverity(v as CsTicketSeverity)}
+        >
+          <SelectTrigger id="cs-severity">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            {CS_SEVERITY_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-          {/* Status */}
-          <div className="space-y-1.5">
-            <Label htmlFor="cs-status">Status *</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as CsTicketStatus)}>
-              <SelectTrigger id="cs-status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {CS_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Status */}
+      <div className="space-y-1.5">
+        <Label htmlFor="cs-status">Status *</Label>
+        <Select
+          value={status}
+          onValueChange={(v) => setStatus(v as CsTicketStatus)}
+        >
+          <SelectTrigger id="cs-status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            {CS_STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-          {/* Responsável */}
-          <div className="md:col-span-2 space-y-1.5">
-            <Label htmlFor="cs-responsible">Responsável</Label>
-            <Select value={responsible} onValueChange={setResponsible}>
-              <SelectTrigger id="cs-responsible">
-                <SelectValue placeholder="Sem responsável" />
-              </SelectTrigger>
-              <SelectContent position="popper" className="max-h-[280px]">
-                <SelectItem value={NONE}>— Sem responsável —</SelectItem>
-                {staff.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Responsável */}
+      <div className="md:col-span-2 space-y-1.5">
+        <Label htmlFor="cs-responsible">Responsável</Label>
+        <Select value={responsible} onValueChange={setResponsible}>
+          <SelectTrigger id="cs-responsible">
+            <SelectValue placeholder="Sem responsável" />
+          </SelectTrigger>
+          <SelectContent position="popper" className="max-h-[280px]">
+            <SelectItem value={NONE}>— Sem responsável —</SelectItem>
+            {staff.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-          {/* Descrição */}
-          <div className="md:col-span-2 space-y-1.5">
-            <Label htmlFor="cs-description">Descrição</Label>
-            <Textarea
-              id="cs-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detalhe a ocorrência, contexto e impacto percebido."
-              rows={4}
-              maxLength={2000}
-            />
-          </div>
+      {/* Descrição */}
+      <div className="md:col-span-2 space-y-1.5">
+        <Label htmlFor="cs-description">Descrição</Label>
+        <Textarea
+          id="cs-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Detalhe a ocorrência, contexto e impacto percebido."
+          rows={4}
+          maxLength={2000}
+        />
+      </div>
 
       {/* Plano de ação */}
       <div className="md:col-span-2 space-y-1.5">
@@ -410,12 +429,14 @@ export function CsTicketDialog({
           <DialogDescription>{headerDescription}</DialogDescription>
         </DialogHeader>
 
-        <div className="overflow-y-auto flex-1 min-h-0">
-          {fields}
-        </div>
+        <div className="overflow-y-auto flex-1 min-h-0">{fields}</div>
 
         <DialogFooter className="shrink-0 p-4 sm:p-6 pt-2 border-t border-border bg-background">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSaving}
+          >
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit || isSaving}>

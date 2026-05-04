@@ -7,13 +7,15 @@ import { X, ChevronLeft, ChevronRight, ChevronDown, Play } from "lucide-react";
 const isVideoUrl = (url: string) => {
   if (!url) return false;
   const lower = url.toLowerCase().split("?")[0];
-  return lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".webm") || lower.endsWith(".quicktime") || lower.includes("video/");
+  return (
+    lower.endsWith(".mp4") ||
+    lower.endsWith(".mov") ||
+    lower.endsWith(".webm") ||
+    lower.endsWith(".quicktime") ||
+    lower.includes("video/")
+  );
 };
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   Collapsible,
   CollapsibleContent,
@@ -80,14 +82,23 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   const firstPhotos = photos.slice(0, 4);
   const remainingPhotos = photos.slice(4);
 
-  const PhotoItem = ({ photo, index, animationDelay = 0 }: { photo: GalleryPhoto; index: number; animationDelay?: number }) => (
+  const PhotoItem = ({
+    photo,
+    index,
+    animationDelay = 0,
+  }: {
+    photo: GalleryPhoto;
+    index: number;
+    animationDelay?: number;
+  }) => (
     <button
       onClick={() => setSelectedIndex(index)}
       className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-muted min-h-0"
-      style={{ 
+      style={{
         animationDelay: `${animationDelay}ms`,
-        animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
-        opacity: animationDelay > 0 ? 0 : 1
+        animation:
+          animationDelay > 0 ? "fade-in 0.3s ease-out forwards" : undefined,
+        opacity: animationDelay > 0 ? 0 : 1,
       }}
     >
       {isVideoUrl(photo.url) ? (
@@ -116,7 +127,9 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-1.5">
-        <p className="text-tiny font-medium text-white line-clamp-2">{photo.caption}</p>
+        <p className="text-tiny font-medium text-white line-clamp-2">
+          {photo.caption}
+        </p>
       </div>
     </button>
   );
@@ -133,7 +146,13 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
           >
             {isVideoUrl(photo.url) ? (
               <>
-                <video src={`${photo.url}#t=0.5`} preload="metadata" muted playsInline className="w-full h-full object-cover" />
+                <video
+                  src={`${photo.url}#t=0.5`}
+                  preload="metadata"
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="bg-black/60 rounded-full p-1">
                     <Play className="w-3.5 h-3.5 text-white fill-white" />
@@ -149,7 +168,9 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <p className="absolute bottom-1 left-1.5 right-1.5 text-[10px] font-medium text-white line-clamp-1">{photo.caption}</p>
+            <p className="absolute bottom-1 left-1.5 right-1.5 text-[10px] font-medium text-white line-clamp-1">
+              {photo.caption}
+            </p>
           </button>
         ))}
       </div>
@@ -160,10 +181,11 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="px-3 py-2.5 sm:px-4 sm:py-3 border-b border-border">
         <h3 className="text-h2">
-          Galeria de Fotos <span className="text-caption font-normal">({photos.length})</span>
+          Galeria de Fotos{" "}
+          <span className="text-caption font-normal">({photos.length})</span>
         </h3>
       </div>
-      
+
       {/* Desktop: Grid */}
       <div className="hidden sm:block p-2.5 sm:p-3">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -179,16 +201,19 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
       </div>
 
       {/* Fullscreen Dialog with swipe */}
-      <Dialog open={selectedIndex !== null} onOpenChange={() => setSelectedIndex(null)}>
+      <Dialog
+        open={selectedIndex !== null}
+        onOpenChange={() => setSelectedIndex(null)}
+      >
         <DialogContent className="max-w-4xl sm:max-w-4xl w-[100dvw] sm:w-auto h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[95dvh] p-0 bg-black/95 border-none rounded-none sm:rounded-lg">
           <VisuallyHidden>
             <DialogTitle>
               {selectedIndex !== null ? photos[selectedIndex].caption : "Foto"}
             </DialogTitle>
           </VisuallyHidden>
-          
+
           {selectedIndex !== null && (
-            <div 
+            <div
               className="relative h-full flex flex-col"
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
@@ -255,13 +280,26 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
 
               {/* Caption bar */}
               <div className="p-4 bg-gradient-to-t from-black to-transparent">
-                <p className="text-white text-caption font-medium">{photos[selectedIndex].caption}</p>
+                <p className="text-white text-caption font-medium">
+                  {photos[selectedIndex].caption}
+                </p>
                 <p className="text-white/70 text-tiny">
                   {[
                     photos[selectedIndex].area,
                     photos[selectedIndex].category,
-                    (() => { try { const d = new Date(photos[selectedIndex].date); return isNaN(d.getTime()) ? null : format(d, "dd/MM/yyyy", { locale: ptBR }); } catch { return null; } })()
-                  ].filter(Boolean).join(" • ")}
+                    (() => {
+                      try {
+                        const d = new Date(photos[selectedIndex].date);
+                        return isNaN(d.getTime())
+                          ? null
+                          : format(d, "dd/MM/yyyy", { locale: ptBR });
+                      } catch {
+                        return null;
+                      }
+                    })(),
+                  ]
+                    .filter(Boolean)
+                    .join(" • ")}
                 </p>
               </div>
 
@@ -274,13 +312,25 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                       onClick={() => setSelectedIndex(i)}
                       className={cn(
                         "w-12 h-12 rounded overflow-hidden shrink-0 border-2 transition-all",
-                        i === selectedIndex ? "border-primary opacity-100" : "border-transparent opacity-50"
+                        i === selectedIndex
+                          ? "border-primary opacity-100"
+                          : "border-transparent opacity-50",
                       )}
                     >
                       {isVideoUrl(photo.url) ? (
-                        <video src={`${photo.url}#t=0.5`} preload="metadata" muted playsInline className="w-full h-full object-cover" />
+                        <video
+                          src={`${photo.url}#t=0.5`}
+                          preload="metadata"
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
-                        <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                        <img
+                          src={photo.url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
                       )}
                     </button>
                   ))}

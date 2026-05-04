@@ -10,7 +10,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, ListChecks, Clock, ChevronRight, Clipboard, Settings } from "lucide-react";
+import {
+  FileText,
+  ListChecks,
+  Clock,
+  ChevronRight,
+  Clipboard,
+  Settings,
+} from "lucide-react";
 
 interface TechnicalReportProps {
   weeklyReport: WeeklyReport;
@@ -24,7 +31,7 @@ interface TechnicalReportProps {
 const getWeekActivities = (
   activities: Activity[],
   weekStart: Date,
-  weekEnd: Date
+  weekEnd: Date,
 ): { completed: Activity[]; inProgress: Activity[]; upcoming: Activity[] } => {
   const completed: Activity[] = [];
   const inProgress: Activity[] = [];
@@ -33,7 +40,9 @@ const getWeekActivities = (
   activities.forEach((activity) => {
     const plannedStart = parseLocalDate(activity.plannedStart);
     const plannedEnd = parseLocalDate(activity.plannedEnd);
-    const actualEnd = activity.actualEnd ? parseLocalDate(activity.actualEnd) : null;
+    const actualEnd = activity.actualEnd
+      ? parseLocalDate(activity.actualEnd)
+      : null;
 
     if (actualEnd && actualEnd <= weekEnd) {
       completed.push(activity);
@@ -56,7 +65,13 @@ interface ReportModalButtonProps {
   title: string;
 }
 
-const ReportModalButton = ({ icon, label, count, children, title }: ReportModalButtonProps) => (
+const ReportModalButton = ({
+  icon,
+  label,
+  count,
+  children,
+  title,
+}: ReportModalButtonProps) => (
   <Dialog>
     <DialogTrigger asChild>
       <Button
@@ -71,7 +86,9 @@ const ReportModalButton = ({ icon, label, count, children, title }: ReportModalB
         </div>
         <div className="flex items-center gap-2">
           {count !== undefined && (
-            <span className="text-sm font-bold text-muted-foreground">{count}</span>
+            <span className="text-sm font-bold text-muted-foreground">
+              {count}
+            </span>
           )}
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </div>
@@ -81,24 +98,31 @@ const ReportModalButton = ({ icon, label, count, children, title }: ReportModalB
       <DialogHeader>
         <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
       </DialogHeader>
-      <div className="mt-4">
-        {children}
-      </div>
+      <div className="mt-4">{children}</div>
     </DialogContent>
   </Dialog>
 );
 
-const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projectStartDate }: TechnicalReportProps) => {
+const TechnicalReport = ({
+  weeklyReport,
+  clientName,
+  activities,
+  endDate,
+  projectStartDate,
+}: TechnicalReportProps) => {
   const { completed, inProgress, upcoming } = getWeekActivities(
     activities,
     weeklyReport.startDate,
-    weeklyReport.endDate
+    weeklyReport.endDate,
   );
 
-  const formattedEndDate = new Date(endDate).toLocaleDateString('pt-BR');
+  const formattedEndDate = new Date(endDate).toLocaleDateString("pt-BR");
 
   return (
-    <div className="animate-fade-in space-y-4" style={{ animationDelay: "0.1s" }}>
+    <div
+      className="animate-fade-in space-y-4"
+      style={{ animationDelay: "0.1s" }}
+    >
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-card rounded-lg p-4 border border-border">
@@ -110,7 +134,9 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
           <p className="text-xs text-muted-foreground">Em andamento</p>
         </div>
         <div className="bg-card rounded-lg p-4 border border-border">
-          <p className="text-2xl font-bold text-muted-foreground">{upcoming.length}</p>
+          <p className="text-2xl font-bold text-muted-foreground">
+            {upcoming.length}
+          </p>
           <p className="text-xs text-muted-foreground">Próximas etapas</p>
         </div>
       </div>
@@ -120,21 +146,31 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
         <ul className="text-sm text-muted-foreground space-y-2">
           <li className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-            Progresso acumulado: <strong className="text-foreground">{weeklyReport.completionPercentage}%</strong> do projeto concluído.
+            Progresso acumulado:{" "}
+            <strong className="text-foreground">
+              {weeklyReport.completionPercentage}%
+            </strong>{" "}
+            do projeto concluído.
           </li>
           <li className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground shrink-0" />
-            Período: {weeklyReport.startDate.toLocaleDateString('pt-BR')} a {weeklyReport.endDate.toLocaleDateString('pt-BR')}
+            Período: {weeklyReport.startDate.toLocaleDateString("pt-BR")} a{" "}
+            {weeklyReport.endDate.toLocaleDateString("pt-BR")}
           </li>
           {inProgress.length > 0 && (
             <li className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-info shrink-0" />
-              Foco principal: {inProgress.slice(0, 2).map(a => a.description).join(" e ")}
+              Foco principal:{" "}
+              {inProgress
+                .slice(0, 2)
+                .map((a) => a.description)
+                .join(" e ")}
             </li>
           )}
           <li className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
-            Previsão de entrega: <strong className="text-foreground">{formattedEndDate}</strong>
+            Previsão de entrega:{" "}
+            <strong className="text-foreground">{formattedEndDate}</strong>
           </li>
         </ul>
       </div>
@@ -156,7 +192,8 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
         >
           <div className="text-sm text-muted-foreground leading-relaxed space-y-4">
             <p className="italic text-center py-8 text-muted-foreground/70">
-              Campo para o resumo escrito pelo engenheiro responsável com as informações mais importantes da semana.
+              Campo para o resumo escrito pelo engenheiro responsável com as
+              informações mais importantes da semana.
             </p>
           </div>
         </ReportModalButton>
@@ -171,12 +208,24 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
           >
             <ul className="space-y-3">
               {inProgress.map((activity, index) => (
-                <li key={index} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                <li
+                  key={index}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50"
+                >
                   <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                   <div>
-                    <p className="font-medium text-foreground text-sm">{activity.description}</p>
+                    <p className="font-medium text-foreground text-sm">
+                      {activity.description}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Previsto: {parseLocalDate(activity.plannedStart).toLocaleDateString('pt-BR')} - {parseLocalDate(activity.plannedEnd).toLocaleDateString('pt-BR')}
+                      Previsto:{" "}
+                      {parseLocalDate(activity.plannedStart).toLocaleDateString(
+                        "pt-BR",
+                      )}{" "}
+                      -{" "}
+                      {parseLocalDate(activity.plannedEnd).toLocaleDateString(
+                        "pt-BR",
+                      )}
                     </p>
                   </div>
                 </li>
@@ -195,13 +244,21 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
           >
             <ul className="space-y-3">
               {completed.slice(-10).map((activity, index) => (
-                <li key={index} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                <li
+                  key={index}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50"
+                >
                   <div className="w-2 h-2 rounded-full bg-success mt-1.5 shrink-0" />
                   <div>
-                    <p className="font-medium text-foreground text-sm">{activity.description}</p>
+                    <p className="font-medium text-foreground text-sm">
+                      {activity.description}
+                    </p>
                     {activity.actualEnd && (
                       <p className="text-xs text-success mt-1">
-                        Finalizado em {parseLocalDate(activity.actualEnd).toLocaleDateString('pt-BR')}
+                        Finalizado em{" "}
+                        {parseLocalDate(activity.actualEnd).toLocaleDateString(
+                          "pt-BR",
+                        )}
                       </p>
                     )}
                   </div>
@@ -226,12 +283,20 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
           >
             <ul className="space-y-3">
               {upcoming.slice(0, 8).map((activity, index) => (
-                <li key={index} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                <li
+                  key={index}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50"
+                >
                   <div className="w-2 h-2 rounded-full bg-muted-foreground mt-1.5 shrink-0" />
                   <div>
-                    <p className="font-medium text-foreground text-sm">{activity.description}</p>
+                    <p className="font-medium text-foreground text-sm">
+                      {activity.description}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Início previsto: {parseLocalDate(activity.plannedStart).toLocaleDateString('pt-BR')}
+                      Início previsto:{" "}
+                      {parseLocalDate(activity.plannedStart).toLocaleDateString(
+                        "pt-BR",
+                      )}
                     </p>
                   </div>
                 </li>
@@ -259,22 +324,35 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
               <li className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
                 <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">Plano semanal (lookahead)</p>
-                  <p className="text-xs mt-1">Programação dos próximos 7 dias com pré-requisitos travados</p>
+                  <p className="font-medium text-foreground">
+                    Plano semanal (lookahead)
+                  </p>
+                  <p className="text-xs mt-1">
+                    Programação dos próximos 7 dias com pré-requisitos travados
+                  </p>
                 </div>
               </li>
               <li className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
                 <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">Check de frentes</p>
-                  <p className="text-xs mt-1">Equipe, material e área verificados antes de cada início</p>
+                  <p className="font-medium text-foreground">
+                    Check de frentes
+                  </p>
+                  <p className="text-xs mt-1">
+                    Equipe, material e área verificados antes de cada início
+                  </p>
                 </div>
               </li>
               <li className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
                 <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">Checklist de qualidade</p>
-                  <p className="text-xs mt-1">Verificação de acabamento antes de considerar atividade concluída</p>
+                  <p className="font-medium text-foreground">
+                    Checklist de qualidade
+                  </p>
+                  <p className="text-xs mt-1">
+                    Verificação de acabamento antes de considerar atividade
+                    concluída
+                  </p>
                 </div>
               </li>
             </ul>
@@ -287,7 +365,9 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
         <p className="text-sm text-muted-foreground mb-3">
           Fico à disposição para qualquer esclarecimento.
         </p>
-        <p className="font-semibold text-foreground text-sm">Pedro Henrique Alves Pereira</p>
+        <p className="font-semibold text-foreground text-sm">
+          Pedro Henrique Alves Pereira
+        </p>
         <p className="text-primary font-bold text-sm">CEO - Bwild</p>
       </div>
     </div>

@@ -58,7 +58,10 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   // Map week_number -> stored WeeklyReportData
   const reportDataByWeek = new Map<number, WeeklyReportData>();
   for (const row of reports) {
-    reportDataByWeek.set(row.week_number, row.data as unknown as WeeklyReportData);
+    reportDataByWeek.set(
+      row.week_number,
+      row.data as unknown as WeeklyReportData,
+    );
   }
 
   const upsertMutation = useMutation({
@@ -74,43 +77,46 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       data: WeeklyReportData;
     }) => {
       if (!projectId) throw new Error("Projeto não selecionado");
-      
+
       const operationId = `save-week-${weekNumber}`;
-      reportLogger.start(operationId, `Saving week ${weekNumber}`, { projectId, weekNumber });
-      
+      reportLogger.start(operationId, `Saving week ${weekNumber}`, {
+        projectId,
+        weekNumber,
+      });
+
       setSavingWeek(weekNumber);
 
-      const { error } = await supabase
-        .from("weekly_reports")
-        .upsert(
-          {
-            project_id: projectId,
-            week_number: weekNumber,
-            week_start: weekStart,
-            week_end: weekEnd,
-            data: data as unknown as Json,
-          },
-          { onConflict: "project_id,week_number" }
-        );
+      const { error } = await supabase.from("weekly_reports").upsert(
+        {
+          project_id: projectId,
+          week_number: weekNumber,
+          week_start: weekStart,
+          week_end: weekEnd,
+          data: data as unknown as Json,
+        },
+        { onConflict: "project_id,week_number" },
+      );
 
       if (error) {
         reportLogger.error(operationId, error, { weekNumber });
         throw error;
       }
-      
-      reportLogger.end(operationId, { level: 'success', data: { weekNumber } });
+
+      reportLogger.end(operationId, { level: "success", data: { weekNumber } });
     },
     // Optimistic update: write to cache immediately so the UI doesn't flicker
     // while the upsert is in flight, especially on slow connections.
     onMutate: async ({ weekNumber, weekStart, weekEnd, data }) => {
       await queryClient.cancelQueries({ queryKey });
-      const previousReports = queryClient.getQueryData<WeeklyReportRow[]>(queryKey);
+      const previousReports =
+        queryClient.getQueryData<WeeklyReportRow[]>(queryKey);
 
       const nowIso = new Date().toISOString();
       queryClient.setQueryData<WeeklyReportRow[]>(queryKey, (old = []) => {
         const existingIdx = old.findIndex((r) => r.week_number === weekNumber);
         const optimisticRow: WeeklyReportRow = {
-          id: existingIdx >= 0 ? old[existingIdx].id : `optimistic-${weekNumber}`,
+          id:
+            existingIdx >= 0 ? old[existingIdx].id : `optimistic-${weekNumber}`,
           project_id: projectId!,
           week_number: weekNumber,
           week_start: weekStart,
@@ -127,7 +133,9 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
           next[existingIdx] = optimisticRow;
           return next;
         }
-        return [...old, optimisticRow].sort((a, b) => a.week_number - b.week_number);
+        return [...old, optimisticRow].sort(
+          (a, b) => a.week_number - b.week_number,
+        );
       });
 
       return { previousReports };
@@ -143,7 +151,9 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       if (context?.previousReports !== undefined) {
         queryClient.setQueryData(queryKey, context.previousReports);
       }
-      toast.error("Erro ao salvar relatório. Suas alterações foram mantidas, tente novamente.");
+      toast.error(
+        "Erro ao salvar relatório. Suas alterações foram mantidas, tente novamente.",
+      );
     },
     onSettled: () => {
       setSavingWeek(null);
@@ -155,7 +165,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       weekNumber: number,
       weekStart: string,
       weekEnd: string,
-      data: WeeklyReportData
+      data: WeeklyReportData,
     ) => {
       if (!projectId) {
         toast.error("Projeto não selecionado");
@@ -167,16 +177,20 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       // Upload any blob URLs to permanent storage before saving
       let dataToSave = data;
       if (data.gallery && data.gallery.length > 0) {
-        const hasBlobUrls = data.gallery.some((p) => p.url?.startsWith("blob:"));
+        const hasBlobUrls = data.gallery.some((p) =>
+          p.url?.startsWith("blob:"),
+        );
         if (hasBlobUrls) {
-          toast.loading("Enviando fotos e vídeos...", { id: "uploading-photos" });
+          toast.loading("Enviando fotos e vídeos...", {
+            id: "uploading-photos",
+          });
           const { success, photos } = await uploadGalleryPhotos(
             projectId,
             weekNumber,
-            data.gallery
+            data.gallery,
           );
           toast.dismiss("uploading-photos");
-          
+
           if (!success) {
             setSavingWeek(null);
             return; // Upload failed, don't save with broken URLs
@@ -185,9 +199,14 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
         }
       }
 
-      upsertMutation.mutate({ weekNumber, weekStart, weekEnd, data: dataToSave });
+      upsertMutation.mutate({
+        weekNumber,
+        weekStart,
+        weekEnd,
+        data: dataToSave,
+      });
     },
-    [projectId, uploadGalleryPhotos, upsertMutation]
+    [projectId, uploadGalleryPhotos, upsertMutation],
   );
 
   return {

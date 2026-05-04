@@ -1,31 +1,31 @@
 /**
  * Documents Hook - TanStack Query Version
- * 
+ *
  * Migrated from useState/useEffect to useQuery/useMutation pattern.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
-import { queryKeys, invalidateDocumentQueries } from '@/lib/queryKeys';
-import { documentLogger } from '@/lib/devLogger';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { queryKeys, invalidateDocumentQueries } from "@/lib/queryKeys";
+import { documentLogger } from "@/lib/devLogger";
 
 export const DOCUMENT_CATEGORIES = {
-  contrato: { label: 'Contrato', icon: 'FileText' },
-  aditivo: { label: 'Aditivos', icon: 'FilePlus' },
-  projeto_3d: { label: 'Projeto 3D', icon: 'Box' },
-  executivo: { label: 'Projeto Executivo', icon: 'Ruler' },
-  art_rrt: { label: 'ART/RRT', icon: 'Award' },
-  plano_reforma: { label: 'Plano de Reforma', icon: 'ClipboardList' },
-  nota_fiscal: { label: 'Notas Fiscais', icon: 'Receipt' },
-  garantia: { label: 'Garantias', icon: 'Shield' },
-  as_built: { label: 'As Built', icon: 'Building' },
-  termo_entrega: { label: 'Termo de Entrega', icon: 'CheckSquare' },
+  contrato: { label: "Contrato", icon: "FileText" },
+  aditivo: { label: "Aditivos", icon: "FilePlus" },
+  projeto_3d: { label: "Projeto 3D", icon: "Box" },
+  executivo: { label: "Projeto Executivo", icon: "Ruler" },
+  art_rrt: { label: "ART/RRT", icon: "Award" },
+  plano_reforma: { label: "Plano de Reforma", icon: "ClipboardList" },
+  nota_fiscal: { label: "Notas Fiscais", icon: "Receipt" },
+  garantia: { label: "Garantias", icon: "Shield" },
+  as_built: { label: "As Built", icon: "Building" },
+  termo_entrega: { label: "Termo de Entrega", icon: "CheckSquare" },
 } as const;
 
 export type DocumentCategory = keyof typeof DOCUMENT_CATEGORIES;
-export type DocumentStatus = 'pending' | 'approved';
+export type DocumentStatus = "pending" | "approved";
 
 export interface ProjectDocument {
   id: string;
@@ -52,11 +52,11 @@ export interface ProjectDocument {
 // URLs are valid for 1 hour; we set staleTime to 30min to refresh before expiration
 async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
   const { data, error } = await supabase
-    .from('project_documents')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('document_type')
-    .order('version', { ascending: false });
+    .from("project_documents")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("document_type")
+    .order("version", { ascending: false });
 
   if (error) throw error;
 
@@ -74,7 +74,10 @@ async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
 
         // Fallback to public URL if signed URL fails (bucket is public)
         if (!url || urlError) {
-          console.warn(`[Documents] Signed URL failed for ${doc.name}, trying public URL:`, urlError?.message);
+          console.warn(
+            `[Documents] Signed URL failed for ${doc.name}, trying public URL:`,
+            urlError?.message,
+          );
           const { data: publicData } = supabase.storage
             .from(doc.storage_bucket)
             .getPublicUrl(doc.storage_path);
@@ -82,7 +85,9 @@ async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
         }
 
         if (!url) {
-          console.error(`[Documents] No URL generated for ${doc.name} (bucket: ${doc.storage_bucket}, path: ${doc.storage_path})`);
+          console.error(
+            `[Documents] No URL generated for ${doc.name} (bucket: ${doc.storage_bucket}, path: ${doc.storage_path})`,
+          );
         }
 
         return {
@@ -104,19 +109,25 @@ async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
           url: publicData?.publicUrl || undefined,
         } as ProjectDocument;
       }
-    })
+    }),
   );
 
   // Extract successful results
   const docs = results
-    .filter((r): r is PromiseFulfilledResult<ProjectDocument> => r.status === 'fulfilled')
-    .map(r => r.value);
-  
-  const withoutUrl = docs.filter(d => !d.url);
+    .filter(
+      (r): r is PromiseFulfilledResult<ProjectDocument> =>
+        r.status === "fulfilled",
+    )
+    .map((r) => r.value);
+
+  const withoutUrl = docs.filter((d) => !d.url);
   if (withoutUrl.length > 0) {
-    console.warn(`[Documents] ${withoutUrl.length} documents without URL:`, withoutUrl.map(d => d.name));
+    console.warn(
+      `[Documents] ${withoutUrl.length} documents without URL:`,
+      withoutUrl.map((d) => d.name),
+    );
   }
-  
+
   return docs;
 }
 
@@ -125,11 +136,11 @@ export function useDocuments(projectId: string | undefined) {
   const queryClient = useQueryClient();
 
   // Main query for documents
-  const { 
-    data: documents = [], 
-    isLoading: loading, 
+  const {
+    data: documents = [],
+    isLoading: loading,
     error,
-    refetch 
+    refetch,
   } = useQuery({
     queryKey: queryKeys.documents.list(projectId),
     queryFn: () => fetchDocuments(projectId!),
@@ -146,52 +157,57 @@ export function useDocuments(projectId: string | undefined) {
   // Approve document mutation with optimistic update
   const approveMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      if (!user) throw new Error('User not authenticated');
-      
+      if (!user) throw new Error("User not authenticated");
+
       const operationId = `approve-${documentId}`;
-      documentLogger.start(operationId, 'Approving document', { documentId, userId: user.id });
-      
+      documentLogger.start(operationId, "Approving document", {
+        documentId,
+        userId: user.id,
+      });
+
       const { error: updateError } = await supabase
-        .from('project_documents')
+        .from("project_documents")
         .update({
-          status: 'approved',
+          status: "approved",
           approved_at: new Date().toISOString(),
           approved_by: user.id,
         })
-        .eq('id', documentId);
+        .eq("id", documentId);
 
       if (updateError) {
         documentLogger.error(operationId, updateError, { documentId });
         throw updateError;
       }
-      
-      documentLogger.end(operationId, { level: 'success' });
+
+      documentLogger.end(operationId, { level: "success" });
       return documentId;
     },
     // Optimistic update
     onMutate: async (documentId) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.documents.list(projectId) });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.documents.list(projectId),
+      });
 
       // Snapshot current value
       const previousDocuments = queryClient.getQueryData<ProjectDocument[]>(
-        queryKeys.documents.list(projectId)
+        queryKeys.documents.list(projectId),
       );
 
       // Optimistically update
       if (previousDocuments) {
         queryClient.setQueryData<ProjectDocument[]>(
           queryKeys.documents.list(projectId),
-          previousDocuments.map(doc =>
+          previousDocuments.map((doc) =>
             doc.id === documentId
               ? {
                   ...doc,
-                  status: 'approved' as DocumentStatus,
+                  status: "approved" as DocumentStatus,
                   approved_at: new Date().toISOString(),
-                  approved_by: user?.id || '',
+                  approved_by: user?.id || "",
                 }
-              : doc
-          )
+              : doc,
+          ),
         );
       }
 
@@ -202,13 +218,13 @@ export function useDocuments(projectId: string | undefined) {
       if (context?.previousDocuments) {
         queryClient.setQueryData(
           queryKeys.documents.list(projectId),
-          context.previousDocuments
+          context.previousDocuments,
         );
       }
-      toast.error('Erro ao aprovar documento');
+      toast.error("Erro ao aprovar documento");
     },
     onSuccess: () => {
-      toast.success('Documento aprovado com sucesso');
+      toast.success("Documento aprovado com sucesso");
     },
     onSettled: () => {
       // Always refetch after mutation to ensure consistency
@@ -220,7 +236,7 @@ export function useDocuments(projectId: string | undefined) {
 
   // Helper functions
   const getDocumentsByCategory = (category: DocumentCategory) => {
-    return documents.filter(doc => doc.document_type === category);
+    return documents.filter((doc) => doc.document_type === category);
   };
 
   const getLatestByCategory = (category: DocumentCategory) => {
@@ -229,7 +245,9 @@ export function useDocuments(projectId: string | undefined) {
     const latestDocs = docs.reduce((acc, doc) => {
       if (!doc.parent_document_id) {
         // This is a root document, check if we have a newer version
-        const newerVersions = docs.filter(d => d.parent_document_id === doc.id);
+        const newerVersions = docs.filter(
+          (d) => d.parent_document_id === doc.id,
+        );
         if (newerVersions.length > 0) {
           // Use the newest version
           const newest = newerVersions.sort((a, b) => b.version - a.version)[0];
@@ -240,17 +258,19 @@ export function useDocuments(projectId: string | undefined) {
       }
       return acc;
     }, [] as ProjectDocument[]);
-    
-    return latestDocs.length > 0 ? latestDocs : docs.filter(d => !d.parent_document_id);
+
+    return latestDocs.length > 0
+      ? latestDocs
+      : docs.filter((d) => !d.parent_document_id);
   };
 
   const getVersionHistory = (documentId: string) => {
-    const doc = documents.find(d => d.id === documentId);
+    const doc = documents.find((d) => d.id === documentId);
     if (!doc) return [];
-    
+
     const rootId = doc.parent_document_id || doc.id;
     return documents
-      .filter(d => d.id === rootId || d.parent_document_id === rootId)
+      .filter((d) => d.id === rootId || d.parent_document_id === rootId)
       .sort((a, b) => b.version - a.version);
   };
 
@@ -284,11 +304,11 @@ export function useDocument(documentId: string | undefined) {
     queryKey: queryKeys.documents.detail(documentId),
     queryFn: async () => {
       if (!documentId) return null;
-      
+
       const { data, error } = await supabase
-        .from('project_documents')
-        .select('*')
-        .eq('id', documentId)
+        .from("project_documents")
+        .select("*")
+        .eq("id", documentId)
         .maybeSingle();
 
       if (error) throw error;

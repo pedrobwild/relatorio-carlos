@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Table as TableIcon } from "lucide-react";
 
@@ -9,7 +16,15 @@ interface Props {
   defaultOpen?: boolean;
 }
 
-const NUMERIC_HINTS = ["amount", "valor", "total", "estimated_cost", "actual_cost", "value", "weight"];
+const NUMERIC_HINTS = [
+  "amount",
+  "valor",
+  "total",
+  "estimated_cost",
+  "actual_cost",
+  "value",
+  "weight",
+];
 
 const fmtCell = (v: unknown, key: string): string => {
   if (v == null || v === "") return "—";
@@ -31,11 +46,16 @@ const fmtCell = (v: unknown, key: string): string => {
   return typeof v === "object" ? JSON.stringify(v) : String(v);
 };
 
-export function UsedDataTable({ rows, rowsReturned, defaultOpen = false }: Props) {
+export function UsedDataTable({
+  rows,
+  rowsReturned,
+  defaultOpen = false,
+}: Props) {
   const [open, setOpen] = useState(defaultOpen);
   const cols = useMemo(() => {
     const set = new Set<string>();
-    for (const r of rows.slice(0, 50)) for (const k of Object.keys(r)) set.add(k);
+    for (const r of rows.slice(0, 50))
+      for (const k of Object.keys(r)) set.add(k);
     return [...set];
   }, [rows]);
 
@@ -49,7 +69,11 @@ export function UsedDataTable({ rows, rowsReturned, defaultOpen = false }: Props
         onClick={() => setOpen((v) => !v)}
         className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
       >
-        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        {open ? (
+          <ChevronDown className="h-3 w-3" />
+        ) : (
+          <ChevronRight className="h-3 w-3" />
+        )}
         <TableIcon className="h-3 w-3" />
         Ver dados utilizados ({rowsReturned ?? rows.length} linhas)
       </Button>
@@ -59,7 +83,10 @@ export function UsedDataTable({ rows, rowsReturned, defaultOpen = false }: Props
             <TableHeader>
               <TableRow>
                 {cols.map((c) => (
-                  <TableHead key={c} className="text-[11px] uppercase tracking-wide whitespace-nowrap">
+                  <TableHead
+                    key={c}
+                    className="text-[11px] uppercase tracking-wide whitespace-nowrap"
+                  >
                     {c}
                   </TableHead>
                 ))}

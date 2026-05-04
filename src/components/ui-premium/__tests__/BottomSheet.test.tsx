@@ -12,12 +12,19 @@ describe("BottomSheet", () => {
     ];
 
     render(
-      <BottomSheet open onOpenChange={vi.fn()} title="Acoes" actions={actions} />,
+      <BottomSheet
+        open
+        onOpenChange={vi.fn()}
+        title="Acoes"
+        actions={actions}
+      />,
     );
 
     expect(screen.getByRole("heading", { name: /acoes/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /editar/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /excluir/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /excluir/i }),
+    ).toBeInTheDocument();
   });
 
   it("calls onSelect and closes the sheet when an action is picked", async () => {
@@ -48,7 +55,12 @@ describe("BottomSheet", () => {
     ];
 
     render(
-      <BottomSheet open onOpenChange={vi.fn()} title="Acoes" actions={actions} />,
+      <BottomSheet
+        open
+        onOpenChange={vi.fn()}
+        title="Acoes"
+        actions={actions}
+      />,
     );
 
     const button = screen.getByRole("button", { name: /bloqueado/i });

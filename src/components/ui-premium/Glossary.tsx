@@ -1,13 +1,13 @@
-import * as React from 'react';
-import { Info } from 'lucide-react';
+import * as React from "react";
+import { Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
-import { glossario, type GlossaryKey } from '@/content/glossario';
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { glossario, type GlossaryKey } from "@/content/glossario";
 
 export interface GlossaryProps {
   /** Chave do termo em `src/content/glossario.ts`. */
@@ -39,7 +39,7 @@ export function Glossary({
   const entry = glossario[termKey];
 
   if (!entry) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       console.warn(`[Glossary] termo desconhecido: "${termKey}"`);
     }
     return <span className={className}>{children ?? termKey}</span>;
@@ -56,10 +56,10 @@ export function Glossary({
             type="button"
             aria-label={`${entry.term}: ${entry.definition}`}
             className={cn(
-              'inline-flex items-center gap-1 align-baseline',
-              'border-b border-dotted border-muted-foreground/60',
-              'cursor-help select-text bg-transparent p-0 text-inherit',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 rounded-sm',
+              "inline-flex items-center gap-1 align-baseline",
+              "border-b border-dotted border-muted-foreground/60",
+              "cursor-help select-text bg-transparent p-0 text-inherit",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 rounded-sm",
               className,
             )}
           >

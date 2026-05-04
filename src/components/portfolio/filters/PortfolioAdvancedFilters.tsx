@@ -1,17 +1,26 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
-  X, Check, SlidersHorizontal, CalendarDays, DollarSign,
-} from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
-import { emptyFilters, isFiltersEmpty, type AdvancedFilters } from './types';
-import type { ProjectWithCustomer } from '@/infra/repositories';
+  X,
+  Check,
+  SlidersHorizontal,
+  CalendarDays,
+  DollarSign,
+} from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { emptyFilters, isFiltersEmpty, type AdvancedFilters } from "./types";
+import type { ProjectWithCustomer } from "@/infra/repositories";
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -26,22 +35,22 @@ interface PortfolioAdvancedFiltersProps {
 // ─── Option sets ─────────────────────────────────────────────────────────────
 
 const statusOptions = [
-  { value: 'draft', label: 'Rascunho' },
-  { value: 'active', label: 'Em andamento' },
-  { value: 'completed', label: 'Concluída' },
-  { value: 'paused', label: 'Pausada' },
-  { value: 'cancelled', label: 'Cancelada' },
+  { value: "draft", label: "Rascunho" },
+  { value: "active", label: "Em andamento" },
+  { value: "completed", label: "Concluída" },
+  { value: "paused", label: "Pausada" },
+  { value: "cancelled", label: "Cancelada" },
 ];
 
 const phaseOptions = [
-  { value: 'execution', label: 'Execução' },
-  { value: 'project', label: 'Fase Projeto' },
+  { value: "execution", label: "Execução" },
+  { value: "project", label: "Fase Projeto" },
 ];
 
 const criticalityOptions = [
-  { value: 'overdue', label: 'Com itens em atraso' },
-  { value: 'blocked', label: 'Bloqueada / Pausada' },
-  { value: 'stale', label: 'Sem atualização (7d+)' },
+  { value: "overdue", label: "Com itens em atraso" },
+  { value: "blocked", label: "Bloqueada / Pausada" },
+  { value: "stale", label: "Sem atualização (7d+)" },
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -64,21 +73,24 @@ export function PortfolioAdvancedFilters({
   // Extract unique values from projects for dynamic options
   const engineers = useMemo(() => {
     const set = new Set<string>();
-    projects.forEach(p => { if (p.engineer_name) set.add(p.engineer_name); });
+    projects.forEach((p) => {
+      if (p.engineer_name) set.add(p.engineer_name);
+    });
     return Array.from(set).sort();
   }, [projects]);
 
-
   const toggleArray = (arr: string[], value: string) =>
-    arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
+    arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
 
   const activeCount = [
-    draft.status.length, draft.phase.length, draft.engineers.length,
+    draft.status.length,
+    draft.phase.length,
+    draft.engineers.length,
     draft.criticality.length,
     draft.hasPendingDocs !== null ? 1 : 0,
     draft.hasPendingSign !== null ? 1 : 0,
-    (draft.dateRange.from || draft.dateRange.to) ? 1 : 0,
-    (draft.contractMin !== null || draft.contractMax !== null) ? 1 : 0,
+    draft.dateRange.from || draft.dateRange.to ? 1 : 0,
+    draft.contractMin !== null || draft.contractMax !== null ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
   return (
@@ -91,7 +103,10 @@ export function PortfolioAdvancedFilters({
               <SlidersHorizontal className="h-4 w-4" />
               Filtros Avançados
               {activeCount > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-bold">
+                <Badge
+                  variant="secondary"
+                  className="h-5 px-1.5 text-[10px] font-bold"
+                >
                   {activeCount}
                 </Badge>
               )}
@@ -112,16 +127,20 @@ export function PortfolioAdvancedFilters({
         {/* Body */}
         <ScrollArea className="flex-1">
           <div className="px-6 py-4 space-y-6">
-
             {/* Status */}
             <FilterSection title="Status">
               <div className="flex flex-wrap gap-1.5">
-                {statusOptions.map(o => (
+                {statusOptions.map((o) => (
                   <ToggleChip
                     key={o.value}
                     label={o.label}
                     selected={draft.status.includes(o.value)}
-                    onClick={() => setDraft(d => ({ ...d, status: toggleArray(d.status, o.value) }))}
+                    onClick={() =>
+                      setDraft((d) => ({
+                        ...d,
+                        status: toggleArray(d.status, o.value),
+                      }))
+                    }
                   />
                 ))}
               </div>
@@ -130,12 +149,17 @@ export function PortfolioAdvancedFilters({
             {/* Phase */}
             <FilterSection title="Fase">
               <div className="flex flex-wrap gap-1.5">
-                {phaseOptions.map(o => (
+                {phaseOptions.map((o) => (
                   <ToggleChip
                     key={o.value}
                     label={o.label}
                     selected={draft.phase.includes(o.value)}
-                    onClick={() => setDraft(d => ({ ...d, phase: toggleArray(d.phase, o.value) }))}
+                    onClick={() =>
+                      setDraft((d) => ({
+                        ...d,
+                        phase: toggleArray(d.phase, o.value),
+                      }))
+                    }
                   />
                 ))}
               </div>
@@ -145,12 +169,17 @@ export function PortfolioAdvancedFilters({
             {engineers.length > 0 && (
               <FilterSection title="Engenheiro">
                 <div className="flex flex-wrap gap-1.5">
-                  {engineers.map(name => (
+                  {engineers.map((name) => (
                     <ToggleChip
                       key={name}
-                      label={name.split(' ')[0]}
+                      label={name.split(" ")[0]}
                       selected={draft.engineers.includes(name)}
-                      onClick={() => setDraft(d => ({ ...d, engineers: toggleArray(d.engineers, name) }))}
+                      onClick={() =>
+                        setDraft((d) => ({
+                          ...d,
+                          engineers: toggleArray(d.engineers, name),
+                        }))
+                      }
                     />
                   ))}
                 </div>
@@ -163,12 +192,22 @@ export function PortfolioAdvancedFilters({
                 <ToggleChip
                   label="Docs pendentes"
                   selected={draft.hasPendingDocs === true}
-                  onClick={() => setDraft(d => ({ ...d, hasPendingDocs: d.hasPendingDocs === true ? null : true }))}
+                  onClick={() =>
+                    setDraft((d) => ({
+                      ...d,
+                      hasPendingDocs: d.hasPendingDocs === true ? null : true,
+                    }))
+                  }
                 />
                 <ToggleChip
                   label="Assinatura pendente"
                   selected={draft.hasPendingSign === true}
-                  onClick={() => setDraft(d => ({ ...d, hasPendingSign: d.hasPendingSign === true ? null : true }))}
+                  onClick={() =>
+                    setDraft((d) => ({
+                      ...d,
+                      hasPendingSign: d.hasPendingSign === true ? null : true,
+                    }))
+                  }
                 />
               </div>
             </FilterSection>
@@ -176,12 +215,17 @@ export function PortfolioAdvancedFilters({
             {/* Criticality */}
             <FilterSection title="Criticidade">
               <div className="flex flex-wrap gap-1.5">
-                {criticalityOptions.map(o => (
+                {criticalityOptions.map((o) => (
                   <ToggleChip
                     key={o.value}
                     label={o.label}
                     selected={draft.criticality.includes(o.value)}
-                    onClick={() => setDraft(d => ({ ...d, criticality: toggleArray(d.criticality, o.value) }))}
+                    onClick={() =>
+                      setDraft((d) => ({
+                        ...d,
+                        criticality: toggleArray(d.criticality, o.value),
+                      }))
+                    }
                   />
                 ))}
               </div>
@@ -193,26 +237,40 @@ export function PortfolioAdvancedFilters({
             <FilterSection title="Período (data de término)">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">De</Label>
+                  <Label className="text-[11px] text-muted-foreground">
+                    De
+                  </Label>
                   <Input
                     type="date"
-                    value={draft.dateRange.from ?? ''}
-                    onChange={e => setDraft(d => ({
-                      ...d,
-                      dateRange: { ...d.dateRange, from: e.target.value || null },
-                    }))}
+                    value={draft.dateRange.from ?? ""}
+                    onChange={(e) =>
+                      setDraft((d) => ({
+                        ...d,
+                        dateRange: {
+                          ...d.dateRange,
+                          from: e.target.value || null,
+                        },
+                      }))
+                    }
                     className="h-8 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Até</Label>
+                  <Label className="text-[11px] text-muted-foreground">
+                    Até
+                  </Label>
                   <Input
                     type="date"
-                    value={draft.dateRange.to ?? ''}
-                    onChange={e => setDraft(d => ({
-                      ...d,
-                      dateRange: { ...d.dateRange, to: e.target.value || null },
-                    }))}
+                    value={draft.dateRange.to ?? ""}
+                    onChange={(e) =>
+                      setDraft((d) => ({
+                        ...d,
+                        dateRange: {
+                          ...d.dateRange,
+                          to: e.target.value || null,
+                        },
+                      }))
+                    }
                     className="h-8 text-xs"
                   />
                 </div>
@@ -223,28 +281,40 @@ export function PortfolioAdvancedFilters({
             <FilterSection title="Faixa de Contrato">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Mínimo (R$)</Label>
+                  <Label className="text-[11px] text-muted-foreground">
+                    Mínimo (R$)
+                  </Label>
                   <Input
                     type="number"
                     placeholder="0"
-                    value={draft.contractMin ?? ''}
-                    onChange={e => setDraft(d => ({
-                      ...d,
-                      contractMin: e.target.value ? Number(e.target.value) : null,
-                    }))}
+                    value={draft.contractMin ?? ""}
+                    onChange={(e) =>
+                      setDraft((d) => ({
+                        ...d,
+                        contractMin: e.target.value
+                          ? Number(e.target.value)
+                          : null,
+                      }))
+                    }
                     className="h-8 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Máximo (R$)</Label>
+                  <Label className="text-[11px] text-muted-foreground">
+                    Máximo (R$)
+                  </Label>
                   <Input
                     type="number"
                     placeholder="∞"
-                    value={draft.contractMax ?? ''}
-                    onChange={e => setDraft(d => ({
-                      ...d,
-                      contractMax: e.target.value ? Number(e.target.value) : null,
-                    }))}
+                    value={draft.contractMax ?? ""}
+                    onChange={(e) =>
+                      setDraft((d) => ({
+                        ...d,
+                        contractMax: e.target.value
+                          ? Number(e.target.value)
+                          : null,
+                      }))
+                    }
                     className="h-8 text-xs"
                   />
                 </div>
@@ -272,7 +342,10 @@ export function PortfolioAdvancedFilters({
             <Check className="h-3.5 w-3.5" />
             Aplicar filtros
             {activeCount > 0 && (
-              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px] bg-primary-foreground/20 text-primary-foreground">
+              <Badge
+                variant="secondary"
+                className="ml-1 h-5 px-1.5 text-[10px] bg-primary-foreground/20 text-primary-foreground"
+              >
                 {activeCount}
               </Badge>
             )}
@@ -285,7 +358,13 @@ export function PortfolioAdvancedFilters({
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
+function FilterSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-2">
       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -312,15 +391,15 @@ function ToggleChip({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        'border',
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "border",
         selected
-          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-          : 'bg-background text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
+          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+          : "bg-background text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground",
       )}
     >
-      {dot && <span className={cn('h-2 w-2 rounded-full shrink-0', dot)} />}
+      {dot && <span className={cn("h-2 w-2 rounded-full shrink-0", dot)} />}
       {selected && <Check className="h-3 w-3 shrink-0" />}
       {label}
     </button>

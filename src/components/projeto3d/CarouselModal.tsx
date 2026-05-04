@@ -1,9 +1,14 @@
-import { useState, useCallback, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Loader2, ImageIcon } from 'lucide-react';
-import { use3DImages } from '@/hooks/use3DVersions';
-import { ImageWithComments } from './ImageWithComments';
+import { useState, useCallback, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Loader2, ImageIcon } from "lucide-react";
+import { use3DImages } from "@/hooks/use3DVersions";
+import { ImageWithComments } from "./ImageWithComments";
 
 interface Props {
   versionId: string;
@@ -31,22 +36,28 @@ export function CarouselModal({ versionId, open, onOpenChange }: Props) {
   }, [total, currentIndex]);
 
   const handlePrev = useCallback(() => {
-    setCurrentIndex(i => (i > 0 ? i - 1 : total - 1));
+    setCurrentIndex((i) => (i > 0 ? i - 1 : total - 1));
   }, [total]);
 
   const handleNext = useCallback(() => {
-    setCurrentIndex(i => (i < total - 1 ? i + 1 : 0));
+    setCurrentIndex((i) => (i < total - 1 ? i + 1 : 0));
   }, [total]);
 
   // Keyboard navigation: ← → ESC
   useEffect(() => {
     if (!open || total <= 1) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); handlePrev(); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); handleNext(); }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        handlePrev();
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        handleNext();
+      }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [open, total, handlePrev, handleNext]);
 
   return (
@@ -118,9 +129,11 @@ export function CarouselModal({ versionId, open, onOpenChange }: Props) {
                   key={img.id}
                   onClick={() => setCurrentIndex(idx)}
                   aria-label={`Miniatura ${idx + 1}`}
-                  aria-current={idx === currentIndex ? 'true' : undefined}
+                  aria-current={idx === currentIndex ? "true" : undefined}
                   className={`shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-colors ${
-                    idx === currentIndex ? 'border-primary' : 'border-transparent hover:border-muted-foreground/30'
+                    idx === currentIndex
+                      ? "border-primary"
+                      : "border-transparent hover:border-muted-foreground/30"
                   }`}
                 >
                   <img

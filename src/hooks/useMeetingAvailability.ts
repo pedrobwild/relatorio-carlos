@@ -1,8 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export type MeetingStatus = 'pending_confirmation' | 'confirmed' | 'cancelled';
+export type MeetingStatus = "pending_confirmation" | "confirmed" | "cancelled";
 
 export interface MeetingAvailability {
   id: string;
@@ -22,24 +22,32 @@ export interface MeetingAvailability {
 }
 
 /** Derived state machine status for the 3-state flow */
-export type BriefingMeetingState = 'needs_availability' | 'awaiting_scheduling' | 'scheduled';
+export type BriefingMeetingState =
+  | "needs_availability"
+  | "awaiting_scheduling"
+  | "scheduled";
 
-export function deriveMeetingState(availability: MeetingAvailability | null): BriefingMeetingState {
-  if (!availability) return 'needs_availability';
-  if (availability.status === 'confirmed') return 'scheduled';
-  return 'awaiting_scheduling';
+export function deriveMeetingState(
+  availability: MeetingAvailability | null,
+): BriefingMeetingState {
+  if (!availability) return "needs_availability";
+  if (availability.status === "confirmed") return "scheduled";
+  return "awaiting_scheduling";
 }
 
-export function useMeetingAvailability(stageId: string | undefined, projectId: string | undefined) {
+export function useMeetingAvailability(
+  stageId: string | undefined,
+  projectId: string | undefined,
+) {
   return useQuery({
-    queryKey: ['meeting-availability', stageId],
+    queryKey: ["meeting-availability", stageId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('journey_meeting_availability')
-        .select('*')
-        .eq('stage_id', stageId!)
-        .eq('project_id', projectId!)
-        .order('submitted_at', { ascending: false })
+        .from("journey_meeting_availability")
+        .select("*")
+        .eq("stage_id", stageId!)
+        .eq("project_id", projectId!)
+        .order("submitted_at", { ascending: false })
         .limit(1);
       if (error) throw error;
       const row = data?.[0] ?? null;
@@ -65,14 +73,14 @@ export function useSubmitMeetingAvailability() {
     }) => {
       // Upsert: delete previous pending then insert
       await supabase
-        .from('journey_meeting_availability')
+        .from("journey_meeting_availability")
         .delete()
-        .eq('stage_id', input.stage_id)
-        .eq('project_id', input.project_id)
-        .eq('status', 'pending_confirmation');
+        .eq("stage_id", input.stage_id)
+        .eq("project_id", input.project_id)
+        .eq("status", "pending_confirmation");
 
       const { error } = await supabase
-        .from('journey_meeting_availability')
+        .from("journey_meeting_availability")
         .insert({
           stage_id: input.stage_id,
           project_id: input.project_id,
@@ -87,11 +95,13 @@ export function useSubmitMeetingAvailability() {
       return { stageId: input.stage_id };
     },
     onSuccess: ({ stageId }) => {
-      qc.invalidateQueries({ queryKey: ['meeting-availability', stageId] });
-      toast.success('Disponibilidade enviada com sucesso.');
+      qc.invalidateQueries({ queryKey: ["meeting-availability", stageId] });
+      toast.success("Disponibilidade enviada com sucesso.");
     },
     onError: () => {
-      toast.error('Não foi possível enviar sua disponibilidade. Tente novamente.');
+      toast.error(
+        "Não foi possível enviar sua disponibilidade. Tente novamente.",
+      );
     },
   });
 }
@@ -108,23 +118,23 @@ export function useScheduleMeeting() {
       confirmed_by: string;
     }) => {
       const { error } = await supabase
-        .from('journey_meeting_availability')
+        .from("journey_meeting_availability")
         .update({
-          status: 'confirmed',
+          status: "confirmed",
           confirmed_datetime: input.confirmed_datetime,
           confirmed_by: input.confirmed_by,
           meeting_details_text: input.meeting_details_text,
         })
-        .eq('id', input.availability_id);
+        .eq("id", input.availability_id);
       if (error) throw error;
       return { stageId: input.stage_id };
     },
     onSuccess: ({ stageId }) => {
-      qc.invalidateQueries({ queryKey: ['meeting-availability', stageId] });
-      toast.success('Reunião agendada com sucesso.');
+      qc.invalidateQueries({ queryKey: ["meeting-availability", stageId] });
+      toast.success("Reunião agendada com sucesso.");
     },
     onError: () => {
-      toast.error('Não foi possível agendar a reunião. Tente novamente.');
+      toast.error("Não foi possível agendar a reunião. Tente novamente.");
     },
   });
 }

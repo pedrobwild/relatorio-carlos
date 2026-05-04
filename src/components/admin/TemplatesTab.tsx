@@ -1,13 +1,19 @@
-import { Plus, Search, X, Upload, Download, FileText, Tag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTemplatesTabState } from './templates/useTemplatesTabState';
-import { TemplateCard } from './templates/TemplateCard';
-import { TemplatePreviewSheet } from './templates/TemplatePreviewSheet';
-import { TemplateFormDialog } from './templates/TemplateFormDialog';
-import { getCategoryLabel, type SortField } from './templates/types';
+import { Plus, Search, X, Upload, Download, FileText, Tag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useTemplatesTabState } from "./templates/useTemplatesTabState";
+import { TemplateCard } from "./templates/TemplateCard";
+import { TemplatePreviewSheet } from "./templates/TemplatePreviewSheet";
+import { TemplateFormDialog } from "./templates/TemplateFormDialog";
+import { getCategoryLabel, type SortField } from "./templates/types";
 
 export function TemplatesTab() {
   const state = useTemplatesTabState();
@@ -30,11 +36,21 @@ export function TemplatesTab() {
             className="hidden"
             onChange={state.handleImport}
           />
-          <Button variant="outline" size="sm" onClick={() => state.importInputRef.current?.click()} className="gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => state.importInputRef.current?.click()}
+            className="gap-1.5"
+          >
             <Upload className="h-3.5 w-3.5" /> Importar
           </Button>
           {state.templates && state.templates.length > 0 && (
-            <Button variant="outline" size="sm" onClick={state.handleExportAll} className="gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={state.handleExportAll}
+              className="gap-1.5"
+            >
               <Download className="h-3.5 w-3.5" /> Exportar todos
             </Button>
           )}
@@ -57,13 +73,21 @@ export function TemplatesTab() {
               className="pl-9"
             />
             {state.search && (
-              <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => state.setSearch('')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                onClick={() => state.setSearch("")}
+              >
                 <X className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>
           {state.categories.length > 1 && (
-            <Select value={state.filterCategory} onValueChange={state.setFilterCategory}>
+            <Select
+              value={state.filterCategory}
+              onValueChange={state.setFilterCategory}
+            >
               <SelectTrigger className="w-[160px]">
                 <Tag className="h-3.5 w-3.5 mr-1.5" />
                 <SelectValue placeholder="Categoria" />
@@ -71,12 +95,17 @@ export function TemplatesTab() {
               <SelectContent>
                 <SelectItem value="__all__">Todas</SelectItem>
                 {state.categories.map((c) => (
-                  <SelectItem key={c} value={c}>{getCategoryLabel(c)}</SelectItem>
+                  <SelectItem key={c} value={c}>
+                    {getCategoryLabel(c)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           )}
-          <Select value={state.sortBy} onValueChange={(v) => state.setSortBy(v as SortField)}>
+          <Select
+            value={state.sortBy}
+            onValueChange={(v) => state.setSortBy(v as SortField)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
@@ -113,7 +142,11 @@ export function TemplatesTab() {
             <p className="text-sm text-muted-foreground mb-4">
               Templates ajudam a padronizar o cadastro de obras
             </p>
-            <Button onClick={state.openCreate} variant="outline" className="gap-2">
+            <Button
+              onClick={state.openCreate}
+              variant="outline"
+              className="gap-2"
+            >
               <Plus className="h-4 w-4" />
               Criar primeiro template
             </Button>
@@ -122,7 +155,13 @@ export function TemplatesTab() {
       ) : state.filtered.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <p>Nenhum template encontrado</p>
-          <Button variant="link" onClick={() => { state.setSearch(''); state.setFilterCategory('__all__'); }}>
+          <Button
+            variant="link"
+            onClick={() => {
+              state.setSearch("");
+              state.setFilterCategory("__all__");
+            }}
+          >
             Limpar filtros
           </Button>
         </div>
@@ -162,7 +201,9 @@ export function TemplatesTab() {
         form={state.form}
         setForm={state.setForm}
         onSave={state.handleSave}
-        isSaving={state.createTemplate.isPending || state.updateTemplate.isPending}
+        isSaving={
+          state.createTemplate.isPending || state.updateTemplate.isPending
+        }
         onPresetChange={state.handlePresetChange}
         onUpdateActivity={state.updateActivity}
         onAddActivity={state.addActivity}

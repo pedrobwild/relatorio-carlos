@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { AssistantChat, type AssistantMessage } from "@/components/assistant/AssistantChat";
+import {
+  AssistantChat,
+  type AssistantMessage,
+} from "@/components/assistant/AssistantChat";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, MessageSquare, FileBarChart, Loader2, Trash2 } from "lucide-react";
+import {
+  Plus,
+  MessageSquare,
+  FileBarChart,
+  Loader2,
+  Trash2,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -71,12 +80,21 @@ export default function Assistente() {
       setMessages([]);
     } else {
       setMessages(
-        (data ?? []).map((m: { id: string; role: string; content: string; result_data: unknown }) => ({
-          id: m.id,
-          role: (m.role === "assistant" ? "assistant" : "user") as "user" | "assistant",
-          content: m.content,
-          result_data: m.result_data as AssistantMessage["result_data"],
-        }))
+        (data ?? []).map(
+          (m: {
+            id: string;
+            role: string;
+            content: string;
+            result_data: unknown;
+          }) => ({
+            id: m.id,
+            role: (m.role === "assistant" ? "assistant" : "user") as
+              | "user"
+              | "assistant",
+            content: m.content,
+            result_data: m.result_data as AssistantMessage["result_data"],
+          }),
+        ),
       );
     }
     setLoadingMsgs(false);
@@ -93,7 +111,10 @@ export default function Assistente() {
   };
 
   const deleteConversation = async (id: string) => {
-    const { error } = await supabase.from("assistant_conversations").delete().eq("id", id);
+    const { error } = await supabase
+      .from("assistant_conversations")
+      .delete()
+      .eq("id", id);
     if (error) {
       toast.error("Erro ao excluir conversa");
       return;
@@ -113,12 +134,20 @@ export default function Assistente() {
       {/* Sidebar de conversas */}
       <aside className="hidden md:flex w-72 border-r border-border bg-card/40 flex-col shrink-0">
         <div className="p-3 border-b border-border space-y-2">
-          <Button onClick={newConversation} className="w-full justify-start gap-2">
+          <Button
+            onClick={newConversation}
+            className="w-full justify-start gap-2"
+          >
             <Plus className="h-4 w-4" />
             Nova conversa
           </Button>
           {isStaff && (
-            <Button asChild variant="outline" size="sm" className="w-full justify-start gap-2">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2"
+            >
               <Link to="/gestao/assistente/logs">
                 <FileBarChart className="h-4 w-4" />
                 Relatório de logs
@@ -143,7 +172,7 @@ export default function Assistente() {
                 key={c.id}
                 className={cn(
                   "group flex items-center gap-1 rounded-md transition-colors",
-                  activeId === c.id ? "bg-accent" : "hover:bg-accent/50"
+                  activeId === c.id ? "bg-accent" : "hover:bg-accent/50",
                 )}
               >
                 <button
@@ -166,12 +195,15 @@ export default function Assistente() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir conversa?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta ação não pode ser desfeita. As mensagens serão removidas, mas os logs técnicos permanecem.
+                        Esta ação não pode ser desfeita. As mensagens serão
+                        removidas, mas os logs técnicos permanecem.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteConversation(c.id)}>
+                      <AlertDialogAction
+                        onClick={() => deleteConversation(c.id)}
+                      >
                         Excluir
                       </AlertDialogAction>
                     </AlertDialogFooter>

@@ -3,20 +3,24 @@
  * Adds human-readable time context to project status labels.
  */
 
-import { differenceInDays, differenceInWeeks, differenceInMonths } from 'date-fns';
+import {
+  differenceInDays,
+  differenceInWeeks,
+  differenceInMonths,
+} from "date-fns";
 
 /**
  * Format a duration in a human-readable way (pt-BR).
  */
 function formatDuration(days: number): string {
-  if (days <= 0) return 'hoje';
-  if (days === 1) return '1 dia';
+  if (days <= 0) return "hoje";
+  if (days === 1) return "1 dia";
   if (days < 7) return `${days} dias`;
   const weeks = Math.floor(days / 7);
-  if (weeks === 1) return '1 semana';
+  if (weeks === 1) return "1 semana";
   if (days < 30) return `${weeks} semanas`;
   const months = Math.floor(days / 30);
-  if (months === 1) return '1 mês';
+  if (months === 1) return "1 mês";
   return `${months} meses`;
 }
 
@@ -30,10 +34,10 @@ export function getTemporalStatusLabel(
   createdAt?: string | null,
 ): string {
   const baseLabels: Record<string, string> = {
-    active: 'Em andamento',
-    completed: 'Concluída',
-    paused: 'Pausada',
-    cancelled: 'Cancelada',
+    active: "Em andamento",
+    completed: "Concluída",
+    paused: "Pausada",
+    cancelled: "Cancelada",
   };
 
   const label = baseLabels[status] ?? status;
@@ -47,13 +51,13 @@ export function getTemporalStatusLabel(
   const duration = formatDuration(days);
 
   switch (status) {
-    case 'active':
+    case "active":
       return `Em andamento há ${duration}`;
-    case 'paused':
+    case "paused":
       return `Pausada há ${duration}`;
-    case 'completed':
+    case "completed":
       return `Concluída há ${duration}`;
-    case 'cancelled':
+    case "cancelled":
       return `Cancelada há ${duration}`;
     default:
       return label;

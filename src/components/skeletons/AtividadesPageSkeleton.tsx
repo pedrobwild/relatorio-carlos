@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function AtividadesPageSkeleton() {
   return (
@@ -11,7 +11,10 @@ export function AtividadesPageSkeleton() {
       </div>
       {/* Task list */}
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 p-3 border border-border/40 rounded-lg">
+        <div
+          key={i}
+          className="flex items-center gap-3 p-3 border border-border/40 rounded-lg"
+        >
           <Skeleton className="h-5 w-5 rounded shrink-0" />
           <div className="flex-1 space-y-1.5">
             <Skeleton className="h-4 w-3/4" />

@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface ExpandableTextProps {
   /** Max visible lines before truncation (default 4) */
@@ -22,8 +22,8 @@ export function ExpandableText({
   lines = 4,
   children,
   className,
-  expandLabel = 'Ler mais',
-  collapseLabel = 'Ler menos',
+  expandLabel = "Ler mais",
+  collapseLabel = "Ler menos",
 }: ExpandableTextProps) {
   const [expanded, setExpanded] = useState(false);
   const [needsClamp, setNeedsClamp] = useState(false);
@@ -47,16 +47,15 @@ export function ExpandableText({
     return () => ro.disconnect();
   }, [lines, children]);
 
-  const clampClass = !expanded && needsClamp
-    ? 'line-clamp-[var(--clamp-lines)]'
-    : '';
+  const clampClass =
+    !expanded && needsClamp ? "line-clamp-[var(--clamp-lines)]" : "";
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn("relative", className)}>
       <div
         ref={contentRef}
-        className={cn(clampClass, 'md:line-clamp-none')}
-        style={{ '--clamp-lines': lines } as React.CSSProperties}
+        className={cn(clampClass, "md:line-clamp-none")}
+        style={{ "--clamp-lines": lines } as React.CSSProperties}
       >
         {children}
       </div>
@@ -70,7 +69,10 @@ export function ExpandableText({
         >
           {expanded ? collapseLabel : expandLabel}
           <ChevronDown
-            className={cn('h-3.5 w-3.5 transition-transform', expanded && 'rotate-180')}
+            className={cn(
+              "h-3.5 w-3.5 transition-transform",
+              expanded && "rotate-180",
+            )}
           />
         </Button>
       )}

@@ -33,7 +33,8 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_BADGE_STYLES: Record<string, string> = {
   draft: "bg-slate-500/15 text-slate-600 border-slate-400/25",
   active: "bg-primary/15 text-primary border-primary/25",
-  paused: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/25",
+  paused:
+    "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/25",
   completed: "bg-emerald-500/15 text-emerald-600 border-emerald-500/25",
   cancelled: "bg-muted text-muted-foreground border-border",
 };
@@ -80,9 +81,11 @@ export function ProjectMobileHeader() {
       (groups[status] ??= []).push(p);
     }
 
-    return STATUS_ORDER
-      .filter((s) => groups[s]?.length)
-      .map((s) => ({ status: s, label: STATUS_LABELS[s] || s, projects: groups[s] }));
+    return STATUS_ORDER.filter((s) => groups[s]?.length).map((s) => ({
+      status: s,
+      label: STATUS_LABELS[s] || s,
+      projects: groups[s],
+    }));
   }, [otherProjects, searchQuery]);
 
   const handleProjectSwitch = (targetId: string) => {
@@ -140,7 +143,10 @@ export function ProjectMobileHeader() {
             aria-expanded={open}
             aria-label={`Obra atual: ${projectDisplayName}. Toque para trocar de obra.`}
           >
-            <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <Building2
+              className="h-4 w-4 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+            />
             <span className="min-w-0 flex-1">
               <span className="block text-[13px] font-bold text-foreground truncate leading-tight">
                 {projectDisplayName}
@@ -158,7 +164,10 @@ export function ProjectMobileHeader() {
               )}
             </span>
             {hasOthers && (
-              <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <ChevronsUpDown
+                className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
             )}
           </button>
         </SheetTrigger>
@@ -196,9 +205,14 @@ export function ProjectMobileHeader() {
             <div className="flex-1 overflow-y-auto px-3 py-2">
               {/* Current project */}
               <div className="px-3 py-2.5 rounded-xl bg-primary/5 mb-3 flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                <Check
+                  className="h-4 w-4 text-primary shrink-0"
+                  aria-hidden="true"
+                />
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold truncate">{projectDisplayName}</p>
+                  <p className="text-[13px] font-semibold truncate">
+                    {projectDisplayName}
+                  </p>
                   {project?.customer_name && (
                     <p className="text-[11px] text-muted-foreground truncate">
                       {project.customer_name}
@@ -234,8 +248,12 @@ export function ProjectMobileHeader() {
                     {group.projects.map((p) => {
                       const pendingCount =
                         pendingByProject instanceof Map
-                          ? pendingByProject.get(p.id) ?? 0
-                          : (pendingByProject as Record<string, number> | undefined)?.[p.id] ?? 0;
+                          ? (pendingByProject.get(p.id) ?? 0)
+                          : ((
+                              pendingByProject as
+                                | Record<string, number>
+                                | undefined
+                            )?.[p.id] ?? 0);
                       return (
                         <button
                           key={p.id}
@@ -259,14 +277,21 @@ export function ProjectMobileHeader() {
                                   {p.customer_name}
                                 </span>
                               )}
-                              {isStaff && (p as { engineer_name?: string }).engineer_name && (
-                                <>
-                                  <span className="text-[11px] text-muted-foreground/50">·</span>
-                                  <span className="text-[11px] text-muted-foreground/70 truncate">
-                                    {(p as { engineer_name?: string }).engineer_name}
-                                  </span>
-                                </>
-                              )}
+                              {isStaff &&
+                                (p as { engineer_name?: string })
+                                  .engineer_name && (
+                                  <>
+                                    <span className="text-[11px] text-muted-foreground/50">
+                                      ·
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground/70 truncate">
+                                      {
+                                        (p as { engineer_name?: string })
+                                          .engineer_name
+                                      }
+                                    </span>
+                                  </>
+                                )}
                             </span>
                           </div>
                           {pendingCount > 0 && (
@@ -289,11 +314,7 @@ export function ProjectMobileHeader() {
         )}
       </Sheet>
 
-      <Link
-        to="/"
-        className="sr-only"
-        aria-label="Ir para a página inicial"
-      >
+      <Link to="/" className="sr-only" aria-label="Ir para a página inicial">
         Início
       </Link>
 

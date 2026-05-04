@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react';
-import { FileText, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useMemo } from "react";
+import { FileText, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,10 +15,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { useActiveCorrectiveActionTemplates, type CorrectiveActionTemplate } from '@/hooks/useCorrectiveActionTemplates';
+} from "@/components/ui/alert-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import {
+  useActiveCorrectiveActionTemplates,
+  type CorrectiveActionTemplate,
+} from "@/hooks/useCorrectiveActionTemplates";
 
 interface Props {
   category?: string | null;
@@ -26,14 +29,19 @@ interface Props {
   onSelect: (text: string) => void;
 }
 
-export function CorrectiveActionTemplateSelector({ category, currentText, onSelect }: Props) {
+export function CorrectiveActionTemplateSelector({
+  category,
+  currentText,
+  onSelect,
+}: Props) {
   const { data: templates = [] } = useActiveCorrectiveActionTemplates();
   const [open, setOpen] = useState(false);
-  const [confirmTemplate, setConfirmTemplate] = useState<CorrectiveActionTemplate | null>(null);
+  const [confirmTemplate, setConfirmTemplate] =
+    useState<CorrectiveActionTemplate | null>(null);
 
   const filtered = useMemo(() => {
     if (category) {
-      const byCategory = templates.filter(t => t.category === category);
+      const byCategory = templates.filter((t) => t.category === category);
       if (byCategory.length > 0) return byCategory;
     }
     return templates;
@@ -72,11 +80,7 @@ export function CorrectiveActionTemplateSelector({ category, currentText, onSele
             <ChevronDown className="h-3 w-3" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent
-          className="w-80 p-0"
-          align="start"
-          sideOffset={4}
-        >
+        <PopoverContent className="w-80 p-0" align="start" sideOffset={4}>
           <ScrollArea className="max-h-64">
             <div className="p-1">
               {filtered.map((t) => (
@@ -87,7 +91,9 @@ export function CorrectiveActionTemplateSelector({ category, currentText, onSele
                   onClick={() => handleSelect(t)}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium truncate">{t.title}</span>
+                    <span className="text-sm font-medium truncate">
+                      {t.title}
+                    </span>
                     {category && t.category !== category && (
                       <Badge variant="outline" className="text-[9px] shrink-0">
                         {t.category}
@@ -96,7 +102,7 @@ export function CorrectiveActionTemplateSelector({ category, currentText, onSele
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                     {t.template_text.slice(0, 80)}
-                    {t.template_text.length > 80 ? '…' : ''}
+                    {t.template_text.length > 80 ? "…" : ""}
                   </p>
                 </button>
               ))}
@@ -105,17 +111,23 @@ export function CorrectiveActionTemplateSelector({ category, currentText, onSele
         </PopoverContent>
       </Popover>
 
-      <AlertDialog open={!!confirmTemplate} onOpenChange={(o) => !o && setConfirmTemplate(null)}>
+      <AlertDialog
+        open={!!confirmTemplate}
+        onOpenChange={(o) => !o && setConfirmTemplate(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Substituir texto atual?</AlertDialogTitle>
             <AlertDialogDescription>
-              O texto da ação corretiva será substituído pelo template selecionado. Você poderá editar livremente depois.
+              O texto da ação corretiva será substituído pelo template
+              selecionado. Você poderá editar livremente depois.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>Substituir</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirm}>
+              Substituir
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

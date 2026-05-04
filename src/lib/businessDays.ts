@@ -5,14 +5,14 @@
 
 /** São Paulo fixed holidays (month, day) — national + municipal */
 const FIXED_HOLIDAYS: [number, number][] = [
-  [1, 1],   // Confraternização Universal
-  [1, 25],  // Aniversário de São Paulo (municipal)
-  [4, 21],  // Tiradentes
-  [5, 1],   // Dia do Trabalho
-  [7, 9],   // Revolução Constitucionalista (SP)
-  [9, 7],   // Independência do Brasil
+  [1, 1], // Confraternização Universal
+  [1, 25], // Aniversário de São Paulo (municipal)
+  [4, 21], // Tiradentes
+  [5, 1], // Dia do Trabalho
+  [7, 9], // Revolução Constitucionalista (SP)
+  [9, 7], // Independência do Brasil
   [10, 12], // Nossa Senhora Aparecida
-  [11, 2],  // Finados
+  [11, 2], // Finados
   [11, 15], // Proclamação da República
   [11, 20], // Consciência Negra
   [12, 25], // Natal
@@ -50,7 +50,7 @@ function moveableHolidays(year: number): Date[] {
   return [
     new Date(ms - 48 * day), // Carnival Monday (easter - 48)
     new Date(ms - 47 * day), // Carnival Tuesday (easter - 47)
-    new Date(ms - 2 * day),  // Good Friday (Sexta-feira Santa)
+    new Date(ms - 2 * day), // Good Friday (Sexta-feira Santa)
     new Date(ms + 60 * day), // Corpus Christi (easter + 60)
   ];
 }

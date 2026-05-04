@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function NcPageSkeleton() {
   return (
@@ -13,7 +13,10 @@ export function NcPageSkeleton() {
       <Skeleton className="h-10 w-full max-w-sm rounded-lg" />
       {/* NC list items */}
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="space-y-2 p-3 border border-border/40 rounded-lg">
+        <div
+          key={i}
+          className="space-y-2 p-3 border border-border/40 rounded-lg"
+        >
           <div className="flex items-center gap-2">
             <Skeleton className="h-5 w-16 rounded-full" />
             <Skeleton className="h-5 w-14 rounded-full" />

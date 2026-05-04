@@ -45,7 +45,11 @@ describe("generateInsights", () => {
       { project_name: "D", amount: 100 },
       { project_name: "E", amount: 5000 },
     ];
-    const insights = generateInsights({ rows, question: "total a pagar", domain: "financeiro" });
+    const insights = generateInsights({
+      rows,
+      question: "total a pagar",
+      domain: "financeiro",
+    });
     expect(insights.find((i) => i.id === "count")).toBeDefined();
     expect(insights.find((i) => i.id === "sum")).toBeDefined();
     expect(insights.find((i) => i.id === "topn")).toBeDefined();
@@ -56,7 +60,11 @@ describe("generateInsights", () => {
       { project_name: "A", amount: 100, due_date: "2000-01-01" },
       { project_name: "B", amount: 100, due_date: "2099-01-01" },
     ];
-    const insights = generateInsights({ rows, question: "pagamentos", domain: "financeiro" });
+    const insights = generateInsights({
+      rows,
+      question: "pagamentos",
+      domain: "financeiro",
+    });
     expect(insights.find((i) => i.id === "overdue")).toBeDefined();
   });
 });
@@ -75,7 +83,12 @@ describe("metricsFromRow", () => {
 
 describe("buildExecutiveSummary", () => {
   it("notes empty results", () => {
-    const out = buildExecutiveSummary({ question: "x", rows: [], insights: [], domain: "ncs" });
+    const out = buildExecutiveSummary({
+      question: "x",
+      rows: [],
+      insights: [],
+      domain: "ncs",
+    });
     expect(out).toContain("Nenhum registro");
   });
 

@@ -1,11 +1,26 @@
 import { useMemo } from "react";
-import { X, Calendar, Clock, AlertTriangle, CheckCircle2, ArrowRight, GitBranch, Percent, FileText, Layers } from "lucide-react";
+import {
+  X,
+  Calendar,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowRight,
+  GitBranch,
+  Percent,
+  FileText,
+  Layers,
+} from "lucide-react";
 import { Activity } from "@/types/report";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { parseLocalDate, computeEffectiveStatus, getStatusLabel } from "@/lib/activityStatus";
+import {
+  parseLocalDate,
+  computeEffectiveStatus,
+  getStatusLabel,
+} from "@/lib/activityStatus";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -16,7 +31,10 @@ interface ActivityDetailsPanelProps {
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
-  const config: Record<string, { icon: typeof CheckCircle2; label: string; className: string }> = {
+  const config: Record<
+    string,
+    { icon: typeof CheckCircle2; label: string; className: string }
+  > = {
     completed: {
       icon: CheckCircle2,
       label: "Concluído",
@@ -42,7 +60,12 @@ const StatusBadge = ({ status }: { status: string }) => {
   const { icon: Icon, label, className } = config[status] || config.pending;
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border", className)}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border",
+        className,
+      )}
+    >
       <Icon className="w-3.5 h-3.5" />
       {label}
     </span>
@@ -61,7 +84,11 @@ const formatDateShort = (dateStr: string | null | undefined): string => {
   return format(date, "dd/MM/yyyy");
 };
 
-const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetailsPanelProps) => {
+const ActivityDetailsPanel = ({
+  activity,
+  activities,
+  onClose,
+}: ActivityDetailsPanelProps) => {
   const today = useMemo(() => new Date(), []);
 
   const computed = useMemo(() => {
@@ -71,23 +98,30 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
     const hasActualEnd = !!activity.actualEnd;
     const plannedStart = parseLocalDate(activity.plannedStart);
     const plannedEnd = parseLocalDate(activity.plannedEnd);
-    const actualStart = activity.actualStart ? parseLocalDate(activity.actualStart) : null;
-    const actualEnd = activity.actualEnd ? parseLocalDate(activity.actualEnd) : null;
+    const actualStart = activity.actualStart
+      ? parseLocalDate(activity.actualStart)
+      : null;
+    const actualEnd = activity.actualEnd
+      ? parseLocalDate(activity.actualEnd)
+      : null;
 
     // Calculate status
-    let status: 'completed' | 'in-progress' | 'delayed' | 'pending' = 'pending';
+    let status: "completed" | "in-progress" | "delayed" | "pending" = "pending";
     let progress = 0;
 
     if (hasActualEnd) {
-      status = 'completed';
+      status = "completed";
       progress = 100;
     } else if (hasActualStart && actualStart) {
-      status = today > plannedEnd ? 'delayed' : 'in-progress';
+      status = today > plannedEnd ? "delayed" : "in-progress";
       const totalPlanned = differenceInDays(plannedEnd, actualStart) + 1;
       const elapsed = differenceInDays(today, actualStart) + 1;
-      progress = Math.min(100, Math.max(0, Math.round((elapsed / Math.max(totalPlanned, 1)) * 100)));
+      progress = Math.min(
+        100,
+        Math.max(0, Math.round((elapsed / Math.max(totalPlanned, 1)) * 100)),
+      );
     } else {
-      status = today > plannedStart ? 'delayed' : 'pending';
+      status = today > plannedStart ? "delayed" : "pending";
       progress = 0;
     }
 
@@ -101,11 +135,12 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
 
     // Duration calculations
     const plannedDuration = differenceInDays(plannedEnd, plannedStart) + 1;
-    const actualDuration = hasActualEnd && actualStart && actualEnd
-      ? differenceInDays(actualEnd, actualStart) + 1 
-      : hasActualStart && actualStart
-        ? differenceInDays(today, actualStart) + 1
-        : null;
+    const actualDuration =
+      hasActualEnd && actualStart && actualEnd
+        ? differenceInDays(actualEnd, actualStart) + 1
+        : hasActualStart && actualStart
+          ? differenceInDays(today, actualStart) + 1
+          : null;
 
     return {
       status,
@@ -124,21 +159,26 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
 
   // Get predecessor activities
   const predecessors = useMemo(() => {
-    if (!activity?.predecessorIds || activity.predecessorIds.length === 0) return [];
-    return activities.filter(a => activity.predecessorIds?.includes(a.id || ''));
+    if (!activity?.predecessorIds || activity.predecessorIds.length === 0)
+      return [];
+    return activities.filter((a) =>
+      activity.predecessorIds?.includes(a.id || ""),
+    );
   }, [activity, activities]);
 
   // Get successor activities (activities that depend on this one)
   const successors = useMemo(() => {
     if (!activity?.id) return [];
-    return activities.filter(a => a.predecessorIds?.includes(activity.id || ''));
+    return activities.filter((a) =>
+      a.predecessorIds?.includes(activity.id || ""),
+    );
   }, [activity, activities]);
 
   if (!activity || !computed) {
     return null;
   }
 
-  const activityIndex = activities.findIndex(a => a.id === activity.id) + 1;
+  const activityIndex = activities.findIndex((a) => a.id === activity.id) + 1;
 
   return (
     <div className="bg-card border-l border-border h-full flex flex-col animate-in slide-in-from-right duration-300">
@@ -197,7 +237,9 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
           </div>
           <div className="bg-secondary/50 rounded-lg p-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-2xl font-bold text-foreground">{computed.progress}%</span>
+              <span className="text-2xl font-bold text-foreground">
+                {computed.progress}%
+              </span>
               <span className="text-xs text-muted-foreground">
                 Peso: {activity.weight || 0}%
               </span>
@@ -206,10 +248,13 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
               <div
                 className={cn(
                   "h-full rounded-full transition-all",
-                  computed.status === 'completed' ? "bg-success" :
-                  computed.status === 'delayed' ? "bg-destructive" :
-                  computed.status === 'in-progress' ? "bg-info" :
-                  "bg-muted-foreground"
+                  computed.status === "completed"
+                    ? "bg-success"
+                    : computed.status === "delayed"
+                      ? "bg-destructive"
+                      : computed.status === "in-progress"
+                        ? "bg-info"
+                        : "bg-muted-foreground",
                 )}
                 style={{ width: `${computed.progress}%` }}
               />
@@ -223,11 +268,12 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
             <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-destructive">
-                {computed.delayDays} {computed.delayDays === 1 ? 'dia' : 'dias'} de atraso
+                {computed.delayDays} {computed.delayDays === 1 ? "dia" : "dias"}{" "}
+                de atraso
               </p>
               <p className="text-xs text-destructive/80 mt-0.5">
-                {computed.hasActualEnd 
-                  ? "Concluído após o prazo previsto" 
+                {computed.hasActualEnd
+                  ? "Concluído após o prazo previsto"
                   : "Em andamento além do prazo previsto"}
               </p>
             </div>
@@ -240,7 +286,8 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
             <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-success">
-                {Math.abs(computed.delayDays)} {Math.abs(computed.delayDays) === 1 ? 'dia' : 'dias'} adiantado
+                {Math.abs(computed.delayDays)}{" "}
+                {Math.abs(computed.delayDays) === 1 ? "dia" : "dias"} adiantado
               </p>
               <p className="text-xs text-success/80 mt-0.5">
                 Concluído antes do prazo previsto
@@ -259,16 +306,28 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Início</p>
-              <p className="text-sm font-semibold text-foreground">{formatDateShort(activity.plannedStart)}</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">
+                Início
+              </p>
+              <p className="text-sm font-semibold text-foreground">
+                {formatDateShort(activity.plannedStart)}
+              </p>
             </div>
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Término</p>
-              <p className="text-sm font-semibold text-foreground">{formatDateShort(activity.plannedEnd)}</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">
+                Término
+              </p>
+              <p className="text-sm font-semibold text-foreground">
+                {formatDateShort(activity.plannedEnd)}
+              </p>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            Duração prevista: <span className="font-medium">{computed.plannedDuration} {computed.plannedDuration === 1 ? 'dia' : 'dias'}</span>
+            Duração prevista:{" "}
+            <span className="font-medium">
+              {computed.plannedDuration}{" "}
+              {computed.plannedDuration === 1 ? "dia" : "dias"}
+            </span>
           </p>
         </div>
 
@@ -281,27 +340,48 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-secondary rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Início</p>
-                <p className="text-sm font-semibold text-foreground">{formatDateShort(activity.actualStart)}</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">
+                  Início
+                </p>
+                <p className="text-sm font-semibold text-foreground">
+                  {formatDateShort(activity.actualStart)}
+                </p>
               </div>
               <div className="bg-secondary rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Término</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">
+                  Término
+                </p>
                 <p className="text-sm font-semibold text-foreground">
-                  {computed.hasActualEnd ? formatDateShort(activity.actualEnd) : "Em andamento"}
+                  {computed.hasActualEnd
+                    ? formatDateShort(activity.actualEnd)
+                    : "Em andamento"}
                 </p>
               </div>
             </div>
             {computed.actualDuration && (
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                Duração real: <span className="font-medium">{computed.actualDuration} {computed.actualDuration === 1 ? 'dia' : 'dias'}</span>
-                {computed.hasActualEnd && computed.actualDuration !== computed.plannedDuration && (
-                  <span className={cn(
-                    "ml-1",
-                    computed.actualDuration > computed.plannedDuration ? "text-destructive" : "text-success"
-                  )}>
-                    ({computed.actualDuration > computed.plannedDuration ? '+' : ''}{computed.actualDuration - computed.plannedDuration}d)
-                  </span>
-                )}
+                Duração real:{" "}
+                <span className="font-medium">
+                  {computed.actualDuration}{" "}
+                  {computed.actualDuration === 1 ? "dia" : "dias"}
+                </span>
+                {computed.hasActualEnd &&
+                  computed.actualDuration !== computed.plannedDuration && (
+                    <span
+                      className={cn(
+                        "ml-1",
+                        computed.actualDuration > computed.plannedDuration
+                          ? "text-destructive"
+                          : "text-success",
+                      )}
+                    >
+                      (
+                      {computed.actualDuration > computed.plannedDuration
+                        ? "+"
+                        : ""}
+                      {computed.actualDuration - computed.plannedDuration}d)
+                    </span>
+                  )}
               </p>
             )}
           </div>
@@ -315,39 +395,57 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
             <GitBranch className="w-4 h-4 text-primary" />
             Dependências
           </div>
-          
+
           {predecessors.length > 0 ? (
             <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Predecessores ({predecessors.length})</p>
+              <p className="text-xs text-muted-foreground">
+                Predecessores ({predecessors.length})
+              </p>
               {predecessors.map((pred, idx) => {
-                const predIndex = activities.findIndex(a => a.id === pred.id) + 1;
+                const predIndex =
+                  activities.findIndex((a) => a.id === pred.id) + 1;
                 return (
-                  <div key={pred.id || idx} className="bg-secondary/50 rounded-lg p-2.5 flex items-center gap-2">
+                  <div
+                    key={pred.id || idx}
+                    className="bg-secondary/50 rounded-lg p-2.5 flex items-center gap-2"
+                  >
                     <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
                       {predIndex}
                     </span>
-                    <span className="text-xs text-foreground truncate">{pred.description}</span>
+                    <span className="text-xs text-foreground truncate">
+                      {pred.description}
+                    </span>
                     <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground italic">Nenhum predecessor</p>
+            <p className="text-xs text-muted-foreground italic">
+              Nenhum predecessor
+            </p>
           )}
 
           {successors.length > 0 && (
             <div className="mt-3 space-y-2">
-              <p className="text-xs text-muted-foreground">Sucessores ({successors.length})</p>
+              <p className="text-xs text-muted-foreground">
+                Sucessores ({successors.length})
+              </p>
               {successors.map((succ, idx) => {
-                const succIndex = activities.findIndex(a => a.id === succ.id) + 1;
+                const succIndex =
+                  activities.findIndex((a) => a.id === succ.id) + 1;
                 return (
-                  <div key={succ.id || idx} className="bg-secondary/50 rounded-lg p-2.5 flex items-center gap-2">
+                  <div
+                    key={succ.id || idx}
+                    className="bg-secondary/50 rounded-lg p-2.5 flex items-center gap-2"
+                  >
                     <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
                     <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
                       {succIndex}
                     </span>
-                    <span className="text-xs text-foreground truncate">{succ.description}</span>
+                    <span className="text-xs text-foreground truncate">
+                      {succ.description}
+                    </span>
                   </div>
                 );
               })}
@@ -366,12 +464,20 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-muted/50 rounded-lg p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Início</p>
-                  <p className="text-sm text-muted-foreground">{formatDateShort(activity.baselineStart)}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">
+                    Início
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDateShort(activity.baselineStart)}
+                  </p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Término</p>
-                  <p className="text-sm text-muted-foreground">{formatDateShort(activity.baselineEnd)}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">
+                    Término
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDateShort(activity.baselineEnd)}
+                  </p>
                 </div>
               </div>
             </div>

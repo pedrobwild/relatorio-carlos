@@ -14,7 +14,7 @@
  * project_daily_logs + filhos). A data default é a segunda-feira da
  * semana corrente ("registro da semana") — pode ser ajustada.
  */
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarRange,
   ChevronDown,
@@ -26,29 +26,29 @@ import {
   MessageSquareText,
   Plus,
   Trash2,
-} from 'lucide-react';
-import { format, parseISO, startOfWeek } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+} from "lucide-react";
+import { format, parseISO, startOfWeek } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 import {
   useProjectDailyLog,
@@ -56,8 +56,8 @@ import {
   type DailyLogService,
   type DailyLogServiceStatus,
   type DailyLogWorker,
-} from '@/hooks/useProjectDailyLog';
-import { ServiceTasksList } from './ServiceTasksList';
+} from "@/hooks/useProjectDailyLog";
+import { ServiceTasksList } from "./ServiceTasksList";
 
 // ----- props -----
 
@@ -68,25 +68,28 @@ export interface DailyLogInlineProps {
 }
 
 const SERVICE_STATUS_OPTIONS: Exclude<DailyLogServiceStatus, null>[] = [
-  'Em andamento',
-  'Concluído',
-  'Parado',
+  "Em andamento",
+  "Concluído",
+  "Parado",
 ];
 
 const mondayIso = () =>
-  format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+  format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
 
 // ----- componente -----
 
-export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) {
+export function DailyLogInline({
+  projectId,
+  initialDate,
+}: DailyLogInlineProps) {
   const [logDate, setLogDate] = useState(initialDate ?? mondayIso());
 
   const { data, isLoading } = useProjectDailyLog(projectId, logDate);
   const saveMutation = useSaveProjectDailyLog();
 
   // ----- estado local editável -----
-  const [notes, setNotes] = useState<string>('');
-  const [planning, setPlanning] = useState<string>('');
+  const [notes, setNotes] = useState<string>("");
+  const [planning, setPlanning] = useState<string>("");
   const [services, setServices] = useState<DailyLogService[]>([]);
   const [workers, setWorkers] = useState<DailyLogWorker[]>([]);
 
@@ -97,15 +100,15 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
       // separadas por um marcador dentro do campo `notes` do banco para
       // não precisar criar nova coluna. Formato:
       //   <observações livres>\n---PLAN---\n<planejamento da semana>
-      const raw = data.notes ?? '';
-      const sep = '\n---PLAN---\n';
+      const raw = data.notes ?? "";
+      const sep = "\n---PLAN---\n";
       if (raw.includes(sep)) {
         const [obs, plan] = raw.split(sep);
         setNotes(obs);
         setPlanning(plan);
       } else {
         setNotes(raw);
-        setPlanning('');
+        setPlanning("");
       }
       setServices(data.services);
       setWorkers(data.workers);
@@ -140,8 +143,8 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
       return [
         ...curr,
         {
-          description: '',
-          status: 'Em andamento',
+          description: "",
+          status: "Em andamento",
           observations: null,
           start_date: null,
           end_date: null,
@@ -164,7 +167,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
       return [
         ...curr,
         {
-          name: '',
+          name: "",
           role: null,
           period_start: null,
           period_end: null,
@@ -195,7 +198,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         `[data-row-index="${idx}"]`,
       );
       if (!row) return;
-      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      row.scrollIntoView({ behavior: "smooth", block: "nearest" });
       row.querySelector<HTMLElement>('[data-autofocus="true"]')?.focus();
     });
   }, [services.length]);
@@ -209,7 +212,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         `[data-row-index="${idx}"]`,
       );
       if (!row) return;
-      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      row.scrollIntoView({ behavior: "smooth", block: "nearest" });
       row.querySelector<HTMLElement>('[data-autofocus="true"]')?.focus();
     });
   }, [workers.length]);
@@ -227,7 +230,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
     const obs = notes.trim();
     const plan = planning.trim();
     const combinedNotes =
-      obs || plan ? `${obs}${plan ? `\n---PLAN---\n${plan}` : ''}` : null;
+      obs || plan ? `${obs}${plan ? `\n---PLAN---\n${plan}` : ""}` : null;
 
     await saveMutation.mutateAsync({
       project_id: projectId,
@@ -263,7 +266,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         </div>
         {data?.updated_at && (
           <span className="text-[11px] sm:text-xs text-muted-foreground tabular-nums truncate">
-            Atualizado em{' '}
+            Atualizado em{" "}
             {format(parseISO(data.updated_at), "dd/MM/yyyy 'às' HH:mm", {
               locale: ptBR,
             })}
@@ -272,163 +275,179 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-start animate-fade-in motion-reduce:animate-none">
-          {/* Serviços e prestadores — UNIFICADO num único colapsável.
+        {/* Serviços e prestadores — UNIFICADO num único colapsável.
               Mantém duas subseções (Serviços / Prestadores) lado a lado em
               telas largas e empilhadas no mobile. Modelo de dados continua
               separado (services + workers); a unificação é puramente de
               UI/UX para reduzir cliques e dar uma visão única de "quem está
               fazendo o quê" no dia. */}
-          <SectionCard
-            icon={<ClipboardList className="h-4 w-4 text-primary" />}
-            title="Serviços e prestadores"
-            count={isLoading ? undefined : services.length + workers.length}
-            defaultOpen={!isLoading && (services.length > 0 || workers.length > 0)}
-            isLoading={isLoading}
-            loadingSkeleton={
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
-                <ServicesSkeleton />
-                <WorkersSkeleton />
-              </div>
+        <SectionCard
+          icon={<ClipboardList className="h-4 w-4 text-primary" />}
+          title="Serviços e prestadores"
+          count={isLoading ? undefined : services.length + workers.length}
+          defaultOpen={
+            !isLoading && (services.length > 0 || workers.length > 0)
+          }
+          isLoading={isLoading}
+          loadingSkeleton={
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+              <ServicesSkeleton />
+              <WorkersSkeleton />
+            </div>
+          }
+          previewWhenClosed={(() => {
+            if (isLoading) return "Carregando…";
+            if (services.length === 0 && workers.length === 0) {
+              return "Nenhum serviço ou prestador — toque para adicionar";
             }
-            previewWhenClosed={(() => {
-              if (isLoading) return 'Carregando…';
-              if (services.length === 0 && workers.length === 0) {
-                return 'Nenhum serviço ou prestador — toque para adicionar';
-              }
-              const parts: string[] = [];
-              if (services.length > 0) {
-                parts.push(`${services.length} ${services.length === 1 ? 'serviço' : 'serviços'}`);
-              }
-              if (workers.length > 0) {
-                parts.push(`${workers.length} ${workers.length === 1 ? 'prestador' : 'prestadores'}`);
-              }
-              return parts.join(' • ');
-            })()}
-            // Esta seção ocupa as duas colunas do grid externo, já que
-            // internamente ela própria divide em duas colunas.
-            className="lg:col-span-2"
-            // Persistência por projeto: cada obra mantém sua própria
-            // preferência de aberto/fechado para a seção unificada.
-            persistKey={`dailyLog:services-workers:open:${projectId}`}
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
-              {/* ============== SUBSEÇÃO: Serviços em execução ============== */}
-              <section
-                aria-labelledby={`subsec-services-${projectId}`}
+            const parts: string[] = [];
+            if (services.length > 0) {
+              parts.push(
+                `${services.length} ${services.length === 1 ? "serviço" : "serviços"}`,
+              );
+            }
+            if (workers.length > 0) {
+              parts.push(
+                `${workers.length} ${workers.length === 1 ? "prestador" : "prestadores"}`,
+              );
+            }
+            return parts.join(" • ");
+          })()}
+          // Esta seção ocupa as duas colunas do grid externo, já que
+          // internamente ela própria divide em duas colunas.
+          className="lg:col-span-2"
+          // Persistência por projeto: cada obra mantém sua própria
+          // preferência de aberto/fechado para a seção unificada.
+          persistKey={`dailyLog:services-workers:open:${projectId}`}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
+            {/* ============== SUBSEÇÃO: Serviços em execução ============== */}
+            <section
+              aria-labelledby={`subsec-services-${projectId}`}
+              className="flex flex-col gap-2 sm:gap-3 min-w-0"
+            >
+              <SubsectionHeader
+                id={`subsec-services-${projectId}`}
+                icon={ClipboardList}
+                title="Serviços em execução"
+                count={services.length}
+                action={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={addService}
+                    disabled={isSaving}
+                    className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10"
+                    aria-label="Adicionar serviço"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                    Adicionar
+                  </Button>
+                }
+              />
+              {services.length === 0 && (
+                <EmptyLine text="Nenhum serviço adicionado — toque em Adicionar para começar." />
+              )}
+              <div
+                ref={servicesListRef}
                 className="flex flex-col gap-2 sm:gap-3 min-w-0"
               >
-                <SubsectionHeader
-                  id={`subsec-services-${projectId}`}
-                  icon={ClipboardList}
-                  title="Serviços em execução"
-                  count={services.length}
-                  action={
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={addService}
-                      disabled={isSaving}
-                      className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10"
-                      aria-label="Adicionar serviço"
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-                      Adicionar
-                    </Button>
-                  }
-                />
-                {services.length === 0 && (
-                  <EmptyLine text="Nenhum serviço adicionado — toque em Adicionar para começar." />
-                )}
-              <div ref={servicesListRef} className="flex flex-col gap-2 sm:gap-3 min-w-0">
-              {services.map((svc, i) => (
-                <div
-                  key={i}
-                  data-row-index={i}
-                  className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
-                >
-                  {/* Header da linha: índice + remover (mobile-friendly) */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                      Serviço #{i + 1}
-                    </span>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
-                      onClick={() => removeService(i)}
-                      disabled={isSaving}
-                      title="Remover serviço"
-                      aria-label="Remover serviço"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                {services.map((svc, i) => (
+                  <div
+                    key={i}
+                    data-row-index={i}
+                    className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
+                  >
+                    {/* Header da linha: índice + remover (mobile-friendly) */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                        Serviço #{i + 1}
+                      </span>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => removeService(i)}
+                        disabled={isSaving}
+                        title="Remover serviço"
+                        aria-label="Remover serviço"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
 
-                  {/* Descrição + status: empilha no mobile, lado a lado no sm+ */}
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2 min-w-0">
-                    <Input
-                      value={svc.description}
-                      placeholder="Ex.: Instalação elétrica"
+                    {/* Descrição + status: empilha no mobile, lado a lado no sm+ */}
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2 min-w-0">
+                      <Input
+                        value={svc.description}
+                        placeholder="Ex.: Instalação elétrica"
+                        onChange={(e) =>
+                          updateService(i, { description: e.target.value })
+                        }
+                        className="h-9 text-sm w-full min-w-0"
+                        disabled={isSaving}
+                        data-autofocus="true"
+                      />
+                      <Select
+                        value={svc.status ?? ""}
+                        onValueChange={(v) =>
+                          updateService(i, {
+                            status: (v || null) as DailyLogServiceStatus,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="h-9 text-sm w-full min-w-0">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SERVICE_STATUS_OPTIONS.map((opt) => (
+                            <SelectItem key={opt} value={opt}>
+                              {opt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 min-w-0">
+                      <MiniField
+                        label="Início"
+                        type="date"
+                        value={svc.start_date ?? ""}
+                        onChange={(v) =>
+                          updateService(i, { start_date: v || null })
+                        }
+                        disabled={isSaving}
+                      />
+                      <MiniField
+                        label="Fim"
+                        type="date"
+                        value={svc.end_date ?? ""}
+                        onChange={(v) =>
+                          updateService(i, { end_date: v || null })
+                        }
+                        disabled={isSaving}
+                      />
+                    </div>
+                    <Textarea
+                      value={svc.observations ?? ""}
+                      placeholder="Observações (opcional)"
                       onChange={(e) =>
-                        updateService(i, { description: e.target.value })
-                      }
-                      className="h-9 text-sm w-full min-w-0"
-                      disabled={isSaving}
-                      data-autofocus="true"
-                    />
-                    <Select
-                      value={svc.status ?? ''}
-                      onValueChange={(v) =>
                         updateService(i, {
-                          status: (v || null) as DailyLogServiceStatus,
+                          observations: e.target.value || null,
                         })
                       }
-                    >
-                      <SelectTrigger className="h-9 text-sm w-full min-w-0">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SERVICE_STATUS_OPTIONS.map((opt) => (
-                          <SelectItem key={opt} value={opt}>
-                            {opt}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 min-w-0">
-                    <MiniField
-                      label="Início"
-                      type="date"
-                      value={svc.start_date ?? ''}
-                      onChange={(v) => updateService(i, { start_date: v || null })}
+                      className="min-h-[56px] text-sm w-full"
                       disabled={isSaving}
                     />
-                    <MiniField
-                      label="Fim"
-                      type="date"
-                      value={svc.end_date ?? ''}
-                      onChange={(v) => updateService(i, { end_date: v || null })}
-                      disabled={isSaving}
+                    <ServiceTasksList
+                      serviceId={svc.id}
+                      serviceSaved={!!svc.id}
                     />
                   </div>
-                  <Textarea
-                    value={svc.observations ?? ''}
-                    placeholder="Observações (opcional)"
-                    onChange={(e) =>
-                      updateService(i, {
-                        observations: e.target.value || null,
-                      })
-                    }
-                    className="min-h-[56px] text-sm w-full"
-                    disabled={isSaving}
-                  />
-                  <ServiceTasksList serviceId={svc.id} serviceSaved={!!svc.id} />
-                </div>
-              ))}
+                ))}
               </div>
               {services.length > 0 && (
                 <Button
@@ -443,135 +462,142 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   Adicionar outro serviço
                 </Button>
               )}
-              </section>
+            </section>
 
-              {/* ============== SUBSEÇÃO: Prestadores no local ============== */}
-              <section
-                aria-labelledby={`subsec-workers-${projectId}`}
+            {/* ============== SUBSEÇÃO: Prestadores no local ============== */}
+            <section
+              aria-labelledby={`subsec-workers-${projectId}`}
+              className="flex flex-col gap-2 sm:gap-3 min-w-0"
+            >
+              <SubsectionHeader
+                id={`subsec-workers-${projectId}`}
+                icon={HardHat}
+                title="Prestadores no local"
+                count={workers.length}
+                action={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={addWorker}
+                    disabled={isSaving}
+                    className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10"
+                    aria-label="Adicionar prestador"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                    Adicionar
+                  </Button>
+                }
+              />
+              {workers.length === 0 && (
+                <EmptyLine text="Nenhum prestador adicionado — toque em Adicionar para começar." />
+              )}
+              <div
+                ref={workersListRef}
                 className="flex flex-col gap-2 sm:gap-3 min-w-0"
               >
-                <SubsectionHeader
-                  id={`subsec-workers-${projectId}`}
-                  icon={HardHat}
-                  title="Prestadores no local"
-                  count={workers.length}
-                  action={
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={addWorker}
-                      disabled={isSaving}
-                      className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10"
-                      aria-label="Adicionar prestador"
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-                      Adicionar
-                    </Button>
-                  }
-                />
-                {workers.length === 0 && (
-                  <EmptyLine text="Nenhum prestador adicionado — toque em Adicionar para começar." />
-                )}
-              <div ref={workersListRef} className="flex flex-col gap-2 sm:gap-3 min-w-0">
-              {workers.map((wk, i) => (
-                <div
-                  key={i}
-                  data-row-index={i}
-                  className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
-                >
-                  {/* Header da linha: índice + remover */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                      Prestador #{i + 1}
-                    </span>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
-                      onClick={() => removeWorker(i)}
-                      disabled={isSaving}
-                      title="Remover prestador"
-                      aria-label="Remover prestador"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                {workers.map((wk, i) => (
+                  <div
+                    key={i}
+                    data-row-index={i}
+                    className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
+                  >
+                    {/* Header da linha: índice + remover */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                        Prestador #{i + 1}
+                      </span>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => removeWorker(i)}
+                        disabled={isSaving}
+                        title="Remover prestador"
+                        aria-label="Remover prestador"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
 
-                  {/* Nome + função: empilha no mobile */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
-                    <Input
-                      value={wk.name}
-                      placeholder="Nome do prestador"
+                    {/* Nome + função: empilha no mobile */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
+                      <Input
+                        value={wk.name}
+                        placeholder="Nome do prestador"
+                        onChange={(e) =>
+                          updateWorker(i, { name: e.target.value })
+                        }
+                        className="h-9 text-sm w-full min-w-0"
+                        disabled={isSaving}
+                        data-autofocus="true"
+                      />
+                      <Input
+                        value={wk.role ?? ""}
+                        placeholder="Função / empresa"
+                        onChange={(e) =>
+                          updateWorker(i, { role: e.target.value || null })
+                        }
+                        className="h-9 text-sm w-full min-w-0"
+                        disabled={isSaving}
+                      />
+                    </div>
+
+                    {/* Período (datas) — sempre 2 colunas */}
+                    <div className="grid grid-cols-2 gap-2 min-w-0">
+                      <MiniField
+                        label="Período de"
+                        type="date"
+                        value={wk.period_start ?? ""}
+                        onChange={(v) =>
+                          updateWorker(i, { period_start: v || null })
+                        }
+                        disabled={isSaving}
+                      />
+                      <MiniField
+                        label="até"
+                        type="date"
+                        value={wk.period_end ?? ""}
+                        onChange={(v) =>
+                          updateWorker(i, { period_end: v || null })
+                        }
+                        disabled={isSaving}
+                      />
+                    </div>
+
+                    {/* Horário — 2 colunas no mobile (ao invés de 4 esmagadas) */}
+                    <div className="grid grid-cols-2 gap-2 min-w-0">
+                      <MiniField
+                        label="Entrada"
+                        type="time"
+                        value={wk.shift_start ?? ""}
+                        onChange={(v) =>
+                          updateWorker(i, { shift_start: v || null })
+                        }
+                        disabled={isSaving}
+                      />
+                      <MiniField
+                        label="Saída"
+                        type="time"
+                        value={wk.shift_end ?? ""}
+                        onChange={(v) =>
+                          updateWorker(i, { shift_end: v || null })
+                        }
+                        disabled={isSaving}
+                      />
+                    </div>
+                    <Textarea
+                      value={wk.notes ?? ""}
+                      placeholder="Observações do prestador (opcional)"
                       onChange={(e) =>
-                        updateWorker(i, { name: e.target.value })
+                        updateWorker(i, { notes: e.target.value || null })
                       }
-                      className="h-9 text-sm w-full min-w-0"
-                      disabled={isSaving}
-                      data-autofocus="true"
-                    />
-                    <Input
-                      value={wk.role ?? ''}
-                      placeholder="Função / empresa"
-                      onChange={(e) =>
-                        updateWorker(i, { role: e.target.value || null })
-                      }
-                      className="h-9 text-sm w-full min-w-0"
+                      className="min-h-[56px] text-sm w-full"
                       disabled={isSaving}
                     />
                   </div>
-
-                  {/* Período (datas) — sempre 2 colunas */}
-                  <div className="grid grid-cols-2 gap-2 min-w-0">
-                    <MiniField
-                      label="Período de"
-                      type="date"
-                      value={wk.period_start ?? ''}
-                      onChange={(v) =>
-                        updateWorker(i, { period_start: v || null })
-                      }
-                      disabled={isSaving}
-                    />
-                    <MiniField
-                      label="até"
-                      type="date"
-                      value={wk.period_end ?? ''}
-                      onChange={(v) => updateWorker(i, { period_end: v || null })}
-                      disabled={isSaving}
-                    />
-                  </div>
-
-                  {/* Horário — 2 colunas no mobile (ao invés de 4 esmagadas) */}
-                  <div className="grid grid-cols-2 gap-2 min-w-0">
-                    <MiniField
-                      label="Entrada"
-                      type="time"
-                      value={wk.shift_start ?? ''}
-                      onChange={(v) =>
-                        updateWorker(i, { shift_start: v || null })
-                      }
-                      disabled={isSaving}
-                    />
-                    <MiniField
-                      label="Saída"
-                      type="time"
-                      value={wk.shift_end ?? ''}
-                      onChange={(v) => updateWorker(i, { shift_end: v || null })}
-                      disabled={isSaving}
-                    />
-                  </div>
-                  <Textarea
-                    value={wk.notes ?? ''}
-                    placeholder="Observações do prestador (opcional)"
-                    onChange={(e) =>
-                      updateWorker(i, { notes: e.target.value || null })
-                    }
-                    className="min-h-[56px] text-sm w-full"
-                    disabled={isSaving}
-                  />
-                </div>
-              ))}
+                ))}
               </div>
               {workers.length > 0 && (
                 <Button
@@ -586,58 +612,58 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   Adicionar outro prestador
                 </Button>
               )}
-              </section>
-            </div>
-          </SectionCard>
+            </section>
+          </div>
+        </SectionCard>
 
-          {/* Planejamento da semana */}
-          <SectionCard
-            icon={<CalendarRange className="h-4 w-4 text-primary" />}
-            title="Planejamento da semana"
-            defaultOpen={!isLoading && !!planning}
-            isLoading={isLoading}
-            loadingSkeleton={<TextareaSkeleton />}
-            previewWhenClosed={
-              isLoading
-                ? 'Carregando planejamento…'
-                : planning.trim()
+        {/* Planejamento da semana */}
+        <SectionCard
+          icon={<CalendarRange className="h-4 w-4 text-primary" />}
+          title="Planejamento da semana"
+          defaultOpen={!isLoading && !!planning}
+          isLoading={isLoading}
+          loadingSkeleton={<TextareaSkeleton />}
+          previewWhenClosed={
+            isLoading
+              ? "Carregando planejamento…"
+              : planning.trim()
                 ? truncate(planning, 80)
-                : 'Sem planejamento — toque para preencher'
-            }
-          >
-            <Textarea
-              value={planning}
-              onChange={(e) => setPlanning(e.target.value)}
-              placeholder="Metas, etapas e marcos previstos para esta semana"
-              className="min-h-[88px] text-sm"
-              disabled={isSaving}
-            />
-          </SectionCard>
+                : "Sem planejamento — toque para preencher"
+          }
+        >
+          <Textarea
+            value={planning}
+            onChange={(e) => setPlanning(e.target.value)}
+            placeholder="Metas, etapas e marcos previstos para esta semana"
+            className="min-h-[88px] text-sm"
+            disabled={isSaving}
+          />
+        </SectionCard>
 
-          {/* Observações */}
-          <SectionCard
-            icon={<MessageSquareText className="h-4 w-4 text-primary" />}
-            title="Observações gerais"
-            defaultOpen={!isLoading && !!notes}
-            isLoading={isLoading}
-            loadingSkeleton={<TextareaSkeleton />}
-            previewWhenClosed={
-              isLoading
-                ? 'Carregando observações…'
-                : notes.trim()
+        {/* Observações */}
+        <SectionCard
+          icon={<MessageSquareText className="h-4 w-4 text-primary" />}
+          title="Observações gerais"
+          defaultOpen={!isLoading && !!notes}
+          isLoading={isLoading}
+          loadingSkeleton={<TextareaSkeleton />}
+          previewWhenClosed={
+            isLoading
+              ? "Carregando observações…"
+              : notes.trim()
                 ? truncate(notes, 80)
-                : 'Sem observações — toque para adicionar'
-            }
-          >
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Relato livre — incidentes, decisões, contexto do dia"
-              className="min-h-[88px] text-sm"
-              disabled={isSaving}
-            />
-          </SectionCard>
-        </div>
+                : "Sem observações — toque para adicionar"
+          }
+        >
+          <Textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Relato livre — incidentes, decisões, contexto do dia"
+            className="min-h-[88px] text-sm"
+            disabled={isSaving}
+          />
+        </SectionCard>
+      </div>
 
       <div className="flex justify-stretch sm:justify-end pt-2 border-t border-border/60">
         <Button
@@ -701,11 +727,11 @@ function SectionCard({
   // (modo privado restrito, SSR, etc.) — nesses casos só perdemos a
   // persistência, sem quebrar a UI.
   const [open, setOpen] = useState<boolean>(() => {
-    if (persistKey && typeof window !== 'undefined') {
+    if (persistKey && typeof window !== "undefined") {
       try {
         const raw = window.localStorage.getItem(persistKey);
-        if (raw === '1') return true;
-        if (raw === '0') return false;
+        if (raw === "1") return true;
+        if (raw === "0") return false;
       } catch {
         /* ignore */
       }
@@ -715,26 +741,30 @@ function SectionCard({
 
   // Sincroniza alterações de estado com o localStorage (idempotente).
   useEffect(() => {
-    if (!persistKey || typeof window === 'undefined') return;
+    if (!persistKey || typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(persistKey, open ? '1' : '0');
+      window.localStorage.setItem(persistKey, open ? "1" : "0");
     } catch {
       /* ignore */
     }
   }, [open, persistKey]);
 
-  const hasCount = typeof count === 'number';
+  const hasCount = typeof count === "number";
   // Enquanto está carregando, força a seção aberta para que o skeleton
   // ocupe a mesma altura aproximada do conteúdo final — evitando layout
   // shift quando os dados chegam e a seção "abre" sozinha. Após o load,
   // o estado controlado pelo usuário volta a valer.
   const effectiveOpen = isLoading ? true : open;
   return (
-    <Collapsible open={effectiveOpen} onOpenChange={setOpen} className={className}>
+    <Collapsible
+      open={effectiveOpen}
+      onOpenChange={setOpen}
+      className={className}
+    >
       <div
         className={cn(
-          'rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-all min-w-0',
-          effectiveOpen ? 'shadow-md' : 'hover:shadow-md',
+          "rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-all min-w-0",
+          effectiveOpen ? "shadow-md" : "hover:shadow-md",
         )}
       >
         <CollapsibleTrigger asChild>
@@ -742,12 +772,14 @@ function SectionCard({
             type="button"
             aria-expanded={effectiveOpen}
             aria-busy={isLoading || undefined}
-            aria-label={effectiveOpen ? `Recolher ${title}` : `Expandir ${title}`}
+            aria-label={
+              effectiveOpen ? `Recolher ${title}` : `Expandir ${title}`
+            }
             disabled={isLoading}
             className={cn(
-              'w-full flex items-start gap-2 px-3 py-3 sm:py-2.5 text-left min-h-[44px]',
-              'hover:bg-accent/30 active:bg-accent/40 transition-colors',
-              isLoading && 'cursor-default',
+              "w-full flex items-start gap-2 px-3 py-3 sm:py-2.5 text-left min-h-[44px]",
+              "hover:bg-accent/30 active:bg-accent/40 transition-colors",
+              isLoading && "cursor-default",
             )}
           >
             <span className="mt-0.5 shrink-0">{icon}</span>
@@ -758,13 +790,16 @@ function SectionCard({
                 </span>
                 {isLoading ? (
                   <span
-                    className={cn(SHIMMER_CLASS, 'h-4 w-6 rounded-full shrink-0')}
+                    className={cn(
+                      SHIMMER_CLASS,
+                      "h-4 w-6 rounded-full shrink-0",
+                    )}
                     aria-hidden
                   />
                 ) : (
                   hasCount && (
                     <Badge
-                      variant={count! > 0 ? 'secondary' : 'outline'}
+                      variant={count! > 0 ? "secondary" : "outline"}
                       className="h-5 min-w-[20px] justify-center px-1.5 text-[10px] tabular-nums shrink-0"
                     >
                       {count}
@@ -781,8 +816,8 @@ function SectionCard({
             <ChevronDown
               aria-hidden
               className={cn(
-                'h-4 w-4 text-muted-foreground shrink-0 mt-1 transition-transform',
-                effectiveOpen && 'rotate-180',
+                "h-4 w-4 text-muted-foreground shrink-0 mt-1 transition-transform",
+                effectiveOpen && "rotate-180",
               )}
             />
           </button>
@@ -798,7 +833,7 @@ function SectionCard({
 }
 
 function truncate(text: string, max: number): string {
-  const t = text.trim().replace(/\s+/g, ' ');
+  const t = text.trim().replace(/\s+/g, " ");
   return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
 
@@ -849,17 +884,17 @@ function SubsectionHeader({
       </h4>
       {isLoading ? (
         <span
-          className={cn(SHIMMER_CLASS, 'ml-auto h-5 w-7 rounded-full shrink-0')}
+          className={cn(SHIMMER_CLASS, "ml-auto h-5 w-7 rounded-full shrink-0")}
           aria-hidden
         />
       ) : (
         <Badge
-          variant={count > 0 ? 'secondary' : 'outline'}
+          variant={count > 0 ? "secondary" : "outline"}
           className={cn(
-            'h-5 min-w-[22px] justify-center px-1.5 text-[11px] font-semibold tabular-nums shrink-0',
-            action ? 'ml-auto' : 'ml-auto',
+            "h-5 min-w-[22px] justify-center px-1.5 text-[11px] font-semibold tabular-nums shrink-0",
+            action ? "ml-auto" : "ml-auto",
           )}
-          aria-label={`${count} ${count === 1 ? 'item' : 'itens'}`}
+          aria-label={`${count} ${count === 1 ? "item" : "itens"}`}
         >
           {count}
         </Badge>
@@ -871,7 +906,7 @@ function SubsectionHeader({
 
 interface MiniFieldProps {
   label: string;
-  type: 'date' | 'time';
+  type: "date" | "time";
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
@@ -880,7 +915,9 @@ interface MiniFieldProps {
 function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
   return (
     <div className="flex flex-col gap-1 min-w-0">
-      <Label className="text-[11px] text-muted-foreground truncate">{label}</Label>
+      <Label className="text-[11px] text-muted-foreground truncate">
+        {label}
+      </Label>
       <Input
         type={type}
         value={value}
@@ -914,31 +951,31 @@ function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
 // - Renderização reduzida no mobile (1 linha por seção vs. 2 no desktop).
 
 const SHIMMER_CLASS =
-  'rounded-md bg-muted/70 overflow-hidden ' +
-  'bg-[linear-gradient(90deg,hsl(var(--muted))_0%,hsl(var(--muted-foreground)/0.12)_50%,hsl(var(--muted))_100%)] ' +
-  'bg-[length:200%_100%] animate-shimmer ' +
-  'motion-reduce:animate-none motion-reduce:bg-muted ' +
-  '[contain:paint] [will-change:background-position]';
+  "rounded-md bg-muted/70 overflow-hidden " +
+  "bg-[linear-gradient(90deg,hsl(var(--muted))_0%,hsl(var(--muted-foreground)/0.12)_50%,hsl(var(--muted))_100%)] " +
+  "bg-[length:200%_100%] animate-shimmer " +
+  "motion-reduce:animate-none motion-reduce:bg-muted " +
+  "[contain:paint] [will-change:background-position]";
 
 const SKELETON_WRAPPER_CLASS =
-  'flex flex-col gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none [contain:layout_paint]';
+  "flex flex-col gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none [contain:layout_paint]";
 
 // ---- Linha (item) com header + dois inputs + textarea (Serviço/Prestador) ----
 const LIST_ROW_SKELETON = (
   <div className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 shadow-sm min-w-0">
     <div className="flex items-center justify-between gap-2">
-      <span className={cn(SHIMMER_CLASS, 'h-3 w-20')} />
-      <span className={cn(SHIMMER_CLASS, 'h-7 w-7 rounded-md')} />
+      <span className={cn(SHIMMER_CLASS, "h-3 w-20")} />
+      <span className={cn(SHIMMER_CLASS, "h-7 w-7 rounded-md")} />
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2 min-w-0">
-      <span className={cn(SHIMMER_CLASS, 'h-9')} />
-      <span className={cn(SHIMMER_CLASS, 'h-9')} />
+      <span className={cn(SHIMMER_CLASS, "h-9")} />
+      <span className={cn(SHIMMER_CLASS, "h-9")} />
     </div>
     <div className="grid grid-cols-2 gap-2 min-w-0">
-      <span className={cn(SHIMMER_CLASS, 'h-9')} />
-      <span className={cn(SHIMMER_CLASS, 'h-9')} />
+      <span className={cn(SHIMMER_CLASS, "h-9")} />
+      <span className={cn(SHIMMER_CLASS, "h-9")} />
     </div>
-    <span className={cn(SHIMMER_CLASS, 'h-14 w-full')} />
+    <span className={cn(SHIMMER_CLASS, "h-14 w-full")} />
   </div>
 );
 
@@ -948,7 +985,7 @@ const LIST_ROW_SKELETON = (
 const ServicesSkeleton = memo(function ServicesSkeleton() {
   return (
     <div
-      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[300px]')}
+      className={cn(SKELETON_WRAPPER_CLASS, "min-h-[300px]")}
       role="status"
       aria-busy="true"
       aria-label="Carregando serviços em execução"
@@ -959,7 +996,7 @@ const ServicesSkeleton = memo(function ServicesSkeleton() {
         title="Serviços em execução"
       />
       {LIST_ROW_SKELETON}
-      <span className={cn(SHIMMER_CLASS, 'h-9 w-full sm:w-40')} />
+      <span className={cn(SHIMMER_CLASS, "h-9 w-full sm:w-40")} />
     </div>
   );
 });
@@ -967,7 +1004,7 @@ const ServicesSkeleton = memo(function ServicesSkeleton() {
 const WorkersSkeleton = memo(function WorkersSkeleton() {
   return (
     <div
-      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[300px]')}
+      className={cn(SKELETON_WRAPPER_CLASS, "min-h-[300px]")}
       role="status"
       aria-busy="true"
       aria-label="Carregando prestadores no local"
@@ -978,7 +1015,7 @@ const WorkersSkeleton = memo(function WorkersSkeleton() {
         title="Prestadores no local"
       />
       {LIST_ROW_SKELETON}
-      <span className={cn(SHIMMER_CLASS, 'h-9 w-full sm:w-40')} />
+      <span className={cn(SHIMMER_CLASS, "h-9 w-full sm:w-40")} />
     </div>
   );
 });
@@ -986,12 +1023,12 @@ const WorkersSkeleton = memo(function WorkersSkeleton() {
 const TextareaSkeleton = memo(function TextareaSkeleton() {
   return (
     <div
-      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[88px]')}
+      className={cn(SKELETON_WRAPPER_CLASS, "min-h-[88px]")}
       role="status"
       aria-busy="true"
       aria-label="Carregando conteúdo"
     >
-      <span className={cn(SHIMMER_CLASS, 'h-[88px] w-full')} />
+      <span className={cn(SHIMMER_CLASS, "h-[88px] w-full")} />
     </div>
   );
 });

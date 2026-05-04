@@ -13,11 +13,11 @@
  *
  * Não substitui checagem de role/permissão — combine com `useCan(...)`.
  */
-import { useOnlineStatus } from './useOnlineStatus';
+import { useOnlineStatus } from "./useOnlineStatus";
 
-export type PerformAction = 'read' | 'write' | 'destructive';
+export type PerformAction = "read" | "write" | "destructive";
 
-export type DenyReason = 'offline' | 'persistent_offline';
+export type DenyReason = "offline" | "persistent_offline";
 
 export interface CanPerformResult {
   allowed: boolean;
@@ -31,14 +31,14 @@ const ALLOWED: CanPerformResult = { allowed: true };
 export function useCanPerform(action: PerformAction): CanPerformResult {
   const { online, persistentOffline } = useOnlineStatus();
 
-  if (action === 'read') return ALLOWED;
+  if (action === "read") return ALLOWED;
 
-  if (action === 'write') {
+  if (action === "write") {
     if (!online) {
       return {
         allowed: false,
-        reason: 'offline',
-        message: 'Você está offline. Conecte para salvar mudanças.',
+        reason: "offline",
+        message: "Você está offline. Conecte para salvar mudanças.",
       };
     }
     return ALLOWED;
@@ -48,17 +48,17 @@ export function useCanPerform(action: PerformAction): CanPerformResult {
   if (persistentOffline) {
     return {
       allowed: false,
-      reason: 'persistent_offline',
+      reason: "persistent_offline",
       message:
-        'Você está offline. Ações que apagam ou cancelam ficam bloqueadas até reconectar.',
+        "Você está offline. Ações que apagam ou cancelam ficam bloqueadas até reconectar.",
     };
   }
   if (!online) {
     return {
       allowed: false,
-      reason: 'offline',
+      reason: "offline",
       message:
-        'Você está offline. Aguarde a conexão voltar antes de apagar ou cancelar.',
+        "Você está offline. Aguarde a conexão voltar antes de apagar ou cancelar.",
     };
   }
   return ALLOWED;

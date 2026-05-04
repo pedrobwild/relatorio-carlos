@@ -1,6 +1,6 @@
 /**
  * Journey Repository
- * 
+ *
  * Centralized data access for journey stages, CSM, and related queries.
  */
 
@@ -10,7 +10,7 @@ import {
   executeListQuery,
   type RepositoryResult,
   type RepositoryListResult,
-} from './base.repository';
+} from "./base.repository";
 
 // ============================================================================
 // Types
@@ -53,14 +53,14 @@ export interface UpdateCSMInput {
  * Get all journey stages for a project, ordered by sort_order
  */
 export async function getProjectStages(
-  projectId: string
+  projectId: string,
 ): Promise<RepositoryListResult<JourneyStage>> {
   return executeListQuery(async () => {
     const { data, error } = await supabase
-      .from('journey_stages')
-      .select('id, project_id, name, status, sort_order, description, icon')
-      .eq('project_id', projectId)
-      .order('sort_order', { ascending: true });
+      .from("journey_stages")
+      .select("id, project_id, name, status, sort_order, description, icon")
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
     return { data: data ?? null, error };
   });
 }
@@ -68,28 +68,32 @@ export async function getProjectStages(
 /**
  * Get the current (first non-completed) stage name
  */
-export async function getCurrentStageName(projectId: string): Promise<string | null> {
+export async function getCurrentStageName(
+  projectId: string,
+): Promise<string | null> {
   const { data, error } = await supabase
-    .from('journey_stages')
-    .select('name, status')
-    .eq('project_id', projectId)
-    .order('sort_order', { ascending: true });
+    .from("journey_stages")
+    .select("name, status")
+    .eq("project_id", projectId)
+    .order("sort_order", { ascending: true });
 
   if (error || !data || data.length === 0) return null;
-  const current = data.find(s => s.status !== 'completed');
+  const current = data.find((s) => s.status !== "completed");
   return current?.name ?? data[data.length - 1]?.name ?? null;
 }
 
 /**
  * Get current obra etapa (from atividades)
  */
-export async function getCurrentObraEtapa(projectId: string): Promise<string | null> {
+export async function getCurrentObraEtapa(
+  projectId: string,
+): Promise<string | null> {
   const { data } = await supabase
-    .from('atividades')
-    .select('titulo, etapa, status, data_prevista_fim')
-    .eq('obra_id', projectId)
-    .in('status', ['em_andamento', 'nao_iniciada'])
-    .order('data_prevista_fim', { ascending: true })
+    .from("atividades")
+    .select("titulo, etapa, status, data_prevista_fim")
+    .eq("obra_id", projectId)
+    .in("status", ["em_andamento", "nao_iniciada"])
+    .order("data_prevista_fim", { ascending: true })
     .limit(1);
 
   if (data && data.length > 0) {
@@ -102,15 +106,18 @@ export async function getCurrentObraEtapa(projectId: string): Promise<string | n
  * Get activity progress data for a project
  */
 export async function getActivityProgressData(
-  projectId: string
+  projectId: string,
 ): Promise<Array<{ weight: number; actualEnd: string | null }>> {
   const { data } = await supabase
-    .from('project_activities')
-    .select('weight, actual_end')
-    .eq('project_id', projectId);
+    .from("project_activities")
+    .select("weight, actual_end")
+    .eq("project_id", projectId);
 
   if (!data || data.length === 0) return [];
-  return data.map(a => ({ weight: Number(a.weight) || 0, actualEnd: a.actual_end }));
+  return data.map((a) => ({
+    weight: Number(a.weight) || 0,
+    actualEnd: a.actual_end,
+  }));
 }
 
 /**
@@ -118,11 +125,11 @@ export async function getActivityProgressData(
  */
 export async function updateCSM(
   csmId: string,
-  input: UpdateCSMInput
+  input: UpdateCSMInput,
 ): Promise<RepositoryResult<null>> {
   return executeQuery(async () => {
     const { error } = await supabase
-      .from('journey_csm')
+      .from("journey_csm")
       .update({
         name: input.name,
         role_title: input.role_title,
@@ -130,7 +137,7 @@ export async function updateCSM(
         email: input.email,
         phone: input.phone,
       })
-      .eq('id', csmId);
+      .eq("id", csmId);
     return { data: null, error };
   });
 }
@@ -140,13 +147,13 @@ export async function updateCSM(
  */
 export async function updateCSMPhoto(
   csmId: string,
-  photoUrl: string
+  photoUrl: string,
 ): Promise<RepositoryResult<null>> {
   return executeQuery(async () => {
     const { error } = await supabase
-      .from('journey_csm')
+      .from("journey_csm")
       .update({ photo_url: photoUrl })
-      .eq('id', csmId);
+      .eq("id", csmId);
     return { data: null, error };
   });
 }
@@ -156,22 +163,22 @@ export async function updateCSMPhoto(
  */
 export async function uploadCSMPhoto(
   projectId: string,
-  file: File
+  file: File,
 ): Promise<string | null> {
-  const ext = file.name.split('.').pop();
+  const ext = file.name.split(".").pop();
   const path = `csm-photos/${projectId}/${Date.now()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
-    .from('project-documents')
-    .upload(path, file, { cacheControl: '3600', upsert: true });
+    .from("project-documents")
+    .upload(path, file, { cacheControl: "3600", upsert: true });
 
   if (uploadError) {
-    console.error('CSM photo upload error:', uploadError);
+    console.error("CSM photo upload error:", uploadError);
     return null;
   }
 
   const { data } = supabase.storage
-    .from('project-documents')
+    .from("project-documents")
     .getPublicUrl(path);
 
   return data.publicUrl;
@@ -180,11 +187,13 @@ export async function uploadCSMPhoto(
 /**
  * Get image counts per 3D version
  */
-export async function get3DImageCounts(versionIds: string[]): Promise<Record<string, number>> {
+export async function get3DImageCounts(
+  versionIds: string[],
+): Promise<Record<string, number>> {
   const { data } = await supabase
-    .from('project_3d_images')
-    .select('version_id')
-    .in('version_id', versionIds);
+    .from("project_3d_images")
+    .select("version_id")
+    .in("version_id", versionIds);
 
   const counts: Record<string, number> = {};
   data?.forEach((row: any) => {
@@ -196,15 +205,18 @@ export async function get3DImageCounts(versionIds: string[]): Promise<Record<str
 /**
  * Request revision on a 3D version
  */
-export async function requestRevision(versionId: string, userId: string): Promise<RepositoryResult<null>> {
+export async function requestRevision(
+  versionId: string,
+  userId: string,
+): Promise<RepositoryResult<null>> {
   return executeQuery(async () => {
     const { error } = await supabase
-      .from('project_3d_versions')
+      .from("project_3d_versions")
       .update({
         revision_requested_at: new Date().toISOString(),
         revision_requested_by: userId,
       })
-      .eq('id', versionId);
+      .eq("id", versionId);
     return { data: null, error };
   });
 }

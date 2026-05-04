@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { StageSummary } from '../StageSummary';
-import { StageIntroCard } from './StageIntroCard';
-import { MeetingAvailabilityCard } from './MeetingAvailabilityCard';
-import { AdminMeetingPanel } from './AdminMeetingPanel';
-import { StageLogSection } from './StageLogSection';
-import { useStageRecords } from '@/hooks/useStageRecords';
-import { useCompleteStage, type JourneyStage } from '@/hooks/useProjectJourney';
+import { useState } from "react";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { StageSummary } from "../StageSummary";
+import { StageIntroCard } from "./StageIntroCard";
+import { MeetingAvailabilityCard } from "./MeetingAvailabilityCard";
+import { AdminMeetingPanel } from "./AdminMeetingPanel";
+import { StageLogSection } from "./StageLogSection";
+import { useStageRecords } from "@/hooks/useStageRecords";
+import { useCompleteStage, type JourneyStage } from "@/hooks/useProjectJourney";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +20,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 interface BriefingStageLayoutProps {
   stage: JourneyStage;
@@ -29,14 +29,19 @@ interface BriefingStageLayoutProps {
   onStageCompleted?: () => void;
 }
 
-export function BriefingStageLayout({ stage, projectId, isAdmin, onStageCompleted }: BriefingStageLayoutProps) {
+export function BriefingStageLayout({
+  stage,
+  projectId,
+  isAdmin,
+  onStageCompleted,
+}: BriefingStageLayoutProps) {
   const { data: records } = useStageRecords(stage.id, projectId);
   const completeStage = useCompleteStage();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const hasMinutes = (records ?? []).some(r => r.category === 'conversation');
+  const hasMinutes = (records ?? []).some((r) => r.category === "conversation");
   // Show advance button for admin when minutes exist and stage not yet completed
-  const showNextButton = isAdmin && hasMinutes && stage.status !== 'completed';
+  const showNextButton = isAdmin && hasMinutes && stage.status !== "completed";
 
   const handleAdvance = () => {
     completeStage.mutate(
@@ -44,12 +49,12 @@ export function BriefingStageLayout({ stage, projectId, isAdmin, onStageComplete
       {
         onSuccess: () => {
           setConfirmOpen(false);
-          toast.success('Etapa de Briefing concluída! Projeto 3D liberado.');
+          toast.success("Etapa de Briefing concluída! Projeto 3D liberado.");
           onStageCompleted?.();
         },
         onError: (err) => {
-          toast.error('Erro ao concluir etapa. Tente novamente.');
-          console.error('BriefingStageLayout advance error:', err);
+          toast.error("Erro ao concluir etapa. Tente novamente.");
+          console.error("BriefingStageLayout advance error:", err);
         },
       },
     );
@@ -67,7 +72,11 @@ export function BriefingStageLayout({ stage, projectId, isAdmin, onStageComplete
       {isAdmin ? (
         <AdminMeetingPanel stageId={stage.id} projectId={projectId} />
       ) : (
-        <MeetingAvailabilityCard stageId={stage.id} projectId={projectId} isAdmin={isAdmin} />
+        <MeetingAvailabilityCard
+          stageId={stage.id}
+          projectId={projectId}
+          isAdmin={isAdmin}
+        />
       )}
 
       <Separator />
@@ -88,9 +97,12 @@ export function BriefingStageLayout({ stage, projectId, isAdmin, onStageComplete
             <div className="flex items-center gap-3 mb-4">
               <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-foreground">Ata de reunião registrada</p>
+                <p className="text-sm font-semibold text-foreground">
+                  Ata de reunião registrada
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  A ata do briefing foi publicada. Ao avançar, a etapa do Projeto 3D será liberada.
+                  A ata do briefing foi publicada. Ao avançar, a etapa do
+                  Projeto 3D será liberada.
                 </p>
               </div>
             </div>
@@ -107,13 +119,17 @@ export function BriefingStageLayout({ stage, projectId, isAdmin, onStageComplete
           <AlertDialogHeader>
             <AlertDialogTitle>Avançar para Projeto 3D?</AlertDialogTitle>
             <AlertDialogDescription>
-              Ao confirmar, a etapa de Briefing será concluída e a etapa do Projeto 3D será desbloqueada.
+              Ao confirmar, a etapa de Briefing será concluída e a etapa do
+              Projeto 3D será desbloqueada.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAdvance} disabled={completeStage.isPending}>
-              {completeStage.isPending ? 'Avançando...' : 'Confirmar'}
+            <AlertDialogAction
+              onClick={handleAdvance}
+              disabled={completeStage.isPending}
+            >
+              {completeStage.isPending ? "Avançando..." : "Confirmar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -14,10 +14,14 @@
  * adiantamento, etc., continue usando `computeEffectiveStatus`.
  */
 
-import { computeEffectiveStatus, type ActivityDates } from './activityStatus';
-import type { StatusTone } from '@/components/ui-premium';
+import { computeEffectiveStatus, type ActivityDates } from "./activityStatus";
+import type { StatusTone } from "@/components/ui-premium";
 
-export type ActivityState = 'not_started' | 'in_progress' | 'completed' | 'delayed';
+export type ActivityState =
+  | "not_started"
+  | "in_progress"
+  | "completed"
+  | "delayed";
 
 export interface ActivityStateResult {
   state: ActivityState;
@@ -27,17 +31,17 @@ export interface ActivityStateResult {
 }
 
 const LABEL: Record<ActivityState, string> = {
-  not_started: 'Não iniciada',
-  in_progress: 'Em andamento',
-  completed: 'Concluída',
-  delayed: 'Atrasada',
+  not_started: "Não iniciada",
+  in_progress: "Em andamento",
+  completed: "Concluída",
+  delayed: "Atrasada",
 };
 
 const TONE: Record<ActivityState, StatusTone> = {
-  not_started: 'neutral',
-  in_progress: 'info',
-  completed: 'success',
-  delayed: 'danger',
+  not_started: "neutral",
+  in_progress: "info",
+  completed: "success",
+  delayed: "danger",
 };
 
 /**
@@ -54,18 +58,18 @@ export function getActivityState(
 
   let state: ActivityState;
   switch (computed.status) {
-    case 'completed':
-      state = 'completed';
+    case "completed":
+      state = "completed";
       break;
-    case 'in-progress':
-      state = 'in_progress';
+    case "in-progress":
+      state = "in_progress";
       break;
-    case 'delayed':
-      state = 'delayed';
+    case "delayed":
+      state = "delayed";
       break;
-    case 'pending':
+    case "pending":
     default:
-      state = 'not_started';
+      state = "not_started";
       break;
   }
 

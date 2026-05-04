@@ -2,25 +2,32 @@
  * Hook for document comments
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  getDocumentComments, 
-  addDocumentComment, 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  getDocumentComments,
+  addDocumentComment,
   deleteDocumentComment,
   type DocumentCommentWithUser,
   type CreateCommentInput,
-} from '@/infra/repositories/documents.repository';
-import { useAuth } from '@/hooks/useAuth';
-import { queryKeys } from '@/lib/queryKeys';
-import { toast } from 'sonner';
+} from "@/infra/repositories/documents.repository";
+import { useAuth } from "@/hooks/useAuth";
+import { queryKeys } from "@/lib/queryKeys";
+import { toast } from "sonner";
 
-export function useDocumentComments(documentId: string | undefined, version?: number) {
+export function useDocumentComments(
+  documentId: string | undefined,
+  version?: number,
+) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const queryKey = ['documentComments', documentId, version];
+  const queryKey = ["documentComments", documentId, version];
 
-  const { data: comments = [], isLoading, error } = useQuery({
+  const {
+    data: comments = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey,
     queryFn: async () => {
       if (!documentId) return [];
@@ -32,34 +39,40 @@ export function useDocumentComments(documentId: string | undefined, version?: nu
   });
 
   const addCommentMutation = useMutation({
-    mutationFn: async (input: Omit<CreateCommentInput, 'project_id' | 'document_id' | 'version'> & { 
-      project_id: string; 
-      document_id: string;
-      version: number;
-    }) => {
-      if (!user?.id) throw new Error('Não autenticado');
-      
+    mutationFn: async (
+      input: Omit<
+        CreateCommentInput,
+        "project_id" | "document_id" | "version"
+      > & {
+        project_id: string;
+        document_id: string;
+        version: number;
+      },
+    ) => {
+      if (!user?.id) throw new Error("Não autenticado");
+
       const result = await addDocumentComment(input, user.id);
       if (result.error) throw result.error;
       return result.data;
     },
     onMutate: async (newComment) => {
       await queryClient.cancelQueries({ queryKey });
-      
-      const previousComments = queryClient.getQueryData<DocumentCommentWithUser[]>(queryKey);
-      
+
+      const previousComments =
+        queryClient.getQueryData<DocumentCommentWithUser[]>(queryKey);
+
       // Optimistic update
       const optimisticComment: DocumentCommentWithUser = {
         id: `temp-${Date.now()}`,
         project_id: newComment.project_id,
         document_id: newComment.document_id,
         version: newComment.version,
-        user_id: user?.id ?? '',
+        user_id: user?.id ?? "",
         comment: newComment.comment,
         page_number: newComment.page_number ?? null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        user_name: user?.email?.split('@')[0],
+        user_name: user?.email?.split("@")[0],
         user_email: user?.email ?? undefined,
       };
 
@@ -72,10 +85,10 @@ export function useDocumentComments(documentId: string | undefined, version?: nu
     },
     onError: (err, _, context) => {
       queryClient.setQueryData(queryKey, context?.previousComments);
-      toast.error('Erro ao adicionar comentário');
+      toast.error("Erro ao adicionar comentário");
     },
     onSuccess: () => {
-      toast.success('Comentário adicionado');
+      toast.success("Comentário adicionado");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
@@ -90,21 +103,22 @@ export function useDocumentComments(documentId: string | undefined, version?: nu
     },
     onMutate: async (commentId) => {
       await queryClient.cancelQueries({ queryKey });
-      
-      const previousComments = queryClient.getQueryData<DocumentCommentWithUser[]>(queryKey);
-      
+
+      const previousComments =
+        queryClient.getQueryData<DocumentCommentWithUser[]>(queryKey);
+
       queryClient.setQueryData<DocumentCommentWithUser[]>(queryKey, (old) =>
-        (old ?? []).filter((c) => c.id !== commentId)
+        (old ?? []).filter((c) => c.id !== commentId),
       );
 
       return { previousComments };
     },
     onError: (err, _, context) => {
       queryClient.setQueryData(queryKey, context?.previousComments);
-      toast.error('Erro ao excluir comentário');
+      toast.error("Erro ao excluir comentário");
     },
     onSuccess: () => {
-      toast.success('Comentário excluído');
+      toast.success("Comentário excluído");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
@@ -116,7 +130,7 @@ export function useDocumentComments(documentId: string | undefined, version?: nu
     documentId: string,
     version: number,
     comment: string,
-    pageNumber?: number
+    pageNumber?: number,
   ) => {
     return addCommentMutation.mutateAsync({
       project_id: projectId,

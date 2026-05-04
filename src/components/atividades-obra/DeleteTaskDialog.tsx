@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 interface DeleteTaskDialogProps {
   open: boolean;
@@ -16,14 +16,20 @@ interface DeleteTaskDialogProps {
   onConfirm: () => void;
 }
 
-export function DeleteTaskDialog({ open, onOpenChange, taskTitle, onConfirm }: DeleteTaskDialogProps) {
+export function DeleteTaskDialog({
+  open,
+  onOpenChange,
+  taskTitle,
+  onConfirm,
+}: DeleteTaskDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Excluir atividade</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja excluir <strong>"{taskTitle}"</strong>? Esta ação não pode ser desfeita.
+            Tem certeza que deseja excluir <strong>"{taskTitle}"</strong>? Esta
+            ação não pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

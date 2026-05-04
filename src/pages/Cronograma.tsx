@@ -1,27 +1,48 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2, GripVertical, ChevronDown, FileText, BellRing } from 'lucide-react';
-import { isHoliday } from '@/lib/businessDays';
-import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
-import { useScheduleAlerts } from '@/hooks/useScheduleAlerts';
-import { useScheduleAlertPrefs } from '@/hooks/useScheduleAlertPrefs';
-import { Badge } from '@/components/ui/badge';
-import { ContentSkeleton } from '@/components/ContentSkeleton';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { DatePickerField } from '@/components/DatePickerField';
-import { useProject } from '@/contexts/ProjectContext';
-import { useProjectActivities, ActivityInput } from '@/hooks/useProjectActivities';
-import { useProjectNavigation } from '@/hooks/useProjectNavigation';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
-import { ImportScheduleModal } from '@/components/ImportScheduleModal';
-import { CronogramaMobileView } from '@/components/cronograma/CronogramaMobileView';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  Plus,
+  Trash2,
+  Save,
+  Loader2,
+  AlertCircle,
+  Upload,
+  Bookmark,
+  ShoppingCart,
+  Wand2,
+  GripVertical,
+  ChevronDown,
+  FileText,
+  BellRing,
+} from "lucide-react";
+import { isHoliday } from "@/lib/businessDays";
+import { AIScheduleGenerator } from "@/components/schedule/AIScheduleGenerator";
+import { useScheduleAlerts } from "@/hooks/useScheduleAlerts";
+import { useScheduleAlertPrefs } from "@/hooks/useScheduleAlertPrefs";
+import { Badge } from "@/components/ui/badge";
+import { ContentSkeleton } from "@/components/ContentSkeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { DatePickerField } from "@/components/DatePickerField";
+import { useProject } from "@/contexts/ProjectContext";
+import {
+  useProjectActivities,
+  ActivityInput,
+} from "@/hooks/useProjectActivities";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
+import { ImportScheduleModal } from "@/components/ImportScheduleModal";
+import { CronogramaMobileView } from "@/components/cronograma/CronogramaMobileView";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { cn } from "@/lib/utils";
 
 interface ActivityFormData {
   id: string;
@@ -38,8 +59,8 @@ interface ActivityFormData {
 
 const toISO = (d: Date) => {
   const y = d.getFullYear();
-  const m = (d.getMonth() + 1).toString().padStart(2, '0');
-  const day = d.getDate().toString().padStart(2, '0');
+  const m = (d.getMonth() + 1).toString().padStart(2, "0");
+  const day = d.getDate().toString().padStart(2, "0");
   return `${y}-${m}-${day}`;
 };
 
@@ -73,15 +94,15 @@ const getNextMonday = (date: Date): Date => {
 
 const createEmptyActivity = (): ActivityFormData => ({
   id: crypto.randomUUID(),
-  description: '',
-  plannedStart: '',
-  plannedEnd: '',
-  actualStart: '',
-  actualEnd: '',
-  weight: '0',
+  description: "",
+  plannedStart: "",
+  plannedEnd: "",
+  actualStart: "",
+  actualEnd: "",
+  weight: "0",
   predecessorIds: [],
-  etapa: '',
-  detailed_description: '',
+  etapa: "",
+  detailed_description: "",
 });
 
 /* ── Auto-resize textarea ── */
@@ -100,7 +121,7 @@ function AutoTextarea({
 
   useEffect(() => {
     if (ref.current) {
-      ref.current.style.height = '0px';
+      ref.current.style.height = "0px";
       ref.current.style.height = `${Math.max(36, ref.current.scrollHeight)}px`;
     }
   }, [value]);
@@ -113,8 +134,8 @@ function AutoTextarea({
       placeholder={placeholder}
       rows={1}
       className={cn(
-        'min-h-[36px] resize-none overflow-hidden py-2 px-2.5 text-sm leading-snug border-transparent bg-transparent hover:border-border focus:border-border transition-colors',
-        hasError && 'border-destructive',
+        "min-h-[36px] resize-none overflow-hidden py-2 px-2.5 text-sm leading-snug border-transparent bg-transparent hover:border-border focus:border-border transition-colors",
+        hasError && "border-destructive",
       )}
     />
   );
@@ -132,22 +153,22 @@ function WeightSummary({ total }: { total: number }) {
       <Progress
         value={Math.min(total, 100)}
         className={cn(
-          'h-2 flex-1 rounded-full max-w-xs',
+          "h-2 flex-1 rounded-full max-w-xs",
           isValid
-            ? '[&>div]:bg-[hsl(var(--success))]'
+            ? "[&>div]:bg-[hsl(var(--success))]"
             : isOver
-              ? '[&>div]:bg-destructive'
-              : '[&>div]:bg-[hsl(var(--warning))]',
+              ? "[&>div]:bg-destructive"
+              : "[&>div]:bg-[hsl(var(--warning))]",
         )}
       />
       <span
         className={cn(
-          'text-sm font-bold tabular-nums whitespace-nowrap min-w-[52px] text-right',
+          "text-sm font-bold tabular-nums whitespace-nowrap min-w-[52px] text-right",
           isValid
-            ? 'text-[hsl(var(--success))]'
+            ? "text-[hsl(var(--success))]"
             : isOver
-              ? 'text-destructive'
-              : 'text-[hsl(var(--warning))]',
+              ? "text-destructive"
+              : "text-[hsl(var(--warning))]",
         )}
       >
         {total.toFixed(1)}%
@@ -179,14 +200,16 @@ const Cronograma = () => {
   const createFirstActivity = (): ActivityFormData => {
     const first = createEmptyActivity();
     if (project?.planned_start_date) {
-      const start = new Date(project.planned_start_date + 'T00:00:00');
+      const start = new Date(project.planned_start_date + "T00:00:00");
       first.plannedStart = project.planned_start_date;
       first.plannedEnd = toISO(getFridayOfWeek(start));
     }
     return first;
   };
 
-  const [activities, setActivities] = useState<ActivityFormData[]>([createEmptyActivity()]);
+  const [activities, setActivities] = useState<ActivityFormData[]>([
+    createEmptyActivity(),
+  ]);
   const initializedRef = useRef(false);
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -200,36 +223,46 @@ const Cronograma = () => {
     setDragOverIndex(null);
   }, []);
 
-  const handleDragStart = useCallback((event: React.DragEvent<HTMLButtonElement>, index: number) => {
-    setDraggedIndex(index);
-    setDragOverIndex(index);
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', String(index));
-  }, []);
-
-  const handleRowDragOver = useCallback((event: React.DragEvent<HTMLDivElement>, index: number) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-    if (dragOverIndex !== index) {
+  const handleDragStart = useCallback(
+    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
+      setDraggedIndex(index);
       setDragOverIndex(index);
-    }
-  }, [dragOverIndex]);
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", String(index));
+    },
+    [],
+  );
 
-  const handleRowDrop = useCallback((event: React.DragEvent<HTMLDivElement>, toIndex: number) => {
-    event.preventDefault();
-    const fromIndex = draggedIndex ?? Number(event.dataTransfer.getData('text/plain'));
-    if (Number.isNaN(fromIndex) || fromIndex === toIndex) {
+  const handleRowDragOver = useCallback(
+    (event: React.DragEvent<HTMLDivElement>, index: number) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      if (dragOverIndex !== index) {
+        setDragOverIndex(index);
+      }
+    },
+    [dragOverIndex],
+  );
+
+  const handleRowDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>, toIndex: number) => {
+      event.preventDefault();
+      const fromIndex =
+        draggedIndex ?? Number(event.dataTransfer.getData("text/plain"));
+      if (Number.isNaN(fromIndex) || fromIndex === toIndex) {
+        clearDragState();
+        return;
+      }
+      setActivities((prev) => {
+        const reordered = [...prev];
+        const [moved] = reordered.splice(fromIndex, 1);
+        reordered.splice(toIndex, 0, moved);
+        return reordered;
+      });
       clearDragState();
-      return;
-    }
-    setActivities(prev => {
-      const reordered = [...prev];
-      const [moved] = reordered.splice(fromIndex, 1);
-      reordered.splice(toIndex, 0, moved);
-      return reordered;
-    });
-    clearDragState();
-  }, [clearDragState, draggedIndex]);
+    },
+    [clearDragState, draggedIndex],
+  );
 
   const totalWeight = useMemo(
     () => activities.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0),
@@ -241,14 +274,20 @@ const Cronograma = () => {
     try {
       await saveBaseline();
     } catch (err) {
-      toast.error('Erro ao salvar baseline');
+      toast.error("Erro ao salvar baseline");
     } finally {
       setSavingBaseline(false);
     }
   };
 
-  const handleImportActivities = (importedActivities: import('@/components/import-schedule/types').ActivityFormData[]) => {
-    const mapped: ActivityFormData[] = importedActivities.map(a => ({ ...a, etapa: '', detailed_description: '' }));
+  const handleImportActivities = (
+    importedActivities: import("@/components/import-schedule/types").ActivityFormData[],
+  ) => {
+    const mapped: ActivityFormData[] = importedActivities.map((a) => ({
+      ...a,
+      etapa: "",
+      detailed_description: "",
+    }));
     if (activities.length === 1 && !activities[0].description.trim()) {
       setActivities(mapped);
     } else {
@@ -264,23 +303,25 @@ const Cronograma = () => {
     if (activitiesLoading) return;
 
     if (existingActivities.length > 0) {
-      const formActivities: ActivityFormData[] = existingActivities.map((act) => ({
-        id: act.id,
-        description: act.description,
-        plannedStart: act.planned_start,
-        plannedEnd: act.planned_end,
-        actualStart: act.actual_start || '',
-        actualEnd: act.actual_end || '',
-        weight: act.weight.toString(),
-        predecessorIds: act.predecessor_ids || [],
-        etapa: act.etapa || '',
-        detailed_description: act.detailed_description || '',
-      }));
+      const formActivities: ActivityFormData[] = existingActivities.map(
+        (act) => ({
+          id: act.id,
+          description: act.description,
+          plannedStart: act.planned_start,
+          plannedEnd: act.planned_end,
+          actualStart: act.actual_start || "",
+          actualEnd: act.actual_end || "",
+          weight: act.weight.toString(),
+          predecessorIds: act.predecessor_ids || [],
+          etapa: act.etapa || "",
+          detailed_description: act.detailed_description || "",
+        }),
+      );
       setActivities(formActivities);
       initializedRef.current = true;
     } else if (project?.planned_start_date && project?.planned_end_date) {
-      const start = new Date(project.planned_start_date + 'T00:00:00');
-      const end = new Date(project.planned_end_date + 'T00:00:00');
+      const start = new Date(project.planned_start_date + "T00:00:00");
+      const end = new Date(project.planned_end_date + "T00:00:00");
       if (start >= end) return;
 
       const weeks: ActivityFormData[] = [];
@@ -292,22 +333,24 @@ const Cronograma = () => {
         const fmt = (d: Date) => toISO(d);
         weeks.push({
           id: crypto.randomUUID(),
-          description: '',
+          description: "",
           plannedStart: fmt(weekStart),
           plannedEnd: fmt(cappedEnd),
-          actualStart: '',
-          actualEnd: '',
-          weight: '0',
+          actualStart: "",
+          actualEnd: "",
+          weight: "0",
           predecessorIds: [],
-          etapa: '',
-          detailed_description: '',
+          etapa: "",
+          detailed_description: "",
         });
         weekStart = new Date(cappedEnd);
         weekStart.setDate(weekStart.getDate() + 1);
       }
       if (weeks.length > 0) {
         const weightPerWeek = parseFloat((100 / weeks.length).toFixed(1));
-        const remainder = parseFloat((100 - weightPerWeek * weeks.length).toFixed(1));
+        const remainder = parseFloat(
+          (100 - weightPerWeek * weeks.length).toFixed(1),
+        );
         weeks.forEach((w, i) => {
           w.weight =
             i === weeks.length - 1
@@ -331,7 +374,7 @@ const Cronograma = () => {
 
     // Auto-fill dates based on previous activity's end date
     if (lastActivity?.plannedEnd) {
-      const prevEnd = new Date(lastActivity.plannedEnd + 'T00:00:00');
+      const prevEnd = new Date(lastActivity.plannedEnd + "T00:00:00");
       const nextMon = getNextMonday(prevEnd);
       const nextFri = getFridayOfWeek(nextMon);
       newActivity.plannedStart = toISO(nextMon);
@@ -344,7 +387,7 @@ const Cronograma = () => {
   const handleRemoveActivity = (id: string) => {
     if (activities.length === 1) return;
     setActivities(activities.filter((act) => act.id !== id));
-    setOpenDetails(prev => {
+    setOpenDetails((prev) => {
       const { [id]: _, ...rest } = prev;
       return rest;
     });
@@ -355,23 +398,25 @@ const Cronograma = () => {
     field: keyof ActivityFormData,
     value: string | string[],
   ) => {
-    setActivities(prev => {
-      const changedIndex = prev.findIndex(a => a.id === id);
+    setActivities((prev) => {
+      const changedIndex = prev.findIndex((a) => a.id === id);
       const oldAct = changedIndex >= 0 ? prev[changedIndex] : null;
-      const oldPlannedEnd = oldAct?.plannedEnd ?? '';
+      const oldPlannedEnd = oldAct?.plannedEnd ?? "";
 
       const newActivities = prev.map((act) => {
         if (act.id !== id) return act;
         const updated = { ...act, [field]: value };
         // Auto-fill end date when start date is set
-        if (field === 'plannedStart' && typeof value === 'string' && value) {
-          const startDate = new Date(value + 'T00:00:00');
+        if (field === "plannedStart" && typeof value === "string" && value) {
+          const startDate = new Date(value + "T00:00:00");
           if (!isNaN(startDate.getTime())) {
             // Keep the same duration (in calendar days) if there was an existing range
             if (act.plannedStart && act.plannedEnd) {
-              const oldStart = new Date(act.plannedStart + 'T00:00:00');
-              const oldEnd = new Date(act.plannedEnd + 'T00:00:00');
-              const durationDays = Math.round((oldEnd.getTime() - oldStart.getTime()) / (1000 * 60 * 60 * 24));
+              const oldStart = new Date(act.plannedStart + "T00:00:00");
+              const oldEnd = new Date(act.plannedEnd + "T00:00:00");
+              const durationDays = Math.round(
+                (oldEnd.getTime() - oldStart.getTime()) / (1000 * 60 * 60 * 24),
+              );
               const newEnd = new Date(startDate);
               newEnd.setDate(newEnd.getDate() + durationDays);
               updated.plannedEnd = toISO(newEnd);
@@ -386,7 +431,7 @@ const Cronograma = () => {
       // Cascade: when planned dates change, shift subsequent activities by the same delta
       // (computed against the changed activity's plannedEnd). A delta-based shift preserves
       // the gap structure (weekends, intentional pauses) between activities.
-      const isDateChange = field === 'plannedStart' || field === 'plannedEnd';
+      const isDateChange = field === "plannedStart" || field === "plannedEnd";
       if (
         isDateChange &&
         changedIndex >= 0 &&
@@ -395,25 +440,30 @@ const Cronograma = () => {
       ) {
         const updatedAct = newActivities[changedIndex];
         if (updatedAct.plannedEnd) {
-          const oldEndDate = new Date(oldPlannedEnd + 'T00:00:00');
-          const newEndDate = new Date(updatedAct.plannedEnd + 'T00:00:00');
+          const oldEndDate = new Date(oldPlannedEnd + "T00:00:00");
+          const newEndDate = new Date(updatedAct.plannedEnd + "T00:00:00");
           if (!isNaN(oldEndDate.getTime()) && !isNaN(newEndDate.getTime())) {
             const deltaDays = Math.round(
-              (newEndDate.getTime() - oldEndDate.getTime()) / (1000 * 60 * 60 * 24),
+              (newEndDate.getTime() - oldEndDate.getTime()) /
+                (1000 * 60 * 60 * 24),
             );
             if (deltaDays !== 0) {
               for (let i = changedIndex + 1; i < newActivities.length; i++) {
                 const a = newActivities[i];
                 const shiftIso = (iso: string) => {
-                  const d = new Date(iso + 'T00:00:00');
+                  const d = new Date(iso + "T00:00:00");
                   if (isNaN(d.getTime())) return iso;
                   d.setDate(d.getDate() + deltaDays);
                   return toISO(d);
                 };
                 newActivities[i] = {
                   ...a,
-                  plannedStart: a.plannedStart ? shiftIso(a.plannedStart) : a.plannedStart,
-                  plannedEnd: a.plannedEnd ? shiftIso(a.plannedEnd) : a.plannedEnd,
+                  plannedStart: a.plannedStart
+                    ? shiftIso(a.plannedStart)
+                    : a.plannedStart,
+                  plannedEnd: a.plannedEnd
+                    ? shiftIso(a.plannedEnd)
+                    : a.plannedEnd,
                 };
               }
             }
@@ -427,14 +477,23 @@ const Cronograma = () => {
 
   // Date validation
   const dateValidationErrors = useMemo(() => {
-    const errors: Record<string, { plannedDates?: string; actualDates?: string }> = {};
+    const errors: Record<
+      string,
+      { plannedDates?: string; actualDates?: string }
+    > = {};
     activities.forEach((act) => {
       const actErrors: { plannedDates?: string; actualDates?: string } = {};
-      if (act.plannedStart && act.plannedEnd && act.plannedEnd < act.plannedStart) {
-        actErrors.plannedDates = 'Término previsto deve ser igual ou posterior ao início';
+      if (
+        act.plannedStart &&
+        act.plannedEnd &&
+        act.plannedEnd < act.plannedStart
+      ) {
+        actErrors.plannedDates =
+          "Término previsto deve ser igual ou posterior ao início";
       }
       if (act.actualStart && act.actualEnd && act.actualEnd < act.actualStart) {
-        actErrors.actualDates = 'Término real deve ser igual ou posterior ao início';
+        actErrors.actualDates =
+          "Término real deve ser igual ou posterior ao início";
       }
       if (Object.keys(actErrors).length > 0) {
         errors[act.id] = actErrors;
@@ -450,11 +509,11 @@ const Cronograma = () => {
       (act) => !act.description.trim() || !act.plannedStart || !act.plannedEnd,
     );
     if (hasEmptyFields) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast.error("Preencha todos os campos obrigatórios");
       return;
     }
     if (hasDateErrors) {
-      toast.error('Corrija os erros de data antes de salvar');
+      toast.error("Corrija os erros de data antes de salvar");
       return;
     }
 
@@ -474,16 +533,18 @@ const Cronograma = () => {
     const success = await saveActivities(activityInputs);
     setSaving(false);
     if (success) {
-      toast.success('Cronograma salvo com sucesso');
+      toast.success("Cronograma salvo com sucesso");
       navigate(paths.relatorio);
     }
   };
 
   // Autosave: persist changes with debounce after the user stops editing.
-  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [autosaveStatus, setAutosaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipNextAutosaveRef = useRef(true); // skip on initial hydration
-  const lastSavedSnapshotRef = useRef<string>('');
+  const lastSavedSnapshotRef = useRef<string>("");
 
   useEffect(() => {
     if (!initializedRef.current) return;
@@ -505,7 +566,7 @@ const Cronograma = () => {
 
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = setTimeout(async () => {
-      setAutosaveStatus('saving');
+      setAutosaveStatus("saving");
       const inputs: ActivityInput[] = activities.map((act, index) => ({
         description: act.description.trim(),
         planned_start: act.plannedStart,
@@ -521,10 +582,13 @@ const Cronograma = () => {
       const ok = await saveActivities(inputs);
       if (ok) {
         lastSavedSnapshotRef.current = snapshot;
-        setAutosaveStatus('saved');
-        setTimeout(() => setAutosaveStatus((s) => (s === 'saved' ? 'idle' : s)), 2000);
+        setAutosaveStatus("saved");
+        setTimeout(
+          () => setAutosaveStatus((s) => (s === "saved" ? "idle" : s)),
+          2000,
+        );
       } else {
-        setAutosaveStatus('error');
+        setAutosaveStatus("error");
       }
     }, 1200);
 
@@ -532,7 +596,6 @@ const Cronograma = () => {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
   }, [activities, hasDateErrors, saving, saveActivities]);
-
 
   if (projectLoading || activitiesLoading) {
     return (
@@ -542,7 +605,10 @@ const Cronograma = () => {
           showLogo={false}
           maxWidth="md"
           onBack={() => navigate(-1)}
-          breadcrumbs={[{ label: 'Gestão', href: '/gestao' }, { label: 'Cronograma' }]}
+          breadcrumbs={[
+            { label: "Gestão", href: "/gestao" },
+            { label: "Cronograma" },
+          ]}
         />
         <div className="max-w-7xl mx-auto p-4">
           <ContentSkeleton variant="table" rows={6} />
@@ -561,12 +627,12 @@ const Cronograma = () => {
           maxWidth="md"
           onBack={() => {
             if (window.history.length > 1) navigate(-1);
-            else navigate('/gestao', { replace: true });
+            else navigate("/gestao", { replace: true });
           }}
           breadcrumbs={[
-            { label: 'Gestão', href: '/gestao' },
-            { label: project?.name || 'Obra', href: `/obra/${projectId}` },
-            { label: 'Cronograma' },
+            { label: "Gestão", href: "/gestao" },
+            { label: project?.name || "Obra", href: `/obra/${projectId}` },
+            { label: "Cronograma" },
           ]}
         />
         <div className="max-w-lg mx-auto p-4">
@@ -576,7 +642,9 @@ const Cronograma = () => {
             hasBaseline={hasBaseline}
             onEditMode={() => setMobileEditMode(true)}
             onImport={() => setImportModalOpen(true)}
-            onSaveBaseline={async () => { await saveBaseline(); }}
+            onSaveBaseline={async () => {
+              await saveBaseline();
+            }}
             projectName={project?.name}
           />
         </div>
@@ -597,12 +665,12 @@ const Cronograma = () => {
         maxWidth="md"
         onBack={() => {
           if (window.history.length > 1) navigate(-1);
-          else navigate('/gestao', { replace: true });
+          else navigate("/gestao", { replace: true });
         }}
         breadcrumbs={[
-          { label: 'Gestão', href: '/gestao' },
-          { label: project?.name || 'Obra', href: `/obra/${projectId}` },
-          { label: 'Cronograma' },
+          { label: "Gestão", href: "/gestao" },
+          { label: project?.name || "Obra", href: `/obra/${projectId}` },
+          { label: "Cronograma" },
         ]}
       >
         <div className="flex items-center gap-2 flex-wrap">
@@ -610,23 +678,31 @@ const Cronograma = () => {
             role="status"
             aria-live="polite"
             className={cn(
-              'text-xs flex items-center gap-1.5',
-              autosaveStatus === 'error' ? 'text-destructive' : 'text-muted-foreground',
+              "text-xs flex items-center gap-1.5",
+              autosaveStatus === "error"
+                ? "text-destructive"
+                : "text-muted-foreground",
             )}
           >
-            {autosaveStatus === 'saving' && (<><Loader2 className="w-3 h-3 animate-spin" />Salvando…</>)}
-            {autosaveStatus === 'saved' && 'Salvo automaticamente'}
-            {autosaveStatus === 'error' && 'Falha ao salvar — tentaremos de novo'}
+            {autosaveStatus === "saving" && (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Salvando…
+              </>
+            )}
+            {autosaveStatus === "saved" && "Salvo automaticamente"}
+            {autosaveStatus === "error" &&
+              "Falha ao salvar — tentaremos de novo"}
           </span>
           <AIScheduleGenerator
-            projectId={projectId || ''}
-            projectName={project?.name || 'Obra'}
+            projectId={projectId || ""}
+            projectName={project?.name || "Obra"}
             plannedStartDate={project?.planned_start_date}
             plannedEndDate={project?.planned_end_date}
           />
           <Link
-            to={`/gestao/alertas-cronograma${projectId ? `?project=${projectId}` : ''}`}
-            aria-label={`Abrir alertas do cronograma${showAlertBadge ? ` (${alertsSummary.total} pendente${alertsSummary.total === 1 ? '' : 's'})` : ''}`}
+            to={`/gestao/alertas-cronograma${projectId ? `?project=${projectId}` : ""}`}
+            aria-label={`Abrir alertas do cronograma${showAlertBadge ? ` (${alertsSummary.total} pendente${alertsSummary.total === 1 ? "" : "s"})` : ""}`}
           >
             <Button
               variant="outline"
@@ -634,7 +710,12 @@ const Cronograma = () => {
               className="text-xs relative"
               title="Abrir alertas do cronograma"
             >
-              <BellRing className={cn('w-4 h-4 mr-1.5', showAlertBadge && 'text-destructive')} />
+              <BellRing
+                className={cn(
+                  "w-4 h-4 mr-1.5",
+                  showAlertBadge && "text-destructive",
+                )}
+              />
               <span className="hidden sm:inline">Alertas</span>
               {showAlertBadge && (
                 <Badge
@@ -642,7 +723,7 @@ const Cronograma = () => {
                   className="ml-1.5 h-4 min-w-[1rem] px-1 text-[10px] leading-none rounded-full"
                   aria-hidden="true"
                 >
-                  {alertsSummary.total > 99 ? '99+' : alertsSummary.total}
+                  {alertsSummary.total > 99 ? "99+" : alertsSummary.total}
                 </Badge>
               )}
             </Button>
@@ -663,10 +744,12 @@ const Cronograma = () => {
             {savingBaseline ? (
               <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
             ) : (
-              <Bookmark className={cn('w-4 h-4 mr-1.5', hasBaseline && 'fill-current')} />
+              <Bookmark
+                className={cn("w-4 h-4 mr-1.5", hasBaseline && "fill-current")}
+              />
             )}
             <span className="hidden sm:inline">
-              {hasBaseline ? 'Atualizar Baseline' : 'Baseline'}
+              {hasBaseline ? "Atualizar Baseline" : "Baseline"}
             </span>
           </Button>
           <Button
@@ -699,11 +782,21 @@ const Cronograma = () => {
             <div className="min-w-[700px]">
               <div className="grid grid-cols-[44px_56px_minmax(320px,1fr)_170px_170px_88px_52px] bg-muted/60 border-b border-border/60">
                 <div className="py-3 pl-2" />
-                <div className="py-3 pr-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</div>
-                <div className="py-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrição</div>
-                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Início Prev.</div>
-                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Término Prev.</div>
-                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Peso</div>
+                <div className="py-3 pr-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  #
+                </div>
+                <div className="py-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Descrição
+                </div>
+                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Início Prev.
+                </div>
+                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Término Prev.
+                </div>
+                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Peso
+                </div>
                 <div className="py-3 pr-3" />
               </div>
 
@@ -713,16 +806,20 @@ const Cronograma = () => {
                   const hasDetail = !!activity.detailed_description?.trim();
                   // Sempre aberto quando há conteúdo (visível para todos os roles);
                   // quando vazio, respeita o toggle do usuário.
-                  const isDetailOpen = hasDetail || (openDetails[activity.id] || false);
+                  const isDetailOpen =
+                    hasDetail || openDetails[activity.id] || false;
                   return (
                     <div key={activity.id}>
                       <div
                         className={cn(
-                          'grid grid-cols-[44px_56px_minmax(320px,1fr)_170px_170px_88px_52px] items-start border-b border-border/30 transition-colors hover:bg-accent/30 group/row',
-                          index % 2 === 1 && 'bg-muted/15',
-                          rowError && 'bg-destructive/5 hover:bg-destructive/10',
-                          draggedIndex === index && 'opacity-55',
-                          dragOverIndex === index && draggedIndex !== index && 'bg-primary/10 ring-1 ring-inset ring-primary/30',
+                          "grid grid-cols-[44px_56px_minmax(320px,1fr)_170px_170px_88px_52px] items-start border-b border-border/30 transition-colors hover:bg-accent/30 group/row",
+                          index % 2 === 1 && "bg-muted/15",
+                          rowError &&
+                            "bg-destructive/5 hover:bg-destructive/10",
+                          draggedIndex === index && "opacity-55",
+                          dragOverIndex === index &&
+                            draggedIndex !== index &&
+                            "bg-primary/10 ring-1 ring-inset ring-primary/30",
                         )}
                         onDragOver={(e) => handleRowDragOver(e, index)}
                         onDrop={(e) => handleRowDrop(e, index)}
@@ -746,7 +843,13 @@ const Cronograma = () => {
                         <div className="px-2 py-2">
                           <AutoTextarea
                             value={activity.description}
-                            onChange={(v) => handleActivityChange(activity.id, 'description', v)}
+                            onChange={(v) =>
+                              handleActivityChange(
+                                activity.id,
+                                "description",
+                                v,
+                              )
+                            }
                             placeholder="Ex: Mobilização e alinhamentos iniciais..."
                           />
                           <div className="flex items-center gap-1 mt-1 px-1">
@@ -760,7 +863,12 @@ const Cronograma = () => {
                               <button
                                 type="button"
                                 className="text-[11px] text-primary/80 hover:text-primary flex items-center gap-1 transition-colors font-medium"
-                                onClick={() => setOpenDetails(prev => ({ ...prev, [activity.id]: true }))}
+                                onClick={() =>
+                                  setOpenDetails((prev) => ({
+                                    ...prev,
+                                    [activity.id]: true,
+                                  }))
+                                }
                               >
                                 <FileText className="h-3 w-3" />
                                 Adicionar descrição da etapa
@@ -770,13 +878,27 @@ const Cronograma = () => {
                               <button
                                 type="button"
                                 className={cn(
-                                  'text-[11px] flex items-center gap-1 transition-colors font-medium',
-                                  hasDetail ? 'text-primary hover:text-primary/80' : 'text-muted-foreground/60 hover:text-primary',
+                                  "text-[11px] flex items-center gap-1 transition-colors font-medium",
+                                  hasDetail
+                                    ? "text-primary hover:text-primary/80"
+                                    : "text-muted-foreground/60 hover:text-primary",
                                 )}
-                                onClick={() => setOpenDetails(prev => ({ ...prev, [activity.id]: !prev[activity.id] }))}
+                                onClick={() =>
+                                  setOpenDetails((prev) => ({
+                                    ...prev,
+                                    [activity.id]: !prev[activity.id],
+                                  }))
+                                }
                               >
-                                <ChevronDown className={cn('h-3 w-3 transition-transform', isDetailOpen && 'rotate-180')} />
-                                {hasDetail ? 'Descrição da etapa' : 'Fechar descrição'}
+                                <ChevronDown
+                                  className={cn(
+                                    "h-3 w-3 transition-transform",
+                                    isDetailOpen && "rotate-180",
+                                  )}
+                                />
+                                {hasDetail
+                                  ? "Descrição da etapa"
+                                  : "Fechar descrição"}
                               </button>
                             )}
                           </div>
@@ -785,16 +907,32 @@ const Cronograma = () => {
                         <div className="px-2 py-2">
                           <DatePickerField
                             value={activity.plannedStart}
-                            onChange={(val) => handleActivityChange(activity.id, 'plannedStart', val)}
+                            onChange={(val) =>
+                              handleActivityChange(
+                                activity.id,
+                                "plannedStart",
+                                val,
+                              )
+                            }
                             placeholder="dd/mm/aaaa"
                             hasError={!!rowError?.plannedDates}
                           />
                         </div>
 
-                        <div className="px-2 py-2" data-testid="cronograma-activity-end" data-planned-end={activity.plannedEnd}>
+                        <div
+                          className="px-2 py-2"
+                          data-testid="cronograma-activity-end"
+                          data-planned-end={activity.plannedEnd}
+                        >
                           <DatePickerField
                             value={activity.plannedEnd}
-                            onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
+                            onChange={(val) =>
+                              handleActivityChange(
+                                activity.id,
+                                "plannedEnd",
+                                val,
+                              )
+                            }
                             placeholder="dd/mm/aaaa"
                             hasError={!!rowError?.plannedDates}
                           />
@@ -807,7 +945,13 @@ const Cronograma = () => {
                             max="100"
                             step="0.1"
                             value={activity.weight}
-                            onChange={(e) => handleActivityChange(activity.id, 'weight', e.target.value)}
+                            onChange={(e) =>
+                              handleActivityChange(
+                                activity.id,
+                                "weight",
+                                e.target.value,
+                              )
+                            }
                             className="h-10 w-full text-sm text-center font-semibold tabular-nums"
                           />
                         </div>
@@ -825,14 +969,23 @@ const Cronograma = () => {
                         </div>
                       </div>
                       {isDetailOpen && (
-                        <div className="border-b border-border/30 bg-muted/10 px-4 py-3 space-y-1.5" style={{ paddingLeft: 'calc(44px + 56px + 8px)' }}>
+                        <div
+                          className="border-b border-border/30 bg-muted/10 px-4 py-3 space-y-1.5"
+                          style={{ paddingLeft: "calc(44px + 56px + 8px)" }}
+                        >
                           <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                             <FileText className="h-3 w-3" />
                             Descrição da etapa
                           </label>
                           <Textarea
                             value={activity.detailed_description}
-                            onChange={(e) => handleActivityChange(activity.id, 'detailed_description', e.target.value)}
+                            onChange={(e) =>
+                              handleActivityChange(
+                                activity.id,
+                                "detailed_description",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Descreva o escopo, objetivos e entregas desta etapa do cronograma..."
                             rows={3}
                             className="text-sm resize-none"
@@ -853,7 +1006,10 @@ const Cronograma = () => {
               return (
                 <div
                   key={activity.id}
-                  className={cn('p-3 space-y-2.5', rowError && 'bg-destructive/5')}
+                  className={cn(
+                    "p-3 space-y-2.5",
+                    rowError && "bg-destructive/5",
+                  )}
                 >
                   <div className="flex items-start gap-2">
                     <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold bg-primary/10 text-primary shrink-0 mt-1">
@@ -862,7 +1018,9 @@ const Cronograma = () => {
                     <div className="flex-1 min-w-0">
                       <AutoTextarea
                         value={activity.description}
-                        onChange={(v) => handleActivityChange(activity.id, 'description', v)}
+                        onChange={(v) =>
+                          handleActivityChange(activity.id, "description", v)
+                        }
                         placeholder="Descrição da atividade..."
                       />
                     </div>
@@ -884,33 +1042,53 @@ const Cronograma = () => {
                   )}
                   <div className="grid grid-cols-2 gap-2 pl-8">
                     <div className="space-y-1">
-                      <span className="text-[10px] text-muted-foreground font-medium">Início Prev.</span>
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        Início Prev.
+                      </span>
                       <DatePickerField
                         value={activity.plannedStart}
-                        onChange={(v) => handleActivityChange(activity.id, 'plannedStart', v)}
+                        onChange={(v) =>
+                          handleActivityChange(activity.id, "plannedStart", v)
+                        }
                         placeholder="dd/mm/aaaa"
                         hasError={!!rowError?.plannedDates}
                       />
                     </div>
-                    <div className="space-y-1" data-testid="cronograma-activity-end-mobile" data-planned-end={activity.plannedEnd}>
-                      <span className="text-[10px] text-muted-foreground font-medium">Término Prev.</span>
+                    <div
+                      className="space-y-1"
+                      data-testid="cronograma-activity-end-mobile"
+                      data-planned-end={activity.plannedEnd}
+                    >
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        Término Prev.
+                      </span>
                       <DatePickerField
                         value={activity.plannedEnd}
-                        onChange={(v) => handleActivityChange(activity.id, 'plannedEnd', v)}
+                        onChange={(v) =>
+                          handleActivityChange(activity.id, "plannedEnd", v)
+                        }
                         placeholder="dd/mm/aaaa"
                         hasError={!!rowError?.plannedDates}
                       />
                     </div>
                   </div>
                   <div className="pl-8 flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground font-medium">Peso:</span>
+                    <span className="text-[10px] text-muted-foreground font-medium">
+                      Peso:
+                    </span>
                     <Input
                       type="number"
                       min="0"
                       max="100"
                       step="0.1"
                       value={activity.weight}
-                      onChange={(e) => handleActivityChange(activity.id, 'weight', e.target.value)}
+                      onChange={(e) =>
+                        handleActivityChange(
+                          activity.id,
+                          "weight",
+                          e.target.value,
+                        )
+                      }
                       className="h-8 w-16 text-xs text-center font-semibold"
                     />
                     <span className="text-[10px] text-muted-foreground">%</span>
@@ -922,7 +1100,13 @@ const Cronograma = () => {
                     </label>
                     <Textarea
                       value={activity.detailed_description}
-                      onChange={(e) => handleActivityChange(activity.id, 'detailed_description', e.target.value)}
+                      onChange={(e) =>
+                        handleActivityChange(
+                          activity.id,
+                          "detailed_description",
+                          e.target.value,
+                        )
+                      }
                       placeholder="Escopo, objetivos e entregas desta etapa..."
                       rows={2}
                       className="text-xs resize-none"

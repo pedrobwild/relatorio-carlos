@@ -12,7 +12,11 @@ interface CustomTooltipProps {
   label?: string;
 }
 
-export const ChartTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+export const ChartTooltip = ({
+  active,
+  payload,
+  label,
+}: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
 
   const activity = payload[0]?.payload?.activity;

@@ -33,7 +33,7 @@ export function setPortalViewState(key: string, state: PortalViewState) {
 
 export function patchPortalViewState(
   key: string,
-  patch: Partial<PortalViewState>
+  patch: Partial<PortalViewState>,
 ): PortalViewState {
   const current = getPortalViewState(key);
   const next: PortalViewState = {

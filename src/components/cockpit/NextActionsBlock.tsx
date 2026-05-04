@@ -9,15 +9,24 @@
  * Mobile-first: CTAs com altura mínima 44px (área de toque), tipografia
  * legível em 375px. Tokens semânticos apenas (destructive/warning/info).
  */
-import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, ListChecks } from 'lucide-react';
-import { SectionCard, StatusBadge, EmptyState, type StatusTone } from '@/components/ui-premium';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { trackAmplitude } from '@/lib/amplitude';
-import { useNextActions, type NextAction, type NextActionUrgency } from '@/hooks/useNextActions';
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, CheckCircle2, ListChecks } from "lucide-react";
+import {
+  SectionCard,
+  StatusBadge,
+  EmptyState,
+  type StatusTone,
+} from "@/components/ui-premium";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { trackAmplitude } from "@/lib/amplitude";
+import {
+  useNextActions,
+  type NextAction,
+  type NextActionUrgency,
+} from "@/hooks/useNextActions";
 
 interface NextActionsBlockProps {
   projectId?: string;
@@ -25,42 +34,47 @@ interface NextActionsBlockProps {
 }
 
 const TONE_BY_URGENCY: Record<NextActionUrgency, StatusTone> = {
-  critical: 'danger',
-  high: 'warning',
-  medium: 'info',
+  critical: "danger",
+  high: "warning",
+  medium: "info",
 };
 
 const URGENCY_LABEL: Record<NextActionUrgency, string> = {
-  critical: 'Crítico',
-  high: 'Atenção',
-  medium: 'Em breve',
+  critical: "Crítico",
+  high: "Atenção",
+  medium: "Em breve",
 };
 
 const OWNER_LABEL = {
-  client: 'Ação sua',
-  bwild: 'Ação BWild',
+  client: "Ação sua",
+  bwild: "Ação BWild",
 } as const;
 
-export function NextActionsBlock({ projectId, className }: NextActionsBlockProps) {
+export function NextActionsBlock({
+  projectId,
+  className,
+}: NextActionsBlockProps) {
   const { actions, isLoading, isEmpty } = useNextActions(projectId);
   const navigate = useNavigate();
   const trackedFingerprintRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (isLoading) return;
-    const fingerprint = actions.map((a) => `${a.type}:${a.urgency}:${a.owner}`).join('|');
+    const fingerprint = actions
+      .map((a) => `${a.type}:${a.urgency}:${a.owner}`)
+      .join("|");
     if (fingerprint === trackedFingerprintRef.current) return;
     trackedFingerprintRef.current = fingerprint;
-    trackAmplitude('next_action_displayed', {
+    trackAmplitude("next_action_displayed", {
       count: actions.length,
       projectId: projectId ?? null,
-      types: actions.map((a) => a.type).join(',') || null,
-      urgencies: actions.map((a) => a.urgency).join(',') || null,
+      types: actions.map((a) => a.type).join(",") || null,
+      urgencies: actions.map((a) => a.urgency).join(",") || null,
     });
   }, [actions, isLoading, projectId]);
 
   const handleCtaClick = (action: NextAction) => {
-    trackAmplitude('next_action_clicked', {
+    trackAmplitude("next_action_clicked", {
       type: action.type,
       urgency: action.urgency,
       owner: action.owner,
@@ -92,7 +106,11 @@ export function NextActionsBlock({ projectId, className }: NextActionsBlockProps
       ) : (
         <ul className="space-y-3" role="list">
           {actions.map((action) => (
-            <NextActionRow key={action.id} action={action} onCtaClick={handleCtaClick} />
+            <NextActionRow
+              key={action.id}
+              action={action}
+              onCtaClick={handleCtaClick}
+            />
           ))}
         </ul>
       )}
@@ -110,8 +128,8 @@ function NextActionRow({ action, onCtaClick }: NextActionRowProps) {
   return (
     <li
       className={cn(
-        'flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface px-4 py-3',
-        'sm:flex-row sm:items-center sm:justify-between',
+        "flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface px-4 py-3",
+        "sm:flex-row sm:items-center sm:justify-between",
       )}
     >
       <div className="min-w-0 flex-1">

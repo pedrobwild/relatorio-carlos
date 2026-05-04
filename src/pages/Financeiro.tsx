@@ -4,27 +4,40 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useProject } from "@/contexts/ProjectContext";
-import { useProjectPayments, useMarkPaymentPaid, ProjectPayment } from "@/hooks/useProjectPayments";
+import {
+  useProjectPayments,
+  useMarkPaymentPaid,
+  ProjectPayment,
+} from "@/hooks/useProjectPayments";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { EmptyState } from "@/components/EmptyState";
 import { FinancialSummary } from "./financeiro/FinancialSummary";
-import { DesktopPaymentCard, MobilePaymentCard } from "./financeiro/PaymentCard";
+import {
+  DesktopPaymentCard,
+  MobilePaymentCard,
+} from "./financeiro/PaymentCard";
 
 const Financeiro = () => {
   const { project, loading: projectLoading } = useProject();
-  const { data: payments = [], isLoading: paymentsLoading } = useProjectPayments(project?.id);
+  const { data: payments = [], isLoading: paymentsLoading } =
+    useProjectPayments(project?.id);
   const { isAdmin, loading: roleLoading } = useUserRole();
   const markPaidMutation = useMarkPaymentPaid();
   const { paths } = useProjectNavigation();
 
-  const totalValue = project?.contract_value ?? payments.reduce((sum, p) => sum + p.amount, 0);
-  const paidAmount = payments.filter(p => p.paid_at).reduce((sum, p) => sum + p.amount, 0);
-  const unpaidAmount = payments.filter(p => !p.paid_at).reduce((sum, p) => sum + p.amount, 0);
+  const totalValue =
+    project?.contract_value ?? payments.reduce((sum, p) => sum + p.amount, 0);
+  const paidAmount = payments
+    .filter((p) => p.paid_at)
+    .reduce((sum, p) => sum + p.amount, 0);
+  const unpaidAmount = payments
+    .filter((p) => !p.paid_at)
+    .reduce((sum, p) => sum + p.amount, 0);
   const remainingAmount = unpaidAmount;
-  const paidCount = payments.filter(p => p.paid_at).length;
+  const paidCount = payments.filter((p) => p.paid_at).length;
 
   const handleTogglePaid = (payment: ProjectPayment) => {
     markPaidMutation.mutate({ paymentId: payment.id, paid: !payment.paid_at });
@@ -99,7 +112,11 @@ const Financeiro = () => {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-h2">Histórico de Parcelas</h2>
-                    {isAdmin && <Badge variant="outline" className="text-xs">Admin: pode editar</Badge>}
+                    {isAdmin && (
+                      <Badge variant="outline" className="text-xs">
+                        Admin: pode editar
+                      </Badge>
+                    )}
                   </div>
                   <div className="space-y-2">
                     {payments.map((payment) => (
@@ -141,7 +158,8 @@ const Financeiro = () => {
                 </div>
                 <div className="px-4 py-4 text-center">
                   <p className="text-caption">
-                    Última atualização: {format(new Date(), "dd/MM/yyyy", { locale: ptBR })}
+                    Última atualização:{" "}
+                    {format(new Date(), "dd/MM/yyyy", { locale: ptBR })}
                   </p>
                 </div>
               </div>

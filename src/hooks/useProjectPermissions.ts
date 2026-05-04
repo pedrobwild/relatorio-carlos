@@ -5,13 +5,17 @@
  * with default role-based permissions via permissionGuard.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
-import { useCallback, useEffect, useMemo } from 'react';
-import { hasProjectPermission, type PermissionContext, checkPermission } from '@/lib/permissionGuard';
-import { useUserRole } from './useUserRole';
-import type { ModulePermission, ProjectPermission } from '@/types/permissions';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { useCallback, useEffect, useMemo } from "react";
+import {
+  hasProjectPermission,
+  type PermissionContext,
+  checkPermission,
+} from "@/lib/permissionGuard";
+import { useUserRole } from "./useUserRole";
+import type { ModulePermission, ProjectPermission } from "@/types/permissions";
 
 export function useProjectPermissions(projectId: string | undefined) {
   const { user } = useAuth();
@@ -23,20 +27,24 @@ export function useProjectPermissions(projectId: string | undefined) {
   // with stale permissions from a different obra.
   useEffect(() => {
     return () => {
-      queryClient.cancelQueries({ queryKey: ['project-member-permissions'] }).catch(() => {});
-      queryClient.cancelQueries({ queryKey: ['project-member-role'] }).catch(() => {});
+      queryClient
+        .cancelQueries({ queryKey: ["project-member-permissions"] })
+        .catch(() => {});
+      queryClient
+        .cancelQueries({ queryKey: ["project-member-role"] })
+        .catch(() => {});
     };
   }, [projectId, queryClient]);
 
   const { data: overrides = {} } = useQuery({
-    queryKey: ['project-member-permissions', projectId, user?.id],
+    queryKey: ["project-member-permissions", projectId, user?.id],
     queryFn: async ({ signal }) => {
       if (!projectId || !user) return {};
       const { data, error } = await supabase
-        .from('project_member_permissions')
-        .select('permission, granted')
-        .eq('project_id', projectId)
-        .eq('user_id', user.id)
+        .from("project_member_permissions")
+        .select("permission, granted")
+        .eq("project_id", projectId)
+        .eq("user_id", user.id)
         .abortSignal(signal);
 
       if (error) throw error;
@@ -52,14 +60,14 @@ export function useProjectPermissions(projectId: string | undefined) {
 
   // Get project role from project_members
   const { data: projectRole } = useQuery({
-    queryKey: ['project-member-role', projectId, user?.id],
+    queryKey: ["project-member-role", projectId, user?.id],
     queryFn: async ({ signal }) => {
       if (!projectId || !user) return null;
       const { data } = await supabase
-        .from('project_members')
-        .select('role')
-        .eq('project_id', projectId)
-        .eq('user_id', user.id)
+        .from("project_members")
+        .select("role")
+        .eq("project_id", projectId)
+        .eq("user_id", user.id)
         .abortSignal(signal)
         .maybeSingle();
       return data?.role ?? null;
@@ -74,12 +82,14 @@ export function useProjectPermissions(projectId: string | undefined) {
   );
 
   const canProject = useCallback(
-    (permission: ProjectPermission) => hasProjectPermission(projectRole ?? null, permission, overrides),
+    (permission: ProjectPermission) =>
+      hasProjectPermission(projectRole ?? null, permission, overrides),
     [projectRole, overrides],
   );
 
   const check = useCallback(
-    (permission: ModulePermission | ProjectPermission) => checkPermission(ctx, permission),
+    (permission: ModulePermission | ProjectPermission) =>
+      checkPermission(ctx, permission),
     [ctx],
   );
 

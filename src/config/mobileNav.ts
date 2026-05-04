@@ -11,7 +11,10 @@ import type { useProjectNavigation } from "@/hooks/useProjectNavigation";
 
 export type ProjectPaths = ReturnType<typeof useProjectNavigation>["paths"];
 
-export type MobileNavBadge = "criticalPendencias" | "unreadNotifications" | "none";
+export type MobileNavBadge =
+  | "criticalPendencias"
+  | "unreadNotifications"
+  | "none";
 
 export type MobileNavSlot = {
   id: string;
@@ -49,14 +52,16 @@ export const CLIENT_NAV: MobileNavSlot[] = [
     id: "financeiro",
     label: "Financeiro",
     icon: DollarSign,
-    to: ({ paths, hasProject }) => (hasProject ? paths.financeiro : HOME_CLIENT),
+    to: ({ paths, hasProject }) =>
+      hasProject ? paths.financeiro : HOME_CLIENT,
     badge: "none",
   },
   {
     id: "pendencias",
     label: "Pendências",
     icon: AlertCircle,
-    to: ({ paths, hasProject }) => (hasProject ? paths.pendencias : HOME_CLIENT),
+    to: ({ paths, hasProject }) =>
+      hasProject ? paths.pendencias : HOME_CLIENT,
     badge: "criticalPendencias",
   },
 ];
