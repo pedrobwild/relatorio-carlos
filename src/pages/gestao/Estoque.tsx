@@ -974,8 +974,8 @@ function NewItemDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={submit} disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          <Button onClick={submit} disabled={isBusy}>
+            {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Cadastrar item
           </Button>
         </DialogFooter>
@@ -1379,7 +1379,7 @@ function NewMovementDialog({
                     size="sm"
                     className="absolute top-1 right-1 h-7 px-2"
                     onClick={() => handlePhotoPick(null)}
-                    disabled={loading}
+                    disabled={isBusy}
                   >
                     Remover
                   </Button>
@@ -1391,7 +1391,7 @@ function NewMovementDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => cameraInputRef.current?.click()}
-                    disabled={loading}
+                    disabled={isBusy}
                   >
                     Tirar foto
                   </Button>
@@ -1400,7 +1400,7 @@ function NewMovementDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => photoInputRef.current?.click()}
-                    disabled={loading}
+                    disabled={isBusy}
                   >
                     Anexar imagem
                   </Button>
@@ -1428,7 +1428,7 @@ function NewMovementDialog({
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-2 items-stretch sm:items-center">
-          {loading && photoFile && (
+          {isBusy && photoFile && (
             <p className="text-xs text-muted-foreground sm:mr-auto flex items-center gap-2">
               <Loader2 className="h-3 w-3 animate-spin" />
               Enviando foto…
@@ -1437,13 +1437,13 @@ function NewMovementDialog({
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            disabled={loading}
+            disabled={isBusy}
           >
             Cancelar
           </Button>
-          <Button onClick={submit} disabled={loading} aria-busy={loading}>
-            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {loading ? (photoFile ? "Enviando…" : "Salvando…") : "Registrar"}
+          <Button onClick={submit} disabled={isBusy} aria-busy={isBusy}>
+            {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {isBusy ? (photoFile ? "Enviando…" : "Salvando…") : "Registrar"}
           </Button>
         </DialogFooter>
       </DialogContent>
