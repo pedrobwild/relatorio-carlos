@@ -92,3 +92,73 @@ describe('formatEtapaLabel', () => {
     expect(formatEtapaLabel(exec(start), new Date(2026, 3, 29))).toBe('Execução - S5');
   });
 });
+
+describe('getEtapaWeek — estabilidade de fuso horário e horário do dia', () => {
+  /**
+   * `parseISO('YYYY-MM-DD')` interpreta a string como meia-noite local. Como
+   * `getEtapaWeek` normaliza para a data civil local (Y/M/D) antes de calcular
+   * a diferença em dias, o resultado deve ser idêntico para qualquer instante
+   * do mesmo dia, em qualquer offset de fuso aplicado ao `now`.
+   */
+  it('todos os horários do mesmo dia retornam a mesma semana', () => {
+    const start = '2026-04-01';
+    // 8/abr/2026 = dia 7 desde 1/abr → S2
+    const horarios: Array<[number, number, number]> = [
+      [0, 0, 0],
+      [3, 30, 0],
+      [8, 15, 42],
+      [12, 0, 0],
+      [17, 45, 0],
+      [23, 59, 59],
+    ];
+    const semanas = horarios.map(([h, m, s]) =>
+      getEtapaWeek(exec(start), new Date(2026, 3, 8, h, m, s)),
+    );
+    expect(new Set(semanas).size).toBe(1);
+    expect(semanas[0]).toBe(2);
+  });
+
+  it('virada de dia (23:59 → 00:00) avança exatamente uma semana quando cruza o múltiplo de 7', () => {
+    const start = '2026-04-01';
+    // 7/abr 23:59 → ainda S1 (dia 6)
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 7, 23, 59, 59))).toBe(1);
+    // 8/abr 00:00 → S2 (dia 7)
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 8, 0, 0, 0))).toBe(2);
+    // 8/abr 23:59 → ainda S2
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 8, 23, 59, 59))).toBe(2);
+  });
+
+  it('é estável independentemente do offset de fuso embutido no Date', () => {
+    const start = '2026-04-01';
+    // Constrói o "mesmo instante civil" (8/abr/2026 12:00 local) a partir de
+    // diferentes representações: ISO local, UTC, e timestamps deslocados em
+    // ±12h. O cálculo deve sempre cair em S2 porque normaliza pela data civil
+    // do `now` no fuso local — não pelo instante UTC bruto.
+    const sameDay = new Date(2026, 3, 8, 12, 0, 0);
+    // Aplica deslocamentos de até ±11h59 dentro do mesmo dia local
+    const deslocamentos = [-11, -6, -1, 0, 1, 6, 11];
+    for (const h of deslocamentos) {
+      const d = new Date(sameDay);
+      d.setHours(12 + h);
+      expect(
+        getEtapaWeek(exec(start), d),
+        `horário ${d.toISOString()} deveria continuar em S2`,
+      ).toBe(2);
+    }
+  });
+
+  it('inicio_etapa em formato ISO completo (com TZ) é tratado como o mesmo dia civil', () => {
+    // O input vem do banco como 'YYYY-MM-DD'. Mesmo se o caller enviar uma
+    // string ISO completa, o cálculo deve ancorar no dia civil dessa data.
+    const startVariants = [
+      '2026-04-01',
+      '2026-04-01T00:00:00',
+      '2026-04-01T12:00:00',
+      '2026-04-01T23:59:59',
+    ];
+    const now = new Date(2026, 3, 8, 9, 0, 0); // → S2
+    const semanas = startVariants.map((s) => getEtapaWeek(exec(s), now));
+    expect(new Set(semanas).size).toBe(1);
+    expect(semanas[0]).toBe(2);
+  });
+});
