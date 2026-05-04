@@ -5820,6 +5820,7 @@ export type Database = {
           movement_date: string
           movement_type: string
           notes: string | null
+          photo_path: string | null
           project_id: string | null
           quantity: number
           reason: string | null
@@ -5838,6 +5839,7 @@ export type Database = {
           movement_date?: string
           movement_type: string
           notes?: string | null
+          photo_path?: string | null
           project_id?: string | null
           quantity: number
           reason?: string | null
@@ -5856,6 +5858,7 @@ export type Database = {
           movement_date?: string
           movement_type?: string
           notes?: string | null
+          photo_path?: string | null
           project_id?: string | null
           quantity?: number
           reason?: string | null
