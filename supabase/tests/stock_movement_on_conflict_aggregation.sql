@@ -153,6 +153,17 @@ BEGIN
   RAISE NOTICE '──────────────────────────────────────────────────────';
 END $$;
 
+-- ═══════════════════════════════════════════════════════════════════
+-- DRY-RUN gate: encerra aqui sem inserir nada nem rodar cenários.
+-- Útil para healthcheck / CI: roda o relatório de índices e sai limpo.
+-- ═══════════════════════════════════════════════════════════════════
+\if :dry_run
+  \echo '── DRY-RUN ativo: pulando cleanup, setup e cenários de teste ──'
+  ROLLBACK;
+  \echo '── Fim do dry-run (transação revertida, banco intocado) ──'
+  \quit
+\endif
+
 -- ─── Cleanup PRÉ-execução (idempotente, baseado em prefixo) ─────────
 -- Pega tudo que tenha o prefixo de teste, não só o item exato — protege
 -- contra resíduos de execuções abortadas com nomes ligeiramente diferentes.
