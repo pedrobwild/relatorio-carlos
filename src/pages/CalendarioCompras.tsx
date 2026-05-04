@@ -192,11 +192,9 @@ type CalendarStatus =
   | "delayed";
 
 /**
- * Tons das badges de status — usam variantes claras + escuras com`dark:` para
- * manter contraste AA tanto em light quanto em dark mode. Usar tokens semânticos
- * resolveria de forma mais limpa, mas mantemos a paleta cromática (amber/blue/
- * emerald/red) para preservar o reconhecimento visual já consolidado em outras
- * telas (Compras, Painel de Obras).
+ * Tons das badges de status — paleta cromática (amber/blue/emerald/red) para
+ * preservar o reconhecimento visual já consolidado em outras telas (Compras,
+ * Painel de Obras). Tema claro é o único suportado.
  */
 const calendarStatusConfig: Record<
   CalendarStatus,
