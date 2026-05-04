@@ -131,6 +131,9 @@ DECLARE
   v_problems   text[] := ARRAY[]::text[];
   v_ddls       text[] := ARRAY[]::text[];
   v_reasons    text[];
+  -- Relatório JSON acumulado (1 entrada por índice esperado)
+  v_report     jsonb := '[]'::jsonb;
+  v_status     text;
   -- Validação estrutural posicional via pg_index
   v_natts      int;     -- total de atributos no índice (key + INCLUDE)
   v_nkeyatts   int;     -- atributos da CHAVE (sem INCLUDE)
@@ -169,6 +172,15 @@ BEGIN
       v_problems := array_append(v_problems, format('%s: AUSENTE', r->>'name'));
       v_ddls     := array_append(v_ddls, r->>'ddl');
       RAISE NOTICE '  ✗ % — AUSENTE', r->>'name';
+      v_report := v_report || jsonb_build_array(jsonb_build_object(
+        'name',              r->>'name',
+        'status',            'missing',
+        'unique_expected',   (r->>'unique')::bool,
+        'columns_expected',  r->'columns',
+        'predicate_expected', r->>'predicate',
+        'reasons',           jsonb_build_array('índice ausente'),
+        'suggested_ddl',     r->>'ddl'
+      ));
       CONTINUE;
     END IF;
 
@@ -228,9 +240,11 @@ BEGIN
 
     IF array_length(v_reasons,1) IS NULL THEN
       v_ok := v_ok + 1;
+      v_status := 'ok';
       RAISE NOTICE '  ✓ % — UNIQUE=%, cols=%, pred=%',
         r->>'name', v_unique, v_cols, v_pred_norm;
     ELSE
+      v_status := CASE WHEN v_oid IS NULL THEN 'missing' ELSE 'divergent' END;
       v_problems := array_append(v_problems,
         format('%s: %s', r->>'name', array_to_string(v_reasons, '; ')));
       v_ddls := array_append(v_ddls,
@@ -238,7 +252,35 @@ BEGIN
                r->>'name', E'\n', r->>'name', E'\n', r->>'ddl'));
       RAISE NOTICE '  ✗ % — DIVERGENTE: %', r->>'name', array_to_string(v_reasons, '; ');
     END IF;
+
+    -- Acumula entrada estruturada para o relatório JSON final
+    v_report := v_report || jsonb_build_array(jsonb_build_object(
+      'name',              r->>'name',
+      'status',            v_status,
+      'unique_expected',   (r->>'unique')::bool,
+      'unique_actual',     v_unique,
+      'columns_expected',  to_jsonb(v_exp_cols),
+      'columns_actual',    to_jsonb(v_cols),
+      'nkeyatts_expected', COALESCE(array_length(v_exp_cols,1), 0),
+      'nkeyatts_actual',   v_nkeyatts,
+      'natts_actual',      v_natts,
+      'predicate_expected', v_exp_pred,
+      'predicate_actual_raw',  v_pred_raw,
+      'predicate_actual_norm', v_pred_norm,
+      'reasons',           to_jsonb(v_reasons)
+    ));
   END LOOP;
+
+  -- ── Relatório JSON em stdout (linha única, prefixada para grep) ──
+  RAISE NOTICE 'PRECHECK_JSON %', jsonb_build_object(
+    'table',    'public.stock_balances',
+    'ok',       v_ok,
+    'total',    jsonb_array_length(v_required),
+    'problems', COALESCE(array_length(v_problems,1), 0),
+    'dry_run',  current_setting('regress.dry_run', true) = 'on',
+    'auto_fix', current_setting('regress.auto_fix', true) = 'on',
+    'indexes',  v_report
+  )::text;
 
   RAISE NOTICE 'OK: % / %  |  Problemas: %',
     v_ok, jsonb_array_length(v_required), COALESCE(array_length(v_problems,1), 0);
