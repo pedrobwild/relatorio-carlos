@@ -55,7 +55,13 @@ export const UploadStep = ({ onFileUpload, onTemplateSelect, isProcessing }: Upl
             onClick={() => onTemplateSelect(template)}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && onTemplateSelect(template)}
+            aria-label={`Selecionar modelo ${template.name}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onTemplateSelect(template);
+              }
+            }}
           >
             <CardContent className="p-4 flex items-center gap-4">
               <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">

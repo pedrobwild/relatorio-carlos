@@ -18,6 +18,9 @@ export const EVENT_TYPES = {
   DOCUMENT_UPLOADED: 'document.uploaded',
   DOCUMENT_VERSION_UPLOADED: 'document.version_uploaded',
   DOCUMENT_APPROVED: 'document.approved',
+
+  // Executive project — tacit approval (sem manifestação no prazo contratual)
+  EXECUTIVE_TACIT_APPROVAL: 'executive.tacit_approval',
   
   // Payments
   PAYMENT_CREATED: 'payment.created',

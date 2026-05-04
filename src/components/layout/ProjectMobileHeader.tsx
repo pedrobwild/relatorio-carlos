@@ -19,6 +19,7 @@ import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { useUserRole } from "@/hooks/useUserRole";
 import { usePendingCountsByProject } from "@/hooks/usePendingCountsByProject";
 import { matchesSearch } from "@/lib/searchNormalize";
+import { getSectionLabel } from "@/config/sectionLabels";
 import { cn } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -99,6 +100,7 @@ export function ProjectMobileHeader() {
     ? `${project.name}${project.unit_name ? ` – ${project.unit_name}` : ""}`
     : "Carregando…";
 
+  const sectionLabel = getSectionLabel(location.pathname);
   const hasOthers = otherProjects.length > 0;
 
   return (
@@ -143,10 +145,16 @@ export function ProjectMobileHeader() {
               <span className="block text-[13px] font-bold text-foreground truncate leading-tight">
                 {projectDisplayName}
               </span>
-              {project?.customer_name && (
-                <span className="block text-[10px] text-muted-foreground truncate leading-tight">
-                  {project.customer_name}
+              {sectionLabel ? (
+                <span className="block text-[11px] text-muted-foreground truncate leading-tight">
+                  <span aria-hidden="true">›</span> {sectionLabel}
                 </span>
+              ) : (
+                project?.customer_name && (
+                  <span className="block text-[10px] text-muted-foreground truncate leading-tight">
+                    {project.customer_name}
+                  </span>
+                )
               )}
             </span>
             {hasOthers && (
