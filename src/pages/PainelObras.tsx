@@ -1505,7 +1505,7 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
         </TableCell>
 
         {/* Etapa */}
-        <TableCell className="min-w-[140px] relative z-table-body overflow-hidden">
+        <TableCell data-testid="painel-obras-cell-etapa" data-etapa-label={obra.etapa ? (formatEtapaLabel(obra) ?? '') : ''} className="min-w-[140px] relative z-table-body overflow-hidden">
           <Select value={obra.etapa ?? NONE}
             onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}>
             <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1 rounded-md',
