@@ -16,6 +16,37 @@
 
 BEGIN;
 
+-- ─── Pré-checagem: índices parciais exigidos pelo trigger ────────────
+-- Falha cedo, com mensagem clara, antes de tentar inserir movimentos.
+DO $$
+DECLARE
+  v_missing text[] := ARRAY[]::text[];
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+     WHERE schemaname = 'public'
+       AND tablename  = 'stock_balances'
+       AND indexname  = 'uniq_balance_estoque'
+  ) THEN
+    v_missing := array_append(v_missing, 'uniq_balance_estoque (item_id) WHERE location_type=''estoque'' AND project_id IS NULL');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+     WHERE schemaname = 'public'
+       AND tablename  = 'stock_balances'
+       AND indexname  = 'uniq_balance_obra'
+  ) THEN
+    v_missing := array_append(v_missing, 'uniq_balance_obra (item_id, project_id) WHERE location_type=''obra'' AND project_id IS NOT NULL');
+  END IF;
+
+  IF array_length(v_missing, 1) > 0 THEN
+    RAISE EXCEPTION USING
+      MESSAGE = 'REGRESSION FAIL: índices parciais ausentes em stock_balances — o trigger apply_stock_movement_to_balance vai falhar com "no unique or exclusion constraint matching the ON CONFLICT specification". Faltando: ' || array_to_string(v_missing, '; '),
+      HINT    = 'Aplique as migrações que criam uniq_balance_estoque e uniq_balance_obra antes de rodar este teste.';
+  END IF;
+END $$;
+
 -- Limpa qualquer resíduo de execuções anteriores
 DELETE FROM public.stock_movements
  WHERE item_id IN (SELECT id FROM public.stock_items WHERE name = '__regress_stock_item__');
