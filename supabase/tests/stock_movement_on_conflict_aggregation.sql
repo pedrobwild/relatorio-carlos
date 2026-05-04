@@ -86,9 +86,12 @@ BEGIN
   s := regexp_replace(s, '\s*\)\s*', ')', 'g');
   s := regexp_replace(s, '\s+is\s+not\s+null\b', ' is not null', 'gi');
   s := regexp_replace(s, '\s+is\s+null\b',       ' is null',     'gi');
-  -- normaliza palavras-chave booleanas mesmo coladas a parênteses
+  -- normaliza palavras-chave booleanas garantindo um espaço de cada lado,
+  -- mesmo quando coladas a parênteses (ex.: ")and(" → ") and (")
   s := regexp_replace(s, '\s*\band\b\s*', ' and ', 'gi');
   s := regexp_replace(s, '\s*\bor\b\s*',  ' or ',  'gi');
+  s := regexp_replace(s, '\)and\(', ') and (', 'g');
+  s := regexp_replace(s, '\)or\(',  ') or (',  'g');
   RETURN btrim(s, ' ;');
 END $fn$;
 
