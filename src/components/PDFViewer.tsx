@@ -176,7 +176,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
   const pageWidth = Math.min(safeContainerWidth - 32, 800) * scale;
 
   return (
-    <div className="flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden h-full">
+    <div data-no-swipe className="flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden h-full">
       {/* PDF Controls - Top */}
       <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border shrink-0">
         <div className="flex items-center gap-1">

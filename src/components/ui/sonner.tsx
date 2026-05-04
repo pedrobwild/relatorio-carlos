@@ -12,11 +12,16 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       // Mobile: top-center keeps toasts visible above bottom nav and within thumb-reach.
-      // Desktop: bottom-right (default Sonner behavior).
-      position={isMobile ? "top-center" : "bottom-right"}
+      // Desktop: top-right keeps the screen readable and out of the FAB area.
+      position={isMobile ? "top-center" : "top-right"}
       className="toaster group"
       // Slightly larger duration on mobile so users have time to read while interacting.
       duration={isMobile ? 5000 : 4000}
+      // Stack semantics: at most one visible at a time.
+      visibleToasts={1}
+      expand={false}
+      richColors
+      closeButton
       toastOptions={{
         classNames: {
           toast:

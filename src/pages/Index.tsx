@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import { useProjectPortal } from "@/hooks/useProjectPortal";
 import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LiveStatus } from "@/components/a11y/LiveStatus";
 
 // Lazy load heavy components
 const GanttChart = lazy(() => import("@/components/GanttChart"));
@@ -199,6 +200,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe">
+      <LiveStatus>
+        {isSavingReport
+          ? `Salvando relatório${savingWeek != null ? ` da semana ${savingWeek}` : ''}…`
+          : null}
+      </LiveStatus>
       {!hasShell && <MobileHeader />}
       <div className="px-4 md:p-4 lg:p-6 xl:p-8">
         <div className="max-w-[1600px] mx-auto">

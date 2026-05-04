@@ -3,6 +3,13 @@ import { LucideIcon, FileX, FolderOpen, Calendar, ClipboardList, ShoppingCart, C
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+/**
+ * @deprecated Use `EmptyState` de `@/components/ui-premium` para novos usos.
+ * Este componente é o legacy mantido apenas por compatibilidade com pages
+ * que ainda não migraram. Novos usos devem importar de `ui-premium` —
+ * a versão premium tem padrões consistentes com o design system (tokens,
+ * tamanhos, container) e suporta `bare`, `size` e `footer`.
+ */
 export type EmptyStateVariant = 
   | 'documents'
   | 'formalizations'
@@ -55,6 +62,9 @@ const variantIcons: Record<EmptyStateVariant, LucideIcon> = {
   generic: FolderOpen,
 };
 
+/**
+ * @deprecated Use o `EmptyState` de `@/components/ui-premium`.
+ */
 export function EmptyState({
   variant = 'generic',
   icon,

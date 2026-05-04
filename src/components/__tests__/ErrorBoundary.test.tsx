@@ -44,7 +44,8 @@ describe('ErrorBoundary', () => {
     );
 
     expect(getByText('Algo deu errado')).toBeInTheDocument();
-    expect(getByText(/Ocorreu um erro inesperado/)).toBeInTheDocument();
+    // Generic Error 'Test error' falls into the 'unknown' bucket of mapError.
+    expect(getByText(/Algo não saiu como esperado/i)).toBeInTheDocument();
   });
 
   it('displays correlation ID in error state', () => {
@@ -75,7 +76,7 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    expect(getByText('Tentar novamente')).toBeInTheDocument();
+    expect(getByText('Tentar de novo')).toBeInTheDocument();
     expect(getByText('Ir para início')).toBeInTheDocument();
     expect(getByText('Recarregar página')).toBeInTheDocument();
   });

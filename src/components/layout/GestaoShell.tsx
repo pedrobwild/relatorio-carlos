@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { GestaoSidebar } from "@/components/layout/GestaoSidebar";
-import { GestaoBottomNav } from "@/components/mobile/GestaoBottomNav";
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { GlobalSearchDialog } from "@/components/search/GlobalSearchDialog";
@@ -45,10 +45,10 @@ export function GestaoShell({ children }: GestaoShellProps) {
             </div>
           </header>
 
-          <div className="pb-bottom-nav">{children}</div>
+          <main id="main-content" className="pb-bottom-nav">{children}</main>
         </div>
       </div>
-      <GestaoBottomNav />
+      <MobileBottomNav />
       <AssistantFab />
     </SidebarProvider>
   );

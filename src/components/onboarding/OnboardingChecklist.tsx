@@ -1,196 +1,264 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Check, Circle, ChevronRight, Sparkles, X } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { Check, ChevronRight, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useUserRole, type AppRole } from '@/hooks/useUserRole';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { track } from '@/lib/telemetry';
+import { supabase } from '@/integrations/supabase/client';
+import { logError } from '@/lib/errorLogger';
+import {
+  getOnboardingFlow,
+  type ObraStatus,
+  type OnboardingRole,
+  type OnboardingStep,
+} from '@/content/onboardingFlows';
 
-interface OnboardingStep {
-  id: string;
-  title: string;
-  description: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
-  /** Role-specific - only show for these roles */
-  roles?: AppRole[];
-}
+export type { OnboardingStep, OnboardingRole, ObraStatus };
 
 interface OnboardingChecklistProps {
   projectId?: string;
-  /** Override steps (otherwise uses role-based defaults) */
+  /** Sobrescreve a detecção automática de papel. */
+  userRole?: OnboardingRole;
+  /** Fase da obra. Default: `'execucao'`. */
+  obraStatus?: ObraStatus;
+  /** Override total dos passos (ignora `userRole` / `obraStatus`). */
   steps?: OnboardingStep[];
-  /** Called when checklist is dismissed */
+  /** Chamado quando o checklist é dispensado. */
   onDismiss?: () => void;
-  /** Custom className */
   className?: string;
 }
 
-// Default steps by role
-const getDefaultSteps = (role: AppRole | string, navigate: (path: string) => void): OnboardingStep[] => {
-  const customerSteps: OnboardingStep[] = [
-    {
-      id: 'view_schedule',
-      title: 'Acompanhe o cronograma',
-      description: 'Veja o progresso da sua obra na Curva S',
-      roles: ['customer'],
-    },
-    {
-      id: 'check_documents',
-      title: 'Confira os documentos',
-      description: 'Acesse contratos, projetos e aprovações',
-      roles: ['customer'],
-    },
-    {
-      id: 'review_formalizations',
-      title: 'Revise formalizações',
-      description: 'Dê ciência em decisões importantes',
-      roles: ['customer'],
-    },
-    {
-      id: 'check_payments',
-      title: 'Acompanhe pagamentos',
-      description: 'Veja boletos e comprovantes',
-      roles: ['customer'],
-    },
-  ];
+const STORAGE_PREFIX = 'onboarding';
 
-  const staffSteps: OnboardingStep[] = [
-    {
-      id: 'create_schedule',
-      title: 'Cadastre o cronograma',
-      description: 'Adicione atividades e datas previstas',
-      roles: ['engineer', 'manager', 'admin'],
-    },
-    {
-      id: 'upload_documents',
-      title: 'Envie documentos',
-      description: 'Contrato, projeto 3D, executivo',
-      roles: ['engineer', 'manager', 'admin'],
-    },
-    {
-      id: 'configure_journey',
-      title: 'Configure a jornada',
-      description: 'Personalize etapas para o cliente',
-      roles: ['engineer', 'manager', 'admin'],
-    },
-    {
-      id: 'add_payments',
-      title: 'Cadastre pagamentos',
-      description: 'Parcelas e boletos do projeto',
-      roles: ['engineer', 'manager', 'admin'],
-    },
-  ];
+function getStorageKey(
+  projectId: string | undefined,
+  userId: string | undefined,
+  flowKey: string,
+): string {
+  return `${STORAGE_PREFIX}:${flowKey}:${projectId ?? 'global'}:${userId ?? 'anon'}`;
+}
 
-  if (role === 'customer') {
-    return customerSteps;
+function inferRoleFromAppRole(args: {
+  isAdmin: boolean;
+  isStaff: boolean;
+  isCustomer: boolean;
+}): OnboardingRole {
+  if (args.isAdmin) return 'admin';
+  if (args.isCustomer) return 'cliente';
+  if (args.isStaff) return 'equipe';
+  return 'cliente';
+}
+
+interface OnboardingProgressRow {
+  step_key: string;
+  completed_at: string | null;
+}
+
+async function fetchProgress(
+  userId: string,
+  projectId: string | null,
+): Promise<{ completed: string[]; dismissed: boolean } | null> {
+  // Cast to `any` because the generated Supabase types haven't been
+  // regenerated yet for the new `onboarding_progress` table.
+  const base = (supabase as any)
+    .from('onboarding_progress')
+    .select('step_key, completed_at, dismissed')
+    .eq('user_id', userId);
+
+  const { data, error } = projectId
+    ? await base.eq('obra_id', projectId)
+    : await base.is('obra_id', null);
+
+  if (error) {
+    logError('onboarding.fetch_progress_failed', error, { userId, projectId });
+    return null;
   }
-  return staffSteps;
-};
 
-function getStorageKey(projectId: string | undefined, userId: string | undefined): string {
-  return `onboarding:${projectId ?? 'global'}:${userId ?? 'anon'}`;
+  const rows = (data ?? []) as Array<OnboardingProgressRow & { dismissed: boolean }>;
+  return {
+    completed: rows.filter((r) => r.completed_at).map((r) => r.step_key),
+    dismissed: rows.some((r) => r.dismissed),
+  };
+}
+
+async function persistStep(args: {
+  userId: string;
+  projectId: string | null;
+  stepKey: string;
+  completed: boolean;
+  dismissed?: boolean;
+}): Promise<void> {
+  const { userId, projectId, stepKey, completed, dismissed } = args;
+  const { error } = await (supabase as any)
+    .from('onboarding_progress')
+    .upsert(
+      {
+        user_id: userId,
+        obra_id: projectId,
+        step_key: stepKey,
+        completed_at: completed ? new Date().toISOString() : null,
+        dismissed: dismissed ?? false,
+      },
+      { onConflict: 'user_id,obra_id,step_key' },
+    );
+
+  if (error) {
+    logError('onboarding.persist_step_failed', error, args);
+  }
 }
 
 export function OnboardingChecklist({
   projectId,
+  userRole,
+  obraStatus = 'execucao',
   steps: customSteps,
   onDismiss,
   className,
 }: OnboardingChecklistProps) {
-  const { roles, isStaff, isCustomer } = useUserRole();
+  const { isStaff, isCustomer, isAdmin } = useUserRole();
   const { user } = useAuth();
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  const storageKey = useMemo(
-    () => getStorageKey(projectId, user?.id),
-    [projectId, user?.id]
+  const resolvedRole: OnboardingRole = useMemo(
+    () => userRole ?? inferRoleFromAppRole({ isAdmin, isStaff, isCustomer }),
+    [userRole, isAdmin, isStaff, isCustomer],
   );
 
-  // Load progress from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setCompletedSteps(parsed.completed || []);
-        setIsDismissed(parsed.dismissed || false);
-      }
-    } catch {
-      // Ignore parse errors
-    }
-  }, [storageKey]);
+  const flowKey = `${resolvedRole}:${obraStatus}`;
 
-  // Get steps filtered by role
-  const steps = useMemo(() => {
+  const steps: OnboardingStep[] = useMemo(() => {
     if (customSteps) return customSteps;
+    return getOnboardingFlow(resolvedRole, obraStatus);
+  }, [customSteps, resolvedRole, obraStatus]);
 
-    const primaryRole = isStaff ? 'engineer' : isCustomer ? 'customer' : roles[0];
-    const defaultSteps = getDefaultSteps(primaryRole || 'customer', () => {});
-    
-    return defaultSteps.filter(step => {
-      if (!step.roles) return true;
-      return roles.some(role => step.roles?.includes(role));
-    });
-  }, [customSteps, roles, isStaff, isCustomer]);
+  const storageKey = useMemo(
+    () => getStorageKey(projectId, user?.id, flowKey),
+    [projectId, user?.id, flowKey],
+  );
 
-  const toggleStep = (stepId: string) => {
-    const isCompleted = completedSteps.includes(stepId);
-    const newCompleted = isCompleted
-      ? completedSteps.filter(id => id !== stepId)
-      : [...completedSteps, stepId];
+  // Hydrate from Supabase (with localStorage fallback)
+  useEffect(() => {
+    let cancelled = false;
 
-    setCompletedSteps(newCompleted);
+    async function hydrate() {
+      // localStorage first for instant render
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (!cancelled) {
+            setCompletedSteps(parsed.completed ?? []);
+            setIsDismissed(Boolean(parsed.dismissed));
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
 
-    // Persist to localStorage
-    try {
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({ completed: newCompleted, dismissed: isDismissed })
-      );
-    } catch {
-      // Ignore storage errors
+      if (user?.id) {
+        const remote = await fetchProgress(user.id, projectId ?? null);
+        if (remote && !cancelled) {
+          setCompletedSteps(remote.completed);
+          setIsDismissed(remote.dismissed);
+        }
+      }
+
+      if (!cancelled) setIsHydrated(true);
     }
 
-    // Track completion
-    if (!isCompleted) {
-      track('complete_onboarding_step', { stepId }, { projectId });
-    }
-  };
+    void hydrate();
 
-  const handleDismiss = () => {
+    return () => {
+      cancelled = true;
+    };
+  }, [storageKey, user?.id, projectId]);
+
+  const writeLocal = useCallback(
+    (completed: string[], dismissed: boolean) => {
+      try {
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({ completed, dismissed }),
+        );
+      } catch {
+        // ignore
+      }
+    },
+    [storageKey],
+  );
+
+  const toggleStep = useCallback(
+    async (stepId: string) => {
+      const isCompleted = completedSteps.includes(stepId);
+      const newCompleted = isCompleted
+        ? completedSteps.filter((id) => id !== stepId)
+        : [...completedSteps, stepId];
+
+      setCompletedSteps(newCompleted);
+      writeLocal(newCompleted, isDismissed);
+
+      if (!isCompleted) {
+        track('complete_onboarding_step', { stepId }, { projectId });
+      }
+
+      if (user?.id) {
+        await persistStep({
+          userId: user.id,
+          projectId: projectId ?? null,
+          stepKey: stepId,
+          completed: !isCompleted,
+        });
+      }
+    },
+    [completedSteps, isDismissed, projectId, user?.id, writeLocal],
+  );
+
+  const handleDismiss = useCallback(async () => {
     setIsDismissed(true);
-    try {
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({ completed: completedSteps, dismissed: true })
-      );
-    } catch {
-      // Ignore storage errors
+    writeLocal(completedSteps, true);
+
+    if (user?.id) {
+      // dismiss is a per-flow, not per-step, signal — write a sentinel row
+      await persistStep({
+        userId: user.id,
+        projectId: projectId ?? null,
+        stepKey: `__dismissed__:${flowKey}`,
+        completed: false,
+        dismissed: true,
+      });
     }
+
     onDismiss?.();
-  };
+  }, [completedSteps, flowKey, projectId, user?.id, onDismiss, writeLocal]);
+
+  if (steps.length === 0) return null;
 
   const progress = (completedSteps.length / steps.length) * 100;
   const isComplete = completedSteps.length === steps.length;
 
-  // Don't render if dismissed or fully complete
-  if (isDismissed || isComplete) {
-    return null;
-  }
+  if (!isHydrated) return null;
+  if (isDismissed || isComplete) return null;
 
   return (
-    <Card className={cn('border-primary/20 bg-gradient-to-br from-primary/5 to-background', className)}>
+    <Card
+      className={cn(
+        'border-primary/20 bg-gradient-to-br from-primary/5 to-background',
+        className,
+      )}
+      data-testid="onboarding-checklist"
+      data-flow-key={flowKey}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-primary" />
+              <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
             </div>
             <div>
               <CardTitle className="text-base">Primeiros passos</CardTitle>
@@ -213,36 +281,47 @@ export function OnboardingChecklist({
       </CardHeader>
 
       <CardContent className="pt-0">
-        <ul className="space-y-2" role="list" aria-label="Passos do onboarding">
+        <ul
+          className="space-y-2"
+          role="list"
+          aria-label="Passos do onboarding"
+        >
           {steps.map((step) => {
             const isChecked = completedSteps.includes(step.id);
-            
+
             return (
               <li key={step.id}>
-                <button
-                  onClick={() => toggleStep(step.id)}
+                <div
                   className={cn(
-                    'w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all',
-                    'hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                    isChecked && 'bg-primary/5'
+                    'w-full flex items-start gap-3 p-3 rounded-lg transition-all',
+                    'hover:bg-accent/50',
+                    isChecked && 'bg-primary/5',
                   )}
-                  aria-pressed={isChecked}
                 >
-                  <div
+                  <button
+                    type="button"
+                    onClick={() => void toggleStep(step.id)}
+                    aria-pressed={isChecked}
+                    aria-label={
+                      isChecked
+                        ? `Desmarcar passo: ${step.title}`
+                        : `Marcar passo concluído: ${step.title}`
+                    }
                     className={cn(
                       'h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                       isChecked
                         ? 'bg-primary border-primary text-primary-foreground'
-                        : 'border-muted-foreground/30'
+                        : 'border-muted-foreground/30',
                     )}
                   >
                     {isChecked && <Check className="h-3 w-3" />}
-                  </div>
+                  </button>
                   <div className="flex-1 min-w-0">
                     <p
                       className={cn(
                         'text-sm font-medium',
-                        isChecked && 'line-through text-muted-foreground'
+                        isChecked && 'line-through text-muted-foreground',
                       )}
                     >
                       {step.title}
@@ -251,21 +330,20 @@ export function OnboardingChecklist({
                       {step.description}
                     </p>
                   </div>
-                  {step.action && !isChecked && (
+                  {step.href && !isChecked && (
                     <Button
+                      asChild
                       variant="ghost"
                       size="sm"
                       className="shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        step.action?.onClick();
-                      }}
                     >
-                      {step.action.label}
-                      <ChevronRight className="h-3 w-3 ml-1" />
+                      <Link to={step.href}>
+                        {step.ctaLabel ?? 'Abrir'}
+                        <ChevronRight className="h-3 w-3 ml-1" />
+                      </Link>
                     </Button>
                   )}
-                </button>
+                </div>
               </li>
             );
           })}
