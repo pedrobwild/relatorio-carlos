@@ -189,6 +189,30 @@ const computeOverdueDays = (obra: {
   return countBusinessDaysInclusive(start, today);
 };
 
+/**
+ * Rótulo exibido para a etapa. Para `Execução`, anexa `- S{N}` onde N é a
+ * semana corrente desde o início da execução (inicio_etapa, com fallback
+ * para inicio_oficial). Semana 1 corresponde aos primeiros 7 dias corridos.
+ */
+const formatEtapaLabel = (obra: {
+  etapa: PainelEtapa | null;
+  inicio_etapa: string | null;
+  inicio_oficial: string | null;
+}): string | null => {
+  if (!obra.etapa) return null;
+  if (obra.etapa !== 'Execução') return obra.etapa;
+  const startIso = obra.inicio_etapa ?? obra.inicio_oficial;
+  if (!startIso) return obra.etapa;
+  const start = parseISO(startIso);
+  if (Number.isNaN(start.getTime())) return obra.etapa;
+  const today = new Date();
+  const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diffDays = Math.floor((todayMid.getTime() - startMid.getTime()) / (1000 * 60 * 60 * 24));
+  const week = Math.max(1, Math.floor(diffDays / 7) + 1);
+  return `Execução - S${week}`;
+};
+
 const statusDotClass = (s: PainelStatus | null): string => {
   switch (s) {
     case 'Aguardando': return 'bg-info';
@@ -1501,7 +1525,9 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
               !obra.etapa && 'text-muted-foreground italic',
               obra.etapa === 'Finalizada' && 'text-success font-medium',
               obra.etapa === 'Vistoria reprovada' && 'text-destructive font-medium')}>
-              <SelectValue placeholder="Definir…" />
+              <SelectValue placeholder="Definir…">
+                {obra.etapa ? formatEtapaLabel(obra) : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>(nenhuma)</SelectItem>
@@ -3030,7 +3056,7 @@ function MobilePainelView({
             }
             if (o.etapa) {
               chips.push({
-                label: o.etapa,
+                label: formatEtapaLabel(o) ?? o.etapa,
                 tone:
                   o.etapa === 'Finalizada'
                     ? 'success'
