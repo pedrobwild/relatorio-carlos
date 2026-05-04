@@ -83,6 +83,7 @@ type StockMovement = {
   unit_cost: number | null;
   invoice_number: string | null;
   notes: string | null;
+  photo_path: string | null;
   created_at: string;
 };
 
