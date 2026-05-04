@@ -102,7 +102,9 @@ const itemSchema = z.object({
 
 const movementSchema = z
   .object({
-    item_id: z.string().uuid("Selecione um item"),
+    item_id: z.string().uuid().optional().nullable(),
+    new_item_name: z.string().trim().max(120).optional().or(z.literal("")),
+    new_item_unit: z.string().trim().max(20).optional().or(z.literal("")),
     movement_type: z.enum(["entrada", "saida", "ajuste"]),
     quantity: z.coerce.number().positive("Quantidade deve ser maior que zero"),
     movement_date: z.string().min(1, "Data obrigatória"),
@@ -112,11 +114,22 @@ const movementSchema = z
     unit_cost: z.coerce.number().nonnegative().optional().nullable(),
     invoice_number: z.string().trim().max(60).optional().or(z.literal("")),
     notes: z.string().trim().max(500).optional().or(z.literal("")),
+    photo_file: z.any().optional().nullable(),
   })
   .refine((v) => (v.location_type === "obra" ? !!v.project_id : true), {
     path: ["project_id"],
     message: "Selecione a obra",
-  });
+  })
+  .refine(
+    (v) =>
+      v.movement_type === "entrada"
+        ? !!(v.item_id || (v.new_item_name && v.new_item_name.length >= 2))
+        : !!v.item_id,
+    {
+      path: ["item_id"],
+      message: "Informe o item",
+    },
+  );
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
