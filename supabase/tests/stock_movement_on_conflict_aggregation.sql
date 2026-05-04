@@ -53,17 +53,23 @@ BEGIN;
 -- comparamos a assinatura real (via pg_index) com a esperada e abortamos
 -- se qualquer divergência for detectada (ausente, não-único, colunas
 -- diferentes, predicado diferente).
--- Função local de normalização: torna a comparação tolerante a
--- diferenças cosméticas que NÃO afetam a semântica do predicado parcial.
--- Aplica:
---   • lower() — case-insensitive (PG normaliza identificadores p/ minúsculas)
---   • colapsa whitespace (incluindo \n e \t) em um único espaço
---   • remove espaços ao redor de parênteses e operadores (= , ;)
---   • remove casts de string redundantes: ::text, ::varchar, ::bpchar,
---       ::"text", ::character varying  (e variantes com espaço)
---   • normaliza  is  null / is  not  null  e  =  /  <>
---   • descasca pares de parênteses externos redundantes (até 4 níveis)
---   • remove ponto-e-vírgula final
+-- Função local de normalização do predicado parcial.
+--
+-- Objetivo: tolerar diferenças COSMÉTICAS sem alterar a semântica.
+-- Aplica, na ordem:
+--   1. lower()                       — case-insensitive
+--   2. colapsa qualquer whitespace   — \n \t múltiplos espaços → 1
+--   3. remove casts de string redundantes:
+--        ::text, ::varchar, ::bpchar, ::"text", ::character varying
+--   4. normaliza espaçamento ao redor de operadores e separadores:
+--        '=', '<>', '<', '>', '<=', '>=', ',', '(', ')'
+--   5. normaliza 'is null' / 'is not null' (qualquer espaçamento interno)
+--   6. normaliza ' and ' / ' or '   (espaço único de cada lado)
+--   7. tira ; final e espaços nas pontas
+--
+-- NÃO mexe em parênteses estruturais — o predicado esperado deve refletir
+-- a forma de pg_get_expr() (que sempre adiciona parens externos e ao redor
+-- de cada subcláusula). Isso mantém a comparação estável e previsível.
 CREATE OR REPLACE FUNCTION pg_temp.norm_pred(src text)
 RETURNS text
 LANGUAGE plpgsql IMMUTABLE
@@ -72,47 +78,30 @@ DECLARE s text;
 BEGIN
   IF src IS NULL THEN RETURN NULL; END IF;
   s := lower(src);
-  -- colapsa qualquer whitespace
   s := regexp_replace(s, '\s+', ' ', 'g');
-  -- remove casts de string redundantes (com ou sem aspas/espaço)
   s := regexp_replace(s, '::\s*"?(text|varchar|bpchar|character\s+varying)"?', '', 'g');
-  -- normaliza espaçamento ao redor de parênteses e separadores
+  s := regexp_replace(s, '\s*(<=|>=|<>|=|<|>)\s*', '\1', 'g');
+  s := regexp_replace(s, '\s*,\s*', ',', 'g');
   s := regexp_replace(s, '\s*\(\s*', '(', 'g');
   s := regexp_replace(s, '\s*\)\s*', ')', 'g');
-  s := regexp_replace(s, '\s*,\s*', ',', 'g');
-  s := regexp_replace(s, '\s*=\s*', '=', 'g');
-  s := regexp_replace(s, '\s*<>\s*', '<>', 'g');
-  -- normaliza "is null" / "is not null"
-  s := regexp_replace(s, '\s+is\s+not\s+null', ' is not null', 'g');
-  s := regexp_replace(s, '\s+is\s+null',     ' is null',     'g');
-  -- remove ; final e trim
-  s := btrim(s, ' ;');
-  -- descasca parênteses externos redundantes: (X) → X, ((X)) → X, ...
-  FOR i IN 1..4 LOOP
-    IF s ~ '^\(.*\)$' AND
-       (length(s) - length(regexp_replace(substr(s,2,length(s)-2), '[^(]', '', 'g')))
-       =
-       (length(s) - length(regexp_replace(substr(s,2,length(s)-2), '[^)]', '', 'g')))
-    THEN
-      s := substr(s, 2, length(s) - 2);
-      s := btrim(s);
-    ELSE
-      EXIT;
-    END IF;
-  END LOOP;
-  RETURN s;
+  s := regexp_replace(s, '\s+is\s+not\s+null\b', ' is not null', 'gi');
+  s := regexp_replace(s, '\s+is\s+null\b',       ' is null',     'gi');
+  s := regexp_replace(s, '\s+and\s+', ' and ', 'gi');
+  s := regexp_replace(s, '\s+or\s+',  ' or ',  'gi');
+  RETURN btrim(s, ' ;');
 END $fn$;
 
 DO $$
 DECLARE
-  -- Predicados esperados em forma CANÔNICA mínima (após norm_pred).
-  -- Não precisam mais embutir parênteses externos ou ::text.
+  -- Predicados esperados na MESMA forma canônica produzida por norm_pred()
+  -- aplicada à saída de pg_get_expr() — ou seja: parens externos preservados,
+  -- sem casts ::text, lower-case, sem espaços supérfluos.
   v_required CONSTANT jsonb := jsonb_build_array(
     jsonb_build_object(
       'name',      'uniq_balance_estoque',
       'unique',    true,
       'columns',   jsonb_build_array('item_id'),
-      'predicate', 'location_type=''estoque'' and project_id is null',
+      'predicate', '((location_type=''estoque'') and (project_id is null))',
       'ddl',       'CREATE UNIQUE INDEX uniq_balance_estoque ON public.stock_balances (item_id) '
                 || 'WHERE location_type = ''estoque'' AND project_id IS NULL;'
     ),
@@ -120,7 +109,7 @@ DECLARE
       'name',      'uniq_balance_obra',
       'unique',    true,
       'columns',   jsonb_build_array('item_id','project_id'),
-      'predicate', 'location_type=''obra'' and project_id is not null',
+      'predicate', '((location_type=''obra'') and (project_id is not null))',
       'ddl',       'CREATE UNIQUE INDEX uniq_balance_obra ON public.stock_balances (item_id, project_id) '
                 || 'WHERE location_type = ''obra'' AND project_id IS NOT NULL;'
     )
