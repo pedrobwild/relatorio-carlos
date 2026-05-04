@@ -277,6 +277,23 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
     providerAccessError = 'O texto está vazio. Escreva o procedimento ou limpe o campo.';
   }
 
+  // ── Validação dos campos de acesso à obra ──
+  const KEY_LOCATION_MAX = 300;
+  const LOCK_PASSWORD_MAX = 50;
+  const keyLocationRaw = studio?.key_location ?? '';
+  const lockPasswordRaw = studio?.electronic_lock_password ?? '';
+  let keyLocationError: string | null = null;
+  if (keyLocationRaw.length > 0 && keyLocationRaw.trim().length === 0) {
+    keyLocationError = 'Não use apenas espaços. Descreva o local ou limpe o campo.';
+  } else if (keyLocationRaw.trim().length > KEY_LOCATION_MAX) {
+    keyLocationError = `Texto muito longo (limite de ${KEY_LOCATION_MAX} caracteres).`;
+  }
+  let lockPasswordError: string | null = null;
+  if (lockPasswordRaw.length > 0 && lockPasswordRaw.trim().length === 0) {
+    lockPasswordError = 'Não use apenas espaços. Informe a senha ou limpe o campo.';
+  } else if (lockPasswordRaw.trim().length > LOCK_PASSWORD_MAX) {
+    lockPasswordError = `Senha muito longa (limite de ${LOCK_PASSWORD_MAX} caracteres).`;
+  }
   const handleSave = async () => {
     if (!projectId) return;
     if (hasContactErrors) {
@@ -291,6 +308,16 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
     }
     if (providerAccessError) {
       toast.error(providerAccessError);
+      setActiveTab('info');
+      return;
+    }
+    if (keyLocationError) {
+      toast.error(keyLocationError);
+      setActiveTab('info');
+      return;
+    }
+    if (lockPasswordError) {
+      toast.error(lockPasswordError);
       setActiveTab('info');
       return;
     }
@@ -674,7 +701,15 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
                   onChange={(e) => updateStudio('key_location', e.target.value || null)}
                   placeholder="Ex.: portaria, com o zelador, cofre na entrada…"
                   maxLength={300}
+                  aria-invalid={!!keyLocationError}
+                  aria-describedby={keyLocationError ? 'key-location-error' : undefined}
+                  className={keyLocationError ? 'border-destructive focus-visible:ring-destructive' : ''}
                 />
+                {keyLocationError && (
+                  <p id="key-location-error" className="text-xs text-destructive" role="alert">
+                    {keyLocationError}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lock-password" className="text-xs font-medium text-muted-foreground">
@@ -687,7 +722,15 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
                   placeholder="Ex.: 1234#"
                   maxLength={50}
                   autoComplete="off"
+                  aria-invalid={!!lockPasswordError}
+                  aria-describedby={lockPasswordError ? 'lock-password-error' : undefined}
+                  className={lockPasswordError ? 'border-destructive focus-visible:ring-destructive' : ''}
                 />
+                {lockPasswordError && (
+                  <p id="lock-password-error" className="text-xs text-destructive" role="alert">
+                    {lockPasswordError}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="provider-access" className="text-xs font-medium text-muted-foreground">
