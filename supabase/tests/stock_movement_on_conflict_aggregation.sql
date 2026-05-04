@@ -53,15 +53,60 @@ BEGIN;
 -- comparamos a assinatura real (via pg_index) com a esperada e abortamos
 -- se qualquer divergência for detectada (ausente, não-único, colunas
 -- diferentes, predicado diferente).
+-- Função local de normalização do predicado parcial.
+--
+-- Objetivo: tolerar diferenças COSMÉTICAS sem alterar a semântica.
+-- Aplica, na ordem:
+--   1. lower()                       — case-insensitive
+--   2. colapsa qualquer whitespace   — \n \t múltiplos espaços → 1
+--   3. remove casts de string redundantes:
+--        ::text, ::varchar, ::bpchar, ::"text", ::character varying
+--   4. normaliza espaçamento ao redor de operadores e separadores:
+--        '=', '<>', '<', '>', '<=', '>=', ',', '(', ')'
+--   5. normaliza 'is null' / 'is not null' (qualquer espaçamento interno)
+--   6. normaliza ' and ' / ' or '   (espaço único de cada lado)
+--   7. tira ; final e espaços nas pontas
+--
+-- NÃO mexe em parênteses estruturais — o predicado esperado deve refletir
+-- a forma de pg_get_expr() (que sempre adiciona parens externos e ao redor
+-- de cada subcláusula). Isso mantém a comparação estável e previsível.
+CREATE OR REPLACE FUNCTION pg_temp.norm_pred(src text)
+RETURNS text
+LANGUAGE plpgsql IMMUTABLE
+AS $fn$
+DECLARE s text;
+BEGIN
+  IF src IS NULL THEN RETURN NULL; END IF;
+  s := lower(src);
+  s := regexp_replace(s, '\s+', ' ', 'g');
+  s := regexp_replace(s, '::\s*"?(text|varchar|bpchar|character\s+varying)"?', '', 'g');
+  s := regexp_replace(s, '\s*(<=|>=|<>|=|<|>)\s*', '\1', 'g');
+  s := regexp_replace(s, '\s*,\s*', ',', 'g');
+  s := regexp_replace(s, '\s*\(\s*', '(', 'g');
+  s := regexp_replace(s, '\s*\)\s*', ')', 'g');
+  -- IMPORTANTE: em PostgreSQL POSIX, word boundary é \y (não \b, que é backspace).
+  s := regexp_replace(s, '\s+is\s+not\s+null\y', ' is not null', 'gi');
+  s := regexp_replace(s, '\s+is\s+null\y',       ' is null',     'gi');
+  -- normaliza palavras-chave booleanas garantindo um espaço de cada lado,
+  -- mesmo quando coladas a parênteses (ex.: ")and(" → ") and (")
+  s := regexp_replace(s, '\)and\(', ') and (', 'gi');
+  s := regexp_replace(s, '\)or\(',  ') or (',  'gi');
+  s := regexp_replace(s, '\s*\yand\y\s*', ' and ', 'gi');
+  s := regexp_replace(s, '\s*\yor\y\s*',  ' or ',  'gi');
+  RETURN btrim(s, ' ;');
+END $fn$;
+
 DO $$
 DECLARE
+  -- Predicados esperados na MESMA forma canônica produzida por norm_pred()
+  -- aplicada à saída de pg_get_expr() — ou seja: parens externos preservados,
+  -- sem casts ::text, lower-case, sem espaços supérfluos.
   v_required CONSTANT jsonb := jsonb_build_array(
     jsonb_build_object(
       'name',      'uniq_balance_estoque',
       'unique',    true,
       'columns',   jsonb_build_array('item_id'),
-      -- normalizado: minúsculas, sem espaços extras, sem ponto-e-vírgula
-      'predicate', '((location_type = ''estoque''::text) and (project_id is null))',
+      'predicate', '((location_type=''estoque'') and (project_id is null))',
       'ddl',       'CREATE UNIQUE INDEX uniq_balance_estoque ON public.stock_balances (item_id) '
                 || 'WHERE location_type = ''estoque'' AND project_id IS NULL;'
     ),
@@ -69,7 +114,7 @@ DECLARE
       'name',      'uniq_balance_obra',
       'unique',    true,
       'columns',   jsonb_build_array('item_id','project_id'),
-      'predicate', '((location_type = ''obra''::text) and (project_id is not null))',
+      'predicate', '((location_type=''obra'') and (project_id is not null))',
       'ddl',       'CREATE UNIQUE INDEX uniq_balance_obra ON public.stock_balances (item_id, project_id) '
                 || 'WHERE location_type = ''obra'' AND project_id IS NOT NULL;'
     )
@@ -119,8 +164,8 @@ BEGIN
     END IF;
 
     -- Normaliza o predicado para comparação tolerante a espaços/casing
-    v_pred_norm := lower(regexp_replace(COALESCE(v_pred_raw, ''), '\s+', ' ', 'g'));
-    v_pred_norm := trim(v_pred_norm);
+    -- Normaliza o predicado real para a mesma forma canônica do esperado
+    v_pred_norm := pg_temp.norm_pred(v_pred_raw);
 
     IF (r->>'unique')::bool AND NOT v_unique THEN
       v_reasons := array_append(v_reasons, 'não é UNIQUE');
@@ -190,9 +235,7 @@ BEGIN
                      FROM unnest(i.indkey) WITH ORDINALITY AS k(attnum, ord)
                      JOIN pg_attribute a ON a.attrelid=i.indrelid AND a.attnum=k.attnum
                     ORDER BY k.ord),
-                 trim(lower(regexp_replace(
-                   COALESCE(pg_get_expr(i.indpred, i.indrelid), ''),
-                   '\s+', ' ', 'g')))
+                 pg_temp.norm_pred(pg_get_expr(i.indpred, i.indrelid))
             INTO v_uunique, v_ucols, v_upred
             FROM pg_index i
             JOIN pg_class c ON c.oid=i.indexrelid
