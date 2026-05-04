@@ -10,7 +10,7 @@
  * tipo de pendência. O usuário pode marcar início, marcar conclusão (ambos
  * com data de hoje) ou abrir o cronograma da obra para replanejar.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
