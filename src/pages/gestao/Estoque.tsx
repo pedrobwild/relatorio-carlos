@@ -317,15 +317,21 @@ export default function Estoque() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ["stock", "items"] });
       qc.invalidateQueries({ queryKey: ["stock", "balances"] });
       qc.invalidateQueries({ queryKey: ["stock", "movements"] });
-      toast.success("Movimentação registrada — saldo atualizado");
+      if (variables.movement_type === "entrada") {
+        toast.success("Entrada registrada no estoque");
+      } else {
+        toast.success("Movimentação registrada — saldo atualizado");
+      }
       setMovDialogOpen(false);
     },
-    onError: (e: any) =>
-      toast.error(e?.message ?? "Falha ao registrar movimentação"),
+    onError: (e: any, variables) => {
+      const action = variables?.movement_type === "entrada" ? "registrar entrada" : "registrar movimentação";
+      toast.error(e?.message ? `Falha ao ${action}: ${e.message}` : `Falha ao ${action}`);
+    },
   });
 
   const itemMap = useMemo(() => {
