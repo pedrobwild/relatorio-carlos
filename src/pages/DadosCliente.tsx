@@ -311,6 +311,16 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       setActiveTab('info');
       return;
     }
+    if (keyLocationError) {
+      toast.error(keyLocationError);
+      setActiveTab('info');
+      return;
+    }
+    if (lockPasswordError) {
+      toast.error(lockPasswordError);
+      setActiveTab('info');
+      return;
+    }
     setSaving(true);
     try {
       if (studio) {
