@@ -320,15 +320,5 @@ BEGIN
   RAISE NOTICE '✓ Estado do banco preservado: nenhum resíduo de teste';
 END $$;
 
--- ═══════════════════════════════════════════════════════════════════
--- DRY-RUN gate: encerra aqui sem inserir nada nem rodar cenários.
--- ═══════════════════════════════════════════════════════════════════
-\if :dry_run
-  \echo '── DRY-RUN ativo: pulando cleanup, setup e cenários de teste ──'
-  ROLLBACK;
-  \echo '── Fim do dry-run (transação revertida, banco intocado) ──'
-  \quit
-\endif
-
-
+COMMIT;
 COMMIT;
