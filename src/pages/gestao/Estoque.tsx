@@ -1005,7 +1005,7 @@ function NewMovementDialog({
   const [form, setForm] = useState({
     item_id: "",
     new_item_name: "",
-    new_item_unit: "un",
+    new_item_unit: "",
     movement_type: "entrada" as "entrada" | "saida" | "ajuste",
     quantity: "",
     movement_date: today,
@@ -1051,7 +1051,7 @@ function NewMovementDialog({
     setForm({
       item_id: "",
       new_item_name: "",
-      new_item_unit: "un",
+      new_item_unit: "",
       movement_type: "entrada",
       quantity: "",
       movement_date: today,
