@@ -1040,29 +1040,80 @@ function NewMovementDialog({
             </div>
           </div>
 
-          {/* Item */}
-          <div className="space-y-1.5">
-            <Label>Item *</Label>
-            <Select
-              value={form.item_id}
-              onValueChange={(v) => setForm((f) => ({ ...f, item_id: v }))}
-            >
-              <SelectTrigger aria-invalid={!!errors.item_id}>
-                <SelectValue placeholder="Selecione o material" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {items.map((it) => (
-                  <SelectItem key={it.id} value={it.id}>
-                    {it.name}{" "}
-                    <span className="text-muted-foreground">({it.unit})</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.item_id && (
-              <p className="text-xs text-destructive">{errors.item_id}</p>
-            )}
-          </div>
+          {/* Item — texto livre na entrada, seleção na saída/ajuste */}
+          {isEntrada ? (
+            <div className="grid grid-cols-[1fr_120px] gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="mov-new-item">Item *</Label>
+                <Input
+                  id="mov-new-item"
+                  value={form.new_item_name}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      new_item_name: e.target.value,
+                      item_id: "",
+                    }))
+                  }
+                  placeholder="Ex: Cimento CP-II 50kg"
+                  list="stock-item-suggestions"
+                  maxLength={120}
+                  aria-invalid={!!errors.item_id}
+                />
+                <datalist id="stock-item-suggestions">
+                  {items.map((it) => (
+                    <option key={it.id} value={it.name} />
+                  ))}
+                </datalist>
+                {errors.item_id && (
+                  <p className="text-xs text-destructive">{errors.item_id}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Digite livremente. Itens já cadastrados aparecem como sugestão.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="mov-new-unit">Unidade</Label>
+                <Input
+                  id="mov-new-unit"
+                  value={form.new_item_unit}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, new_item_unit: e.target.value }))
+                  }
+                  placeholder="un, kg, m"
+                  maxLength={20}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>Item *</Label>
+              <Select
+                value={form.item_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, item_id: v }))}
+              >
+                <SelectTrigger aria-invalid={!!errors.item_id}>
+                  <SelectValue placeholder="Selecione o material" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {items.map((it) => (
+                    <SelectItem key={it.id} value={it.id}>
+                      {it.name}{" "}
+                      <span className="text-muted-foreground">({it.unit})</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.item_id && (
+                <p className="text-xs text-destructive">{errors.item_id}</p>
+              )}
+              {items.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Nenhum item cadastrado. Registre uma entrada primeiro.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Qtd + Data */}
           <div className="grid grid-cols-2 gap-3">
