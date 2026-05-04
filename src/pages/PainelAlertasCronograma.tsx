@@ -114,13 +114,22 @@ export default function PainelAlertasCronograma() {
   // Estado sincronizado com a URL (?q=&project=&kind=).
   // Mantém filtros ao sair/voltar para a página e permite atalhos pré-filtrados.
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchQuery = searchParams.get("q") ?? "";
+  const urlQuery = searchParams.get("q") ?? "";
   const filterProject = searchParams.get("project") ?? ALL;
   const filterKindRaw = searchParams.get("kind");
   const filterKind: AlertFilter =
     filterKindRaw === "missing_start" || filterKindRaw === "missing_end"
       ? filterKindRaw
       : "all";
+
+  // Busca: estado local com debounce para evitar atualizar URL a cada tecla.
+  const [searchInput, setSearchInput] = useState(urlQuery);
+  const debounceRef = useRef<number | null>(null);
+  useEffect(() => {
+    // Sincroniza quando a URL muda externamente (ex.: navegação)
+    setSearchInput(urlQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQuery]);
 
   const updateParam = (
     key: "q" | "project" | "kind",
@@ -137,9 +146,17 @@ export default function PainelAlertasCronograma() {
       { replace: true },
     );
   };
-  const setSearchQuery = (v: string) => updateParam("q", v, "");
+  const setSearchQuery = (v: string) => {
+    setSearchInput(v);
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(
+      () => updateParam("q", v, ""),
+      250,
+    );
+  };
   const setFilterProject = (v: string) => updateParam("project", v, ALL);
   const setFilterKind = (v: AlertFilter) => updateParam("kind", v, "all");
+  const searchQuery = urlQuery;
 
   const projectOptions = useMemo(() => {
     const map = new Map<string, string>();
