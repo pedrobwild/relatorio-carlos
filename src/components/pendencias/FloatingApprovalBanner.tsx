@@ -7,6 +7,7 @@ import { usePendencias, getStatus } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useReducedMotionSafe } from "@/hooks/useReducedMotionSafe";
 
 const APPROVAL_TYPES = new Set(["approval_3d", "approval_exec", "decision", "extra_purchase"]);
 
@@ -18,6 +19,7 @@ export function FloatingApprovalBanner({ projectId }: FloatingApprovalBannerProp
   const [dismissed, setDismissed] = useState(false);
   const { sortedItems } = usePendencias({ projectId });
   const { paths } = useProjectNavigation();
+  const reducedMotion = useReducedMotionSafe();
 
   // Only show for urgent/overdue approval-type items
   const urgentApprovals = sortedItems.filter((item) => {
@@ -36,10 +38,14 @@ export function FloatingApprovalBanner({ projectId }: FloatingApprovalBannerProp
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ y: 80, opacity: 0 }}
+        initial={reducedMotion ? false : { y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 80, opacity: 0 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        exit={reducedMotion ? { opacity: 0 } : { y: 80, opacity: 0 }}
+        transition={
+          reducedMotion
+            ? { duration: 0 }
+            : { type: "spring", damping: 25, stiffness: 300 }
+        }
         className={cn(
           "fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50",
           "max-w-md w-[calc(100%-2rem)]",

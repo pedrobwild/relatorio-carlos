@@ -68,7 +68,7 @@
     --info-light: 211 80% 95%;
 
     --warning: 32 92% 42%;
-    --warning-foreground: 0 0% 100%;
+    --warning-foreground: 32 100% 10%; /* AA: dark amber sobre warning (4.5+:1) */
     --warning-light: 38 92% 94%;
 
     --destructive: 0 72% 48%;
@@ -155,21 +155,21 @@
     --accent: 204 40% 25%;
     --accent-foreground: 204 80% 75%;
 
-    --success: 160 84% 45%;
+    --success: 160 84% 25%;
     --success-foreground: 0 0% 100%;
 
-    --info: 204 80% 45%;
+    --info: 204 80% 38%;
     --info-foreground: 0 0% 100%;
 
     --warning: 38 92% 55%;
-    --warning-foreground: 0 0% 100%;
+    --warning-foreground: 38 100% 10%; /* AA: dark amber sobre warning */
 
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 14% 20%;
     --input: 220 14% 20%;
-    --ring: 204 80% 35%;
+    --ring: 204 80% 55%;
 
     --sidebar-background: 220 14% 12%;
     --sidebar-foreground: 220 14% 96%;
