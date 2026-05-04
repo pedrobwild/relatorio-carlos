@@ -1,25 +1,21 @@
 /**
  * Schedule Alert Preferences
  *
- * Preferências de notificação por canal (in-app, e-mail, push) para os
- * Schedule Alerts. Persistido em localStorage por usuário (chave única por
- * navegador). Mantém retrocompatibilidade quando a chave não existe — o
- * padrão é apenas in-app habilitado.
+ * Apenas uma preferência local: mostrar ou ocultar o badge global de alertas
+ * de cronograma na barra de navegação. As notificações in-app reais vivem em
+ * `useNotifications`; este toggle controla apenas o indicador discreto na
+ * sidebar (e o badge no link "Alertas" dentro do Cronograma da obra).
  */
 import { useCallback, useEffect, useState } from "react";
 
-export type ScheduleAlertChannel = "inApp" | "email" | "push";
-
 export interface ScheduleAlertPrefs {
-  enabled: boolean;
-  channels: Record<ScheduleAlertChannel, boolean>;
+  showBadge: boolean;
 }
 
-const STORAGE_KEY = "schedule_alert_prefs_v1";
+const STORAGE_KEY = "schedule_alert_prefs_v2";
 
 const DEFAULT_PREFS: ScheduleAlertPrefs = {
-  enabled: true,
-  channels: { inApp: true, email: false, push: false },
+  showBadge: true,
 };
 
 function readPrefs(): ScheduleAlertPrefs {
@@ -28,10 +24,7 @@ function readPrefs(): ScheduleAlertPrefs {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFS;
     const parsed = JSON.parse(raw) as Partial<ScheduleAlertPrefs>;
-    return {
-      enabled: parsed.enabled ?? DEFAULT_PREFS.enabled,
-      channels: { ...DEFAULT_PREFS.channels, ...(parsed.channels ?? {}) },
-    };
+    return { showBadge: parsed.showBadge ?? DEFAULT_PREFS.showBadge };
   } catch {
     return DEFAULT_PREFS;
   }
@@ -40,7 +33,6 @@ function readPrefs(): ScheduleAlertPrefs {
 export function useScheduleAlertPrefs() {
   const [prefs, setPrefs] = useState<ScheduleAlertPrefs>(() => readPrefs());
 
-  // Sincroniza entre abas
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) setPrefs(readPrefs());
@@ -54,20 +46,14 @@ export function useScheduleAlertPrefs() {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
-      // ignore quota / privacy errors — estado em memória já foi atualizado
+      // ignore quota / privacy errors
     }
   }, []);
 
-  const setEnabled = useCallback(
-    (enabled: boolean) => persist({ ...prefs, enabled }),
+  const setShowBadge = useCallback(
+    (showBadge: boolean) => persist({ ...prefs, showBadge }),
     [prefs, persist],
   );
 
-  const setChannel = useCallback(
-    (channel: ScheduleAlertChannel, value: boolean) =>
-      persist({ ...prefs, channels: { ...prefs.channels, [channel]: value } }),
-    [prefs, persist],
-  );
-
-  return { prefs, setEnabled, setChannel };
+  return { prefs, setShowBadge };
 }
