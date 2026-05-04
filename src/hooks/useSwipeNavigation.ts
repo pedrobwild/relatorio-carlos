@@ -1,60 +1,26 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 
-const SWIPE_THRESHOLD = 60;
-const SWIPE_MAX_Y = 80;
+let warned = false;
 
 /**
- * Detects horizontal swipe gestures and navigates between ordered routes.
- * Only active on mobile viewports (< 768px).
+ * @deprecated Cross-route swipe navigation is disabled by design.
+ *
+ * Listening on `document` with a low threshold causes accidental navigation in
+ * PDF viewers, charts, sliders, and conflicts with iOS edge-swipe. This stub
+ * preserves the type signature so legacy callers compile, but registers no
+ * listeners.
+ *
+ * Use `useScopedSwipe` with a ref to the carousel/tabs element instead, and
+ * mark non-swipeable zones with `data-no-swipe`.
  */
-export function useSwipeNavigation(routes: string[]) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-
-  const handleSwipe = useCallback(
-    (deltaX: number) => {
-      const currentIndex = routes.findIndex((r) => location.pathname.startsWith(r));
-      if (currentIndex === -1) return;
-
-      if (deltaX < -SWIPE_THRESHOLD && currentIndex < routes.length - 1) {
-        navigate(routes[currentIndex + 1]);
-      } else if (deltaX > SWIPE_THRESHOLD && currentIndex > 0) {
-        navigate(routes[currentIndex - 1]);
-      }
-    },
-    [routes, location.pathname, navigate]
-  );
-
+export function useSwipeNavigation(_routes: string[]): void {
   useEffect(() => {
-    // Only on mobile
-    if (window.innerWidth >= 768) return;
-
-    const onTouchStart = (e: TouchEvent) => {
-      const t = e.touches[0];
-      touchStart.current = { x: t.clientX, y: t.clientY };
-    };
-
-    const onTouchEnd = (e: TouchEvent) => {
-      if (!touchStart.current) return;
-      const t = e.changedTouches[0];
-      const deltaX = t.clientX - touchStart.current.x;
-      const deltaY = Math.abs(t.clientY - touchStart.current.y);
-      touchStart.current = null;
-
-      // Only trigger if horizontal movement dominates
-      if (deltaY < SWIPE_MAX_Y) {
-        handleSwipe(deltaX);
-      }
-    };
-
-    document.addEventListener('touchstart', onTouchStart, { passive: true });
-    document.addEventListener('touchend', onTouchEnd, { passive: true });
-
-    return () => {
-      document.removeEventListener('touchstart', onTouchStart);
-      document.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [handleSwipe]);
+    if (import.meta.env.DEV && !warned) {
+      warned = true;
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[useSwipeNavigation] Deprecated. Cross-route swipe is disabled — use useScopedSwipe on a specific element instead.',
+      );
+    }
+  }, []);
 }
