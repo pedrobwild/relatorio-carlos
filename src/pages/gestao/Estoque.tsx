@@ -1443,7 +1443,7 @@ function NewMovementDialog({
           </Button>
           <Button onClick={submit} disabled={isBusy} aria-busy={isBusy}>
             {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {isBusy ? (photoFile ? "Enviando…" : "Salvando…") : "Registrar"}
+            {isBusy ? (photoFile ? "Enviando foto…" : "Salvando…") : "Registrar"}
           </Button>
         </DialogFooter>
       </DialogContent>
