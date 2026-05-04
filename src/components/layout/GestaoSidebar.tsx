@@ -318,6 +318,9 @@ export function GestaoSidebar() {
                   {visibleItems.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item);
+                    const isAlertsItem =
+                      item.path === "/gestao/alertas-cronograma";
+                    const showBadge = isAlertsItem && showAlertsBadge;
                     return (
                       <SidebarMenuItem key={item.path}>
                         <SidebarMenuButton
@@ -330,16 +333,37 @@ export function GestaoSidebar() {
                             className="flex items-center gap-2.5 w-full"
                             activeClassName=""
                           >
-                            <Icon
-                              className={cn(
-                                "h-[15px] w-[15px] shrink-0",
-                                active
-                                  ? "text-sidebar-primary"
-                                  : "text-sidebar-foreground/70",
+                            <span className="relative shrink-0">
+                              <Icon
+                                className={cn(
+                                  "h-[15px] w-[15px]",
+                                  active
+                                    ? "text-sidebar-primary"
+                                    : "text-sidebar-foreground/70",
+                                )}
+                              />
+                              {showBadge && collapsed && (
+                                <span
+                                  className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-sidebar"
+                                  aria-hidden="true"
+                                />
                               )}
-                            />
+                            </span>
                             {!collapsed && (
-                              <span className="truncate">{item.label}</span>
+                              <>
+                                <span className="truncate flex-1">
+                                  {item.label}
+                                </span>
+                                {showBadge && (
+                                  <Badge
+                                    variant="destructive"
+                                    className="h-4 min-w-[18px] px-1 text-[10px] font-semibold tabular-nums"
+                                    aria-label={`${alertsTotal} ${alertsTotal === 1 ? "alerta" : "alertas"} de cronograma`}
+                                  >
+                                    {alertsTotal > 99 ? "99+" : alertsTotal}
+                                  </Badge>
+                                )}
+                              </>
                             )}
                           </NavLink>
                         </SidebarMenuButton>
