@@ -118,6 +118,9 @@ describe('DadosCliente · Acesso à obra (persistência)', () => {
     cleanup();
     renderPage();
 
+    const infoTab2 = await screen.findByRole('tab', { name: /Informações do Projeto/i });
+    fireEvent.click(infoTab2);
+
     const reloadedKey = await screen.findByLabelText(/Local da chave/i) as HTMLInputElement;
     const reloadedLock = await screen.findByLabelText(/Senha da fechadura eletrônica/i) as HTMLInputElement;
 
@@ -126,7 +129,6 @@ describe('DadosCliente · Acesso à obra (persistência)', () => {
   });
 
   it('grava null quando os campos ficam vazios', async () => {
-    // Pré-popula store
     studioStore[PROJECT_ID] = {
       project_id: PROJECT_ID,
       key_location: 'antigo',
@@ -134,6 +136,9 @@ describe('DadosCliente · Acesso à obra (persistência)', () => {
     };
 
     renderPage();
+
+    const infoTab = await screen.findByRole('tab', { name: /Informações do Projeto/i });
+    fireEvent.click(infoTab);
 
     const keyInput = await screen.findByLabelText(/Local da chave/i) as HTMLInputElement;
     const lockInput = await screen.findByLabelText(/Senha da fechadura eletrônica/i) as HTMLInputElement;
