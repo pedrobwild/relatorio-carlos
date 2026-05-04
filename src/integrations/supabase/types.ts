@@ -6884,6 +6884,9 @@ export type Database = {
         | "rejected"
         | "cancelled"
       painel_etapa_enum:
+        | "Projeto 3D"
+        | "Projeto Executivo"
+        | "Executivo Aprovado"
         | "Medição"
         | "Executivo"
         | "Emissão RRT"
@@ -7155,6 +7158,9 @@ export const Constants = {
         "cancelled",
       ],
       painel_etapa_enum: [
+        "Projeto 3D",
+        "Projeto Executivo",
+        "Executivo Aprovado",
         "Medição",
         "Executivo",
         "Emissão RRT",
