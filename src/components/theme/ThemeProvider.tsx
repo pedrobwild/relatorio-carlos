@@ -1,29 +1,12 @@
-import type { ComponentProps } from 'react';
-import { ThemeProvider as NextThemesProvider } from 'next-themes';
-
-type ThemeProviderProps = ComponentProps<typeof NextThemesProvider>;
+import type { ReactNode } from 'react';
 
 /**
- * Wrapper around `next-themes` para o Portal BWild.
- *
- * - `attribute="class"` adiciona/remove `.dark` em `<html>`, ativando os tokens
- *   `.dark` definidos em `src/index.css`.
- * - `defaultTheme="system"` respeita a preferência do sistema operacional.
- * - `enableSystem` permite o terceiro estado "system" no toggle.
- * - Persiste em localStorage (`theme` por padrão do next-themes).
+ * Tema claro é o único tema suportado no Portal BWild.
+ * Este wrapper é mantido apenas para compatibilidade com a árvore atual de
+ * componentes (consumidores ainda importam `<ThemeProvider>`). Não há
+ * lógica de troca de tema, hidratação ou persistência — toda essa
+ * infraestrutura foi removida intencionalmente.
  */
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return (
-    <NextThemesProvider
-      attribute="class"
-      defaultTheme="light"
-      forcedTheme="light"
-      enableSystem={false}
-      disableTransitionOnChange
-      storageKey="theme"
-      {...props}
-    >
-      {children}
-    </NextThemesProvider>
-  );
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }
