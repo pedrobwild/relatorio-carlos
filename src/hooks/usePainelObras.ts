@@ -16,6 +16,9 @@ import { useStaffUsers } from './useStaffUsers';
 import type { ProjectWithCustomer } from '@/infra/repositories/projects.repository';
 
 export type PainelEtapa =
+  | 'Projeto 3D'
+  | 'Projeto Executivo'
+  | 'Executivo Aprovado'
   | 'Medição'
   | 'Executivo'
   | 'Emissão RRT'
@@ -85,6 +88,9 @@ export interface PainelObra {
  * a última etapa (`Finalizada`) indica entrega consolidada.
  */
 export const ETAPA_OPTIONS: PainelEtapa[] = [
+  'Projeto 3D',
+  'Projeto Executivo',
+  'Executivo Aprovado',
   'Medição',
   'Executivo',
   'Emissão RRT',
