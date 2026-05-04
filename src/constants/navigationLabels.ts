@@ -26,6 +26,7 @@ export const navigationLabels: NavLabels = {
     dadosCliente:   { staff: "Dados do Cliente",   client: "Dados do Cliente" },
     atividades:     { staff: "Atividades",         client: "Atividades" },
     orcamento:      { staff: "Orçamento",          client: "Orçamento" },
+    assessor:       { staff: "Assessor BWild",      client: "Assessor BWild" },
   },
   breadcrumb: {
     relatorio:      { staff: "Relatório",        client: "Diário da Obra" },

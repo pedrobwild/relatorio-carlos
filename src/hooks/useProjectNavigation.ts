@@ -31,6 +31,7 @@ export function useProjectNavigation() {
       atividades: getProjectPath('/atividades'),
       naoConformidades: getProjectPath('/nao-conformidades'),
       orcamento: getProjectPath('/orcamento'),
+      assessor: getProjectPath('/assessor'),
     }
   };
 }

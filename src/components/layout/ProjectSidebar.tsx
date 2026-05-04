@@ -14,7 +14,7 @@ import {
   Map,
   ShoppingCart,
   Package,
-  
+
   ClipboardCheck,
   ChevronDown,
   LucideIcon,
@@ -22,6 +22,7 @@ import {
   UserCircle,
   ListChecks,
   Receipt,
+  Bot,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,8 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useCan } from "@/hooks/useCan";
+import type { Feature } from "@/config/permissions";
 import { navigationLabels } from "@/constants/navigationLabels";
 
 interface SidebarNavItem {
@@ -59,6 +62,8 @@ interface SidebarNavItem {
   badgeKey?: "pendencias" | "formalizacoes" | "financeiro";
   /** Only visible to staff users */
   staffOnly?: boolean;
+  /** Only visible when current user has this feature permission */
+  feature?: Feature;
   /** For clients, hide under a collapsible "Mais" section */
   clientSecondary?: boolean;
 }
@@ -81,6 +86,7 @@ export function ProjectSidebar() {
   const { project } = useProject();
   const { stats: pendenciasStats } = usePendencias({ projectId });
   const { isStaff } = useUserRole();
+  const { can } = useCan();
 
   const isProjectPhase = project?.is_project_phase === true;
 
@@ -178,6 +184,13 @@ export function ProjectSidebar() {
           icon: ListChecks,
           path: paths.atividades,
           staffOnly: true,
+        },
+        {
+          label: L("assessor"),
+          icon: Bot,
+          path: paths.assessor,
+          staffOnly: true,
+          feature: "assessor:use",
         },
         {
           label: L("pendencias"),
@@ -315,6 +328,7 @@ export function ProjectSidebar() {
           const visibleItems = group.items.filter((item) => {
             if (item.projectPhaseOnly && !isProjectPhase) return false;
             if (item.staffOnly && !isStaff) return false;
+            if (item.feature && !can(item.feature)) return false;
             return true;
           });
 

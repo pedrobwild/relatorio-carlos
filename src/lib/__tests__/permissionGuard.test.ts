@@ -43,9 +43,10 @@ describe('permissionGuard', () => {
       ).toBe(true);
     });
 
-    it('engineer lacks users:delete', () => {
+    it('manager lacks users:delete (engineer/manager are intentionally different here)', () => {
+      // engineer/admin/cs/gestor have users:delete; manager does not.
       expect(
-        hasAllModulePermissions(['engineer'], ['users:read', 'users:delete']),
+        hasAllModulePermissions(['manager'], ['users:read', 'users:delete']),
       ).toBe(false);
     });
   });

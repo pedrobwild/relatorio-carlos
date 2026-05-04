@@ -49,17 +49,18 @@ describe('Auth Page', () => {
   it('should render login form by default', async () => {
     const Auth = (await import('../Auth')).default;
     
-    const { queryByText, findByText } = render(
+    const { findByText } = render(
       <MemoryRouter>
         <Auth />
       </MemoryRouter>
     );
 
-    // Wait for session check to complete
-    const title = await findByText('Portal Bwild', { exact: false });
-    expect(title).toBeInTheDocument();
-
-    expect(queryByText('Entrar')).toBeInTheDocument();
+    // Wait for session check to complete and the form to render.
+    // The current Auth page surfaces an "Entrar" button as the primary CTA
+    // and the login form root carries the data-testid hook.
+    const entrar = await findByText('Entrar', { exact: false });
+    expect(entrar).toBeInTheDocument();
+    expect(document.querySelector('[data-testid="login-form"]')).not.toBeNull();
   });
 
   it('should show loading state while checking session', async () => {

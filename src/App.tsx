@@ -87,6 +87,7 @@ const AtividadeDetalhe = lazy(() => import("./pages/AtividadeDetalhe"));
 const JornadaProjeto = lazy(() => import("./pages/JornadaProjeto"));
 const DadosCliente = lazy(() => import("./pages/DadosCliente"));
 const OrcamentoProjeto = lazy(() => import("./pages/OrcamentoProjeto"));
+const Assessor = lazy(() => import("./pages/Assessor"));
 
 // Create persister - returns null if localStorage is not available
 const persister = createQueryPersister();
@@ -373,7 +374,15 @@ const App = () => (
                 </StaffRoute>
               }
             />
-            
+            <Route
+              path="/obra/:projectId/assessor"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<Assessor />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
+
             {/* Root route - redirect based on role */}
             <Route path="/" element={<ProtectedRoute><AuthRedirectPage /></ProtectedRoute>} />
             <Route path="/relatorio" element={<Navigate to="/minhas-obras" replace />} />

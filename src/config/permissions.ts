@@ -61,7 +61,9 @@ export type Feature =
   | 'ncs:treat'
   | 'ncs:verify'
   | 'ncs:approve'
-  | 'ncs:view';
+  | 'ncs:view'
+  // BWild Assessor (stateful agent)
+  | 'assessor:use';
 
 /**
  * Permission matrix: role -> allowed features
@@ -129,6 +131,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'ncs:verify',
     'ncs:approve',
     'ncs:view',
+    'assessor:use',
   ],
 
   manager: [
@@ -178,6 +181,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'ncs:verify',
     'ncs:approve',
     'ncs:view',
+    'assessor:use',
   ],
 
   admin: [
@@ -228,6 +232,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'ncs:verify',
     'ncs:approve',
     'ncs:view',
+    'assessor:use',
   ],
 
   gestor: [
@@ -277,6 +282,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'ncs:verify',
     'ncs:approve',
     'ncs:view',
+    'assessor:use',
   ],
 
   suprimentos: [
@@ -357,6 +363,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'ncs:verify',
     'ncs:approve',
     'ncs:view',
+    'assessor:use',
   ],
 
   arquitetura: [
@@ -406,6 +413,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'ncs:verify',
     'ncs:approve',
     'ncs:view',
+    'assessor:use',
   ],
 };
 

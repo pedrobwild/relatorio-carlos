@@ -107,7 +107,7 @@ function ContactField({
       ) : (
         // Reserva 1 linha de altura para evitar shift quando erro aparece.
         <p className="text-xs text-transparent leading-snug select-none" aria-hidden>
-          ​
+          {'​'}
         </p>
       )}
     </div>

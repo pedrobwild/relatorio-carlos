@@ -60,6 +60,22 @@ vi.mock('@/lib/errorLogger', () => ({
   logInfo: vi.fn(),
 }));
 
+// validateBoletoLine has its own dedicated tests (boletoValidation.test.ts).
+// Here we only care about the upload + extract + persist flow, so we stub it
+// to accept any 47+ digit string as a valid cobrança boleto.
+vi.mock('@/lib/boletoValidation', () => ({
+  validateBoletoLine: (raw: string) => {
+    const digits = (raw ?? '').replace(/\D/g, '');
+    if (digits.length === 0) {
+      return { valid: false, error: 'vazio' };
+    }
+    if (digits.length < 47) {
+      return { valid: false, error: 'curto', digits };
+    }
+    return { valid: true, type: 'cobranca', digits };
+  },
+}));
+
 // ----- Imports após mocks -----
 import { PaymentMethodModal } from '@/components/PaymentMethodModal';
 

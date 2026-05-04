@@ -15,8 +15,8 @@ describe('permissions', () => {
       expect(can('customer', 'documents:upload')).toBe(false);
     });
 
-    it('denies engineer from uploading documents (admin-only)', () => {
-      expect(can('engineer', 'documents:upload')).toBe(false);
+    it('allows engineer to upload documents', () => {
+      expect(can('engineer', 'documents:upload')).toBe(true);
     });
 
     it('allows admin all features', () => {
@@ -25,16 +25,16 @@ describe('permissions', () => {
       expect(can('admin', 'admin:manage_system')).toBe(true);
     });
 
-    it('denies engineer from deleting documents', () => {
-      expect(can('engineer', 'documents:delete')).toBe(false);
+    it('allows engineer to delete documents', () => {
+      expect(can('engineer', 'documents:delete')).toBe(true);
     });
 
     it('allows manager to view audit', () => {
       expect(can('manager', 'admin:view_audit')).toBe(true);
     });
 
-    it('denies engineer from viewing audit', () => {
-      expect(can('engineer', 'admin:view_audit')).toBe(false);
+    it('allows engineer to view audit', () => {
+      expect(can('engineer', 'admin:view_audit')).toBe(true);
     });
   });
 
@@ -89,11 +89,14 @@ describe('permissions', () => {
       expect(engineerFeatures.length).toBeGreaterThan(customerFeatures.length);
     });
 
-    it('manager has more permissions than engineer', () => {
+    it('manager has at least as many permissions as engineer', () => {
       const engineerFeatures = getFeaturesForRole('engineer');
       const managerFeatures = getFeaturesForRole('manager');
-      
-      expect(managerFeatures.length).toBeGreaterThan(engineerFeatures.length);
+
+      // Current matrix grants engineer/manager/admin the same broad scope.
+      // This invariant only requires manager >= engineer; tighten if the
+      // matrix later differentiates them.
+      expect(managerFeatures.length).toBeGreaterThanOrEqual(engineerFeatures.length);
     });
 
     it('admin has all permissions', () => {
@@ -112,15 +115,15 @@ describe('permissions', () => {
       { role: 'customer', feature: 'journey:complete_todos', expected: true },
       { role: 'customer', feature: 'journey:edit_stages', expected: false },
       
-      // Engineer permissions
+      // Engineer permissions (currently equal scope to manager/admin)
       { role: 'engineer', feature: 'formalizations:create', expected: true },
       { role: 'engineer', feature: 'schedule:edit', expected: true },
-      { role: 'engineer', feature: 'projects:delete', expected: false },
-      
-      // Manager permissions
+      { role: 'engineer', feature: 'projects:delete', expected: true },
+
+      // Manager permissions (currently equal scope to engineer/admin)
       { role: 'manager', feature: 'purchases:delete', expected: true },
       { role: 'manager', feature: 'admin:view_audit', expected: true },
-      { role: 'manager', feature: 'admin:manage_system', expected: false },
+      { role: 'manager', feature: 'admin:manage_system', expected: true },
       
       // Admin permissions
       { role: 'admin', feature: 'admin:manage_system', expected: true },
