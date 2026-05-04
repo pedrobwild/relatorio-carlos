@@ -561,6 +561,43 @@ export default function PainelObras() {
     };
   }, [obras]);
 
+  /**
+   * KPIs do cockpit operacional (Bloco 1 — JTBD): respondem em < 5s
+   * "qual obra precisa de atenção hoje?". Cada métrica é clicável e
+   * aplica o filtro correspondente na tabela abaixo. Computado sobre as
+   * obras já carregadas (sem nova query) e respeitando a fase atual.
+   */
+  const cockpitMetrics = useMemo(() => {
+    const inFase = obras.filter((o) =>
+      fase === 'projetos' ? o.is_project_phase : !o.is_project_phase,
+    );
+    const todayIso = format(new Date(), 'yyyy-MM-dd');
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    const sevenDaysIso = format(sevenDaysFromNow, 'yyyy-MM-dd');
+    const atrasadas = inFase.filter((o) => computeDisplayStatus(o) === 'Atrasado').length;
+    const riscoSemana = inFase.filter((o) => {
+      if (!o.entrega_oficial || o.entrega_real) return false;
+      // 0..7 dias até o prazo, mas ainda não atrasado.
+      return o.entrega_oficial >= todayIso && o.entrega_oficial <= sevenDaysIso;
+    }).length;
+    const aguardandoAprovacao = inFase.filter(
+      (o) => o.etapa === 'Executivo' || o.etapa === 'Vistoria reprovada' || o.etapa === 'Vistoria',
+    ).length;
+    const pendenciasAbertas = inFase.reduce((acc, o) => acc + (o.pending_count ?? 0), 0);
+    const paralisadas = inFase.filter((o) => o.status === 'Paralisada').length;
+    return { atrasadas, riscoSemana, aguardandoAprovacao, pendenciasAbertas, paralisadas };
+  }, [obras, fase]);
+
+  /** Aplica/limpa o filtro de status disparado pelos KPIs clicáveis. */
+  const applyStatusFilter = useCallback((status: PainelStatus) => {
+    setFilterStatuses((prev) => {
+      // Toggle: se o único filtro ativo é o mesmo, limpa.
+      if (prev.size === 1 && prev.has(status)) return new Set();
+      return new Set([status]);
+    });
+  }, []);
+
   if (roleLoading) {
     return (
       <PageContainer>
@@ -772,6 +809,49 @@ export default function PainelObras() {
 
           {/* ── Desktop: toolbar + tabela/board/kanban (preserva comportamento) ── */}
           <div className="hidden md:block">
+          {/*
+            Cockpit operacional — KPIs no topo respondem em <5s "qual obra
+            está em risco hoje?". Cada métrica é clicável e aplica filtro
+            correspondente na tabela. Cores apenas via tokens semânticos.
+          */}
+          {!isLoading && obras.length > 0 && (
+            <div className="mb-3">
+              <MetricRail>
+                <MetricCard
+                  label="Atrasadas"
+                  value={cockpitMetrics.atrasadas}
+                  hint="Status atrasado"
+                  accent={cockpitMetrics.atrasadas > 0 ? 'destructive' : 'muted'}
+                  onClick={() => applyStatusFilter('Atrasado')}
+                />
+                <MetricCard
+                  label="Risco semana"
+                  value={cockpitMetrics.riscoSemana}
+                  hint="Entrega em ≤ 7 dias"
+                  accent={cockpitMetrics.riscoSemana > 0 ? 'warning' : 'muted'}
+                />
+                <MetricCard
+                  label="Aprovação pendente"
+                  value={cockpitMetrics.aguardandoAprovacao}
+                  hint="Executivo / Vistoria"
+                  accent={cockpitMetrics.aguardandoAprovacao > 0 ? 'info' : 'muted'}
+                />
+                <MetricCard
+                  label="Pendências"
+                  value={cockpitMetrics.pendenciasAbertas}
+                  hint="Total de itens abertos"
+                  accent={cockpitMetrics.pendenciasAbertas > 0 ? 'warning' : 'muted'}
+                />
+                <MetricCard
+                  label="Paralisadas"
+                  value={cockpitMetrics.paralisadas}
+                  hint="Sem progresso"
+                  accent={cockpitMetrics.paralisadas > 0 ? 'destructive' : 'muted'}
+                  onClick={() => applyStatusFilter('Paralisada')}
+                />
+              </MetricRail>
+            </div>
+          )}
           {/*
             Toolbar redesenhada — referência híbrida (Linear + Notion):
             - linha única densa (h-9), divisores verticais entre grupos
