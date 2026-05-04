@@ -920,9 +920,13 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       {/* ── Sticky save bar ── */}
       <div
         className={cn(
-          'sticky bottom-0 -mx-4 md:-mx-6 mt-6',
+          'sticky -mx-4 md:-mx-6 mt-6',
           'bg-background/95 backdrop-blur border-t border-border-subtle',
           'pl-safe pr-safe pb-safe',
+          // Quando está dentro de um sheet/dialog (embedded), basta colar no bottom.
+          // Na rota /obra/:id/dados-cliente o ProjectShell renderiza a MobileBottomNav fixa,
+          // então elevamos a barra acima dela para não ser ocultada.
+          embedded ? 'bottom-0' : 'bottom-[var(--bottom-nav-offset,0px)] md:bottom-0',
         )}
       >
         <div className="px-4 md:px-6 py-3 flex items-center justify-end gap-2">
