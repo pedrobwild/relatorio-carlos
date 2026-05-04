@@ -2801,7 +2801,7 @@ function BoardView({
               ) : (
                 <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
               )}
-              <span className="font-semibold text-sm">{g.label}</span>
+              <span data-testid="board-group-label" className="font-semibold text-sm">{g.label}</span>
               <span className="inline-flex items-center justify-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground min-w-[24px]">
                 {g.items.length}
               </span>
