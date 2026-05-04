@@ -78,38 +78,57 @@ Se a pergunta exige dado que não está no CATÁLOGO (ex: "qual a margem real po
 
 # O que retornar
 
-Você DEVE chamar a função \`generate_query\` exatamente UMA vez, com:
+Você DEVE chamar a função \`plan_query\` exatamente UMA vez, devolvendo um **plano** com 1-3 steps. As regras detalhadas do schema (steps[], step_type, final_calculation, assumptions, limite hard de 2 steps externos) estão no bloco "**Plano multi-step (v4)**" mais abaixo. A regra acima — apenas SELECT/WITH, catálogo, datas, ordenação, etc. — vale para o \`sql\` de cada step internal.
 
-- **\`sql\`**: a consulta. Limpa, comentada com \`-- comentário\` apenas em CTEs complexas (1 linha).
-- **\`domain\`**: um de \`financeiro | compras | cronograma | ncs | pendencias | cs | obras | fornecedores | outros\`. Se a pergunta cruza domínios (ex: "saldo de obras com NCs abertas"), escolha o domínio do **fato principal** (aqui: financeiro).
-- **\`intent\`**: 1 frase de até 140 caracteres explicando o que a consulta entrega e quaisquer assunções. Exemplos:
+Para perguntas simples sobre dado interno, use **1 step internal só** com \`final_calculation\` vazio. Não force decomposição.
+
+Exemplos de \`intent\` (1 frase de até 140 chars):
   - "Lista pagamentos vencidos por obra, ordenados pelo mais antigo."
-  - "Compara compras pagas neste mês vs mês anterior, agrupado por categoria. Considerei mês corrente como referência."
+  - "Compara compras pagas neste mês vs mês anterior, agrupado por categoria."
   - "Top 5 obras com maior saldo (recebido - pago). Aproximação: ignora compras pendentes não pagas."
 
 Não escreva texto fora do tool call.`;
 
 // ============================================================
-// v4 — classificação interna × externa
+// v4 — Planner multi-step (internal × external)
 // ============================================================
 //
-// Bloco anexado ao SYSTEM_PROMPT quando a pergunta pode envolver mercado.
-// Mantemos a saída como UMA tool_call (compatibilidade): a tool agora aceita
-// `step_type` ∈ {internal, external} e os campos correspondentes.
+// Bloco anexado ao SYSTEM_PROMPT que instrui o LLM a produzir um PLANO com
+// até 3 steps. Cada step é internal (SQL) ou external (BCB/Receita/Perplexity);
+// o orquestrador executa step a step e o Formatter cruza via final_calculation.
 
 export const PLANNER_EXTERNAL_DELTA =
-  `# Dados internos vs externos (v4)
+  `# Plano multi-step (v4)
 
-Para CADA pergunta, decida o passo principal:
+Em vez de UMA consulta, você produz um **plano**: lista ordenada de \`steps\` que, executados, respondem à pergunta. Cada step é \`internal\` (SQL no banco BWild) ou \`external\` (fonte do CATÁLOGO DE FONTES EXTERNAS abaixo).
 
-- **internal**: a sub-pergunta é totalmente respondível pelo banco BWild (CATÁLOGO interno).
-- **external**: a sub-pergunta exige dado de fora (CATÁLOGO DE FONTES EXTERNAS abaixo). Cite \`external_source_id\`.
+## Regras do plano
 
-Heurística: se a pergunta menciona "mercado", "média do setor", "INCC", "IPCA", "Selic", "CUB", "câmbio", "dólar", "USD", "regulação", "lei", "Airbnb", "ocupação", "preço de [bairro]", ou "fornecedor [nome] tem" → external.
+1. **Mínimo 1, máximo 3 steps.** Se a pergunta exige mais, simplifique e diga em \`assumptions\`.
+2. **Máximo 2 steps externos.** Custo de Perplexity/API explode além disso.
+3. **Cada step responde a UMA sub_question.** Sub_question deve ser auto-contida (o leitor entende sem ver as outras).
+4. **Steps independentes**, não há fan-out: o resultado do step 2 NÃO alimenta o SQL do step 3. Quem cruza os resultados é o Formatter (via \`final_calculation\`).
+5. **Em pergunta cruzada interno×externo** (ex.: "estamos cobrando acima do CUB?"): step 1 = internal (lista as obras com R$/m²), step 2 = external (CUB atual), e \`final_calculation\` descreve a comparação.
 
-Se cruza ambos (típico — "estamos cobrando acima do CUB?"): escolha como passo principal o **internal** (a base da nossa obra) e marque \`needs_external: true\` com \`external_source_id\` e \`external_query\` curtos. O orquestrador buscará o externo em paralelo e o Formatter cruzará.
+## Como decidir o tipo de step
 
-Limite: máximo 1 fonte externa por pergunta (custo). Se exigir mais, simplifique e diga em \`intent\`.`;
+- **internal**: respondível 100% pelo banco BWild (CATÁLOGO interno + DERIVATIONS). Campo obrigatório: \`sql\` (mesmas regras de SELECT/WITH do prompt principal).
+- **external**: exige dado de fora. Campos obrigatórios: \`external_source_id\` (id do CATÁLOGO DE FONTES EXTERNAS), \`external_kind\` (\`fetch\` para api_official/api_aggregator, \`web\` para web_search/web_scrape), e \`external_params\` (\`{ n: 12 }\` em séries BCB; \`{ cnpj: "14digitos" }\` em Receita) ou \`external_query\` (PT-BR específico e datado, em web_research).
+
+Heurística para escolher external: a pergunta cita "mercado", "média do setor", "INCC", "IPCA", "Selic", "CUB", "câmbio", "dólar", "USD", "regulação", "lei", "Airbnb", "ocupação", "preço de [bairro]", "Reclame Aqui", "TJSP", "alvará", "zoneamento", "notícia" → considere external.
+
+## Campos do tool \`plan_query\`
+
+- \`question_type\` — \`factual | diagnostica | comparativa | decisoria | exploratoria\`.
+- \`domain\` — domínio do FATO principal (mesmo enum do v3).
+- \`intent\` — 1 frase de até 140 caracteres explicando a leitura final.
+- \`steps[]\` — a lista ordenada (cada item com \`id\`, \`sub_question\`, \`step_type\`, e os campos de execução).
+- \`final_calculation\` — como cruzar os resultados dos steps para chegar à resposta. Pode ser vazio quando há 1 step.
+- \`assumptions[]\` — decisões do Planner ("este mês = mês corrente"; "CUB R-8 = padrão alto").
+
+## Quando há 1 step só (caminho mais comum)
+
+Não force decomposição: pergunta simples ("quanto vence esta semana") = 1 step internal, \`final_calculation\` vazio.`;
 
 export const FETCH_MARKET_DATA_TOOL = {
   type: "function" as const,
@@ -270,16 +289,45 @@ export interface FormatterEvidence {
   warnings?: string[];
 }
 
+/** Resultado de um step (interno ou externo) renderizado pro Formatter. */
+export interface FormatterStep {
+  id: number;
+  sub_question: string;
+  step_type: 'internal' | 'external';
+  /** internal: rows do SQL (até 30 linhas). */
+  rows?: Record<string, unknown>[] | null;
+  rows_returned?: number | null;
+  /** external: source_id + (claim/numeric) — a evidência completa fica em `evidences`. */
+  external_source_id?: string | null;
+  /** mensagem de erro do step quando ele falhou (sql_error, perplexity timeout, etc.). */
+  error?: string | null;
+}
+
 export function buildFormatterUserMessage(opts: {
   question: string;
   domain: string;
   intent: string | null;
+  /** Linhas agregadas (compat com v3 — primeiro step internal). */
   rows: Record<string, unknown>[];
   rowsReturned: number;
   analysis: FormatterAnalysis | null;
   evidences?: FormatterEvidence[] | null;
+  steps?: FormatterStep[] | null;
+  finalCalculation?: string | null;
+  assumptions?: string[] | null;
 }): string {
-  const { question, domain, intent, rows, rowsReturned, analysis, evidences } = opts;
+  const {
+    question,
+    domain,
+    intent,
+    rows,
+    rowsReturned,
+    analysis,
+    evidences,
+    steps,
+    finalCalculation,
+    assumptions,
+  } = opts;
 
   const insightsBlock = analysis?.insights?.length
     ? analysis.insights
@@ -323,6 +371,38 @@ export function buildFormatterUserMessage(opts: {
     ? `\n\n# Evidências externas\n${evidencesBlock}`
     : '';
 
+  const stepsBlock = steps?.length
+    ? steps
+        .map((s) => {
+          const head = `## Step ${s.id} [${s.step_type}] — ${s.sub_question}`;
+          if (s.error) return `${head}\nFALHA: ${s.error}`;
+          if (s.step_type === 'internal') {
+            const r = s.rows ?? [];
+            const preview = r.length
+              ? JSON.stringify(r.slice(0, 30))
+              : '[]';
+            return `${head}\nlinhas=${s.rows_returned ?? r.length}\ndados=${preview}`;
+          }
+          return `${head}\nfonte=${s.external_source_id ?? '—'} (ver Evidências externas)`;
+        })
+        .join('\n\n')
+    : null;
+
+  const stepsSection = stepsBlock
+    ? `\n\n# Steps executados\n${stepsBlock}`
+    : '';
+
+  const finalCalcSection = finalCalculation && finalCalculation.trim()
+    ? `\n\n# Como cruzar os steps\n${finalCalculation.trim()}`
+    : '';
+
+  const assumptionsBlock = assumptions?.length
+    ? assumptions.map((a) => `- ${a}`).join('\n')
+    : null;
+  const assumptionsSection = assumptionsBlock
+    ? `\n\n# Assunções do Planner\n${assumptionsBlock}`
+    : '';
+
   return `# Pergunta original
 ${question}
 
@@ -347,9 +427,9 @@ ${limitationsBlock}
 # Sugestões de visualização (apenas referência — não renderize, só use para guiar como apresentar)
 ${vizBlock}
 
-# Total de linhas retornadas
+# Total de linhas retornadas (step principal)
 ${rowsReturned}
 
-# Dados (até 50 linhas, JSON)
-${JSON.stringify(rows.slice(0, 50))}${evidencesSection}`;
+# Dados (até 50 linhas, JSON — step principal)
+${JSON.stringify(rows.slice(0, 50))}${stepsSection}${finalCalcSection}${assumptionsSection}${evidencesSection}`;
 }
