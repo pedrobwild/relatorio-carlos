@@ -1242,6 +1242,68 @@ function NewMovementDialog({
             </div>
           )}
 
+          {/* Foto do item — apenas em entrada */}
+          {isEntrada && (
+            <div className="space-y-1.5">
+              <Label>Foto do item</Label>
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="sr-only"
+                onChange={(e) => handlePhotoPick(e.target.files?.[0] ?? null)}
+              />
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) => handlePhotoPick(e.target.files?.[0] ?? null)}
+              />
+              {photoPreview ? (
+                <div className="relative inline-block rounded-lg overflow-hidden border bg-muted">
+                  <img
+                    src={photoPreview}
+                    alt="Pré-visualização"
+                    className="h-32 w-32 object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-1 right-1 h-7 px-2"
+                    onClick={() => handlePhotoPick(null)}
+                  >
+                    Remover
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    Tirar foto
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => photoInputRef.current?.click()}
+                  >
+                    Anexar imagem
+                  </Button>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Opcional. Útil para identificar visualmente o item recebido.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="mov-notes">Observações</Label>
             <Textarea
