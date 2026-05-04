@@ -8,7 +8,14 @@ export interface ParsedDateRange {
   /** Human label (PT-BR). */
   label: string;
   /** Detected granularity. */
-  granularity: "day" | "week" | "month" | "quarter" | "year" | "custom" | "none";
+  granularity:
+    | "day"
+    | "week"
+    | "month"
+    | "quarter"
+    | "year"
+    | "custom"
+    | "none";
 }
 
 const today = (): Date => {
@@ -33,7 +40,8 @@ const startOfWeek = (d: Date): Date => {
   return c;
 };
 
-const startOfMonth = (d: Date): Date => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+const startOfMonth = (d: Date): Date =>
+  new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
 const endOfMonth = (d: Date): Date =>
   new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
 

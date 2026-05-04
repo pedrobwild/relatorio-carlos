@@ -1,15 +1,18 @@
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CheckCircle2, CalendarCheck } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import type { MeetingAvailability } from '@/hooks/useMeetingAvailability';
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { CheckCircle2, CalendarCheck } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import type { MeetingAvailability } from "@/hooks/useMeetingAvailability";
 
 interface MeetingConfirmationCardProps {
   availability: MeetingAvailability;
 }
 
-export function MeetingConfirmationCard({ availability }: MeetingConfirmationCardProps) {
-  if (availability.status !== 'confirmed' || !availability.confirmed_datetime) return null;
+export function MeetingConfirmationCard({
+  availability,
+}: MeetingConfirmationCardProps) {
+  if (availability.status !== "confirmed" || !availability.confirmed_datetime)
+    return null;
 
   const confirmedDate = new Date(availability.confirmed_datetime);
 
@@ -33,7 +36,9 @@ export function MeetingConfirmationCard({ availability }: MeetingConfirmationCar
 
         <div className="pl-11">
           <p className="text-sm font-medium text-foreground">
-            {format(confirmedDate, "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+            {format(confirmedDate, "EEEE, dd 'de' MMMM 'às' HH:mm", {
+              locale: ptBR,
+            })}
           </p>
         </div>
       </CardContent>

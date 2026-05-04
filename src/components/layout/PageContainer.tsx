@@ -10,11 +10,11 @@ interface PageContainerProps {
 }
 
 const maxWidthMap = {
-  sm: "max-w-2xl",      // 672px - compact lists (MinhasObras)
-  md: "max-w-4xl",      // 896px - forms (Cronograma)
-  lg: "max-w-5xl",      // 1024px - standard pages
-  xl: "max-w-6xl",      // 1152px - wide pages (Pendencias, Formalizacoes)
-  full: "max-w-7xl",    // 1280px - full-width (Compras)
+  sm: "max-w-2xl", // 672px - compact lists (MinhasObras)
+  md: "max-w-4xl", // 896px - forms (Cronograma)
+  lg: "max-w-5xl", // 1024px - standard pages
+  xl: "max-w-6xl", // 1152px - wide pages (Pendencias, Formalizacoes)
+  full: "max-w-7xl", // 1280px - full-width (Compras)
 };
 
 /**
@@ -35,7 +35,7 @@ export function PageContainer({
         "mx-auto w-full overflow-x-hidden",
         maxWidthMap[maxWidth],
         !noPadding && "px-4 sm:px-6 md:px-8",
-        className
+        className,
       )}
     >
       {children}
@@ -52,14 +52,17 @@ interface ReadingContainerProps {
  * ReadingContainer — for long-form text content (reports, descriptions).
  * Max width 720–840px with comfortable line-height for readability.
  */
-export function ReadingContainer({ children, className }: ReadingContainerProps) {
+export function ReadingContainer({
+  children,
+  className,
+}: ReadingContainerProps) {
   return (
     <div
       className={cn(
         "max-w-[780px] mx-auto",
         "[&_p]:leading-relaxed [&_li]:leading-relaxed",
         "[&>*+*]:mt-4",
-        className
+        className,
       )}
     >
       {children}

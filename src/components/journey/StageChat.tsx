@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, MessageCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { useStageChat, type StageMessage } from '@/hooks/useStageChat';
-import { useAuth } from '@/hooks/useAuth';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useState, useRef, useEffect } from "react";
+import { Send, MessageCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { useStageChat, type StageMessage } from "@/hooks/useStageChat";
+import { useAuth } from "@/hooks/useAuth";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface StageChatProps {
   stageId: string;
@@ -19,11 +19,11 @@ interface StageChatProps {
 export function StageChat({ stageId, projectId, isAdmin }: StageChatProps) {
   const { messages, isLoading, sendMessage } = useStageChat(stageId, projectId);
   const { user } = useAuth();
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
   const handleSend = () => {
@@ -32,21 +32,25 @@ export function StageChat({ stageId, projectId, isAdmin }: StageChatProps) {
 
     sendMessage.mutate({
       message: trimmed,
-      authorName: user.user_metadata?.display_name || user.email || 'Usuário',
-      authorRole: isAdmin ? 'admin' : 'customer',
+      authorName: user.user_metadata?.display_name || user.email || "Usuário",
+      authorRole: isAdmin ? "admin" : "customer",
     });
-    setText('');
+    setText("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
   const initials = (name: string) =>
-    name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase()).join('');
+    name
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase())
+      .join("");
 
   return (
     <section className="space-y-3" aria-label="Chat da etapa">
@@ -54,7 +58,10 @@ export function StageChat({ stageId, projectId, isAdmin }: StageChatProps) {
         <MessageCircle className="h-4 w-4 text-primary" aria-hidden />
         Chat da etapa
         {messages.length > 0 && (
-          <Badge variant="secondary" className="h-5 min-w-[20px] px-1.5 text-[10px]">
+          <Badge
+            variant="secondary"
+            className="h-5 min-w-[20px] px-1.5 text-[10px]"
+          >
             {messages.length}
           </Badge>
         )}
@@ -71,7 +78,9 @@ export function StageChat({ stageId, projectId, isAdmin }: StageChatProps) {
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
               <MessageCircle className="h-5 w-5 text-muted-foreground" />
             </div>
-            <p className="text-sm font-medium text-foreground">Nenhuma mensagem ainda</p>
+            <p className="text-sm font-medium text-foreground">
+              Nenhuma mensagem ainda
+            </p>
             <p className="text-xs text-muted-foreground text-center">
               Inicie uma conversa sobre esta etapa do projeto.
             </p>
@@ -128,39 +137,42 @@ function ChatBubble({
   isOwn: boolean;
   initials: (name: string) => string;
 }) {
-  const isAdmin = msg.author_role === 'admin';
+  const isAdmin = msg.author_role === "admin";
 
   return (
-    <div className={cn('flex gap-2', isOwn && 'flex-row-reverse')}>
+    <div className={cn("flex gap-2", isOwn && "flex-row-reverse")}>
       <Avatar className="h-7 w-7 shrink-0 mt-0.5">
         <AvatarFallback
           className={cn(
-            'text-[10px] font-bold',
+            "text-[10px] font-bold",
             isAdmin
-              ? 'bg-primary/15 text-primary'
-              : 'bg-accent text-accent-foreground',
+              ? "bg-primary/15 text-primary"
+              : "bg-accent text-accent-foreground",
           )}
         >
           {initials(msg.author_name)}
         </AvatarFallback>
       </Avatar>
-      <div className={cn('max-w-[80%] space-y-0.5', isOwn && 'items-end')}>
+      <div className={cn("max-w-[80%] space-y-0.5", isOwn && "items-end")}>
         <div className="flex items-center gap-1.5">
           <span className="text-[11px] font-semibold text-foreground">
             {msg.author_name}
           </span>
           {isAdmin && (
-            <Badge variant="outline" className="h-4 px-1 text-[9px] border-primary/30 text-primary">
+            <Badge
+              variant="outline"
+              className="h-4 px-1 text-[9px] border-primary/30 text-primary"
+            >
               Equipe
             </Badge>
           )}
         </div>
         <div
           className={cn(
-            'rounded-lg px-3 py-2 text-sm leading-relaxed',
+            "rounded-lg px-3 py-2 text-sm leading-relaxed",
             isOwn
-              ? 'bg-primary text-primary-foreground rounded-tr-sm'
-              : 'bg-muted rounded-tl-sm text-foreground',
+              ? "bg-primary text-primary-foreground rounded-tr-sm"
+              : "bg-muted rounded-tl-sm text-foreground",
           )}
         >
           {msg.message}

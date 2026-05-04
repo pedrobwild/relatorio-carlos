@@ -84,5 +84,14 @@ export function useScopedSwipe({
       node.removeEventListener("touchend", onTouchEnd);
       node.removeEventListener("touchcancel", onTouchCancel);
     };
-  }, [ref, onSwipeLeft, onSwipeRight, threshold, minVelocity, edgeIgnore, maxVerticalRatio, disableWhen]);
+  }, [
+    ref,
+    onSwipeLeft,
+    onSwipeRight,
+    threshold,
+    minVelocity,
+    edgeIgnore,
+    maxVerticalRatio,
+    disableWhen,
+  ]);
 }

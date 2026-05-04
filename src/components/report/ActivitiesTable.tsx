@@ -19,20 +19,49 @@ interface ActivitiesTableProps {
 const getStatusBadge = (status: WeeklyReportActivitySnapshot["status"]) => {
   switch (status) {
     case "concluído":
-      return <Badge variant="outline" className="bg-success/10 text-success border-success/20">Concluído</Badge>;
+      return (
+        <Badge
+          variant="outline"
+          className="bg-success/10 text-success border-success/20"
+        >
+          Concluído
+        </Badge>
+      );
     case "em andamento":
-      return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">Em andamento</Badge>;
+      return (
+        <Badge
+          variant="outline"
+          className="bg-primary/10 text-primary border-primary/20"
+        >
+          Em andamento
+        </Badge>
+      );
     case "pendente":
-      return <Badge variant="outline" className="bg-muted text-muted-foreground border-border">Pendente</Badge>;
+      return (
+        <Badge
+          variant="outline"
+          className="bg-muted text-muted-foreground border-border"
+        >
+          Pendente
+        </Badge>
+      );
     case "atrasado":
-      return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">Atrasado</Badge>;
+      return (
+        <Badge
+          variant="outline"
+          className="bg-destructive/10 text-destructive border-destructive/20"
+        >
+          Atrasado
+        </Badge>
+      );
     default:
       return null;
   }
 };
 
 const getVarianceText = (days: number) => {
-  if (days === 0) return <span className="text-muted-foreground">No prazo</span>;
+  if (days === 0)
+    return <span className="text-muted-foreground">No prazo</span>;
   if (days < 0) return <span className="text-success">{days}d</span>;
   return <span className="text-destructive">+{days}d</span>;
 };
@@ -43,7 +72,7 @@ const ActivitiesTable = ({ activities }: ActivitiesTableProps) => {
       <div className="p-4 border-b border-border">
         <h3 className="text-h3">Cronograma de Atividades</h3>
       </div>
-      
+
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto">
         <Table>
@@ -63,13 +92,18 @@ const ActivitiesTable = ({ activities }: ActivitiesTableProps) => {
                   {activity.description}
                 </TableCell>
                 <TableCell className="text-caption">
-                  {format(parseLocalDate(activity.plannedStart), "dd/MM", { locale: ptBR })} - {format(parseLocalDate(activity.plannedEnd), "dd/MM", { locale: ptBR })}
+                  {format(parseLocalDate(activity.plannedStart), "dd/MM", {
+                    locale: ptBR,
+                  })}{" "}
+                  -{" "}
+                  {format(parseLocalDate(activity.plannedEnd), "dd/MM", {
+                    locale: ptBR,
+                  })}
                 </TableCell>
                 <TableCell className="text-caption">
-                  {activity.actualStart 
+                  {activity.actualStart
                     ? `${format(parseLocalDate(activity.actualStart), "dd/MM", { locale: ptBR })}${activity.actualEnd ? ` - ${format(parseLocalDate(activity.actualEnd), "dd/MM", { locale: ptBR })}` : " - ..."}`
-                    : "-"
-                  }
+                    : "-"}
                 </TableCell>
                 <TableCell>{getStatusBadge(activity.status)}</TableCell>
                 <TableCell className="text-right text-caption font-medium">
@@ -86,20 +120,27 @@ const ActivitiesTable = ({ activities }: ActivitiesTableProps) => {
         {activities.map((activity) => (
           <div key={activity.activityId} className="p-4 space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-body font-medium">{activity.description}</span>
+              <span className="text-body font-medium">
+                {activity.description}
+              </span>
               {getStatusBadge(activity.status)}
             </div>
             <div className="grid grid-cols-2 gap-2 text-tiny">
               <div>
                 <span className="block text-muted-foreground">Previsto</span>
-                {format(parseLocalDate(activity.plannedStart), "dd/MM", { locale: ptBR })} - {format(parseLocalDate(activity.plannedEnd), "dd/MM", { locale: ptBR })}
+                {format(parseLocalDate(activity.plannedStart), "dd/MM", {
+                  locale: ptBR,
+                })}{" "}
+                -{" "}
+                {format(parseLocalDate(activity.plannedEnd), "dd/MM", {
+                  locale: ptBR,
+                })}
               </div>
               <div>
                 <span className="block text-muted-foreground">Real</span>
-                {activity.actualStart 
+                {activity.actualStart
                   ? `${format(parseLocalDate(activity.actualStart), "dd/MM", { locale: ptBR })}${activity.actualEnd ? ` - ${format(parseLocalDate(activity.actualEnd), "dd/MM", { locale: ptBR })}` : ""}`
-                  : "-"
-                }
+                  : "-"}
               </div>
             </div>
             <div className="text-tiny">

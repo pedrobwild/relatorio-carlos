@@ -1,7 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { projectKeys } from './useProjectsQuery';
-import { deleteProject, restoreProject } from '@/infra/repositories/projects.repository';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { projectKeys } from "./useProjectsQuery";
+import {
+  deleteProject,
+  restoreProject,
+} from "@/infra/repositories/projects.repository";
 
 export function useDeleteProject() {
   const queryClient = useQueryClient();
@@ -13,17 +16,17 @@ export function useDeleteProject() {
       return projectId;
     },
     onSuccess: (projectId) => {
-      toast.success('Obra movida para a lixeira', {
-        description: 'Você pode restaurar nos próximos dias.',
+      toast.success("Obra movida para a lixeira", {
+        description: "Você pode restaurar nos próximos dias.",
         action: {
-          label: 'Desfazer',
+          label: "Desfazer",
           onClick: async () => {
             const { error } = await restoreProject(projectId);
             if (error) {
-              toast.error('Não foi possível restaurar: ' + error.message);
+              toast.error("Não foi possível restaurar: " + error.message);
               return;
             }
-            toast.success('Obra restaurada');
+            toast.success("Obra restaurada");
             queryClient.invalidateQueries({ queryKey: projectKeys.all });
           },
         },
@@ -31,8 +34,8 @@ export function useDeleteProject() {
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
     onError: (error: Error) => {
-      console.error('Error deleting project:', error);
-      toast.error('Erro ao excluir obra: ' + error.message);
+      console.error("Error deleting project:", error);
+      toast.error("Erro ao excluir obra: " + error.message);
     },
   });
 }
@@ -46,11 +49,11 @@ export function useRestoreProject() {
       return projectId;
     },
     onSuccess: () => {
-      toast.success('Obra restaurada');
+      toast.success("Obra restaurada");
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
     onError: (error: Error) => {
-      toast.error('Erro ao restaurar obra: ' + error.message);
+      toast.error("Erro ao restaurar obra: " + error.message);
     },
   });
 }

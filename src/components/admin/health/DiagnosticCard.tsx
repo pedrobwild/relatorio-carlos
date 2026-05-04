@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatusBadge } from './StatusBadge';
-import type { DiagnosticResult } from '@/infra/repositories/diagnostics.repository';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "./StatusBadge";
+import type { DiagnosticResult } from "@/infra/repositories/diagnostics.repository";
 
 interface DiagnosticCardProps {
   title: string;
@@ -9,7 +9,12 @@ interface DiagnosticCardProps {
   children?: React.ReactNode;
 }
 
-export const DiagnosticCard = ({ title, icon: Icon, result, children }: DiagnosticCardProps) => (
+export const DiagnosticCard = ({
+  title,
+  icon: Icon,
+  result,
+  children,
+}: DiagnosticCardProps) => (
   <Card>
     <CardHeader className="pb-2">
       <div className="flex items-center justify-between">

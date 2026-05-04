@@ -9,25 +9,26 @@
  * As políticas RLS garantem que apenas equipe staff
  * (`is_staff(auth.uid())`) acesse, crie, edite ou exclua tickets.
  */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // ----- types -----
-export type CsTicketSeverity = 'baixa' | 'media' | 'alta' | 'critica';
-export type CsTicketStatus = 'aberto' | 'em_andamento' | 'concluido';
+export type CsTicketSeverity = "baixa" | "media" | "alta" | "critica";
+export type CsTicketStatus = "aberto" | "em_andamento" | "concluido";
 
-export const CS_SEVERITY_OPTIONS: { value: CsTicketSeverity; label: string }[] = [
-  { value: 'baixa', label: 'Baixa' },
-  { value: 'media', label: 'Média' },
-  { value: 'alta', label: 'Alta' },
-  { value: 'critica', label: 'Crítica' },
-];
+export const CS_SEVERITY_OPTIONS: { value: CsTicketSeverity; label: string }[] =
+  [
+    { value: "baixa", label: "Baixa" },
+    { value: "media", label: "Média" },
+    { value: "alta", label: "Alta" },
+    { value: "critica", label: "Crítica" },
+  ];
 
 export const CS_STATUS_OPTIONS: { value: CsTicketStatus; label: string }[] = [
-  { value: 'aberto', label: 'Aberto' },
-  { value: 'em_andamento', label: 'Em andamento' },
-  { value: 'concluido', label: 'Concluído' },
+  { value: "aberto", label: "Aberto" },
+  { value: "em_andamento", label: "Em andamento" },
+  { value: "concluido", label: "Concluído" },
 ];
 
 export interface CsTicket {
@@ -58,12 +59,12 @@ export interface CsTicketInput {
   responsible_user_id?: string | null;
 }
 
-export type CsTicketPatch = Partial<Omit<CsTicketInput, 'project_id'>>;
+export type CsTicketPatch = Partial<Omit<CsTicketInput, "project_id">>;
 
 // ----- query keys -----
 export const csTicketKeys = {
-  all: ['cs-tickets'] as const,
-  list: () => [...csTicketKeys.all, 'list'] as const,
+  all: ["cs-tickets"] as const,
+  list: () => [...csTicketKeys.all, "list"] as const,
 };
 
 // ----- list -----
@@ -72,7 +73,7 @@ export function useCsTickets() {
     queryKey: csTicketKeys.list(),
     queryFn: async (): Promise<CsTicket[]> => {
       const { data, error } = await supabase
-        .from('cs_tickets')
+        .from("cs_tickets")
         .select(
           `
           id, project_id, situation, description, severity, status,
@@ -82,7 +83,7 @@ export function useCsTickets() {
           responsible:users_profile!cs_tickets_responsible_user_id_fkey ( id, nome )
           `,
         )
-        .order('created_at', { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
@@ -115,21 +116,21 @@ export function useCreateCsTicket() {
     mutationFn: async (input: CsTicketInput) => {
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth.user?.id;
-      if (!uid) throw new Error('Usuário não autenticado.');
+      if (!uid) throw new Error("Usuário não autenticado.");
 
       const { data, error } = await supabase
-        .from('cs_tickets')
+        .from("cs_tickets")
         .insert({
           project_id: input.project_id,
           situation: input.situation,
           description: input.description ?? null,
           severity: input.severity,
-          status: input.status ?? 'aberto',
+          status: input.status ?? "aberto",
           action_plan: input.action_plan ?? null,
           responsible_user_id: input.responsible_user_id ?? null,
           created_by: uid,
         })
-        .select('id')
+        .select("id")
         .single();
 
       if (error) throw error;
@@ -137,10 +138,10 @@ export function useCreateCsTicket() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: csTicketKeys.all });
-      toast.success('Ticket criado com sucesso.');
+      toast.success("Ticket criado com sucesso.");
     },
     onError: (err: any) => {
-      toast.error('Erro ao criar ticket', { description: err?.message });
+      toast.error("Erro ao criar ticket", { description: err?.message });
     },
   });
 }
@@ -150,14 +151,17 @@ export function useUpdateCsTicket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: CsTicketPatch }) => {
-      const { error } = await supabase.from('cs_tickets').update(patch).eq('id', id);
+      const { error } = await supabase
+        .from("cs_tickets")
+        .update(patch)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: csTicketKeys.all });
     },
     onError: (err: any) => {
-      toast.error('Erro ao atualizar ticket', { description: err?.message });
+      toast.error("Erro ao atualizar ticket", { description: err?.message });
     },
   });
 }
@@ -168,17 +172,17 @@ export function useTouchCsTicket() {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('cs_tickets')
+        .from("cs_tickets")
         .update({ updated_at: new Date().toISOString() })
-        .eq('id', id);
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: csTicketKeys.all });
-      toast.success('Ticket marcado como tratado.');
+      toast.success("Ticket marcado como tratado.");
     },
     onError: (err: any) => {
-      toast.error('Erro ao atualizar ticket', { description: err?.message });
+      toast.error("Erro ao atualizar ticket", { description: err?.message });
     },
   });
 }
@@ -188,15 +192,15 @@ export function useDeleteCsTicket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('cs_tickets').delete().eq('id', id);
+      const { error } = await supabase.from("cs_tickets").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: csTicketKeys.all });
-      toast.success('Ticket removido.');
+      toast.success("Ticket removido.");
     },
     onError: (err: any) => {
-      toast.error('Erro ao remover ticket', { description: err?.message });
+      toast.error("Erro ao remover ticket", { description: err?.message });
     },
   });
 }

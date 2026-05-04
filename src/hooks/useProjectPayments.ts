@@ -26,7 +26,7 @@ export function useProjectPayments(projectId: string | undefined) {
     queryKey: queryKeys.payments.list(projectId),
     queryFn: async () => {
       if (!projectId) return [];
-      
+
       const { data, error } = await supabase
         .from("project_payments")
         .select("*")
@@ -46,11 +46,17 @@ export function useMarkPaymentPaid() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ paymentId, paid }: { paymentId: string; paid: boolean }) => {
+    mutationFn: async ({
+      paymentId,
+      paid,
+    }: {
+      paymentId: string;
+      paid: boolean;
+    }) => {
       const { error } = await supabase
         .from("project_payments")
-        .update({ 
-          paid_at: paid ? new Date().toISOString() : null 
+        .update({
+          paid_at: paid ? new Date().toISOString() : null,
         })
         .eq("id", paymentId);
 
@@ -58,52 +64,56 @@ export function useMarkPaymentPaid() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
-      toast.success(variables.paid ? "Pagamento marcado como pago" : "Pagamento desmarcado");
+      toast.success(
+        variables.paid ? "Pagamento marcado como pago" : "Pagamento desmarcado",
+      );
     },
     onError: (error: any) => {
       console.error("Error updating payment:", error);
       if (error.message?.includes("row-level security")) {
-        toast.error("Apenas administradores podem alterar o status de pagamento");
+        toast.error(
+          "Apenas administradores podem alterar o status de pagamento",
+        );
       } else {
         toast.error("Erro ao atualizar pagamento");
       }
     },
   });
 }
- 
- export function useUpdatePayment() {
-   const queryClient = useQueryClient();
- 
-   return useMutation({
-     mutationFn: async ({
-       paymentId,
-       updates,
-     }: {
-       paymentId: string;
-       updates: {
-         description?: string;
-         amount?: number;
-         due_date?: string | null;
-       };
-     }) => {
-       const { error } = await supabase
-         .from("project_payments")
-         .update(updates)
-         .eq("id", paymentId);
- 
-       if (error) throw error;
-     },
-      onSuccess: () => {
-       queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
-       toast.success("Parcela atualizada");
-     },
-     onError: (error: any) => {
-       console.error("Error updating payment:", error);
-       if (error.message?.includes("row-level security")) {
-         toast.error("Apenas administradores podem editar parcelas");
-       } else {
-         toast.error("Erro ao atualizar parcela");
-       }
-     },
-   });
- }
+
+export function useUpdatePayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      paymentId,
+      updates,
+    }: {
+      paymentId: string;
+      updates: {
+        description?: string;
+        amount?: number;
+        due_date?: string | null;
+      };
+    }) => {
+      const { error } = await supabase
+        .from("project_payments")
+        .update(updates)
+        .eq("id", paymentId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
+      toast.success("Parcela atualizada");
+    },
+    onError: (error: any) => {
+      console.error("Error updating payment:", error);
+      if (error.message?.includes("row-level security")) {
+        toast.error("Apenas administradores podem editar parcelas");
+      } else {
+        toast.error("Erro ao atualizar parcela");
+      }
+    },
+  });
+}

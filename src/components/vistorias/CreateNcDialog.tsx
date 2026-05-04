@@ -1,48 +1,60 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, FileText, ImagePlus, X, Upload, Film, Sparkles, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  CalendarIcon,
+  FileText,
+  ImagePlus,
+  X,
+  Upload,
+  Film,
+  Sparkles,
+  Loader2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { useCreateNonConformity, type NcSeverity } from '@/hooks/useNonConformities';
-import { useProjectMembers } from '@/hooks/useProjectMembers';
-import { useStaffUsers } from '@/hooks/useStaffUsers';
-import { cn } from '@/lib/utils';
-import { NC_CATEGORIES, parseCurrencyInput } from './ncConstants';
-import { useFormDraft } from '@/hooks/useFormDraft';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+} from "@/components/ui/popover";
+import {
+  useCreateNonConformity,
+  type NcSeverity,
+} from "@/hooks/useNonConformities";
+import { useProjectMembers } from "@/hooks/useProjectMembers";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import { cn } from "@/lib/utils";
+import { NC_CATEGORIES, parseCurrencyInput } from "./ncConstants";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const severityOptions: { value: NcSeverity; label: string }[] = [
-  { value: 'low', label: 'Baixa' },
-  { value: 'medium', label: 'Média' },
-  { value: 'high', label: 'Alta' },
-  { value: 'critical', label: 'Crítica' },
+  { value: "low", label: "Baixa" },
+  { value: "medium", label: "Média" },
+  { value: "high", label: "Alta" },
+  { value: "critical", label: "Crítica" },
 ];
 
-const ACCEPTED_MEDIA = 'image/*,video/*';
+const ACCEPTED_MEDIA = "image/*,video/*";
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
 interface Props {
@@ -58,7 +70,7 @@ interface Props {
 interface MediaPreview {
   file: File;
   previewUrl: string;
-  type: 'image' | 'video';
+  type: "image" | "video";
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -67,7 +79,7 @@ function fileToBase64(file: File): Promise<string> {
     reader.onload = () => {
       const result = reader.result as string;
       // Strip data URL prefix
-      const base64 = result.split(',')[1];
+      const base64 = result.split(",")[1];
       resolve(base64);
     };
     reader.onerror = reject;
@@ -92,7 +104,7 @@ export function CreateNcDialog({
   const [uploading, setUploading] = useState(false);
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
   const [aiContextFiles, setAiContextFiles] = useState<MediaPreview[]>([]);
-  const [aiTextContext, setAiTextContext] = useState('');
+  const [aiTextContext, setAiTextContext] = useState("");
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<{
     title?: string;
@@ -105,16 +117,21 @@ export function CreateNcDialog({
 
   const draftKey = `create-nc-${projectId}`;
   const defaultValues = {
-    title: prefillTitle || '',
-    description: '',
-    category: '',
-    severity: 'high' as NcSeverity,
-    responsibleUserId: '',
+    title: prefillTitle || "",
+    description: "",
+    category: "",
+    severity: "high" as NcSeverity,
+    responsibleUserId: "",
     deadline: undefined as string | undefined,
-    estimatedCostInput: '',
+    estimatedCostInput: "",
   };
 
-  const { values: draft, updateField, clearDraft, hasDraft } = useFormDraft({
+  const {
+    values: draft,
+    updateField,
+    clearDraft,
+    hasDraft,
+  } = useFormDraft({
     key: draftKey,
     initialValues: defaultValues,
   });
@@ -122,15 +139,15 @@ export function CreateNcDialog({
   // Reset when dialog opens with prefill (ignore draft for prefill scenarios)
   useEffect(() => {
     if (open && prefillTitle) {
-      updateField('title', prefillTitle);
+      updateField("title", prefillTitle);
     }
   }, [open, prefillTitle, updateField]);
 
   // Cleanup media previews on unmount
   useEffect(() => {
     return () => {
-      mediaFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
-      aiContextFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
+      mediaFiles.forEach((m) => URL.revokeObjectURL(m.previewUrl));
+      aiContextFiles.forEach((m) => URL.revokeObjectURL(m.previewUrl));
     };
   }, []);
 
@@ -140,7 +157,9 @@ export function CreateNcDialog({
   const category = draft.category;
   const severity = draft.severity;
   const responsibleUserId = draft.responsibleUserId;
-  const deadline = draft.deadline ? new Date(draft.deadline + 'T00:00:00') : undefined;
+  const deadline = draft.deadline
+    ? new Date(draft.deadline + "T00:00:00")
+    : undefined;
   const estimatedCostInput = draft.estimatedCostInput;
 
   const handleAddMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,19 +172,19 @@ export function CreateNcDialog({
         toast.error(`${file.name} excede o limite de 20MB`);
         continue;
       }
-      const type = file.type.startsWith('video/') ? 'video' : 'image';
+      const type = file.type.startsWith("video/") ? "video" : "image";
       newPreviews.push({
         file,
         previewUrl: URL.createObjectURL(file),
         type,
       });
     }
-    setMediaFiles(prev => [...prev, ...newPreviews]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setMediaFiles((prev) => [...prev, ...newPreviews]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleRemoveMedia = (index: number) => {
-    setMediaFiles(prev => {
+    setMediaFiles((prev) => {
       const removed = prev[index];
       URL.revokeObjectURL(removed.previewUrl);
       return prev.filter((_, i) => i !== index);
@@ -182,22 +201,24 @@ export function CreateNcDialog({
         toast.error(`${file.name} excede o limite de 20MB`);
         continue;
       }
-      if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name}: apenas imagens são suportadas para análise com IA`);
+      if (!file.type.startsWith("image/")) {
+        toast.error(
+          `${file.name}: apenas imagens são suportadas para análise com IA`,
+        );
         continue;
       }
       newPreviews.push({
         file,
         previewUrl: URL.createObjectURL(file),
-        type: 'image',
+        type: "image",
       });
     }
-    setAiContextFiles(prev => [...prev, ...newPreviews]);
-    if (aiFileInputRef.current) aiFileInputRef.current.value = '';
+    setAiContextFiles((prev) => [...prev, ...newPreviews]);
+    if (aiFileInputRef.current) aiFileInputRef.current.value = "";
   };
 
   const handleRemoveAiContext = (index: number) => {
-    setAiContextFiles(prev => {
+    setAiContextFiles((prev) => {
       const removed = prev[index];
       URL.revokeObjectURL(removed.previewUrl);
       return prev.filter((_, i) => i !== index);
@@ -206,7 +227,7 @@ export function CreateNcDialog({
 
   const handleAiAnalyze = async () => {
     if (aiContextFiles.length === 0 && !aiTextContext.trim()) {
-      toast.error('Anexe prints ou insira um texto para a IA analisar');
+      toast.error("Anexe prints ou insira um texto para a IA analisar");
       return;
     }
 
@@ -217,18 +238,22 @@ export function CreateNcDialog({
         aiContextFiles.map(async (media) => ({
           base64: await fileToBase64(media.file),
           mime_type: media.file.type,
-        }))
+        })),
       );
 
-      const { data, error } = await supabase.functions.invoke('analyze-nc-evidence', {
-        body: {
-          images,
-          text_context: aiTextContext.trim() || undefined,
+      const { data, error } = await supabase.functions.invoke(
+        "analyze-nc-evidence",
+        {
+          body: {
+            images,
+            text_context: aiTextContext.trim() || undefined,
+          },
         },
-      });
+      );
 
-      if (error) throw new Error(error.message || 'Erro ao analisar evidências');
-      
+      if (error)
+        throw new Error(error.message || "Erro ao analisar evidências");
+
       if (data?.error) {
         toast.error(data.error);
         return;
@@ -236,14 +261,14 @@ export function CreateNcDialog({
 
       const suggestion = data?.suggestion;
       if (!suggestion) {
-        toast.error('IA não retornou sugestões');
+        toast.error("IA não retornou sugestões");
         return;
       }
 
       setAiSuggestion(suggestion);
 
       // Pre-fill form fields
-      if (suggestion.title) updateField('title', suggestion.title);
+      if (suggestion.title) updateField("title", suggestion.title);
       if (suggestion.description) {
         let desc = suggestion.description;
         if (suggestion.corrective_action) {
@@ -252,28 +277,33 @@ export function CreateNcDialog({
         if (suggestion.root_cause) {
           desc += `\n\n🔍 Causa Raiz:\n${suggestion.root_cause}`;
         }
-        updateField('description', desc);
+        updateField("description", desc);
       }
-      if (suggestion.severity) updateField('severity', suggestion.severity);
-      if (suggestion.category && NC_CATEGORIES.includes(suggestion.category as any)) {
-        updateField('category', suggestion.category);
+      if (suggestion.severity) updateField("severity", suggestion.severity);
+      if (
+        suggestion.category &&
+        NC_CATEGORIES.includes(suggestion.category as any)
+      ) {
+        updateField("category", suggestion.category);
       }
 
       // Also add AI context images as evidence
-      const newEvidence: MediaPreview[] = aiContextFiles.map(f => ({
+      const newEvidence: MediaPreview[] = aiContextFiles.map((f) => ({
         file: f.file,
         previewUrl: URL.createObjectURL(f.file),
         type: f.type,
       }));
       if (newEvidence.length > 0) {
-        setMediaFiles(prev => [...prev, ...newEvidence]);
+        setMediaFiles((prev) => [...prev, ...newEvidence]);
       }
 
-      toast.success('Formulário preenchido com sugestões da IA');
+      toast.success("Formulário preenchido com sugestões da IA");
       setShowAiPanel(false);
     } catch (err) {
-      console.error('AI analysis error:', err);
-      toast.error(err instanceof Error ? err.message : 'Erro ao analisar evidências');
+      console.error("AI analysis error:", err);
+      toast.error(
+        err instanceof Error ? err.message : "Erro ao analisar evidências",
+      );
     } finally {
       setAiAnalyzing(false);
     }
@@ -284,11 +314,13 @@ export function CreateNcDialog({
     const paths: string[] = [];
 
     for (const media of mediaFiles) {
-      const safeName = media.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const safeName = media.file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `ncs/${projectId}/${ncId}/${Date.now()}_${safeName}`;
-      const { error } = await supabase.storage.from('project-documents').upload(path, media.file);
+      const { error } = await supabase.storage
+        .from("project-documents")
+        .upload(path, media.file);
       if (error) {
-        console.error('Upload failed:', error);
+        console.error("Upload failed:", error);
         continue;
       }
       paths.push(path);
@@ -299,7 +331,7 @@ export function CreateNcDialog({
   const handleSubmit = async () => {
     if (!title.trim() || !category) return;
     if (!deadline) {
-      toast.error('Informe o prazo para finalização da NC');
+      toast.error("Informe o prazo para finalização da NC");
       return;
     }
     const estimatedCost = parseCurrencyInput(estimatedCostInput);
@@ -316,7 +348,7 @@ export function CreateNcDialog({
         category,
         estimated_cost: estimatedCost ?? undefined,
         responsible_user_id: responsibleUserId || undefined,
-        deadline: deadline ? format(deadline, 'yyyy-MM-dd') : undefined,
+        deadline: deadline ? format(deadline, "yyyy-MM-dd") : undefined,
       });
 
       // Upload media and attach to NC
@@ -324,18 +356,18 @@ export function CreateNcDialog({
         const paths = await uploadMediaFiles(nc.id);
         if (paths.length > 0) {
           await supabase
-            .from('non_conformities')
+            .from("non_conformities")
             .update({ evidence_photos_before: paths })
-            .eq('id', nc.id);
+            .eq("id", nc.id);
         }
       }
 
       // Cleanup
-      mediaFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
+      mediaFiles.forEach((m) => URL.revokeObjectURL(m.previewUrl));
       setMediaFiles([]);
-      aiContextFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
+      aiContextFiles.forEach((m) => URL.revokeObjectURL(m.previewUrl));
       setAiContextFiles([]);
-      setAiTextContext('');
+      setAiTextContext("");
       setAiSuggestion(null);
       setShowAiPanel(false);
       clearDraft();
@@ -349,24 +381,31 @@ export function CreateNcDialog({
   };
 
   const handleClose = () => {
-    mediaFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
+    mediaFiles.forEach((m) => URL.revokeObjectURL(m.previewUrl));
     setMediaFiles([]);
-    aiContextFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
+    aiContextFiles.forEach((m) => URL.revokeObjectURL(m.previewUrl));
     setAiContextFiles([]);
-    setAiTextContext('');
+    setAiTextContext("");
     setAiSuggestion(null);
     setShowAiPanel(false);
     clearDraft();
     onOpenChange(false);
   };
 
-  const staffFromProject = members.filter(m => m.role !== 'viewer' && m.role !== 'customer');
+  const staffFromProject = members.filter(
+    (m) => m.role !== "viewer" && m.role !== "customer",
+  );
   const { data: allStaff = [] } = useStaffUsers();
-  
-  const extraStaff = allStaff.filter(s => !staffFromProject.some(m => m.user_id === s.id));
+
+  const extraStaff = allStaff.filter(
+    (s) => !staffFromProject.some((m) => m.user_id === s.id),
+  );
   const allResponsibleOptions = [
-    ...staffFromProject.map(m => ({ id: m.user_id, name: m.user_name || m.user_email || m.user_id.slice(0, 8) })),
-    ...extraStaff.map(s => ({ id: s.id, name: s.nome || s.email })),
+    ...staffFromProject.map((m) => ({
+      id: m.user_id,
+      name: m.user_name || m.user_email || m.user_id.slice(0, 8),
+    })),
+    ...extraStaff.map((s) => ({ id: s.id, name: s.nome || s.email })),
   ];
   const isSubmitting = createNc.isPending || uploading;
 
@@ -378,7 +417,9 @@ export function CreateNcDialog({
       <DialogContent className="max-w-lg max-h-[100dvh] sm:max-h-[85dvh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-base sm:text-lg">Registrar Não Conformidade</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">
+              Registrar Não Conformidade
+            </DialogTitle>
             {hasDraft && (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <FileText className="h-3 w-3" />
@@ -418,7 +459,9 @@ export function CreateNcDialog({
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Anexe prints de conversas, fotos do problema ou descreva a situação. A IA irá sugerir título, descrição, severidade, categoria e plano de ação.
+                Anexe prints de conversas, fotos do problema ou descreva a
+                situação. A IA irá sugerir título, descrição, severidade,
+                categoria e plano de ação.
               </p>
 
               {/* AI context images */}
@@ -434,7 +477,10 @@ export function CreateNcDialog({
               {aiContextFiles.length > 0 && (
                 <div className="grid grid-cols-4 gap-1.5">
                   {aiContextFiles.map((media, idx) => (
-                    <div key={idx} className="relative group rounded-md overflow-hidden border bg-muted aspect-square">
+                    <div
+                      key={idx}
+                      className="relative group rounded-md overflow-hidden border bg-muted aspect-square"
+                    >
                       <img
                         src={media.previewUrl}
                         alt={`Evidência ${idx + 1}`}
@@ -475,7 +521,10 @@ export function CreateNcDialog({
               <Button
                 type="button"
                 onClick={handleAiAnalyze}
-                disabled={aiAnalyzing || (aiContextFiles.length === 0 && !aiTextContext.trim())}
+                disabled={
+                  aiAnalyzing ||
+                  (aiContextFiles.length === 0 && !aiTextContext.trim())
+                }
                 className="w-full h-10 gap-2"
               >
                 {aiAnalyzing ? (
@@ -492,8 +541,9 @@ export function CreateNcDialog({
               </Button>
 
               {aiSuggestion && (
-                <p className="text-[11px] text-green-600 dark:text-green-400 font-medium">
-                  ✓ Campos preenchidos com sugestões da IA. Revise antes de registrar.
+                <p className="text-[11px] text-green-600 font-medium">
+                  ✓ Campos preenchidos com sugestões da IA. Revise antes de
+                  registrar.
                 </p>
               )}
             </div>
@@ -507,7 +557,7 @@ export function CreateNcDialog({
             <Input
               id="nc-title"
               value={title}
-              onChange={(e) => updateField('title', e.target.value)}
+              onChange={(e) => updateField("title", e.target.value)}
               placeholder="Descreva a não conformidade..."
               className="h-11"
             />
@@ -521,7 +571,7 @@ export function CreateNcDialog({
             <Textarea
               id="nc-description"
               value={description}
-              onChange={(e) => updateField('description', e.target.value)}
+              onChange={(e) => updateField("description", e.target.value)}
               placeholder="Detalhes adicionais..."
               rows={description.length > 200 ? 8 : 3}
               className="min-h-[44px]"
@@ -534,11 +584,14 @@ export function CreateNcDialog({
               <Label className="text-sm font-medium">
                 Categoria <span className="text-destructive">*</span>
               </Label>
-              <Select value={category} onValueChange={(v) => updateField('category', v)}>
+              <Select
+                value={category}
+                onValueChange={(v) => updateField("category", v)}
+              >
                 <SelectTrigger className="h-11">
                   <SelectValue placeholder="Selecionar..." />
                 </SelectTrigger>
-                <SelectContent position="popper"  sideOffset={4}>
+                <SelectContent position="popper" sideOffset={4}>
                   {NC_CATEGORIES.map((cat) => (
                     <SelectItem key={cat} value={cat} className="min-h-[44px]">
                       {cat}
@@ -552,13 +605,20 @@ export function CreateNcDialog({
               <Label className="text-sm font-medium">
                 Severidade <span className="text-destructive">*</span>
               </Label>
-              <Select value={severity} onValueChange={(v) => updateField('severity', v as NcSeverity)}>
+              <Select
+                value={severity}
+                onValueChange={(v) => updateField("severity", v as NcSeverity)}
+              >
                 <SelectTrigger className="h-11">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper"  sideOffset={4}>
+                <SelectContent position="popper" sideOffset={4}>
                   {severityOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="min-h-[44px]">
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="min-h-[44px]"
+                    >
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -570,13 +630,20 @@ export function CreateNcDialog({
           {/* Responsável */}
           <div className="space-y-1.5">
             <Label className="text-sm font-medium">Responsável</Label>
-            <Select value={responsibleUserId} onValueChange={(v) => updateField('responsibleUserId', v)}>
+            <Select
+              value={responsibleUserId}
+              onValueChange={(v) => updateField("responsibleUserId", v)}
+            >
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Selecionar responsável..." />
               </SelectTrigger>
-              <SelectContent position="popper"  sideOffset={4}>
+              <SelectContent position="popper" sideOffset={4}>
                 {allResponsibleOptions.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id} className="min-h-[44px]">
+                  <SelectItem
+                    key={opt.id}
+                    value={opt.id}
+                    className="min-h-[44px]"
+                  >
                     {opt.name}
                   </SelectItem>
                 ))}
@@ -587,42 +654,52 @@ export function CreateNcDialog({
           {/* Prazo + Custo side by side */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Prazo <span className="text-destructive">*</span></Label>
+              <Label className="text-sm font-medium">
+                Prazo <span className="text-destructive">*</span>
+              </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      'w-full h-11 justify-start text-left font-normal',
-                      !deadline && 'text-muted-foreground',
-                      !deadline && 'border-destructive/50'
+                      "w-full h-11 justify-start text-left font-normal",
+                      !deadline && "text-muted-foreground",
+                      !deadline && "border-destructive/50",
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
                     <span className="truncate">
-                      {deadline ? format(deadline, "dd/MM/yyyy", { locale: ptBR }) : 'Selecionar...'}
+                      {deadline
+                        ? format(deadline, "dd/MM/yyyy", { locale: ptBR })
+                        : "Selecionar..."}
                     </span>
                     {deadline && (
                       <X
                         className="ml-auto h-3.5 w-3.5 text-muted-foreground hover:text-destructive shrink-0"
                         onClick={(e) => {
                           e.stopPropagation();
-                          updateField('deadline', undefined);
+                          updateField("deadline", undefined);
                         }}
                       />
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
+                <PopoverContent
+                  className="w-auto p-0"
+                  align="start"
+                  sideOffset={4}
+                >
                   <Calendar
                     mode="single"
                     selected={deadline}
                     onSelect={(d) => {
                       if (d) {
                         const y = d.getFullYear();
-                        const m = (d.getMonth() + 1).toString().padStart(2, '0');
-                        const day = d.getDate().toString().padStart(2, '0');
-                        updateField('deadline', `${y}-${m}-${day}`);
+                        const m = (d.getMonth() + 1)
+                          .toString()
+                          .padStart(2, "0");
+                        const day = d.getDate().toString().padStart(2, "0");
+                        updateField("deadline", `${y}-${m}-${day}`);
                       }
                     }}
                     disabled={(date) => {
@@ -632,7 +709,7 @@ export function CreateNcDialog({
                     }}
                     locale={ptBR}
                     initialFocus
-                    className={cn('p-3 pointer-events-auto')}
+                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
@@ -642,7 +719,9 @@ export function CreateNcDialog({
               <Label className="text-sm font-medium">Custo Estimado (R$)</Label>
               <Input
                 value={estimatedCostInput}
-                onChange={(e) => updateField('estimatedCostInput', e.target.value)}
+                onChange={(e) =>
+                  updateField("estimatedCostInput", e.target.value)
+                }
                 placeholder="0,00"
                 inputMode="decimal"
                 className="h-11"
@@ -665,8 +744,11 @@ export function CreateNcDialog({
             {mediaFiles.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mb-2">
                 {mediaFiles.map((media, idx) => (
-                  <div key={idx} className="relative group rounded-md overflow-hidden border bg-muted aspect-square">
-                    {media.type === 'image' ? (
+                  <div
+                    key={idx}
+                    className="relative group rounded-md overflow-hidden border bg-muted aspect-square"
+                  >
+                    {media.type === "image" ? (
                       <img
                         src={media.previewUrl}
                         alt={`Anexo ${idx + 1}`}
@@ -718,7 +800,7 @@ export function CreateNcDialog({
             disabled={!title.trim() || !category || !deadline || isSubmitting}
             className="h-11 sm:h-10 w-full sm:w-auto"
           >
-            {isSubmitting ? 'Criando...' : 'Registrar NC'}
+            {isSubmitting ? "Criando..." : "Registrar NC"}
           </Button>
         </DialogFooter>
       </DialogContent>

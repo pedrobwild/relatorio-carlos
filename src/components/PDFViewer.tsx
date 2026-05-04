@@ -1,6 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Document, Page } from "react-pdf";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Move, AlertCircle, RotateCw } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  Move,
+  AlertCircle,
+  RotateCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import "@/lib/pdfWorker";
@@ -22,13 +30,13 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
   const [loadTimedOut, setLoadTimedOut] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+
   // Pan/drag state
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [scrollStart, setScrollStart] = useState({ x: 0, y: 0 });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Swipe handling (for page navigation when not zoomed)
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
@@ -46,13 +54,15 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
     timeoutRef.current = setTimeout(() => {
       if (numPages === 0) setLoadTimedOut(true);
     }, PDF_LOAD_TIMEOUT_MS);
-    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [url, retryKey]);
 
   const handleRetry = () => {
     setNumPages(0);
     setLoadTimedOut(false);
-    setRetryKey(k => k + 1);
+    setRetryKey((k) => k + 1);
   };
 
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
@@ -165,7 +175,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
         goToPrevPage();
       }
     }
-    
+
     setIsPanning(false);
     touchStartX.current = 0;
     touchEndX.current = 0;
@@ -176,7 +186,10 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
   const pageWidth = Math.min(safeContainerWidth - 32, 800) * scale;
 
   return (
-    <div data-no-swipe className="flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden h-full">
+    <div
+      data-no-swipe
+      className="flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden h-full"
+    >
       {/* PDF Controls - Top */}
       <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border shrink-0">
         <div className="flex items-center gap-1">
@@ -247,10 +260,16 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
       <div
         ref={(node: HTMLDivElement | null) => {
           containerRef(node);
-          (scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          (
+            scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>
+          ).current = node;
         }}
-        className={cn("flex-1 min-h-0 overflow-auto", scale > 1 && "cursor-grab", isPanning && "cursor-grabbing")}
-        style={{ 
+        className={cn(
+          "flex-1 min-h-0 overflow-auto",
+          scale > 1 && "cursor-grab",
+          isPanning && "cursor-grabbing",
+        )}
+        style={{
           WebkitOverflowScrolling: "touch",
         }}
         onMouseDown={handleMouseDown}
@@ -261,12 +280,20 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="flex justify-center p-4" style={{ minWidth: scale > 1 ? `${pageWidth + 32}px` : 'auto' }}>
+        <div
+          className="flex justify-center p-4"
+          style={{ minWidth: scale > 1 ? `${pageWidth + 32}px` : "auto" }}
+        >
           {loadTimedOut ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground gap-3">
               <AlertCircle className="w-8 h-8 text-destructive" />
               <p className="font-medium">Tempo limite ao carregar PDF</p>
-              <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRetry}
+                className="gap-2"
+              >
                 <RotateCw className="w-4 h-4" />
                 Tentar novamente
               </Button>

@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface GanttLegendProps {
   hasAnyBaseline: boolean;
@@ -24,12 +24,18 @@ export function GanttLegend({
           onClick={onToggleBaseline}
           className={cn(
             "flex items-center gap-1.5 px-2 py-1 rounded transition-colors",
-            baselineVisible ? "bg-muted-foreground/20" : "bg-muted hover:bg-muted/80"
+            baselineVisible
+              ? "bg-muted-foreground/20"
+              : "bg-muted hover:bg-muted/80",
           )}
         >
           <div className="w-3 h-1 bg-muted-foreground rounded-full" />
-          <span className={baselineVisible ? "text-foreground" : "text-muted-foreground"}>
-            Baseline {baselineVisible ? '✓' : ''}
+          <span
+            className={
+              baselineVisible ? "text-foreground" : "text-muted-foreground"
+            }
+          >
+            Baseline {baselineVisible ? "✓" : ""}
           </span>
         </button>
       )}
@@ -60,10 +66,12 @@ export function GanttLegend({
           onClick={onToggleDebug}
           className={cn(
             "flex items-center gap-1.5 px-2 py-1 rounded transition-colors font-mono text-[10px]",
-            debugMode ? "bg-warning/20 text-[hsl(var(--warning))]" : "bg-muted hover:bg-muted/80 text-muted-foreground"
+            debugMode
+              ? "bg-warning/20 text-[hsl(var(--warning))]"
+              : "bg-muted hover:bg-muted/80 text-muted-foreground",
           )}
         >
-          🐛 Debug {debugMode ? 'ON' : 'OFF'}
+          🐛 Debug {debugMode ? "ON" : "OFF"}
         </button>
       </div>
     </div>

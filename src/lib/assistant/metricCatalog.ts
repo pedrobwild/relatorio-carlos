@@ -45,7 +45,8 @@ export const METRIC_CATALOG: MetricDefinition[] = [
     domain: "financeiro",
     description: "Parcelas em atraso, valor.",
     table: "project_payments",
-    expression: "SUM(amount) FILTER (WHERE paid_at IS NULL AND due_date < CURRENT_DATE)",
+    expression:
+      "SUM(amount) FILTER (WHERE paid_at IS NULL AND due_date < CURRENT_DATE)",
     unit: "currency",
     goodWhen: "low",
     exampleQuestion: "Quanto está vencido?",
@@ -88,7 +89,8 @@ export const METRIC_CATALOG: MetricDefinition[] = [
     id: "compras.overrun_total",
     label: "Excesso de custo",
     domain: "compras",
-    description: "Diferença total entre custo real e estimado quando real > estimado.",
+    description:
+      "Diferença total entre custo real e estimado quando real > estimado.",
     table: "project_purchases",
     expression:
       "SUM(GREATEST(actual_cost - estimated_cost, 0)) FILTER (WHERE actual_cost IS NOT NULL AND estimated_cost IS NOT NULL)",
@@ -102,7 +104,8 @@ export const METRIC_CATALOG: MetricDefinition[] = [
     domain: "cronograma",
     description: "Atividades com planned_end < hoje e actual_end NULL.",
     table: "project_activities",
-    expression: "COUNT(*) FILTER (WHERE planned_end < CURRENT_DATE AND actual_end IS NULL)",
+    expression:
+      "COUNT(*) FILTER (WHERE planned_end < CURRENT_DATE AND actual_end IS NULL)",
     unit: "count",
     goodWhen: "low",
     exampleQuestion: "Quantas atividades estão atrasadas?",
@@ -114,8 +117,7 @@ export const METRIC_CATALOG: MetricDefinition[] = [
     description:
       "Atividades concluídas (actual_end IS NOT NULL) dividido pelo total — proxy de progresso.",
     table: "project_activities",
-    expression:
-      "AVG(CASE WHEN actual_end IS NOT NULL THEN 1 ELSE 0 END)",
+    expression: "AVG(CASE WHEN actual_end IS NOT NULL THEN 1 ELSE 0 END)",
     unit: "ratio",
     goodWhen: "high",
     exampleQuestion: "Qual a taxa de conclusão das atividades?",
@@ -137,7 +139,8 @@ export const METRIC_CATALOG: MetricDefinition[] = [
     domain: "ncs",
     description: "Severidade crítica e ainda não fechadas.",
     table: "non_conformities",
-    expression: "COUNT(*) FILTER (WHERE severity = 'critical' AND status <> 'closed')",
+    expression:
+      "COUNT(*) FILTER (WHERE severity = 'critical' AND status <> 'closed')",
     unit: "count",
     goodWhen: "low",
     exampleQuestion: "Há NCs críticas em aberto?",
@@ -148,7 +151,8 @@ export const METRIC_CATALOG: MetricDefinition[] = [
     domain: "pendencias",
     description: "Pendências com due_date < hoje e status pending.",
     table: "pending_items",
-    expression: "COUNT(*) FILTER (WHERE status = 'pending' AND due_date < CURRENT_DATE)",
+    expression:
+      "COUNT(*) FILTER (WHERE status = 'pending' AND due_date < CURRENT_DATE)",
     unit: "count",
     goodWhen: "low",
     exampleQuestion: "Quais pendências estão vencidas?",
@@ -178,9 +182,8 @@ export const METRIC_CATALOG: MetricDefinition[] = [
   },
 ];
 
-export const METRIC_BY_ID: Record<string, MetricDefinition> = Object.fromEntries(
-  METRIC_CATALOG.map((m) => [m.id, m]),
-);
+export const METRIC_BY_ID: Record<string, MetricDefinition> =
+  Object.fromEntries(METRIC_CATALOG.map((m) => [m.id, m]));
 
 export function metricsForDomain(domain: InsightDomain): MetricDefinition[] {
   return METRIC_CATALOG.filter((m) => m.domain === domain);

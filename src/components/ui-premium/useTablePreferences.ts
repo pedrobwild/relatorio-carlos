@@ -24,10 +24,10 @@
  * />
  * <DataTableSettings prefs={prefs} columns={columns} />
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { DataTableColumn, TableDensity } from './DataTable';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { DataTableColumn, TableDensity } from "./DataTable";
 
-const STORAGE_PREFIX = 'lov.table-prefs.v1';
+const STORAGE_PREFIX = "lov.table-prefs.v1";
 
 export interface TablePreferencesState {
   visibleColumnIds: string[];
@@ -51,12 +51,12 @@ export interface UseTablePreferencesReturn extends TablePreferencesState {
 }
 
 function readStorage(key: string): Partial<TablePreferencesState> | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') return null;
+    if (!parsed || typeof parsed !== "object") return null;
     return parsed as Partial<TablePreferencesState>;
   } catch {
     return null;
@@ -64,7 +64,7 @@ function readStorage(key: string): Partial<TablePreferencesState> | null {
 }
 
 function writeStorage(key: string, value: TablePreferencesState) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
@@ -89,15 +89,18 @@ export function useTablePreferences<T>(
     const baseVisible = options.defaultVisibleIds ?? allIds;
     // garante required + remove ids inválidos
     const merged = Array.from(
-      new Set([...baseVisible.filter((id) => allIds.includes(id)), ...requiredIds]),
+      new Set([
+        ...baseVisible.filter((id) => allIds.includes(id)),
+        ...requiredIds,
+      ]),
     );
     return {
       visibleColumnIds: merged,
       zebra: options.defaultZebra ?? false,
-      density: options.defaultDensity ?? 'comfortable',
+      density: options.defaultDensity ?? "comfortable",
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allIds.join('|'), requiredIds.join('|')]);
+  }, [allIds.join("|"), requiredIds.join("|")]);
 
   const [state, setState] = useState<TablePreferencesState>(() => {
     const stored = readStorage(fullKey);
@@ -111,12 +114,18 @@ export function useTablePreferences<T>(
     const withRequired = Array.from(new Set([...cleanIds, ...requiredIds]));
 
     return {
-      visibleColumnIds: withRequired.length > 0 ? withRequired : initialDefaults.visibleColumnIds,
-      zebra: typeof stored.zebra === 'boolean' ? stored.zebra : initialDefaults.zebra,
+      visibleColumnIds:
+        withRequired.length > 0
+          ? withRequired
+          : initialDefaults.visibleColumnIds,
+      zebra:
+        typeof stored.zebra === "boolean"
+          ? stored.zebra
+          : initialDefaults.zebra,
       density:
-        stored.density === 'compact' ||
-        stored.density === 'comfortable' ||
-        stored.density === 'spacious'
+        stored.density === "compact" ||
+        stored.density === "comfortable" ||
+        stored.density === "spacious"
           ? stored.density
           : initialDefaults.density,
     };
@@ -136,7 +145,7 @@ export function useTablePreferences<T>(
       return { ...prev, visibleColumnIds: withRequired };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allIds.join('|'), requiredIds.join('|')]);
+  }, [allIds.join("|"), requiredIds.join("|")]);
 
   // persistência
   useEffect(() => {
@@ -147,7 +156,10 @@ export function useTablePreferences<T>(
     (value: boolean) => setState((s) => ({ ...s, zebra: value })),
     [],
   );
-  const toggleZebra = useCallback(() => setState((s) => ({ ...s, zebra: !s.zebra })), []);
+  const toggleZebra = useCallback(
+    () => setState((s) => ({ ...s, zebra: !s.zebra })),
+    [],
+  );
   const setDensity = useCallback(
     (value: TableDensity) => setState((s) => ({ ...s, density: value })),
     [],
@@ -166,7 +178,10 @@ export function useTablePreferences<T>(
       setState((s) => {
         if (requiredIds.includes(id)) return s; // não pode ocultar
         if (s.visibleColumnIds.includes(id)) {
-          return { ...s, visibleColumnIds: s.visibleColumnIds.filter((x) => x !== id) };
+          return {
+            ...s,
+            visibleColumnIds: s.visibleColumnIds.filter((x) => x !== id),
+          };
         }
         // adiciona preservando ordem de `columns`
         const next = allIds.filter(

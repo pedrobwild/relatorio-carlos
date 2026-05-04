@@ -1,13 +1,19 @@
-import { useState } from 'react';
-import { Trash2, Loader2, CheckCircle2, AlertCircle, HardDrive } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import {
+  Trash2,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  HardDrive,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,10 +24,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { invokeFunction } from '@/infra/edgeFunctions';
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { invokeFunction } from "@/infra/edgeFunctions";
 
 interface CleanupResult {
   success: boolean;
@@ -40,11 +46,11 @@ export function FilesCleanupCard() {
     setLastResult(null);
 
     try {
-      const { data, error } = await invokeFunction('files-cleanup');
+      const { data, error } = await invokeFunction("files-cleanup");
 
       if (error) {
-        console.error('[FilesCleanup] Error:', error);
-        toast.error('Erro ao executar limpeza', {
+        console.error("[FilesCleanup] Error:", error);
+        toast.error("Erro ao executar limpeza", {
           description: error.message,
         });
         return;
@@ -54,18 +60,18 @@ export function FilesCleanupCard() {
       setLastResult(result);
 
       if (result.success) {
-        toast.success('Limpeza concluída', {
+        toast.success("Limpeza concluída", {
           description: `${result.deleted} arquivo(s) removido(s) de ${result.processed} processado(s).`,
         });
       } else {
-        toast.warning('Limpeza com erros', {
+        toast.warning("Limpeza com erros", {
           description: `${result.deleted} removido(s), ${result.errors.length} erro(s).`,
         });
       }
     } catch (err) {
-      console.error('[FilesCleanup] Unexpected error:', err);
-      toast.error('Erro inesperado', {
-        description: 'Não foi possível executar a limpeza de arquivos.',
+      console.error("[FilesCleanup] Unexpected error:", err);
+      toast.error("Erro inesperado", {
+        description: "Não foi possível executar a limpeza de arquivos.",
       });
     } finally {
       setIsLoading(false);
@@ -80,9 +86,9 @@ export function FilesCleanupCard() {
           Limpeza de Arquivos
         </CardTitle>
         <CardDescription>
-          Remove fisicamente arquivos expirados ou deletados há mais de 7 dias do
-          armazenamento. Esta operação é executada automaticamente por cron, mas
-          pode ser disparada manualmente.
+          Remove fisicamente arquivos expirados ou deletados há mais de 7 dias
+          do armazenamento. Esta operação é executada automaticamente por cron,
+          mas pode ser disparada manualmente.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -90,8 +96,8 @@ export function FilesCleanupCard() {
           <div
             className={`p-3 rounded-lg border ${
               lastResult.success
-                ? 'bg-accent/50 border-accent'
-                : 'bg-muted border-border'
+                ? "bg-accent/50 border-accent"
+                : "bg-muted border-border"
             }`}
           >
             <div className="flex items-center gap-2 mb-2">
@@ -101,16 +107,15 @@ export function FilesCleanupCard() {
                 <AlertCircle className="h-4 w-4 text-destructive" />
               )}
               <span className="font-medium text-sm">
-                Última execução: {new Date(lastResult.timestamp).toLocaleString('pt-BR')}
+                Última execução:{" "}
+                {new Date(lastResult.timestamp).toLocaleString("pt-BR")}
               </span>
             </div>
             <div className="flex gap-2 flex-wrap">
               <Badge variant="secondary">
                 Processados: {lastResult.processed}
               </Badge>
-              <Badge variant="default">
-                Removidos: {lastResult.deleted}
-              </Badge>
+              <Badge variant="default">Removidos: {lastResult.deleted}</Badge>
               {lastResult.errors.length > 0 && (
                 <Badge variant="destructive">
                   Erros: {lastResult.errors.length}

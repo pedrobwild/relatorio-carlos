@@ -11,20 +11,20 @@
  * semana visualizada) — o filtro por `weekStart` é derivado no cliente para
  * reaproveitar o cache entre navegações de semana.
  */
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
 
 async function fetchAllOpenPastActivities(): Promise<
   Array<{ project_id: string; planned_end: string }>
 > {
   const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase
-    .from('project_activities')
-    .select('project_id, planned_end')
-    .lt('planned_end', today)
-    .is('actual_end', null);
+    .from("project_activities")
+    .select("project_id, planned_end")
+    .lt("planned_end", today)
+    .is("actual_end", null);
 
   if (error) throw error;
   return (data ?? []) as Array<{ project_id: string; planned_end: string }>;
@@ -46,7 +46,7 @@ export function useProjectsWithOverduePrevious(weekStart: string) {
   const today = new Date().toISOString().slice(0, 10);
 
   const query = useQuery({
-    queryKey: ['projects-overdue-previous', today],
+    queryKey: ["projects-overdue-previous", today],
     queryFn: fetchAllOpenPastActivities,
     enabled: !!user,
     staleTime: 5 * 60_000,

@@ -1,16 +1,16 @@
-import { isHoliday, isNonBusinessDay } from './businessDays';
+import { isHoliday, isNonBusinessDay } from "./businessDays";
 
 /** Format Date → YYYY-MM-DD (local). */
 export function toISODateLocal(d: Date): string {
   const y = d.getFullYear();
-  const m = (d.getMonth() + 1).toString().padStart(2, '0');
-  const day = d.getDate().toString().padStart(2, '0');
+  const m = (d.getMonth() + 1).toString().padStart(2, "0");
+  const day = d.getDate().toString().padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 
 /** Parse YYYY-MM-DD → Date at local midnight. */
 export function parseISODateLocal(s: string): Date {
-  return new Date(s + 'T00:00:00');
+  return new Date(s + "T00:00:00");
 }
 
 /**
@@ -21,9 +21,11 @@ export function getFridayOfWeek(date: Date): Date {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   const dow = d.getDay();
-  if (dow === 0) d.setDate(d.getDate() + 5);          // Sun → Fri next
-  else if (dow === 6) d.setDate(d.getDate() + 6);     // Sat → Fri next
-  else d.setDate(d.getDate() + (5 - dow));            // Mon-Fri → Fri this week
+  if (dow === 0)
+    d.setDate(d.getDate() + 5); // Sun → Fri next
+  else if (dow === 6)
+    d.setDate(d.getDate() + 6); // Sat → Fri next
+  else d.setDate(d.getDate() + (5 - dow)); // Mon-Fri → Fri this week
   while (isHoliday(d)) d.setDate(d.getDate() - 1);
   if (d < date) return new Date(date);
   return d;

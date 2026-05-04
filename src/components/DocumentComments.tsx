@@ -1,19 +1,19 @@
 /**
  * Document Comments Component
- * 
+ *
  * Displays and manages comments for a document version
  */
 
-import { useState } from 'react';
-import { MessageSquare, Send, Loader2, Trash2, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { MessageSquare, Send, Loader2, Trash2, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export interface DocumentComment {
   id: string;
@@ -50,7 +50,7 @@ export function DocumentComments({
   onPageClick,
   className,
 }: DocumentCommentsProps) {
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [linkToPage, setLinkToPage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -62,9 +62,9 @@ export function DocumentComments({
     try {
       await onAddComment(
         newComment.trim(),
-        linkToPage && isPdf && currentPage ? currentPage : undefined
+        linkToPage && isPdf && currentPage ? currentPage : undefined,
       );
-      setNewComment('');
+      setNewComment("");
       setLinkToPage(false);
     } finally {
       setIsSubmitting(false);
@@ -73,7 +73,7 @@ export function DocumentComments({
 
   const handleDelete = async (commentId: string) => {
     if (!onDeleteComment) return;
-    
+
     setDeletingId(commentId);
     try {
       await onDeleteComment(commentId);
@@ -84,12 +84,17 @@ export function DocumentComments({
 
   const getInitials = (name?: string, email?: string) => {
     if (name) {
-      return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+      return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
     }
     if (email) {
       return email.slice(0, 2).toUpperCase();
     }
-    return 'U';
+    return "U";
   };
 
   return (
@@ -120,8 +125,8 @@ export function DocumentComments({
             </div>
           ) : (
             comments.map((comment) => (
-              <div 
-                key={comment.id} 
+              <div
+                key={comment.id}
                 className="group flex gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
               >
                 <Avatar className="h-8 w-8 shrink-0">
@@ -129,17 +134,21 @@ export function DocumentComments({
                     {getInitials(comment.user_name, comment.user_email)}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium truncate">
-                      {comment.user_name || comment.user_email || 'Usuário'}
+                      {comment.user_name || comment.user_email || "Usuário"}
                     </span>
                     <span className="text-xs text-muted-foreground shrink-0">
-                      {format(new Date(comment.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                      {format(
+                        new Date(comment.created_at),
+                        "dd/MM 'às' HH:mm",
+                        { locale: ptBR },
+                      )}
                     </span>
                   </div>
-                  
+
                   {comment.page_number && (
                     <button
                       onClick={() => onPageClick?.(comment.page_number!)}
@@ -149,7 +158,7 @@ export function DocumentComments({
                       Página {comment.page_number}
                     </button>
                   )}
-                  
+
                   <p className="text-sm text-foreground whitespace-pre-wrap break-words">
                     {comment.comment}
                   </p>
@@ -187,7 +196,7 @@ export function DocumentComments({
             className="min-h-[80px] resize-none"
             disabled={isSubmitting}
           />
-          
+
           <div className="flex items-center justify-between gap-2">
             {isPdf && currentPage && (
               <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
@@ -201,7 +210,7 @@ export function DocumentComments({
                 Vincular à página {currentPage}
               </label>
             )}
-            
+
             <Button
               onClick={handleSubmit}
               disabled={!newComment.trim() || isSubmitting}

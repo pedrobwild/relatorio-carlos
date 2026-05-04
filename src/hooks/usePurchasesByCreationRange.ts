@@ -6,10 +6,10 @@
  * dia cada solicitação de compra foi cadastrada — dando visibilidade do
  * volume e da distribuição de pedidos ao longo do tempo.
  */
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
 
 export interface PurchaseCalendarEvent {
   id: string;
@@ -39,8 +39,9 @@ async function fetchPurchasesByCreation(
   const endISO = endDate.toISOString();
 
   const { data, error } = await supabase
-    .from('project_purchases')
-    .select(`
+    .from("project_purchases")
+    .select(
+      `
       id,
       project_id,
       item_name,
@@ -57,10 +58,11 @@ async function fetchPurchasesByCreation(
           customer_name
         )
       )
-    `)
-    .gte('created_at', startISO)
-    .lt('created_at', endISO)
-    .order('created_at', { ascending: false });
+    `,
+    )
+    .gte("created_at", startISO)
+    .lt("created_at", endISO)
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
 
@@ -69,12 +71,12 @@ async function fetchPurchasesByCreation(
     // Converte para YYYY-MM-DD em local time (não UTC) — alinhado com o que o
     // usuário enxerga em horário de Brasília.
     const y = created.getFullYear();
-    const m = String(created.getMonth() + 1).padStart(2, '0');
-    const d = String(created.getDate()).padStart(2, '0');
+    const m = String(created.getMonth() + 1).padStart(2, "0");
+    const d = String(created.getDate()).padStart(2, "0");
     return {
       id: row.id,
       project_id: row.project_id,
-      project_name: row.projects?.name ?? 'Obra sem nome',
+      project_name: row.projects?.name ?? "Obra sem nome",
       client_name:
         row.projects?.project_customers?.[0]?.customer_name ??
         row.projects?.client_name ??
@@ -93,8 +95,12 @@ async function fetchPurchasesByCreation(
 
 export function usePurchasesByCreationRange(startStr: string, endStr: string) {
   const { user } = useAuth();
-  const { data = [], isLoading, error } = useQuery({
-    queryKey: ['purchases-by-creation', startStr, endStr],
+  const {
+    data = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["purchases-by-creation", startStr, endStr],
     queryFn: () => fetchPurchasesByCreation(startStr, endStr),
     enabled: !!user && !!startStr && !!endStr,
     staleTime: 60_000,

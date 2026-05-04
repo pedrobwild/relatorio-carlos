@@ -1,7 +1,23 @@
-import { ArrowLeft, Download, ExternalLink, FileText, Calendar, X, Loader2, FilePlus } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  ExternalLink,
+  FileText,
+  Calendar,
+  X,
+  Loader2,
+  FilePlus,
+} from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 import PDFViewer from "@/components/PDFViewer";
 import { useProject } from "@/contexts/ProjectContext";
@@ -15,18 +31,26 @@ import { ptBR } from "date-fns/locale";
 
 const Contrato = () => {
   const { projectId } = useParams();
-  const { project, loading: projectLoading, error: projectError } = useProject();
+  const {
+    project,
+    loading: projectLoading,
+    error: projectError,
+  } = useProject();
   const { paths } = useProjectNavigation();
-  const { documents, loading: docsLoading, getLatestByCategory } = useDocuments(projectId);
-  
-  const mainContract = getLatestByCategory('contrato')[0];
-  const aditivos = getLatestByCategory('aditivo');
-  
+  const {
+    documents,
+    loading: docsLoading,
+    getLatestByCategory,
+  } = useDocuments(projectId);
+
+  const mainContract = getLatestByCategory("contrato")[0];
+  const aditivos = getLatestByCategory("aditivo");
+
   const loading = projectLoading || docsLoading;
 
   const handleDownload = async (doc: ProjectDocument) => {
     if (!doc.url) return;
-    
+
     const response = await fetch(doc.url);
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
@@ -58,7 +82,9 @@ const Contrato = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">{projectError}</p>
-          <Link to="/minhas-obras" className="text-primary underline">Voltar</Link>
+          <Link to="/minhas-obras" className="text-primary underline">
+            Voltar
+          </Link>
         </div>
       </div>
     );
@@ -90,7 +116,11 @@ const Contrato = () => {
             >
               <ExternalLink className="w-4 h-4" />
             </Button>
-            <Button onClick={() => handleDownload(mainContract)} size="sm" className="gap-2 h-9">
+            <Button
+              onClick={() => handleDownload(mainContract)}
+              size="sm"
+              className="gap-2 h-9"
+            >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Download</span>
             </Button>
@@ -105,15 +135,22 @@ const Contrato = () => {
           {!hasContract ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-              <p className="text-body text-muted-foreground">Contrato não disponível</p>
-              <p className="text-caption mt-1">O documento será disponibilizado em breve</p>
+              <p className="text-body text-muted-foreground">
+                Contrato não disponível
+              </p>
+              <p className="text-caption mt-1">
+                O documento será disponibilizado em breve
+              </p>
             </div>
           ) : (
             <>
               {/* Desktop: Two-column layout */}
               <div className="hidden lg:grid lg:grid-cols-[1fr_320px] lg:gap-6 h-[calc(100vh-100px)]">
                 <div className="h-full">
-                  <PDFViewer url={mainContract.url!} title="Contrato de Prestação de Serviços" />
+                  <PDFViewer
+                    url={mainContract.url!}
+                    title="Contrato de Prestação de Serviços"
+                  />
                 </div>
 
                 <div className="space-y-4">
@@ -130,11 +167,17 @@ const Contrato = () => {
                                     <FilePlus className="w-4 h-4 text-primary" />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="text-body font-medium">{aditivo.name}</h3>
+                                    <h3 className="text-body font-medium">
+                                      {aditivo.name}
+                                    </h3>
                                     <div className="flex items-center gap-1.5 mt-1">
                                       <Calendar className="w-3 h-3 text-primary" />
                                       <span className="text-caption text-primary">
-                                        {format(new Date(aditivo.created_at), "MMMM yyyy", { locale: ptBR })}
+                                        {format(
+                                          new Date(aditivo.created_at),
+                                          "MMMM yyyy",
+                                          { locale: ptBR },
+                                        )}
                                       </span>
                                     </div>
                                   </div>
@@ -145,21 +188,35 @@ const Contrato = () => {
                               <DialogHeader className="p-4 border-b border-border shrink-0">
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <DialogTitle className="text-base">{aditivo.name}</DialogTitle>
+                                    <DialogTitle className="text-base">
+                                      {aditivo.name}
+                                    </DialogTitle>
                                     <div className="flex items-center gap-1.5 mt-1">
                                       <Calendar className="w-3.5 h-3.5 text-primary" />
                                       <span className="text-xs font-medium text-primary">
-                                        {format(new Date(aditivo.created_at), "MMMM yyyy", { locale: ptBR })}
+                                        {format(
+                                          new Date(aditivo.created_at),
+                                          "MMMM yyyy",
+                                          { locale: ptBR },
+                                        )}
                                       </span>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Button onClick={() => handleDownload(aditivo)} size="sm" className="gap-2">
+                                    <Button
+                                      onClick={() => handleDownload(aditivo)}
+                                      size="sm"
+                                      className="gap-2"
+                                    >
                                       <Download className="w-4 h-4" />
                                       Download
                                     </Button>
                                     <DialogClose asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-full"
+                                      >
                                         <X className="w-4 h-4" />
                                       </Button>
                                     </DialogClose>
@@ -167,7 +224,12 @@ const Contrato = () => {
                                 </div>
                               </DialogHeader>
                               <div className="flex-1 overflow-hidden p-2">
-                                {aditivo.url && <PDFViewer url={aditivo.url} title={aditivo.name} />}
+                                {aditivo.url && (
+                                  <PDFViewer
+                                    url={aditivo.url}
+                                    title={aditivo.name}
+                                  />
+                                )}
                               </div>
                             </DialogContent>
                           </Dialog>
@@ -178,7 +240,8 @@ const Contrato = () => {
 
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                     <p className="text-caption text-foreground/80">
-                      <strong>Dica:</strong> Clique em um aditivo para visualizar o documento completo.
+                      <strong>Dica:</strong> Clique em um aditivo para
+                      visualizar o documento completo.
                     </p>
                   </div>
                 </div>
@@ -187,7 +250,10 @@ const Contrato = () => {
               {/* Mobile/Tablet Layout */}
               <div className="lg:hidden">
                 <div className="h-[calc(100vh-100px)] sm:h-[calc(100vh-120px)]">
-                  <PDFViewer url={mainContract.url!} title="Contrato de Prestação de Serviços" />
+                  <PDFViewer
+                    url={mainContract.url!}
+                    title="Contrato de Prestação de Serviços"
+                  />
                 </div>
 
                 {aditivos.length > 0 && (
@@ -207,7 +273,11 @@ const Contrato = () => {
                                   <div className="flex items-center gap-1.5 mt-1">
                                     <Calendar className="w-3.5 h-3.5 text-primary" />
                                     <span className="text-caption text-primary">
-                                      {format(new Date(aditivo.created_at), "MMMM yyyy", { locale: ptBR })}
+                                      {format(
+                                        new Date(aditivo.created_at),
+                                        "MMMM yyyy",
+                                        { locale: ptBR },
+                                      )}
                                     </span>
                                   </div>
                                 </div>
@@ -218,21 +288,35 @@ const Contrato = () => {
                             <DialogHeader className="p-4 border-b border-border shrink-0">
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <DialogTitle className="text-base">{aditivo.name}</DialogTitle>
+                                  <DialogTitle className="text-base">
+                                    {aditivo.name}
+                                  </DialogTitle>
                                   <div className="flex items-center gap-1.5 mt-1">
                                     <Calendar className="w-3.5 h-3.5 text-primary" />
                                     <span className="text-xs font-medium text-primary">
-                                      {format(new Date(aditivo.created_at), "MMMM yyyy", { locale: ptBR })}
+                                      {format(
+                                        new Date(aditivo.created_at),
+                                        "MMMM yyyy",
+                                        { locale: ptBR },
+                                      )}
                                     </span>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <Button onClick={() => handleDownload(aditivo)} size="sm" className="gap-2">
+                                  <Button
+                                    onClick={() => handleDownload(aditivo)}
+                                    size="sm"
+                                    className="gap-2"
+                                  >
                                     <Download className="w-4 h-4" />
                                     Download
                                   </Button>
                                   <DialogClose asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 rounded-full"
+                                    >
                                       <X className="w-4 h-4" />
                                     </Button>
                                   </DialogClose>
@@ -240,7 +324,12 @@ const Contrato = () => {
                               </div>
                             </DialogHeader>
                             <div className="flex-1 overflow-hidden p-2">
-                              {aditivo.url && <PDFViewer url={aditivo.url} title={aditivo.name} />}
+                              {aditivo.url && (
+                                <PDFViewer
+                                  url={aditivo.url}
+                                  title={aditivo.name}
+                                />
+                              )}
                             </div>
                           </DialogContent>
                         </Dialog>

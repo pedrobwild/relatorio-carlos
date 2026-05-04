@@ -12,15 +12,24 @@ interface FinancialSummaryProps {
   paidCount: number;
   totalCount: number;
   isAdmin: boolean;
-  variant: 'desktop' | 'mobile';
+  variant: "desktop" | "mobile";
 }
 
-export function FinancialSummary({ totalValue, paidAmount, remainingAmount, paidCount, totalCount, isAdmin, variant }: FinancialSummaryProps) {
+export function FinancialSummary({
+  totalValue,
+  paidAmount,
+  remainingAmount,
+  paidCount,
+  totalCount,
+  isAdmin,
+  variant,
+}: FinancialSummaryProps) {
   const today = new Date();
   const formatDate = (d: Date) => format(d, "dd/MM/yyyy", { locale: ptBR });
-  const pctPaid = totalValue > 0 ? ((paidAmount / totalValue) * 100).toFixed(0) : '0';
+  const pctPaid =
+    totalValue > 0 ? ((paidAmount / totalValue) * 100).toFixed(0) : "0";
 
-  if (variant === 'mobile') {
+  if (variant === "mobile") {
     return (
       <div className="px-4 py-6 border-b border-border">
         <p className="text-caption mb-1">Valor total do contrato</p>
@@ -41,7 +50,9 @@ export function FinancialSummary({ totalValue, paidAmount, remainingAmount, paid
 
         <div className="mt-6">
           <div className="flex items-center justify-between text-caption mb-2">
-            <span>{paidCount} de {totalCount} parcelas pagas</span>
+            <span>
+              {paidCount} de {totalCount} parcelas pagas
+            </span>
             <span>{pctPaid}%</span>
           </div>
           <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -54,7 +65,9 @@ export function FinancialSummary({ totalValue, paidAmount, remainingAmount, paid
 
         {isAdmin && (
           <div className="mt-4">
-            <Badge variant="outline" className="text-xs">Admin: pode editar pagamentos</Badge>
+            <Badge variant="outline" className="text-xs">
+              Admin: pode editar pagamentos
+            </Badge>
           </div>
         )}
       </div>
@@ -74,7 +87,9 @@ export function FinancialSummary({ totalValue, paidAmount, remainingAmount, paid
             <Check className="w-4 h-4 text-emerald-600" />
             <span className="text-caption font-medium">Pago</span>
           </div>
-          <p className="text-h3 text-emerald-700">{formatCurrency(paidAmount)}</p>
+          <p className="text-h3 text-emerald-700">
+            {formatCurrency(paidAmount)}
+          </p>
         </div>
         <div className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border">
           <div className="flex items-center gap-2">
@@ -87,7 +102,9 @@ export function FinancialSummary({ totalValue, paidAmount, remainingAmount, paid
 
       <div className="p-4 rounded-lg bg-card border border-border">
         <div className="flex items-center justify-between text-caption mb-2">
-          <span>{paidCount} de {totalCount} parcelas pagas</span>
+          <span>
+            {paidCount} de {totalCount} parcelas pagas
+          </span>
           <span className="font-semibold">{pctPaid}%</span>
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -98,7 +115,9 @@ export function FinancialSummary({ totalValue, paidAmount, remainingAmount, paid
         </div>
       </div>
 
-      <p className="text-tiny text-center mt-4">Última atualização: {formatDate(today)}</p>
+      <p className="text-tiny text-center mt-4">
+        Última atualização: {formatDate(today)}
+      </p>
     </div>
   );
 }

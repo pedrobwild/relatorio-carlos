@@ -1,12 +1,22 @@
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Building2, User, Calendar, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  CalendarIcon,
+  Building2,
+  User,
+  Calendar,
+  FileText,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface ProjectInfoFieldsProps {
   projectName: string;
@@ -24,7 +34,7 @@ interface ProjectInfoFieldsProps {
 }
 
 const formatDisplay = (date: Date | undefined) =>
-  date ? format(date, 'dd/MM/yyyy', { locale: ptBR }) : '';
+  date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "";
 
 const DatePickerField = ({
   label,
@@ -41,7 +51,7 @@ const DatePickerField = ({
   className?: string;
   hint?: string;
 }) => (
-  <div className={cn('space-y-2', className)}>
+  <div className={cn("space-y-2", className)}>
     <Label className="flex items-center gap-1.5">
       <Icon className="w-3.5 h-3.5" />
       {label}
@@ -51,12 +61,12 @@ const DatePickerField = ({
         <Button
           variant="outline"
           className={cn(
-            'w-full justify-start text-left font-normal',
-            !date && 'text-muted-foreground'
+            "w-full justify-start text-left font-normal",
+            !date && "text-muted-foreground",
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? formatDisplay(date) : 'Selecione a data'}
+          {date ? formatDisplay(date) : "Selecione a data"}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -74,12 +84,18 @@ const DatePickerField = ({
 );
 
 export const ProjectInfoFields = ({
-  projectName, setProjectName,
-  unitName, setUnitName,
-  clientName, setClientName,
-  startDate, setStartDate,
-  endDate, setEndDate,
-  reportDate, setReportDate,
+  projectName,
+  setProjectName,
+  unitName,
+  setUnitName,
+  clientName,
+  setClientName,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+  reportDate,
+  setReportDate,
 }: ProjectInfoFieldsProps) => (
   <div className="space-y-4">
     <h3 className="text-h3 text-muted-foreground uppercase tracking-wider">
@@ -126,8 +142,18 @@ export const ProjectInfoFields = ({
     </div>
 
     <div className="grid gap-4 md:grid-cols-2">
-      <DatePickerField label="Data de Início" icon={Calendar} date={startDate} onSelect={setStartDate} />
-      <DatePickerField label="Data de Término Prevista" icon={Calendar} date={endDate} onSelect={setEndDate} />
+      <DatePickerField
+        label="Data de Início"
+        icon={Calendar}
+        date={startDate}
+        onSelect={setStartDate}
+      />
+      <DatePickerField
+        label="Data de Término Prevista"
+        icon={Calendar}
+        date={endDate}
+        onSelect={setEndDate}
+      />
     </div>
 
     <DatePickerField

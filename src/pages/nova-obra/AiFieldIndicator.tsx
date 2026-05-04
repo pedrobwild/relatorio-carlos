@@ -1,6 +1,11 @@
-import { Sparkles, AlertTriangle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { Sparkles, AlertTriangle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface AiFieldIndicatorProps {
   fieldName: string;
@@ -9,7 +14,12 @@ interface AiFieldIndicatorProps {
   className?: string;
 }
 
-export function AiFieldIndicator({ fieldName, aiPrefilledFields, aiConflictFields, className }: AiFieldIndicatorProps) {
+export function AiFieldIndicator({
+  fieldName,
+  aiPrefilledFields,
+  aiConflictFields,
+  className,
+}: AiFieldIndicatorProps) {
   const isPrefilled = aiPrefilledFields.has(fieldName);
   const isConflict = aiConflictFields?.has(fieldName);
 
@@ -19,7 +29,7 @@ export function AiFieldIndicator({ fieldName, aiPrefilledFields, aiConflictField
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={cn('inline-flex items-center ml-1', className)}>
+          <span className={cn("inline-flex items-center ml-1", className)}>
             {isConflict ? (
               <AlertTriangle className="h-3 w-3 text-amber-500" />
             ) : (
@@ -29,9 +39,8 @@ export function AiFieldIndicator({ fieldName, aiPrefilledFields, aiConflictField
         </TooltipTrigger>
         <TooltipContent side="top" className="text-xs max-w-[200px]">
           {isConflict
-            ? 'Valor pode ter divergência — verifique com o contrato'
-            : 'Preenchido automaticamente via contrato'
-          }
+            ? "Valor pode ter divergência — verifique com o contrato"
+            : "Preenchido automaticamente via contrato"}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

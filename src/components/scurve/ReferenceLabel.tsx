@@ -5,7 +5,12 @@ interface ReferenceLabelProps {
   highlight?: boolean;
 }
 
-export const ReferenceLabel = ({ viewBox, label, position = "top", highlight = false }: ReferenceLabelProps) => {
+export const ReferenceLabel = ({
+  viewBox,
+  label,
+  position = "top",
+  highlight = false,
+}: ReferenceLabelProps) => {
   if (!viewBox) return null;
   const { x } = viewBox;
 
@@ -14,8 +19,22 @@ export const ReferenceLabel = ({ viewBox, label, position = "top", highlight = f
     const rectHeight = 20;
     return (
       <g>
-        <rect x={x - estimatedWidth / 2} y={1} width={estimatedWidth} height={rectHeight} rx={5} fill="hsl(var(--primary))" />
-        <text x={x} y={14.5} fill="white" fontSize={9} textAnchor="middle" fontWeight={700}>
+        <rect
+          x={x - estimatedWidth / 2}
+          y={1}
+          width={estimatedWidth}
+          height={rectHeight}
+          rx={5}
+          fill="hsl(var(--primary))"
+        />
+        <text
+          x={x}
+          y={14.5}
+          fill="white"
+          fontSize={9}
+          textAnchor="middle"
+          fontWeight={700}
+        >
           {label}
         </text>
       </g>

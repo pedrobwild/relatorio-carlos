@@ -5,10 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
@@ -29,12 +37,19 @@ interface Props {
   fornecedorNome: string;
 }
 
-export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorNome }: Props) {
+export function SendToProjectDialog({
+  open,
+  onOpenChange,
+  priceItem,
+  fornecedorNome,
+}: Props) {
   const qc = useQueryClient();
   const [projectId, setProjectId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
-  const requiredByDate = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+  const requiredByDate = new Date(Date.now() + 7 * 86400000)
+    .toISOString()
+    .slice(0, 10);
   const [requiredBy, setRequiredBy] = useState(requiredByDate);
 
   const { data: projects = [] } = useQuery({
@@ -54,7 +69,9 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
 
   const sendMut = useMutation({
     mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
       const { error } = await supabase.from("project_purchases").insert({
@@ -81,12 +98,16 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
       setQuantity(1);
       setNotes("");
     },
-    onError: (e: Error) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+    onError: (e: Error) =>
+      toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
   const estimatedTotal = priceItem.preco_unitario * quantity;
   const fmt = (v: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(v);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,7 +124,8 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
           <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
             <p className="text-sm font-medium">{priceItem.descricao}</p>
             <p className="text-xs text-muted-foreground">
-              {fmt(priceItem.preco_unitario)} / {priceItem.unidade} · {fornecedorNome}
+              {fmt(priceItem.preco_unitario)} / {priceItem.unidade} ·{" "}
+              {fornecedorNome}
             </p>
           </div>
 
@@ -116,7 +138,9 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
               </SelectTrigger>
               <SelectContent position="popper">
                 {projects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -130,7 +154,9 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
                 type="number"
                 min={1}
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                onChange={(e) =>
+                  setQuantity(Math.max(1, Number(e.target.value)))
+                }
               />
             </div>
             <div className="space-y-1.5">
@@ -145,8 +171,12 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
 
           {/* Estimated total */}
           <div className="rounded-lg border bg-primary/5 p-3 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Custo estimado</span>
-            <span className="text-lg font-semibold text-primary">{fmt(estimatedTotal)}</span>
+            <span className="text-sm text-muted-foreground">
+              Custo estimado
+            </span>
+            <span className="text-lg font-semibold text-primary">
+              {fmt(estimatedTotal)}
+            </span>
           </div>
 
           {/* Notes */}
@@ -162,7 +192,9 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button
             onClick={() => sendMut.mutate()}
             disabled={!projectId || sendMut.isPending}

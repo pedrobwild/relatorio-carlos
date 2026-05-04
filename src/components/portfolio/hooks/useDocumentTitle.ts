@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 /**
  * Sets the document title dynamically.
@@ -6,8 +6,10 @@ import { useEffect } from 'react';
  */
 export function useDocumentTitle(alertCount: number) {
   useEffect(() => {
-    const base = 'Portfólio de Obras';
+    const base = "Portfólio de Obras";
     document.title = alertCount > 0 ? `(${alertCount}) ${base}` : base;
-    return () => { document.title = 'Bwild'; };
+    return () => {
+      document.title = "Bwild";
+    };
   }, [alertCount]);
 }

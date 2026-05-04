@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   addDays,
   addMonths,
@@ -11,8 +11,8 @@ import {
   parseISO,
   startOfMonth,
   startOfWeek,
-} from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   CalendarDays,
   CalendarOff,
@@ -26,53 +26,72 @@ import {
   Filter,
   X,
   ShoppingCart,
-} from 'lucide-react';
-import { PageContainer } from '@/components/layout/PageContainer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+} from "lucide-react";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import { getProjectColor } from '@/lib/taskUtils';
-import { useWeekActivities, type WeekActivity } from '@/hooks/useWeekActivities';
-import { useProjectsWithOverduePrevious } from '@/hooks/useProjectsWithOverduePrevious';
-import { usePurchasesByCreationRange } from '@/hooks/usePurchasesByCreationRange';
-import { useUserRole } from '@/hooks/useUserRole';
-import { EmptyState } from '@/components/ui/states';
-import { ActivityDetailDialog } from '@/components/calendar/ActivityDetailDialog';
-import { BreakActivityDialog } from '@/components/calendar/BreakActivityDialog';
-import { CalendarMonthGrid } from '@/components/calendar/CalendarMonthGrid';
-import { CalendarDayAgenda } from '@/components/calendar/CalendarDayAgenda';
-import { CalendarRangeTimeline } from '@/components/calendar/CalendarRangeTimeline';
-import { NonWorkingDaysDialog } from '@/components/calendar/NonWorkingDaysDialog';
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { getProjectColor } from "@/lib/taskUtils";
+import {
+  useWeekActivities,
+  type WeekActivity,
+} from "@/hooks/useWeekActivities";
+import { useProjectsWithOverduePrevious } from "@/hooks/useProjectsWithOverduePrevious";
+import { usePurchasesByCreationRange } from "@/hooks/usePurchasesByCreationRange";
+import { useUserRole } from "@/hooks/useUserRole";
+import { EmptyState } from "@/components/ui/states";
+import { ActivityDetailDialog } from "@/components/calendar/ActivityDetailDialog";
+import { BreakActivityDialog } from "@/components/calendar/BreakActivityDialog";
+import { CalendarMonthGrid } from "@/components/calendar/CalendarMonthGrid";
+import { CalendarDayAgenda } from "@/components/calendar/CalendarDayAgenda";
+import { CalendarRangeTimeline } from "@/components/calendar/CalendarRangeTimeline";
+import { NonWorkingDaysDialog } from "@/components/calendar/NonWorkingDaysDialog";
 
-type ViewMode = 'month' | 'week-list' | 'week-timeline' | 'day' | 'range';
+type ViewMode = "month" | "week-list" | "week-timeline" | "day" | "range";
 
 function getActivityStatus(a: WeekActivity, today: Date) {
-  if (a.actual_end) return 'completed' as const;
-  if (a.actual_start) return 'in_progress' as const;
+  if (a.actual_end) return "completed" as const;
+  if (a.actual_start) return "in_progress" as const;
   const plannedStart = parseISO(a.planned_start);
-  if (today > plannedStart) return 'overdue' as const;
-  return 'pending' as const;
+  if (today > plannedStart) return "overdue" as const;
+  return "pending" as const;
 }
 
 const statusBadge: Record<string, { label: string; className: string }> = {
-  completed: { label: 'Concluída', className: 'bg-green-500/10 text-green-600 border-green-500/30' },
-  in_progress: { label: 'Em andamento', className: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
-  overdue: { label: 'Atrasada', className: 'bg-red-500/10 text-red-600 border-red-500/30' },
-  pending: { label: 'Pendente', className: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
+  completed: {
+    label: "Concluída",
+    className: "bg-green-500/10 text-green-600 border-green-500/30",
+  },
+  in_progress: {
+    label: "Em andamento",
+    className: "bg-blue-500/10 text-blue-600 border-blue-500/30",
+  },
+  overdue: {
+    label: "Atrasada",
+    className: "bg-red-500/10 text-red-600 border-red-500/30",
+  },
+  pending: {
+    label: "Pendente",
+    className: "bg-amber-500/10 text-amber-600 border-amber-500/30",
+  },
 };
 
 export default function CalendarioObras() {
@@ -80,11 +99,11 @@ export default function CalendarioObras() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin, hasRole } = useUserRole();
   // Apenas Admin e Engenheiro podem criar/ver micro-etapas internas no Calendário.
-  const canBreak = isAdmin || hasRole('engineer');
+  const canBreak = isAdmin || hasRole("engineer");
   const today = useMemo(() => new Date(), []);
 
   // ── Restauração da visualização e datas a partir da query string ────────
-  // Mantemos `view`, `date` (refDate), `from`/`to` (range) na URL para que ao
+  // Mantemos`view`,`date` (refDate),`from`/`to` (range) na URL para que ao
   // recarregar ou compartilhar o link, o usuário caia exatamente no mesmo
   // recorte temporal que estava vendo.
   const parseDateParam = (raw: string | null, fallback: Date): Date => {
@@ -99,126 +118,154 @@ export default function CalendarioObras() {
     }
   };
   const isViewMode = (v: string | null): v is ViewMode =>
-    v === 'month' || v === 'week-list' || v === 'week-timeline' || v === 'day' || v === 'range';
+    v === "month" ||
+    v === "week-list" ||
+    v === "week-timeline" ||
+    v === "day" ||
+    v === "range";
 
-  const initialView: ViewMode = isViewMode(searchParams.get('view'))
-    ? (searchParams.get('view') as ViewMode)
-    : 'week-timeline';
-  const initialRefDate = parseDateParam(searchParams.get('date'), today);
-  const initialRangeStart = parseDateParam(searchParams.get('from'), today);
-  const initialRangeEnd = parseDateParam(searchParams.get('to'), addDays(today, 13));
+  const initialView: ViewMode = isViewMode(searchParams.get("view"))
+    ? (searchParams.get("view") as ViewMode)
+    : "week-timeline";
+  const initialRefDate = parseDateParam(searchParams.get("date"), today);
+  const initialRangeStart = parseDateParam(searchParams.get("from"), today);
+  const initialRangeEnd = parseDateParam(
+    searchParams.get("to"),
+    addDays(today, 13),
+  );
 
   const [view, setView] = useState<ViewMode>(initialView);
   const [refDate, setRefDate] = useState<Date>(initialRefDate);
   const [rangeStartDate, setRangeStartDate] = useState<Date>(initialRangeStart);
   const [rangeEndDate, setRangeEndDate] = useState<Date>(initialRangeEnd);
   // Draft (unapplied) selection for the custom range pickers.
-  const [draftRangeStart, setDraftRangeStart] = useState<Date>(initialRangeStart);
+  const [draftRangeStart, setDraftRangeStart] =
+    useState<Date>(initialRangeStart);
   const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(initialRangeEnd);
-  const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
-  const [breakingActivity, setBreakingActivity] = useState<WeekActivity | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(
+    null,
+  );
+  const [breakingActivity, setBreakingActivity] = useState<WeekActivity | null>(
+    null,
+  );
   // Filtros persistidos via query string (?obra=, ?etapa=, ?concluidas=1) para que
   // ao compartilhar a URL ou recarregar a página o mesmo recorte seja restaurado.
   const [projectFilter, setProjectFilter] = useState<string>(
-    () => searchParams.get('obra') || 'all',
+    () => searchParams.get("obra") || "all",
   );
-  // Filtro por etapa do cronograma (project_activities.etapa). 'all' inclui tudo,
-  // '__none__' representa atividades sem etapa preenchida.
+  // Filtro por etapa do cronograma (project_activities.etapa).'all' inclui tudo,
+  //'__none__' representa atividades sem etapa preenchida.
   const [etapaFilter, setEtapaFilter] = useState<string>(
-    () => searchParams.get('etapa') || 'all',
+    () => searchParams.get("etapa") || "all",
   );
   // Por padrão, ocultamos atividades de obras já concluídas para focar no que está em andamento.
-  // O usuário pode reativar via toggle "Incluir concluídas" na barra de filtros.
+  // O usuário pode reativar via toggle"Incluir concluídas" na barra de filtros.
   const [includeCompleted, setIncludeCompleted] = useState<boolean>(
-    () => searchParams.get('concluidas') === '1',
+    () => searchParams.get("concluidas") === "1",
   );
   // Filtro (somente week-timeline + staff): mostrar apenas micro-etapas, ou seja,
   // atividades-mãe que já foram quebradas em sub-atividades. Útil para focar no
   // detalhamento granular de execução. Persistido via ?microetapas=1.
   const [onlyMicroSteps, setOnlyMicroSteps] = useState<boolean>(
-    () => searchParams.get('microetapas') === '1',
+    () => searchParams.get("microetapas") === "1",
   );
   // Filtro (somente week-timeline): atividades de um prestador específico.
-  // '__none__' representa atividades sem prestador atribuído. Persistido em ?prestador=.
+  //'__none__' representa atividades sem prestador atribuído. Persistido em ?prestador=.
   const [fornecedorFilter, setFornecedorFilter] = useState<string>(
-    () => searchParams.get('prestador') || 'all',
+    () => searchParams.get("prestador") || "all",
   );
   // Toggle de alto contraste para a Semana · Timeline. Persistido em
   // localStorage para que a preferência sobreviva entre sessões. Aplica-se
   // apenas à visualização week-timeline (e range, por consistência visual).
-  const HC_STORAGE_KEY = 'calendario:high-contrast';
+  const HC_STORAGE_KEY = "calendario:high-contrast";
   const [highContrast, setHighContrast] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
     try {
-      return window.localStorage.getItem(HC_STORAGE_KEY) === '1';
+      return window.localStorage.getItem(HC_STORAGE_KEY) === "1";
     } catch {
       return false;
     }
   });
   useEffect(() => {
     try {
-      window.localStorage.setItem(HC_STORAGE_KEY, highContrast ? '1' : '0');
+      window.localStorage.setItem(HC_STORAGE_KEY, highContrast ? "1" : "0");
     } catch {
       // localStorage indisponível (modo privado / SSR) — toggle continua funcional em memória.
     }
   }, [highContrast]);
 
   // Sincroniza os filtros + visualização atuais para a query string. Usamos
-  // `replace` para não poluir o histórico de navegação a cada toggle e
+  //`replace` para não poluir o histórico de navegação a cada toggle e
   // preservamos quaisquer outros parâmetros existentes na URL. Persistimos:
-  //   - obra / etapa / concluidas → filtros do recorte
-  //   - view                      → modo de visualização ativo
-  //   - date                      → data de referência (mês/semana/dia)
-  //   - from / to                 → período personalizado (modo "range")
+  // - obra / etapa / concluidas → filtros do recorte
+  // - view → modo de visualização ativo
+  // - date → data de referência (mês/semana/dia)
+  // - from / to → período personalizado (modo"range")
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
-    if (projectFilter && projectFilter !== 'all') next.set('obra', projectFilter);
-    else next.delete('obra');
-    if (etapaFilter && etapaFilter !== 'all') next.set('etapa', etapaFilter);
-    else next.delete('etapa');
-    if (includeCompleted) next.set('concluidas', '1');
-    else next.delete('concluidas');
-    if (onlyMicroSteps && view === 'week-timeline') next.set('microetapas', '1');
-    else next.delete('microetapas');
-    if (fornecedorFilter && fornecedorFilter !== 'all' && view === 'week-timeline') next.set('prestador', fornecedorFilter);
-    else next.delete('prestador');
+    if (projectFilter && projectFilter !== "all")
+      next.set("obra", projectFilter);
+    else next.delete("obra");
+    if (etapaFilter && etapaFilter !== "all") next.set("etapa", etapaFilter);
+    else next.delete("etapa");
+    if (includeCompleted) next.set("concluidas", "1");
+    else next.delete("concluidas");
+    if (onlyMicroSteps && view === "week-timeline")
+      next.set("microetapas", "1");
+    else next.delete("microetapas");
+    if (
+      fornecedorFilter &&
+      fornecedorFilter !== "all" &&
+      view === "week-timeline"
+    )
+      next.set("prestador", fornecedorFilter);
+    else next.delete("prestador");
 
     // Visualização: só persiste se diferente do default ('week-timeline') para manter URLs limpas.
-    if (view && view !== 'week-timeline') next.set('view', view);
-    else next.delete('view');
+    if (view && view !== "week-timeline") next.set("view", view);
+    else next.delete("view");
 
-    // Datas: only persist when the user actually navigated away from "today"
+    // Datas: only persist when the user actually navigated away from"today"
     // / default range. Comparamos pelo formato YYYY-MM-DD para evitar ruído
     // de horários (today guardado no estado é um Date com hora atual).
-    const todayStr = format(today, 'yyyy-MM-dd');
-    if (view === 'range') {
-      next.delete('date');
-      const fromStr = format(rangeStartDate, 'yyyy-MM-dd');
-      const toStr = format(rangeEndDate, 'yyyy-MM-dd');
-      const defaultTo = format(addDays(today, 13), 'yyyy-MM-dd');
+    const todayStr = format(today, "yyyy-MM-dd");
+    if (view === "range") {
+      next.delete("date");
+      const fromStr = format(rangeStartDate, "yyyy-MM-dd");
+      const toStr = format(rangeEndDate, "yyyy-MM-dd");
+      const defaultTo = format(addDays(today, 13), "yyyy-MM-dd");
       if (fromStr !== todayStr || toStr !== defaultTo) {
-        next.set('from', fromStr);
-        next.set('to', toStr);
+        next.set("from", fromStr);
+        next.set("to", toStr);
       } else {
-        next.delete('from');
-        next.delete('to');
+        next.delete("from");
+        next.delete("to");
       }
     } else {
-      next.delete('from');
-      next.delete('to');
-      const dateStr = format(refDate, 'yyyy-MM-dd');
-      if (dateStr !== todayStr) next.set('date', dateStr);
-      else next.delete('date');
+      next.delete("from");
+      next.delete("to");
+      const dateStr = format(refDate, "yyyy-MM-dd");
+      if (dateStr !== todayStr) next.set("date", dateStr);
+      else next.delete("date");
     }
 
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectFilter, etapaFilter, includeCompleted, onlyMicroSteps, fornecedorFilter, view, refDate, rangeStartDate, rangeEndDate]);
+  }, [
+    projectFilter,
+    etapaFilter,
+    includeCompleted,
+    onlyMicroSteps,
+    fornecedorFilter,
+    view,
+    refDate,
+    rangeStartDate,
+    rangeEndDate,
+  ]);
 
-
-  // Range validation (start ≤ end). Used to gate the "Aplicar" button.
+  // Range validation (start ≤ end). Used to gate the"Aplicar" button.
   const draftRangeInvalid = draftRangeStart > draftRangeEnd;
   const draftDirty =
     draftRangeStart.getTime() !== rangeStartDate.getTime() ||
@@ -236,7 +283,7 @@ export default function CalendarioObras() {
 
   // Compute fetch range based on active view.
   const { fetchStart, fetchEnd, viewStart, viewEnd } = useMemo(() => {
-    if (view === 'month') {
+    if (view === "month") {
       const ms = startOfMonth(refDate);
       const me = endOfMonth(refDate);
       // Fetch the visible grid (Mon..Sun expanded)
@@ -247,10 +294,15 @@ export default function CalendarioObras() {
         viewEnd: me,
       };
     }
-    if (view === 'day') {
-      return { fetchStart: refDate, fetchEnd: refDate, viewStart: refDate, viewEnd: refDate };
+    if (view === "day") {
+      return {
+        fetchStart: refDate,
+        fetchEnd: refDate,
+        viewStart: refDate,
+        viewEnd: refDate,
+      };
     }
-    if (view === 'range') {
+    if (view === "range") {
       const s = rangeStartDate <= rangeEndDate ? rangeStartDate : rangeEndDate;
       const e = rangeStartDate <= rangeEndDate ? rangeEndDate : rangeStartDate;
       return { fetchStart: s, fetchEnd: e, viewStart: s, viewEnd: e };
@@ -261,8 +313,8 @@ export default function CalendarioObras() {
     return { fetchStart: ws, fetchEnd: we, viewStart: ws, viewEnd: we };
   }, [view, refDate, rangeStartDate, rangeEndDate]);
 
-  const fetchStartStr = format(fetchStart, 'yyyy-MM-dd');
-  const fetchEndStr = format(fetchEnd, 'yyyy-MM-dd');
+  const fetchStartStr = format(fetchStart, "yyyy-MM-dd");
+  const fetchEndStr = format(fetchEnd, "yyyy-MM-dd");
 
   const {
     byProject,
@@ -278,59 +330,76 @@ export default function CalendarioObras() {
 
   // Quantidade de micro-etapas (children) já existentes para a atividade-mãe
   // que está sendo editada no BreakActivityDialog. Usado para habilitar a
-  // ação "Desfazer quebra" no rodapé do dialog.
+  // ação"Desfazer quebra" no rodapé do dialog.
   const breakingChildrenCount = useMemo(() => {
     if (!breakingActivity) return 0;
-    return activities.filter((a) => a.parent_activity_id === breakingActivity.id).length;
+    return activities.filter(
+      (a) => a.parent_activity_id === breakingActivity.id,
+    ).length;
   }, [activities, breakingActivity]);
 
   // Conjunto de project_ids com etapas anteriores não concluídas (atrasadas)
-  // antes do início do recorte visível. Usado para sugerir "Replanejar
+  // antes do início do recorte visível. Usado para sugerir"Replanejar
   // cronograma" no tooltip do calendário mensal.
-  const { data: projectsWithOverduePrev } = useProjectsWithOverduePrevious(fetchStartStr);
+  const { data: projectsWithOverduePrev } =
+    useProjectsWithOverduePrevious(fetchStartStr);
 
   // Solicitações de compra criadas no período visível (data de criação).
-  const { purchases, purchasesByDay } = usePurchasesByCreationRange(fetchStartStr, fetchEndStr);
+  const { purchases, purchasesByDay } = usePurchasesByCreationRange(
+    fetchStartStr,
+    fetchEndStr,
+  );
 
   // Dialog: gerenciamento de dias não úteis (feriados específicos / folgas).
   // Restrito a Admin/Engineer (mesma regra de quebrar atividades).
   const [nonWorkingOpen, setNonWorkingOpen] = useState(false);
 
-  // 1) Aplica o filtro "ocultar obras concluídas" antes de qualquer outra lógica:
-  //    obras com project_status === 'completed' só aparecem quando o toggle estiver ativo.
+  // 1) Aplica o filtro"ocultar obras concluídas" antes de qualquer outra lógica:
+  // obras com project_status ==='completed' só aparecem quando o toggle estiver ativo.
   const visibleByProjectRaw = useMemo(
-    () => (includeCompleted ? byProject : byProject.filter((g) => g.project_status !== 'completed')),
+    () =>
+      includeCompleted
+        ? byProject
+        : byProject.filter((g) => g.project_status !== "completed"),
     [byProject, includeCompleted],
   );
 
   // 1.b) Recorte hierárquico das micro-etapas:
-  //   - Admin/Engineer enxergam o detalhamento interno: quando uma atividade-mãe
-  //     possui pelo menos um child visível neste recorte, ocultamos a mãe e
-  //     mostramos apenas os children (que são mais granulares).
-  //   - Demais papéis (defesa em profundidade — esta página é restrita a staff)
-  //     veem apenas as mães e nunca os children, preservando a visão informativa
-  //     compartilhada com o cliente.
+  // - Admin/Engineer enxergam o detalhamento interno: quando uma atividade-mãe
+  // possui pelo menos um child visível neste recorte, ocultamos a mãe e
+  // mostramos apenas os children (que são mais granulares).
+  // - Demais papéis (defesa em profundidade — esta página é restrita a staff)
+  // veem apenas as mães e nunca os children, preservando a visão informativa
+  // compartilhada com o cliente.
   const visibleByProject = useMemo(() => {
     return visibleByProjectRaw.map((g) => {
       if (canBreak) {
         const parentsWithVisibleChildren = new Set<string>();
         for (const a of g.items) {
-          if (a.parent_activity_id) parentsWithVisibleChildren.add(a.parent_activity_id);
+          if (a.parent_activity_id)
+            parentsWithVisibleChildren.add(a.parent_activity_id);
         }
         return {
           ...g,
           items: g.items.filter(
-            (a) => !(a.parent_activity_id === null && parentsWithVisibleChildren.has(a.id)),
+            (a) =>
+              !(
+                a.parent_activity_id === null &&
+                parentsWithVisibleChildren.has(a.id)
+              ),
           ),
         };
       }
-      return { ...g, items: g.items.filter((a) => a.parent_activity_id === null) };
+      return {
+        ...g,
+        items: g.items.filter((a) => a.parent_activity_id === null),
+      };
     });
   }, [visibleByProjectRaw, canBreak]);
 
   // Quantidade de obras concluídas escondidas (para feedback no UI)
   const hiddenCompletedCount = useMemo(
-    () => byProject.filter((g) => g.project_status === 'completed').length,
+    () => byProject.filter((g) => g.project_status === "completed").length,
     [byProject],
   );
 
@@ -342,88 +411,103 @@ export default function CalendarioObras() {
           id: g.project_id,
           name: g.project_name,
           client_name: g.client_name,
-          isCompleted: g.project_status === 'completed',
+          isCompleted: g.project_status === "completed",
         }))
-        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
     [visibleByProject],
   );
 
   // Etapas disponíveis (derivadas do dataset já visível, sem aplicar filtro de etapa
   // para que o usuário sempre enxergue todas as opções existentes no período).
-  // Inclui um sentinela '__none__' quando há atividades sem etapa preenchida.
+  // Inclui um sentinela'__none__' quando há atividades sem etapa preenchida.
   const etapaOptions = useMemo(() => {
     const set = new Set<string>();
     let hasEmpty = false;
     for (const g of visibleByProject) {
       for (const a of g.items) {
-        const e = (a.etapa ?? '').trim();
+        const e = (a.etapa ?? "").trim();
         if (e) set.add(e);
         else hasEmpty = true;
       }
     }
-    const list = Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const list = Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
     return { list, hasEmpty };
   }, [visibleByProject]);
 
   // Prestadores disponíveis no recorte visível (week-timeline). Cada item carrega
-  // o id do fornecedor e o nome resolvido. '__none__' é exposto se houver
+  // o id do fornecedor e o nome resolvido.'__none__' é exposto se houver
   // atividades sem prestador atribuído.
   const fornecedorOptions = useMemo(() => {
     const map = new Map<string, string>();
     let hasEmpty = false;
     for (const g of visibleByProject) {
       for (const a of g.items) {
-        if (a.fornecedor_id && a.fornecedor_nome) map.set(a.fornecedor_id, a.fornecedor_nome);
+        if (a.fornecedor_id && a.fornecedor_nome)
+          map.set(a.fornecedor_id, a.fornecedor_nome);
         else hasEmpty = true;
       }
     }
     const list = Array.from(map.entries())
       .map(([id, nome]) => ({ id, nome }))
-      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
     return { list, hasEmpty };
   }, [visibleByProject]);
 
   const filteredByProject = useMemo(() => {
     // 1) Filtro de obra
     const byProj =
-      projectFilter === 'all'
+      projectFilter === "all"
         ? visibleByProject
         : visibleByProject.filter((g) => g.project_id === projectFilter);
     // 2) Filtro de etapa: aplicado por atividade; remove grupos vazios.
     const byEtapa =
-      etapaFilter === 'all'
+      etapaFilter === "all"
         ? byProj
         : byProj
             .map((g) => ({
               ...g,
               items: g.items.filter((a) => {
-                const e = (a.etapa ?? '').trim();
-                if (etapaFilter === '__none__') return e === '';
+                const e = (a.etapa ?? "").trim();
+                if (etapaFilter === "__none__") return e === "";
                 return e === etapaFilter;
               }),
             }))
             .filter((g) => g.items.length > 0);
 
-    // 3) Filtro "apenas micro-etapas" — válido só em week-timeline + staff.
-    //    Mantém somente atividades que são children (parent_activity_id !== null),
-    //    ou seja, resultados de uma quebra em micro-etapas.
-    const byMicro = (!onlyMicroSteps || view !== 'week-timeline' || !canBreak)
-      ? byEtapa
-      : byEtapa
-          .map((g) => ({ ...g, items: g.items.filter((a) => a.parent_activity_id !== null) }))
-          .filter((g) => g.items.length > 0);
+    // 3) Filtro"apenas micro-etapas" — válido só em week-timeline + staff.
+    // Mantém somente atividades que são children (parent_activity_id !== null),
+    // ou seja, resultados de uma quebra em micro-etapas.
+    const byMicro =
+      !onlyMicroSteps || view !== "week-timeline" || !canBreak
+        ? byEtapa
+        : byEtapa
+            .map((g) => ({
+              ...g,
+              items: g.items.filter((a) => a.parent_activity_id !== null),
+            }))
+            .filter((g) => g.items.length > 0);
 
-    // 4) Filtro por prestador — válido só em week-timeline. '__none__' = sem prestador.
-    if (fornecedorFilter === 'all' || view !== 'week-timeline') return byMicro;
+    // 4) Filtro por prestador — válido só em week-timeline.'__none__' = sem prestador.
+    if (fornecedorFilter === "all" || view !== "week-timeline") return byMicro;
     return byMicro
       .map((g) => ({
         ...g,
         items: g.items.filter((a) =>
-          fornecedorFilter === '__none__' ? !a.fornecedor_id : a.fornecedor_id === fornecedorFilter,
+          fornecedorFilter === "__none__"
+            ? !a.fornecedor_id
+            : a.fornecedor_id === fornecedorFilter,
         ),
       }))
       .filter((g) => g.items.length > 0);
-  }, [visibleByProject, projectFilter, etapaFilter, onlyMicroSteps, fornecedorFilter, view, canBreak]);
+  }, [
+    visibleByProject,
+    projectFilter,
+    etapaFilter,
+    onlyMicroSteps,
+    fornecedorFilter,
+    view,
+    canBreak,
+  ]);
 
   const filteredActivities = useMemo(
     () => filteredByProject.flatMap((g) => g.items),
@@ -431,7 +515,13 @@ export default function CalendarioObras() {
   );
 
   const counts = useMemo(() => {
-    const c = { total: filteredActivities.length, completed: 0, in_progress: 0, overdue: 0, pending: 0 };
+    const c = {
+      total: filteredActivities.length,
+      completed: 0,
+      in_progress: 0,
+      overdue: 0,
+      pending: 0,
+    };
     for (const a of filteredActivities) {
       const s = getActivityStatus(a, today);
       c[s]++;
@@ -440,11 +530,14 @@ export default function CalendarioObras() {
   }, [filteredActivities, today]);
 
   const handleStart = async (a: WeekActivity) => {
-    await updateDates(a.id, { actual_start: format(today, 'yyyy-MM-dd') });
+    await updateDates(a.id, { actual_start: format(today, "yyyy-MM-dd") });
   };
   const handleFinish = async (a: WeekActivity) => {
-    const updates: { actual_start?: string | null; actual_end?: string | null } = {
-      actual_end: format(today, 'yyyy-MM-dd'),
+    const updates: {
+      actual_start?: string | null;
+      actual_end?: string | null;
+    } = {
+      actual_end: format(today, "yyyy-MM-dd"),
     };
     if (!a.actual_start) updates.actual_start = a.planned_start;
     await updateDates(a.id, updates);
@@ -453,22 +546,27 @@ export default function CalendarioObras() {
     await updateDates(a.id, { actual_start: null, actual_end: null });
   };
   // Marcação rápida de status direto na timeline (usado em micro-etapas).
-  // 'in-progress' inicia, 'completed' conclui, 'pending' reseta as datas reais.
+  //'in-progress' inicia,'completed' conclui,'pending' reseta as datas reais.
   const handleQuickToggle = async (
     a: WeekActivity,
-    next: 'pending' | 'in-progress' | 'completed',
+    next: "pending" | "in-progress" | "completed",
   ) => {
-    if (next === 'in-progress') return handleStart(a);
-    if (next === 'completed') return handleFinish(a);
+    if (next === "in-progress") return handleStart(a);
+    if (next === "completed") return handleFinish(a);
     return handleReset(a);
   };
 
   // Navigation per view
   const goPrev = () => {
-    if (view === 'month') setRefDate(addMonths(refDate, -1));
-    else if (view === 'day') setRefDate(addDays(refDate, -1));
-    else if (view === 'range') {
-      const span = Math.max(1, Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1);
+    if (view === "month") setRefDate(addMonths(refDate, -1));
+    else if (view === "day") setRefDate(addDays(refDate, -1));
+    else if (view === "range") {
+      const span = Math.max(
+        1,
+        Math.round(
+          (rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000,
+        ) + 1,
+      );
       const ns = addDays(rangeStartDate, -span);
       const ne = addDays(rangeEndDate, -span);
       setRangeStartDate(ns);
@@ -478,10 +576,15 @@ export default function CalendarioObras() {
     } else setRefDate(addWeeks(refDate, -1));
   };
   const goNext = () => {
-    if (view === 'month') setRefDate(addMonths(refDate, 1));
-    else if (view === 'day') setRefDate(addDays(refDate, 1));
-    else if (view === 'range') {
-      const span = Math.max(1, Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1);
+    if (view === "month") setRefDate(addMonths(refDate, 1));
+    else if (view === "day") setRefDate(addDays(refDate, 1));
+    else if (view === "range") {
+      const span = Math.max(
+        1,
+        Math.round(
+          (rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000,
+        ) + 1,
+      );
       const ns = addDays(rangeStartDate, span);
       const ne = addDays(rangeEndDate, span);
       setRangeStartDate(ns);
@@ -492,7 +595,7 @@ export default function CalendarioObras() {
   };
   const goToday = () => {
     setRefDate(today);
-    if (view === 'range') {
+    if (view === "range") {
       const ne = addDays(today, 13);
       setRangeStartDate(today);
       setRangeEndDate(ne);
@@ -502,15 +605,18 @@ export default function CalendarioObras() {
   };
 
   const periodLabel = useMemo(() => {
-    if (view === 'month') return format(refDate, "MMMM 'de' yyyy", { locale: ptBR });
-    if (view === 'day') return format(refDate, "EEEE, d 'de' MMM 'de' yyyy", { locale: ptBR });
-    if (view === 'range')
-      return `${format(viewStart, "d 'de' MMM", { locale: ptBR })} – ${format(viewEnd, "d 'de' MMM 'de' yyyy", { locale: ptBR })}`;
-    return `${format(viewStart, "d 'de' MMM", { locale: ptBR })} – ${format(viewEnd, "d 'de' MMM 'de' yyyy", { locale: ptBR })}`;
+    if (view === "month")
+      return format(refDate, "MMMM'de' yyyy", { locale: ptBR });
+    if (view === "day")
+      return format(refDate, "EEEE, d'de' MMM'de' yyyy", { locale: ptBR });
+    if (view === "range")
+      return `${format(viewStart, "d'de' MMM", { locale: ptBR })} – ${format(viewEnd, "d'de' MMM'de' yyyy", { locale: ptBR })}`;
+    return `${format(viewStart, "d'de' MMM", { locale: ptBR })} – ${format(viewEnd, "d'de' MMM'de' yyyy", { locale: ptBR })}`;
   }, [view, refDate, viewStart, viewEnd]);
 
   // Capitalize first letter
-  const periodLabelCap = periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1);
+  const periodLabelCap =
+    periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1);
 
   return (
     <PageContainer>
@@ -522,10 +628,13 @@ export default function CalendarioObras() {
               <CalendarDays className="h-4 w-4" />
               <span>Visão de calendário</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Calendário de Obras</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+              Calendário de Obras
+            </h1>
             <p className="text-muted-foreground mt-1">
-              Atividades programadas em todas as obras. Alterne entre visões de mês, semana, dia ou
-              período personalizado para acompanhar e atualizar o cronograma.
+              Atividades programadas em todas as obras. Alterne entre visões de
+              mês, semana, dia ou período personalizado para acompanhar e
+              atualizar o cronograma.
             </p>
           </div>
           {canBreak && (
@@ -549,8 +658,11 @@ export default function CalendarioObras() {
             <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
               <TabsList className="flex-wrap h-auto">
                 <TabsTrigger value="month">Mês</TabsTrigger>
-                {/* "Semana · Lista" foi ocultada — Semana · Timeline é o default */}
-                <TabsTrigger value="week-timeline" title="Semana em formato de linha do tempo (Gantt)">
+                {/*"Semana · Lista" foi ocultada — Semana · Timeline é o default */}
+                <TabsTrigger
+                  value="week-timeline"
+                  title="Semana em formato de linha do tempo (Gantt)"
+                >
                   Semana · Timeline
                 </TabsTrigger>
                 <TabsTrigger value="day">Dia</TabsTrigger>
@@ -560,13 +672,21 @@ export default function CalendarioObras() {
 
             <div className="ml-auto flex flex-wrap items-center gap-2 text-xs">
               <Badge variant="outline">Total: {counts.total}</Badge>
-              <Badge className={statusBadge.in_progress.className}>Em andamento: {counts.in_progress}</Badge>
-              <Badge className={statusBadge.overdue.className}>Atrasadas: {counts.overdue}</Badge>
-              <Badge className={statusBadge.pending.className}>Pendentes: {counts.pending}</Badge>
-              <Badge className={statusBadge.completed.className}>Concluídas: {counts.completed}</Badge>
+              <Badge className={statusBadge.in_progress.className}>
+                Em andamento: {counts.in_progress}
+              </Badge>
+              <Badge className={statusBadge.overdue.className}>
+                Atrasadas: {counts.overdue}
+              </Badge>
+              <Badge className={statusBadge.pending.className}>
+                Pendentes: {counts.pending}
+              </Badge>
+              <Badge className={statusBadge.completed.className}>
+                Concluídas: {counts.completed}
+              </Badge>
               {purchases.length > 0 && (
                 <Badge
-                  className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                  className="bg-amber-500/10 text-amber-700 border-amber-500/30"
                   title="Solicitações de compra criadas no período visível"
                 >
                   <ShoppingCart className="h-3 w-3 mr-1" />
@@ -577,9 +697,14 @@ export default function CalendarioObras() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {view !== 'range' ? (
+            {view !== "range" ? (
               <>
-                <Button variant="outline" size="icon" onClick={goPrev} aria-label="Anterior">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={goPrev}
+                  aria-label="Anterior"
+                >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <Popover>
@@ -596,11 +721,16 @@ export default function CalendarioObras() {
                       onSelect={(d) => d && setRefDate(d)}
                       initialFocus
                       locale={ptBR}
-                      className={cn('p-3 pointer-events-auto')}
+                      className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
                 </Popover>
-                <Button variant="outline" size="icon" onClick={goNext} aria-label="Próximo">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={goNext}
+                  aria-label="Próximo"
+                >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="sm" onClick={goToday}>
@@ -608,7 +738,9 @@ export default function CalendarioObras() {
                 </Button>
 
                 {/* Quick jumps — only on month / week views; filter de obra é preservado */}
-                {(view === 'month' || view === 'week-list' || view === 'week-timeline') && (
+                {(view === "month" ||
+                  view === "week-list" ||
+                  view === "week-timeline") && (
                   <div className="flex items-center gap-1 ml-1 pl-2 border-l">
                     <Button
                       variant="secondary"
@@ -632,17 +764,28 @@ export default function CalendarioObras() {
             ) : (
               <div className="flex flex-col gap-2 w-full">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" size="icon" onClick={goPrev} aria-label="Período anterior">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={goPrev}
+                    aria-label="Período anterior"
+                  >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className={cn(draftRangeInvalid && 'border-destructive text-destructive')}
+                        className={cn(
+                          draftRangeInvalid &&
+                            "border-destructive text-destructive",
+                        )}
                       >
                         <CalendarDays className="h-4 w-4 mr-2" />
-                        Início: <strong className="ml-1">{format(draftRangeStart, 'dd/MM/yyyy')}</strong>
+                        Início:{" "}
+                        <strong className="ml-1">
+                          {format(draftRangeStart, "dd/MM/yyyy")}
+                        </strong>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -652,7 +795,7 @@ export default function CalendarioObras() {
                         onSelect={(d) => d && setDraftRangeStart(d)}
                         initialFocus
                         locale={ptBR}
-                        className={cn('p-3 pointer-events-auto')}
+                        className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>
@@ -661,10 +804,16 @@ export default function CalendarioObras() {
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className={cn(draftRangeInvalid && 'border-destructive text-destructive')}
+                        className={cn(
+                          draftRangeInvalid &&
+                            "border-destructive text-destructive",
+                        )}
                       >
                         <CalendarDays className="h-4 w-4 mr-2" />
-                        Fim: <strong className="ml-1">{format(draftRangeEnd, 'dd/MM/yyyy')}</strong>
+                        Fim:{" "}
+                        <strong className="ml-1">
+                          {format(draftRangeEnd, "dd/MM/yyyy")}
+                        </strong>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -674,7 +823,7 @@ export default function CalendarioObras() {
                         onSelect={(d) => d && setDraftRangeEnd(d)}
                         initialFocus
                         locale={ptBR}
-                        className={cn('p-3 pointer-events-auto')}
+                        className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>
@@ -685,22 +834,32 @@ export default function CalendarioObras() {
                     disabled={draftRangeInvalid || !draftDirty}
                     title={
                       draftRangeInvalid
-                        ? 'A data de início deve ser anterior ou igual à data de fim'
+                        ? "A data de início deve ser anterior ou igual à data de fim"
                         : !draftDirty
-                          ? 'Nenhuma alteração pendente'
-                          : 'Aplicar período selecionado'
+                          ? "Nenhuma alteração pendente"
+                          : "Aplicar período selecionado"
                     }
                   >
                     Aplicar
                   </Button>
                   {draftDirty && (
-                    <Button variant="ghost" size="sm" onClick={resetDraftRange} title="Descartar alterações">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={resetDraftRange}
+                      title="Descartar alterações"
+                    >
                       <X className="h-3.5 w-3.5 mr-1" />
                       Resetar
                     </Button>
                   )}
 
-                  <Button variant="outline" size="icon" onClick={goNext} aria-label="Próximo período">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={goNext}
+                    aria-label="Próximo período"
+                  >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={goToday}>
@@ -714,13 +873,18 @@ export default function CalendarioObras() {
                   </p>
                 ) : draftDirty ? (
                   <p className="text-xs text-muted-foreground">
-                    Período selecionado ainda não aplicado — clique em <strong>Aplicar</strong> para
-                    atualizar a timeline.
+                    Período selecionado ainda não aplicado — clique em{" "}
+                    <strong>Aplicar</strong> para atualizar a timeline.
                   </p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    Exibindo {format(rangeStartDate, 'dd/MM/yyyy')} → {format(rangeEndDate, 'dd/MM/yyyy')} (
-                    {Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1} dias).
+                    Exibindo {format(rangeStartDate, "dd/MM/yyyy")} →{" "}
+                    {format(rangeEndDate, "dd/MM/yyyy")} (
+                    {Math.round(
+                      (rangeEndDate.getTime() - rangeStartDate.getTime()) /
+                        86_400_000,
+                    ) + 1}{" "}
+                    dias).
                   </p>
                 )}
               </div>
@@ -741,19 +905,29 @@ export default function CalendarioObras() {
               <SelectValue placeholder="Todas as obras" />
             </SelectTrigger>
             <SelectContent position="popper" className="max-h-72">
-              <SelectItem value="all">Todas as obras ({visibleByProject.length})</SelectItem>
+              <SelectItem value="all">
+                Todas as obras ({visibleByProject.length})
+              </SelectItem>
               {projectOptions.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   <span className="font-medium">{p.name}</span>
                   {p.client_name && (
-                    <span className="text-muted-foreground"> · {p.client_name}</span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      · {p.client_name}
+                    </span>
                   )}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {projectFilter !== 'all' && (
-            <Button variant="ghost" size="sm" onClick={() => setProjectFilter('all')} className="h-9">
+          {projectFilter !== "all" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setProjectFilter("all")}
+              className="h-9"
+            >
               <X className="h-3.5 w-3.5 mr-1" />
               Limpar filtro
             </Button>
@@ -772,7 +946,8 @@ export default function CalendarioObras() {
             </SelectTrigger>
             <SelectContent position="popper" className="max-h-72">
               <SelectItem value="all">
-                Todas as etapas ({etapaOptions.list.length + (etapaOptions.hasEmpty ? 1 : 0)})
+                Todas as etapas (
+                {etapaOptions.list.length + (etapaOptions.hasEmpty ? 1 : 0)})
               </SelectItem>
               {etapaOptions.list.map((etapa) => (
                 <SelectItem key={etapa} value={etapa}>
@@ -781,13 +956,20 @@ export default function CalendarioObras() {
               ))}
               {etapaOptions.hasEmpty && (
                 <SelectItem value="__none__">
-                  <span className="text-muted-foreground italic">Sem etapa</span>
+                  <span className="text-muted-foreground italic">
+                    Sem etapa
+                  </span>
                 </SelectItem>
               )}
             </SelectContent>
           </Select>
-          {etapaFilter !== 'all' && (
-            <Button variant="ghost" size="sm" onClick={() => setEtapaFilter('all')} className="h-9">
+          {etapaFilter !== "all" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEtapaFilter("all")}
+              className="h-9"
+            >
               <X className="h-3.5 w-3.5 mr-1" />
               Limpar
             </Button>
@@ -804,17 +986,19 @@ export default function CalendarioObras() {
           <Label
             htmlFor="include-completed"
             className="text-xs text-muted-foreground cursor-pointer select-none"
-            title="Por padrão, obras com status 'Concluída' ficam ocultas. Ative para mostrá-las novamente."
+            title="Por padrão, obras com status'Concluída' ficam ocultas. Ative para mostrá-las novamente."
           >
             Incluir obras concluídas
             {hiddenCompletedCount > 0 && !includeCompleted && (
-              <span className="ml-1 text-foreground font-medium">({hiddenCompletedCount})</span>
+              <span className="ml-1 text-foreground font-medium">
+                ({hiddenCompletedCount})
+              </span>
             )}
           </Label>
         </div>
 
         {/* Toggle: apenas micro-etapas (week-timeline + staff) */}
-        {view === 'week-timeline' && canBreak && (
+        {view === "week-timeline" && canBreak && (
           <div className="flex items-center gap-2">
             <Switch
               id="only-microsteps"
@@ -832,19 +1016,25 @@ export default function CalendarioObras() {
         )}
 
         {/* Filtro por prestador (somente week-timeline) */}
-        {view === 'week-timeline' && (
+        {view === "week-timeline" && (
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Filter className="h-3.5 w-3.5" />
               Prestador:
             </div>
-            <Select value={fornecedorFilter} onValueChange={setFornecedorFilter}>
+            <Select
+              value={fornecedorFilter}
+              onValueChange={setFornecedorFilter}
+            >
               <SelectTrigger className="h-9 w-full sm:w-[240px]">
                 <SelectValue placeholder="Todos os prestadores" />
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-72">
                 <SelectItem value="all">
-                  Todos os prestadores ({fornecedorOptions.list.length + (fornecedorOptions.hasEmpty ? 1 : 0)})
+                  Todos os prestadores (
+                  {fornecedorOptions.list.length +
+                    (fornecedorOptions.hasEmpty ? 1 : 0)}
+                  )
                 </SelectItem>
                 {fornecedorOptions.list.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
@@ -853,13 +1043,20 @@ export default function CalendarioObras() {
                 ))}
                 {fornecedorOptions.hasEmpty && (
                   <SelectItem value="__none__">
-                    <span className="text-muted-foreground italic">Sem prestador</span>
+                    <span className="text-muted-foreground italic">
+                      Sem prestador
+                    </span>
                   </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            {fornecedorFilter !== 'all' && (
-              <Button variant="ghost" size="sm" onClick={() => setFornecedorFilter('all')} className="h-9">
+            {fornecedorFilter !== "all" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFornecedorFilter("all")}
+                className="h-9"
+              >
                 <X className="h-3.5 w-3.5 mr-1" />
                 Limpar
               </Button>
@@ -868,9 +1065,9 @@ export default function CalendarioObras() {
         )}
 
         {/* Toggle: alto contraste (somente week-timeline). Reforça a leitura
-            das barras para usuários com baixa visão, monitores com brilho
-            baixo ou ambientes muito iluminados. Persistido em localStorage. */}
-        {view === 'week-timeline' && (
+ das barras para usuários com baixa visão, monitores com brilho
+ baixo ou ambientes muito iluminados. Persistido em localStorage. */}
+        {view === "week-timeline" && (
           <div className="flex items-center gap-2">
             <Switch
               id="high-contrast-toggle"
@@ -885,7 +1082,8 @@ export default function CalendarioObras() {
               Alto contraste
             </Label>
             <span id="high-contrast-help" className="sr-only">
-              Quando ativo, as barras da timeline usam fundos sólidos e texto de máxima legibilidade.
+              Quando ativo, as barras da timeline usam fundos sólidos e texto de
+              máxima legibilidade.
             </span>
           </div>
         )}
@@ -898,7 +1096,7 @@ export default function CalendarioObras() {
             <Skeleton key={i} className="h-24 w-full" />
           ))}
         </div>
-      ) : view === 'month' ? (
+      ) : view === "month" ? (
         <CalendarMonthGrid
           refDate={refDate}
           activities={filteredActivities}
@@ -906,7 +1104,7 @@ export default function CalendarioObras() {
           projectsWithOverduePrevious={projectsWithOverduePrev}
           onReplanSchedule={(pid) => navigate(`/obra/${pid}/cronograma`)}
           purchasesByDay={
-            projectFilter === 'all'
+            projectFilter === "all"
               ? purchasesByDay
               : new Map(
                   Array.from(purchasesByDay.entries()).map(([k, v]) => [
@@ -916,16 +1114,18 @@ export default function CalendarioObras() {
                 )
           }
         />
-      ) : view === 'day' ? (
+      ) : view === "day" ? (
         <CalendarDayAgenda
           day={refDate}
           activities={filteredActivities}
           onActivityClick={setSelectedActivity}
           dayPurchases={(
-            purchasesByDay.get(format(refDate, 'yyyy-MM-dd')) ?? []
-          ).filter((p) => projectFilter === 'all' || p.project_id === projectFilter)}
+            purchasesByDay.get(format(refDate, "yyyy-MM-dd")) ?? []
+          ).filter(
+            (p) => projectFilter === "all" || p.project_id === projectFilter,
+          )}
         />
-      ) : view === 'range' ? (
+      ) : view === "range" ? (
         <CalendarRangeTimeline
           rangeStart={viewStart}
           rangeEnd={viewEnd}
@@ -936,15 +1136,15 @@ export default function CalendarioObras() {
           onQuickToggle={handleQuickToggle}
           highContrast={highContrast}
         />
-      ) : view === 'week-timeline' ? (
+      ) : view === "week-timeline" ? (
         (() => {
-          // Na visão "Semana · Timeline" exibimos apenas obras que estão de
+          // Na visão"Semana · Timeline" exibimos apenas obras que estão de
           // fato em andamento na semana — i.e., possuem ao menos uma atividade
-          // cujo `actual_start` (data real de início) cai dentro do intervalo
+          // cujo`actual_start` (data real de início) cai dentro do intervalo
           // [viewStart, viewEnd]. Isso filtra obras que apenas têm atividades
           // *planejadas* mas ainda não começaram na prática.
-          const weekStartStr = format(viewStart, 'yyyy-MM-dd');
-          const weekEndStr = format(viewEnd, 'yyyy-MM-dd');
+          const weekStartStr = format(viewStart, "yyyy-MM-dd");
+          const weekEndStr = format(viewEnd, "yyyy-MM-dd");
           const inProgressByProject = filteredByProject
             .filter((g) =>
               g.items.some(
@@ -955,29 +1155,30 @@ export default function CalendarioObras() {
               ),
             )
             // Ordenação por prioridade de leitura da semana:
-            //  1) menor `actual_start` que caiu DENTRO da semana (obras que
-            //     começaram antes aparecem primeiro — facilita varredura
-            //     temporal de cima para baixo);
-            //  2) atrasos da semana (qualquer atividade com planned_end
-            //     dentro da semana e ainda sem actual_end) sobem como
-            //     desempate, para chamar atenção;
-            //  3) nome da obra (estável, alfabético pt-BR) como fallback.
+            // 1) menor`actual_start` que caiu DENTRO da semana (obras que
+            // começaram antes aparecem primeiro — facilita varredura
+            // temporal de cima para baixo);
+            // 2) atrasos da semana (qualquer atividade com planned_end
+            // dentro da semana e ainda sem actual_end) sobem como
+            // desempate, para chamar atenção;
+            // 3) nome da obra (estável, alfabético pt-BR) como fallback.
             .map((g) => {
-              const earliestStart = g.items
-                .filter(
-                  (a) =>
-                    !!a.actual_start &&
-                    a.actual_start >= weekStartStr &&
-                    a.actual_start <= weekEndStr,
-                )
-                .map((a) => a.actual_start as string)
-                .sort()[0] ?? '9999-12-31';
+              const earliestStart =
+                g.items
+                  .filter(
+                    (a) =>
+                      !!a.actual_start &&
+                      a.actual_start >= weekStartStr &&
+                      a.actual_start <= weekEndStr,
+                  )
+                  .map((a) => a.actual_start as string)
+                  .sort()[0] ?? "9999-12-31";
               const hasOverdueInWeek = g.items.some(
                 (a) =>
                   !a.actual_end &&
                   a.planned_end >= weekStartStr &&
                   a.planned_end <= weekEndStr &&
-                  a.planned_end < format(today, 'yyyy-MM-dd'),
+                  a.planned_end < format(today, "yyyy-MM-dd"),
               );
               return { g, earliestStart, hasOverdueInWeek };
             })
@@ -986,7 +1187,7 @@ export default function CalendarioObras() {
                 return a.earliestStart.localeCompare(b.earliestStart);
               if (a.hasOverdueInWeek !== b.hasOverdueInWeek)
                 return a.hasOverdueInWeek ? -1 : 1;
-              return a.g.project_name.localeCompare(b.g.project_name, 'pt-BR');
+              return a.g.project_name.localeCompare(b.g.project_name, "pt-BR");
             })
             .map((x) => x.g);
           return (
@@ -1043,7 +1244,8 @@ export default function CalendarioObras() {
           existingChildrenCount={breakingChildrenCount}
           onUndoBreak={(p) => mergeSubActivities(p.id)}
           isUndoing={isMerging}
-        />)}
+        />
+      )}
 
       {/* Dialog para gerenciar dias não úteis (Admin/Engineer) */}
       {canBreak && (
@@ -1092,26 +1294,41 @@ function WeekListView({
     return (
       <EmptyState
         icon={CalendarDays}
-        title={projectFilter === 'all' ? 'Nenhuma atividade programada' : 'Nenhuma atividade para esta obra'}
+        title={
+          projectFilter === "all"
+            ? "Nenhuma atividade programada"
+            : "Nenhuma atividade para esta obra"
+        }
         description={
-          projectFilter === 'all'
-            ? 'Não há atividades planejadas para esta semana em nenhuma obra.'
-            : 'Esta obra não possui atividades planejadas para a semana selecionada.'
+          projectFilter === "all"
+            ? "Não há atividades planejadas para esta semana em nenhuma obra."
+            : "Esta obra não possui atividades planejadas para a semana selecionada."
         }
       />
     );
   }
-  const inThisWeek = isWithinInterval(today, { start: weekStart, end: weekEnd });
+  const inThisWeek = isWithinInterval(today, {
+    start: weekStart,
+    end: weekEnd,
+  });
   return (
     <div className="space-y-4">
       {filteredByProject.map((group) => {
         const color = getProjectColor(group.project_id);
         return (
-          <Card key={group.project_id} className={cn('overflow-hidden border-l-4', color.border)}>
+          <Card
+            key={group.project_id}
+            className={cn("overflow-hidden border-l-4", color.border)}
+          >
             <CardHeader className="py-3 px-4 border-b">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className={cn('inline-flex items-center justify-center h-7 w-7 rounded-md shrink-0', color.bg)}>
+                  <span
+                    className={cn(
+                      "inline-flex items-center justify-center h-7 w-7 rounded-md shrink-0",
+                      color.bg,
+                    )}
+                  >
                     <Building2 className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -1142,10 +1359,11 @@ function WeekListView({
             <CardContent className="p-0 divide-y">
               {group.items.map((a) => {
                 const status = (() => {
-                  if (a.actual_end) return 'completed' as const;
-                  if (a.actual_start) return 'in_progress' as const;
-                  if (today > parseISO(a.planned_start)) return 'overdue' as const;
-                  return 'pending' as const;
+                  if (a.actual_end) return "completed" as const;
+                  if (a.actual_start) return "in_progress" as const;
+                  if (today > parseISO(a.planned_start))
+                    return "overdue" as const;
+                  return "pending" as const;
                 })();
                 const sb = statusBadge[status];
                 const ps = parseISO(a.planned_start);
@@ -1158,7 +1376,7 @@ function WeekListView({
                     aria-label={`Abrir atividade ${a.description}`}
                     onClick={() => onActivityClick(a)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === "") {
                         e.preventDefault();
                         onActivityClick(a);
                       }
@@ -1167,33 +1385,46 @@ function WeekListView({
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm truncate">{a.description}</span>
+                        <span className="font-medium text-sm truncate">
+                          {a.description}
+                        </span>
                         {a.etapa && (
                           <Badge variant="outline" className="text-[10px]">
                             {a.etapa}
                           </Badge>
                         )}
-                        <Badge className={cn('text-[10px]', sb.className)}>{sb.label}</Badge>
+                        <Badge className={cn("text-[10px]", sb.className)}>
+                          {sb.label}
+                        </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-4 gap-y-1">
                         <span>
-                          Previsto: <strong>{format(ps, 'dd/MM')}</strong> →{' '}
-                          <strong>{format(pe, 'dd/MM')}</strong>
+                          Previsto: <strong>{format(ps, "dd/MM")}</strong> →{""}
+                          <strong>{format(pe, "dd/MM")}</strong>
                         </span>
                         {a.actual_start && (
                           <span className="text-blue-600">
-                            Início real: <strong>{format(parseISO(a.actual_start), 'dd/MM')}</strong>
+                            Início real:{" "}
+                            <strong>
+                              {format(parseISO(a.actual_start), "dd/MM")}
+                            </strong>
                           </span>
                         )}
                         {a.actual_end && (
                           <span className="text-green-600">
-                            Fim real: <strong>{format(parseISO(a.actual_end), 'dd/MM')}</strong>
+                            Fim real:{" "}
+                            <strong>
+                              {format(parseISO(a.actual_end), "dd/MM")}
+                            </strong>
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex items-center gap-2 shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {!a.actual_start && !a.actual_end && (
                         <Button
                           size="sm"
@@ -1202,8 +1433,8 @@ function WeekListView({
                           onClick={() => onStart(a)}
                           title={
                             inThisWeek
-                              ? 'Marcar início real como hoje'
-                              : 'Marcar início real como hoje (data atual do sistema)'
+                              ? "Marcar início real como hoje"
+                              : "Marcar início real como hoje (data atual do sistema)"
                           }
                         >
                           <PlayCircle className="h-4 w-4 mr-1" />

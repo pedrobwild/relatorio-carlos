@@ -10,18 +10,25 @@
  * cabeçalho do ticket): total, concluídas, atrasadas, próximo prazo e
  * tempo médio de conclusão.
  */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // ----- types -----
-export type CsActionStatus = 'pendente' | 'em_andamento' | 'concluida' | 'cancelada';
+export type CsActionStatus =
+  | "pendente"
+  | "em_andamento"
+  | "concluida"
+  | "cancelada";
 
-export const CS_ACTION_STATUS_OPTIONS: { value: CsActionStatus; label: string }[] = [
-  { value: 'pendente', label: 'Pendente' },
-  { value: 'em_andamento', label: 'Em andamento' },
-  { value: 'concluida', label: 'Concluída' },
-  { value: 'cancelada', label: 'Cancelada' },
+export const CS_ACTION_STATUS_OPTIONS: {
+  value: CsActionStatus;
+  label: string;
+}[] = [
+  { value: "pendente", label: "Pendente" },
+  { value: "em_andamento", label: "Em andamento" },
+  { value: "concluida", label: "Concluída" },
+  { value: "cancelada", label: "Cancelada" },
 ];
 
 export interface CsTicketAction {
@@ -50,24 +57,27 @@ export interface CsTicketActionInput {
 }
 
 export type CsTicketActionPatch = Partial<
-  Omit<CsTicketActionInput, 'ticket_id'> & { sort_order: number }
+  Omit<CsTicketActionInput, "ticket_id"> & { sort_order: number }
 >;
 
 // ----- query keys -----
 export const csActionKeys = {
-  all: ['cs-ticket-actions'] as const,
-  byTicket: (ticketId: string) => [...csActionKeys.all, 'ticket', ticketId] as const,
-  summary: () => [...csActionKeys.all, 'summary'] as const,
+  all: ["cs-ticket-actions"] as const,
+  byTicket: (ticketId: string) =>
+    [...csActionKeys.all, "ticket", ticketId] as const,
+  summary: () => [...csActionKeys.all, "summary"] as const,
 };
 
 // ----- list por ticket -----
 export function useCsTicketActions(ticketId: string | undefined | null) {
   return useQuery({
-    queryKey: ticketId ? csActionKeys.byTicket(ticketId) : ['cs-ticket-actions', 'idle'],
+    queryKey: ticketId
+      ? csActionKeys.byTicket(ticketId)
+      : ["cs-ticket-actions", "idle"],
     enabled: !!ticketId,
     queryFn: async (): Promise<CsTicketAction[]> => {
       const { data, error } = await supabase
-        .from('cs_ticket_actions')
+        .from("cs_ticket_actions")
         .select(
           `
           id, ticket_id, title, description, responsible_user_id,
@@ -76,9 +86,9 @@ export function useCsTicketActions(ticketId: string | undefined | null) {
           responsible:users_profile!cs_ticket_actions_responsible_user_id_fkey ( id, nome )
           `,
         )
-        .eq('ticket_id', ticketId!)
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true });
+        .eq("ticket_id", ticketId!)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
 
@@ -117,8 +127,8 @@ export function useAllCsActionsSummary() {
     queryKey: csActionKeys.summary(),
     queryFn: async (): Promise<Record<string, CsTicketActionsSummary>> => {
       const { data, error } = await supabase
-        .from('cs_ticket_actions')
-        .select('ticket_id, status, due_date, title');
+        .from("cs_ticket_actions")
+        .select("ticket_id, status, due_date, title");
       if (error) throw error;
 
       const today = new Date();
@@ -135,13 +145,13 @@ export function useAllCsActionsSummary() {
           nextDueTitle: null,
         });
         sum.total += 1;
-        const isDone = row.status === 'concluida' || row.status === 'cancelada';
+        const isDone = row.status === "concluida" || row.status === "cancelada";
         if (isDone) {
           sum.done += 1;
         } else {
           sum.open += 1;
           if (row.due_date) {
-            const due = new Date(row.due_date + 'T00:00:00');
+            const due = new Date(row.due_date + "T00:00:00");
             if (due < today) sum.overdue += 1;
             if (!sum.nextDueDate || row.due_date < sum.nextDueDate) {
               sum.nextDueDate = row.due_date;
@@ -163,27 +173,27 @@ export function useCreateCsTicketAction() {
     mutationFn: async (input: CsTicketActionInput) => {
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth.user?.id;
-      if (!uid) throw new Error('Usuário não autenticado.');
+      if (!uid) throw new Error("Usuário não autenticado.");
 
       // posiciona ao final
       const { count } = await supabase
-        .from('cs_ticket_actions')
-        .select('id', { count: 'exact', head: true })
-        .eq('ticket_id', input.ticket_id);
+        .from("cs_ticket_actions")
+        .select("id", { count: "exact", head: true })
+        .eq("ticket_id", input.ticket_id);
 
       const { data, error } = await supabase
-        .from('cs_ticket_actions')
+        .from("cs_ticket_actions")
         .insert({
           ticket_id: input.ticket_id,
           title: input.title,
           description: input.description ?? null,
           responsible_user_id: input.responsible_user_id ?? null,
           due_date: input.due_date ?? null,
-          status: input.status ?? 'pendente',
+          status: input.status ?? "pendente",
           sort_order: count ?? 0,
           created_by: uid,
         })
-        .select('id')
+        .select("id")
         .single();
       if (error) throw error;
       return data;
@@ -193,7 +203,7 @@ export function useCreateCsTicketAction() {
       qc.invalidateQueries({ queryKey: csActionKeys.summary() });
     },
     onError: (err: any) => {
-      toast.error('Erro ao criar ação', { description: err?.message });
+      toast.error("Erro ao criar ação", { description: err?.message });
     },
   });
 }
@@ -211,7 +221,10 @@ export function useUpdateCsTicketAction() {
       ticket_id: string;
       patch: CsTicketActionPatch;
     }) => {
-      const { error } = await supabase.from('cs_ticket_actions').update(patch).eq('id', id);
+      const { error } = await supabase
+        .from("cs_ticket_actions")
+        .update(patch)
+        .eq("id", id);
       if (error) throw error;
       return { id, ticket_id };
     },
@@ -220,7 +233,7 @@ export function useUpdateCsTicketAction() {
       qc.invalidateQueries({ queryKey: csActionKeys.summary() });
     },
     onError: (err: any) => {
-      toast.error('Erro ao atualizar ação', { description: err?.message });
+      toast.error("Erro ao atualizar ação", { description: err?.message });
     },
   });
 }
@@ -229,24 +242,35 @@ export function useUpdateCsTicketAction() {
 export function useDeleteCsTicketAction() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ticket_id }: { id: string; ticket_id: string }) => {
-      const { error } = await supabase.from('cs_ticket_actions').delete().eq('id', id);
+    mutationFn: async ({
+      id,
+      ticket_id,
+    }: {
+      id: string;
+      ticket_id: string;
+    }) => {
+      const { error } = await supabase
+        .from("cs_ticket_actions")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
       return { ticket_id };
     },
     onSuccess: ({ ticket_id }) => {
       qc.invalidateQueries({ queryKey: csActionKeys.byTicket(ticket_id) });
       qc.invalidateQueries({ queryKey: csActionKeys.summary() });
-      toast.success('Ação removida.');
+      toast.success("Ação removida.");
     },
     onError: (err: any) => {
-      toast.error('Erro ao remover ação', { description: err?.message });
+      toast.error("Erro ao remover ação", { description: err?.message });
     },
   });
 }
 
 // ----- helpers de exibição -----
-export function summarizeActions(actions: CsTicketAction[]): CsTicketActionsSummary {
+export function summarizeActions(
+  actions: CsTicketAction[],
+): CsTicketActionsSummary {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -259,12 +283,12 @@ export function summarizeActions(actions: CsTicketAction[]): CsTicketActionsSumm
     nextDueTitle: null,
   };
   actions.forEach((a) => {
-    const isDone = a.status === 'concluida' || a.status === 'cancelada';
+    const isDone = a.status === "concluida" || a.status === "cancelada";
     if (isDone) sum.done += 1;
     else {
       sum.open += 1;
       if (a.due_date) {
-        const due = new Date(a.due_date + 'T00:00:00');
+        const due = new Date(a.due_date + "T00:00:00");
         if (due < today) sum.overdue += 1;
         if (!sum.nextDueDate || a.due_date < sum.nextDueDate) {
           sum.nextDueDate = a.due_date;
@@ -277,12 +301,17 @@ export function summarizeActions(actions: CsTicketAction[]): CsTicketActionsSumm
 }
 
 /** Tempo médio (ms) entre criação e conclusão das ações concluídas. */
-export function avgActionResolutionMs(actions: CsTicketAction[]): number | null {
-  const done = actions.filter((a) => a.status === 'concluida' && a.completed_at);
+export function avgActionResolutionMs(
+  actions: CsTicketAction[],
+): number | null {
+  const done = actions.filter(
+    (a) => a.status === "concluida" && a.completed_at,
+  );
   if (done.length === 0) return null;
   const total = done.reduce(
     (acc, a) =>
-      acc + (new Date(a.completed_at!).getTime() - new Date(a.created_at).getTime()),
+      acc +
+      (new Date(a.completed_at!).getTime() - new Date(a.created_at).getTime()),
     0,
   );
   return total / done.length;
@@ -290,7 +319,7 @@ export function avgActionResolutionMs(actions: CsTicketAction[]): number | null 
 
 /** Formata duração (ms) em "Xd Yh" / "Yh Zmin" / "Zmin". */
 export function formatDuration(ms: number | null | undefined): string {
-  if (ms == null || !isFinite(ms) || ms < 0) return '—';
+  if (ms == null || !isFinite(ms) || ms < 0) return "—";
   const mins = Math.round(ms / 60000);
   if (mins < 60) return `${mins}min`;
   const hours = Math.floor(mins / 60);

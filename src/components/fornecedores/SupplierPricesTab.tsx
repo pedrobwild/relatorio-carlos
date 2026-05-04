@@ -6,7 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Plus, Trash2, Pencil, X, Check, ArrowRight } from "lucide-react";
 import { SendToProjectDialog } from "./SendToProjectDialog";
@@ -35,11 +40,16 @@ const emptyPrice = (fornecedorId: string): Partial<PriceItem> => ({
   observacoes: null,
 });
 
-export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) {
+export function SupplierPricesTab({
+  fornecedorId,
+  fornecedorNome = "",
+}: Props) {
   const qc = useQueryClient();
   const qk = ["fornecedor_precos", fornecedorId];
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<Partial<PriceItem>>(emptyPrice(fornecedorId));
+  const [form, setForm] = useState<Partial<PriceItem>>(
+    emptyPrice(fornecedorId),
+  );
   const [adding, setAdding] = useState(false);
   const [sendItem, setSendItem] = useState<PriceItem | null>(null);
 
@@ -59,10 +69,15 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
   const saveMut = useMutation({
     mutationFn: async (item: Partial<PriceItem>) => {
       if (editingId) {
-        const { error } = await supabase.from("fornecedor_precos").update(item as any).eq("id", editingId);
+        const { error } = await supabase
+          .from("fornecedor_precos")
+          .update(item as any)
+          .eq("id", editingId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("fornecedor_precos").insert(item as any);
+        const { error } = await supabase
+          .from("fornecedor_precos")
+          .insert(item as any);
         if (error) throw error;
       }
     },
@@ -71,12 +86,16 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
       toast({ title: editingId ? "Preço atualizado" : "Preço adicionado" });
       cancelEdit();
     },
-    onError: (e: Error) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+    onError: (e: Error) =>
+      toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("fornecedor_precos").delete().eq("id", id);
+      const { error } = await supabase
+        .from("fornecedor_precos")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -104,8 +123,10 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
   };
 
   const handleSave = () => {
-    if (!form.descricao?.trim()) return toast({ title: "Descrição obrigatória", variant: "destructive" });
-    if (!form.preco_unitario || form.preco_unitario <= 0) return toast({ title: "Preço inválido", variant: "destructive" });
+    if (!form.descricao?.trim())
+      return toast({ title: "Descrição obrigatória", variant: "destructive" });
+    if (!form.preco_unitario || form.preco_unitario <= 0)
+      return toast({ title: "Preço inválido", variant: "destructive" });
     const payload = { ...form };
     if (!payload.data_validade) delete payload.data_validade;
     if (!payload.observacoes) delete payload.observacoes;
@@ -113,7 +134,10 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
   };
 
   const fmt = (v: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(v);
 
   const renderForm = () => (
     <TableRow>
@@ -121,7 +145,9 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
         <Input
           placeholder="Descrição do item"
           value={form.descricao || ""}
-          onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, descricao: e.target.value }))
+          }
           className="h-8 text-sm"
         />
       </TableCell>
@@ -140,7 +166,9 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
           min="0"
           placeholder="0,00"
           value={form.preco_unitario || ""}
-          onChange={(e) => setForm((p) => ({ ...p, preco_unitario: Number(e.target.value) }))}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, preco_unitario: Number(e.target.value) }))
+          }
           className="h-8 text-sm w-28"
         />
       </TableCell>
@@ -148,16 +176,29 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
         <Input
           type="date"
           value={form.data_validade || ""}
-          onChange={(e) => setForm((p) => ({ ...p, data_validade: e.target.value || null }))}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, data_validade: e.target.value || null }))
+          }
           className="h-8 text-sm w-36"
         />
       </TableCell>
       <TableCell>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSave} disabled={saveMut.isPending}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={handleSave}
+            disabled={saveMut.isPending}
+          >
             <Check className="h-4 w-4 text-green-600" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={cancelEdit}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={cancelEdit}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -170,7 +211,12 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Tabela de Preços</Label>
         {!adding && !editingId && (
-          <Button variant="outline" size="sm" onClick={startAdd} className="gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={startAdd}
+            className="gap-1"
+          >
             <Plus className="h-3.5 w-3.5" /> Adicionar
           </Button>
         )}
@@ -198,9 +244,15 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
                 <TableRow key={p.id}>
                   <TableCell className="text-sm">{p.descricao}</TableCell>
                   <TableCell className="text-sm">{p.unidade}</TableCell>
-                  <TableCell className="text-sm font-medium">{fmt(p.preco_unitario)}</TableCell>
+                  <TableCell className="text-sm font-medium">
+                    {fmt(p.preco_unitario)}
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {p.data_validade ? new Date(p.data_validade + "T12:00:00").toLocaleDateString("pt-BR") : "—"}
+                    {p.data_validade
+                      ? new Date(
+                          p.data_validade + "T12:00:00",
+                        ).toLocaleDateString("pt-BR")
+                      : "—"}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
@@ -213,20 +265,33 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
                       >
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(p)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => startEdit(p)}
+                      >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteMut.mutate(p.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => deleteMut.mutate(p.id)}
+                      >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
-              )
+              ),
             )}
             {prices.length === 0 && !adding && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground text-sm py-6">
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-muted-foreground text-sm py-6"
+                >
                   Nenhum preço cadastrado
                 </TableCell>
               </TableRow>

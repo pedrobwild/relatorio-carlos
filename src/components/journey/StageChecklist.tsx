@@ -1,17 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
-import { Check, X, Plus, Edit2, Trash2, CheckCircle, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useRef } from "react";
+import {
+  Check,
+  X,
+  Plus,
+  Edit2,
+  Trash2,
+  CheckCircle,
+  Sparkles,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import {
   JourneyTodo,
   useToggleTodo,
   useUpdateTodo,
   useAddTodo,
   useDeleteTodo,
-} from '@/hooks/useProjectJourney';
-import { journeyCopy } from '@/constants/journeyCopy';
+} from "@/hooks/useProjectJourney";
+import { journeyCopy } from "@/constants/journeyCopy";
 
 interface TodoItemProps {
   todo: JourneyTodo;
@@ -46,12 +54,22 @@ function TodoItem({ todo, projectId, isAdmin, canCheck }: TodoItemProps) {
           onChange={(e) => setText(e.target.value)}
           className="flex-1 h-10 text-sm"
           autoFocus
-          onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+          onKeyDown={(e) => e.key === "Enter" && handleSave()}
         />
-        <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={handleSave}>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-10 w-10 shrink-0"
+          onClick={handleSave}
+        >
           <Check className="h-4 w-4" />
         </Button>
-        <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={() => setIsEditing(false)}>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-10 w-10 shrink-0"
+          onClick={() => setIsEditing(false)}
+        >
           <X className="h-4 w-4" />
         </Button>
         <Button
@@ -72,14 +90,18 @@ function TodoItem({ todo, projectId, isAdmin, canCheck }: TodoItemProps) {
         checked={todo.completed}
         disabled={!canCheck && !isAdmin}
         onCheckedChange={(checked) =>
-          toggleTodo.mutate({ todoId: todo.id, completed: !!checked, projectId })
+          toggleTodo.mutate({
+            todoId: todo.id,
+            completed: !!checked,
+            projectId,
+          })
         }
         className="mt-0.5 h-5 w-5"
       />
       <span
         className={cn(
           "flex-1 text-sm leading-relaxed",
-          todo.completed && "line-through text-muted-foreground"
+          todo.completed && "line-through text-muted-foreground",
         )}
       >
         {todo.text}
@@ -100,7 +122,7 @@ function TodoItem({ todo, projectId, isAdmin, canCheck }: TodoItemProps) {
 
 interface StageChecklistProps {
   todos: JourneyTodo[];
-  owner: 'client' | 'bwild';
+  owner: "client" | "bwild";
   label: string;
   projectId: string;
   stageId: string;
@@ -115,13 +137,14 @@ export function StageChecklist({
   stageId,
   isAdmin,
 }: StageChecklistProps) {
-  const [newTodoText, setNewTodoText] = useState('');
+  const [newTodoText, setNewTodoText] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const addTodo = useAddTodo();
 
   const filteredTodos = todos.filter((t) => t.owner === owner);
-  const allDone = filteredTodos.length > 0 && filteredTodos.every(t => t.completed);
+  const allDone =
+    filteredTodos.length > 0 && filteredTodos.every((t) => t.completed);
   const prevAllDone = useRef(allDone);
 
   // Micro-celebration: detect when all items just became completed
@@ -137,7 +160,7 @@ export function StageChecklist({
   const handleAdd = () => {
     if (!newTodoText.trim()) return;
     addTodo.mutate({ stageId, owner, text: newTodoText, projectId });
-    setNewTodoText('');
+    setNewTodoText("");
     setIsAdding(false);
   };
 
@@ -163,7 +186,7 @@ export function StageChecklist({
             todo={todo}
             projectId={projectId}
             isAdmin={isAdmin}
-            canCheck={owner === 'client'}
+            canCheck={owner === "client"}
           />
         ))}
         {filteredTodos.length === 0 && !isAdding && (
@@ -180,12 +203,22 @@ export function StageChecklist({
               placeholder={journeyCopy.checklist.newItemPlaceholder}
               className="flex-1 h-10 text-sm"
               autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             />
-            <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={handleAdd}>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-10 w-10 shrink-0"
+              onClick={handleAdd}
+            >
               <Check className="h-4 w-4" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={() => setIsAdding(false)}>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-10 w-10 shrink-0"
+              onClick={() => setIsAdding(false)}
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>

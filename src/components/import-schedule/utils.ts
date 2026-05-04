@@ -1,21 +1,25 @@
-import * as XLSX from 'xlsx';
-import { type ColumnMapping, COLUMN_ALIASES, type ActivityFormData } from './types';
+import * as XLSX from "xlsx";
+import {
+  type ColumnMapping,
+  COLUMN_ALIASES,
+  type ActivityFormData,
+} from "./types";
 
 export function autoMapColumns(detectedHeaders: string[]): ColumnMapping {
   const mapping: ColumnMapping = {
-    description: '',
-    plannedStart: '',
-    plannedEnd: '',
-    actualStart: '',
-    actualEnd: '',
-    weight: '',
+    description: "",
+    plannedStart: "",
+    plannedEnd: "",
+    actualStart: "",
+    actualEnd: "",
+    weight: "",
   };
 
-  const normalizedHeaders = detectedHeaders.map(h => h.toLowerCase().trim());
+  const normalizedHeaders = detectedHeaders.map((h) => h.toLowerCase().trim());
 
   Object.entries(COLUMN_ALIASES).forEach(([field, aliases]) => {
-    const matchIndex = normalizedHeaders.findIndex(header =>
-      aliases.some(alias => header.includes(alias))
+    const matchIndex = normalizedHeaders.findIndex((header) =>
+      aliases.some((alias) => header.includes(alias)),
     );
     if (matchIndex !== -1) {
       mapping[field as keyof ColumnMapping] = detectedHeaders[matchIndex];
@@ -26,20 +30,20 @@ export function autoMapColumns(detectedHeaders: string[]): ColumnMapping {
 }
 
 export function parseDate(value: string | number | undefined): string {
-  if (!value) return '';
+  if (!value) return "";
 
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     const date = XLSX.SSF.parse_date_code(value);
     if (date) {
       const year = date.y;
-      const month = String(date.m).padStart(2, '0');
-      const day = String(date.d).padStart(2, '0');
+      const month = String(date.m).padStart(2, "0");
+      const day = String(date.d).padStart(2, "0");
       return `${year}-${month}-${day}`;
     }
   }
 
   const strValue = String(value).trim();
-  if (!strValue) return '';
+  if (!strValue) return "";
 
   const formats = [
     /^(\d{4})-(\d{2})-(\d{2})$/,
@@ -56,9 +60,9 @@ export function parseDate(value: string | number | undefined): string {
   if (match2) return `${match2[3]}-${match2[2]}-${match2[1]}`;
 
   const parsed = new Date(strValue);
-  if (!isNaN(parsed.getTime())) return parsed.toISOString().split('T')[0];
+  if (!isNaN(parsed.getTime())) return parsed.toISOString().split("T")[0];
 
-  return '';
+  return "";
 }
 
 export interface ImportError {
@@ -73,27 +77,33 @@ export interface MapResult {
 
 export function mapRawToActivities(
   rawData: Record<string, string>[],
-  columnMapping: ColumnMapping
+  columnMapping: ColumnMapping,
 ): MapResult {
   const valid: ActivityFormData[] = [];
   const errors: ImportError[] = [];
 
   rawData.forEach((row, index) => {
-    const description = columnMapping.description ? String(row[columnMapping.description] || '').trim() : '';
+    const description = columnMapping.description
+      ? String(row[columnMapping.description] || "").trim()
+      : "";
     if (!description) {
-      errors.push({ row: index + 2, reason: 'Descrição vazia' });
+      errors.push({ row: index + 2, reason: "Descrição vazia" });
       return;
     }
 
-    const plannedStart = parseDate(columnMapping.plannedStart ? row[columnMapping.plannedStart] : '');
-    const plannedEnd = parseDate(columnMapping.plannedEnd ? row[columnMapping.plannedEnd] : '');
+    const plannedStart = parseDate(
+      columnMapping.plannedStart ? row[columnMapping.plannedStart] : "",
+    );
+    const plannedEnd = parseDate(
+      columnMapping.plannedEnd ? row[columnMapping.plannedEnd] : "",
+    );
 
     if (!plannedStart) {
-      errors.push({ row: index + 2, reason: 'Data início inválida' });
+      errors.push({ row: index + 2, reason: "Data início inválida" });
       return;
     }
     if (!plannedEnd) {
-      errors.push({ row: index + 2, reason: 'Data término inválida' });
+      errors.push({ row: index + 2, reason: "Data término inválida" });
       return;
     }
 
@@ -102,11 +112,22 @@ export function mapRawToActivities(
       description,
       plannedStart,
       plannedEnd,
-      actualStart: parseDate(columnMapping.actualStart ? row[columnMapping.actualStart] : ''),
-      actualEnd: parseDate(columnMapping.actualEnd ? row[columnMapping.actualEnd] : ''),
-      weight: columnMapping.weight && row[columnMapping.weight]
-        ? String(parseFloat(String(row[columnMapping.weight]).replace(',', '.').replace('%', '')) || 0)
-        : '0',
+      actualStart: parseDate(
+        columnMapping.actualStart ? row[columnMapping.actualStart] : "",
+      ),
+      actualEnd: parseDate(
+        columnMapping.actualEnd ? row[columnMapping.actualEnd] : "",
+      ),
+      weight:
+        columnMapping.weight && row[columnMapping.weight]
+          ? String(
+              parseFloat(
+                String(row[columnMapping.weight])
+                  .replace(",", ".")
+                  .replace("%", ""),
+              ) || 0,
+            )
+          : "0",
       predecessorIds: [],
     });
   });

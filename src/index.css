@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,40 +6,38 @@
 
 /* ============================================================
  * Z-INDEX SCALE — tokens semânticos (Tailwind config).
- * Use SEMPRE as utilities `z-<layer>` em vez de números arbitrários.
+ * Use SEMPRE as utilities`z-<layer>` em vez de números arbitrários.
  * Editar a escala SOMENTE em tailwind.config.ts.
  * NUNCA sobrescrever em consumidores (Pages/Components).
  * ------------------------------------------------------------
- *  z-base / z-sticky / z-raised / z-docked   conteúdo de fluxo
- *  z-shell                FAB, headers de shell mobile, toolbars
- *  z-header               page headers sticky
- *  z-modal                Sheet / Dialog / Drawer overlay
- *  z-modal-content        Sheet / Dialog / Drawer content
- *  z-popover              Select, Popover, Dropdown, Context,
- *                         Hover, Tooltip, Menubar
- *                         ← sempre acima de modais
- *  z-toast                Toaster
- *  z-alert / z-alert-content   AlertDialog (confirmação destrutiva)
- *  z-max                  fallback de emergência (não usar)
+ * z-base / z-sticky / z-raised / z-docked conteúdo de fluxo
+ * z-shell FAB, headers de shell mobile, toolbars
+ * z-header page headers sticky
+ * z-modal Sheet / Dialog / Drawer overlay
+ * z-modal-content Sheet / Dialog / Drawer content
+ * z-popover Select, Popover, Dropdown, Context,
+ * Hover, Tooltip, Menubar
+ * ← sempre acima de modais
+ * z-toast Toaster
+ * z-alert / z-alert-content AlertDialog (confirmação destrutiva)
+ * z-max fallback de emergência (não usar)
  * ============================================================ */
-
-
 
 @layer base {
   /* Tema claro forçado globalmente — dark mode desativado intencionalmente. */
   :root {
     color-scheme: light;
     /* ====== Premium Surface System (zinc/slate, frio, sólido) ======
-     * Inspirado em Linear/Stripe/Notion — neutros frios para deixar o
-     * primary Bwild respirar e ações de cor terem peso real.
-     */
-    --background: 220 20% 98.5%;        /* canvas: quase branco frio */
-    --foreground: 222 25% 11%;          /* texto principal: zinc-950 frio */
-    --foreground-muted: 220 14% 32%;    /* texto secundário high-contrast */
+ * Inspirado em Linear/Stripe/Notion — neutros frios para deixar o
+ * primary Bwild respirar e ações de cor terem peso real.
+ */
+    --background: 220 20% 98.5%; /* canvas: quase branco frio */
+    --foreground: 222 25% 11%; /* texto principal: zinc-950 frio */
+    --foreground-muted: 220 14% 32%; /* texto secundário high-contrast */
 
-    --surface: 0 0% 100%;               /* cards/painéis acima do canvas */
-    --surface-raised: 0 0% 100%;        /* modais/popovers — usa shadow-lg */
-    --surface-sunken: 220 18% 96%;      /* zonas internas (table header, code) */
+    --surface: 0 0% 100%; /* cards/painéis acima do canvas */
+    --surface-raised: 0 0% 100%; /* modais/popovers — usa shadow-lg */
+    --surface-sunken: 220 18% 96%; /* zonas internas (table header, code) */
 
     --card: 0 0% 100%;
     --card-foreground: 222 25% 11%;
@@ -50,13 +48,13 @@
     --primary: 204 100% 25%;
     --primary-foreground: 0 0% 100%;
     --primary-dark: 211 97% 18%;
-    --primary-soft: 204 60% 96%;        /* tint sutil para hover/selected */
+    --primary-soft: 204 60% 96%; /* tint sutil para hover/selected */
 
     --secondary: 220 16% 95%;
     --secondary-foreground: 222 25% 15%;
 
     --muted: 220 16% 95.5%;
-    --muted-foreground: 220 12% 38%;    /* contraste AA garantido */
+    --muted-foreground: 220 12% 38%; /* contraste AA garantido */
 
     --accent: 204 50% 95%;
     --accent-foreground: 204 100% 22%;
@@ -78,14 +76,14 @@
     --destructive-light: 0 80% 96%;
 
     /* Bordas em escala — sutil → padrão → ênfase */
-    --border-subtle: 220 16% 92%;       /* divisores internos, table rows */
-    --border: 220 14% 88%;              /* default */
-    --border-strong: 220 12% 78%;       /* inputs em foco, ações */
+    --border-subtle: 220 16% 92%; /* divisores internos, table rows */
+    --border: 220 14% 88%; /* default */
+    --border-strong: 220 12% 78%; /* inputs em foco, ações */
 
     --input: 220 14% 88%;
     --ring: 204 100% 35%;
 
-    --radius: 0.625rem;                 /* 10px — mais Linear, menos Bootstrap */
+    --radius: 0.625rem; /* 10px — mais Linear, menos Bootstrap */
     --radius-sm: 0.375rem;
     --radius-lg: 0.875rem;
     --radius-xl: 1.125rem;
@@ -99,28 +97,42 @@
     --content-max-width: 1440px;
 
     /* Gradientes legados — manter por compat, mas NÃO aplicar no body */
-    --gradient-primary: linear-gradient(135deg, hsl(204, 100%, 25%), hsl(211, 97%, 18%));
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(204, 100%, 25%),
+      hsl(211, 97%, 18%)
+    );
     --gradient-background: none;
 
     /* ====== Elevation Scale (5 níveis) ======
-     * xs: bordas inferiores sutis (sticky toolbars)
-     * sm: cards default (quase imperceptível)
-     * md: cards interativos / hover
-     * lg: dropdowns, popovers, tooltips
-     * xl: modais, drawers
-     * Cores: zinc com baixa opacidade — sem cinza morno.
-     */
+ * xs: bordas inferiores sutis (sticky toolbars)
+ * sm: cards default (quase imperceptível)
+ * md: cards interativos / hover
+ * lg: dropdowns, popovers, tooltips
+ * xl: modais, drawers
+ * Cores: zinc com baixa opacidade — sem cinza morno.
+ */
     --shadow-xs: 0 1px 0 0 hsl(220 14% 10% / 0.04);
-    --shadow-sm: 0 1px 2px 0 hsl(220 30% 10% / 0.04), 0 1px 3px 0 hsl(220 30% 10% / 0.04);
-    --shadow-md: 0 2px 4px -1px hsl(220 30% 10% / 0.06), 0 4px 8px -2px hsl(220 30% 10% / 0.06);
-    --shadow-lg: 0 4px 12px -2px hsl(220 30% 10% / 0.08), 0 12px 24px -4px hsl(220 30% 10% / 0.08);
-    --shadow-xl: 0 8px 24px -4px hsl(220 30% 10% / 0.10), 0 24px 48px -8px hsl(220 30% 10% / 0.12);
+    --shadow-sm:
+      0 1px 2px 0 hsl(220 30% 10% / 0.04), 0 1px 3px 0 hsl(220 30% 10% / 0.04);
+    --shadow-md:
+      0 2px 4px -1px hsl(220 30% 10% / 0.06),
+      0 4px 8px -2px hsl(220 30% 10% / 0.06);
+    --shadow-lg:
+      0 4px 12px -2px hsl(220 30% 10% / 0.08),
+      0 12px 24px -4px hsl(220 30% 10% / 0.08);
+    --shadow-xl:
+      0 8px 24px -4px hsl(220 30% 10% / 0.1),
+      0 24px 48px -8px hsl(220 30% 10% / 0.12);
     /* Ring focus premium — duplo (offset branco + cor) */
-    --shadow-ring: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.45);
+    --shadow-ring:
+      0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.45);
 
     /* Mobile layout tokens */
     --bottom-nav-height: 64px; /* h-16 — matches MobileBottomNav/GestaoBottomNav */
-    --bottom-nav-offset: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+    --bottom-nav-offset: calc(
+      var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px)
+    );
     --sticky-cta-height: 64px;
     --mobile-header-height: 52px; /* slim mobile header inside ProjectShell */
 
@@ -135,7 +147,7 @@
   }
 
   /* Dark mode removido — tema claro é o único suportado.
-   * Mantenha apenas o bloco :root acima. */
+ * Mantenha apenas o bloco :root acima. */
 }
 
 @layer base {
@@ -148,19 +160,39 @@
   }
 
   /* Images and media: never overflow container */
-  img, video, svg, canvas, iframe {
+  img,
+  video,
+  svg,
+  canvas,
+  iframe {
     max-width: 100%;
     height: auto;
   }
 
   /* Prevent text selection on interactive elements only, not globally */
-  button, [role="button"], .no-select {
+  button,
+  [role="button"],
+  .no-select {
     -webkit-user-select: none;
     user-select: none;
   }
 
   /* Ensure text selection works in inputs and editable areas */
-  input, textarea, [contenteditable="true"], .selectable, p, span, h1, h2, h3, h4, h5, h6, li, td, th {
+  input,
+  textarea,
+  [contenteditable="true"],
+  .selectable,
+  p,
+  span,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  li,
+  td,
+  th {
     -webkit-user-select: text;
     user-select: text;
   }
@@ -180,7 +212,17 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family:
+      "Montserrat",
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      sans-serif;
     /* Premium: canvas sólido neutro frio (sem gradiente) */
     background-color: hsl(var(--background));
     min-height: 100vh;
@@ -193,43 +235,53 @@
     /* Tipografia premium: tracking levemente apertado em telas grandes */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    font-feature-settings: "cv11", "ss01", "ss03";
   }
 
   /* CRITICAL FIX: Allow page scroll over charts
-   * The issue is that Recharts creates an invisible overlay that captures 
-   * scroll/touch events. We need to allow touch scrolling while keeping
-   * hover/click interactions working.
-   */
+ * The issue is that Recharts creates an invisible overlay that captures 
+ * scroll/touch events. We need to allow touch scrolling while keeping
+ * hover/click interactions working.
+ */
   .recharts-wrapper {
     /* Allow vertical scroll to pass through to page */
     touch-action: pan-y pinch-zoom;
   }
-  
+
   .recharts-surface {
     /* Allow touch scroll while maintaining hover effects */
     touch-action: pan-y pinch-zoom;
   }
-  
+
   /* The transparent overlay that captures mouse events - needs touch passthrough */
   .recharts-tooltip-wrapper {
     pointer-events: auto;
   }
 
   /* Body text: comfortable reading line-height */
-  p, span, li, td, th, label {
+  p,
+  span,
+  li,
+  td,
+  th,
+  label {
     line-height: 1.5;
   }
 
   /* Headings: tighter line-height */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     line-height: 1.25;
   }
 
   /* ====== Typography Scale (Design System) ======
-   * Consistent hierarchy: PageTitle > SectionTitle > CardLabel > CardValue > Body > Caption > Meta
-   * Line-heights: headings 1.2–1.3, body 1.5–1.6
-   */
+ * Consistent hierarchy: PageTitle > SectionTitle > CardLabel > CardValue > Body > Caption > Meta
+ * Line-heights: headings 1.2–1.3, body 1.5–1.6
+ */
 
   /* PageTitle: Main page title - 16px mobile / 18px desktop */
   .text-page-title {
@@ -242,14 +294,14 @@
     @apply text-lg md:text-xl font-bold text-foreground;
     line-height: 1.25;
   }
-  
+
   /* SectionTitle / H2: Section headings - 16px mobile / 18px desktop */
   .text-section-title,
   .text-h2 {
     @apply text-base md:text-lg font-semibold text-foreground;
     line-height: 1.3;
   }
-  
+
   /* CardLabel / H3: Card/subsection headings - 14px mobile / 15px desktop */
   .text-card-label,
   .text-h3 {
@@ -262,19 +314,19 @@
     @apply text-xl md:text-2xl font-bold text-foreground tabular-nums;
     line-height: 1.2;
   }
-  
+
   /* Body: Regular content - 14px mobile / 15px desktop */
   .text-body {
     @apply text-sm md:text-[15px] text-foreground;
     line-height: 1.5;
   }
-  
+
   /* Caption: Secondary text - 13px mobile / 14px desktop */
   .text-caption {
     @apply text-[13px] md:text-sm text-muted-foreground;
     line-height: 1.5;
   }
-  
+
   /* Meta/Tiny: Timestamps, badges - 11px mobile / 12px desktop */
   .text-meta,
   .text-tiny {
@@ -283,34 +335,39 @@
   }
 
   /* Improve touch targets for mobile - Apple's minimum is 44px */
-  button:not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8), 
+  button:not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8),
   [role="button"]:not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8) {
     min-height: 44px;
   }
 
   /* Small buttons get smaller touch target */
-  button.h-8, button.h-9 {
+  button.h-8,
+  button.h-9 {
     min-height: 36px;
   }
-  
+
   /* Exclude small inline elements from min-width */
   a {
     min-height: auto;
     min-width: auto;
   }
-  
+
   a.touch-target {
     min-height: 44px;
     min-width: 44px;
   }
 
   /* Fix inputs on iOS - prevent zoom on focus */
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     font-size: 16px !important; /* Prevents iOS zoom on focus */
   }
 
   @media (min-width: 768px) {
-    input, select, textarea {
+    input,
+    select,
+    textarea {
       font-size: 14px !important;
     }
   }
@@ -328,7 +385,9 @@
 
   /* Reduced motion: disable all animations and transitions */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -348,9 +407,9 @@
 
 @layer components {
   /* ====== Portal Underline Tabs ======
-   * Underline-style tabs used in the main portal (Curva S / Relatórios / Atividade).
-   * Sticky bar sits below the header. 44px min hit area for accessibility.
-   */
+ * Underline-style tabs used in the main portal (Curva S / Relatórios / Atividade).
+ * Sticky bar sits below the header. 44px min hit area for accessibility.
+ */
   .portal-tabs-bar {
     @apply border-b border-border bg-card/95 backdrop-blur-sm;
     position: sticky;
@@ -366,7 +425,7 @@
     box-shadow: none;
   }
   .portal-tab-trigger::after {
-    content: '';
+    content: "";
     @apply absolute bottom-0 left-0 right-0 h-0.5 rounded-full;
     background: transparent;
     transition: background-color 150ms ease;
@@ -393,8 +452,8 @@
   }
 
   /* ====== Premium Surfaces & Elevation ======
-   * Use estas utilities em vez de re-declarar bg/border em cada componente.
-   */
+ * Use estas utilities em vez de re-declarar bg/border em cada componente.
+ */
   .surface-canvas {
     background-color: hsl(var(--background));
   }
@@ -405,11 +464,21 @@
     background-color: hsl(var(--surface-sunken));
   }
 
-  .elevation-xs { box-shadow: var(--shadow-xs); }
-  .elevation-sm { box-shadow: var(--shadow-sm); }
-  .elevation-md { box-shadow: var(--shadow-md); }
-  .elevation-lg { box-shadow: var(--shadow-lg); }
-  .elevation-xl { box-shadow: var(--shadow-xl); }
+  .elevation-xs {
+    box-shadow: var(--shadow-xs);
+  }
+  .elevation-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  .elevation-md {
+    box-shadow: var(--shadow-md);
+  }
+  .elevation-lg {
+    box-shadow: var(--shadow-lg);
+  }
+  .elevation-xl {
+    box-shadow: var(--shadow-xl);
+  }
 
   .ring-premium:focus-visible {
     outline: none;
@@ -429,8 +498,12 @@
   }
 
   /* Compat: tokens antigos continuam funcionando */
-  .shadow-card { box-shadow: var(--shadow-sm); }
-  .shadow-card-lg { box-shadow: var(--shadow-md); }
+  .shadow-card {
+    box-shadow: var(--shadow-sm);
+  }
+  .shadow-card-lg {
+    box-shadow: var(--shadow-md);
+  }
 
   /* Hide scrollbar for horizontal scroll */
   .scrollbar-hide {
@@ -503,7 +576,7 @@
   }
 
   /* Bottom-sheet drag handle (visual affordance for swipe-to-dismiss).
-   * Sits inside the rounded-top edge, neutral gray pill. */
+ * Sits inside the rounded-top edge, neutral gray pill. */
   .sheet-drag-handle {
     position: absolute;
     top: 6px;
@@ -519,7 +592,7 @@
   }
 
   /* Toast viewport offset on mobile so toasts don't sit under the bottom nav.
-   * Only applies at <md, where bottom nav is rendered. */
+ * Only applies at <md, where bottom nav is rendered. */
   .toaster-mobile-aware {
     bottom: calc(var(--bottom-nav-offset) + 12px) !important;
   }
@@ -530,7 +603,7 @@
   }
 
   /* Auto-hide bottom nav when virtual keyboard is open (modern iOS/Android).
-   * Use on the bottom nav <nav> element. */
+ * Use on the bottom nav <nav> element. */
   @supports (height: env(keyboard-inset-height)) {
     .hide-on-keyboard {
       transition: transform 0.18s ease;

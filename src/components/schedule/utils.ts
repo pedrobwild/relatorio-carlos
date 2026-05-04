@@ -39,15 +39,20 @@ export const getDelayDays = (activity: Activity): number | null => {
   const plannedEnd = parseDate(activity.plannedEnd);
   const actualEnd = parseDate(activity.actualEnd);
   if (plannedEnd && actualEnd) {
-    return Math.ceil((actualEnd.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.ceil(
+      (actualEnd.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24),
+    );
   }
   return null;
 };
 
-export const formatDeviation = (days: number | null): { text: string; className: string } => {
+export const formatDeviation = (
+  days: number | null,
+): { text: string; className: string } => {
   if (days === null) return { text: "—", className: "text-muted-foreground" };
   if (days === 0) return { text: "No prazo", className: "text-success" };
-  if (days > 0) return { text: `+${days}d`, className: "text-destructive font-semibold" };
+  if (days > 0)
+    return { text: `+${days}d`, className: "text-destructive font-semibold" };
   return { text: `${days}d`, className: "text-success font-semibold" };
 };
 

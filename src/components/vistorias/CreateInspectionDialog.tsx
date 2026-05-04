@@ -1,29 +1,33 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { useState, useEffect } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useCreateInspection } from '@/hooks/useInspections';
-import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { INSPECTION_TYPES, TYPE_TO_TEMPLATE_CATEGORY, type InspectionType } from './inspectionConstants';
+} from "@/components/ui/select";
+import { useCreateInspection } from "@/hooks/useInspections";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  INSPECTION_TYPES,
+  TYPE_TO_TEMPLATE_CATEGORY,
+  type InspectionType,
+} from "./inspectionConstants";
 
 interface Props {
   projectId: string;
@@ -31,18 +35,27 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props) {
+export function CreateInspectionDialog({
+  projectId,
+  open,
+  onOpenChange,
+}: Props) {
   const { user } = useAuth();
-  const [inspectionType, setInspectionType] = useState<InspectionType>('rotina');
-  const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split('T')[0]);
-  const [activityId, setActivityId] = useState<string>('');
-  const [inspectorUserId, setInspectorUserId] = useState<string>(user?.id ?? '');
-  const [notes, setNotes] = useState('');
+  const [inspectionType, setInspectionType] =
+    useState<InspectionType>("rotina");
+  const [inspectionDate, setInspectionDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
+  const [activityId, setActivityId] = useState<string>("");
+  const [inspectorUserId, setInspectorUserId] = useState<string>(
+    user?.id ?? "",
+  );
+  const [notes, setNotes] = useState("");
   const [clientPresent, setClientPresent] = useState(false);
-  const [clientName, setClientName] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [clientName, setClientName] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [items, setItems] = useState<{ description: string }[]>([]);
-  const [newItemText, setNewItemText] = useState('');
+  const [newItemText, setNewItemText] = useState("");
 
   const createInspection = useCreateInspection();
 
@@ -53,13 +66,13 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
 
   // Fetch project activities for linking
   const { data: activities = [] } = useQuery({
-    queryKey: ['project-activities', projectId],
+    queryKey: ["project-activities", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_activities')
-        .select('id, description')
-        .eq('project_id', projectId)
-        .order('sort_order');
+        .from("project_activities")
+        .select("id, description")
+        .eq("project_id", projectId)
+        .order("sort_order");
       if (error) throw error;
       return data ?? [];
     },
@@ -68,14 +81,14 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
 
   // Fetch staff users for inspector select
   const { data: staffUsers = [] } = useQuery({
-    queryKey: ['staff-users'],
+    queryKey: ["staff-users"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('users_profile')
-        .select('id, nome')
-        .in('perfil', ['admin', 'engineer', 'manager', 'gestor'])
-        .eq('status', 'ativo')
-        .order('nome');
+        .from("users_profile")
+        .select("id, nome")
+        .in("perfil", ["admin", "engineer", "manager", "gestor"])
+        .eq("status", "ativo")
+        .order("nome");
       if (error) throw error;
       return data ?? [];
     },
@@ -84,20 +97,23 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
 
   // Fetch inspection templates from DB
   const { data: templatesByCategory = {} } = useQuery({
-    queryKey: ['inspection-templates'],
+    queryKey: ["inspection-templates"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('inspection_templates')
-        .select('*')
-        .eq('is_active', true)
-        .order('category')
-        .order('sort_order');
+        .from("inspection_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("category")
+        .order("sort_order");
       if (error) throw error;
-      return (data ?? []).reduce((acc: Record<string, string[]>, item) => {
-        if (!acc[item.category]) acc[item.category] = [];
-        acc[item.category].push(item.description);
-        return acc;
-      }, {} as Record<string, string[]>);
+      return (data ?? []).reduce(
+        (acc: Record<string, string[]>, item) => {
+          if (!acc[item.category]) acc[item.category] = [];
+          acc[item.category].push(item.description);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
     },
     staleTime: 1000 * 60 * 60,
   });
@@ -114,20 +130,20 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
   const handleAddCategory = (category: string) => {
     const categoryItems = templatesByCategory[category] || [];
     const newItems = categoryItems
-      .filter((desc: string) => !items.some(i => i.description === desc))
+      .filter((desc: string) => !items.some((i) => i.description === desc))
       .map((desc: string) => ({ description: desc }));
-    setItems(prev => [...prev, ...newItems]);
-    setSelectedCategory('');
+    setItems((prev) => [...prev, ...newItems]);
+    setSelectedCategory("");
   };
 
   const handleAddCustomItem = () => {
     if (!newItemText.trim()) return;
-    setItems(prev => [...prev, { description: newItemText.trim() }]);
-    setNewItemText('');
+    setItems((prev) => [...prev, { description: newItemText.trim() }]);
+    setNewItemText("");
   };
 
   const handleRemoveItem = (index: number) => {
-    setItems(prev => prev.filter((_, i) => i !== index));
+    setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = () => {
@@ -135,13 +151,15 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
     createInspection.mutate(
       {
         project_id: projectId,
-        activity_id: activityId && activityId !== 'none' ? activityId : undefined,
+        activity_id:
+          activityId && activityId !== "none" ? activityId : undefined,
         inspection_date: inspectionDate,
         notes: notes || undefined,
         inspection_type: inspectionType,
         inspector_user_id: inspectorUserId || undefined,
         client_present: clientPresent,
-        client_name: clientPresent && clientName.trim() ? clientName.trim() : undefined,
+        client_name:
+          clientPresent && clientName.trim() ? clientName.trim() : undefined,
         items: items.map((item, i) => ({
           description: item.description,
           sort_order: i,
@@ -149,7 +167,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
       },
       {
         onSuccess: () => onOpenChange(false),
-      }
+      },
     );
   };
 
@@ -165,14 +183,23 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
         <div className="space-y-4">
           {/* Inspection type */}
           <div className="space-y-2">
-            <Label>Tipo de Vistoria <span className="text-destructive">*</span></Label>
-            <Select value={inspectionType} onValueChange={(v) => setInspectionType(v as InspectionType)}>
+            <Label>
+              Tipo de Vistoria <span className="text-destructive">*</span>
+            </Label>
+            <Select
+              value={inspectionType}
+              onValueChange={(v) => setInspectionType(v as InspectionType)}
+            >
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent position="popper"  sideOffset={4}>
-                {INSPECTION_TYPES.map(t => (
-                  <SelectItem key={t.value} value={t.value} className="min-h-[44px]">
+              <SelectContent position="popper" sideOffset={4}>
+                {INSPECTION_TYPES.map((t) => (
+                  <SelectItem
+                    key={t.value}
+                    value={t.value}
+                    className="min-h-[44px]"
+                  >
                     {t.emoji} {t.label}
                   </SelectItem>
                 ))}
@@ -198,9 +225,11 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Selecione o vistoriador" />
               </SelectTrigger>
-              <SelectContent position="popper"  sideOffset={4}>
-                {staffUsers.map(u => (
-                  <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+              <SelectContent position="popper" sideOffset={4}>
+                {staffUsers.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.nome}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -213,10 +242,12 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Selecione uma atividade" />
               </SelectTrigger>
-              <SelectContent position="popper"  sideOffset={4}>
+              <SelectContent position="popper" sideOffset={4}>
                 <SelectItem value="none">Nenhuma</SelectItem>
-                {activities.map(a => (
-                  <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>
+                {activities.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.description}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -225,7 +256,9 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
           {/* Client present toggle */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="client-present" className="cursor-pointer">Cliente/morador presente</Label>
+              <Label htmlFor="client-present" className="cursor-pointer">
+                Cliente/morador presente
+              </Label>
               <Switch
                 id="client-present"
                 checked={clientPresent}
@@ -263,9 +296,11 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Adicionar checklist padrão..." />
               </SelectTrigger>
-              <SelectContent position="popper"  sideOffset={4}>
-                {categories.map(cat => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              <SelectContent position="popper" sideOffset={4}>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -276,7 +311,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
                 placeholder="Item personalizado..."
                 value={newItemText}
                 onChange={(e) => setNewItemText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddCustomItem()}
+                onKeyDown={(e) => e.key === "Enter" && handleAddCustomItem()}
                 className="h-11 sm:h-10"
               />
               <Button
@@ -294,8 +329,13 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
             {items.length > 0 && (
               <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
                 {items.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between px-3 py-2.5 text-sm gap-2">
-                    <span className="truncate text-xs sm:text-sm">{item.description}</span>
+                  <div
+                    key={i}
+                    className="flex items-center justify-between px-3 py-2.5 text-sm gap-2"
+                  >
+                    <span className="truncate text-xs sm:text-sm">
+                      {item.description}
+                    </span>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -310,13 +350,18 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
             )}
 
             <p className="text-xs text-muted-foreground">
-              {items.length} {items.length === 1 ? 'item' : 'itens'} no checklist
+              {items.length} {items.length === 1 ? "item" : "itens"} no
+              checklist
             </p>
           </div>
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 sm:h-10 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="h-11 sm:h-10 w-full sm:w-auto"
+          >
             Cancelar
           </Button>
           <Button
@@ -324,7 +369,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
             disabled={items.length === 0 || createInspection.isPending}
             className="h-11 sm:h-10 w-full sm:w-auto"
           >
-            {createInspection.isPending ? 'Criando...' : 'Criar Vistoria'}
+            {createInspection.isPending ? "Criando..." : "Criar Vistoria"}
           </Button>
         </DialogFooter>
       </DialogContent>

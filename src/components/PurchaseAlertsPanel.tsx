@@ -2,7 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertTriangle, AlertCircle, Clock, Bell, ChevronRight, X } from "lucide-react";
+import {
+  AlertTriangle,
+  AlertCircle,
+  Clock,
+  Bell,
+  ChevronRight,
+  X,
+} from "lucide-react";
 import { ProjectPurchase } from "@/hooks/useProjectPurchases";
 import { PurchaseAlertBadge } from "./PurchaseAlertBadge";
 import { format } from "date-fns";
@@ -29,13 +36,14 @@ export function PurchaseAlertsPanel({
   collapsible = true,
 }: PurchaseAlertsPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  
+
   const { overdue, critical, warning, approaching } = alertThresholds;
-  const totalAlerts = overdue.length + critical.length + warning.length + approaching.length;
+  const totalAlerts =
+    overdue.length + critical.length + warning.length + approaching.length;
 
   if (totalAlerts === 0) {
     return (
-      <Card className="border-[hsl(var(--success))]/20 bg-success-light/50 dark:bg-[hsl(var(--success))]/5">
+      <Card className="border-[hsl(var(--success))]/20 bg-success-light/50">
         <CardContent className="py-4">
           <div className="flex items-center gap-2 text-[hsl(var(--success))]">
             <Bell className="h-4 w-4" />
@@ -50,8 +58,8 @@ export function PurchaseAlertsPanel({
     items: ProjectPurchase[],
     title: string,
     icon: React.ElementType,
-    urgencyLevel: 'overdue' | 'critical' | 'warning' | 'approaching',
-    colorClasses: string
+    urgencyLevel: "overdue" | "critical" | "warning" | "approaching",
+    colorClasses: string,
   ) => {
     if (items.length === 0) return null;
 
@@ -59,9 +67,16 @@ export function PurchaseAlertsPanel({
 
     return (
       <div className="space-y-2">
-        <div className={cn("flex items-center gap-2 text-sm font-medium", colorClasses)}>
+        <div
+          className={cn(
+            "flex items-center gap-2 text-sm font-medium",
+            colorClasses,
+          )}
+        >
           <Icon className="h-4 w-4" />
-          <span>{title} ({items.length})</span>
+          <span>
+            {title} ({items.length})
+          </span>
         </div>
         <div className="space-y-1.5 ml-6">
           {items.slice(0, 5).map((purchase) => (
@@ -70,21 +85,24 @@ export function PurchaseAlertsPanel({
               className={cn(
                 "flex items-center justify-between p-2 rounded-md text-sm cursor-pointer",
                 "hover:bg-accent/50 transition-colors",
-                urgencyLevel === 'overdue' && "bg-destructive/5",
-                urgencyLevel === 'critical' && "bg-destructive/5",
-                urgencyLevel === 'warning' && "bg-warning/5",
+                urgencyLevel === "overdue" && "bg-destructive/5",
+                urgencyLevel === "critical" && "bg-destructive/5",
+                urgencyLevel === "warning" && "bg-warning/5",
               )}
               onClick={() => onItemClick?.(purchase)}
             >
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{purchase.item_name}</p>
                 <p className="text-xs text-muted-foreground">
-                  Prazo: {format(new Date(purchase.required_by_date), "dd/MM/yyyy", { locale: ptBR })}
+                  Prazo:{" "}
+                  {format(new Date(purchase.required_by_date), "dd/MM/yyyy", {
+                    locale: ptBR,
+                  })}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <PurchaseAlertBadge 
-                  urgencyLevel={urgencyLevel} 
+                <PurchaseAlertBadge
+                  urgencyLevel={urgencyLevel}
                   daysUntil={getDaysUntilDeadline(purchase)}
                   size="sm"
                 />
@@ -103,7 +121,7 @@ export function PurchaseAlertsPanel({
   };
 
   return (
-    <Card className="border-[hsl(var(--warning))]/20 dark:border-[hsl(var(--warning))]/30">
+    <Card className="border-[hsl(var(--warning))]/20">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
@@ -132,29 +150,29 @@ export function PurchaseAlertsPanel({
                 overdue,
                 "Atrasados",
                 AlertCircle,
-                'overdue',
-                "text-destructive"
+                "overdue",
+                "text-destructive",
               )}
               {renderAlertSection(
                 critical,
                 "Críticos (≤3 dias)",
                 AlertTriangle,
-                'critical',
-                "text-destructive"
+                "critical",
+                "text-destructive",
               )}
               {renderAlertSection(
                 warning,
                 "Atenção (≤7 dias)",
                 Clock,
-                'warning',
-                "text-[hsl(var(--warning))]"
+                "warning",
+                "text-[hsl(var(--warning))]",
               )}
               {renderAlertSection(
                 approaching,
                 "Próximos (≤14 dias)",
                 Clock,
-                'approaching',
-                "text-muted-foreground"
+                "approaching",
+                "text-muted-foreground",
               )}
             </div>
           </ScrollArea>

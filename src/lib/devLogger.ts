@@ -1,6 +1,6 @@
 /**
  * Development Logger - Provides grouped, timestamped logs only in DEV mode
- * 
+ *
  * Use for debugging critical flows:
  * - Document upload/approval
  * - Weekly report save
@@ -11,7 +11,7 @@
 
 const isDev = import.meta.env.DEV;
 
-type LogLevel = 'info' | 'warn' | 'error' | 'success';
+type LogLevel = "info" | "warn" | "error" | "success";
 
 interface LogOptions {
   level?: LogLevel;
@@ -20,17 +20,17 @@ interface LogOptions {
 }
 
 const levelStyles = {
-  info: 'color: #3b82f6',
-  warn: 'color: #f59e0b',
-  error: 'color: #ef4444',
-  success: 'color: #22c55e',
+  info: "color: #3b82f6",
+  warn: "color: #f59e0b",
+  error: "color: #ef4444",
+  success: "color: #22c55e",
 };
 
 const levelIcons = {
-  info: 'ℹ️',
-  warn: '⚠️',
-  error: '❌',
-  success: '✅',
+  info: "ℹ️",
+  warn: "⚠️",
+  error: "❌",
+  success: "✅",
 };
 
 /**
@@ -43,19 +43,23 @@ export function createDevLogger(scope: string) {
     /**
      * Start timing an operation
      */
-    start(operationId: string, message: string, data?: Record<string, unknown>) {
+    start(
+      operationId: string,
+      message: string,
+      data?: Record<string, unknown>,
+    ) {
       if (!isDev) return;
-      
+
       const startTime = performance.now();
       startTimes.set(operationId, startTime);
-      
+
       console.groupCollapsed(
         `%c[${scope}] ${message}`,
-        'color: #8b5cf6; font-weight: bold'
+        "color: #8b5cf6; font-weight: bold",
       );
-      console.log('🕐 Started at:', new Date().toISOString());
+      console.log("🕐 Started at:", new Date().toISOString());
       if (data) {
-        console.log('📦 Params:', data);
+        console.log("📦 Params:", data);
       }
     },
 
@@ -64,13 +68,15 @@ export function createDevLogger(scope: string) {
      */
     end(operationId: string, options?: LogOptions) {
       if (!isDev) return;
-      
+
       const startTime = startTimes.get(operationId);
-      const duration = startTime ? Math.round(performance.now() - startTime) : options?.duration;
+      const duration = startTime
+        ? Math.round(performance.now() - startTime)
+        : options?.duration;
       startTimes.delete(operationId);
-      
-      const level = options?.level || 'success';
-      
+
+      const level = options?.level || "success";
+
       if (duration !== undefined) {
         console.log(`⏱️ Duration: ${duration}ms`);
       }
@@ -83,16 +89,22 @@ export function createDevLogger(scope: string) {
     /**
      * Log an error and close the group
      */
-    error(operationId: string, error: unknown, context?: Record<string, unknown>) {
+    error(
+      operationId: string,
+      error: unknown,
+      context?: Record<string, unknown>,
+    ) {
       if (!isDev) return;
-      
+
       const startTime = startTimes.get(operationId);
-      const duration = startTime ? Math.round(performance.now() - startTime) : undefined;
+      const duration = startTime
+        ? Math.round(performance.now() - startTime)
+        : undefined;
       startTimes.delete(operationId);
-      
+
       console.log(`%c${levelIcons.error} Error:`, levelStyles.error, error);
       if (context) {
-        console.log('📋 Context:', context);
+        console.log("📋 Context:", context);
       }
       if (duration !== undefined) {
         console.log(`⏱️ Failed after: ${duration}ms`);
@@ -103,13 +115,17 @@ export function createDevLogger(scope: string) {
     /**
      * Simple log without timing
      */
-    log(message: string, data?: Record<string, unknown>, level: LogLevel = 'info') {
+    log(
+      message: string,
+      data?: Record<string, unknown>,
+      level: LogLevel = "info",
+    ) {
       if (!isDev) return;
-      
+
       console.log(
         `%c[${scope}] ${levelIcons[level]} ${message}`,
         levelStyles[level],
-        data ? data : ''
+        data ? data : "",
       );
     },
 
@@ -118,14 +134,14 @@ export function createDevLogger(scope: string) {
      */
     warn(message: string, data?: Record<string, unknown>) {
       if (!isDev) return;
-      console.warn(`[${scope}] ${levelIcons.warn} ${message}`, data || '');
+      console.warn(`[${scope}] ${levelIcons.warn} ${message}`, data || "");
     },
   };
 }
 
 // Pre-configured loggers for critical features
-export const documentLogger = createDevLogger('Documents');
-export const reportLogger = createDevLogger('WeeklyReport');
-export const ganttLogger = createDevLogger('Gantt');
-export const pdfLogger = createDevLogger('PDFExport');
-export const authLogger = createDevLogger('Auth');
+export const documentLogger = createDevLogger("Documents");
+export const reportLogger = createDevLogger("WeeklyReport");
+export const ganttLogger = createDevLogger("Gantt");
+export const pdfLogger = createDevLogger("PDFExport");
+export const authLogger = createDevLogger("Auth");

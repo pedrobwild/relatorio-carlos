@@ -3,48 +3,52 @@
  * Lê da tabela `projects` (fonte única) e dos summaries (progresso/pendências).
  * Edição inline de campos do painel via optimistic updates.
  */
-import { useMemo } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useMemo } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   useProjectsQuery,
   useProjectSummaryQuery,
   projectKeys,
-} from './useProjectsQuery';
-import { useStaffUsers } from './useStaffUsers';
-import type { ProjectWithCustomer } from '@/infra/repositories/projects.repository';
+} from "./useProjectsQuery";
+import { useStaffUsers } from "./useStaffUsers";
+import type { ProjectWithCustomer } from "@/infra/repositories/projects.repository";
 
 export type PainelEtapa =
-  | 'Projeto 3D'
-  | 'Projeto Executivo'
-  | 'Executivo Aprovado'
-  | 'Medição'
-  | 'Executivo'
-  | 'Emissão RRT'
-  | 'Condomínio'
-  | 'Planejamento'
-  | 'Mobilização'
-  | 'Execução'
-  | 'Vistoria'
-  | 'Vistoria reprovada'
-  | 'Finalizada';
+  | "Projeto 3D"
+  | "Projeto Executivo"
+  | "Executivo Aprovado"
+  | "Medição"
+  | "Executivo"
+  | "Emissão RRT"
+  | "Condomínio"
+  | "Planejamento"
+  | "Mobilização"
+  | "Execução"
+  | "Vistoria"
+  | "Vistoria reprovada"
+  | "Finalizada";
 
-export type PainelStatus = 'Aguardando' | 'Em dia' | 'Atrasado' | 'Paralisada';
+export type PainelStatus = "Aguardando" | "Em dia" | "Atrasado" | "Paralisada";
 
-export type PainelRelacionamento = 'Normal' | 'Atrito' | 'Insatisfeito' | 'Crítico';
+export type PainelRelacionamento =
+  | "Normal"
+  | "Atrito"
+  | "Insatisfeito"
+  | "Crítico";
 
 /**
  * Prazo é armazenado como text livre (painel_prazo) mas editado via select
  * controlado no painel. Mantemos a lista aqui como fonte única de verdade.
  */
-export type PainelPrazo = '55 dias' | '60 dias' | '65 dias' | '75 dias';
+export type PainelPrazo = "55 dias" | "60 dias" | "65 dias" | "75 dias";
 
 export const PAINEL_PRAZO_OPTIONS: PainelPrazo[] = [
-  '55 dias',
-  '60 dias',
-  '65 dias',
-  '75 dias',
+  "55 dias",
+  "60 dias",
+  "65 dias",
+  "75 dias",
 ];
 
 /** Linha unificada do Painel: dados da obra + campos operacionais + métricas. */
@@ -88,33 +92,33 @@ export interface PainelObra {
  * a última etapa (`Finalizada`) indica entrega consolidada.
  */
 export const ETAPA_OPTIONS: PainelEtapa[] = [
-  'Projeto 3D',
-  'Projeto Executivo',
-  'Executivo Aprovado',
-  'Medição',
-  'Executivo',
-  'Emissão RRT',
-  'Condomínio',
-  'Planejamento',
-  'Mobilização',
-  'Execução',
-  'Vistoria',
-  'Vistoria reprovada',
-  'Finalizada',
+  "Projeto 3D",
+  "Projeto Executivo",
+  "Executivo Aprovado",
+  "Medição",
+  "Executivo",
+  "Emissão RRT",
+  "Condomínio",
+  "Planejamento",
+  "Mobilização",
+  "Execução",
+  "Vistoria",
+  "Vistoria reprovada",
+  "Finalizada",
 ];
 
 export const STATUS_OPTIONS: PainelStatus[] = [
-  'Aguardando',
-  'Em dia',
-  'Atrasado',
-  'Paralisada',
+  "Aguardando",
+  "Em dia",
+  "Atrasado",
+  "Paralisada",
 ];
 
 export const RELACIONAMENTO_OPTIONS: PainelRelacionamento[] = [
-  'Normal',
-  'Atrito',
-  'Insatisfeito',
-  'Crítico',
+  "Normal",
+  "Atrito",
+  "Insatisfeito",
+  "Crítico",
 ];
 
 /** Patch suportado para edição inline (somente campos operacionais). */
@@ -136,19 +140,22 @@ export type PainelObraPatch = Partial<{
 /** Mapeamento patch lógico → colunas reais do `projects`. */
 function patchToDbColumns(patch: PainelObraPatch): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  if ('prazo' in patch) out.painel_prazo = patch.prazo;
-  if ('etapa' in patch) out.painel_etapa = patch.etapa;
-  if ('inicio_etapa' in patch) out.painel_inicio_etapa = patch.inicio_etapa;
-  if ('previsao_avanco' in patch) out.painel_previsao_avanco = patch.previsao_avanco;
-  if ('status' in patch) out.painel_status = patch.status;
-  if ('relacionamento' in patch) out.painel_relacionamento = patch.relacionamento;
-  if ('external_budget_id' in patch)
+  if ("prazo" in patch) out.painel_prazo = patch.prazo;
+  if ("etapa" in patch) out.painel_etapa = patch.etapa;
+  if ("inicio_etapa" in patch) out.painel_inicio_etapa = patch.inicio_etapa;
+  if ("previsao_avanco" in patch)
+    out.painel_previsao_avanco = patch.previsao_avanco;
+  if ("status" in patch) out.painel_status = patch.status;
+  if ("relacionamento" in patch)
+    out.painel_relacionamento = patch.relacionamento;
+  if ("external_budget_id" in patch)
     out.painel_external_budget_id = patch.external_budget_id;
-  if ('responsavel_id' in patch) out.painel_responsavel_id = patch.responsavel_id;
-  if ('inicio_oficial' in patch) out.planned_start_date = patch.inicio_oficial;
-  if ('entrega_oficial' in patch) out.planned_end_date = patch.entrega_oficial;
-  if ('inicio_real' in patch) out.actual_start_date = patch.inicio_real;
-  if ('entrega_real' in patch) out.actual_end_date = patch.entrega_real;
+  if ("responsavel_id" in patch)
+    out.painel_responsavel_id = patch.responsavel_id;
+  if ("inicio_oficial" in patch) out.planned_start_date = patch.inicio_oficial;
+  if ("entrega_oficial" in patch) out.planned_end_date = patch.entrega_oficial;
+  if ("inicio_real" in patch) out.actual_start_date = patch.inicio_real;
+  if ("entrega_real" in patch) out.actual_end_date = patch.entrega_real;
   return out;
 }
 
@@ -160,7 +167,8 @@ export function usePainelObras() {
     error,
     refetch,
   } = useProjectsQuery();
-  const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
+  const { data: summaries = [], isLoading: summariesLoading } =
+    useProjectSummaryQuery();
   const { data: staffUsers = [] } = useStaffUsers();
 
   const obras = useMemo<PainelObra[]>(() => {
@@ -199,11 +207,15 @@ export function usePainelObras() {
         relacionamento: raw.painel_relacionamento ?? null,
         external_budget_id: raw.painel_external_budget_id ?? null,
         responsavel_id: responsavelId,
-        responsavel_nome: responsavelId ? (staffMap.get(responsavelId) ?? null) : null,
+        responsavel_nome: responsavelId
+          ? (staffMap.get(responsavelId) ?? null)
+          : null,
         ultima_atualizacao: raw.painel_ultima_atualizacao ?? p.updated_at,
         is_project_phase: !!p.is_project_phase,
         progress_percentage:
-          s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : null,
+          s?.progress_percentage != null
+            ? Math.round(Math.min(100, Number(s.progress_percentage)))
+            : null,
         pending_count: s?.pending_count ?? 0,
         overdue_count: s?.overdue_count ?? 0,
       };
@@ -211,20 +223,28 @@ export function usePainelObras() {
   }, [projects, summaries, staffUsers]);
 
   const update = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: PainelObraPatch }) => {
+    mutationFn: async ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: PainelObraPatch;
+    }) => {
       const dbPatch = patchToDbColumns(patch);
       if (Object.keys(dbPatch).length === 0) return { id, patch };
       const { error: updateErr } = await supabase
-        .from('projects')
+        .from("projects")
         .update(dbPatch as never)
-        .eq('id', id);
+        .eq("id", id);
       if (updateErr) throw updateErr;
       return { id, patch };
     },
     onMutate: async ({ id, patch }) => {
       // Optimistic: atualiza todas as listas em cache
       await qc.cancelQueries({ queryKey: projectKeys.lists() });
-      const snapshots = qc.getQueriesData<ProjectWithCustomer[]>({ queryKey: projectKeys.lists() });
+      const snapshots = qc.getQueriesData<ProjectWithCustomer[]>({
+        queryKey: projectKeys.lists(),
+      });
       for (const [key, prev] of snapshots) {
         if (!prev) continue;
         qc.setQueryData<ProjectWithCustomer[]>(
@@ -232,27 +252,37 @@ export function usePainelObras() {
           prev.map((p) => {
             if (p.id !== id) return p;
             const next: Record<string, unknown> = { ...p };
-            if ('prazo' in patch) next.painel_prazo = patch.prazo;
-            if ('etapa' in patch) {
+            if ("prazo" in patch) next.painel_prazo = patch.prazo;
+            if ("etapa" in patch) {
               next.painel_etapa = patch.etapa;
               // Espelha o trigger do banco: ao mudar a etapa, início da
               // etapa é "hoje" — a menos que o caller tenha enviado um
               // valor explícito no mesmo patch.
-              if (!('inicio_etapa' in patch)) {
-                next.painel_inicio_etapa = new Date().toISOString().slice(0, 10);
+              if (!("inicio_etapa" in patch)) {
+                next.painel_inicio_etapa = new Date()
+                  .toISOString()
+                  .slice(0, 10);
               }
             }
-            if ('inicio_etapa' in patch) next.painel_inicio_etapa = patch.inicio_etapa;
-            if ('previsao_avanco' in patch) next.painel_previsao_avanco = patch.previsao_avanco;
-            if ('status' in patch) next.painel_status = patch.status;
-            if ('relacionamento' in patch) next.painel_relacionamento = patch.relacionamento;
-            if ('external_budget_id' in patch)
+            if ("inicio_etapa" in patch)
+              next.painel_inicio_etapa = patch.inicio_etapa;
+            if ("previsao_avanco" in patch)
+              next.painel_previsao_avanco = patch.previsao_avanco;
+            if ("status" in patch) next.painel_status = patch.status;
+            if ("relacionamento" in patch)
+              next.painel_relacionamento = patch.relacionamento;
+            if ("external_budget_id" in patch)
               next.painel_external_budget_id = patch.external_budget_id;
-            if ('responsavel_id' in patch) next.painel_responsavel_id = patch.responsavel_id;
-            if ('inicio_oficial' in patch) next.planned_start_date = patch.inicio_oficial;
-            if ('entrega_oficial' in patch) next.planned_end_date = patch.entrega_oficial;
-            if ('inicio_real' in patch) next.actual_start_date = patch.inicio_real;
-            if ('entrega_real' in patch) next.actual_end_date = patch.entrega_real;
+            if ("responsavel_id" in patch)
+              next.painel_responsavel_id = patch.responsavel_id;
+            if ("inicio_oficial" in patch)
+              next.planned_start_date = patch.inicio_oficial;
+            if ("entrega_oficial" in patch)
+              next.planned_end_date = patch.entrega_oficial;
+            if ("inicio_real" in patch)
+              next.actual_start_date = patch.inicio_real;
+            if ("entrega_real" in patch)
+              next.actual_end_date = patch.entrega_real;
             next.painel_ultima_atualizacao = new Date().toISOString();
             return next as unknown as ProjectWithCustomer;
           }),
@@ -264,7 +294,7 @@ export function usePainelObras() {
       if (ctx?.snapshots) {
         for (const [key, prev] of ctx.snapshots) qc.setQueryData(key, prev);
       }
-      toast.error('Erro ao salvar alteração');
+      toast.error("Erro ao salvar alteração");
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: projectKeys.lists() });
@@ -276,7 +306,8 @@ export function usePainelObras() {
     isLoading: projectsLoading || summariesLoading,
     error: error ? (error as Error).message : null,
     refetch,
-    updateObra: (id: string, patch: PainelObraPatch) => update.mutateAsync({ id, patch }),
+    updateObra: (id: string, patch: PainelObraPatch) =>
+      update.mutateAsync({ id, patch }),
     isUpdating: update.isPending,
   };
 }

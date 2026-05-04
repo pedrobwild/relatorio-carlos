@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface CorrectiveActionTemplate {
   id: string;
@@ -11,32 +11,36 @@ export interface CorrectiveActionTemplate {
 
 export async function getTemplates(): Promise<CorrectiveActionTemplate[]> {
   const { data, error } = await supabase
-    .from('corrective_action_templates')
-    .select('*')
-    .order('category')
-    .order('title');
+    .from("corrective_action_templates")
+    .select("*")
+    .order("category")
+    .order("title");
   if (error) throw error;
   return (data ?? []) as CorrectiveActionTemplate[];
 }
 
-export async function getActiveTemplatesByCategory(category: string): Promise<CorrectiveActionTemplate[]> {
+export async function getActiveTemplatesByCategory(
+  category: string,
+): Promise<CorrectiveActionTemplate[]> {
   const { data, error } = await supabase
-    .from('corrective_action_templates')
-    .select('*')
-    .eq('category', category)
-    .eq('is_active', true)
-    .order('title');
+    .from("corrective_action_templates")
+    .select("*")
+    .eq("category", category)
+    .eq("is_active", true)
+    .order("title");
   if (error) throw error;
   return (data ?? []) as CorrectiveActionTemplate[];
 }
 
-export async function getAllActiveTemplates(): Promise<CorrectiveActionTemplate[]> {
+export async function getAllActiveTemplates(): Promise<
+  CorrectiveActionTemplate[]
+> {
   const { data, error } = await supabase
-    .from('corrective_action_templates')
-    .select('*')
-    .eq('is_active', true)
-    .order('category')
-    .order('title');
+    .from("corrective_action_templates")
+    .select("*")
+    .eq("is_active", true)
+    .order("category")
+    .order("title");
   if (error) throw error;
   return (data ?? []) as CorrectiveActionTemplate[];
 }
@@ -47,7 +51,7 @@ export async function createTemplate(params: {
   template_text: string;
 }): Promise<CorrectiveActionTemplate> {
   const { data, error } = await supabase
-    .from('corrective_action_templates')
+    .from("corrective_action_templates")
     .insert(params)
     .select()
     .single();
@@ -64,16 +68,16 @@ export async function updateTemplate(params: {
 }): Promise<void> {
   const { id, ...update } = params;
   const { error } = await supabase
-    .from('corrective_action_templates')
+    .from("corrective_action_templates")
     .update(update)
-    .eq('id', id);
+    .eq("id", id);
   if (error) throw error;
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
   const { error } = await supabase
-    .from('corrective_action_templates')
+    .from("corrective_action_templates")
     .delete()
-    .eq('id', id);
+    .eq("id", id);
   if (error) throw error;
 }

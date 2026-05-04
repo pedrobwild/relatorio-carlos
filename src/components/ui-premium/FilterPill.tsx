@@ -7,9 +7,9 @@
  *  - mantém altura 32px (mais compacto que h-9 do shadcn padrão)
  *  - pareia bem com o PageToolbar (sem borda pesada)
  */
-import type { ReactNode } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import type { ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FilterPillProps {
   label: string;
@@ -39,11 +39,12 @@ export function FilterPill({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium',
-        'border border-border-subtle bg-surface text-foreground/80',
-        'transition-colors hover:bg-accent/50 hover:text-foreground hover:border-border',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-        active && 'border-primary/50 bg-primary/5 text-primary hover:bg-primary/10',
+        "inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium",
+        "border border-border-subtle bg-surface text-foreground/80",
+        "transition-colors hover:bg-accent/50 hover:text-foreground hover:border-border",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        active &&
+          "border-primary/50 bg-primary/5 text-primary hover:bg-primary/10",
         className,
       )}
     >

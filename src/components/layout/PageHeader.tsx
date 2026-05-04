@@ -46,15 +46,28 @@ export function PageHeader({
   // When inside ProjectShell (staff sidebar), render simplified inline header
   if (hasShell) {
     return (
-      <div className={cn("px-4 sm:px-6 md:px-8 py-4 border-b border-border", className)}>
+      <div
+        className={cn(
+          "px-4 sm:px-6 md:px-8 py-4 border-b border-border",
+          className,
+        )}
+      >
         <div className={cn("mx-auto", maxWidthMap[maxWidth])}>
           {breadcrumbs && breadcrumbs.length > 0 && (
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+            <nav
+              aria-label="Breadcrumb"
+              className="flex items-center gap-1 text-xs text-muted-foreground mb-1"
+            >
               {breadcrumbs.map((crumb, i) => (
                 <span key={i} className="flex items-center gap-1 shrink-0">
-                  {i > 0 && <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
+                  {i > 0 && (
+                    <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+                  )}
                   {crumb.href ? (
-                    <Link to={crumb.href} className="hover:text-foreground transition-colors">
+                    <Link
+                      to={crumb.href}
+                      className="hover:text-foreground transition-colors"
+                    >
                       {crumb.label}
                     </Link>
                   ) : (
@@ -66,7 +79,9 @@ export function PageHeader({
           )}
           <div className="flex items-center justify-between gap-3">
             <h1 className="text-page-title truncate">{title}</h1>
-            {children && <div className="flex items-center gap-2 shrink-0">{children}</div>}
+            {children && (
+              <div className="flex items-center gap-2 shrink-0">{children}</div>
+            )}
           </div>
         </div>
       </div>
@@ -77,11 +92,16 @@ export function PageHeader({
     <div
       className={cn(
         "sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm",
-        className
+        className,
       )}
     >
       {/* ── Desktop: single row ── */}
-      <div className={cn("mx-auto px-4 sm:px-6 md:px-8 py-3 hidden sm:flex items-center justify-between gap-3", maxWidthMap[maxWidth])}>
+      <div
+        className={cn(
+          "mx-auto px-4 sm:px-6 md:px-8 py-3 hidden sm:flex items-center justify-between gap-3",
+          maxWidthMap[maxWidth],
+        )}
+      >
         <div className="flex items-center gap-3 min-w-0">
           {(backTo || onBack) && (
             <BackWrapper {...backProps}>
@@ -98,22 +118,36 @@ export function PageHeader({
           )}
           {showLogo && (
             <>
-              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
+              <img
+                src={bwildLogo}
+                alt="Bwild"
+                className="h-8 w-auto shrink-0"
+              />
               <span className="text-muted-foreground/40 shrink-0">|</span>
             </>
           )}
           <div className="min-w-0">
             {breadcrumbs && breadcrumbs.length > 0 && (
-              <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 overflow-hidden">
+              <nav
+                aria-label="Breadcrumb"
+                className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 overflow-hidden"
+              >
                 {breadcrumbs.map((crumb, i) => (
                   <span key={i} className="flex items-center gap-1 shrink-0">
-                    {i > 0 && <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
+                    {i > 0 && (
+                      <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+                    )}
                     {crumb.href ? (
-                      <Link to={crumb.href} className="hover:text-foreground transition-colors truncate max-w-[120px]">
+                      <Link
+                        to={crumb.href}
+                        className="hover:text-foreground transition-colors truncate max-w-[120px]"
+                      >
                         {crumb.label}
                       </Link>
                     ) : (
-                      <span className="truncate max-w-[120px]">{crumb.label}</span>
+                      <span className="truncate max-w-[120px]">
+                        {crumb.label}
+                      </span>
                     )}
                   </span>
                 ))}
@@ -129,7 +163,12 @@ export function PageHeader({
       </div>
 
       {/* ── Mobile: two-row layout ── */}
-      <div className={cn("mx-auto px-3 py-2 sm:hidden space-y-1.5 pl-safe pr-safe", maxWidthMap[maxWidth])}>
+      <div
+        className={cn(
+          "mx-auto px-3 py-2 sm:hidden space-y-1.5 pl-safe pr-safe",
+          maxWidthMap[maxWidth],
+        )}
+      >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             {(backTo || onBack) && (
@@ -146,11 +185,17 @@ export function PageHeader({
               </BackWrapper>
             )}
             {showLogo && (
-              <img src={bwildLogo} alt="Bwild" className="h-6 w-auto shrink-0" />
+              <img
+                src={bwildLogo}
+                alt="Bwild"
+                className="h-6 w-auto shrink-0"
+              />
             )}
           </div>
           <div className="flex items-center gap-1 min-w-0 shrink">
-            {children && <div className="min-w-0 flex items-center gap-1">{children}</div>}
+            {children && (
+              <div className="min-w-0 flex items-center gap-1">{children}</div>
+            )}
             <UserMenu />
           </div>
         </div>
@@ -162,7 +207,9 @@ export function PageHeader({
             >
               {breadcrumbs.map((crumb, i) => (
                 <span key={i} className="flex items-center gap-1 shrink-0">
-                  {i > 0 && <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
+                  {i > 0 && (
+                    <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+                  )}
                   {crumb.href ? (
                     <Link
                       to={crumb.href}
@@ -171,7 +218,9 @@ export function PageHeader({
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span className="truncate max-w-[140px]">{crumb.label}</span>
+                    <span className="truncate max-w-[140px]">
+                      {crumb.label}
+                    </span>
                   )}
                 </span>
               ))}

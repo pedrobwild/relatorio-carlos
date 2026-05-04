@@ -1,4 +1,4 @@
-import { StageRegistry } from '../StageRegistry';
+import { StageRegistry } from "../StageRegistry";
 
 interface StageLogSectionProps {
   stageId: string;
@@ -8,10 +8,22 @@ interface StageLogSectionProps {
   stageName?: string;
 }
 
-export function StageLogSection({ stageId, projectId, isAdmin, minutesOnly, stageName }: StageLogSectionProps) {
+export function StageLogSection({
+  stageId,
+  projectId,
+  isAdmin,
+  minutesOnly,
+  stageName,
+}: StageLogSectionProps) {
   return (
     <section className="space-y-3">
-      <StageRegistry stageId={stageId} projectId={projectId} isAdmin={isAdmin} minutesOnly={minutesOnly} stageName={stageName} />
+      <StageRegistry
+        stageId={stageId}
+        projectId={projectId}
+        isAdmin={isAdmin}
+        minutesOnly={minutesOnly}
+        stageName={stageName}
+      />
     </section>
   );
 }

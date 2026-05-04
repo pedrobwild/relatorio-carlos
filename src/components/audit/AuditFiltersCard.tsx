@@ -1,18 +1,26 @@
-import { Search, Filter, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search, Filter, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import type { AuditoriaAcao } from '@/infra/repositories/auditoria.repository';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import type { AuditoriaAcao } from "@/infra/repositories/auditoria.repository";
 
 const ACOES: { value: AuditoriaAcao; label: string }[] = [
-  { value: 'create', label: 'Criação' },
-  { value: 'update', label: 'Atualização' },
-  { value: 'delete', label: 'Remoção' },
+  { value: "create", label: "Criação" },
+  { value: "update", label: "Atualização" },
+  { value: "delete", label: "Remoção" },
 ];
 
 interface AuditFiltersCardProps {
@@ -33,9 +41,20 @@ interface AuditFiltersCardProps {
 }
 
 export function AuditFiltersCard({
-  search, setSearch, acao, setAcao, entidade, setEntidade,
-  dateFrom, setDateFrom, dateTo, setDateTo,
-  entityTypes, onResetFilters, hasActiveFilters, setPage,
+  search,
+  setSearch,
+  acao,
+  setAcao,
+  entidade,
+  setEntidade,
+  dateFrom,
+  setDateFrom,
+  dateTo,
+  setDateTo,
+  entityTypes,
+  onResetFilters,
+  hasActiveFilters,
+  setPage,
 }: AuditFiltersCardProps) {
   return (
     <Card>
@@ -44,7 +63,12 @@ export function AuditFiltersCard({
           <Filter className="h-4 w-4" />
           Filtros
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={onResetFilters} className="ml-auto h-7 text-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onResetFilters}
+              className="ml-auto h-7 text-xs"
+            >
               Limpar filtros
             </Button>
           )}
@@ -57,42 +81,65 @@ export function AuditFiltersCard({
             <Input
               placeholder="Buscar por entidade ou ID..."
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               className="pl-9"
             />
           </div>
 
-          <Select value={acao} onValueChange={(v) => { setAcao(v === 'all' ? '' : v); setPage(1); }}>
+          <Select
+            value={acao}
+            onValueChange={(v) => {
+              setAcao(v === "all" ? "" : v);
+              setPage(1);
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Ação" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as ações</SelectItem>
               {ACOES.map((a) => (
-                <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                <SelectItem key={a.value} value={a.value}>
+                  {a.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <Select value={entidade} onValueChange={(v) => { setEntidade(v === 'all' ? '' : v); setPage(1); }}>
+          <Select
+            value={entidade}
+            onValueChange={(v) => {
+              setEntidade(v === "all" ? "" : v);
+              setPage(1);
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Entidade" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as entidades</SelectItem>
               {entityTypes.map((type) => (
-                <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
+                <SelectItem key={type} value={type} className="capitalize">
+                  {type}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="justify-start text-left font-normal">
+              <Button
+                variant="outline"
+                className="justify-start text-left font-normal"
+              >
                 <Calendar className="h-4 w-4 mr-2" />
                 {dateFrom || dateTo ? (
                   <span className="text-xs">
-                    {dateFrom?.toLocaleDateString('pt-BR') || '...'} - {dateTo?.toLocaleDateString('pt-BR') || '...'}
+                    {dateFrom?.toLocaleDateString("pt-BR") || "..."} -{" "}
+                    {dateTo?.toLocaleDateString("pt-BR") || "..."}
                   </span>
                 ) : (
                   <span className="text-muted-foreground">Período</span>
@@ -106,7 +153,10 @@ export function AuditFiltersCard({
                   <CalendarComponent
                     mode="single"
                     selected={dateFrom}
-                    onSelect={(d) => { setDateFrom(d); setPage(1); }}
+                    onSelect={(d) => {
+                      setDateFrom(d);
+                      setPage(1);
+                    }}
                   />
                 </div>
                 <div className="p-2">
@@ -114,7 +164,10 @@ export function AuditFiltersCard({
                   <CalendarComponent
                     mode="single"
                     selected={dateTo}
-                    onSelect={(d) => { setDateTo(d); setPage(1); }}
+                    onSelect={(d) => {
+                      setDateTo(d);
+                      setPage(1);
+                    }}
                   />
                 </div>
               </div>

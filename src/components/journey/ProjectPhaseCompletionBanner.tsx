@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { CheckCircle2, Loader2, Sparkles, X } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { toast } from 'sonner';
-import type { JourneyStage } from '@/hooks/useProjectJourney';
+import { useState } from "react";
+import { CheckCircle2, Loader2, Sparkles, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
+import type { JourneyStage } from "@/hooks/useProjectJourney";
 
 interface Props {
   projectId: string;
@@ -32,31 +32,33 @@ export function ProjectPhaseCompletionBanner({
   const queryClient = useQueryClient();
   const [submitting, setSubmitting] = useState(false);
   const [dismissed, setDismissed] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(dismissKey(projectId)) === '1';
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(dismissKey(projectId)) === "1";
   });
 
   // Only staff sees this; only when project is still in project phase
   if (!isStaff || !isProjectPhase || dismissed) return null;
   if (!stages.length) return null;
 
-  const allCompleted = stages.every((s) => s.status === 'completed');
+  const allCompleted = stages.every((s) => s.status === "completed");
   if (!allCompleted) return null;
 
   const handleConfirm = async () => {
     setSubmitting(true);
     try {
       const { error } = await supabase
-        .from('projects')
+        .from("projects")
         .update({ is_project_phase: false })
-        .eq('id', projectId);
+        .eq("id", projectId);
       if (error) throw error;
-      toast.success('Fase de projeto concluída. Cronograma liberado.');
-      await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success("Fase de projeto concluída. Cronograma liberado.");
+      await queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      await queryClient.invalidateQueries({ queryKey: ["projects"] });
     } catch (err: any) {
-      console.error('Failed to flip is_project_phase', err);
-      toast.error(err?.message || 'Não foi possível concluir a fase de projeto.');
+      console.error("Failed to flip is_project_phase", err);
+      toast.error(
+        err?.message || "Não foi possível concluir a fase de projeto.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -64,7 +66,7 @@ export function ProjectPhaseCompletionBanner({
 
   const handleDismiss = () => {
     setDismissed(true);
-    localStorage.setItem(dismissKey(projectId), '1');
+    localStorage.setItem(dismissKey(projectId), "1");
   };
 
   return (
@@ -75,9 +77,10 @@ export function ProjectPhaseCompletionBanner({
       </AlertTitle>
       <AlertDescription className="mt-1 space-y-3">
         <p className="text-sm text-muted-foreground">
-          A obra <span className="font-medium text-foreground">{projectName}</span> ainda está
-          marcada como <em>fase de projeto</em>. Encerrar essa fase libera o Cronograma para
-          gestão da execução.
+          A obra{" "}
+          <span className="font-medium text-foreground">{projectName}</span>{" "}
+          ainda está marcada como <em>fase de projeto</em>. Encerrar essa fase
+          libera o Cronograma para gestão da execução.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <Button

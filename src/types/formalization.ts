@@ -1,9 +1,30 @@
 // Enum types
-export type FormalizationType = 'budget_item_swap' | 'meeting_minutes' | 'exception_custody' | 'scope_change' | 'general';
-export type FormalizationStatus = 'draft' | 'pending_signatures' | 'signed' | 'voided';
-export type PartyType = 'customer' | 'company';
-export type EvidenceLinkKind = 'meeting_recording' | 'drive_link' | 'external_doc' | 'other';
-export type FormalizationEventType = 'created' | 'updated' | 'sent_for_signature' | 'signed_by_party' | 'locked' | 'voided' | 'evidence_added' | 'attachment_added';
+export type FormalizationType =
+  | "budget_item_swap"
+  | "meeting_minutes"
+  | "exception_custody"
+  | "scope_change"
+  | "general";
+export type FormalizationStatus =
+  | "draft"
+  | "pending_signatures"
+  | "signed"
+  | "voided";
+export type PartyType = "customer" | "company";
+export type EvidenceLinkKind =
+  | "meeting_recording"
+  | "drive_link"
+  | "external_doc"
+  | "other";
+export type FormalizationEventType =
+  | "created"
+  | "updated"
+  | "sent_for_signature"
+  | "signed_by_party"
+  | "locked"
+  | "voided"
+  | "evidence_added"
+  | "attachment_added";
 
 // Main formalization record
 export interface Formalization {
@@ -163,39 +184,43 @@ export interface ScopeChangeData {
 
 // Type labels for display
 export const FORMALIZATION_TYPE_LABELS: Record<FormalizationType, string> = {
-  budget_item_swap: 'Troca de Item de Orçamento',
-  meeting_minutes: 'Ata de Reunião',
-  exception_custody: 'Custódia de Item',
-  scope_change: 'Alteração de Escopo',
-  general: 'Formalização Geral',
+  budget_item_swap: "Troca de Item de Orçamento",
+  meeting_minutes: "Ata de Reunião",
+  exception_custody: "Custódia de Item",
+  scope_change: "Alteração de Escopo",
+  general: "Formalização Geral",
 };
 
-export const FORMALIZATION_STATUS_LABELS: Record<FormalizationStatus, string> = {
-  draft: 'Rascunho',
-  pending_signatures: 'Aguardando Assinaturas',
-  signed: 'Assinado',
-  voided: 'Anulado',
-};
+export const FORMALIZATION_STATUS_LABELS: Record<FormalizationStatus, string> =
+  {
+    draft: "Rascunho",
+    pending_signatures: "Aguardando Assinaturas",
+    signed: "Assinado",
+    voided: "Anulado",
+  };
 
 export const PARTY_TYPE_LABELS: Record<PartyType, string> = {
-  customer: 'Cliente',
-  company: 'Empresa',
+  customer: "Cliente",
+  company: "Empresa",
 };
 
 export const EVIDENCE_LINK_KIND_LABELS: Record<EvidenceLinkKind, string> = {
-  meeting_recording: 'Gravação de Reunião',
-  drive_link: 'Link do Drive',
-  external_doc: 'Documento Externo',
-  other: 'Outro',
+  meeting_recording: "Gravação de Reunião",
+  drive_link: "Link do Drive",
+  external_doc: "Documento Externo",
+  other: "Outro",
 };
 
-export const FORMALIZATION_EVENT_TYPE_LABELS: Record<FormalizationEventType, string> = {
-  created: 'Criado',
-  updated: 'Atualizado',
-  sent_for_signature: 'Enviado para Assinatura',
-  signed_by_party: 'Assinado por Parte',
-  locked: 'Bloqueado',
-  voided: 'Anulado',
-  evidence_added: 'Evidência Adicionada',
-  attachment_added: 'Anexo Adicionado',
+export const FORMALIZATION_EVENT_TYPE_LABELS: Record<
+  FormalizationEventType,
+  string
+> = {
+  created: "Criado",
+  updated: "Atualizado",
+  sent_for_signature: "Enviado para Assinatura",
+  signed_by_party: "Assinado por Parte",
+  locked: "Bloqueado",
+  voided: "Anulado",
+  evidence_added: "Evidência Adicionada",
+  attachment_added: "Anexo Adicionado",
 };

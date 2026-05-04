@@ -1,5 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Maximize, Minimize, Volume2, VolumeX } from "lucide-react";
+import {
+  Play,
+  Pause,
+  Maximize,
+  Minimize,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Vendor-prefixed fullscreen APIs (Safari, older IE/Edge)
@@ -29,7 +36,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-  
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -74,11 +81,20 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
         // Try container fullscreen first (for custom controls)
         if (container.requestFullscreen) {
           await container.requestFullscreen();
-        } else if ((container as unknown as VendorHTMLElement).webkitRequestFullscreen) {
-          await (container as unknown as VendorHTMLElement).webkitRequestFullscreen!();
-        } else if ((container as unknown as VendorHTMLElement).msRequestFullscreen) {
-          await (container as unknown as VendorHTMLElement).msRequestFullscreen!();
-        } else if (video && (video as unknown as VendorVideoElement).webkitEnterFullscreen) {
+        } else if (
+          (container as unknown as VendorHTMLElement).webkitRequestFullscreen
+        ) {
+          await (container as unknown as VendorHTMLElement)
+            .webkitRequestFullscreen!();
+        } else if (
+          (container as unknown as VendorHTMLElement).msRequestFullscreen
+        ) {
+          await (container as unknown as VendorHTMLElement)
+            .msRequestFullscreen!();
+        } else if (
+          video &&
+          (video as unknown as VendorVideoElement).webkitEnterFullscreen
+        ) {
           (video as unknown as VendorVideoElement).webkitEnterFullscreen!();
         }
       } else {
@@ -92,8 +108,12 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
         }
       }
     } catch (error) {
-      if (import.meta.env.DEV) console.log("Fullscreen not supported or blocked:", error);
-      if (video && (video as unknown as VendorVideoElement).webkitEnterFullscreen) {
+      if (import.meta.env.DEV)
+        console.log("Fullscreen not supported or blocked:", error);
+      if (
+        video &&
+        (video as unknown as VendorVideoElement).webkitEnterFullscreen
+      ) {
         (video as unknown as VendorVideoElement).webkitEnterFullscreen!();
       }
     }
@@ -101,12 +121,16 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!videoRef.current || !progressRef.current) return;
-    if (!Number.isFinite(videoRef.current.duration) || videoRef.current.duration <= 0) return;
-    
+    if (
+      !Number.isFinite(videoRef.current.duration) ||
+      videoRef.current.duration <= 0
+    )
+      return;
+
     const rect = progressRef.current.getBoundingClientRect();
     const clickPosition = (e.clientX - rect.left) / rect.width;
     const newTime = clickPosition * videoRef.current.duration;
-    
+
     videoRef.current.currentTime = newTime;
     setProgress(clickPosition * 100);
   };
@@ -147,7 +171,11 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
     };
 
     const handleProgress = () => {
-      if (video.buffered.length > 0 && Number.isFinite(video.duration) && video.duration > 0) {
+      if (
+        video.buffered.length > 0 &&
+        Number.isFinite(video.duration) &&
+        video.duration > 0
+      ) {
         const bufferedEnd = video.buffered.end(video.buffered.length - 1);
         const bufferedProgress = (bufferedEnd / video.duration) * 100;
         setBuffered(bufferedProgress);
@@ -185,8 +213,14 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
       video.removeEventListener("progress", handleProgress);
       video.removeEventListener("ended", handleEnded);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
-      document.removeEventListener("msfullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange,
+      );
+      document.removeEventListener(
+        "msfullscreenchange",
+        handleFullscreenChange,
+      );
     };
   }, []);
 
@@ -195,7 +229,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
       ref={containerRef}
       className={cn(
         "relative bg-black group overflow-hidden",
-        isFullscreen ? "w-screen h-screen" : "aspect-video"
+        isFullscreen ? "w-screen h-screen" : "aspect-video",
       )}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setShowControls(false)}
@@ -217,7 +251,10 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
           className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity"
         >
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 flex items-center justify-center hover:bg-primary transition-colors hover:scale-105 active:scale-95">
-            <Play className="w-8 h-8 sm:w-10 sm:h-10 text-white ml-1" fill="white" />
+            <Play
+              className="w-8 h-8 sm:w-10 sm:h-10 text-white ml-1"
+              fill="white"
+            />
           </div>
         </button>
       )}
@@ -226,7 +263,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
       <div
         className={cn(
           "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 sm:p-4 transition-opacity duration-300",
-          showControls || !isPlaying ? "opacity-100" : "opacity-0"
+          showControls || !isPlaying ? "opacity-100" : "opacity-0",
         )}
       >
         {/* Progress bar */}

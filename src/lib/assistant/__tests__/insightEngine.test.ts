@@ -33,7 +33,9 @@ describe("buildAnalysis", () => {
       status: "success",
     });
     expect(r.insights[0].id).toBe("empty");
-    expect(r.limitations?.some((l) => l.includes("Nenhum registro"))).toBe(true);
+    expect(r.limitations?.some((l) => l.includes("Nenhum registro"))).toBe(
+      true,
+    );
   });
 
   it("includes data quality warnings when applicable", () => {

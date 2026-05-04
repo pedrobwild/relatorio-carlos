@@ -1,4 +1,4 @@
-import { useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from "framer-motion";
 
 /**
  * Wrapper sobre `useReducedMotion()` do framer-motion que **nunca retorna `null`**.

@@ -18,12 +18,18 @@ interface WeeklyReportHeaderProps {
   hasNext: boolean;
 }
 
-const getCurrentPhase = (activities: Activity[], weekStart: Date, weekEnd: Date): string => {
+const getCurrentPhase = (
+  activities: Activity[],
+  weekStart: Date,
+  weekEnd: Date,
+): string => {
   const inProgressActivities = activities.filter((activity) => {
     const plannedStart = parseLocalDate(activity.plannedStart);
     const plannedEnd = parseLocalDate(activity.plannedEnd);
-    const actualEnd = activity.actualEnd ? parseLocalDate(activity.actualEnd) : null;
-    
+    const actualEnd = activity.actualEnd
+      ? parseLocalDate(activity.actualEnd)
+      : null;
+
     if (actualEnd && actualEnd <= weekEnd) return false;
     return plannedStart <= weekEnd && plannedEnd >= weekStart;
   });
@@ -56,7 +62,11 @@ const WeeklyReportHeader = ({
   hasNext,
 }: WeeklyReportHeaderProps) => {
   const dateRange = `${format(weeklyReport.startDate, "dd/MM/yyyy", { locale: ptBR })} - ${format(weeklyReport.endDate, "dd/MM/yyyy", { locale: ptBR })}`;
-  const currentPhase = getCurrentPhase(activities, weeklyReport.startDate, weeklyReport.endDate);
+  const currentPhase = getCurrentPhase(
+    activities,
+    weeklyReport.startDate,
+    weeklyReport.endDate,
+  );
 
   return (
     <div className="max-w-[840px] mx-auto bg-card rounded-xl border border-border px-3 py-2.5 md:p-5 mb-3 md:mb-6 animate-fade-in">
@@ -117,19 +127,23 @@ const WeeklyReportHeader = ({
           <span className="bg-primary text-primary-foreground px-2.5 py-0.5 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap">
             Semana {weeklyReport.weekNumber}
           </span>
-          <span className="text-xs text-muted-foreground">
-            {dateRange}
-          </span>
+          <span className="text-xs text-muted-foreground">{dateRange}</span>
         </div>
-        <span className="text-lg md:text-2xl font-bold tabular-nums">{weeklyReport.completionPercentage}%</span>
+        <span className="text-lg md:text-2xl font-bold tabular-nums">
+          {weeklyReport.completionPercentage}%
+        </span>
       </div>
 
       {/* Progress bar */}
-      <Progress value={weeklyReport.completionPercentage} className="h-1 md:h-1.5 mt-1.5 mb-1.5" />
+      <Progress
+        value={weeklyReport.completionPercentage}
+        className="h-1 md:h-1.5 mt-1.5 mb-1.5"
+      />
 
       {/* Current phase */}
       <p className="text-xs text-muted-foreground line-clamp-1">
-        Etapa: <span className="font-medium text-foreground/80">{currentPhase}</span>
+        Etapa:{" "}
+        <span className="font-medium text-foreground/80">{currentPhase}</span>
       </p>
     </div>
   );

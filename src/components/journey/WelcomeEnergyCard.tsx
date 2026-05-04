@@ -1,13 +1,13 @@
-import { useState, useCallback } from 'react';
-import DOMPurify from 'dompurify';
-import { Zap, ArrowRight, Edit2, Save, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { InlineRichEditor } from '@/components/ui/inline-rich-editor';
-import { usePageInstructions } from '@/hooks/usePageInstructions';
+import { useState, useCallback } from "react";
+import DOMPurify from "dompurify";
+import { Zap, ArrowRight, Edit2, Save, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { InlineRichEditor } from "@/components/ui/inline-rich-editor";
+import { usePageInstructions } from "@/hooks/usePageInstructions";
 
-const PAGE_KEY = 'ligacao_energia';
+const PAGE_KEY = "ligacao_energia";
 
 const DEFAULT_CONTENT = `<p>Como proprietário, é preciso que você solicite a ligação da energia elétrica para que possamos trabalhar. Você pode fazer a solicitação online, de forma rápida, pelo site da ENEL. Segue o passo a passo:</p>
 <ol>
@@ -21,22 +21,28 @@ const DEFAULT_CONTENT = `<p>Como proprietário, é preciso que você solicite a 
 <p><strong>Assim que finalizar, nos envie no e-mail victorya@bwild.com.br.</strong></p>`;
 
 const contentVariants = {
-  collapsed: { height: 0, opacity: 0, overflow: 'hidden' as const },
+  collapsed: { height: 0, opacity: 0, overflow: "hidden" as const },
   expanded: {
-    height: 'auto',
+    height: "auto",
     opacity: 1,
-    overflow: 'visible' as const,
+    overflow: "visible" as const,
     transition: {
-      height: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] },
+      height: {
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1] as [number, number, number, number],
+      },
       opacity: { duration: 0.2, delay: 0.1 },
     },
   },
   exit: {
     height: 0,
     opacity: 0,
-    overflow: 'hidden' as const,
+    overflow: "hidden" as const,
     transition: {
-      height: { duration: 0.25, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] },
+      height: {
+        duration: 0.25,
+        ease: [0.4, 0, 0.2, 1] as [number, number, number, number],
+      },
       opacity: { duration: 0.15 },
     },
   },
@@ -47,32 +53,44 @@ interface WelcomeEnergyCardProps {
   isAdmin: boolean;
 }
 
-export function WelcomeEnergyCard({ projectId, isAdmin }: WelcomeEnergyCardProps) {
+export function WelcomeEnergyCard({
+  projectId,
+  isAdmin,
+}: WelcomeEnergyCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState("");
 
-  const { instruction, loading, save } = usePageInstructions(projectId, PAGE_KEY);
+  const { instruction, loading, save } = usePageInstructions(
+    projectId,
+    PAGE_KEY,
+  );
 
   const displayContent = instruction?.content_html || DEFAULT_CONTENT;
 
-  const startEditing = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDraft(displayContent);
-    setEditing(true);
-  }, [displayContent]);
+  const startEditing = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setDraft(displayContent);
+      setEditing(true);
+    },
+    [displayContent],
+  );
 
   const cancelEditing = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setEditing(false);
-    setDraft('');
+    setDraft("");
   }, []);
 
-  const handleSave = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    await save(draft);
-    setEditing(false);
-  }, [draft, save]);
+  const handleSave = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      await save(draft);
+      setEditing(false);
+    },
+    [draft, save],
+  );
 
   return (
     <Card className="transition-shadow duration-200 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-amber-500/10">
@@ -84,7 +102,7 @@ export function WelcomeEnergyCard({ projectId, isAdmin }: WelcomeEnergyCardProps
         aria-label="Ligação de Energia"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             setExpanded(!expanded);
           }
@@ -95,10 +113,17 @@ export function WelcomeEnergyCard({ projectId, isAdmin }: WelcomeEnergyCardProps
             <Zap className="h-4 w-4 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm text-foreground">Ligação de Energia</h3>
-            <p className="text-xs text-amber-600 font-medium">Ação necessária do proprietário</p>
+            <h3 className="font-semibold text-sm text-foreground">
+              Ligação de Energia
+            </h3>
+            <p className="text-xs text-amber-600 font-medium">
+              Ação necessária do proprietário
+            </p>
           </div>
-          <motion.div animate={{ rotate: expanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
+          <motion.div
+            animate={{ rotate: expanded ? 90 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </motion.div>
         </div>
@@ -106,7 +131,13 @@ export function WelcomeEnergyCard({ projectId, isAdmin }: WelcomeEnergyCardProps
 
       <AnimatePresence initial={false}>
         {expanded && (
-          <motion.div key="energy-content" variants={contentVariants} initial="collapsed" animate="expanded" exit="exit">
+          <motion.div
+            key="energy-content"
+            variants={contentVariants}
+            initial="collapsed"
+            animate="expanded"
+            exit="exit"
+          >
             <CardContent className="space-y-4 pt-0 px-4 pb-5 md:px-6 md:pb-6">
               {isAdmin && !editing && (
                 <div className="flex justify-end">
@@ -131,7 +162,12 @@ export function WelcomeEnergyCard({ projectId, isAdmin }: WelcomeEnergyCardProps
                     minHeight="200px"
                   />
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" className="gap-1.5" onClick={cancelEditing}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={cancelEditing}
+                    >
                       <X className="h-3.5 w-3.5" />
                       Cancelar
                     </Button>
@@ -146,7 +182,9 @@ export function WelcomeEnergyCard({ projectId, isAdmin }: WelcomeEnergyCardProps
               ) : (
                 <div
                   className="text-sm text-foreground leading-relaxed prose prose-sm max-w-none [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_p]:mb-3"
-                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayContent) }}
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(displayContent),
+                  }}
                 />
               )}
             </CardContent>

@@ -42,21 +42,41 @@ export const DATA_CATALOG: CatalogTable[] = [
     table: "projects",
     businessName: "Obras / Projetos",
     domain: "obras",
-    description: "Cadastro principal de obras. Cada obra agrega cronograma, financeiro, compras, NCs e atendimento.",
+    description:
+      "Cadastro principal de obras. Cada obra agrega cronograma, financeiro, compras, NCs e atendimento.",
     columns: [
       { name: "id", type: "uuid" },
       { name: "name", type: "text", description: "Nome da obra" },
-      { name: "status", type: "text", description: "Status livre (ex: active, completed, paused)" },
+      {
+        name: "status",
+        type: "text",
+        description: "Status livre (ex: active, completed, paused)",
+      },
       { name: "org_id", type: "uuid", nullable: true },
       { name: "created_by", type: "uuid" },
       { name: "planned_start_date", type: "date", nullable: true },
       { name: "planned_end_date", type: "date", nullable: true },
       { name: "actual_start_date", type: "date", nullable: true },
       { name: "actual_end_date", type: "date", nullable: true },
-      { name: "contract_value", type: "number", nullable: true, description: "Valor do contrato em R$" },
-      { name: "budget_value", type: "number", nullable: true, description: "Orçamento previsto em R$" },
+      {
+        name: "contract_value",
+        type: "number",
+        nullable: true,
+        description: "Valor do contrato em R$",
+      },
+      {
+        name: "budget_value",
+        type: "number",
+        nullable: true,
+        description: "Orçamento previsto em R$",
+      },
       { name: "is_project_phase", type: "boolean" },
-      { name: "deleted_at", type: "date", nullable: true, description: "Quando preenchida, registro foi soft-deleted." },
+      {
+        name: "deleted_at",
+        type: "date",
+        nullable: true,
+        description: "Quando preenchida, registro foi soft-deleted.",
+      },
       { name: "city", type: "text", nullable: true },
       { name: "client_name", type: "text", nullable: true },
       { name: "created_at", type: "date" },
@@ -86,7 +106,8 @@ export const DATA_CATALOG: CatalogTable[] = [
     table: "project_payments",
     businessName: "Pagamentos / Parcelas",
     domain: "financeiro",
-    description: "Parcelas previstas e realizadas de cada obra. Não há coluna `status`; ele é derivado.",
+    description:
+      "Parcelas previstas e realizadas de cada obra. Não há coluna `status`; ele é derivado.",
     columns: [
       { name: "id", type: "uuid" },
       { name: "project_id", type: "uuid" },
@@ -94,7 +115,12 @@ export const DATA_CATALOG: CatalogTable[] = [
       { name: "description", type: "text" },
       { name: "amount", type: "number", description: "Valor em R$" },
       { name: "due_date", type: "date", nullable: true },
-      { name: "paid_at", type: "date", nullable: true, description: "Quando preenchida, parcela foi quitada." },
+      {
+        name: "paid_at",
+        type: "date",
+        nullable: true,
+        description: "Quando preenchida, parcela foi quitada.",
+      },
       { name: "payment_method", type: "text", nullable: true },
       { name: "boleto_code", type: "text", nullable: true },
       { name: "boleto_path", type: "text", nullable: true },
@@ -141,7 +167,8 @@ export const DATA_CATALOG: CatalogTable[] = [
     table: "project_purchases",
     businessName: "Compras (produtos e prestadores)",
     domain: "compras",
-    description: "Itens comprados ou prestadores agendados. Cobre tanto produtos quanto serviços.",
+    description:
+      "Itens comprados ou prestadores agendados. Cobre tanto produtos quanto serviços.",
     columns: [
       { name: "id", type: "uuid" },
       { name: "project_id", type: "uuid" },
@@ -156,8 +183,17 @@ export const DATA_CATALOG: CatalogTable[] = [
       { name: "actual_cost", type: "number", nullable: true },
       { name: "required_by_date", type: "date" },
       { name: "lead_time_days", type: "number" },
-      { name: "purchase_type", type: "text", nullable: true, enumValues: ["produto", "prestador"] },
-      { name: "status", type: "text", description: "pending | ordered | delivered | cancelled" },
+      {
+        name: "purchase_type",
+        type: "text",
+        nullable: true,
+        enumValues: ["produto", "prestador"],
+      },
+      {
+        name: "status",
+        type: "text",
+        description: "pending | ordered | delivered | cancelled",
+      },
       { name: "scheduled_start", type: "date", nullable: true },
       { name: "scheduled_end", type: "date", nullable: true },
       { name: "order_date", type: "date", nullable: true },
@@ -169,7 +205,11 @@ export const DATA_CATALOG: CatalogTable[] = [
     ],
     relationships: [
       { column: "project_id", table: "projects", referencedColumn: "id" },
-      { column: "fornecedor_id", table: "fornecedores", referencedColumn: "id" },
+      {
+        column: "fornecedor_id",
+        table: "fornecedores",
+        referencedColumn: "id",
+      },
     ],
     metrics: [
       "count",
@@ -177,7 +217,13 @@ export const DATA_CATALOG: CatalogTable[] = [
       "sum(actual_cost)",
       "sum(actual_cost - estimated_cost)",
     ],
-    dimensions: ["status", "purchase_type", "category", "fornecedor_id", "supplier_name"],
+    dimensions: [
+      "status",
+      "purchase_type",
+      "category",
+      "fornecedor_id",
+      "supplier_name",
+    ],
     commonFilters: [
       "status = 'pending'",
       "status = 'ordered'",
@@ -203,8 +249,17 @@ export const DATA_CATALOG: CatalogTable[] = [
     columns: [
       { name: "id", type: "uuid" },
       { name: "nome", type: "text" },
-      { name: "categoria", type: "enum", description: "Tipo do fornecedor (enum supplier_category)" },
-      { name: "supplier_type", type: "text", nullable: true, enumValues: ["prestadores", "produtos"] },
+      {
+        name: "categoria",
+        type: "enum",
+        description: "Tipo do fornecedor (enum supplier_category)",
+      },
+      {
+        name: "supplier_type",
+        type: "text",
+        nullable: true,
+        enumValues: ["prestadores", "produtos"],
+      },
       { name: "telefone", type: "text", nullable: true },
       { name: "email", type: "text", nullable: true },
       { name: "status", type: "text" },
@@ -231,7 +286,8 @@ export const DATA_CATALOG: CatalogTable[] = [
     table: "project_activities",
     businessName: "Cronograma (atividades)",
     domain: "cronograma",
-    description: "Atividades planejadas/executadas. Origem do progresso da obra.",
+    description:
+      "Atividades planejadas/executadas. Origem do progresso da obra.",
     columns: [
       { name: "id", type: "uuid" },
       { name: "project_id", type: "uuid" },
@@ -241,7 +297,11 @@ export const DATA_CATALOG: CatalogTable[] = [
       { name: "planned_end", type: "date" },
       { name: "actual_start", type: "date", nullable: true },
       { name: "actual_end", type: "date", nullable: true },
-      { name: "weight", type: "number", description: "Peso da atividade no cronograma" },
+      {
+        name: "weight",
+        type: "number",
+        description: "Peso da atividade no cronograma",
+      },
       { name: "sort_order", type: "number" },
       { name: "responsible_user_id", type: "uuid", nullable: true },
       { name: "fornecedor_id", type: "uuid", nullable: true },
@@ -251,8 +311,16 @@ export const DATA_CATALOG: CatalogTable[] = [
     ],
     relationships: [
       { column: "project_id", table: "projects", referencedColumn: "id" },
-      { column: "responsible_user_id", table: "users_profile", referencedColumn: "id" },
-      { column: "fornecedor_id", table: "fornecedores", referencedColumn: "id" },
+      {
+        column: "responsible_user_id",
+        table: "users_profile",
+        referencedColumn: "id",
+      },
+      {
+        column: "fornecedor_id",
+        table: "fornecedores",
+        referencedColumn: "id",
+      },
     ],
     metrics: [
       "count",
@@ -279,14 +347,24 @@ export const DATA_CATALOG: CatalogTable[] = [
     table: "non_conformities",
     businessName: "Não-conformidades (NCs)",
     domain: "ncs",
-    description: "Registros de qualidade. Status enum nc_status; severidade enum nc_severity.",
+    description:
+      "Registros de qualidade. Status enum nc_status; severidade enum nc_severity.",
     columns: [
       { name: "id", type: "uuid" },
       { name: "project_id", type: "uuid" },
       { name: "title", type: "text" },
       { name: "description", type: "text", nullable: true },
-      { name: "status", type: "enum", description: "open | in_treatment | pending_verification | pending_approval | closed | reopened" },
-      { name: "severity", type: "enum", description: "low | medium | high | critical (enum nc_severity)" },
+      {
+        name: "status",
+        type: "enum",
+        description:
+          "open | in_treatment | pending_verification | pending_approval | closed | reopened",
+      },
+      {
+        name: "severity",
+        type: "enum",
+        description: "low | medium | high | critical (enum nc_severity)",
+      },
       { name: "category", type: "text", nullable: true },
       { name: "deadline", type: "date", nullable: true },
       { name: "responsible_user_id", type: "uuid", nullable: true },
@@ -299,7 +377,11 @@ export const DATA_CATALOG: CatalogTable[] = [
     ],
     relationships: [
       { column: "project_id", table: "projects", referencedColumn: "id" },
-      { column: "responsible_user_id", table: "users_profile", referencedColumn: "id" },
+      {
+        column: "responsible_user_id",
+        table: "users_profile",
+        referencedColumn: "id",
+      },
     ],
     metrics: [
       "count",
@@ -326,14 +408,19 @@ export const DATA_CATALOG: CatalogTable[] = [
     table: "pending_items",
     businessName: "Pendências do cliente",
     domain: "pendencias",
-    description: "Pendências bloqueadoras enviadas ao cliente. Pode ter valor financeiro associado.",
+    description:
+      "Pendências bloqueadoras enviadas ao cliente. Pode ter valor financeiro associado.",
     columns: [
       { name: "id", type: "uuid" },
       { name: "project_id", type: "uuid" },
       { name: "title", type: "text" },
       { name: "description", type: "text", nullable: true },
       { name: "type", type: "enum", description: "enum pending_item_type" },
-      { name: "status", type: "enum", description: "enum pending_item_status (pending | completed)" },
+      {
+        name: "status",
+        type: "enum",
+        description: "enum pending_item_status (pending | completed)",
+      },
       { name: "due_date", type: "date", nullable: true },
       { name: "amount", type: "number", nullable: true },
       { name: "impact", type: "text", nullable: true },
@@ -344,7 +431,11 @@ export const DATA_CATALOG: CatalogTable[] = [
     relationships: [
       { column: "project_id", table: "projects", referencedColumn: "id" },
     ],
-    metrics: ["count", "sum(amount)", "count(*) FILTER (WHERE status = 'pending')"],
+    metrics: [
+      "count",
+      "sum(amount)",
+      "count(*) FILTER (WHERE status = 'pending')",
+    ],
     dimensions: ["type", "status", "project_id"],
     commonFilters: [
       "status = 'pending'",
@@ -370,7 +461,11 @@ export const DATA_CATALOG: CatalogTable[] = [
       { name: "situation", type: "text" },
       { name: "description", type: "text", nullable: true },
       { name: "status", type: "enum", description: "enum cs_ticket_status" },
-      { name: "severity", type: "enum", description: "enum cs_ticket_severity" },
+      {
+        name: "severity",
+        type: "enum",
+        description: "enum cs_ticket_severity",
+      },
       { name: "responsible_user_id", type: "uuid", nullable: true },
       { name: "created_by", type: "uuid" },
       { name: "created_at", type: "date" },
@@ -379,7 +474,11 @@ export const DATA_CATALOG: CatalogTable[] = [
     ],
     relationships: [
       { column: "project_id", table: "projects", referencedColumn: "id" },
-      { column: "responsible_user_id", table: "users_profile", referencedColumn: "id" },
+      {
+        column: "responsible_user_id",
+        table: "users_profile",
+        referencedColumn: "id",
+      },
     ],
     metrics: [
       "count",
@@ -392,9 +491,7 @@ export const DATA_CATALOG: CatalogTable[] = [
       "Quais tickets críticos estão abertos?",
       "Qual a evolução de tickets desta semana?",
     ],
-    interpretationRisks: [
-      "Tickets em aberto = resolved_at IS NULL.",
-    ],
+    interpretationRisks: ["Tickets em aberto = resolved_at IS NULL."],
     confidence: 0.9,
   },
   {
@@ -422,9 +519,8 @@ export const DATA_CATALOG: CatalogTable[] = [
 ];
 
 /** Convenience map by table name. */
-export const CATALOG_BY_TABLE: Record<string, CatalogTable> = Object.fromEntries(
-  DATA_CATALOG.map((t) => [t.table, t]),
-);
+export const CATALOG_BY_TABLE: Record<string, CatalogTable> =
+  Object.fromEntries(DATA_CATALOG.map((t) => [t.table, t]));
 
 /** Convenience map by domain. */
 export function tablesByDomain(domain: InsightDomain): CatalogTable[] {
@@ -432,11 +528,18 @@ export function tablesByDomain(domain: InsightDomain): CatalogTable[] {
 }
 
 /** Render catalog as markdown summary, used in LLM prompt building. */
-export function renderCatalogPrompt(catalog: CatalogTable[] = DATA_CATALOG): string {
-  const blocks: string[] = ["# CATÁLOGO DE TABELAS DISPONÍVEIS (apenas SELECT, RLS aplicada)"];
+export function renderCatalogPrompt(
+  catalog: CatalogTable[] = DATA_CATALOG,
+): string {
+  const blocks: string[] = [
+    "# CATÁLOGO DE TABELAS DISPONÍVEIS (apenas SELECT, RLS aplicada)",
+  ];
   for (const t of catalog) {
     const cols = t.columns
-      .map((c) => `${c.name} ${c.type}${c.nullable ? "?" : ""}${c.description ? ` -- ${c.description}` : ""}`)
+      .map(
+        (c) =>
+          `${c.name} ${c.type}${c.nullable ? "?" : ""}${c.description ? ` -- ${c.description}` : ""}`,
+      )
       .join(", ");
     const rels = t.relationships.length
       ? `\n  Joins seguros: ${t.relationships.map((r) => `${r.column} → ${r.table}.${r.referencedColumn}`).join(", ")}`

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
-import { toast } from 'sonner';
+import { useEffect, useRef, useCallback, useState } from "react";
+import { toast } from "sonner";
 
 interface UseAutoSaveOptions<T> {
   data: T;
@@ -23,23 +23,23 @@ export function useAutoSave<T>({
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const previousSavedDataRef = useRef<string>('');
+  const previousSavedDataRef = useRef<string>("");
   const isFirstRender = useRef(true);
-  
+
   // Keep refs for latest values to avoid recreating callbacks
   const dataRef = useRef<T>(data);
   const onSaveRef = useRef(onSave);
   const enabledRef = useRef(enabled);
-  
+
   // Update refs when values change
   useEffect(() => {
     dataRef.current = data;
   }, [data]);
-  
+
   useEffect(() => {
     onSaveRef.current = onSave;
   }, [onSave]);
-  
+
   useEffect(() => {
     enabledRef.current = enabled;
   }, [enabled]);
@@ -54,15 +54,15 @@ export function useAutoSave<T>({
   const performSave = useCallback(async () => {
     if (!enabledRef.current) return;
     if (isSavingRef.current) return; // Prevent concurrent saves
-    
+
     const currentData = dataRef.current;
     const currentSerialized = JSON.stringify(currentData);
-    
+
     // Double-check if data actually changed since last save
     if (currentSerialized === previousSavedDataRef.current) {
       return;
     }
-    
+
     isSavingRef.current = true;
     try {
       setIsSaving(true);
@@ -71,10 +71,12 @@ export function useAutoSave<T>({
       // Update the "saved" reference so we don't trigger re-saves
       previousSavedDataRef.current = currentSerialized;
     } catch (error) {
-      console.error('Auto-save failed:', error);
+      console.error("Auto-save failed:", error);
       // IMPORTANT: Do NOT update previousSavedDataRef on error
       // This ensures we'll retry on next change/visibility event
-      toast.error('Erro ao salvar o relatório. Suas alterações foram mantidas, tente novamente.');
+      toast.error(
+        "Erro ao salvar o relatório. Suas alterações foram mantidas, tente novamente.",
+      );
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
@@ -123,7 +125,10 @@ export function useAutoSave<T>({
 
     const handleVisibilityChange = () => {
       const currentSerialized = JSON.stringify(dataRef.current);
-      if (document.hidden && currentSerialized !== previousSavedDataRef.current) {
+      if (
+        document.hidden &&
+        currentSerialized !== previousSavedDataRef.current
+      ) {
         // Clear pending timeout and save immediately
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
@@ -136,16 +141,16 @@ export function useAutoSave<T>({
       const currentSerialized = JSON.stringify(dataRef.current);
       if (currentSerialized !== previousSavedDataRef.current) {
         e.preventDefault();
-        e.returnValue = '';
+        e.returnValue = "";
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [enabled, performSave]);
 

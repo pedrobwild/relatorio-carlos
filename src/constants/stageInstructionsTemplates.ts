@@ -4,7 +4,7 @@
  * Used as initial content when no instruction has been saved yet.
  */
 
-import { PROJETO_3D_INSTRUCTIONS_TEMPLATE } from './projeto3dInstructionsTemplate';
+import { PROJETO_3D_INSTRUCTIONS_TEMPLATE } from "./projeto3dInstructionsTemplate";
 
 const MEDICAO_TECNICA_TEMPLATE = `
 <p><strong>Medição Técnica – O que acontece nesta etapa</strong></p>

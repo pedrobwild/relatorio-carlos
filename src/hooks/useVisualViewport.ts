@@ -33,7 +33,10 @@ export function useVisualViewport(): VisualViewportState {
     const vv = window.visualViewport;
     const update = () => {
       const layoutHeight = window.innerHeight;
-      const keyboardInset = Math.max(0, layoutHeight - vv.height - vv.offsetTop);
+      const keyboardInset = Math.max(
+        0,
+        layoutHeight - vv.height - vv.offsetTop,
+      );
       setState({
         height: vv.height,
         width: vv.width,

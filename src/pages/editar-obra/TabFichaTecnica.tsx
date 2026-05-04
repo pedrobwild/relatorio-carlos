@@ -1,7 +1,13 @@
-import { Home, Ruler, Key, MapPin } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Home, Ruler, Key, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
 export interface StudioInfo {
   project_id: string;
@@ -21,7 +27,10 @@ interface TabFichaTecnicaProps {
   onChange: (field: keyof StudioInfo, value: string | number | null) => void;
 }
 
-export function TabFichaTecnica({ studioInfo, onChange }: TabFichaTecnicaProps) {
+export function TabFichaTecnica({
+  studioInfo,
+  onChange,
+}: TabFichaTecnicaProps) {
   return (
     <div className="space-y-6">
       {/* Identification */}
@@ -31,15 +40,19 @@ export function TabFichaTecnica({ studioInfo, onChange }: TabFichaTecnicaProps) 
             <Home className="h-5 w-5" />
             Identificação do Imóvel
           </CardTitle>
-          <CardDescription>Dados do empreendimento e localização</CardDescription>
+          <CardDescription>
+            Dados do empreendimento e localização
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <Label>Nome do Empreendimento</Label>
               <Input
-                value={studioInfo.nome_do_empreendimento || ''}
-                onChange={(e) => onChange('nome_do_empreendimento', e.target.value || null)}
+                value={studioInfo.nome_do_empreendimento || ""}
+                onChange={(e) =>
+                  onChange("nome_do_empreendimento", e.target.value || null)
+                }
                 placeholder="Ex: Residencial Jardins"
               />
             </div>
@@ -60,38 +73,42 @@ export function TabFichaTecnica({ studioInfo, onChange }: TabFichaTecnicaProps) 
             <div className="sm:col-span-2">
               <Label>Endereço Completo</Label>
               <Input
-                value={studioInfo.endereco_completo || ''}
-                onChange={(e) => onChange('endereco_completo', e.target.value || null)}
+                value={studioInfo.endereco_completo || ""}
+                onChange={(e) =>
+                  onChange("endereco_completo", e.target.value || null)
+                }
                 placeholder="Rua, número"
               />
             </div>
             <div>
               <Label>Complemento</Label>
               <Input
-                value={studioInfo.complemento || ''}
-                onChange={(e) => onChange('complemento', e.target.value || null)}
+                value={studioInfo.complemento || ""}
+                onChange={(e) =>
+                  onChange("complemento", e.target.value || null)
+                }
                 placeholder="Apto, Bloco"
               />
             </div>
             <div>
               <Label>Bairro</Label>
               <Input
-                value={studioInfo.bairro || ''}
-                onChange={(e) => onChange('bairro', e.target.value || null)}
+                value={studioInfo.bairro || ""}
+                onChange={(e) => onChange("bairro", e.target.value || null)}
               />
             </div>
             <div>
               <Label>Cidade</Label>
               <Input
-                value={studioInfo.cidade || ''}
-                onChange={(e) => onChange('cidade', e.target.value || null)}
+                value={studioInfo.cidade || ""}
+                onChange={(e) => onChange("cidade", e.target.value || null)}
               />
             </div>
             <div>
               <Label>CEP</Label>
               <Input
-                value={studioInfo.cep || ''}
-                onChange={(e) => onChange('cep', e.target.value || null)}
+                value={studioInfo.cep || ""}
+                onChange={(e) => onChange("cep", e.target.value || null)}
                 placeholder="00000-000"
               />
             </div>
@@ -106,7 +123,9 @@ export function TabFichaTecnica({ studioInfo, onChange }: TabFichaTecnicaProps) 
             <Ruler className="h-5 w-5" />
             Dados Técnicos
           </CardTitle>
-          <CardDescription>Metragem, tipo de locação e informações técnicas</CardDescription>
+          <CardDescription>
+            Metragem, tipo de locação e informações técnicas
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -115,16 +134,23 @@ export function TabFichaTecnica({ studioInfo, onChange }: TabFichaTecnicaProps) 
               <Input
                 type="number"
                 step="0.01"
-                value={studioInfo.tamanho_imovel_m2 ?? ''}
-                onChange={(e) => onChange('tamanho_imovel_m2', e.target.value ? parseFloat(e.target.value) : null)}
+                value={studioInfo.tamanho_imovel_m2 ?? ""}
+                onChange={(e) =>
+                  onChange(
+                    "tamanho_imovel_m2",
+                    e.target.value ? parseFloat(e.target.value) : null,
+                  )
+                }
                 placeholder="0.00"
               />
             </div>
             <div>
               <Label>Tipo de Locação</Label>
               <Input
-                value={studioInfo.tipo_de_locacao || ''}
-                onChange={(e) => onChange('tipo_de_locacao', e.target.value || null)}
+                value={studioInfo.tipo_de_locacao || ""}
+                onChange={(e) =>
+                  onChange("tipo_de_locacao", e.target.value || null)
+                }
                 placeholder="Ex: Residencial, Comercial"
               />
             </div>
@@ -145,8 +171,10 @@ export function TabFichaTecnica({ studioInfo, onChange }: TabFichaTecnicaProps) 
             <Label>Data de Recebimento das Chaves</Label>
             <Input
               type="date"
-              value={studioInfo.data_recebimento_chaves || ''}
-              onChange={(e) => onChange('data_recebimento_chaves', e.target.value || null)}
+              value={studioInfo.data_recebimento_chaves || ""}
+              onChange={(e) =>
+                onChange("data_recebimento_chaves", e.target.value || null)
+              }
             />
           </div>
         </CardContent>

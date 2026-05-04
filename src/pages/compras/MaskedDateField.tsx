@@ -1,8 +1,8 @@
-import { useEffect, useId, useRef, useState, type ClipboardEvent } from 'react';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { formatBR, maskBRDate, parseFlexibleBRDate } from '@/lib/dates';
-import { AutosaveStatusIcon, useFieldAutosave } from './InlineAutosave';
+import { useEffect, useId, useRef, useState, type ClipboardEvent } from "react";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { formatBR, maskBRDate, parseFlexibleBRDate } from "@/lib/dates";
+import { AutosaveStatusIcon, useFieldAutosave } from "./InlineAutosave";
 
 interface MaskedDateFieldProps {
   /** Valor canônico em ISO `yyyy-MM-dd` ou null. */
@@ -24,19 +24,19 @@ interface MaskedDateFieldProps {
  *   exigir blur.
  * - Em blur, valida e persiste; entradas inválidas mostram erro inline.
  */
-const INVALID_DATE_MESSAGE = 'Data inválida. Use o formato dd/mm/aaaa.';
+const INVALID_DATE_MESSAGE = "Data inválida. Use o formato dd/mm/aaaa.";
 
 export function MaskedDateField({
   value,
   onSave,
-  placeholder = 'dd/mm/aaaa',
+  placeholder = "dd/mm/aaaa",
   className,
   ariaLabel,
 }: MaskedDateFieldProps) {
   const [text, setText] = useState(() => formatBR(value ?? null));
   const [error, setError] = useState<string | null>(null);
   const lastCommittedRef = useRef<string | null>(value ?? null);
-  const { saveState, runSave } = useFieldAutosave(value ?? '');
+  const { saveState, runSave } = useFieldAutosave(value ?? "");
   const errorId = useId();
 
   // Mantém o input em sincronia quando o valor canônico muda externamente.
@@ -54,7 +54,7 @@ export function MaskedDateField({
       setError(null);
       if (lastCommittedRef.current !== null) {
         lastCommittedRef.current = null;
-        await runSave('', async () => {
+        await runSave("", async () => {
           await onSave(null);
         });
       }
@@ -76,7 +76,7 @@ export function MaskedDateField({
   };
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
-    const pasted = e.clipboardData.getData('text');
+    const pasted = e.clipboardData.getData("text");
     if (!pasted) return;
     e.preventDefault();
 
@@ -101,7 +101,7 @@ export function MaskedDateField({
   };
 
   return (
-    <div className={cn('relative w-full', className)}>
+    <div className={cn("relative w-full", className)}>
       <Input
         type="text"
         inputMode="numeric"
@@ -116,7 +116,9 @@ export function MaskedDateField({
           const rawBefore = input.value;
           const caret = input.selectionStart ?? rawBefore.length;
           // Conta dígitos à esquerda do caret no valor digitado bruto.
-          const digitsBeforeCaret = rawBefore.slice(0, caret).replace(/\D/g, '').length;
+          const digitsBeforeCaret = rawBefore
+            .slice(0, caret)
+            .replace(/\D/g, "").length;
           const masked = maskBRDate(rawBefore);
           setText(masked);
           if (error) setError(null);
@@ -134,7 +136,7 @@ export function MaskedDateField({
             // Se o caret pousar imediatamente antes de uma barra, avança
             // para depois dela — comportamento esperado ao acabar de
             // preencher dia ou mês.
-            while (pos < masked.length && masked[pos] === '/') pos++;
+            while (pos < masked.length && masked[pos] === "/") pos++;
             try {
               input.setSelectionRange(pos, pos);
             } catch {
@@ -145,12 +147,15 @@ export function MaskedDateField({
         onPaste={handlePaste}
         onBlur={(e) => void commit(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') {
+          if (e.key === "Enter") {
             e.preventDefault();
             (e.target as HTMLInputElement).blur();
           }
         }}
-        className={cn('pr-7', error && 'border-destructive focus-visible:ring-destructive')}
+        className={cn(
+          "pr-7",
+          error && "border-destructive focus-visible:ring-destructive",
+        )}
       />
       <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
         <AutosaveStatusIcon state={saveState} />

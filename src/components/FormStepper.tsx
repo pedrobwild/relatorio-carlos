@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 export interface Step {
   label: string;
@@ -14,7 +14,12 @@ interface FormStepperProps {
   onStepClick?: (index: number) => void;
 }
 
-export function FormStepper({ steps, currentStep, completedSteps, onStepClick }: FormStepperProps) {
+export function FormStepper({
+  steps,
+  currentStep,
+  completedSteps,
+  onStepClick,
+}: FormStepperProps) {
   return (
     <nav aria-label="Progresso do formulário" className="w-full">
       {/* Desktop horizontal stepper */}
@@ -25,39 +30,58 @@ export function FormStepper({ steps, currentStep, completedSteps, onStepClick }:
           const isClickable = isCompleted || isCurrent;
 
           return (
-            <li key={i} className={cn('flex items-center', i < steps.length - 1 && 'flex-1')}>
+            <li
+              key={i}
+              className={cn(
+                "flex items-center",
+                i < steps.length - 1 && "flex-1",
+              )}
+            >
               <button
                 type="button"
                 disabled={!isClickable}
                 onClick={() => isClickable && onStepClick?.(i)}
                 className={cn(
-                  'flex items-center gap-2.5 group transition-colors',
-                  isClickable ? 'cursor-pointer' : 'cursor-default'
+                  "flex items-center gap-2.5 group transition-colors",
+                  isClickable ? "cursor-pointer" : "cursor-default",
                 )}
-                aria-current={isCurrent ? 'step' : undefined}
+                aria-current={isCurrent ? "step" : undefined}
               >
                 <span
                   className={cn(
-                    'flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold border-2 transition-all shrink-0',
-                    isCurrent && 'border-primary bg-primary text-primary-foreground scale-110',
-                    isCompleted && !isCurrent && 'border-primary bg-primary/10 text-primary',
-                    !isCompleted && !isCurrent && 'border-muted-foreground/30 text-muted-foreground'
+                    "flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold border-2 transition-all shrink-0",
+                    isCurrent &&
+                      "border-primary bg-primary text-primary-foreground scale-110",
+                    isCompleted &&
+                      !isCurrent &&
+                      "border-primary bg-primary/10 text-primary",
+                    !isCompleted &&
+                      !isCurrent &&
+                      "border-muted-foreground/30 text-muted-foreground",
                   )}
                 >
-                  {isCompleted && !isCurrent ? <Check className="w-4 h-4" /> : i + 1}
+                  {isCompleted && !isCurrent ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    i + 1
+                  )}
                 </span>
-                <span className={cn(
-                  'text-xs font-medium whitespace-nowrap',
-                  isCurrent ? 'text-foreground' : 'text-muted-foreground'
-                )}>
+                <span
+                  className={cn(
+                    "text-xs font-medium whitespace-nowrap",
+                    isCurrent ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
                   {step.label}
                 </span>
               </button>
               {i < steps.length - 1 && (
-                <div className={cn(
-                  'flex-1 h-0.5 mx-3 rounded-full transition-colors',
-                  isCompleted ? 'bg-primary/40' : 'bg-border'
-                )} />
+                <div
+                  className={cn(
+                    "flex-1 h-0.5 mx-3 rounded-full transition-colors",
+                    isCompleted ? "bg-primary/40" : "bg-border",
+                  )}
+                />
               )}
             </li>
           );
@@ -70,9 +94,13 @@ export function FormStepper({ steps, currentStep, completedSteps, onStepClick }:
           {currentStep + 1}/{steps.length}
         </span>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">{steps[currentStep].label}</p>
+          <p className="text-sm font-semibold text-foreground">
+            {steps[currentStep].label}
+          </p>
           {steps[currentStep].description && (
-            <p className="text-xs text-muted-foreground">{steps[currentStep].description}</p>
+            <p className="text-xs text-muted-foreground">
+              {steps[currentStep].description}
+            </p>
           )}
         </div>
         {/* Progress dots */}
@@ -81,8 +109,12 @@ export function FormStepper({ steps, currentStep, completedSteps, onStepClick }:
             <div
               key={i}
               className={cn(
-                'w-2 h-2 rounded-full transition-colors',
-                i === currentStep ? 'bg-primary' : completedSteps.has(i) ? 'bg-primary/40' : 'bg-border'
+                "w-2 h-2 rounded-full transition-colors",
+                i === currentStep
+                  ? "bg-primary"
+                  : completedSteps.has(i)
+                    ? "bg-primary/40"
+                    : "bg-border",
               )}
             />
           ))}

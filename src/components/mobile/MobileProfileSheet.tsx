@@ -50,7 +50,10 @@ interface MobileProfileSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function MobileProfileSheet({ open, onOpenChange }: MobileProfileSheetProps) {
+export function MobileProfileSheet({
+  open,
+  onOpenChange,
+}: MobileProfileSheetProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { roles, isStaff, isAdmin } = useUserRole();
@@ -58,7 +61,8 @@ export function MobileProfileSheet({ open, onOpenChange }: MobileProfileSheetPro
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
 
-  const primaryRoleLabel = roles.length > 0 ? ROLE_LABELS[roles[0]] ?? roles[0] : null;
+  const primaryRoleLabel =
+    roles.length > 0 ? (ROLE_LABELS[roles[0]] ?? roles[0]) : null;
   const displayName = user?.email?.split("@")[0] ?? "Usuário";
 
   const close = () => onOpenChange(false);
@@ -116,7 +120,12 @@ export function MobileProfileSheet({ open, onOpenChange }: MobileProfileSheetPro
         close();
         window.open(buildSupportWhatsappUrl(), "_blank", "noopener,noreferrer");
       },
-      rightSlot: <ExternalLink className="h-4 w-4 text-muted-foreground" aria-hidden="true" />,
+      rightSlot: (
+        <ExternalLink
+          className="h-4 w-4 text-muted-foreground"
+          aria-hidden="true"
+        />
+      ),
       visible: true,
     },
     {
@@ -149,13 +158,20 @@ export function MobileProfileSheet({ open, onOpenChange }: MobileProfileSheetPro
                 <User className="h-5 w-5" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {displayName}
+                </p>
                 {user?.email && (
-                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {user.email}
+                  </p>
                 )}
               </div>
               {primaryRoleLabel && (
-                <Badge variant="secondary" className="text-[10px] px-2 py-0 h-5 font-medium shrink-0">
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] px-2 py-0 h-5 font-medium shrink-0"
+                >
                   {primaryRoleLabel}
                 </Badge>
               )}
@@ -201,7 +217,9 @@ export function MobileProfileSheet({ open, onOpenChange }: MobileProfileSheetPro
               <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-destructive/10 text-destructive shrink-0">
                 <LogOut className="h-5 w-5" aria-hidden="true" />
               </span>
-              <span className="flex-1 min-w-0 text-sm font-semibold text-destructive">Sair</span>
+              <span className="flex-1 min-w-0 text-sm font-semibold text-destructive">
+                Sair
+              </span>
             </button>
           </nav>
         </SheetContent>
@@ -217,7 +235,8 @@ export function MobileProfileSheet({ open, onOpenChange }: MobileProfileSheetPro
           <AlertDialogHeader>
             <AlertDialogTitle>Sair da sua conta?</AlertDialogTitle>
             <AlertDialogDescription>
-              Suas pendências continuam aqui. Você pode entrar de novo a qualquer momento.
+              Suas pendências continuam aqui. Você pode entrar de novo a
+              qualquer momento.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

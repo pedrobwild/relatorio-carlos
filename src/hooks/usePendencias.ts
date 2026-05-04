@@ -8,18 +8,24 @@ import type { Json } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
 
 // Database enum mappings
-export type PendingItemType = 
-  | "approve_3d" 
-  | "approve_executive" 
-  | "signature" 
-  | "decision" 
-  | "invoice" 
+export type PendingItemType =
+  | "approve_3d"
+  | "approve_executive"
+  | "signature"
+  | "decision"
+  | "invoice"
   | "extra_purchase";
 
 export type PendingItemStatus = "pending" | "completed" | "cancelled";
 
 // UI-friendly types (backwards compatible)
-export type PendingType = "decision" | "invoice" | "signature" | "approval_3d" | "approval_exec" | "extra_purchase";
+export type PendingType =
+  | "decision"
+  | "invoice"
+  | "signature"
+  | "approval_3d"
+  | "approval_exec"
+  | "extra_purchase";
 export type PendingPriority = "alta" | "média" | "baixa";
 export type PendingStatus = "pendente" | "urgente" | "atrasado";
 
@@ -65,18 +71,24 @@ export interface PendingItem {
 // Map database type to UI type
 const mapDbTypeToUiType = (dbType: PendingItemType): PendingType => {
   switch (dbType) {
-    case "approve_3d": return "approval_3d";
-    case "approve_executive": return "approval_exec";
-    default: return dbType as PendingType;
+    case "approve_3d":
+      return "approval_3d";
+    case "approve_executive":
+      return "approval_exec";
+    default:
+      return dbType as PendingType;
   }
 };
 
 // Map UI type to database type
 export const mapUiTypeToDbType = (uiType: PendingType): PendingItemType => {
   switch (uiType) {
-    case "approval_3d": return "approve_3d";
-    case "approval_exec": return "approve_executive";
-    default: return uiType as PendingItemType;
+    case "approval_3d":
+      return "approve_3d";
+    case "approval_exec":
+      return "approve_executive";
+    default:
+      return uiType as PendingItemType;
   }
 };
 
@@ -99,30 +111,42 @@ const calculatePriority = (dueDate: string | null): PendingPriority => {
 };
 
 // Get display status based on due date
-export const getStatus = (dueDate: string, referenceDate: Date = new Date()): PendingStatus => {
+export const getStatus = (
+  dueDate: string,
+  referenceDate: Date = new Date(),
+): PendingStatus => {
   if (!dueDate) return "pendente";
   const due = parseISO(dueDate);
   // BUG FIX: Guard against Invalid Date
   if (isNaN(due.getTime())) return "pendente";
   const diff = differenceInDays(due, referenceDate);
-  
+
   if (diff < 0) return "atrasado";
   if (diff <= 2) return "urgente";
   return "pendente";
 };
 
-export const getDaysOverdue = (item: PendingItem, referenceDate: Date = new Date()): number => {
+export const getDaysOverdue = (
+  item: PendingItem,
+  referenceDate: Date = new Date(),
+): number => {
   const due = parseISO(item.dueDate);
   const diff = differenceInDays(referenceDate, due);
   return diff > 0 ? diff : 0;
 };
 
-export const getDaysRemaining = (item: PendingItem, referenceDate: Date = new Date()): number => {
+export const getDaysRemaining = (
+  item: PendingItem,
+  referenceDate: Date = new Date(),
+): number => {
   const due = parseISO(item.dueDate);
   return differenceInDays(due, referenceDate);
 };
 
-const buildPendingItemsQuery = (projectId?: string, includeCompleted?: boolean) => {
+const buildPendingItemsQuery = (
+  projectId?: string,
+  includeCompleted?: boolean,
+) => {
   let query = supabase
     .from("pending_items")
     .select("*")
@@ -173,30 +197,42 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: pendingItems = [], isLoading, error } = useQuery({
+  const {
+    data: pendingItems = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: queryKeys.pendingItems.list(projectId, includeCompleted),
     queryFn: async () => {
-      const { data, error } = await buildPendingItemsQuery(projectId, includeCompleted);
+      const { data, error } = await buildPendingItemsQuery(
+        projectId,
+        includeCompleted,
+      );
       if (error) {
         if (isDemoMode) {
-          console.warn('Pending items query failed (demo mode):', error.message);
+          console.warn(
+            "Pending items query failed (demo mode):",
+            error.message,
+          );
           return [];
         }
         throw error;
       }
-      return (data || []).map((item) => mapDbItemToPendingItem(item as PendingItemRow));
+      return (data || []).map((item) =>
+        mapDbItemToPendingItem(item as PendingItemRow),
+      );
     },
     enabled: !!user,
   });
 
   // Mutation to resolve a pending item
   const resolveMutation = useMutation({
-    mutationFn: async ({ 
-      itemId, 
+    mutationFn: async ({
+      itemId,
       notes,
       payload,
-    }: { 
-      itemId: string; 
+    }: {
+      itemId: string;
       notes?: string;
       payload?: Record<string, unknown>;
     }) => {
@@ -220,12 +256,12 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
 
   // Mutation to cancel a pending item
   const cancelMutation = useMutation({
-    mutationFn: async ({ 
-      itemId, 
+    mutationFn: async ({
+      itemId,
       notes,
       payload,
-    }: { 
-      itemId: string; 
+    }: {
+      itemId: string;
       notes?: string;
       payload?: Record<string, unknown>;
     }) => {
@@ -263,12 +299,17 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
       amount?: number;
       actionUrl?: string;
     }) => {
-      const { error } = await supabase
-        .from("pending_items")
-        .insert([{
+      const { error } = await supabase.from("pending_items").insert([
+        {
           project_id: newItem.projectId,
           customer_org_id: newItem.customerOrgId,
-          type: mapUiTypeToDbType(newItem.type) as "approve_3d" | "approve_executive" | "decision" | "extra_purchase" | "invoice" | "signature",
+          type: mapUiTypeToDbType(newItem.type) as
+            | "approve_3d"
+            | "approve_executive"
+            | "decision"
+            | "extra_purchase"
+            | "invoice"
+            | "signature",
           title: newItem.title,
           description: newItem.description,
           due_date: newItem.dueDate,
@@ -278,7 +319,8 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
           impact: newItem.impact,
           amount: newItem.amount,
           action_url: newItem.actionUrl,
-        }]);
+        },
+      ]);
 
       if (error) throw error;
     },
@@ -298,7 +340,8 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
           if (status === "atrasado") acc.overdueCount += 1;
           if (status === "urgente") acc.urgentCount += 1;
           if (status === "pendente") acc.pendingCount += 1;
-          if (status === "atrasado" || status === "urgente") acc.hasUrgent = true;
+          if (status === "atrasado" || status === "urgente")
+            acc.hasUrgent = true;
         }
 
         acc.byType[item.type] += 1;

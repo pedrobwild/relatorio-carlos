@@ -1,11 +1,22 @@
-import { Check, Plus } from 'lucide-react';
+import { Check, Plus } from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { journeyCopy } from '@/constants/journeyCopy';
-import { useCreateStageDate } from '@/hooks/useStageDates';
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { journeyCopy } from "@/constants/journeyCopy";
+import { useCreateStageDate } from "@/hooks/useStageDates";
 
-const ORDINALS = ['primeira', 'segunda', 'terceira', 'quarta', 'quinta', 'sexta', 'sétima', 'oitava', 'nona', 'décima'];
+const ORDINALS = [
+  "primeira",
+  "segunda",
+  "terceira",
+  "quarta",
+  "quinta",
+  "sexta",
+  "sétima",
+  "oitava",
+  "nona",
+  "décima",
+];
 
 function getNextDeliveryTitle(existingCount: number): string {
   const ordinal = ORDINALS[existingCount] || `${existingCount + 1}ª`;
@@ -19,12 +30,21 @@ interface CreateStageDateFormProps {
   onClose: () => void;
 }
 
-export function CreateStageDateForm({ projectId, stageKey, existingCount, onClose }: CreateStageDateFormProps) {
+export function CreateStageDateForm({
+  projectId,
+  stageKey,
+  existingCount,
+  onClose,
+}: CreateStageDateFormProps) {
   const autoTitle = getNextDeliveryTitle(existingCount);
   const create = useCreateStageDate(projectId);
 
   return (
-    <div className="p-4 rounded-xl border border-dashed border-primary/30 bg-accent/30 space-y-3" role="form" aria-label="Novo prazo de entrega">
+    <div
+      className="p-4 rounded-xl border border-dashed border-primary/30 bg-accent/30 space-y-3"
+      role="form"
+      aria-label="Novo prazo de entrega"
+    >
       <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
         <Plus className="h-3.5 w-3.5 text-primary" aria-hidden />
         Novo prazo de entrega
@@ -40,7 +60,11 @@ export function CreateStageDateForm({ projectId, stageKey, existingCount, onClos
           disabled={create.isPending}
           onClick={() => {
             create.mutate(
-              { stage_key: stageKey, date_type: 'end_planned', title: autoTitle },
+              {
+                stage_key: stageKey,
+                date_type: "end_planned",
+                title: autoTitle,
+              },
               {
                 onSuccess: () => onClose(),
                 onError: () => toast.error(journeyCopy.errors.create_date),
@@ -55,7 +79,14 @@ export function CreateStageDateForm({ projectId, stageKey, existingCount, onClos
           )}
           Criar prazo
         </Button>
-        <Button variant="ghost" size="sm" className="h-11 min-w-[44px]" onClick={onClose}>{journeyCopy.dates.create.cancel}</Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-11 min-w-[44px]"
+          onClick={onClose}
+        >
+          {journeyCopy.dates.create.cancel}
+        </Button>
       </div>
     </div>
   );

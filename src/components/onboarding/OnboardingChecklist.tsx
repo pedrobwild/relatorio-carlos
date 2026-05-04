@@ -1,21 +1,21 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Check, ChevronRight, Sparkles, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
-import { useUserRole } from '@/hooks/useUserRole';
-import { useAuth } from '@/hooks/useAuth';
-import { track } from '@/lib/telemetry';
-import { supabase } from '@/integrations/supabase/client';
-import { logError } from '@/lib/errorLogger';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { Check, ChevronRight, Sparkles, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
+import { track } from "@/lib/telemetry";
+import { supabase } from "@/integrations/supabase/client";
+import { logError } from "@/lib/errorLogger";
 import {
   getOnboardingFlow,
   type ObraStatus,
   type OnboardingRole,
   type OnboardingStep,
-} from '@/content/onboardingFlows';
+} from "@/content/onboardingFlows";
 
 export type { OnboardingStep, OnboardingRole, ObraStatus };
 
@@ -32,14 +32,14 @@ interface OnboardingChecklistProps {
   className?: string;
 }
 
-const STORAGE_PREFIX = 'onboarding';
+const STORAGE_PREFIX = "onboarding";
 
 function getStorageKey(
   projectId: string | undefined,
   userId: string | undefined,
   flowKey: string,
 ): string {
-  return `${STORAGE_PREFIX}:${flowKey}:${projectId ?? 'global'}:${userId ?? 'anon'}`;
+  return `${STORAGE_PREFIX}:${flowKey}:${projectId ?? "global"}:${userId ?? "anon"}`;
 }
 
 function inferRoleFromAppRole(args: {
@@ -47,10 +47,10 @@ function inferRoleFromAppRole(args: {
   isStaff: boolean;
   isCustomer: boolean;
 }): OnboardingRole {
-  if (args.isAdmin) return 'admin';
-  if (args.isCustomer) return 'cliente';
-  if (args.isStaff) return 'equipe';
-  return 'cliente';
+  if (args.isAdmin) return "admin";
+  if (args.isCustomer) return "cliente";
+  if (args.isStaff) return "equipe";
+  return "cliente";
 }
 
 interface OnboardingProgressRow {
@@ -65,20 +65,22 @@ async function fetchProgress(
   // Cast to `any` because the generated Supabase types haven't been
   // regenerated yet for the new `onboarding_progress` table.
   const base = (supabase as any)
-    .from('onboarding_progress')
-    .select('step_key, completed_at, dismissed')
-    .eq('user_id', userId);
+    .from("onboarding_progress")
+    .select("step_key, completed_at, dismissed")
+    .eq("user_id", userId);
 
   const { data, error } = projectId
-    ? await base.eq('obra_id', projectId)
-    : await base.is('obra_id', null);
+    ? await base.eq("obra_id", projectId)
+    : await base.is("obra_id", null);
 
   if (error) {
-    logError('onboarding.fetch_progress_failed', error, { userId, projectId });
+    logError("onboarding.fetch_progress_failed", error, { userId, projectId });
     return null;
   }
 
-  const rows = (data ?? []) as Array<OnboardingProgressRow & { dismissed: boolean }>;
+  const rows = (data ?? []) as Array<
+    OnboardingProgressRow & { dismissed: boolean }
+  >;
   return {
     completed: rows.filter((r) => r.completed_at).map((r) => r.step_key),
     dismissed: rows.some((r) => r.dismissed),
@@ -93,28 +95,26 @@ async function persistStep(args: {
   dismissed?: boolean;
 }): Promise<void> {
   const { userId, projectId, stepKey, completed, dismissed } = args;
-  const { error } = await (supabase as any)
-    .from('onboarding_progress')
-    .upsert(
-      {
-        user_id: userId,
-        obra_id: projectId,
-        step_key: stepKey,
-        completed_at: completed ? new Date().toISOString() : null,
-        dismissed: dismissed ?? false,
-      },
-      { onConflict: 'user_id,obra_id,step_key' },
-    );
+  const { error } = await (supabase as any).from("onboarding_progress").upsert(
+    {
+      user_id: userId,
+      obra_id: projectId,
+      step_key: stepKey,
+      completed_at: completed ? new Date().toISOString() : null,
+      dismissed: dismissed ?? false,
+    },
+    { onConflict: "user_id,obra_id,step_key" },
+  );
 
   if (error) {
-    logError('onboarding.persist_step_failed', error, args);
+    logError("onboarding.persist_step_failed", error, args);
   }
 }
 
 export function OnboardingChecklist({
   projectId,
   userRole,
-  obraStatus = 'execucao',
+  obraStatus = "execucao",
   steps: customSteps,
   onDismiss,
   className,
@@ -204,7 +204,7 @@ export function OnboardingChecklist({
       writeLocal(newCompleted, isDismissed);
 
       if (!isCompleted) {
-        track('complete_onboarding_step', { stepId }, { projectId });
+        track("complete_onboarding_step", { stepId }, { projectId });
       }
 
       if (user?.id) {
@@ -248,7 +248,7 @@ export function OnboardingChecklist({
   return (
     <Card
       className={cn(
-        'border-primary/20 bg-gradient-to-br from-primary/5 to-background',
+        "border-primary/20 bg-gradient-to-br from-primary/5 to-background",
         className,
       )}
       data-testid="onboarding-checklist"
@@ -281,11 +281,7 @@ export function OnboardingChecklist({
       </CardHeader>
 
       <CardContent className="pt-0">
-        <ul
-          className="space-y-2"
-          role="list"
-          aria-label="Passos do onboarding"
-        >
+        <ul className="space-y-2" role="list" aria-label="Passos do onboarding">
           {steps.map((step) => {
             const isChecked = completedSteps.includes(step.id);
 
@@ -293,9 +289,9 @@ export function OnboardingChecklist({
               <li key={step.id}>
                 <div
                   className={cn(
-                    'w-full flex items-start gap-3 p-3 rounded-lg transition-all',
-                    'hover:bg-accent/50',
-                    isChecked && 'bg-primary/5',
+                    "w-full flex items-start gap-3 p-3 rounded-lg transition-all",
+                    "hover:bg-accent/50",
+                    isChecked && "bg-primary/5",
                   )}
                 >
                   <button
@@ -308,11 +304,11 @@ export function OnboardingChecklist({
                         : `Marcar passo concluído: ${step.title}`
                     }
                     className={cn(
-                      'h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                      "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                       isChecked
-                        ? 'bg-primary border-primary text-primary-foreground'
-                        : 'border-muted-foreground/30',
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "border-muted-foreground/30",
                     )}
                   >
                     {isChecked && <Check className="h-3 w-3" />}
@@ -320,8 +316,8 @@ export function OnboardingChecklist({
                   <div className="flex-1 min-w-0">
                     <p
                       className={cn(
-                        'text-sm font-medium',
-                        isChecked && 'line-through text-muted-foreground',
+                        "text-sm font-medium",
+                        isChecked && "line-through text-muted-foreground",
                       )}
                     >
                       {step.title}
@@ -338,7 +334,7 @@ export function OnboardingChecklist({
                       className="shrink-0"
                     >
                       <Link to={step.href}>
-                        {step.ctaLabel ?? 'Abrir'}
+                        {step.ctaLabel ?? "Abrir"}
                         <ChevronRight className="h-3 w-3 ml-1" />
                       </Link>
                     </Button>

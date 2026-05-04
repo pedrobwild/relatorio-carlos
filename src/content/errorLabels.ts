@@ -19,7 +19,8 @@ export const errorLabels = {
   /** Erro genérico — fallback quando nada mais bate. */
   generic: {
     title: "Algo travou aqui",
-    description: "Já registramos o problema. Atualize a página em alguns segundos.",
+    description:
+      "Já registramos o problema. Atualize a página em alguns segundos.",
     cta: "Atualizar",
   },
   network: {
@@ -29,11 +30,13 @@ export const errorLabels = {
   },
   timeout: {
     title: "Demorou demais para responder",
-    description: "A operação ainda pode estar processando. Aguarde um pouco e atualize.",
+    description:
+      "A operação ainda pode estar processando. Aguarde um pouco e atualize.",
   },
   saveFailed: {
     title: "Não consegui salvar agora",
-    description: "Tenta de novo em alguns segundos. Suas alterações estão preservadas no formulário.",
+    description:
+      "Tenta de novo em alguns segundos. Suas alterações estão preservadas no formulário.",
     cta: "Tentar de novo",
   },
   loadFailed: {
@@ -43,7 +46,8 @@ export const errorLabels = {
   },
   uploadFailed: {
     title: "Falha no envio do arquivo",
-    description: "Tente novamente. Se persistir, tente um arquivo menor ou em outro formato.",
+    description:
+      "Tente novamente. Se persistir, tente um arquivo menor ou em outro formato.",
   },
   permissionDenied: {
     title: "Sem permissão para esta ação",
@@ -60,11 +64,13 @@ export const errorLabels = {
   },
   duplicateRecord: {
     title: "Registro já existe",
-    description: "Confira a lista — talvez ele tenha sido criado por outra pessoa.",
+    description:
+      "Confira a lista — talvez ele tenha sido criado por outra pessoa.",
   },
   foreignKeyConstraint: {
     title: "Não dá para excluir",
-    description: "Existem registros vinculados. Remova os vínculos antes ou arquive em vez de excluir.",
+    description:
+      "Existem registros vinculados. Remova os vínculos antes ou arquive em vez de excluir.",
   },
   rateLimited: {
     title: "Muitas tentativas seguidas",
@@ -90,7 +96,10 @@ export type ErrorKey = keyof typeof errorLabels;
  * Helper para combinar a mensagem humana com um detalhe técnico opcional
  * (que ficará num `<details>` na UI ou no log).
  */
-export function formatError(key: ErrorKey, technicalDetail?: string): {
+export function formatError(
+  key: ErrorKey,
+  technicalDetail?: string,
+): {
   title: string;
   description: string;
   technicalDetail?: string;

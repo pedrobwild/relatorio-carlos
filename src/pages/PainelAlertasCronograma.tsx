@@ -10,10 +10,10 @@
  * tipo de pendência. O usuário pode marcar início, marcar conclusão (ambos
  * com data de hoje) ou abrir o cronograma da obra para replanejar.
  */
-import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   CheckCircle2,
   Clock,
@@ -24,22 +24,22 @@ import {
   RotateCcw,
   ExternalLink,
   Bell,
-} from 'lucide-react';
-import { ScheduleAlertPrefsDialog } from '@/components/ScheduleAlertPrefsDialog';
-import { PageContainer } from '@/components/layout/PageContainer';
-import { PageHeader, MetricCard, MetricRail } from '@/components/ui-premium';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+} from "lucide-react";
+import { ScheduleAlertPrefsDialog } from "@/components/ScheduleAlertPrefsDialog";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader, MetricCard, MetricRail } from "@/components/ui-premium";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -47,36 +47,36 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
-import { matchesSearch } from '@/lib/searchNormalize';
-import { useCan } from '@/hooks/useCan';
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { matchesSearch } from "@/lib/searchNormalize";
+import { useCan } from "@/hooks/useCan";
 import {
   useScheduleAlerts,
   type ScheduleAlertActivity,
   type ScheduleAlertKind,
-} from '@/hooks/useScheduleAlerts';
+} from "@/hooks/useScheduleAlerts";
 
-const ALL = '__all__';
+const ALL = "__all__";
 
 const fmtDate = (iso: string | null) =>
-  iso ? format(parseISO(iso), 'dd/MM/yy', { locale: ptBR }) : '—';
+  iso ? format(parseISO(iso), "dd/MM/yy", { locale: ptBR }) : "—";
 
-type AlertFilter = 'all' | ScheduleAlertKind;
+type AlertFilter = "all" | ScheduleAlertKind;
 
 const KIND_LABEL: Record<ScheduleAlertKind, string> = {
-  missing_start: 'Início não sinalizado',
-  missing_end: 'Término não sinalizado',
+  missing_start: "Início não sinalizado",
+  missing_end: "Término não sinalizado",
 };
 
 function KindBadge({ kind }: { kind: ScheduleAlertKind }) {
-  if (kind === 'missing_start') {
+  if (kind === "missing_start") {
     return (
       <Badge
         variant="outline"
@@ -99,7 +99,7 @@ function KindBadge({ kind }: { kind: ScheduleAlertKind }) {
 export default function PainelAlertasCronograma() {
   const navigate = useNavigate();
   const { can } = useCan();
-  const canEdit = can('schedule:edit');
+  const canEdit = can("schedule:edit");
 
   const {
     alerts,
@@ -114,13 +114,19 @@ export default function PainelAlertasCronograma() {
   // Estado sincronizado com a URL (?q=&project=&kind=).
   // Mantém filtros ao sair/voltar para a página e permite atalhos pré-filtrados.
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchQuery = searchParams.get('q') ?? '';
-  const filterProject = searchParams.get('project') ?? ALL;
-  const filterKindRaw = searchParams.get('kind');
+  const searchQuery = searchParams.get("q") ?? "";
+  const filterProject = searchParams.get("project") ?? ALL;
+  const filterKindRaw = searchParams.get("kind");
   const filterKind: AlertFilter =
-    filterKindRaw === 'missing_start' || filterKindRaw === 'missing_end' ? filterKindRaw : 'all';
+    filterKindRaw === "missing_start" || filterKindRaw === "missing_end"
+      ? filterKindRaw
+      : "all";
 
-  const updateParam = (key: 'q' | 'project' | 'kind', value: string, defaultValue: string) => {
+  const updateParam = (
+    key: "q" | "project" | "kind",
+    value: string,
+    defaultValue: string,
+  ) => {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
@@ -131,23 +137,30 @@ export default function PainelAlertasCronograma() {
       { replace: true },
     );
   };
-  const setSearchQuery = (v: string) => updateParam('q', v, '');
-  const setFilterProject = (v: string) => updateParam('project', v, ALL);
-  const setFilterKind = (v: AlertFilter) => updateParam('kind', v, 'all');
+  const setSearchQuery = (v: string) => updateParam("q", v, "");
+  const setFilterProject = (v: string) => updateParam("project", v, ALL);
+  const setFilterKind = (v: AlertFilter) => updateParam("kind", v, "all");
 
   const projectOptions = useMemo(() => {
     const map = new Map<string, string>();
     for (const a of alerts) map.set(a.project_id, a.project_name);
     return Array.from(map.entries())
       .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   }, [alerts]);
 
   const filtered = useMemo(() => {
     return alerts.filter((a) => {
       if (filterProject !== ALL && a.project_id !== filterProject) return false;
-      if (filterKind !== 'all' && !a.kinds.includes(filterKind)) return false;
-      if (searchQuery && !matchesSearch(searchQuery, [a.description, a.project_name, a.etapa ?? ''])) {
+      if (filterKind !== "all" && !a.kinds.includes(filterKind)) return false;
+      if (
+        searchQuery &&
+        !matchesSearch(searchQuery, [
+          a.description,
+          a.project_name,
+          a.etapa ?? "",
+        ])
+      ) {
         return false;
       }
       return true;
@@ -160,7 +173,10 @@ export default function PainelAlertasCronograma() {
 
   return (
     <TooltipProvider>
-      <PageContainer maxWidth="full" className="py-4 sm:py-6 flex flex-col gap-4">
+      <PageContainer
+        maxWidth="full"
+        className="py-4 sm:py-6 flex flex-col gap-4"
+      >
         <PageHeader
           eyebrow="Cronograma"
           title="Alertas de Cronograma"
@@ -192,23 +208,23 @@ export default function PainelAlertasCronograma() {
         <MetricRail>
           <MetricCard
             label="Pendências"
-            value={isLoading ? '—' : summary.total}
-            accent={summary.total > 0 ? 'destructive' : 'success'}
+            value={isLoading ? "—" : summary.total}
+            accent={summary.total > 0 ? "destructive" : "success"}
             hint="Total de atividades alertando"
           />
           <MetricCard
             label="Início pendente"
-            value={isLoading ? '—' : summary.missingStart}
-            accent={summary.missingStart > 0 ? 'warning' : 'muted'}
+            value={isLoading ? "—" : summary.missingStart}
+            accent={summary.missingStart > 0 ? "warning" : "muted"}
           />
           <MetricCard
             label="Término pendente"
-            value={isLoading ? '—' : summary.missingEnd}
-            accent={summary.missingEnd > 0 ? 'destructive' : 'muted'}
+            value={isLoading ? "—" : summary.missingEnd}
+            accent={summary.missingEnd > 0 ? "destructive" : "muted"}
           />
           <MetricCard
             label="Obras impactadas"
-            value={isLoading ? '—' : summary.projects}
+            value={isLoading ? "—" : summary.projects}
             accent="info"
           />
         </MetricRail>
@@ -277,9 +293,7 @@ export default function PainelAlertasCronograma() {
                       onMarkStarted={() => markStarted.mutate(alert.id)}
                       onMarkCompleted={() => markCompleted.mutate(alert.id)}
                       onReplan={() => goToCronograma(alert.project_id)}
-                      pending={
-                        markStarted.isPending || markCompleted.isPending
-                      }
+                      pending={markStarted.isPending || markCompleted.isPending}
                     />
                   ))}
                 </div>
@@ -346,8 +360,8 @@ function AlertRow({
   onReplan,
 }: AlertRowProps) {
   const showStartAction =
-    canEdit && alert.kinds.includes('missing_start') && !alert.actual_start;
-  const showEndAction = canEdit && alert.kinds.includes('missing_end');
+    canEdit && alert.kinds.includes("missing_start") && !alert.actual_start;
+  const showEndAction = canEdit && alert.kinds.includes("missing_end");
 
   return (
     <TableRow>
@@ -377,13 +391,13 @@ function AlertRow({
       <TableCell className="align-top whitespace-nowrap">
         <DateChip
           iso={alert.planned_start}
-          highlight={alert.kinds.includes('missing_start')}
+          highlight={alert.kinds.includes("missing_start")}
         />
       </TableCell>
       <TableCell className="align-top whitespace-nowrap">
         <DateChip
           iso={alert.planned_end}
-          highlight={alert.kinds.includes('missing_end')}
+          highlight={alert.kinds.includes("missing_end")}
         />
       </TableCell>
       <TableCell className="align-top text-right whitespace-nowrap">
@@ -451,8 +465,8 @@ function AlertCard({
   onReplan,
 }: AlertRowProps) {
   const showStartAction =
-    canEdit && alert.kinds.includes('missing_start') && !alert.actual_start;
-  const showEndAction = canEdit && alert.kinds.includes('missing_end');
+    canEdit && alert.kinds.includes("missing_start") && !alert.actual_start;
+  const showEndAction = canEdit && alert.kinds.includes("missing_end");
 
   return (
     <div className="rounded-lg border border-border bg-card p-3 flex flex-col gap-2">
@@ -479,14 +493,14 @@ function AlertCard({
           <span className="text-muted-foreground">Início previsto</span>
           <DateChip
             iso={alert.planned_start}
-            highlight={alert.kinds.includes('missing_start')}
+            highlight={alert.kinds.includes("missing_start")}
           />
         </div>
         <div className="flex flex-col">
           <span className="text-muted-foreground">Término previsto</span>
           <DateChip
             iso={alert.planned_end}
-            highlight={alert.kinds.includes('missing_end')}
+            highlight={alert.kinds.includes("missing_end")}
           />
         </div>
       </div>
@@ -529,12 +543,18 @@ function AlertCard({
 }
 
 // ── Helpers visuais ─────────────────────────────────────────────
-function DateChip({ iso, highlight }: { iso: string | null; highlight: boolean }) {
+function DateChip({
+  iso,
+  highlight,
+}: {
+  iso: string | null;
+  highlight: boolean;
+}) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 text-sm tabular-nums',
-        highlight ? 'text-destructive font-medium' : 'text-foreground',
+        "inline-flex items-center gap-1 text-sm tabular-nums",
+        highlight ? "text-destructive font-medium" : "text-foreground",
       )}
     >
       {fmtDate(iso)}
@@ -554,10 +574,10 @@ function OverdueBadge({ days }: { days: number }) {
     <Badge
       variant="outline"
       className={cn(
-        'tabular-nums',
+        "tabular-nums",
         days >= 7
-          ? 'border-destructive/50 bg-destructive/10 text-destructive'
-          : 'border-warning/50 bg-warning/10 text-warning',
+          ? "border-destructive/50 bg-destructive/10 text-destructive"
+          : "border-warning/50 bg-warning/10 text-warning",
       )}
     >
       {days}d
@@ -571,13 +591,13 @@ function EmptyAlerts({ hasFilters }: { hasFilters: boolean }) {
       <CheckCircle2 className="h-10 w-10 text-success" />
       <span className="text-base font-medium">
         {hasFilters
-          ? 'Nenhum alerta com os filtros atuais'
-          : 'Nenhuma pendência de cronograma'}
+          ? "Nenhum alerta com os filtros atuais"
+          : "Nenhuma pendência de cronograma"}
       </span>
       <span className="text-sm text-muted-foreground max-w-md">
         {hasFilters
-          ? 'Ajuste a busca ou os filtros acima para ver outras atividades.'
-          : 'Todas as atividades em curso estão com início e término sinalizados dentro do prazo.'}
+          ? "Ajuste a busca ou os filtros acima para ver outras atividades."
+          : "Todas as atividades em curso estão com início e término sinalizados dentro do prazo."}
       </span>
     </div>
   );

@@ -1,9 +1,9 @@
-import { Server, Copy } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { toast } from '@/hooks/use-toast';
-import { getBuildInfo, getShortCommit } from '@/lib/buildInfo';
+import { Server, Copy } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
+import { getBuildInfo, getShortCommit } from "@/lib/buildInfo";
 
 export const BuildInfoCard = () => {
   const buildInfo = getBuildInfo();
@@ -20,8 +20,10 @@ export const BuildInfoCard = () => {
             variant="ghost"
             size="sm"
             onClick={() => {
-              navigator.clipboard.writeText(`${buildInfo.commit} | ${buildInfo.environment} | ${buildInfo.version}`);
-              toast({ title: 'Copiado!' });
+              navigator.clipboard.writeText(
+                `${buildInfo.commit} | ${buildInfo.environment} | ${buildInfo.version}`,
+              );
+              toast({ title: "Copiado!" });
             }}
           >
             <Copy className="w-4 h-4" />
@@ -40,7 +42,13 @@ export const BuildInfoCard = () => {
           </div>
           <div>
             <p className="text-muted-foreground">Ambiente</p>
-            <Badge variant={buildInfo.environment === 'production' ? 'destructive' : 'secondary'}>
+            <Badge
+              variant={
+                buildInfo.environment === "production"
+                  ? "destructive"
+                  : "secondary"
+              }
+            >
               {buildInfo.environment}
             </Badge>
           </div>

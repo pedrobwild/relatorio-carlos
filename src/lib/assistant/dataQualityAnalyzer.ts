@@ -22,7 +22,8 @@ const RULES: RuleSpec[] = [
     issue: "negative_value",
     severity: "medium",
     message: "Custo estimado negativo em compras.",
-    detect: (r) => typeof r.estimated_cost === "number" && (r.estimated_cost as number) < 0,
+    detect: (r) =>
+      typeof r.estimated_cost === "number" && (r.estimated_cost as number) < 0,
   },
   {
     field: "supplier_name",
@@ -68,7 +69,12 @@ const RULES: RuleSpec[] = [
       try {
         const ae = new Date(r.actual_end as string).getTime();
         const pe = new Date(r.planned_end as string).getTime();
-        return Number.isFinite(ae) && Number.isFinite(pe) && ae < pe && r.status === "atrasada";
+        return (
+          Number.isFinite(ae) &&
+          Number.isFinite(pe) &&
+          ae < pe &&
+          r.status === "atrasada"
+        );
       } catch {
         return false;
       }
@@ -79,7 +85,8 @@ const RULES: RuleSpec[] = [
     issue: "missing_planning",
     severity: "medium",
     message: "Atividade sem planned_end.",
-    detect: (r) => "planned_end" in r && (r.planned_end == null || r.planned_end === ""),
+    detect: (r) =>
+      "planned_end" in r && (r.planned_end == null || r.planned_end === ""),
   },
 ];
 

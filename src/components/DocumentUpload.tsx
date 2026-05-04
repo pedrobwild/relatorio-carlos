@@ -5,8 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { invokeFunctionRaw } from "@/infra/edgeFunctions";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -19,36 +31,40 @@ interface DocumentUploadProps {
 }
 
 const uploadSchema = z.object({
-  name: z.string().trim().min(1, "Nome é obrigatório").max(200, "Nome muito longo"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Nome é obrigatório")
+    .max(200, "Nome muito longo"),
   description: z.string().trim().max(1000, "Descrição muito longa").optional(),
   document_type: z.string().min(1, "Selecione uma categoria"),
 });
 
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
 const ACCEPTED_MIME_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'image/png',
-  'image/jpeg',
-  'image/gif',
-  'image/webp',
-  'application/zip',
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "application/zip",
 ];
 const ACCEPTED_EXTENSIONS = [
-  '.pdf',
-  '.doc',
-  '.docx',
-  '.xls',
-  '.xlsx',
-  '.png',
-  '.jpg',
-  '.jpeg',
-  '.gif',
-  '.webp',
-  '.zip',
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".zip",
 ];
 
 export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
@@ -72,7 +88,7 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
 
   const getFileExtension = (filename: string) => {
     const match = filename.toLowerCase().match(/\.[^.]+$/);
-    return match ? match[0] : '';
+    return match ? match[0] : "";
   };
 
   const isAllowedFile = (selectedFile: File) => {
@@ -95,16 +111,18 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
     }
 
     if (!isAllowedFile(selectedFile)) {
-      toast.error("Envie PDF, Word, Excel, ZIP ou imagens (PNG, JPG, GIF, WEBP).");
+      toast.error(
+        "Envie PDF, Word, Excel, ZIP ou imagens (PNG, JPG, GIF, WEBP).",
+      );
       return;
     }
 
     setFile(selectedFile);
-    setErrors(prev => ({ ...prev, file: "" }));
+    setErrors((prev) => ({ ...prev, file: "" }));
     if (!formData.name) {
       // Auto-fill name from filename (without extension)
       const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
-      setFormData(prev => ({ ...prev, name: nameWithoutExt }));
+      setFormData((prev) => ({ ...prev, name: nameWithoutExt }));
     }
   };
 
@@ -136,7 +154,7 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
-        error.errors.forEach(err => {
+        error.errors.forEach((err) => {
           if (err.path[0]) {
             newErrors[err.path[0] as string] = err.message;
           }
@@ -155,35 +173,36 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
     try {
       // Create form data for edge function
       const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
-      uploadFormData.append('projectId', projectId);
-      uploadFormData.append('documentType', formData.document_type);
-      uploadFormData.append('name', formData.name.trim());
+      uploadFormData.append("file", file);
+      uploadFormData.append("projectId", projectId);
+      uploadFormData.append("documentType", formData.document_type);
+      uploadFormData.append("name", formData.name.trim());
       if (formData.description?.trim()) {
-        uploadFormData.append('description', formData.description.trim());
+        uploadFormData.append("description", formData.description.trim());
       }
 
       // Upload via edge function (computes SHA256 checksum server-side)
-      const response = await invokeFunctionRaw('document-upload', {
-        method: 'POST',
+      const response = await invokeFunctionRaw("document-upload", {
+        method: "POST",
         body: uploadFormData,
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Falha no upload');
+        throw new Error(result.error || "Falha no upload");
       }
 
-      toast.success('Documento enviado e verificado', {
+      toast.success("Documento enviado e verificado", {
         description: result.document?.checksum
           ? `SHA256: ${result.document.checksum}`
           : undefined,
         duration: 10000,
         action: result.document?.checksum
           ? {
-              label: 'Copiar',
-              onClick: () => navigator.clipboard.writeText(result.document!.checksum!),
+              label: "Copiar",
+              onClick: () =>
+                navigator.clipboard.writeText(result.document!.checksum!),
             }
           : undefined,
       });
@@ -192,7 +211,10 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
       setOpen(false);
       onSuccess?.();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Não foi possível enviar o documento";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível enviar o documento";
       toast.error(`Erro ao enviar: ${errorMessage}`);
     } finally {
       setUploading(false);
@@ -200,10 +222,13 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if (!isOpen) resetForm();
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) resetForm();
+      }}
+    >
       <DialogTrigger asChild>
         <Button className="gap-2" data-testid="document-upload-button">
           <Upload className="w-4 h-4" />
@@ -220,17 +245,26 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
           <div
             role="button"
             tabIndex={0}
-            aria-label={file ? `Arquivo selecionado: ${file.name}` : "Área de upload. Arraste um arquivo ou clique para selecionar"}
+            aria-label={
+              file
+                ? `Arquivo selecionado: ${file.name}`
+                : "Área de upload. Arraste um arquivo ou clique para selecionar"
+            }
             className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
               dragOver ? "border-primary bg-primary/5" : "border-border"
             } ${file ? "bg-primary/5 border-primary" : ""}`}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                const input = e.currentTarget.querySelector('input[type="file"]') as HTMLInputElement;
+                const input = e.currentTarget.querySelector(
+                  'input[type="file"]',
+                ) as HTMLInputElement;
                 input?.click();
               }
             }}
@@ -268,7 +302,9 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
                 <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                 <p className="text-body">Arraste um arquivo ou</p>
                 <label className="cursor-pointer">
-                  <span className="text-primary underline">clique para selecionar</span>
+                  <span className="text-primary underline">
+                    clique para selecionar
+                  </span>
                   <input
                     type="file"
                     className="hidden"
@@ -281,7 +317,9 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
                 </p>
               </div>
             )}
-            {errors.file && <p className="text-xs text-destructive mt-2">{errors.file}</p>}
+            {errors.file && (
+              <p className="text-xs text-destructive mt-2">{errors.file}</p>
+            )}
           </div>
 
           <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg border border-border/50">
@@ -290,7 +328,10 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
               <p className="font-medium mb-1">Boas práticas</p>
               <ul className="list-disc list-inside space-y-0.5">
                 <li>Prefira nomes claros e objetivos para facilitar buscas.</li>
-                <li>Evite arquivos duplicados: o sistema identifica checksum automaticamente.</li>
+                <li>
+                  Evite arquivos duplicados: o sistema identifica checksum
+                  automaticamente.
+                </li>
               </ul>
             </div>
           </div>
@@ -300,20 +341,30 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
             <Label htmlFor="category">Categoria *</Label>
             <Select
               value={formData.document_type}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, document_type: value }))}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, document_type: value }))
+              }
             >
-              <SelectTrigger id="category" className={errors.document_type ? "border-destructive" : ""} data-testid="document-category-select">
+              <SelectTrigger
+                id="category"
+                className={errors.document_type ? "border-destructive" : ""}
+                data-testid="document-category-select"
+              >
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
-              <SelectContent position="popper" >
-                {(Object.keys(DOCUMENT_CATEGORIES) as DocumentCategory[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {DOCUMENT_CATEGORIES[key].label}
-                  </SelectItem>
-                ))}
+              <SelectContent position="popper">
+                {(Object.keys(DOCUMENT_CATEGORIES) as DocumentCategory[]).map(
+                  (key) => (
+                    <SelectItem key={key} value={key}>
+                      {DOCUMENT_CATEGORIES[key].label}
+                    </SelectItem>
+                  ),
+                )}
               </SelectContent>
             </Select>
-            {errors.document_type && <p className="text-xs text-destructive">{errors.document_type}</p>}
+            {errors.document_type && (
+              <p className="text-xs text-destructive">{errors.document_type}</p>
+            )}
           </div>
 
           {/* Document Name */}
@@ -323,12 +374,16 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
               id="name"
               data-testid="document-name-input"
               value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
+              }
               placeholder="Ex: Contrato de Prestação de Serviços"
               className={errors.name ? "border-destructive" : ""}
               maxLength={200}
             />
-            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-xs text-destructive">{errors.name}</p>
+            )}
           </div>
 
           {/* Description */}
@@ -337,7 +392,12 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               placeholder="Adicione uma descrição ou observações sobre o documento"
               rows={3}
               maxLength={1000}
@@ -346,10 +406,18 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={uploading}>
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={uploading}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleUpload} disabled={uploading || !file} className="gap-2">
+            <Button
+              onClick={handleUpload}
+              disabled={uploading || !file}
+              className="gap-2"
+            >
               {uploading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />

@@ -5,23 +5,31 @@
  * criação rápida no topo e remoção. Apresenta resumo (total, concluídas,
  * atrasadas) e tempo médio de conclusão.
  */
-import { useState } from 'react';
-import { format, parseISO, isBefore, startOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CalendarClock, CheckCircle2, ListChecks, Loader2, Plus, Trash2, User as UserIcon } from 'lucide-react';
+import { useState } from "react";
+import { format, parseISO, isBefore, startOfDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  CalendarClock,
+  CheckCircle2,
+  ListChecks,
+  Loader2,
+  Plus,
+  Trash2,
+  User as UserIcon,
+} from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,8 +39,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 import {
   CS_ACTION_STATUS_OPTIONS,
@@ -45,21 +53,21 @@ import {
   useCsTicketActions,
   useDeleteCsTicketAction,
   useUpdateCsTicketAction,
-} from '@/hooks/useCsTicketActions';
-import { useStaffUsers } from '@/hooks/useStaffUsers';
+} from "@/hooks/useCsTicketActions";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
 
-const NONE = '__none__';
+const NONE = "__none__";
 
 const statusClass = (s: CsActionStatus): string => {
   switch (s) {
-    case 'pendente':
-      return 'bg-muted text-muted-foreground border border-border';
-    case 'em_andamento':
-      return 'bg-warning/10 text-warning border border-warning/30';
-    case 'concluida':
-      return 'bg-success/10 text-success border border-success/25';
-    case 'cancelada':
-      return 'bg-muted/40 text-muted-foreground border border-dashed border-border';
+    case "pendente":
+      return "bg-muted text-muted-foreground border border-border";
+    case "em_andamento":
+      return "bg-warning/10 text-warning border border-warning/30";
+    case "concluida":
+      return "bg-success/10 text-success border border-success/25";
+    case "cancelada":
+      return "bg-muted/40 text-muted-foreground border border-dashed border-border";
   }
 };
 
@@ -67,18 +75,22 @@ const statusLabel = (s: CsActionStatus) =>
   CS_ACTION_STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s;
 
 const fmtDate = (d: string | null) =>
-  d ? format(parseISO(d), 'dd/MM/yyyy', { locale: ptBR }) : '—';
+  d ? format(parseISO(d), "dd/MM/yyyy", { locale: ptBR }) : "—";
 
 const isOverdue = (a: CsTicketAction) => {
   if (!a.due_date) return false;
-  if (a.status === 'concluida' || a.status === 'cancelada') return false;
+  if (a.status === "concluida" || a.status === "cancelada") return false;
   return isBefore(parseISO(a.due_date), startOfDay(new Date()));
 };
 
 interface ActionRowProps {
   action: CsTicketAction;
   staff: Array<{ id: string; nome: string }>;
-  onPatch: (patch: Parameters<ReturnType<typeof useUpdateCsTicketAction>['mutate']>[0]['patch']) => void;
+  onPatch: (
+    patch: Parameters<
+      ReturnType<typeof useUpdateCsTicketAction>["mutate"]
+    >[0]["patch"],
+  ) => void;
   onDelete: () => void;
 }
 
@@ -88,8 +100,8 @@ function ActionRow({ action, staff, onPatch, onDelete }: ActionRowProps) {
   return (
     <div
       className={cn(
-        'rounded-lg border bg-card p-3 sm:p-4 space-y-3',
-        overdue ? 'border-destructive/40' : 'border-border',
+        "rounded-lg border bg-card p-3 sm:p-4 space-y-3",
+        overdue ? "border-destructive/40" : "border-border",
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -113,7 +125,7 @@ function ActionRow({ action, staff, onPatch, onDelete }: ActionRowProps) {
       </div>
 
       <Textarea
-        defaultValue={action.description ?? ''}
+        defaultValue={action.description ?? ""}
         placeholder="Descrição (opcional)"
         rows={2}
         onBlur={(e) => {
@@ -133,7 +145,9 @@ function ActionRow({ action, staff, onPatch, onDelete }: ActionRowProps) {
             value={action.status}
             onValueChange={(v) => onPatch({ status: v as CsActionStatus })}
           >
-            <SelectTrigger className={cn('h-8 text-xs px-2', statusClass(action.status))}>
+            <SelectTrigger
+              className={cn("h-8 text-xs px-2", statusClass(action.status))}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent position="popper">
@@ -153,12 +167,15 @@ function ActionRow({ action, staff, onPatch, onDelete }: ActionRowProps) {
           </Label>
           <Input
             type="date"
-            defaultValue={action.due_date ?? ''}
+            defaultValue={action.due_date ?? ""}
             onBlur={(e) => {
               const v = e.target.value || null;
               if (v !== (action.due_date ?? null)) onPatch({ due_date: v });
             }}
-            className={cn('h-8 text-xs', overdue && 'border-destructive text-destructive')}
+            className={cn(
+              "h-8 text-xs",
+              overdue && "border-destructive text-destructive",
+            )}
           />
         </div>
 
@@ -169,13 +186,17 @@ function ActionRow({ action, staff, onPatch, onDelete }: ActionRowProps) {
           </Label>
           <Select
             value={action.responsible_user_id ?? NONE}
-            onValueChange={(v) => onPatch({ responsible_user_id: v === NONE ? null : v })}
+            onValueChange={(v) =>
+              onPatch({ responsible_user_id: v === NONE ? null : v })
+            }
           >
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="—" />
             </SelectTrigger>
             <SelectContent position="popper">
-              <SelectItem value={NONE} className="text-xs">— Sem responsável —</SelectItem>
+              <SelectItem value={NONE} className="text-xs">
+                — Sem responsável —
+              </SelectItem>
               {staff.map((s) => (
                 <SelectItem key={s.id} value={s.id} className="text-xs">
                   {s.nome}
@@ -194,7 +215,7 @@ function ActionRow({ action, staff, onPatch, onDelete }: ActionRowProps) {
             Atrasada
           </span>
         )}
-        {action.status === 'concluida' && action.completed_at && (
+        {action.status === "concluida" && action.completed_at && (
           <span className="text-success flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" />
             Concluída em {fmtDate(action.completed_at)}
@@ -222,8 +243,8 @@ export function CsTicketActionsPanel({ ticketId }: CsTicketActionsPanelProps) {
   const update = useUpdateCsTicketAction();
   const remove = useDeleteCsTicketAction();
 
-  const [newTitle, setNewTitle] = useState('');
-  const [newDue, setNewDue] = useState('');
+  const [newTitle, setNewTitle] = useState("");
+  const [newDue, setNewDue] = useState("");
   const [newResp, setNewResp] = useState<string>(NONE);
   const [deleteTarget, setDeleteTarget] = useState<CsTicketAction | null>(null);
 
@@ -239,8 +260,8 @@ export function CsTicketActionsPanel({ ticketId }: CsTicketActionsPanelProps) {
       due_date: newDue || null,
       responsible_user_id: newResp === NONE ? null : newResp,
     });
-    setNewTitle('');
-    setNewDue('');
+    setNewTitle("");
+    setNewDue("");
     setNewResp(NONE);
   };
 
@@ -256,11 +277,13 @@ export function CsTicketActionsPanel({ ticketId }: CsTicketActionsPanelProps) {
             {summary.done}/{summary.total} concluídas
             {summary.overdue > 0 && (
               <span className="text-destructive font-medium ml-2">
-                · {summary.overdue} atrasada{summary.overdue > 1 ? 's' : ''}
+                · {summary.overdue} atrasada{summary.overdue > 1 ? "s" : ""}
               </span>
             )}
             {avgMs != null && (
-              <span className="ml-2">· tempo médio {formatDuration(avgMs)}</span>
+              <span className="ml-2">
+                · tempo médio {formatDuration(avgMs)}
+              </span>
             )}
           </span>
         )}
@@ -273,7 +296,7 @@ export function CsTicketActionsPanel({ ticketId }: CsTicketActionsPanelProps) {
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && newTitle.trim()) handleCreate();
+              if (e.key === "Enter" && newTitle.trim()) handleCreate();
             }}
             placeholder="Nova ação… (ex.: Ligar para o cliente)"
             className="h-9 text-sm"
@@ -342,7 +365,10 @@ export function CsTicketActionsPanel({ ticketId }: CsTicketActionsPanelProps) {
         </div>
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover ação?</AlertDialogTitle>

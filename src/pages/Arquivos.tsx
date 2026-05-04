@@ -1,28 +1,51 @@
 /**
  * Arquivos Page
- * 
+ *
  * General file listing with inline preview for PDFs and images.
  * Staff-only page accessible from /gestao/arquivos.
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Search, FileText, Image, Film, File, Eye, Download, Trash2, Archive, Filter } from 'lucide-react';
-import { useUserRole } from '@/hooks/useUserRole';
-import { AppHeader } from '@/components/AppHeader';
-import { ContentSkeleton } from '@/components/ContentSkeleton';
-import { EmptyState } from '@/components/EmptyState';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DocumentViewer } from '@/components/DocumentViewer';
-import { useFilesQuery, useDeleteFileMutation, useArchiveFileMutation } from '@/hooks/useFilesQuery';
-import { useProjectsQuery } from '@/hooks/useProjectsQuery';
-import { getSignedUrl, type FileMetadata } from '@/infra/repositories/files.repository';
-import { matchesSearch } from '@/lib/searchNormalize';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useState, useMemo, useCallback, useEffect } from "react";
+import {
+  Search,
+  FileText,
+  Image,
+  Film,
+  File,
+  Eye,
+  Download,
+  Trash2,
+  Archive,
+  Filter,
+} from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
+import { AppHeader } from "@/components/AppHeader";
+import { ContentSkeleton } from "@/components/ContentSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { DocumentViewer } from "@/components/DocumentViewer";
+import {
+  useFilesQuery,
+  useDeleteFileMutation,
+  useArchiveFileMutation,
+} from "@/hooks/useFilesQuery";
+import { useProjectsQuery } from "@/hooks/useProjectsQuery";
+import {
+  getSignedUrl,
+  type FileMetadata,
+} from "@/infra/repositories/files.repository";
+import { matchesSearch } from "@/lib/searchNormalize";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +55,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 // ---- helpers ----
 
@@ -43,29 +66,29 @@ function formatFileSize(bytes: number): string {
 }
 
 function getFileIcon(mimeType: string) {
-  if (mimeType.startsWith('image/')) return <Image className="h-5 w-5 text-primary" />;
-  if (mimeType === 'application/pdf') return <FileText className="h-5 w-5 text-destructive" />;
-  if (mimeType.startsWith('video/')) return <Film className="h-5 w-5 text-accent-foreground" />;
+  if (mimeType.startsWith("image/"))
+    return <Image className="h-5 w-5 text-primary" />;
+  if (mimeType === "application/pdf")
+    return <FileText className="h-5 w-5 text-destructive" />;
+  if (mimeType.startsWith("video/"))
+    return <Film className="h-5 w-5 text-accent-foreground" />;
   return <File className="h-5 w-5 text-muted-foreground" />;
 }
 
 function canPreview(mimeType: string): boolean {
-  return (
-    mimeType === 'application/pdf' ||
-    mimeType.startsWith('image/')
-  );
+  return mimeType === "application/pdf" || mimeType.startsWith("image/");
 }
 
 const statusLabels: Record<string, string> = {
-  active: 'Ativo',
-  archived: 'Arquivado',
-  deleted: 'Excluído',
+  active: "Ativo",
+  archived: "Arquivado",
+  deleted: "Excluído",
 };
 
 const statusColors: Record<string, string> = {
-  active: 'bg-green-500/10 text-green-600 border-green-500/20',
-  archived: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
-  deleted: 'bg-red-500/10 text-red-600 border-red-500/20',
+  active: "bg-green-500/10 text-green-600 border-green-500/20",
+  archived: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+  deleted: "bg-red-500/10 text-red-600 border-red-500/20",
 };
 
 // ---- components ----
@@ -102,7 +125,7 @@ function FilePreviewModal({
       }
       onOpenChange(open);
     },
-    [onOpenChange]
+    [onOpenChange],
   );
 
   // Trigger load when file changes via useEffect (not during render)
@@ -124,8 +147,11 @@ function FilePreviewModal({
                 {file?.original_name}
               </DialogTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {file && formatFileSize(file.size_bytes)} •{' '}
-                {file && format(new Date(file.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                {file && formatFileSize(file.size_bytes)} •{" "}
+                {file &&
+                  format(new Date(file.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                    locale: ptBR,
+                  })}
               </p>
             </div>
           </div>
@@ -158,11 +184,15 @@ function FilePreviewModal({
 
 export default function Arquivos() {
   const { isStaff } = useUserRole();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'active' | 'archived' | 'deleted'>('active');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "active" | "archived" | "deleted"
+  >("active");
   const [projectFilter, setProjectFilter] = useState<string | null>(null);
 
-  const { data: files = [], isLoading } = useFilesQuery({ status: statusFilter });
+  const { data: files = [], isLoading } = useFilesQuery({
+    status: statusFilter,
+  });
   const { data: projects = [] } = useProjectsQuery();
   const deleteMutation = useDeleteFileMutation();
   const archiveMutation = useArchiveFileMutation();
@@ -180,7 +210,10 @@ export default function Arquivos() {
   // Filtered files
   const filteredFiles = useMemo(() => {
     return files.filter((f) => {
-      const matchesQuery = matchesSearch(searchTerm, [f.original_name, f.category]);
+      const matchesQuery = matchesSearch(searchTerm, [
+        f.original_name,
+        f.category,
+      ]);
       const matchesProject = !projectFilter || f.project_id === projectFilter;
       return matchesQuery && matchesProject;
     });
@@ -189,10 +222,12 @@ export default function Arquivos() {
   // Unique projects from file list for filter
   const fileProjects = useMemo(() => {
     const ids = new Set(files.map((f) => f.project_id).filter(Boolean));
-    return Array.from(ids).map((id) => ({
-      id: id!,
-      name: projectMap.get(id!) || id!,
-    })).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(ids)
+      .map((id) => ({
+        id: id!,
+        name: projectMap.get(id!) || id!,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [files, projectMap]);
 
   const handleDelete = () => {
@@ -204,7 +239,7 @@ export default function Arquivos() {
   const handleDownload = async (file: FileMetadata) => {
     const url = await getSignedUrl(file.bucket, file.storage_path);
     if (url) {
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = file.original_name;
       document.body.appendChild(link);
@@ -225,20 +260,42 @@ export default function Arquivos() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card className="p-4">
-            <p className="text-tiny text-muted-foreground uppercase tracking-wider">Total</p>
+            <p className="text-tiny text-muted-foreground uppercase tracking-wider">
+              Total
+            </p>
             <p className="text-h2 font-bold">{filteredFiles.length}</p>
           </Card>
           <Card className="p-4">
-            <p className="text-tiny text-muted-foreground uppercase tracking-wider">PDFs</p>
-            <p className="text-h2 font-bold">{filteredFiles.filter((f) => f.mime_type === 'application/pdf').length}</p>
+            <p className="text-tiny text-muted-foreground uppercase tracking-wider">
+              PDFs
+            </p>
+            <p className="text-h2 font-bold">
+              {
+                filteredFiles.filter((f) => f.mime_type === "application/pdf")
+                  .length
+              }
+            </p>
           </Card>
           <Card className="p-4">
-            <p className="text-tiny text-muted-foreground uppercase tracking-wider">Imagens</p>
-            <p className="text-h2 font-bold">{filteredFiles.filter((f) => f.mime_type.startsWith('image/')).length}</p>
+            <p className="text-tiny text-muted-foreground uppercase tracking-wider">
+              Imagens
+            </p>
+            <p className="text-h2 font-bold">
+              {
+                filteredFiles.filter((f) => f.mime_type.startsWith("image/"))
+                  .length
+              }
+            </p>
           </Card>
           <Card className="p-4">
-            <p className="text-tiny text-muted-foreground uppercase tracking-wider">Tamanho total</p>
-            <p className="text-h2 font-bold">{formatFileSize(filteredFiles.reduce((acc, f) => acc + f.size_bytes, 0))}</p>
+            <p className="text-tiny text-muted-foreground uppercase tracking-wider">
+              Tamanho total
+            </p>
+            <p className="text-h2 font-bold">
+              {formatFileSize(
+                filteredFiles.reduce((acc, f) => acc + f.size_bytes, 0),
+              )}
+            </p>
           </Card>
         </div>
 
@@ -258,23 +315,23 @@ export default function Arquivos() {
             {isStaff ? (
               <>
                 <Button
-                  variant={statusFilter === 'active' ? 'default' : 'outline'}
+                  variant={statusFilter === "active" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setStatusFilter('active')}
+                  onClick={() => setStatusFilter("active")}
                 >
                   Ativos
                 </Button>
                 <Button
-                  variant={statusFilter === 'archived' ? 'default' : 'outline'}
+                  variant={statusFilter === "archived" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setStatusFilter('archived')}
+                  onClick={() => setStatusFilter("archived")}
                 >
                   Arquivados
                 </Button>
                 <Button
-                  variant={statusFilter === 'deleted' ? 'default' : 'outline'}
+                  variant={statusFilter === "deleted" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setStatusFilter('deleted')}
+                  onClick={() => setStatusFilter("deleted")}
                 >
                   Excluídos
                 </Button>
@@ -285,7 +342,7 @@ export default function Arquivos() {
               <>
                 <div className="w-px h-8 bg-border mx-1 hidden sm:block" />
                 <Button
-                  variant={!projectFilter ? 'secondary' : 'ghost'}
+                  variant={!projectFilter ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => setProjectFilter(null)}
                 >
@@ -294,7 +351,7 @@ export default function Arquivos() {
                 {fileProjects.map((p) => (
                   <Button
                     key={p.id}
-                    variant={projectFilter === p.id ? 'secondary' : 'ghost'}
+                    variant={projectFilter === p.id ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => setProjectFilter(p.id)}
                     className="truncate max-w-[200px]"
@@ -314,7 +371,11 @@ export default function Arquivos() {
           <EmptyState
             variant="documents"
             title="Nenhum arquivo encontrado"
-            description={searchTerm || projectFilter ? 'Tente ajustar os filtros de busca.' : 'Os arquivos aparecerão aqui conforme forem enviados.'}
+            description={
+              searchTerm || projectFilter
+                ? "Tente ajustar os filtros de busca."
+                : "Os arquivos aparecerão aqui conforme forem enviados."
+            }
           />
         ) : (
           <div className="space-y-2">
@@ -330,9 +391,14 @@ export default function Arquivos() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-body font-medium truncate">{file.original_name}</h3>
-                      {file.status !== 'active' && (
-                        <Badge variant="outline" className={statusColors[file.status]}>
+                      <h3 className="text-body font-medium truncate">
+                        {file.original_name}
+                      </h3>
+                      {file.status !== "active" && (
+                        <Badge
+                          variant="outline"
+                          className={statusColors[file.status]}
+                        >
                           {statusLabels[file.status]}
                         </Badge>
                       )}
@@ -340,17 +406,28 @@ export default function Arquivos() {
                     <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mt-0.5">
                       <span>{formatFileSize(file.size_bytes)}</span>
                       <span>•</span>
-                      <span>{format(new Date(file.created_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                      <span>
+                        {format(new Date(file.created_at), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })}
+                      </span>
                       {file.project_id && projectMap.get(file.project_id) && (
                         <>
                           <span>•</span>
-                          <span className="truncate max-w-[150px]">{projectMap.get(file.project_id)}</span>
+                          <span className="truncate max-w-[150px]">
+                            {projectMap.get(file.project_id)}
+                          </span>
                         </>
                       )}
                       {file.category && (
                         <>
                           <span>•</span>
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{file.category}</Badge>
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] px-1.5 py-0"
+                          >
+                            {file.category}
+                          </Badge>
                         </>
                       )}
                     </div>
@@ -378,7 +455,7 @@ export default function Arquivos() {
                     >
                       <Download className="h-4 w-4" />
                     </Button>
-                    {file.status === 'active' && isStaff && (
+                    {file.status === "active" && isStaff && (
                       <>
                         <Button
                           variant="ghost"
@@ -416,12 +493,17 @@ export default function Arquivos() {
       />
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir arquivo</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir &quot;{deleteTarget?.original_name}&quot;? O arquivo será marcado para remoção permanente após 7 dias.
+              Tem certeza que deseja excluir &quot;{deleteTarget?.original_name}
+              &quot;? O arquivo será marcado para remoção permanente após 7
+              dias.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

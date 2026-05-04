@@ -3,10 +3,10 @@
  * UX densa tipo planilha (Airtable/Monday): cabeçalho leve, linhas compactas,
  * colunas prioritárias fixas à esquerda, edição inline com affordance visual.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   CalendarIcon,
   X,
@@ -36,22 +36,33 @@ import {
   Check,
   Maximize2,
   Minimize2,
-} from 'lucide-react';
-import { PageContainer } from '@/components/layout/PageContainer';
-import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+} from "lucide-react";
+import { PageContainer } from "@/components/layout/PageContainer";
+import {
+  PageHeader,
+  PageToolbar,
+  MetricCard,
+  MetricRail,
+  SectionCard,
+  FilterPill,
+} from "@/components/ui-premium";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -59,13 +70,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,18 +86,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
-import { matchesSearch } from '@/lib/searchNormalize';
-import { countBusinessDaysInclusive } from '@/lib/businessDays';
-import { useUserRole } from '@/hooks/useUserRole';
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { matchesSearch } from "@/lib/searchNormalize";
+import { countBusinessDaysInclusive } from "@/lib/businessDays";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   ETAPA_OPTIONS,
   RELACIONAMENTO_OPTIONS,
@@ -97,31 +108,35 @@ import {
   type PainelObraPatch,
   type PainelRelacionamento,
   type PainelStatus,
-} from '@/hooks/usePainelObras';
-import { EmptyState } from '@/components/ui/states';
-import { useStaffUsers } from '@/hooks/useStaffUsers';
-import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
-import { DadosClienteDialog } from '@/components/admin/obras/DadosClienteDialog';
+} from "@/hooks/usePainelObras";
+import { EmptyState } from "@/components/ui/states";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import { DailyLogInline } from "@/components/admin/obras/DailyLogInline";
+import { DadosClienteDialog } from "@/components/admin/obras/DadosClienteDialog";
 import {
   MobileRecordCard,
   MobileFiltersSheet,
   type MobileRecordCardChip,
-} from '@/components/mobile';
+} from "@/components/mobile";
 
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ----- helpers -----
-const ALL = '__all__';
+const ALL = "__all__";
 type SortKey =
-  | 'atraso'
-  | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
-  | 'entrega_real'   | 'responsavel_nome' | null;
-const NONE = '__none__';
+  | "atraso"
+  | "inicio_oficial"
+  | "entrega_oficial"
+  | "inicio_real"
+  | "entrega_real"
+  | "responsavel_nome"
+  | null;
+const NONE = "__none__";
 
 const fmtDate = (iso: string | null) =>
-  iso ? format(parseISO(iso), 'dd/MM/yy', { locale: ptBR }) : '—';
+  iso ? format(parseISO(iso), "dd/MM/yy", { locale: ptBR }) : "—";
 
 /**
  * Normaliza nomes recebidos em CAPS LOCK (ex: "FELIPE ABRANTES DALMAGRO") para
@@ -129,28 +144,31 @@ const fmtDate = (iso: string | null) =>
  * da, do, dos, das, e). Quando o nome já tem capitalização mista, devolve
  * inalterado para respeitar a grafia original.
  */
-const PARTICULAS = new Set(['de', 'da', 'do', 'dos', 'das', 'e', 'di', 'du']);
+const PARTICULAS = new Set(["de", "da", "do", "dos", "das", "e", "di", "du"]);
 const formatNomePessoa = (raw: string | null | undefined): string => {
-  if (!raw) return '';
+  if (!raw) return "";
   const trimmed = raw.trim();
-  if (!trimmed) return '';
+  if (!trimmed) return "";
   // Heurística: só converter se >70% das letras estão em CAPS
-  const letters = trimmed.replace(/[^A-Za-zÀ-ÿ]/g, '');
+  const letters = trimmed.replace(/[^A-Za-zÀ-ÿ]/g, "");
   if (!letters) return trimmed;
-  const upperRatio = letters.split('').filter((c) => c === c.toUpperCase() && c !== c.toLowerCase()).length / letters.length;
+  const upperRatio =
+    letters
+      .split("")
+      .filter((c) => c === c.toUpperCase() && c !== c.toLowerCase()).length /
+    letters.length;
   if (upperRatio < 0.7) return trimmed;
   return trimmed
-    .toLocaleLowerCase('pt-BR')
+    .toLocaleLowerCase("pt-BR")
     .split(/\s+/)
     .map((w, i) => {
       if (i > 0 && PARTICULAS.has(w)) return w;
-      return w.charAt(0).toLocaleUpperCase('pt-BR') + w.slice(1);
+      return w.charAt(0).toLocaleUpperCase("pt-BR") + w.slice(1);
     })
-    .join(' ');
+    .join(" ");
 };
 
-
-const toIsoDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
+const toIsoDate = (d: Date | undefined) => (d ? format(d, "yyyy-MM-dd") : null);
 
 const computeDisplayStatus = (obra: {
   status: PainelStatus | null;
@@ -159,8 +177,8 @@ const computeDisplayStatus = (obra: {
 }): PainelStatus | null => {
   const { status, entrega_oficial, entrega_real } = obra;
   if (!entrega_oficial || entrega_real) return status;
-  const hojeIso = format(new Date(), 'yyyy-MM-dd');
-  if (entrega_oficial < hojeIso) return 'Atrasado';
+  const hojeIso = format(new Date(), "yyyy-MM-dd");
+  if (entrega_oficial < hojeIso) return "Atrasado";
   return status;
 };
 
@@ -178,8 +196,8 @@ const computeOverdueDays = (obra: {
 }): number => {
   if (!obra.entrega_oficial) return 0;
   if (obra.entrega_real) return 0;
-  if (obra.etapa === 'Finalizada') return 0;
-  const hojeIso = format(new Date(), 'yyyy-MM-dd');
+  if (obra.etapa === "Finalizada") return 0;
+  const hojeIso = format(new Date(), "yyyy-MM-dd");
   if (obra.entrega_oficial >= hojeIso) return 0;
   const planned = parseISO(obra.entrega_oficial);
   const today = new Date();
@@ -189,47 +207,62 @@ const computeOverdueDays = (obra: {
   return countBusinessDaysInclusive(start, today);
 };
 
-import { getEtapaWeek, formatEtapaLabel } from '@/lib/painelEtapaWeek';
+import { getEtapaWeek, formatEtapaLabel } from "@/lib/painelEtapaWeek";
 
 const statusDotClass = (s: PainelStatus | null): string => {
   switch (s) {
-    case 'Aguardando': return 'bg-info';
-    case 'Em dia':     return 'bg-success';
-    case 'Atrasado':   return 'bg-destructive';
-    case 'Paralisada': return 'bg-muted-foreground';
-    default:           return 'bg-muted';
+    case "Aguardando":
+      return "bg-info";
+    case "Em dia":
+      return "bg-success";
+    case "Atrasado":
+      return "bg-destructive";
+    case "Paralisada":
+      return "bg-muted-foreground";
+    default:
+      return "bg-muted";
   }
 };
 
 const statusPillClass = (s: PainelStatus | null): string => {
   switch (s) {
-    case 'Aguardando': return 'bg-info/10 text-info border border-info/25';
-    case 'Em dia':     return 'bg-success/10 text-success border border-success/25';
-    case 'Atrasado':   return 'bg-destructive/10 text-destructive border border-destructive/25';
-    case 'Paralisada': return 'bg-muted text-muted-foreground border border-border';
-    default:           return 'bg-muted/40 text-muted-foreground border border-dashed border-border';
+    case "Aguardando":
+      return "bg-info/10 text-info border border-info/25";
+    case "Em dia":
+      return "bg-success/10 text-success border border-success/25";
+    case "Atrasado":
+      return "bg-destructive/10 text-destructive border border-destructive/25";
+    case "Paralisada":
+      return "bg-muted text-muted-foreground border border-border";
+    default:
+      return "bg-muted/40 text-muted-foreground border border-dashed border-border";
   }
 };
 
 const relacionamentoPillClass = (r: PainelRelacionamento | null): string => {
   switch (r) {
-    case 'Normal':       return 'bg-success/10 text-success border border-success/25';
-    case 'Atrito':       return 'bg-warning/10 text-warning border border-warning/25';
-    case 'Insatisfeito': return 'bg-warning/15 text-warning border border-warning/30';
-    case 'Crítico':      return 'bg-destructive/10 text-destructive border border-destructive/25';
-    default:             return 'bg-muted/40 text-muted-foreground border border-dashed border-border';
+    case "Normal":
+      return "bg-success/10 text-success border border-success/25";
+    case "Atrito":
+      return "bg-warning/10 text-warning border border-warning/25";
+    case "Insatisfeito":
+      return "bg-warning/15 text-warning border border-warning/30";
+    case "Crítico":
+      return "bg-destructive/10 text-destructive border border-destructive/25";
+    default:
+      return "bg-muted/40 text-muted-foreground border border-dashed border-border";
   }
 };
 
 const editableCell =
-  'group/cell w-full h-full text-left px-2 py-1 rounded-md text-sm transition-colors ' +
-  'hover:bg-accent/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0';
+  "group/cell w-full h-full text-left px-2 py-1 rounded-md text-sm transition-colors " +
+  "hover:bg-accent/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0";
 
 // Ring contido (ring-inset + offset-0) usado em SelectTrigger inline em
 // pills da tabela — evita que o halo de foco vaze para fora da célula
 // (especialmente sobre a coluna sticky "Cliente / Obra").
 const inlinePillTrigger =
-  'focus:ring-0 focus:ring-offset-0 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0';
+  "focus:ring-0 focus:ring-offset-0 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0";
 
 // ----- inline date cell -----
 interface DateCellProps {
@@ -240,14 +273,24 @@ interface DateCellProps {
   disabled?: boolean;
 }
 
-function DateCell({ value, onChange, confirmEdit, confirmTitle, disabled }: DateCellProps) {
+function DateCell({
+  value,
+  onChange,
+  confirmEdit,
+  confirmTitle,
+  disabled,
+}: DateCellProps) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<Date | undefined>();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleSelect = (d: Date | undefined) => {
     setOpen(false);
-    if (confirmEdit && value) { setPending(d); setConfirmOpen(true); return; }
+    if (confirmEdit && value) {
+      setPending(d);
+      setConfirmOpen(true);
+      return;
+    }
     onChange(toIsoDate(d));
   };
 
@@ -260,9 +303,9 @@ function DateCell({ value, onChange, confirmEdit, confirmTitle, disabled }: Date
             disabled={disabled}
             className={cn(
               editableCell,
-              'flex items-center gap-1.5 tabular-nums',
-              !value && 'text-muted-foreground',
-              disabled && 'opacity-50 cursor-not-allowed',
+              "flex items-center gap-1.5 tabular-nums",
+              !value && "text-muted-foreground",
+              disabled && "opacity-50 cursor-not-allowed",
             )}
           >
             <CalendarIcon className="h-3 w-3 shrink-0 opacity-60 group-hover/cell:opacity-100" />
@@ -279,13 +322,20 @@ function DateCell({ value, onChange, confirmEdit, confirmTitle, disabled }: Date
           />
           {value && (
             <div className="p-2 border-t border-border">
-              <Button size="sm" variant="ghost" className="w-full text-destructive"
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-full text-destructive"
                 onClick={() => {
                   setOpen(false);
-                  if (confirmEdit) { setPending(undefined); setConfirmOpen(true); }
-                  else onChange(null);
+                  if (confirmEdit) {
+                    setPending(undefined);
+                    setConfirmOpen(true);
+                  } else onChange(null);
                 }}
-              >Limpar data</Button>
+              >
+                Limpar data
+              </Button>
             </div>
           )}
         </PopoverContent>
@@ -296,16 +346,24 @@ function DateCell({ value, onChange, confirmEdit, confirmTitle, disabled }: Date
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
-              {confirmTitle ?? 'Confirmar alteração'}
+              {confirmTitle ?? "Confirmar alteração"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Esta data representa um <strong>prazo contratual</strong> e não deve ser alterada
-              rotineiramente. Tem certeza de que deseja modificá-la?
+              Esta data representa um <strong>prazo contratual</strong> e não
+              deve ser alterada rotineiramente. Tem certeza de que deseja
+              modificá-la?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPending(undefined)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { onChange(toIsoDate(pending)); setPending(undefined); }}>
+            <AlertDialogCancel onClick={() => setPending(undefined)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onChange(toIsoDate(pending));
+                setPending(undefined);
+              }}
+            >
               Confirmar alteração
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -328,36 +386,42 @@ export default function PainelObras() {
 
   // Fase exibida: obras em execução (default) ou em fase de projeto.
   // Persistida em URL via ?fase=projetos para compartilhar/voltar na visão.
-  const faseParam = searchParams.get('fase');
-  const fase: 'obras' | 'projetos' = faseParam === 'projetos' ? 'projetos' : 'obras';
-  const handleFaseChange = (next: 'obras' | 'projetos') => {
+  const faseParam = searchParams.get("fase");
+  const fase: "obras" | "projetos" =
+    faseParam === "projetos" ? "projetos" : "obras";
+  const handleFaseChange = (next: "obras" | "projetos") => {
     const params = new URLSearchParams(searchParams);
-    if (next === 'obras') params.delete('fase'); else params.set('fase', next);
+    if (next === "obras") params.delete("fase");
+    else params.set("fase", next);
     setSearchParams(params, { replace: true });
   };
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
-  const viewParam = searchParams.get('view');
-  const activeView: 'table' | 'kanban' | 'board' =
-    viewParam === 'kanban' ? 'kanban' : viewParam === 'board' ? 'board' : 'table';
-  const handleViewChange = (next: 'table' | 'kanban' | 'board') => {
+  const viewParam = searchParams.get("view");
+  const activeView: "table" | "kanban" | "board" =
+    viewParam === "kanban"
+      ? "kanban"
+      : viewParam === "board"
+        ? "board"
+        : "table";
+  const handleViewChange = (next: "table" | "kanban" | "board") => {
     const params = new URLSearchParams(searchParams);
-    if (next === 'table') params.delete('view');
-    else params.set('view', next);
+    if (next === "table") params.delete("view");
+    else params.set("view", next);
     setSearchParams(params, { replace: true });
   };
 
   // Densidade da tabela: 'comfortable' (padrão) ou 'compact' (tipo planilha).
   // Persistida em localStorage para manter preferência entre sessões e telas do painel.
-  const DENSITY_STORAGE_KEY = 'painel-obras:density';
-  const [density, setDensity] = useState<'comfortable' | 'compact'>(() => {
-    if (typeof window === 'undefined') return 'comfortable';
+  const DENSITY_STORAGE_KEY = "painel-obras:density";
+  const [density, setDensity] = useState<"comfortable" | "compact">(() => {
+    if (typeof window === "undefined") return "comfortable";
     const v = window.localStorage.getItem(DENSITY_STORAGE_KEY);
-    return v === 'compact' ? 'compact' : 'comfortable';
+    return v === "compact" ? "compact" : "comfortable";
   });
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     window.localStorage.setItem(DENSITY_STORAGE_KEY, density);
   }, [density]);
 
@@ -365,22 +429,23 @@ export default function PainelObras() {
   // do header e padding vertical das células sem alterar paddings horizontais
   // (que mantêm o alinhamento das colunas sticky).
   const densityTableClass =
-    density === 'compact'
-      ? '[&_th]:h-7 [&_td]:py-1'
-      : '[&_th]:h-9 [&_td]:py-2.5';
+    density === "compact"
+      ? "[&_th]:h-7 [&_td]:py-1"
+      : "[&_th]:h-9 [&_td]:py-2.5";
 
   // Critério de agrupamento do Kanban: por etapa (default) ou por status (estilo Monday).
   // Persistido em URL para preservar a visão escolhida ao compartilhar / recarregar.
-  const groupByParam = searchParams.get('groupBy');
-  const kanbanGroupBy: 'etapa' | 'status' = groupByParam === 'status' ? 'status' : 'etapa';
-  const handleGroupByChange = (next: 'etapa' | 'status') => {
+  const groupByParam = searchParams.get("groupBy");
+  const kanbanGroupBy: "etapa" | "status" =
+    groupByParam === "status" ? "status" : "etapa";
+  const handleGroupByChange = (next: "etapa" | "status") => {
     const params = new URLSearchParams(searchParams);
-    if (next === 'etapa') params.delete('groupBy');
-    else params.set('groupBy', next);
+    if (next === "etapa") params.delete("groupBy");
+    else params.set("groupBy", next);
     setSearchParams(params, { replace: true });
   };
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
   /**
    * Filtro de status agora é multi-seleção (Set vazio = sem filtro / mostra
@@ -389,14 +454,17 @@ export default function PainelObras() {
    * Kanban está agrupado por status (filtro independe da seleção visual da
    * coluna ativa). Inclui o sentinel `NONE` para representar "sem status".
    */
-  const [filterStatuses, setFilterStatuses] = useState<Set<string>>(() => new Set());
+  const [filterStatuses, setFilterStatuses] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
   const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
 
   const toggleStatusFilter = (value: string) => {
     setFilterStatuses((prev) => {
       const next = new Set(prev);
-      if (next.has(value)) next.delete(value); else next.add(value);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
       return next;
     });
   };
@@ -411,7 +479,8 @@ export default function PainelObras() {
   const toggleSelectId = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -425,13 +494,17 @@ export default function PainelObras() {
     setBulkUpdating(true);
     try {
       // Atualiza em paralelo; cada chamada é uma mutation independente.
-      const results = await Promise.allSettled(ids.map((id) => updateObra(id, patch)));
-      const ok = results.filter((r) => r.status === 'fulfilled').length;
+      const results = await Promise.allSettled(
+        ids.map((id) => updateObra(id, patch)),
+      );
+      const ok = results.filter((r) => r.status === "fulfilled").length;
       const fail = results.length - ok;
       if (fail === 0) {
-        toast.success(`${ok} ${ok === 1 ? 'obra atualizada' : 'obras atualizadas'}.`);
+        toast.success(
+          `${ok} ${ok === 1 ? "obra atualizada" : "obras atualizadas"}.`,
+        );
       } else if (ok === 0) {
-        toast.error('Não foi possível atualizar as obras selecionadas.');
+        toast.error("Não foi possível atualizar as obras selecionadas.");
       } else {
         toast.warning(`${ok} atualizadas, ${fail} com falha.`);
       }
@@ -442,13 +515,14 @@ export default function PainelObras() {
   };
 
   const [sortKey, setSortKey] = useState<SortKey>(null);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const toggleExpanded = (id: string) => {
     setExpandedIds((curr) => {
       const next = new Set(curr);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -465,14 +539,16 @@ export default function PainelObras() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const { error } = await supabase.rpc('soft_delete_project', { p_project_id: deleteTarget.id });
+      const { error } = await supabase.rpc("soft_delete_project", {
+        p_project_id: deleteTarget.id,
+      });
       if (error) throw error;
       toast.success(`Obra "${deleteTarget.nome}" movida para a lixeira.`);
-      queryClient.invalidateQueries({ queryKey: ['painel-obras'] });
+      queryClient.invalidateQueries({ queryKey: ["painel-obras"] });
       setDeleteTarget(null);
     } catch (e) {
       console.error(e);
-      toast.error('Erro ao excluir obra. Tente novamente.');
+      toast.error("Erro ao excluir obra. Tente novamente.");
     } finally {
       setDeleting(false);
     }
@@ -480,12 +556,18 @@ export default function PainelObras() {
 
   const filtered = useMemo(() => {
     // Separa obras (execução) de projetos (fase de projeto). Default: obras.
-    let rows = obras.filter((o) => (fase === 'projetos' ? o.is_project_phase : !o.is_project_phase));
+    let rows = obras.filter((o) =>
+      fase === "projetos" ? o.is_project_phase : !o.is_project_phase,
+    );
     if (search.trim()) {
-      rows = rows.filter((o) => matchesSearch(search, [o.nome, o.customer_name, o.responsavel_nome]));
+      rows = rows.filter((o) =>
+        matchesSearch(search, [o.nome, o.customer_name, o.responsavel_nome]),
+      );
     }
     if (filterEtapa !== ALL)
-      rows = rows.filter((o) => (filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa));
+      rows = rows.filter((o) =>
+        filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa,
+      );
     if (filterStatuses.size > 0)
       rows = rows.filter((o) => {
         const display = computeDisplayStatus(o);
@@ -494,22 +576,29 @@ export default function PainelObras() {
       });
     if (filterRelacionamento !== ALL)
       rows = rows.filter((o) =>
-        filterRelacionamento === NONE ? !o.relacionamento : o.relacionamento === filterRelacionamento,
+        filterRelacionamento === NONE
+          ? !o.relacionamento
+          : o.relacionamento === filterRelacionamento,
       );
     if (filterResponsavel !== ALL)
       rows = rows.filter((o) =>
-        filterResponsavel === NONE ? !o.responsavel_id : o.responsavel_id === filterResponsavel,
+        filterResponsavel === NONE
+          ? !o.responsavel_id
+          : o.responsavel_id === filterResponsavel,
       );
     if (sortKey) {
       rows = [...rows].sort((a, b) => {
-        if (sortKey === 'atraso') {
+        if (sortKey === "atraso") {
           const av = computeOverdueDays(a);
           const bv = computeOverdueDays(b);
-          return sortDir === 'asc' ? av - bv : bv - av;
+          return sortDir === "asc" ? av - bv : bv - av;
         }
-        const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
-        if (!av && !bv) return 0; if (!av) return 1; if (!bv) return -1;
-        return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+        const av = a[sortKey] ?? "";
+        const bv = b[sortKey] ?? "";
+        if (!av && !bv) return 0;
+        if (!av) return 1;
+        if (!bv) return -1;
+        return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
       });
     } else {
       // Ordenação padrão: pela etapa canônica e, dentro de Execução, pela
@@ -518,8 +607,12 @@ export default function PainelObras() {
         ETAPA_OPTIONS.map((e, i) => [e, i] as const),
       );
       rows = [...rows].sort((a, b) => {
-        const ai = a.etapa ? (etapaIndex.get(a.etapa) ?? ETAPA_OPTIONS.length) : ETAPA_OPTIONS.length + 1;
-        const bi = b.etapa ? (etapaIndex.get(b.etapa) ?? ETAPA_OPTIONS.length) : ETAPA_OPTIONS.length + 1;
+        const ai = a.etapa
+          ? (etapaIndex.get(a.etapa) ?? ETAPA_OPTIONS.length)
+          : ETAPA_OPTIONS.length + 1;
+        const bi = b.etapa
+          ? (etapaIndex.get(b.etapa) ?? ETAPA_OPTIONS.length)
+          : ETAPA_OPTIONS.length + 1;
         if (ai !== bi) return ai - bi;
         const aw = getEtapaWeek(a);
         const bw = getEtapaWeek(b);
@@ -528,8 +621,8 @@ export default function PainelObras() {
           if (bw == null) return -1;
           if (aw !== bw) return aw - bw;
         }
-        const av = a.entrega_oficial ?? '';
-        const bv = b.entrega_oficial ?? '';
+        const av = a.entrega_oficial ?? "";
+        const bv = b.entrega_oficial ?? "";
         if (!av && !bv) return 0;
         if (!av) return 1;
         if (!bv) return -1;
@@ -537,27 +630,49 @@ export default function PainelObras() {
       });
     }
     return rows;
-  }, [obras, fase, search, filterEtapa, filterStatuses, filterRelacionamento, filterResponsavel, sortKey, sortDir]);
+  }, [
+    obras,
+    fase,
+    search,
+    filterEtapa,
+    filterStatuses,
+    filterRelacionamento,
+    filterResponsavel,
+    sortKey,
+    sortDir,
+  ]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
-    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    else { setSortKey(key); setSortDir('asc'); }
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
   };
 
   const clearFilters = () => {
-    setSearch(''); setFilterEtapa(ALL); setFilterStatuses(new Set()); setFilterRelacionamento(ALL); setFilterResponsavel(ALL);
+    setSearch("");
+    setFilterEtapa(ALL);
+    setFilterStatuses(new Set());
+    setFilterRelacionamento(ALL);
+    setFilterResponsavel(ALL);
   };
 
-  const hasFilters = !!search.trim() || filterEtapa !== ALL || filterStatuses.size > 0 || filterRelacionamento !== ALL || filterResponsavel !== ALL;
+  const hasFilters =
+    !!search.trim() ||
+    filterEtapa !== ALL ||
+    filterStatuses.size > 0 ||
+    filterRelacionamento !== ALL ||
+    filterResponsavel !== ALL;
 
   const summary = useMemo(() => {
     const displayed = obras.map((o) => computeDisplayStatus(o));
     return {
-      total:       obras.length,
-      aguardando:  displayed.filter((s) => s === 'Aguardando').length,
-      emDia:       displayed.filter((s) => s === 'Em dia').length,
-      atrasadas:   displayed.filter((s) => s === 'Atrasado').length,
-      paralisadas: displayed.filter((s) => s === 'Paralisada').length,
+      total: obras.length,
+      aguardando: displayed.filter((s) => s === "Aguardando").length,
+      emDia: displayed.filter((s) => s === "Em dia").length,
+      atrasadas: displayed.filter((s) => s === "Atrasado").length,
+      paralisadas: displayed.filter((s) => s === "Paralisada").length,
     };
   }, [obras]);
 
@@ -569,24 +684,38 @@ export default function PainelObras() {
    */
   const cockpitMetrics = useMemo(() => {
     const inFase = obras.filter((o) =>
-      fase === 'projetos' ? o.is_project_phase : !o.is_project_phase,
+      fase === "projetos" ? o.is_project_phase : !o.is_project_phase,
     );
-    const todayIso = format(new Date(), 'yyyy-MM-dd');
+    const todayIso = format(new Date(), "yyyy-MM-dd");
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-    const sevenDaysIso = format(sevenDaysFromNow, 'yyyy-MM-dd');
-    const atrasadas = inFase.filter((o) => computeDisplayStatus(o) === 'Atrasado').length;
+    const sevenDaysIso = format(sevenDaysFromNow, "yyyy-MM-dd");
+    const atrasadas = inFase.filter(
+      (o) => computeDisplayStatus(o) === "Atrasado",
+    ).length;
     const riscoSemana = inFase.filter((o) => {
       if (!o.entrega_oficial || o.entrega_real) return false;
       // 0..7 dias até o prazo, mas ainda não atrasado.
       return o.entrega_oficial >= todayIso && o.entrega_oficial <= sevenDaysIso;
     }).length;
     const aguardandoAprovacao = inFase.filter(
-      (o) => o.etapa === 'Executivo' || o.etapa === 'Vistoria reprovada' || o.etapa === 'Vistoria',
+      (o) =>
+        o.etapa === "Executivo" ||
+        o.etapa === "Vistoria reprovada" ||
+        o.etapa === "Vistoria",
     ).length;
-    const pendenciasAbertas = inFase.reduce((acc, o) => acc + (o.pending_count ?? 0), 0);
-    const paralisadas = inFase.filter((o) => o.status === 'Paralisada').length;
-    return { atrasadas, riscoSemana, aguardandoAprovacao, pendenciasAbertas, paralisadas };
+    const pendenciasAbertas = inFase.reduce(
+      (acc, o) => acc + (o.pending_count ?? 0),
+      0,
+    );
+    const paralisadas = inFase.filter((o) => o.status === "Paralisada").length;
+    return {
+      atrasadas,
+      riscoSemana,
+      aguardandoAprovacao,
+      pendenciasAbertas,
+      paralisadas,
+    };
   }, [obras, fase]);
 
   /** Aplica/limpa o filtro de status disparado pelos KPIs clicáveis. */
@@ -610,33 +739,48 @@ export default function PainelObras() {
   if (!isStaff) {
     return (
       <PageContainer>
-        <EmptyState icon={ShieldOff} title="Acesso restrito"
-          description="O Painel de Obras é exclusivo da equipe interna." />
+        <EmptyState
+          icon={ShieldOff}
+          title="Acesso restrito"
+          description="O Painel de Obras é exclusivo da equipe interna."
+        />
       </PageContainer>
     );
   }
 
-  const SortableHeader = ({ label, sortKey: k }: { label: string; sortKey: NonNullable<SortKey> }) => {
+  const SortableHeader = ({
+    label,
+    sortKey: k,
+  }: {
+    label: string;
+    sortKey: NonNullable<SortKey>;
+  }) => {
     const isActive = sortKey === k;
-    const Icon = !isActive ? ChevronsUpDown : sortDir === 'asc' ? ChevronUp : ChevronDown;
+    const Icon = !isActive
+      ? ChevronsUpDown
+      : sortDir === "asc"
+        ? ChevronUp
+        : ChevronDown;
     return (
       <button
         type="button"
         onClick={() => toggleSort(k)}
-        aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
-        aria-label={`Ordenar por ${label}${isActive ? (sortDir === 'asc' ? ' (crescente)' : ' (decrescente)') : ''}`}
+        aria-sort={
+          isActive ? (sortDir === "asc" ? "ascending" : "descending") : "none"
+        }
+        aria-label={`Ordenar por ${label}${isActive ? (sortDir === "asc" ? " (crescente)" : " (decrescente)") : ""}`}
         className={cn(
-          'group/sort inline-flex items-center gap-1 rounded uppercase tracking-wide transition-colors',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-          isActive ? 'text-foreground' : 'hover:text-foreground',
+          "group/sort inline-flex items-center gap-1 rounded uppercase tracking-wide transition-colors",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+          isActive ? "text-foreground" : "hover:text-foreground",
         )}
       >
         <span>{label}</span>
         <Icon
           aria-hidden="true"
           className={cn(
-            'h-3 w-3 shrink-0 transition-opacity',
-            isActive ? 'opacity-100' : 'opacity-30 group-hover/sort:opacity-70',
+            "h-3 w-3 shrink-0 transition-opacity",
+            isActive ? "opacity-100" : "opacity-30 group-hover/sort:opacity-70",
           )}
         />
       </button>
@@ -648,44 +792,66 @@ export default function PainelObras() {
       <PageContainer maxWidth="full">
         <PageHeader
           eyebrow="Operações"
-          title={fase === 'projetos' ? 'Painel de Projetos' : 'Painel de Obras'}
+          title={fase === "projetos" ? "Painel de Projetos" : "Painel de Obras"}
           description={
-            fase === 'projetos'
-              ? 'Empreendimentos em fase de projeto — anteprojeto, executivo e aprovações antes da execução em campo.'
-              : 'Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução.'
+            fase === "projetos"
+              ? "Empreendimentos em fase de projeto — anteprojeto, executivo e aprovações antes da execução em campo."
+              : "Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
           }
           actions={
             <div className="hidden md:flex items-center gap-2">
               {/* Toggle de fase: Obras (execução) | Projetos (fase de projeto) */}
-              <div role="tablist" aria-label="Alternar entre obras e projetos" className="inline-flex h-8 rounded-md border border-border-subtle bg-surface p-0.5">
+              <div
+                role="tablist"
+                aria-label="Alternar entre obras e projetos"
+                className="inline-flex h-8 rounded-md border border-border-subtle bg-surface p-0.5"
+              >
                 <button
                   type="button"
                   role="tab"
-                  aria-selected={fase === 'obras'}
-                  onClick={() => handleFaseChange('obras')}
+                  aria-selected={fase === "obras"}
+                  onClick={() => handleFaseChange("obras")}
                   className={cn(
-                    'h-7 px-3 rounded-[5px] text-xs font-medium transition-colors',
-                    fase === 'obras' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground',
+                    "h-7 px-3 rounded-[5px] text-xs font-medium transition-colors",
+                    fase === "obras"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
-                >Obras</button>
+                >
+                  Obras
+                </button>
                 <button
                   type="button"
                   role="tab"
-                  aria-selected={fase === 'projetos'}
-                  onClick={() => handleFaseChange('projetos')}
+                  aria-selected={fase === "projetos"}
+                  onClick={() => handleFaseChange("projetos")}
                   className={cn(
-                    'h-7 px-3 rounded-[5px] text-xs font-medium transition-colors',
-                    fase === 'projetos' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground',
+                    "h-7 px-3 rounded-[5px] text-xs font-medium transition-colors",
+                    fase === "projetos"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
-                >Projetos</button>
+                >
+                  Projetos
+                </button>
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate('/gestao/cs/operacional')} className="h-8 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/gestao/cs/operacional")}
+                className="h-8 gap-2"
+              >
                 <Headset className="h-4 w-4" />
                 <span className="hidden sm:inline">Customer Success</span>
                 <ArrowRight className="h-3.5 w-3.5 opacity-60" />
               </Button>
-              <Button size="sm" onClick={() => navigate('/gestao/nova-obra')} className="h-8 gap-2">
-                <Plus className="h-4 w-4" />Nova obra
+              <Button
+                size="sm"
+                onClick={() => navigate("/gestao/nova-obra")}
+                className="h-8 gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Nova obra
               </Button>
             </div>
           }
@@ -695,33 +861,49 @@ export default function PainelObras() {
 
         {/* Mobile: toggle Obras/Projetos compacto acima da listagem */}
         <div className="md:hidden mt-2 px-3">
-          <div role="tablist" aria-label="Alternar entre obras e projetos" className="inline-flex h-9 rounded-md border border-border-subtle bg-surface p-0.5 w-full">
+          <div
+            role="tablist"
+            aria-label="Alternar entre obras e projetos"
+            className="inline-flex h-9 rounded-md border border-border-subtle bg-surface p-0.5 w-full"
+          >
             <button
               type="button"
               role="tab"
-              aria-selected={fase === 'obras'}
-              onClick={() => handleFaseChange('obras')}
+              aria-selected={fase === "obras"}
+              onClick={() => handleFaseChange("obras")}
               className={cn(
-                'flex-1 h-8 rounded-[5px] text-sm font-medium transition-colors',
-                fase === 'obras' ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
+                "flex-1 h-8 rounded-[5px] text-sm font-medium transition-colors",
+                fase === "obras"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground",
               )}
-            >Obras</button>
+            >
+              Obras
+            </button>
             <button
               type="button"
               role="tab"
-              aria-selected={fase === 'projetos'}
-              onClick={() => handleFaseChange('projetos')}
+              aria-selected={fase === "projetos"}
+              onClick={() => handleFaseChange("projetos")}
               className={cn(
-                'flex-1 h-8 rounded-[5px] text-sm font-medium transition-colors',
-                fase === 'projetos' ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
+                "flex-1 h-8 rounded-[5px] text-sm font-medium transition-colors",
+                fase === "projetos"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground",
               )}
-            >Projetos</button>
+            >
+              Projetos
+            </button>
           </div>
         </div>
 
-
         {/* Delete confirmation dialog */}
-        <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o && !deleting) setDeleteTarget(null); }}>
+        <AlertDialog
+          open={!!deleteTarget}
+          onOpenChange={(o) => {
+            if (!o && !deleting) setDeleteTarget(null);
+          }}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-destructive">
@@ -745,13 +927,15 @@ export default function PainelObras() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel disabled={deleting}>
+                Cancelar
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteConfirm}
                 disabled={deleting}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deleting ? 'Excluindo…' : 'Sim, excluir obra'}
+                {deleting ? "Excluindo…" : "Sim, excluir obra"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -760,7 +944,9 @@ export default function PainelObras() {
         {/* Popup "Dados do cliente" — feature completa em dialog (Contratante / Imóvel / Info). */}
         <DadosClienteDialog
           open={!!dadosTarget}
-          onOpenChange={(o) => { if (!o) setDadosTarget(null); }}
+          onOpenChange={(o) => {
+            if (!o) setDadosTarget(null);
+          }}
           projectId={dadosTarget?.id ?? null}
           projectName={dadosTarget?.nome ?? null}
           customerName={dadosTarget?.customer_name ?? null}
@@ -802,57 +988,67 @@ export default function PainelObras() {
             onOpen={(id) => navigate(`/obra/${id}`)}
             onOpenDados={(o) => setDadosTarget(o)}
             onDeleteRequest={(o) => setDeleteTarget(o)}
-            onCreate={() => navigate('/gestao/nova-obra')}
+            onCreate={() => navigate("/gestao/nova-obra")}
             expandedIds={expandedIds}
             onToggleExpanded={toggleExpanded}
           />
 
           {/* ── Desktop: toolbar + tabela/board/kanban (preserva comportamento) ── */}
           <div className="hidden md:block">
-          {/*
+            {/*
             Cockpit operacional — KPIs no topo respondem em <5s "qual obra
             está em risco hoje?". Cada métrica é clicável e aplica filtro
             correspondente na tabela. Cores apenas via tokens semânticos.
           */}
-          {!isLoading && obras.length > 0 && (
-            <div className="mb-3">
-              <MetricRail>
-                <MetricCard
-                  label="Atrasadas"
-                  value={cockpitMetrics.atrasadas}
-                  hint="Status atrasado"
-                  accent={cockpitMetrics.atrasadas > 0 ? 'destructive' : 'muted'}
-                  onClick={() => applyStatusFilter('Atrasado')}
-                />
-                <MetricCard
-                  label="Risco semana"
-                  value={cockpitMetrics.riscoSemana}
-                  hint="Entrega em ≤ 7 dias"
-                  accent={cockpitMetrics.riscoSemana > 0 ? 'warning' : 'muted'}
-                />
-                <MetricCard
-                  label="Aprovação pendente"
-                  value={cockpitMetrics.aguardandoAprovacao}
-                  hint="Executivo / Vistoria"
-                  accent={cockpitMetrics.aguardandoAprovacao > 0 ? 'info' : 'muted'}
-                />
-                <MetricCard
-                  label="Pendências"
-                  value={cockpitMetrics.pendenciasAbertas}
-                  hint="Total de itens abertos"
-                  accent={cockpitMetrics.pendenciasAbertas > 0 ? 'warning' : 'muted'}
-                />
-                <MetricCard
-                  label="Paralisadas"
-                  value={cockpitMetrics.paralisadas}
-                  hint="Sem progresso"
-                  accent={cockpitMetrics.paralisadas > 0 ? 'destructive' : 'muted'}
-                  onClick={() => applyStatusFilter('Paralisada')}
-                />
-              </MetricRail>
-            </div>
-          )}
-          {/*
+            {!isLoading && obras.length > 0 && (
+              <div className="mb-3">
+                <MetricRail>
+                  <MetricCard
+                    label="Atrasadas"
+                    value={cockpitMetrics.atrasadas}
+                    hint="Status atrasado"
+                    accent={
+                      cockpitMetrics.atrasadas > 0 ? "destructive" : "muted"
+                    }
+                    onClick={() => applyStatusFilter("Atrasado")}
+                  />
+                  <MetricCard
+                    label="Risco semana"
+                    value={cockpitMetrics.riscoSemana}
+                    hint="Entrega em ≤ 7 dias"
+                    accent={
+                      cockpitMetrics.riscoSemana > 0 ? "warning" : "muted"
+                    }
+                  />
+                  <MetricCard
+                    label="Aprovação pendente"
+                    value={cockpitMetrics.aguardandoAprovacao}
+                    hint="Executivo / Vistoria"
+                    accent={
+                      cockpitMetrics.aguardandoAprovacao > 0 ? "info" : "muted"
+                    }
+                  />
+                  <MetricCard
+                    label="Pendências"
+                    value={cockpitMetrics.pendenciasAbertas}
+                    hint="Total de itens abertos"
+                    accent={
+                      cockpitMetrics.pendenciasAbertas > 0 ? "warning" : "muted"
+                    }
+                  />
+                  <MetricCard
+                    label="Paralisadas"
+                    value={cockpitMetrics.paralisadas}
+                    hint="Sem progresso"
+                    accent={
+                      cockpitMetrics.paralisadas > 0 ? "destructive" : "muted"
+                    }
+                    onClick={() => applyStatusFilter("Paralisada")}
+                  />
+                </MetricRail>
+              </div>
+            )}
+            {/*
             Toolbar redesenhada — referência híbrida (Linear + Notion):
             - linha única densa (h-9), divisores verticais entre grupos
             - search compacto, filtros como chips com label inline + contador
@@ -868,19 +1064,22 @@ export default function PainelObras() {
                 (filterResponsavel !== ALL ? 1 : 0);
 
               const chipBase =
-                'h-8 inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface px-2.5 text-xs font-normal text-foreground/80 hover:bg-accent/60 hover:text-foreground transition-colors';
+                "h-8 inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface px-2.5 text-xs font-normal text-foreground/80 hover:bg-accent/60 hover:text-foreground transition-colors";
               const chipActive =
-                'border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10';
+                "border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10";
 
               const triggerClass = (active: boolean) =>
                 cn(
-                  'h-8 w-auto min-w-0 gap-1.5 px-2.5 text-xs font-normal border-border-subtle bg-surface',
-                  '[&>svg:last-child]:opacity-50',
-                  active && 'border-primary/40 bg-primary/5 text-foreground',
+                  "h-8 w-auto min-w-0 gap-1.5 px-2.5 text-xs font-normal border-border-subtle bg-surface",
+                  "[&>svg:last-child]:opacity-50",
+                  active && "border-primary/40 bg-primary/5 text-foreground",
                 );
 
               const Divider = () => (
-                <span aria-hidden className="hidden md:block h-5 w-px bg-border-subtle/80 mx-0.5" />
+                <span
+                  aria-hidden
+                  className="hidden md:block h-5 w-px bg-border-subtle/80 mx-0.5"
+                />
               );
 
               return (
@@ -898,7 +1097,7 @@ export default function PainelObras() {
                     {search && (
                       <button
                         type="button"
-                        onClick={() => setSearch('')}
+                        onClick={() => setSearch("")}
                         aria-label="Limpar busca"
                         className="absolute right-1.5 top-1/2 -translate-y-1/2 h-5 w-5 inline-flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent"
                       >
@@ -918,7 +1117,10 @@ export default function PainelObras() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className={cn(chipBase, filterStatuses.size > 0 && chipActive)}
+                          className={cn(
+                            chipBase,
+                            filterStatuses.size > 0 && chipActive,
+                          )}
                           aria-label="Filtrar por status"
                         >
                           <Filter className="h-3.5 w-3.5 opacity-60" />
@@ -951,7 +1153,7 @@ export default function PainelObras() {
                         <div className="flex flex-col">
                           {[NONE, ...STATUS_OPTIONS].map((s) => {
                             const checked = filterStatuses.has(s);
-                            const label = s === NONE ? '(sem status)' : s;
+                            const label = s === NONE ? "(sem status)" : s;
                             return (
                               <button
                                 type="button"
@@ -960,24 +1162,27 @@ export default function PainelObras() {
                                 role="menuitemcheckbox"
                                 aria-checked={checked}
                                 className={cn(
-                                  'flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs text-left',
-                                  'hover:bg-accent hover:text-accent-foreground',
-                                  'focus:outline-none focus:bg-accent',
+                                  "flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs text-left",
+                                  "hover:bg-accent hover:text-accent-foreground",
+                                  "focus:outline-none focus:bg-accent",
                                 )}
                               >
                                 <span
                                   className={cn(
-                                    'flex h-4 w-4 items-center justify-center rounded border',
+                                    "flex h-4 w-4 items-center justify-center rounded border",
                                     checked
-                                      ? 'bg-primary border-primary text-primary-foreground'
-                                      : 'border-border bg-surface',
+                                      ? "bg-primary border-primary text-primary-foreground"
+                                      : "border-border bg-surface",
                                   )}
                                 >
                                   {checked && <Check className="h-3 w-3" />}
                                 </span>
                                 {s !== NONE && (
                                   <span
-                                    className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(s as PainelStatus))}
+                                    className={cn(
+                                      "h-1.5 w-1.5 rounded-full shrink-0",
+                                      statusDotClass(s as PainelStatus),
+                                    )}
                                     aria-hidden
                                   />
                                 )}
@@ -987,58 +1192,98 @@ export default function PainelObras() {
                           })}
                         </div>
                         <p className="px-2 pt-1.5 pb-1 text-[10px] text-muted-foreground leading-snug">
-                          Vazio mostra todos. Refina cards mesmo no Kanban agrupado por status.
+                          Vazio mostra todos. Refina cards mesmo no Kanban
+                          agrupado por status.
                         </p>
                       </PopoverContent>
                     </Popover>
 
                     {/* Etapa */}
                     <Select value={filterEtapa} onValueChange={setFilterEtapa}>
-                      <SelectTrigger className={triggerClass(filterEtapa !== ALL)} aria-label="Filtrar por etapa">
+                      <SelectTrigger
+                        className={triggerClass(filterEtapa !== ALL)}
+                        aria-label="Filtrar por etapa"
+                      >
                         <span className="text-muted-foreground">Etapa</span>
                         <span className="text-foreground/90 truncate max-w-[110px]">
-                          {filterEtapa === ALL ? 'todas' : filterEtapa === NONE ? '(sem)' : filterEtapa}
+                          {filterEtapa === ALL
+                            ? "todas"
+                            : filterEtapa === NONE
+                              ? "(sem)"
+                              : filterEtapa}
                         </span>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={ALL}>Todas etapas</SelectItem>
                         <SelectItem value={NONE}>(sem etapa)</SelectItem>
-                        {ETAPA_OPTIONS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                        {ETAPA_OPTIONS.map((e) => (
+                          <SelectItem key={e} value={e}>
+                            {e}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
 
                     {/* Relacionamento */}
-                    <Select value={filterRelacionamento} onValueChange={setFilterRelacionamento}>
-                      <SelectTrigger className={triggerClass(filterRelacionamento !== ALL)} aria-label="Filtrar por relacionamento">
+                    <Select
+                      value={filterRelacionamento}
+                      onValueChange={setFilterRelacionamento}
+                    >
+                      <SelectTrigger
+                        className={triggerClass(filterRelacionamento !== ALL)}
+                        aria-label="Filtrar por relacionamento"
+                      >
                         <span className="text-muted-foreground">Relac.</span>
                         <span className="text-foreground/90 truncate max-w-[110px]">
-                          {filterRelacionamento === ALL ? 'todos' : filterRelacionamento === NONE ? '(sem)' : filterRelacionamento}
+                          {filterRelacionamento === ALL
+                            ? "todos"
+                            : filterRelacionamento === NONE
+                              ? "(sem)"
+                              : filterRelacionamento}
                         </span>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={ALL}>Todos relacionamentos</SelectItem>
-                        <SelectItem value={NONE}>(sem relacionamento)</SelectItem>
-                        {RELACIONAMENTO_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        <SelectItem value={ALL}>
+                          Todos relacionamentos
+                        </SelectItem>
+                        <SelectItem value={NONE}>
+                          (sem relacionamento)
+                        </SelectItem>
+                        {RELACIONAMENTO_OPTIONS.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {r}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
 
                     {/* Responsável */}
-                    <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
-                      <SelectTrigger className={triggerClass(filterResponsavel !== ALL)} aria-label="Filtrar por responsável">
+                    <Select
+                      value={filterResponsavel}
+                      onValueChange={setFilterResponsavel}
+                    >
+                      <SelectTrigger
+                        className={triggerClass(filterResponsavel !== ALL)}
+                        aria-label="Filtrar por responsável"
+                      >
                         <span className="text-muted-foreground">Resp.</span>
                         <span className="text-foreground/90 truncate max-w-[120px]">
                           {filterResponsavel === ALL
-                            ? 'todos'
+                            ? "todos"
                             : filterResponsavel === NONE
-                              ? '(sem)'
-                              : staffUsers.find((u) => u.id === filterResponsavel)?.nome ?? 'selecionado'}
+                              ? "(sem)"
+                              : (staffUsers.find(
+                                  (u) => u.id === filterResponsavel,
+                                )?.nome ?? "selecionado")}
                         </span>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={ALL}>Todos responsáveis</SelectItem>
                         <SelectItem value={NONE}>(sem responsável)</SelectItem>
                         {staffUsers.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.nome}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1049,12 +1294,14 @@ export default function PainelObras() {
                         variant="ghost"
                         onClick={clearFilters}
                         className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
-                        aria-label={`Limpar ${activeFilterCount} filtro${activeFilterCount > 1 ? 's' : ''}`}
+                        aria-label={`Limpar ${activeFilterCount} filtro${activeFilterCount > 1 ? "s" : ""}`}
                         title="Limpar todos os filtros"
                       >
                         <X className="h-3.5 w-3.5" />
                         Limpar
-                        <span className="tabular-nums opacity-60">({activeFilterCount})</span>
+                        <span className="tabular-nums opacity-60">
+                          ({activeFilterCount})
+                        </span>
                       </Button>
                     )}
                   </div>
@@ -1062,43 +1309,68 @@ export default function PainelObras() {
                   {/* Lado direito: contador + ordenação (kanban) + view switcher + densidade */}
                   <div className="flex items-center gap-2 ml-auto flex-wrap">
                     <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-                      <span className="font-semibold text-foreground">{filtered.length}</span>
+                      <span className="font-semibold text-foreground">
+                        {filtered.length}
+                      </span>
                       <span className="opacity-60"> de {obras.length}</span>
                     </span>
 
-                    {activeView === 'kanban' && (
+                    {activeView === "kanban" && (
                       <>
                         <Divider />
                         <div className="flex items-center gap-1">
                           <Select
-                            value={sortKey ?? 'default'}
+                            value={sortKey ?? "default"}
                             onValueChange={(v) => {
-                              if (v === 'default') { setSortKey(null); setSortDir('asc'); }
-                              else { setSortKey(v as NonNullable<SortKey>); }
+                              if (v === "default") {
+                                setSortKey(null);
+                                setSortDir("asc");
+                              } else {
+                                setSortKey(v as NonNullable<SortKey>);
+                              }
                             }}
                           >
-                            <SelectTrigger className={triggerClass(!!sortKey)} aria-label="Ordenar cards">
-                              <span className="text-muted-foreground">Ordenar</span>
+                            <SelectTrigger
+                              className={triggerClass(!!sortKey)}
+                              aria-label="Ordenar cards"
+                            >
+                              <span className="text-muted-foreground">
+                                Ordenar
+                              </span>
                               <span className="text-foreground/90 truncate max-w-[120px]">
                                 {sortKey
-                                  ? ({
-                                      entrega_oficial: 'entrega oficial',
-                                      inicio_oficial: 'início oficial',
-                                      entrega_real: 'entrega real',
-                                      inicio_real: 'início real',
-                                      responsavel_nome: 'responsável',
-                                      atraso: 'atraso',
-                                    } as Record<string, string>)[sortKey] ?? 'custom'
-                                  : 'padrão'}
+                                  ? ((
+                                      {
+                                        entrega_oficial: "entrega oficial",
+                                        inicio_oficial: "início oficial",
+                                        entrega_real: "entrega real",
+                                        inicio_real: "início real",
+                                        responsavel_nome: "responsável",
+                                        atraso: "atraso",
+                                      } as Record<string, string>
+                                    )[sortKey] ?? "custom")
+                                  : "padrão"}
                               </span>
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="default">Entrega + próxima (padrão)</SelectItem>
-                              <SelectItem value="entrega_oficial">Entrega oficial</SelectItem>
-                              <SelectItem value="inicio_oficial">Início oficial</SelectItem>
-                              <SelectItem value="entrega_real">Entrega real</SelectItem>
-                              <SelectItem value="inicio_real">Início real</SelectItem>
-                              <SelectItem value="responsavel_nome">Responsável</SelectItem>
+                              <SelectItem value="default">
+                                Entrega + próxima (padrão)
+                              </SelectItem>
+                              <SelectItem value="entrega_oficial">
+                                Entrega oficial
+                              </SelectItem>
+                              <SelectItem value="inicio_oficial">
+                                Início oficial
+                              </SelectItem>
+                              <SelectItem value="entrega_real">
+                                Entrega real
+                              </SelectItem>
+                              <SelectItem value="inicio_real">
+                                Início real
+                              </SelectItem>
+                              <SelectItem value="responsavel_nome">
+                                Responsável
+                              </SelectItem>
                               <SelectItem value="atraso">Atraso</SelectItem>
                             </SelectContent>
                           </Select>
@@ -1106,13 +1378,21 @@ export default function PainelObras() {
                             type="button"
                             size="sm"
                             variant="ghost"
-                            onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+                            onClick={() =>
+                              setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+                            }
                             disabled={!sortKey}
                             className="h-8 w-8 p-0 text-xs border border-border-subtle bg-surface"
-                            aria-label={`Direção: ${sortDir === 'asc' ? 'crescente' : 'decrescente'}`}
-                            title={sortDir === 'asc' ? 'Crescente' : 'Decrescente'}
+                            aria-label={`Direção: ${sortDir === "asc" ? "crescente" : "decrescente"}`}
+                            title={
+                              sortDir === "asc" ? "Crescente" : "Decrescente"
+                            }
                           >
-                            {sortDir === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                            {sortDir === "asc" ? (
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            )}
                           </Button>
                         </div>
                       </>
@@ -1130,13 +1410,13 @@ export default function PainelObras() {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        aria-pressed={activeView === 'table'}
-                        onClick={() => handleViewChange('table')}
+                        aria-pressed={activeView === "table"}
+                        onClick={() => handleViewChange("table")}
                         className={cn(
-                          'h-7 gap-1.5 px-2 text-xs font-normal',
-                          activeView === 'table'
-                            ? 'bg-accent text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground',
+                          "h-7 gap-1.5 px-2 text-xs font-normal",
+                          activeView === "table"
+                            ? "bg-accent text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
                         )}
                         title="Tabela"
                       >
@@ -1147,13 +1427,13 @@ export default function PainelObras() {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        aria-pressed={activeView === 'board'}
-                        onClick={() => handleViewChange('board')}
+                        aria-pressed={activeView === "board"}
+                        onClick={() => handleViewChange("board")}
                         className={cn(
-                          'h-7 gap-1.5 px-2 text-xs font-normal',
-                          activeView === 'board'
-                            ? 'bg-accent text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground',
+                          "h-7 gap-1.5 px-2 text-xs font-normal",
+                          activeView === "board"
+                            ? "bg-accent text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
                         )}
                         title="Board agrupado por etapa"
                       >
@@ -1164,13 +1444,13 @@ export default function PainelObras() {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        aria-pressed={activeView === 'kanban'}
-                        onClick={() => handleViewChange('kanban')}
+                        aria-pressed={activeView === "kanban"}
+                        onClick={() => handleViewChange("kanban")}
                         className={cn(
-                          'h-7 gap-1.5 px-2 text-xs font-normal',
-                          activeView === 'kanban'
-                            ? 'bg-accent text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground',
+                          "h-7 gap-1.5 px-2 text-xs font-normal",
+                          activeView === "kanban"
+                            ? "bg-accent text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
                         )}
                         title="Kanban"
                       >
@@ -1180,18 +1460,30 @@ export default function PainelObras() {
                     </div>
 
                     {/* Densidade — ícone-only, alinhado ao switcher */}
-                    {activeView !== 'kanban' && (
+                    {activeView !== "kanban" && (
                       <Button
                         type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
+                        onClick={() =>
+                          setDensity((d) =>
+                            d === "compact" ? "comfortable" : "compact",
+                          )
+                        }
                         className="h-8 w-8 p-0 border border-border-subtle bg-surface text-muted-foreground hover:text-foreground"
-                        aria-pressed={density === 'compact'}
-                        aria-label={density === 'compact' ? 'Densidade compacta — alternar para confortável' : 'Densidade confortável — alternar para compacta'}
-                        title={density === 'compact' ? 'Compacta (clique p/ confortável)' : 'Confortável (clique p/ compacta)'}
+                        aria-pressed={density === "compact"}
+                        aria-label={
+                          density === "compact"
+                            ? "Densidade compacta — alternar para confortável"
+                            : "Densidade confortável — alternar para compacta"
+                        }
+                        title={
+                          density === "compact"
+                            ? "Compacta (clique p/ confortável)"
+                            : "Confortável (clique p/ compacta)"
+                        }
                       >
-                        {density === 'compact' ? (
+                        {density === "compact" ? (
                           <Maximize2 className="h-3.5 w-3.5" />
                         ) : (
                           <Minimize2 className="h-3.5 w-3.5" />
@@ -1203,12 +1495,11 @@ export default function PainelObras() {
               );
             })()}
 
-
             <div className="mt-2">
               {isLoading ? (
-                activeView === 'board' ? (
+                activeView === "board" ? (
                   <BoardSkeleton densityTableClass={densityTableClass} />
-                ) : activeView === 'kanban' ? (
+                ) : activeView === "kanban" ? (
                   <KanbanSkeleton />
                 ) : (
                   <TableSkeleton densityTableClass={densityTableClass} />
@@ -1217,22 +1508,34 @@ export default function PainelObras() {
                 <SectionCard>
                   <EmptyState
                     icon={Table2}
-                    title={obras.length === 0 ? 'Nenhuma obra cadastrada' : 'Nenhum resultado'}
+                    title={
+                      obras.length === 0
+                        ? "Nenhuma obra cadastrada"
+                        : "Nenhum resultado"
+                    }
                     description={
                       obras.length === 0
-                        ? 'Crie sua primeira obra para começar a monitorar status, prazos e relacionamento da equipe.'
-                        : 'Nenhuma obra corresponde aos filtros atuais. Ajuste os filtros ou limpe-os para ver todas as obras.'
+                        ? "Crie sua primeira obra para começar a monitorar status, prazos e relacionamento da equipe."
+                        : "Nenhuma obra corresponde aos filtros atuais. Ajuste os filtros ou limpe-os para ver todas as obras."
                     }
                     action={
                       obras.length === 0
-                        ? { label: 'Nova obra', onClick: () => navigate('/gestao/nova-obra'), icon: Plus }
+                        ? {
+                            label: "Nova obra",
+                            onClick: () => navigate("/gestao/nova-obra"),
+                            icon: Plus,
+                          }
                         : hasFilters
-                          ? { label: 'Limpar filtros', onClick: clearFilters, icon: RotateCcw }
+                          ? {
+                              label: "Limpar filtros",
+                              onClick: clearFilters,
+                              icon: RotateCcw,
+                            }
                           : undefined
                     }
                   />
                 </SectionCard>
-              ) : activeView === 'kanban' ? (
+              ) : activeView === "kanban" ? (
                 <KanbanView
                   obras={filtered}
                   groupBy={kanbanGroupBy}
@@ -1253,7 +1556,7 @@ export default function PainelObras() {
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                   onUpdateStatus={(id, status) => updateObra(id, { status })}
                 />
-              ) : activeView === 'board' ? (
+              ) : activeView === "board" ? (
                 <BoardView
                   obras={filtered}
                   staffUsers={staffUsers}
@@ -1271,21 +1574,74 @@ export default function PainelObras() {
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
-                    <Table className={cn('min-w-max text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-2 sm:[&_td]:px-3 [&_th]:px-2 sm:[&_th]:px-3 [&_td]:whitespace-nowrap [&_th]:text-[10px] sm:[&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
+                    <Table
+                      className={cn(
+                        "min-w-max text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-2 sm:[&_td]:px-3 [&_th]:px-2 sm:[&_th]:px-3 [&_td]:whitespace-nowrap [&_th]:text-[10px] sm:[&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
+                        densityTableClass,
+                      )}
+                    >
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
-                          <TableHead data-testid="painel-obras-th-cliente" className="w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
-                          <TableHead className="w-[52px] sm:w-[60px] text-center" aria-label="Dados do cliente">Dados</TableHead>
-                          <TableHead data-testid="painel-obras-th-status" className="min-w-[112px] sm:min-w-[140px]">Status</TableHead>
-                          <TableHead className="min-w-[128px] sm:min-w-[160px]">Etapa</TableHead>
-                          <TableHead className="min-w-[112px] sm:min-w-[140px] text-right">Progresso</TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px]"><SortableHeader label="Início Of." sortKey="inicio_oficial" /></TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px]"><SortableHeader label="Entrega Of." sortKey="entrega_oficial" /></TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px]"><SortableHeader label="Início Real" sortKey="inicio_real" /></TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px]"><SortableHeader label="Entrega Real" sortKey="entrega_real" /></TableHead>
-                          <TableHead className="min-w-[120px] sm:min-w-[150px]">Relacionamento</TableHead>
-                          <TableHead className="min-w-[140px] sm:min-w-[180px]"><SortableHeader label="Responsável" sortKey="responsavel_nome" /></TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px] text-right"><SortableHeader label="Atraso" sortKey="atraso" /></TableHead>
+                          <TableHead
+                            data-testid="painel-obras-th-cliente"
+                            className="w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle"
+                          >
+                            Cliente / Obra
+                          </TableHead>
+                          <TableHead
+                            className="w-[52px] sm:w-[60px] text-center"
+                            aria-label="Dados do cliente"
+                          >
+                            Dados
+                          </TableHead>
+                          <TableHead
+                            data-testid="painel-obras-th-status"
+                            className="min-w-[112px] sm:min-w-[140px]"
+                          >
+                            Status
+                          </TableHead>
+                          <TableHead className="min-w-[128px] sm:min-w-[160px]">
+                            Etapa
+                          </TableHead>
+                          <TableHead className="min-w-[112px] sm:min-w-[140px] text-right">
+                            Progresso
+                          </TableHead>
+                          <TableHead className="min-w-[96px] sm:min-w-[120px]">
+                            <SortableHeader
+                              label="Início Of."
+                              sortKey="inicio_oficial"
+                            />
+                          </TableHead>
+                          <TableHead className="min-w-[96px] sm:min-w-[120px]">
+                            <SortableHeader
+                              label="Entrega Of."
+                              sortKey="entrega_oficial"
+                            />
+                          </TableHead>
+                          <TableHead className="min-w-[96px] sm:min-w-[120px]">
+                            <SortableHeader
+                              label="Início Real"
+                              sortKey="inicio_real"
+                            />
+                          </TableHead>
+                          <TableHead className="min-w-[96px] sm:min-w-[120px]">
+                            <SortableHeader
+                              label="Entrega Real"
+                              sortKey="entrega_real"
+                            />
+                          </TableHead>
+                          <TableHead className="min-w-[120px] sm:min-w-[150px]">
+                            Relacionamento
+                          </TableHead>
+                          <TableHead className="min-w-[140px] sm:min-w-[180px]">
+                            <SortableHeader
+                              label="Responsável"
+                              sortKey="responsavel_nome"
+                            />
+                          </TableHead>
+                          <TableHead className="min-w-[96px] sm:min-w-[120px] text-right">
+                            <SortableHeader label="Atraso" sortKey="atraso" />
+                          </TableHead>
                           <TableHead className="w-12 sm:w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
@@ -1341,27 +1697,46 @@ interface ObraRowProps {
 // reduzir layout shift quando os dados chegam. Usam tokens neutros (Skeleton
 // shadcn) e respeitam a densidade selecionada para alinhar com a tabela final.
 
-const TABLE_COLS: { width: string; align?: 'right' | 'center' }[] = [
-  { width: 'w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px]' }, // Cliente / Obra (sticky)
-  { width: 'w-[52px] sm:w-[60px]', align: 'center' },        // Dados
-  { width: 'min-w-[112px] sm:min-w-[140px]' },               // Status
-  { width: 'min-w-[128px] sm:min-w-[160px]' },               // Etapa
-  { width: 'min-w-[112px] sm:min-w-[140px]', align: 'right' }, // Progresso
-  { width: 'min-w-[96px] sm:min-w-[120px]' },                // Início Of.
-  { width: 'min-w-[96px] sm:min-w-[120px]' },                // Entrega Of.
-  { width: 'min-w-[96px] sm:min-w-[120px]' },                // Início Real
-  { width: 'min-w-[96px] sm:min-w-[120px]' },                // Entrega Real
-  { width: 'min-w-[120px] sm:min-w-[150px]' },               // Relacionamento
-  { width: 'min-w-[140px] sm:min-w-[180px]' },               // Responsável
-  { width: 'min-w-[96px] sm:min-w-[120px]', align: 'right' }, // Atraso
-  { width: 'w-12 sm:w-16' },                                  // Ações
+const TABLE_COLS: { width: string; align?: "right" | "center" }[] = [
+  {
+    width:
+      "w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px]",
+  }, // Cliente / Obra (sticky)
+  { width: "w-[52px] sm:w-[60px]", align: "center" }, // Dados
+  { width: "min-w-[112px] sm:min-w-[140px]" }, // Status
+  { width: "min-w-[128px] sm:min-w-[160px]" }, // Etapa
+  { width: "min-w-[112px] sm:min-w-[140px]", align: "right" }, // Progresso
+  { width: "min-w-[96px] sm:min-w-[120px]" }, // Início Of.
+  { width: "min-w-[96px] sm:min-w-[120px]" }, // Entrega Of.
+  { width: "min-w-[96px] sm:min-w-[120px]" }, // Início Real
+  { width: "min-w-[96px] sm:min-w-[120px]" }, // Entrega Real
+  { width: "min-w-[120px] sm:min-w-[150px]" }, // Relacionamento
+  { width: "min-w-[140px] sm:min-w-[180px]" }, // Responsável
+  { width: "min-w-[96px] sm:min-w-[120px]", align: "right" }, // Atraso
+  { width: "w-12 sm:w-16" }, // Ações
 ];
 
-function TableSkeleton({ densityTableClass, rows = 8 }: { densityTableClass: string; rows?: number }) {
+function TableSkeleton({
+  densityTableClass,
+  rows = 8,
+}: {
+  densityTableClass: string;
+  rows?: number;
+}) {
   return (
     <SectionCard flush>
-      <div className="overflow-x-auto" aria-busy="true" aria-live="polite" aria-label="Carregando obras">
-        <Table className={cn('min-w-max text-sm [&_th]:px-2 sm:[&_th]:px-3 [&_td]:px-2 sm:[&_td]:px-3 [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
+      <div
+        className="overflow-x-auto"
+        aria-busy="true"
+        aria-live="polite"
+        aria-label="Carregando obras"
+      >
+        <Table
+          className={cn(
+            "min-w-max text-sm [&_th]:px-2 sm:[&_th]:px-3 [&_td]:px-2 sm:[&_td]:px-3 [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
+            densityTableClass,
+          )}
+        >
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border-subtle">
               {TABLE_COLS.map((c, i) => (
@@ -1369,8 +1744,9 @@ function TableSkeleton({ densityTableClass, rows = 8 }: { densityTableClass: str
                   key={i}
                   className={cn(
                     c.width,
-                    'bg-surface-sunken text-[11px] uppercase tracking-[0.04em] text-muted-foreground',
-                    i === 0 && 'sticky left-0 z-table-header-corner-left border-r border-border-subtle',
+                    "bg-surface-sunken text-[11px] uppercase tracking-[0.04em] text-muted-foreground",
+                    i === 0 &&
+                      "sticky left-0 z-table-header-corner-left border-r border-border-subtle",
                   )}
                 >
                   <Skeleton className="h-3 w-16" />
@@ -1386,7 +1762,8 @@ function TableSkeleton({ densityTableClass, rows = 8 }: { densityTableClass: str
                     key={cIdx}
                     className={cn(
                       c.width,
-                      cIdx === 0 && 'sticky left-0 bg-card border-r border-border',
+                      cIdx === 0 &&
+                        "sticky left-0 bg-card border-r border-border",
                     )}
                   >
                     {cIdx === 0 ? (
@@ -1401,11 +1778,11 @@ function TableSkeleton({ densityTableClass, rows = 8 }: { densityTableClass: str
                         <Skeleton className="h-1.5 w-14 rounded-full" />
                         <Skeleton className="h-3 w-7" />
                       </div>
-                    ) : c.align === 'center' ? (
+                    ) : c.align === "center" ? (
                       <div className="flex justify-center">
                         <Skeleton className="h-4 w-4 rounded" />
                       </div>
-                    ) : c.align === 'right' ? (
+                    ) : c.align === "right" ? (
                       <div className="flex justify-end">
                         <Skeleton className="h-3 w-10" />
                       </div>
@@ -1426,17 +1803,25 @@ function TableSkeleton({ densityTableClass, rows = 8 }: { densityTableClass: str
 function BoardSkeleton({ densityTableClass }: { densityTableClass: string }) {
   // Board agrupa por status — simulamos 3 grupos com cabeçalho + tabela compacta
   const groups = [
-    { color: 'bg-success/30', count: 4 },
-    { color: 'bg-info/30', count: 3 },
-    { color: 'bg-destructive/30', count: 2 },
+    { color: "bg-success/30", count: 4 },
+    { color: "bg-info/30", count: 3 },
+    { color: "bg-destructive/30", count: 2 },
   ];
   return (
-    <div className="space-y-3" aria-busy="true" aria-live="polite" aria-label="Carregando obras">
+    <div
+      className="space-y-3"
+      aria-busy="true"
+      aria-live="polite"
+      aria-label="Carregando obras"
+    >
       {groups.map((g, gi) => (
         <SectionCard key={gi} flush>
           {/* Group header */}
           <div className="flex items-center gap-3 px-3 py-2 border-b border-border-subtle bg-surface-sunken/50">
-            <span className={cn('h-2 w-2 rounded-full', g.color)} aria-hidden="true" />
+            <span
+              className={cn("h-2 w-2 rounded-full", g.color)}
+              aria-hidden="true"
+            />
             <Skeleton className="h-3.5 w-32" />
             <Skeleton className="h-3 w-8 ml-auto" />
           </div>
@@ -1451,7 +1836,12 @@ function KanbanSkeleton() {
   // Kanban: 4 colunas com 2-4 cartões cada
   const cols = [3, 4, 2, 3];
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2" aria-busy="true" aria-live="polite" aria-label="Carregando obras">
+    <div
+      className="flex gap-3 overflow-x-auto pb-2"
+      aria-busy="true"
+      aria-live="polite"
+      aria-label="Carregando obras"
+    >
       {cols.map((cards, ci) => (
         <div
           key={ci}
@@ -1481,20 +1871,36 @@ function KanbanSkeleton() {
   );
 }
 
-function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest, onOpenDados }: ObraRowProps) {
-  const stickyBase = 'bg-card group-hover:bg-muted/50 transition-colors';
+function ObraRow({
+  obra,
+  staffUsers,
+  expanded,
+  onToggleExpanded,
+  onUpdate,
+  onOpen,
+  onDeleteRequest,
+  onOpenDados,
+}: ObraRowProps) {
+  const stickyBase = "bg-card group-hover:bg-muted/50 transition-colors";
 
   return (
     <>
-      <TableRow data-testid="painel-obras-row" data-expanded={expanded ? 'true' : 'false'} className={cn('group transition-colors hover:bg-accent/40', expanded && 'bg-accent/25 hover:bg-accent/30')}>
+      <TableRow
+        data-testid="painel-obras-row"
+        data-expanded={expanded ? "true" : "false"}
+        className={cn(
+          "group transition-colors hover:bg-accent/40",
+          expanded && "bg-accent/25 hover:bg-accent/30",
+        )}
+      >
         {/* Cliente / Obra — sticky left */}
         <TableCell
           data-testid="painel-obras-cell-cliente"
           className={cn(
-            'sticky left-0 z-sticky-left border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
+            "sticky left-0 z-sticky-left border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]",
             // overflow-hidden na própria célula impede que halo/ring de
             // foco interno (botões, links) vaze para fora da coluna sticky.
-            'overflow-hidden',
+            "overflow-hidden",
             // Fundo SEMPRE opaco (bg-card) — nunca aplicar tonalidades
             // translúcidas (`bg-accent/25`) aqui, porque elas permitem que
             // badges/conteúdo de colunas não-sticky apareçam por baixo
@@ -1503,25 +1909,41 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
           )}
         >
           <div className="flex items-start gap-1.5 min-w-0 max-w-full">
-            <Button type="button" size="icon" variant="ghost" onClick={onToggleExpanded}
-              aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'} aria-expanded={expanded}
-              className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0">
-              <ChevronRight className={cn('h-4 w-4 transition-transform duration-200', expanded && 'rotate-90 text-primary')} />
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={onToggleExpanded}
+              aria-label={expanded ? "Recolher detalhes" : "Expandir detalhes"}
+              aria-expanded={expanded}
+              className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0"
+            >
+              <ChevronRight
+                className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  expanded && "rotate-90 text-primary",
+                )}
+              />
             </Button>
-            <button type="button" onClick={onOpen}
+            <button
+              type="button"
+              onClick={onOpen}
               // ring-inset + offset-0 mantém o halo de foco DENTRO do botão,
               // evitando vazamento visual sobre a borda da célula sticky.
               className="text-left flex flex-col gap-0.5 flex-1 min-w-0 max-w-full overflow-hidden group/link focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0 rounded-md px-0.5"
-              title={`${obra.customer_name ?? 'Sem cliente'} — ${obra.nome ?? ''}`.trim()}
+              title={`${obra.customer_name ?? "Sem cliente"} — ${obra.nome ?? ""}`.trim()}
             >
               <span className="flex items-center gap-1.5 min-w-0 max-w-full w-full">
                 <span className="font-semibold text-sm truncate [overflow-wrap:anywhere] group-hover/link:text-primary transition-colors min-w-0 flex-1">
-                  {obra.customer_name ?? 'Sem cliente'}
+                  {obra.customer_name ?? "Sem cliente"}
                 </span>
-                <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" aria-hidden="true" />
+                <ExternalLink
+                  className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0"
+                  aria-hidden="true"
+                />
               </span>
               <span className="block text-xs text-muted-foreground truncate [overflow-wrap:anywhere] min-w-0 max-w-full w-full">
-                {obra.nome ?? '—'}
+                {obra.nome ?? "—"}
               </span>
             </button>
           </div>
@@ -1536,13 +1958,15 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
                 size="icon"
                 variant="ghost"
                 onClick={onOpenDados}
-                aria-label={`Abrir dados do cliente da obra ${obra.nome ?? ''}`}
+                aria-label={`Abrir dados do cliente da obra ${obra.nome ?? ""}`}
                 className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-accent/60"
               >
                 <FileText className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">Dados do cliente</TooltipContent>
+            <TooltipContent side="top" className="text-xs">
+              Dados do cliente
+            </TooltipContent>
           </Tooltip>
         </TableCell>
 
@@ -1550,31 +1974,68 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
         <TableCell className="min-w-[120px] relative z-table-body overflow-hidden">
           {(() => {
             const displayStatus = computeDisplayStatus(obra);
-            const isAuto = displayStatus === 'Atrasado' && obra.status !== 'Atrasado';
+            const isAuto =
+              displayStatus === "Atrasado" && obra.status !== "Atrasado";
             const autoHint =
-              'Atraso automático: Entrega Oficial vencida sem Entrega Real preenchida. ' +
-              (obra.status ? `Valor salvo: "${obra.status}".` : 'Nenhum status salvo.');
+              "Atraso automático: Entrega Oficial vencida sem Entrega Real preenchida. " +
+              (obra.status
+                ? `Valor salvo: "${obra.status}".`
+                : "Nenhum status salvo.");
             return (
-              <Select value={obra.status ?? NONE}
-                onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}>
+              <Select
+                value={obra.status ?? NONE}
+                onValueChange={(v) =>
+                  onUpdate({ status: v === NONE ? null : (v as PainelStatus) })
+                }
+              >
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <SelectTrigger
-                      className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5 rounded-md', inlinePillTrigger, statusPillClass(displayStatus))}
-                      aria-label={isAuto ? autoHint : undefined}>
-                      <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(displayStatus))} />
-                      <span className="font-medium truncate">{displayStatus ?? 'Definir'}</span>
-                      {isAuto && <AlertTriangle className="h-3 w-3 opacity-70 shrink-0" aria-hidden />}
+                      className={cn(
+                        "h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5 rounded-md",
+                        inlinePillTrigger,
+                        statusPillClass(displayStatus),
+                      )}
+                      aria-label={isAuto ? autoHint : undefined}
+                    >
+                      <span
+                        className={cn(
+                          "h-1.5 w-1.5 rounded-full shrink-0",
+                          statusDotClass(displayStatus),
+                        )}
+                      />
+                      <span className="font-medium truncate">
+                        {displayStatus ?? "Definir"}
+                      </span>
+                      {isAuto && (
+                        <AlertTriangle
+                          className="h-3 w-3 opacity-70 shrink-0"
+                          aria-hidden
+                        />
+                      )}
                     </SelectTrigger>
                   </TooltipTrigger>
-                  {isAuto && <TooltipContent side="top" className="max-w-[280px] text-xs">{autoHint}</TooltipContent>}
+                  {isAuto && (
+                    <TooltipContent
+                      side="top"
+                      className="max-w-[280px] text-xs"
+                    >
+                      {autoHint}
+                    </TooltipContent>
+                  )}
                 </Tooltip>
                 <SelectContent>
                   <SelectItem value={NONE}>(nenhum)</SelectItem>
                   {STATUS_OPTIONS.map((s) => (
                     <SelectItem key={s} value={s}>
                       <span className="flex items-center gap-2">
-                        <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(s))} />{s}
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            statusDotClass(s),
+                          )}
+                        />
+                        {s}
                       </span>
                     </SelectItem>
                   ))}
@@ -1585,14 +2046,27 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
         </TableCell>
 
         {/* Etapa */}
-        <TableCell data-testid="painel-obras-cell-etapa" data-etapa-label={obra.etapa ? (formatEtapaLabel(obra) ?? '') : ''} className="min-w-[140px] relative z-table-body overflow-hidden">
-          <Select value={obra.etapa ?? NONE}
-            onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}>
-            <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1 rounded-md',
-              inlinePillTrigger,
-              !obra.etapa && 'text-muted-foreground italic',
-              obra.etapa === 'Finalizada' && 'text-success font-medium',
-              obra.etapa === 'Vistoria reprovada' && 'text-destructive font-medium')}>
+        <TableCell
+          data-testid="painel-obras-cell-etapa"
+          data-etapa-label={obra.etapa ? (formatEtapaLabel(obra) ?? "") : ""}
+          className="min-w-[140px] relative z-table-body overflow-hidden"
+        >
+          <Select
+            value={obra.etapa ?? NONE}
+            onValueChange={(v) =>
+              onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })
+            }
+          >
+            <SelectTrigger
+              className={cn(
+                "h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1 rounded-md",
+                inlinePillTrigger,
+                !obra.etapa && "text-muted-foreground italic",
+                obra.etapa === "Finalizada" && "text-success font-medium",
+                obra.etapa === "Vistoria reprovada" &&
+                  "text-destructive font-medium",
+              )}
+            >
               <SelectValue placeholder="Definir…">
                 {obra.etapa ? formatEtapaLabel(obra) : null}
               </SelectValue>
@@ -1601,7 +2075,15 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
               <SelectItem value={NONE}>(nenhuma)</SelectItem>
               {ETAPA_OPTIONS.map((e) => (
                 <SelectItem key={e} value={e}>
-                  <span className={cn(e === 'Finalizada' && 'text-success font-medium', e === 'Vistoria reprovada' && 'text-destructive font-medium')}>{e}</span>
+                  <span
+                    className={cn(
+                      e === "Finalizada" && "text-success font-medium",
+                      e === "Vistoria reprovada" &&
+                        "text-destructive font-medium",
+                    )}
+                  >
+                    {e}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -1614,32 +2096,93 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
             <div className="flex items-center justify-end gap-2">
               <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
                 <div
-                  className={cn('h-full transition-all', obra.progress_percentage >= 100 ? 'bg-success' : 'bg-primary')}
-                  style={{ width: `${Math.min(100, obra.progress_percentage)}%` }} />
+                  className={cn(
+                    "h-full transition-all",
+                    obra.progress_percentage >= 100
+                      ? "bg-success"
+                      : "bg-primary",
+                  )}
+                  style={{
+                    width: `${Math.min(100, obra.progress_percentage)}%`,
+                  }}
+                />
               </div>
-              <span className={cn('text-xs tabular-nums w-9 text-right', obra.progress_percentage >= 100 && 'text-success font-semibold')}>
+              <span
+                className={cn(
+                  "text-xs tabular-nums w-9 text-right",
+                  obra.progress_percentage >= 100 &&
+                    "text-success font-semibold",
+                )}
+              >
                 {obra.progress_percentage}%
               </span>
             </div>
-          ) : <span className="text-muted-foreground text-xs">—</span>}
+          ) : (
+            <span className="text-muted-foreground text-xs">—</span>
+          )}
         </TableCell>
 
         {/* Datas */}
-        <TableCell><DateCell value={obra.inicio_oficial} onChange={(v) => onUpdate({ inicio_oficial: v })} confirmEdit confirmTitle="Alterar início oficial?" /></TableCell>
-        <TableCell data-testid="painel-obras-cell-entrega-oficial" data-entrega-oficial={obra.entrega_oficial ?? ''}><DateCell value={obra.entrega_oficial} onChange={(v) => onUpdate({ entrega_oficial: v })} confirmEdit confirmTitle="Alterar entrega oficial?" /></TableCell>
-        <TableCell><DateCell value={obra.inicio_real} onChange={(v) => onUpdate({ inicio_real: v })} /></TableCell>
-        <TableCell><DateCell value={obra.entrega_real} onChange={(v) => onUpdate({ entrega_real: v })} /></TableCell>
+        <TableCell>
+          <DateCell
+            value={obra.inicio_oficial}
+            onChange={(v) => onUpdate({ inicio_oficial: v })}
+            confirmEdit
+            confirmTitle="Alterar início oficial?"
+          />
+        </TableCell>
+        <TableCell
+          data-testid="painel-obras-cell-entrega-oficial"
+          data-entrega-oficial={obra.entrega_oficial ?? ""}
+        >
+          <DateCell
+            value={obra.entrega_oficial}
+            onChange={(v) => onUpdate({ entrega_oficial: v })}
+            confirmEdit
+            confirmTitle="Alterar entrega oficial?"
+          />
+        </TableCell>
+        <TableCell>
+          <DateCell
+            value={obra.inicio_real}
+            onChange={(v) => onUpdate({ inicio_real: v })}
+          />
+        </TableCell>
+        <TableCell>
+          <DateCell
+            value={obra.entrega_real}
+            onChange={(v) => onUpdate({ entrega_real: v })}
+          />
+        </TableCell>
 
         {/* Relacionamento */}
         <TableCell className="min-w-[110px] relative z-table-body overflow-hidden">
-          <Select value={obra.relacionamento ?? NONE}
-            onValueChange={(v) => onUpdate({ relacionamento: v === NONE ? null : (v as PainelRelacionamento) })}>
-            <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start rounded-md', inlinePillTrigger, relacionamentoPillClass(obra.relacionamento))}>
-              <span className="font-medium truncate">{obra.relacionamento ?? 'Definir'}</span>
+          <Select
+            value={obra.relacionamento ?? NONE}
+            onValueChange={(v) =>
+              onUpdate({
+                relacionamento: v === NONE ? null : (v as PainelRelacionamento),
+              })
+            }
+          >
+            <SelectTrigger
+              className={cn(
+                "h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start rounded-md",
+                inlinePillTrigger,
+                relacionamentoPillClass(obra.relacionamento),
+              )}
+            >
+              <span className="font-medium truncate">
+                {obra.relacionamento ?? "Definir"}
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>(nenhum)</SelectItem>
-              {RELACIONAMENTO_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              {RELACIONAMENTO_OPTIONS.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </TableCell>
@@ -1648,25 +2191,30 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
         <TableCell className="min-w-[150px] relative z-table-body overflow-hidden">
           <Select
             value={obra.responsavel_id ?? NONE}
-            onValueChange={(v) => onUpdate({ responsavel_id: v === NONE ? null : v })}
+            onValueChange={(v) =>
+              onUpdate({ responsavel_id: v === NONE ? null : v })
+            }
           >
             <SelectTrigger
               className={cn(
-                'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:opacity-40 [&>svg]:ml-1 hover:bg-accent/60 rounded-md justify-start gap-1.5',
+                "h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:opacity-40 [&>svg]:ml-1 hover:bg-accent/60 rounded-md justify-start gap-1.5",
                 inlinePillTrigger,
-                !obra.responsavel_id && 'text-muted-foreground italic',
+                !obra.responsavel_id && "text-muted-foreground italic",
               )}
               aria-label="Responsável pela obra"
             >
               <User className="h-3 w-3 shrink-0 opacity-60" />
               <span className="truncate font-medium">
-                {obra.responsavel_nome ?? (obra.responsavel_id ? '—' : 'Definir')}
+                {obra.responsavel_nome ??
+                  (obra.responsavel_id ? "—" : "Definir")}
               </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>(sem responsável)</SelectItem>
               {staffUsers.map((u) => (
-                <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                <SelectItem key={u.id} value={u.id}>
+                  {u.nome}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -1684,10 +2232,10 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
                 <TooltipTrigger asChild>
                   <span
                     className={cn(
-                      'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold',
+                      "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold",
                       dias > 10
-                        ? 'bg-destructive/10 text-destructive'
-                        : 'bg-warning/15 text-warning-foreground',
+                        ? "bg-destructive/10 text-destructive"
+                        : "bg-warning/15 text-warning-foreground",
                     )}
                     aria-label={`${dias} dias úteis de atraso`}
                   >
@@ -1696,28 +2244,36 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {dias} dia{dias === 1 ? '' : 's'} útil{dias === 1 ? '' : 'eis'} de atraso vs. entrega oficial. Ajuste o cronograma para zerar.
+                  {dias} dia{dias === 1 ? "" : "s"} útil
+                  {dias === 1 ? "" : "eis"} de atraso vs. entrega oficial.
+                  Ajuste o cronograma para zerar.
                 </TooltipContent>
               </Tooltip>
             );
           })()}
         </TableCell>
 
-        <TableCell className={cn(
-          'sticky right-0 z-sticky-right border-l border-border',
-          // Fundo SEMPRE opaco (bg-card) — sem tonalidades translúcidas para
-          // garantir que conteúdo de colunas não-sticky (badges de Status/
-          // Etapa/Relacionamento) não apareça por baixo desta coluna durante
-          // scroll horizontal ou quando a linha está expandida.
-          stickyBase,
-        )}>
+        <TableCell
+          className={cn(
+            "sticky right-0 z-sticky-right border-l border-border",
+            // Fundo SEMPRE opaco (bg-card) — sem tonalidades translúcidas para
+            // garantir que conteúdo de colunas não-sticky (badges de Status/
+            // Etapa/Relacionamento) não apareça por baixo desta coluna durante
+            // scroll horizontal ou quando a linha está expandida.
+            stickyBase,
+          )}
+        >
           <div className="flex items-center justify-center gap-0.5">
             {/* Abrir obra */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost"
+                <Button
+                  size="icon"
+                  variant="ghost"
                   className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                  onClick={onOpen} aria-label="Abrir obra">
+                  onClick={onOpen}
+                  aria-label="Abrir obra"
+                >
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -1729,9 +2285,12 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost"
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent/60"
-                      aria-label="Mais ações">
+                      aria-label="Mais ações"
+                    >
                       <MoreHorizontal className="h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -1740,13 +2299,16 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
               </Tooltip>
               <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuItem onClick={onOpen} className="text-xs gap-2">
-                  <ExternalLink className="h-3.5 w-3.5" />Abrir obra
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Abrir obra
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={onDeleteRequest}
-                  className="text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10">
-                  <Trash2 className="h-3.5 w-3.5" />Excluir obra
+                  className="text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir obra
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -1755,7 +2317,10 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
       </TableRow>
 
       {expanded && (
-        <TableRow data-testid="painel-obras-row-expanded" className="bg-accent/15 hover:bg-accent/15">
+        <TableRow
+          data-testid="painel-obras-row-expanded"
+          className="bg-accent/15 hover:bg-accent/15"
+        >
           <TableCell
             colSpan={PAINEL_COLUMN_COUNT}
             className="p-0 border-t border-b-2 border-primary/20 align-top"
@@ -1800,10 +2365,10 @@ function ExpandedRowContent({ projectId }: { projectId: string }) {
     update();
     const ro = new ResizeObserver(update);
     ro.observe(target);
-    window.addEventListener('resize', update);
+    window.addEventListener("resize", update);
     return () => {
       ro.disconnect();
-      window.removeEventListener('resize', update);
+      window.removeEventListener("resize", update);
     };
   }, []);
 
@@ -1825,16 +2390,19 @@ function ExpandedRowContent({ projectId }: { projectId: string }) {
 // agrupamento (etapa ou status), reordena colunas manualmente
 // (persistido em localStorage por critério) ou ativa modo automático
 // que segue a ordenação ativa da tabela.
-type KanbanGroupBy = 'etapa' | 'status';
+type KanbanGroupBy = "etapa" | "status";
 type KanbanColKey = string; // PainelEtapa | PainelStatus | 'none'
 
 const ETAPA_COL_ORDER: KanbanColKey[] = [
-  'none',
+  "none",
   ...(ETAPA_OPTIONS as readonly PainelEtapa[]),
 ];
 const ETAPA_COL_LABELS: Record<string, string> = {
-  none: 'Sem etapa',
-  ...(Object.fromEntries(ETAPA_OPTIONS.map((e) => [e, e])) as Record<PainelEtapa, string>),
+  none: "Sem etapa",
+  ...(Object.fromEntries(ETAPA_OPTIONS.map((e) => [e, e])) as Record<
+    PainelEtapa,
+    string
+  >),
 };
 
 // Ordem dos status segue o ciclo de vida operacional:
@@ -1842,16 +2410,19 @@ const ETAPA_COL_LABELS: Record<string, string> = {
 // Paralisada (bloqueio). "Sem status" entra primeiro como bucket de
 // triagem para obras ainda não classificadas.
 const STATUS_COL_ORDER: KanbanColKey[] = [
-  'none',
+  "none",
   ...(STATUS_OPTIONS as readonly PainelStatus[]),
 ];
 const STATUS_COL_LABELS: Record<string, string> = {
-  none: 'Sem status',
-  ...(Object.fromEntries(STATUS_OPTIONS.map((s) => [s, s])) as Record<PainelStatus, string>),
+  none: "Sem status",
+  ...(Object.fromEntries(STATUS_OPTIONS.map((s) => [s, s])) as Record<
+    PainelStatus,
+    string
+  >),
 };
 
 function getDefaultOrderFor(groupBy: KanbanGroupBy): KanbanColKey[] {
-  return groupBy === 'status' ? STATUS_COL_ORDER : ETAPA_COL_ORDER;
+  return groupBy === "status" ? STATUS_COL_ORDER : ETAPA_COL_ORDER;
 }
 
 /**
@@ -1860,52 +2431,72 @@ function getDefaultOrderFor(groupBy: KanbanGroupBy): KanbanColKey[] {
  * mapeamos cores frias (preparação) → quentes (execução) → verde (entrega).
  */
 function getColumnAccent(groupBy: KanbanGroupBy, key: KanbanColKey): string {
-  if (key === 'none') return 'bg-muted-foreground/30';
-  if (groupBy === 'status') {
+  if (key === "none") return "bg-muted-foreground/30";
+  if (groupBy === "status") {
     switch (key as PainelStatus) {
-      case 'Aguardando': return 'bg-info';
-      case 'Em dia':     return 'bg-success';
-      case 'Atrasado':   return 'bg-destructive';
-      case 'Paralisada': return 'bg-muted-foreground';
-      default:           return 'bg-muted-foreground/30';
+      case "Aguardando":
+        return "bg-info";
+      case "Em dia":
+        return "bg-success";
+      case "Atrasado":
+        return "bg-destructive";
+      case "Paralisada":
+        return "bg-muted-foreground";
+      default:
+        return "bg-muted-foreground/30";
     }
   }
   switch (key as PainelEtapa) {
-    case 'Projeto 3D':         return 'bg-cyan-400';
-    case 'Projeto Executivo':  return 'bg-blue-500';
-    case 'Executivo Aprovado': return 'bg-emerald-400';
-    case 'Medição':            return 'bg-sky-400';
-    case 'Executivo':          return 'bg-indigo-400';
-    case 'Emissão RRT':        return 'bg-violet-400';
-    case 'Condomínio':         return 'bg-purple-400';
-    case 'Planejamento':       return 'bg-blue-400';
-    case 'Mobilização':        return 'bg-amber-400';
-    case 'Execução':           return 'bg-orange-400';
-    case 'Vistoria':           return 'bg-teal-400';
-    case 'Vistoria reprovada': return 'bg-destructive';
-    case 'Finalizada':         return 'bg-success';
-    default:                   return 'bg-muted-foreground/30';
+    case "Projeto 3D":
+      return "bg-cyan-400";
+    case "Projeto Executivo":
+      return "bg-blue-500";
+    case "Executivo Aprovado":
+      return "bg-emerald-400";
+    case "Medição":
+      return "bg-sky-400";
+    case "Executivo":
+      return "bg-indigo-400";
+    case "Emissão RRT":
+      return "bg-violet-400";
+    case "Condomínio":
+      return "bg-purple-400";
+    case "Planejamento":
+      return "bg-blue-400";
+    case "Mobilização":
+      return "bg-amber-400";
+    case "Execução":
+      return "bg-orange-400";
+    case "Vistoria":
+      return "bg-teal-400";
+    case "Vistoria reprovada":
+      return "bg-destructive";
+    case "Finalizada":
+      return "bg-success";
+    default:
+      return "bg-muted-foreground/30";
   }
 }
 function getLabelsFor(groupBy: KanbanGroupBy): Record<string, string> {
-  return groupBy === 'status' ? STATUS_COL_LABELS : ETAPA_COL_LABELS;
+  return groupBy === "status" ? STATUS_COL_LABELS : ETAPA_COL_LABELS;
 }
 function getStorageKeyFor(groupBy: KanbanGroupBy): string {
-  return groupBy === 'status'
-    ? 'painelObras:kanbanColumnOrder:status:v1'
-    : 'painelObras:kanbanColumnOrder:etapa:v1';
+  return groupBy === "status"
+    ? "painelObras:kanbanColumnOrder:status:v1"
+    : "painelObras:kanbanColumnOrder:etapa:v1";
 }
 
 function loadKanbanOrder(groupBy: KanbanGroupBy): KanbanColKey[] {
   const fallback = getDefaultOrderFor(groupBy);
-  if (typeof window === 'undefined') return fallback;
+  if (typeof window === "undefined") return fallback;
   try {
     const raw = window.localStorage.getItem(getStorageKeyFor(groupBy));
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return fallback;
-    const valid = parsed.filter((k): k is KanbanColKey =>
-      typeof k === 'string' && (fallback as string[]).includes(k),
+    const valid = parsed.filter(
+      (k): k is KanbanColKey =>
+        typeof k === "string" && (fallback as string[]).includes(k),
     );
     // Acrescenta opções novas (ainda não vistas) ao final, preservando ordem do usuário.
     const missing = fallback.filter((k) => !valid.includes(k));
@@ -1917,19 +2508,19 @@ function loadKanbanOrder(groupBy: KanbanGroupBy): KanbanColKey[] {
 
 // Layout das colunas (manual vs automático) também é persistido por critério —
 // trocar entre Etapa/Status preserva a preferência feita em cada um.
-type KanbanLayoutMode = 'manual' | 'auto';
+type KanbanLayoutMode = "manual" | "auto";
 function getLayoutStorageKeyFor(groupBy: KanbanGroupBy): string {
-  return groupBy === 'status'
-    ? 'painelObras:kanbanLayoutMode:status:v1'
-    : 'painelObras:kanbanLayoutMode:etapa:v1';
+  return groupBy === "status"
+    ? "painelObras:kanbanLayoutMode:status:v1"
+    : "painelObras:kanbanLayoutMode:etapa:v1";
 }
 function loadKanbanLayoutMode(groupBy: KanbanGroupBy): KanbanLayoutMode {
-  if (typeof window === 'undefined') return 'manual';
+  if (typeof window === "undefined") return "manual";
   try {
     const raw = window.localStorage.getItem(getLayoutStorageKeyFor(groupBy));
-    return raw === 'auto' ? 'auto' : 'manual';
+    return raw === "auto" ? "auto" : "manual";
   } catch {
-    return 'manual';
+    return "manual";
   }
 }
 
@@ -1949,7 +2540,7 @@ interface KanbanViewProps {
   onClearStatusFilter: () => void;
   /** Critério atual de ordenação da tabela (compartilhado com o Kanban). */
   sortKey: SortKey;
-  sortDir: 'asc' | 'desc';
+  sortDir: "asc" | "desc";
   /** Seleção múltipla: ids de obras marcadas para ação em lote. */
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
@@ -1988,13 +2579,18 @@ function KanbanView({
   const defaultOrder = getDefaultOrderFor(groupBy);
 
   // Ordem das colunas é persistida por critério; troca de critério remonta o estado.
-  const [order, setOrder] = useState<KanbanColKey[]>(() => loadKanbanOrder(groupBy));
+  const [order, setOrder] = useState<KanbanColKey[]>(() =>
+    loadKanbanOrder(groupBy),
+  );
   useEffect(() => {
     setOrder(loadKanbanOrder(groupBy));
   }, [groupBy]);
   useEffect(() => {
     try {
-      window.localStorage.setItem(getStorageKeyFor(groupBy), JSON.stringify(order));
+      window.localStorage.setItem(
+        getStorageKeyFor(groupBy),
+        JSON.stringify(order),
+      );
     } catch {
       /* ignore (modo privado, quota etc.) */
     }
@@ -2024,8 +2620,8 @@ function KanbanView({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverKey, setDragOverKey] = useState<KanbanColKey | null>(null);
   const handleCardDragStart = (e: React.DragEvent, id: string) => {
-    e.dataTransfer.setData('text/plain', id);
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
     setDraggingId(id);
   };
   const handleCardDragEnd = () => {
@@ -2035,7 +2631,7 @@ function KanbanView({
   const handleColumnDragOver = (e: React.DragEvent, key: KanbanColKey) => {
     if (!draggingId) return;
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
     if (dragOverKey !== key) setDragOverKey(key);
   };
   const handleColumnDragLeave = (e: React.DragEvent, key: KanbanColKey) => {
@@ -2046,19 +2642,19 @@ function KanbanView({
   };
   const handleColumnDrop = (e: React.DragEvent, key: KanbanColKey) => {
     e.preventDefault();
-    const id = e.dataTransfer.getData('text/plain') || draggingId;
+    const id = e.dataTransfer.getData("text/plain") || draggingId;
     setDragOverKey(null);
     setDraggingId(null);
     if (!id) return;
     const obra = obras.find((o) => o.id === id);
     if (!obra) return;
-    if (groupBy === 'status') {
-      const nextStatus = key === 'none' ? null : (key as PainelStatus);
+    if (groupBy === "status") {
+      const nextStatus = key === "none" ? null : (key as PainelStatus);
       const current = computeDisplayStatus(obra);
       if (current === nextStatus) return;
       onUpdateStatus(id, nextStatus);
     } else {
-      const nextEtapa = key === 'none' ? null : (key as PainelEtapa);
+      const nextEtapa = key === "none" ? null : (key as PainelEtapa);
       if ((obra.etapa ?? null) === nextEtapa) return;
       onUpdateEtapa(id, nextEtapa);
     }
@@ -2069,10 +2665,10 @@ function KanbanView({
   // visual da tabela (e.g., obras com entrega oficial vencida aparecem como
   // "Atrasado" mesmo sem flag manual).
   const colKeyOf = (o: PainelObra): KanbanColKey => {
-    if (groupBy === 'status') {
-      return (computeDisplayStatus(o) as PainelStatus | null) ?? 'none';
+    if (groupBy === "status") {
+      return (computeDisplayStatus(o) as PainelStatus | null) ?? "none";
     }
-    return (o.etapa as PainelEtapa | null) ?? 'none';
+    return (o.etapa as PainelEtapa | null) ?? "none";
   };
 
   // Agrupamento O(n) por coluna para renderização.
@@ -2083,7 +2679,7 @@ function KanbanView({
       const key = colKeyOf(o);
       const arr = map.get(key);
       if (arr) arr.push(o);
-      else map.get('none')?.push(o);
+      else map.get("none")?.push(o);
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2094,19 +2690,20 @@ function KanbanView({
   // - Status: multi-select que reflete o popover de status na toolbar
   //   (clica = toggle no Set; chip aparece marcado se status está no filtro).
   const isChipActive = (filterValue: string): boolean => {
-    if (groupBy === 'status') return filterStatuses.has(filterValue);
+    if (groupBy === "status") return filterStatuses.has(filterValue);
     return selectedEtapa === filterValue;
   };
   const onChipClick = (filterValue: string): void => {
-    if (groupBy === 'status') {
+    if (groupBy === "status") {
       onToggleStatusFilter(filterValue);
       return;
     }
     onSelectEtapa(selectedEtapa === filterValue ? ALL : filterValue);
   };
-  const hasGroupFilter = groupBy === 'status' ? filterStatuses.size > 0 : selectedEtapa !== ALL;
+  const hasGroupFilter =
+    groupBy === "status" ? filterStatuses.size > 0 : selectedEtapa !== ALL;
   const clearGroupFilter = () => {
-    if (groupBy === 'status') onClearStatusFilter();
+    if (groupBy === "status") onClearStatusFilter();
     else onSelectEtapa(ALL);
   };
 
@@ -2131,18 +2728,30 @@ function KanbanView({
   }, [layoutMode, groupBy]);
 
   const aggregateByCol = useMemo(() => {
-    const agg = new Map<KanbanColKey, { num: number | null; str: string | null }>();
+    const agg = new Map<
+      KanbanColKey,
+      { num: number | null; str: string | null }
+    >();
     for (const key of order) {
       const items = grouped.get(key) ?? [];
-      if (items.length === 0) { agg.set(key, { num: null, str: null }); continue; }
-      if (sortKey === 'atraso') {
+      if (items.length === 0) {
+        agg.set(key, { num: null, str: null });
+        continue;
+      }
+      if (sortKey === "atraso") {
         const max = Math.max(...items.map((o) => computeOverdueDays(o)));
         agg.set(key, { num: max, str: null });
-      } else if (sortKey === 'responsavel_nome') {
-        const names = items.map((o) => o.responsavel_nome ?? '').filter(Boolean).sort();
+      } else if (sortKey === "responsavel_nome") {
+        const names = items
+          .map((o) => o.responsavel_nome ?? "")
+          .filter(Boolean)
+          .sort();
         agg.set(key, { num: null, str: names[0] ?? null });
       } else if (sortKey) {
-        const dates = items.map((o) => o[sortKey] ?? '').filter(Boolean).sort();
+        const dates = items
+          .map((o) => o[sortKey] ?? "")
+          .filter(Boolean)
+          .sort();
         agg.set(key, { num: null, str: dates[0] ?? null });
       } else {
         agg.set(key, { num: null, str: null });
@@ -2152,7 +2761,7 @@ function KanbanView({
   }, [order, grouped, sortKey]);
 
   const displayedOrder = useMemo<KanbanColKey[]>(() => {
-    if (layoutMode === 'manual' || !sortKey) return order;
+    if (layoutMode === "manual" || !sortKey) return order;
     const withVal: KanbanColKey[] = [];
     const empty: KanbanColKey[] = [];
     for (const k of order) {
@@ -2162,23 +2771,23 @@ function KanbanView({
     withVal.sort((a, b) => {
       const va = aggregateByCol.get(a);
       const vb = aggregateByCol.get(b);
-      if (sortKey === 'atraso') {
+      if (sortKey === "atraso") {
         const an = va?.num ?? -Infinity;
         const bn = vb?.num ?? -Infinity;
-        return sortDir === 'asc' ? an - bn : bn - an;
+        return sortDir === "asc" ? an - bn : bn - an;
       }
-      const sa = va?.str ?? '';
-      const sb = vb?.str ?? '';
+      const sa = va?.str ?? "";
+      const sb = vb?.str ?? "";
       if (!sa && !sb) return 0;
       if (!sa) return 1;
       if (!sb) return -1;
-      return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa);
+      return sortDir === "asc" ? sa.localeCompare(sb) : sb.localeCompare(sa);
     });
     return [...withVal, ...empty];
   }, [layoutMode, sortKey, sortDir, order, grouped, aggregateByCol]);
 
   const autoAvailable = !!sortKey;
-  const isAuto = layoutMode === 'auto' && autoAvailable;
+  const isAuto = layoutMode === "auto" && autoAvailable;
 
   // Bulk action handlers — recebem o novo valor e disparam onBulkUpdate.
   const handleBulkChangeEtapa = (value: string) => {
@@ -2201,7 +2810,8 @@ function KanbanView({
           className="sticky top-0 z-sticky flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border-subtle bg-primary/10 backdrop-blur"
         >
           <span className="text-xs font-medium text-foreground">
-            {selectedIds.size} {selectedIds.size === 1 ? 'obra selecionada' : 'obras selecionadas'}
+            {selectedIds.size}{" "}
+            {selectedIds.size === 1 ? "obra selecionada" : "obras selecionadas"}
           </span>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
             <Select
@@ -2209,13 +2819,18 @@ function KanbanView({
               onValueChange={handleBulkChangeEtapa}
               disabled={bulkUpdating}
             >
-              <SelectTrigger className="h-8 w-[180px] text-xs bg-surface" aria-label="Mudar etapa em lote">
+              <SelectTrigger
+                className="h-8 w-[180px] text-xs bg-surface"
+                aria-label="Mudar etapa em lote"
+              >
                 <SelectValue placeholder="Mudar etapa…" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>(sem etapa)</SelectItem>
                 {ETAPA_OPTIONS.map((e) => (
-                  <SelectItem key={e} value={e}>{e}</SelectItem>
+                  <SelectItem key={e} value={e}>
+                    {e}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -2224,13 +2839,18 @@ function KanbanView({
               onValueChange={handleBulkChangeStatus}
               disabled={bulkUpdating}
             >
-              <SelectTrigger className="h-8 w-[180px] text-xs bg-surface" aria-label="Mudar status em lote">
+              <SelectTrigger
+                className="h-8 w-[180px] text-xs bg-surface"
+                aria-label="Mudar status em lote"
+              >
                 <SelectValue placeholder="Mudar status…" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>(sem status)</SelectItem>
                 {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -2256,13 +2876,15 @@ function KanbanView({
           aria-label="Agrupar quadro por"
           className="inline-flex items-center rounded-md border border-border-subtle bg-surface p-0.5"
         >
-          <span className="px-2 text-[11px] text-muted-foreground">Agrupar por</span>
+          <span className="px-2 text-[11px] text-muted-foreground">
+            Agrupar por
+          </span>
           <Button
             type="button"
             size="sm"
-            variant={groupBy === 'etapa' ? 'secondary' : 'ghost'}
-            aria-pressed={groupBy === 'etapa'}
-            onClick={() => onGroupByChange('etapa')}
+            variant={groupBy === "etapa" ? "secondary" : "ghost"}
+            aria-pressed={groupBy === "etapa"}
+            onClick={() => onGroupByChange("etapa")}
             className="h-7 px-2 text-xs"
           >
             Etapa
@@ -2270,9 +2892,9 @@ function KanbanView({
           <Button
             type="button"
             size="sm"
-            variant={groupBy === 'status' ? 'secondary' : 'ghost'}
-            aria-pressed={groupBy === 'status'}
-            onClick={() => onGroupByChange('status')}
+            variant={groupBy === "status" ? "secondary" : "ghost"}
+            aria-pressed={groupBy === "status"}
+            onClick={() => onGroupByChange("status")}
             className="h-7 px-2 text-xs"
           >
             Status
@@ -2292,9 +2914,9 @@ function KanbanView({
           <Button
             type="button"
             size="sm"
-            variant={!isAuto ? 'secondary' : 'ghost'}
+            variant={!isAuto ? "secondary" : "ghost"}
             aria-pressed={!isAuto}
-            onClick={() => setLayoutMode('manual')}
+            onClick={() => setLayoutMode("manual")}
             className="h-7 gap-1.5 px-2 text-xs"
             title="Definir a ordem manualmente"
           >
@@ -2303,14 +2925,16 @@ function KanbanView({
           <Button
             type="button"
             size="sm"
-            variant={isAuto ? 'secondary' : 'ghost'}
+            variant={isAuto ? "secondary" : "ghost"}
             aria-pressed={isAuto}
             disabled={!autoAvailable}
-            onClick={() => setLayoutMode('auto')}
+            onClick={() => setLayoutMode("auto")}
             className="h-7 gap-1.5 px-2 text-xs"
-            title={autoAvailable
-              ? 'Reordenar pelas colunas conforme o critério de ordenação ativo'
-              : 'Selecione um critério de ordenação para usar o modo automático'}
+            title={
+              autoAvailable
+                ? "Reordenar pelas colunas conforme o critério de ordenação ativo"
+                : "Selecione um critério de ordenação para usar o modo automático"
+            }
           >
             Automático
           </Button>
@@ -2326,7 +2950,7 @@ function KanbanView({
               className="h-7 px-2 text-xs text-muted-foreground"
             >
               <X className="h-3.5 w-3.5 mr-1" />
-              Limpar filtro de {groupBy === 'status' ? 'status' : 'etapa'}
+              Limpar filtro de {groupBy === "status" ? "status" : "etapa"}
             </Button>
           )}
           {isAuto && (
@@ -2356,7 +2980,7 @@ function KanbanView({
             const label = labels[key] ?? key;
             const canMoveLeft = !isAuto && idx > 0;
             const canMoveRight = !isAuto && idx < displayedOrder.length - 1;
-            const filterValue = key === 'none' ? NONE : key;
+            const filterValue = key === "none" ? NONE : key;
             const isActive = isChipActive(filterValue);
             const accent = getColumnAccent(groupBy, key);
             return (
@@ -2365,15 +2989,21 @@ function KanbanView({
                 onDragOver={(e) => handleColumnDragOver(e, key)}
                 onDragLeave={(e) => handleColumnDragLeave(e, key)}
                 onDrop={(e) => handleColumnDrop(e, key)}
-                aria-dropeffect={draggingId ? 'move' : undefined}
+                aria-dropeffect={draggingId ? "move" : undefined}
                 className={cn(
-                  'flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border overflow-hidden transition-colors',
-                  isActive ? 'border-primary ring-2 ring-primary/30' : 'border-border-subtle',
-                  dragOverKey === key && 'border-primary ring-2 ring-primary/40 bg-primary/5',
+                  "flex flex-col w-[280px] shrink-0 rounded-lg bg-surface-sunken border overflow-hidden transition-colors",
+                  isActive
+                    ? "border-primary ring-2 ring-primary/30"
+                    : "border-border-subtle",
+                  dragOverKey === key &&
+                    "border-primary ring-2 ring-primary/40 bg-primary/5",
                 )}
               >
                 {/* Faixa colorida estilo Monday no topo da coluna */}
-                <div className={cn('h-1 w-full shrink-0', accent)} aria-hidden />
+                <div
+                  className={cn("h-1 w-full shrink-0", accent)}
+                  aria-hidden
+                />
                 <button
                   type="button"
                   onClick={() => onChipClick(filterValue)}
@@ -2391,7 +3021,10 @@ function KanbanView({
                   </div>
                   {!isAuto && (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuTrigger
+                        asChild
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Button
                           type="button"
                           size="icon"
@@ -2402,7 +3035,10 @@ function KanbanView({
                           <MoreHorizontal className="h-3.5 w-3.5" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="min-w-[180px]">
+                      <DropdownMenuContent
+                        align="end"
+                        className="min-w-[180px]"
+                      >
                         <DropdownMenuItem
                           disabled={!canMoveLeft}
                           onClick={() => moveColumn(key, -1)}
@@ -2500,7 +3136,7 @@ function KanbanCard({
       onDragEnd={onDragEnd}
       onClick={onOpen}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onOpen();
         }
@@ -2509,11 +3145,13 @@ function KanbanCard({
       aria-selected={selected}
       aria-grabbed={dragging}
       className={cn(
-        'group relative rounded-md bg-card border p-2.5 text-left',
-        'hover:border-primary/40 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        selected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border-subtle',
-        dragging && 'opacity-50',
+        "group relative rounded-md bg-card border p-2.5 text-left",
+        "hover:border-primary/40 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        selected
+          ? "border-primary ring-2 ring-primary/30 bg-primary/5"
+          : "border-border-subtle",
+        dragging && "opacity-50",
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -2521,10 +3159,10 @@ function KanbanCard({
             já há seleção ativa. Para o clique no card de navegar. */}
         <div
           className={cn(
-            'shrink-0 pt-0.5 transition-opacity',
+            "shrink-0 pt-0.5 transition-opacity",
             selected || anySelected
-              ? 'opacity-100'
-              : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+              ? "opacity-100"
+              : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
           )}
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
@@ -2532,28 +3170,42 @@ function KanbanCard({
           <Checkbox
             checked={selected}
             onCheckedChange={onToggleSelect}
-            aria-label={selected ? `Desmarcar ${obra.nome}` : `Selecionar ${obra.nome}`}
+            aria-label={
+              selected ? `Desmarcar ${obra.nome}` : `Selecionar ${obra.nome}`
+            }
           />
         </div>
         <div className="min-w-0 flex-1">
           {obra.customer_name && (
-            <p className="text-[11px] text-muted-foreground truncate" title={obra.customer_name}>
+            <p
+              className="text-[11px] text-muted-foreground truncate"
+              title={obra.customer_name}
+            >
               {formatNomePessoa(obra.customer_name)}
             </p>
           )}
-          <p className="text-sm font-medium text-foreground leading-tight truncate" title={obra.nome}>
+          <p
+            className="text-sm font-medium text-foreground leading-tight truncate"
+            title={obra.nome}
+          >
             {obra.nome}
           </p>
         </div>
         <span
           className={cn(
-            'inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0',
+            "inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0",
             statusPillClass(displayStatus),
           )}
-          aria-label={`Status: ${displayStatus ?? 'sem status'}`}
+          aria-label={`Status: ${displayStatus ?? "sem status"}`}
         >
-          <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(displayStatus))} aria-hidden />
-          {displayStatus ?? '—'}
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              statusDotClass(displayStatus),
+            )}
+            aria-hidden
+          />
+          {displayStatus ?? "—"}
         </span>
       </div>
 
@@ -2569,7 +3221,9 @@ function KanbanCard({
           <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
             <div
               className="h-full bg-primary"
-              style={{ width: `${Math.max(0, Math.min(100, obra.progress_percentage))}%` }}
+              style={{
+                width: `${Math.max(0, Math.min(100, obra.progress_percentage))}%`,
+              }}
             />
           </div>
         </div>
@@ -2584,15 +3238,17 @@ function KanbanCard({
           </span>
         )}
         {obra.responsavel_nome && (
-          <span className="inline-flex items-center gap-1 truncate max-w-[120px]" title={obra.responsavel_nome}>
+          <span
+            className="inline-flex items-center gap-1 truncate max-w-[120px]"
+            title={obra.responsavel_nome}
+          >
             <User className="h-3 w-3 opacity-60" />
             <span className="truncate">{obra.responsavel_nome}</span>
           </span>
         )}
         {overdueDays > 0 && (
           <span className="inline-flex items-center gap-1 text-destructive font-medium tabular-nums">
-            <Clock className="h-3 w-3" />
-            +{overdueDays}d
+            <Clock className="h-3 w-3" />+{overdueDays}d
           </span>
         )}
       </div>
@@ -2601,18 +3257,20 @@ function KanbanCard({
           ruído (o card já está na coluna, então o select repetia o valor). */}
       <div
         className={cn(
-          'mt-2 pt-2 border-t border-border-subtle transition-opacity',
+          "mt-2 pt-2 border-t border-border-subtle transition-opacity",
           selected || anySelected
-            ? 'opacity-100'
-            : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+            ? "opacity-100"
+            : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
         )}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {groupBy === 'status' ? (
+        {groupBy === "status" ? (
           <Select
             value={obra.status ?? NONE}
-            onValueChange={(v) => onChangeStatus(v === NONE ? null : (v as PainelStatus))}
+            onValueChange={(v) =>
+              onChangeStatus(v === NONE ? null : (v as PainelStatus))
+            }
           >
             <SelectTrigger
               className="h-7 text-[11px] border-border-subtle bg-surface"
@@ -2623,14 +3281,18 @@ function KanbanCard({
             <SelectContent>
               <SelectItem value={NONE}>(sem status)</SelectItem>
               {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         ) : (
           <Select
             value={obra.etapa ?? NONE}
-            onValueChange={(v) => onChangeEtapa(v === NONE ? null : (v as PainelEtapa))}
+            onValueChange={(v) =>
+              onChangeEtapa(v === NONE ? null : (v as PainelEtapa))
+            }
           >
             <SelectTrigger
               className="h-7 text-[11px] border-border-subtle bg-surface"
@@ -2641,7 +3303,9 @@ function KanbanCard({
             <SelectContent>
               <SelectItem value={NONE}>(sem etapa)</SelectItem>
               {ETAPA_OPTIONS.map((e) => (
-                <SelectItem key={e} value={e}>{e}</SelectItem>
+                <SelectItem key={e} value={e}>
+                  {e}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -2657,17 +3321,17 @@ function KanbanCard({
 // as 13 colunas e a edição inline. Estado de colapso persistido em
 // localStorage para preservar a preferência entre sessões.
 
-const BOARD_COLLAPSED_STORAGE_KEY = 'painelObras:boardCollapsedEtapas:v1';
-const BOARD_NONE_KEY = '__none__';
+const BOARD_COLLAPSED_STORAGE_KEY = "painelObras:boardCollapsedEtapas:v1";
+const BOARD_NONE_KEY = "__none__";
 
 function loadBoardCollapsed(): Set<string> {
-  if (typeof window === 'undefined') return new Set();
+  if (typeof window === "undefined") return new Set();
   try {
     const raw = window.localStorage.getItem(BOARD_COLLAPSED_STORAGE_KEY);
     if (!raw) return new Set();
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return new Set();
-    return new Set(parsed.filter((k): k is string => typeof k === 'string'));
+    return new Set(parsed.filter((k): k is string => typeof k === "string"));
   } catch {
     return new Set();
   }
@@ -2678,29 +3342,29 @@ function loadBoardCollapsed(): Set<string> {
  * Usa tokens semânticos do design system.
  */
 function getBoardEtapaAccent(etapa: PainelEtapa | null): string {
-  if (!etapa) return 'bg-muted-foreground/40';
+  if (!etapa) return "bg-muted-foreground/40";
   switch (etapa) {
-    case 'Projeto 3D':
-    case 'Projeto Executivo':
-    case 'Executivo Aprovado':
-    case 'Medição':
-    case 'Executivo':
-    case 'Emissão RRT':
-    case 'Condomínio':
-      return 'bg-[hsl(var(--info))]';
-    case 'Planejamento':
-    case 'Mobilização':
-      return 'bg-[hsl(var(--warning))]';
-    case 'Execução':
-      return 'bg-primary';
-    case 'Vistoria':
-      return 'bg-[hsl(var(--success))]';
-    case 'Vistoria reprovada':
-      return 'bg-destructive';
-    case 'Finalizada':
-      return 'bg-muted-foreground';
+    case "Projeto 3D":
+    case "Projeto Executivo":
+    case "Executivo Aprovado":
+    case "Medição":
+    case "Executivo":
+    case "Emissão RRT":
+    case "Condomínio":
+      return "bg-[hsl(var(--info))]";
+    case "Planejamento":
+    case "Mobilização":
+      return "bg-[hsl(var(--warning))]";
+    case "Execução":
+      return "bg-primary";
+    case "Vistoria":
+      return "bg-[hsl(var(--success))]";
+    case "Vistoria reprovada":
+      return "bg-destructive";
+    case "Finalizada":
+      return "bg-muted-foreground";
     default:
-      return 'bg-muted-foreground/40';
+      return "bg-muted-foreground/40";
   }
 }
 
@@ -2713,7 +3377,10 @@ interface BoardViewProps {
   onOpen: (id: string) => void;
   onDeleteRequest: (o: PainelObra) => void;
   onOpenDados: (o: PainelObra) => void;
-  renderSortableHeader: (label: string, key: NonNullable<SortKey>) => React.ReactNode;
+  renderSortableHeader: (
+    label: string,
+    key: NonNullable<SortKey>,
+  ) => React.ReactNode;
   densityTableClass: string;
 }
 
@@ -2729,25 +3396,32 @@ function BoardView({
   renderSortableHeader,
   densityTableClass,
 }: BoardViewProps) {
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => loadBoardCollapsed());
+  const [collapsed, setCollapsed] = useState<Set<string>>(() =>
+    loadBoardCollapsed(),
+  );
 
   // Sincronização de scroll horizontal entre os grupos do Board.
   // Permite comparar colunas alinhadas quando há múltiplos grupos visíveis.
   const scrollersRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const isSyncingRef = useRef(false);
 
-  const registerScroller = useCallback((key: string, node: HTMLDivElement | null) => {
-    const map = scrollersRef.current;
-    if (node) {
-      map.set(key, node);
-      // Aplica imediatamente o scrollLeft atual (de outro grupo já existente)
-      // para que grupos recém-expandidos apareçam alinhados.
-      const any = Array.from(map.values()).find((el) => el !== node && el.scrollLeft > 0);
-      if (any) node.scrollLeft = any.scrollLeft;
-    } else {
-      map.delete(key);
-    }
-  }, []);
+  const registerScroller = useCallback(
+    (key: string, node: HTMLDivElement | null) => {
+      const map = scrollersRef.current;
+      if (node) {
+        map.set(key, node);
+        // Aplica imediatamente o scrollLeft atual (de outro grupo já existente)
+        // para que grupos recém-expandidos apareçam alinhados.
+        const any = Array.from(map.values()).find(
+          (el) => el !== node && el.scrollLeft > 0,
+        );
+        if (any) node.scrollLeft = any.scrollLeft;
+      } else {
+        map.delete(key);
+      }
+    },
+    [],
+  );
 
   const handleScrollerScroll = useCallback((source: HTMLDivElement) => {
     if (isSyncingRef.current) return;
@@ -2790,9 +3464,9 @@ function BoardView({
     const map = new Map<string, PainelObra[]>();
     for (const o of obras) {
       let key: string;
-      if (o.etapa === 'Execução') {
+      if (o.etapa === "Execução") {
         const w = getEtapaWeek(o);
-        key = w != null ? `Execução::S${w}` : 'Execução::S?';
+        key = w != null ? `Execução::S${w}` : "Execução::S?";
       } else {
         key = o.etapa ?? BOARD_NONE_KEY;
       }
@@ -2800,21 +3474,35 @@ function BoardView({
       if (arr) arr.push(o);
       else map.set(key, [o]);
     }
-    const ordered: { key: string; label: string; etapa: PainelEtapa | null; items: PainelObra[] }[] = [];
+    const ordered: {
+      key: string;
+      label: string;
+      etapa: PainelEtapa | null;
+      items: PainelObra[];
+    }[] = [];
     for (const e of ETAPA_OPTIONS) {
-      if (e === 'Execução') {
+      if (e === "Execução") {
         // Coleta todas as semanas presentes e ordena S1, S2, ...
         const weekKeys = Array.from(map.keys())
-          .filter((k) => k.startsWith('Execução::'))
+          .filter((k) => k.startsWith("Execução::"))
           .sort((a, b) => {
-            const na = a === 'Execução::S?' ? Number.POSITIVE_INFINITY : Number(a.slice('Execução::S'.length));
-            const nb = b === 'Execução::S?' ? Number.POSITIVE_INFINITY : Number(b.slice('Execução::S'.length));
+            const na =
+              a === "Execução::S?"
+                ? Number.POSITIVE_INFINITY
+                : Number(a.slice("Execução::S".length));
+            const nb =
+              b === "Execução::S?"
+                ? Number.POSITIVE_INFINITY
+                : Number(b.slice("Execução::S".length));
             return na - nb;
           });
         for (const k of weekKeys) {
           const items = map.get(k);
           if (!items || items.length === 0) continue;
-          const label = k === 'Execução::S?' ? 'Execução' : `Execução - S${k.slice('Execução::S'.length)}`;
+          const label =
+            k === "Execução::S?"
+              ? "Execução"
+              : `Execução - S${k.slice("Execução::S".length)}`;
           ordered.push({ key: k, label, etapa: e, items });
         }
       } else {
@@ -2826,12 +3514,18 @@ function BoardView({
     }
     const noneItems = map.get(BOARD_NONE_KEY);
     if (noneItems && noneItems.length > 0) {
-      ordered.push({ key: BOARD_NONE_KEY, label: 'Sem etapa', etapa: null, items: noneItems });
+      ordered.push({
+        key: BOARD_NONE_KEY,
+        label: "Sem etapa",
+        etapa: null,
+        items: noneItems,
+      });
     }
     return ordered;
   }, [obras]);
 
-  const allCollapsed = groups.length > 0 && groups.every((g) => collapsed.has(g.key));
+  const allCollapsed =
+    groups.length > 0 && groups.every((g) => collapsed.has(g.key));
 
   const handleToggleAll = () => {
     if (allCollapsed) {
@@ -2845,8 +3539,8 @@ function BoardView({
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2 px-1">
         <p className="text-xs text-muted-foreground">
-          {groups.length} {groups.length === 1 ? 'grupo' : 'grupos'} · {obras.length}{' '}
-          {obras.length === 1 ? 'obra' : 'obras'}
+          {groups.length} {groups.length === 1 ? "grupo" : "grupos"} ·{" "}
+          {obras.length} {obras.length === 1 ? "obra" : "obras"}
         </p>
         <Button
           type="button"
@@ -2880,14 +3574,22 @@ function BoardView({
             >
               <span
                 aria-hidden="true"
-                className={cn('h-5 w-1 rounded-full shrink-0', getBoardEtapaAccent(g.etapa))}
+                className={cn(
+                  "h-5 w-1 rounded-full shrink-0",
+                  getBoardEtapaAccent(g.etapa),
+                )}
               />
               {isCollapsed ? (
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               ) : (
                 <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
               )}
-              <span data-testid="board-group-label" className="font-semibold text-sm">{g.label}</span>
+              <span
+                data-testid="board-group-label"
+                className="font-semibold text-sm"
+              >
+                {g.label}
+              </span>
               <span className="inline-flex items-center justify-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground min-w-[24px]">
                 {g.items.length}
               </span>
@@ -2900,21 +3602,52 @@ function BoardView({
                 onScroll={(e) => handleScrollerScroll(e.currentTarget)}
                 className="overflow-x-auto border-t border-border-subtle"
               >
-                <Table className={cn('w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle', densityTableClass)}>
+                <Table
+                  className={cn(
+                    "w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
+                    densityTableClass,
+                  )}
+                >
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border-subtle">
-                      <TableHead className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
-                      <TableHead className="w-[60px] text-center" aria-label="Dados do cliente">Dados</TableHead>
+                      <TableHead className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">
+                        Cliente / Obra
+                      </TableHead>
+                      <TableHead
+                        className="w-[60px] text-center"
+                        aria-label="Dados do cliente"
+                      >
+                        Dados
+                      </TableHead>
                       <TableHead className="min-w-[120px]">Status</TableHead>
                       <TableHead className="min-w-[140px]">Etapa</TableHead>
-                      <TableHead className="min-w-[120px] text-right">Progresso</TableHead>
-                      <TableHead className="min-w-[100px]">{renderSortableHeader('Início Of.', 'inicio_oficial')}</TableHead>
-                      <TableHead className="min-w-[100px]">{renderSortableHeader('Entrega Of.', 'entrega_oficial')}</TableHead>
-                      <TableHead className="min-w-[100px]">{renderSortableHeader('Início Real', 'inicio_real')}</TableHead>
-                      <TableHead className="min-w-[100px]">{renderSortableHeader('Entrega Real', 'entrega_real')}</TableHead>
-                      <TableHead className="min-w-[130px]">Relacionamento</TableHead>
-                      <TableHead className="min-w-[150px]">{renderSortableHeader('Responsável', 'responsavel_nome')}</TableHead>
-                      <TableHead className="min-w-[110px] text-right">{renderSortableHeader('Atraso', 'atraso')}</TableHead>
+                      <TableHead className="min-w-[120px] text-right">
+                        Progresso
+                      </TableHead>
+                      <TableHead className="min-w-[100px]">
+                        {renderSortableHeader("Início Of.", "inicio_oficial")}
+                      </TableHead>
+                      <TableHead className="min-w-[100px]">
+                        {renderSortableHeader("Entrega Of.", "entrega_oficial")}
+                      </TableHead>
+                      <TableHead className="min-w-[100px]">
+                        {renderSortableHeader("Início Real", "inicio_real")}
+                      </TableHead>
+                      <TableHead className="min-w-[100px]">
+                        {renderSortableHeader("Entrega Real", "entrega_real")}
+                      </TableHead>
+                      <TableHead className="min-w-[130px]">
+                        Relacionamento
+                      </TableHead>
+                      <TableHead className="min-w-[150px]">
+                        {renderSortableHeader(
+                          "Responsável",
+                          "responsavel_nome",
+                        )}
+                      </TableHead>
+                      <TableHead className="min-w-[110px] text-right">
+                        {renderSortableHeader("Atraso", "atraso")}
+                      </TableHead>
                       <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                     </TableRow>
                   </TableHeader>
@@ -2979,23 +3712,37 @@ interface MobilePainelViewProps {
   onToggleExpanded: (id: string) => void;
 }
 
-function statusChipTone(s: PainelStatus | null): NonNullable<MobileRecordCardChip['tone']> {
+function statusChipTone(
+  s: PainelStatus | null,
+): NonNullable<MobileRecordCardChip["tone"]> {
   switch (s) {
-    case 'Em dia':     return 'success';
-    case 'Aguardando': return 'info';
-    case 'Atrasado':   return 'destructive';
-    case 'Paralisada': return 'neutral';
-    default:           return 'muted';
+    case "Em dia":
+      return "success";
+    case "Aguardando":
+      return "info";
+    case "Atrasado":
+      return "destructive";
+    case "Paralisada":
+      return "neutral";
+    default:
+      return "muted";
   }
 }
 
-function relacionamentoChipTone(r: PainelRelacionamento | null): NonNullable<MobileRecordCardChip['tone']> {
+function relacionamentoChipTone(
+  r: PainelRelacionamento | null,
+): NonNullable<MobileRecordCardChip["tone"]> {
   switch (r) {
-    case 'Normal':       return 'success';
-    case 'Atrito':       return 'warning';
-    case 'Insatisfeito': return 'warning';
-    case 'Crítico':      return 'destructive';
-    default:             return 'muted';
+    case "Normal":
+      return "success";
+    case "Atrito":
+      return "warning";
+    case "Insatisfeito":
+      return "warning";
+    case "Crítico":
+      return "destructive";
+    default:
+      return "muted";
   }
 }
 
@@ -3048,7 +3795,7 @@ function MobilePainelView({
             {search && (
               <button
                 type="button"
-                onClick={() => onSearchChange('')}
+                onClick={() => onSearchChange("")}
                 aria-label="Limpar busca"
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
               >
@@ -3062,13 +3809,14 @@ function MobilePainelView({
             variant="outline"
             onClick={() => setMobileFiltersOpen(true)}
             className={cn(
-              'shrink-0 h-11 px-3 gap-1.5 text-[13px] font-medium',
-              activeFilterCount > 0 && 'border-primary/40 bg-primary/5 text-foreground',
+              "shrink-0 h-11 px-3 gap-1.5 text-[13px] font-medium",
+              activeFilterCount > 0 &&
+                "border-primary/40 bg-primary/5 text-foreground",
             )}
             aria-label={
               activeFilterCount > 0
                 ? `Filtros (${activeFilterCount} ativos)`
-                : 'Abrir filtros'
+                : "Abrir filtros"
             }
             aria-haspopup="dialog"
           >
@@ -3085,7 +3833,9 @@ function MobilePainelView({
         {/* Linha secundária: contador + limpar (só quando há filtros) */}
         <div className="flex items-center justify-between mt-2">
           <span className="text-[12px] text-muted-foreground tabular-nums">
-            <span className="font-semibold text-foreground">{filtered.length}</span>
+            <span className="font-semibold text-foreground">
+              {filtered.length}
+            </span>
             <span className="opacity-60"> de {obras.length} obras</span>
           </span>
           {hasFilters && (
@@ -3119,17 +3869,25 @@ function MobilePainelView({
         <div className="mt-3">
           <EmptyState
             icon={Table2}
-            title={obras.length === 0 ? 'Nenhuma obra cadastrada' : 'Nenhum resultado'}
+            title={
+              obras.length === 0
+                ? "Nenhuma obra cadastrada"
+                : "Nenhum resultado"
+            }
             description={
               obras.length === 0
-                ? 'Crie sua primeira obra para começar.'
-                : 'Nenhuma obra corresponde aos filtros atuais.'
+                ? "Crie sua primeira obra para começar."
+                : "Nenhuma obra corresponde aos filtros atuais."
             }
             action={
               obras.length === 0
-                ? { label: 'Nova obra', onClick: onCreate, icon: Plus }
+                ? { label: "Nova obra", onClick: onCreate, icon: Plus }
                 : hasFilters
-                  ? { label: 'Limpar filtros', onClick: clearAllFilters, icon: RotateCcw }
+                  ? {
+                      label: "Limpar filtros",
+                      onClick: clearAllFilters,
+                      icon: RotateCcw,
+                    }
                   : undefined
             }
           />
@@ -3146,7 +3904,10 @@ function MobilePainelView({
                 tone: statusChipTone(displayStatus),
                 leading: (
                   <span
-                    className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(displayStatus))}
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full shrink-0",
+                      statusDotClass(displayStatus),
+                    )}
                     aria-hidden
                   />
                 ),
@@ -3156,26 +3917,26 @@ function MobilePainelView({
               chips.push({
                 label: formatEtapaLabel(o) ?? o.etapa,
                 tone:
-                  o.etapa === 'Finalizada'
-                    ? 'success'
-                    : o.etapa === 'Vistoria reprovada'
-                      ? 'destructive'
-                      : 'neutral',
+                  o.etapa === "Finalizada"
+                    ? "success"
+                    : o.etapa === "Vistoria reprovada"
+                      ? "destructive"
+                      : "neutral",
               });
             }
-            if (o.relacionamento && o.relacionamento !== 'Normal') {
+            if (o.relacionamento && o.relacionamento !== "Normal") {
               chips.push({
                 label: o.relacionamento,
                 tone: relacionamentoChipTone(o.relacionamento),
               });
             }
 
-            const tone: 'default' | 'destructive' | 'warning' =
-              displayStatus === 'Atrasado' || dias > 10
-                ? 'destructive'
+            const tone: "default" | "destructive" | "warning" =
+              displayStatus === "Atrasado" || dias > 10
+                ? "destructive"
                 : dias > 0
-                  ? 'warning'
-                  : 'default';
+                  ? "warning"
+                  : "default";
 
             const responsavel = o.responsavel_nome
               ? formatNomePessoa(o.responsavel_nome)
@@ -3191,8 +3952,8 @@ function MobilePainelView({
                 {dias > 0 && (
                   <span
                     className={cn(
-                      'inline-flex items-center gap-1 font-semibold tabular-nums',
-                      dias > 10 ? 'text-destructive' : 'text-warning',
+                      "inline-flex items-center gap-1 font-semibold tabular-nums",
+                      dias > 10 ? "text-destructive" : "text-warning",
                     )}
                   >
                     <AlertTriangle className="h-3 w-3" />
@@ -3202,7 +3963,9 @@ function MobilePainelView({
                 {responsavel && (
                   <span className="inline-flex items-center gap-1 truncate">
                     <User className="h-3 w-3 opacity-60" />
-                    <span className="truncate max-w-[140px]">{responsavel}</span>
+                    <span className="truncate max-w-[140px]">
+                      {responsavel}
+                    </span>
                   </span>
                 )}
               </span>
@@ -3213,19 +3976,19 @@ function MobilePainelView({
               <li
                 key={o.id}
                 className={cn(
-                  'border-b border-border-subtle last:border-b-0',
-                  isExpanded && 'bg-accent/15',
+                  "border-b border-border-subtle last:border-b-0",
+                  isExpanded && "bg-accent/15",
                 )}
-                data-expanded={isExpanded ? 'true' : 'false'}
+                data-expanded={isExpanded ? "true" : "false"}
               >
                 <MobileRecordCard
-                  title={o.customer_name ?? 'Sem cliente'}
-                  subtitle={o.nome ?? '—'}
+                  title={o.customer_name ?? "Sem cliente"}
+                  subtitle={o.nome ?? "—"}
                   chips={chips}
                   meta={meta}
                   tone={tone}
                   onClick={() => onOpen(o.id)}
-                  ariaLabel={`Abrir obra ${o.nome ?? ''} de ${o.customer_name ?? 'cliente sem nome'}`}
+                  ariaLabel={`Abrir obra ${o.nome ?? ""} de ${o.customer_name ?? "cliente sem nome"}`}
                   className="border-b-0 bg-transparent"
                   overflowMenu={
                     <>
@@ -3241,7 +4004,9 @@ function MobilePainelView({
                         className="text-sm gap-2"
                       >
                         <ClipboardList className="h-4 w-4" />
-                        {isExpanded ? 'Recolher atividades' : 'Planejar atividades'}
+                        {isExpanded
+                          ? "Recolher atividades"
+                          : "Planejar atividades"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onOpenDados(o)}
@@ -3268,24 +4033,26 @@ function MobilePainelView({
                   onClick={() => onToggleExpanded(o.id)}
                   aria-expanded={isExpanded}
                   aria-controls={`obra-atividades-${o.id}`}
-                  aria-label={isExpanded ? 'Recolher atividades' : 'Planejar atividades'}
+                  aria-label={
+                    isExpanded ? "Recolher atividades" : "Planejar atividades"
+                  }
                   className={cn(
-                    'flex w-full items-center justify-between gap-2 px-4 py-2.5 min-h-[44px] text-[13px] font-medium',
-                    'border-t border-dashed border-border-subtle transition-colors',
-                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                    "flex w-full items-center justify-between gap-2 px-4 py-2.5 min-h-[44px] text-[13px] font-medium",
+                    "border-t border-dashed border-border-subtle transition-colors",
+                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                     isExpanded
-                      ? 'bg-primary/5 text-primary hover:bg-primary/10'
-                      : 'text-muted-foreground hover:bg-muted/40 active:bg-muted',
+                      ? "bg-primary/5 text-primary hover:bg-primary/10"
+                      : "text-muted-foreground hover:bg-muted/40 active:bg-muted",
                   )}
                 >
                   <span className="inline-flex items-center gap-2">
                     <ClipboardList className="h-3.5 w-3.5" aria-hidden="true" />
-                    {isExpanded ? 'Recolher atividades' : 'Planejar atividades'}
+                    {isExpanded ? "Recolher atividades" : "Planejar atividades"}
                   </span>
                   <ChevronDown
                     className={cn(
-                      'h-4 w-4 transition-transform duration-200',
-                      isExpanded && 'rotate-180',
+                      "h-4 w-4 transition-transform duration-200",
+                      isExpanded && "rotate-180",
                     )}
                     aria-hidden="true"
                   />
@@ -3320,7 +4087,7 @@ function MobilePainelView({
           <div className="flex flex-wrap gap-2">
             {[NONE, ...STATUS_OPTIONS].map((s) => {
               const checked = filterStatuses.has(s);
-              const label = s === NONE ? 'Sem status' : s;
+              const label = s === NONE ? "Sem status" : s;
               return (
                 <button
                   type="button"
@@ -3329,17 +4096,19 @@ function MobilePainelView({
                   role="checkbox"
                   aria-checked={checked}
                   className={cn(
-                    'inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[13px] border transition-colors',
+                    "inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[13px] border transition-colors",
                     checked
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-surface text-foreground border-border-subtle hover:border-border-strong',
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-surface text-foreground border-border-subtle hover:border-border-strong",
                   )}
                 >
                   {s !== NONE && (
                     <span
                       className={cn(
-                        'h-1.5 w-1.5 rounded-full',
-                        checked ? 'bg-primary-foreground' : statusDotClass(s as PainelStatus),
+                        "h-1.5 w-1.5 rounded-full",
+                        checked
+                          ? "bg-primary-foreground"
+                          : statusDotClass(s as PainelStatus),
                       )}
                       aria-hidden
                     />
@@ -3376,7 +4145,9 @@ function MobilePainelView({
               <SelectItem value={ALL}>Todas etapas</SelectItem>
               <SelectItem value={NONE}>(sem etapa)</SelectItem>
               {ETAPA_OPTIONS.map((e) => (
-                <SelectItem key={e} value={e}>{e}</SelectItem>
+                <SelectItem key={e} value={e}>
+                  {e}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -3387,7 +4158,10 @@ function MobilePainelView({
           <legend className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
             Relacionamento
           </legend>
-          <Select value={filterRelacionamento} onValueChange={onFilterRelacionamento}>
+          <Select
+            value={filterRelacionamento}
+            onValueChange={onFilterRelacionamento}
+          >
             <SelectTrigger
               aria-label="Filtrar por relacionamento"
               className="h-11 w-full text-[14px]"
@@ -3398,7 +4172,9 @@ function MobilePainelView({
               <SelectItem value={ALL}>Todos relacionamentos</SelectItem>
               <SelectItem value={NONE}>(sem relacionamento)</SelectItem>
               {RELACIONAMENTO_OPTIONS.map((r) => (
-                <SelectItem key={r} value={r}>{r}</SelectItem>
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -3420,7 +4196,9 @@ function MobilePainelView({
               <SelectItem value={ALL}>Todos responsáveis</SelectItem>
               <SelectItem value={NONE}>(sem responsável)</SelectItem>
               {staffUsers.map((u) => (
-                <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                <SelectItem key={u.id} value={u.id}>
+                  {u.nome}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>

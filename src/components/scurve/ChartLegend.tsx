@@ -11,8 +11,14 @@ export const ChartLegend = () => (
       <span className="text-xs sm:text-sm text-muted-foreground">Previsto</span>
     </div>
     <div className="flex items-center gap-2">
-      <span className="w-6 h-1 rounded-full" style={{ backgroundColor: "#22c55e" }} />
-      <span className="text-xs sm:text-sm font-semibold" style={{ color: "#22c55e" }}>
+      <span
+        className="w-6 h-1 rounded-full"
+        style={{ backgroundColor: "#22c55e" }}
+      />
+      <span
+        className="text-xs sm:text-sm font-semibold"
+        style={{ color: "#22c55e" }}
+      >
         Realizado
       </span>
     </div>

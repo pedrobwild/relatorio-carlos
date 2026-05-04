@@ -1,27 +1,27 @@
 /**
  * Files Repository
- * 
+ *
  * Centralized data access for the scalable file storage system.
  * Handles file metadata, signed URLs, lifecycle management, and deduplication.
  */
 
-import { 
-  supabase, 
-  executeQuery, 
+import {
+  supabase,
+  executeQuery,
   executeListQuery,
   getPaginationRange,
   type PaginationParams,
   type PaginatedResult,
   type RepositoryResult,
   type RepositoryListResult,
-} from './base.repository';
+} from "./base.repository";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type FileStatus = 'active' | 'archived' | 'deleted';
-export type FileVisibility = 'private' | 'team' | 'public';
+export type FileStatus = "active" | "archived" | "deleted";
+export type FileVisibility = "private" | "team" | "public";
 
 export interface FileMetadata {
   id: string;
@@ -91,24 +91,24 @@ const SIGNED_URL_EXPIRY_SECONDS = 3600; // 1 hour
 // Allowed MIME types for upload validation
 export const ALLOWED_MIME_TYPES = [
   // Images
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg+xml',
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
   // Documents
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   // Videos
-  'video/mp4',
-  'video/quicktime',
-  'video/webm',
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
   // Archives
-  'application/zip',
-  'application/x-rar-compressed',
+  "application/zip",
+  "application/x-rar-compressed",
 ];
 
 // Maximum file size: 500MB
@@ -124,22 +124,29 @@ const MIN_FILE_SIZE_BYTES = 1;
  */
 export function validateFile(file: File): { valid: boolean; error?: string } {
   if (file.size < MIN_FILE_SIZE_BYTES) {
-    return { valid: false, error: 'Arquivo vazio não é permitido' };
+    return { valid: false, error: "Arquivo vazio não é permitido" };
   }
 
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    return { valid: false, error: `Arquivo muito grande. Máximo permitido: ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB` };
+    return {
+      valid: false,
+      error: `Arquivo muito grande. Máximo permitido: ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB`,
+    };
   }
-  
+
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    return { valid: false, error: 'Tipo de arquivo não permitido' };
+    return { valid: false, error: "Tipo de arquivo não permitido" };
   }
-  
+
   // Check for path traversal in filename
-  if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
-    return { valid: false, error: 'Nome de arquivo inválido' };
+  if (
+    file.name.includes("..") ||
+    file.name.includes("/") ||
+    file.name.includes("\\")
+  ) {
+    return { valid: false, error: "Nome de arquivo inválido" };
   }
-  
+
   return { valid: true };
 }
 
@@ -149,40 +156,40 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
 export function sanitizeFilename(filename: string): string {
   // Remove path traversal and special characters
   const sanitized = filename
-    .replace(/\.\./g, '')
-    .replace(/[/\\]/g, '')
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .replace(/\.\./g, "")
+    .replace(/[/\\]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
     .slice(0, 100);
-  
-  return sanitized || 'unnamed_file';
+
+  return sanitized || "unnamed_file";
 }
 
 // ============================================================================
 // Media Helpers
 // ============================================================================
 
-const MEDIA_MIME_PREFIXES = ['image/', 'video/', 'audio/'];
+const MEDIA_MIME_PREFIXES = ["image/", "video/", "audio/"];
 
 function isMediaType(mimeType: string): boolean {
-  return MEDIA_MIME_PREFIXES.some(prefix => mimeType.startsWith(prefix));
+  return MEDIA_MIME_PREFIXES.some((prefix) => mimeType.startsWith(prefix));
 }
 
 function getCacheControl(mimeType: string): string {
   if (isMediaType(mimeType)) {
-    return '31536000';
+    return "31536000";
   }
 
-  return '3600';
+  return "3600";
 }
 
 async function computeChecksum(file: File): Promise<string | null> {
   try {
     const buffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
   } catch (error) {
-    console.warn('Could not compute file checksum', error);
+    console.warn("Could not compute file checksum", error);
     return null;
   }
 }
@@ -190,18 +197,18 @@ async function computeChecksum(file: File): Promise<string | null> {
 async function findDuplicateFile(
   checksum: string,
   ownerId: string,
-  projectId?: string
+  projectId?: string,
 ): Promise<FileMetadata | null> {
   let query = supabase
-    .from('files')
-    .select('*')
-    .eq('checksum', checksum)
-    .eq('owner_id', ownerId)
-    .eq('status', 'active')
+    .from("files")
+    .select("*")
+    .eq("checksum", checksum)
+    .eq("owner_id", ownerId)
+    .eq("status", "active")
     .limit(1);
 
   if (projectId) {
-    query = query.eq('project_id', projectId);
+    query = query.eq("project_id", projectId);
   }
 
   const { data, error } = await query;
@@ -221,11 +228,11 @@ async function findDuplicateFile(
  * Create file metadata record
  */
 export async function createFileMetadata(
-  input: CreateFileInput
+  input: CreateFileInput,
 ): Promise<RepositoryResult<FileMetadata>> {
   return executeQuery(async () => {
     const { data, error } = await supabase
-      .from('files')
+      .from("files")
       .insert({
         bucket: input.bucket,
         storage_path: input.storage_path,
@@ -239,7 +246,7 @@ export async function createFileMetadata(
         category: input.category ?? null,
         tags: input.tags ?? [],
         description: input.description ?? null,
-        visibility: input.visibility ?? 'private',
+        visibility: input.visibility ?? "private",
         retention_days: input.retention_days ?? null,
         entity_type: input.entity_type ?? null,
         entity_id: input.entity_id ?? null,
@@ -259,12 +266,14 @@ export async function createFileMetadata(
 /**
  * Get file by ID
  */
-export async function getFileById(fileId: string): Promise<RepositoryResult<FileMetadata>> {
+export async function getFileById(
+  fileId: string,
+): Promise<RepositoryResult<FileMetadata>> {
   return executeQuery(async () => {
     const { data, error } = await supabase
-      .from('files')
-      .select('*')
-      .eq('id', fileId)
+      .from("files")
+      .select("*")
+      .eq("id", fileId)
       .single();
 
     if (error) return { data: null, error };
@@ -281,44 +290,52 @@ export async function getFileById(fileId: string): Promise<RepositoryResult<File
  */
 export async function getFiles(
   filters: FileFilters,
-  params: PaginationParams = {}
+  params: PaginationParams = {},
 ): Promise<PaginatedResult<FileMetadata>> {
   const { from, to } = getPaginationRange(params);
-  
+
   let query = supabase
-    .from('files')
-    .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
+    .from("files")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
     .range(from, to);
 
   // Apply filters
   if (filters.project_id) {
-    query = query.eq('project_id', filters.project_id);
+    query = query.eq("project_id", filters.project_id);
   }
   if (filters.org_id) {
-    query = query.eq('org_id', filters.org_id);
+    query = query.eq("org_id", filters.org_id);
   }
   if (filters.owner_id) {
-    query = query.eq('owner_id', filters.owner_id);
+    query = query.eq("owner_id", filters.owner_id);
   }
   if (filters.category) {
-    query = query.eq('category', filters.category);
+    query = query.eq("category", filters.category);
   }
   if (filters.status) {
-    query = query.eq('status', filters.status);
+    query = query.eq("status", filters.status);
   } else {
     // Default to active files only
-    query = query.eq('status', 'active');
+    query = query.eq("status", "active");
   }
   if (filters.entity_type && filters.entity_id) {
-    query = query.eq('entity_type', filters.entity_type).eq('entity_id', filters.entity_id);
+    query = query
+      .eq("entity_type", filters.entity_type)
+      .eq("entity_id", filters.entity_id);
   }
 
   const { data, error, count } = await query;
 
   if (error) {
-    console.error('Error fetching files:', error);
-    return { data: [], total: 0, page: params.page ?? 1, pageSize: params.pageSize ?? 20, hasMore: false };
+    console.error("Error fetching files:", error);
+    return {
+      data: [],
+      total: 0,
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 20,
+      hasMore: false,
+    };
   }
 
   const total = count ?? 0;
@@ -340,14 +357,14 @@ export async function getFiles(
 export async function getSignedUrl(
   bucket: string,
   storagePath: string,
-  expiresIn: number = SIGNED_URL_EXPIRY_SECONDS
+  expiresIn: number = SIGNED_URL_EXPIRY_SECONDS,
 ): Promise<string | null> {
   const { data, error } = await supabase.storage
     .from(bucket)
     .createSignedUrl(storagePath, expiresIn);
 
   if (error) {
-    console.error('Error creating signed URL:', error);
+    console.error("Error creating signed URL:", error);
     return null;
   }
 
@@ -358,13 +375,13 @@ export async function getSignedUrl(
  * Get files with signed URLs
  */
 export async function getFilesWithUrls(
-  files: FileMetadata[]
+  files: FileMetadata[],
 ): Promise<FileWithUrl[]> {
   const filesWithUrls = await Promise.all(
     files.map(async (file) => {
       const url = await getSignedUrl(file.bucket, file.storage_path);
       return { ...file, url };
-    })
+    }),
   );
 
   return filesWithUrls;
@@ -373,12 +390,14 @@ export async function getFilesWithUrls(
 /**
  * Soft delete a file (mark as deleted)
  */
-export async function softDeleteFile(fileId: string): Promise<RepositoryResult<FileMetadata>> {
+export async function softDeleteFile(
+  fileId: string,
+): Promise<RepositoryResult<FileMetadata>> {
   return executeQuery(async () => {
     const { data, error } = await supabase
-      .from('files')
-      .update({ status: 'deleted', deleted_at: new Date().toISOString() })
-      .eq('id', fileId)
+      .from("files")
+      .update({ status: "deleted", deleted_at: new Date().toISOString() })
+      .eq("id", fileId)
       .select()
       .single();
 
@@ -394,12 +413,14 @@ export async function softDeleteFile(fileId: string): Promise<RepositoryResult<F
 /**
  * Archive a file
  */
-export async function archiveFile(fileId: string): Promise<RepositoryResult<FileMetadata>> {
+export async function archiveFile(
+  fileId: string,
+): Promise<RepositoryResult<FileMetadata>> {
   return executeQuery(async () => {
     const { data, error } = await supabase
-      .from('files')
-      .update({ status: 'archived', archived_at: new Date().toISOString() })
-      .eq('id', fileId)
+      .from("files")
+      .update({ status: "archived", archived_at: new Date().toISOString() })
+      .eq("id", fileId)
       .select()
       .single();
 
@@ -418,9 +439,9 @@ export async function archiveFile(fileId: string): Promise<RepositoryResult<File
 export async function findDuplicateByChecksum(
   checksum: string,
   ownerId?: string,
-  projectId?: string
+  projectId?: string,
 ): Promise<FileMetadata | null> {
-  const { data, error } = await supabase.rpc('find_duplicate_file', {
+  const { data, error } = await supabase.rpc("find_duplicate_file", {
     p_checksum: checksum,
     p_owner_id: ownerId,
     p_project_id: projectId,
@@ -441,23 +462,23 @@ export async function findDuplicateByChecksum(
 export async function generateStoragePath(
   orgId: string | null,
   projectId: string | null,
-  filename: string
+  filename: string,
 ): Promise<string> {
-  const { data, error } = await supabase.rpc('generate_file_storage_path', {
-     p_org_id: orgId as string,
-     p_project_id: projectId as string,
+  const { data, error } = await supabase.rpc("generate_file_storage_path", {
+    p_org_id: orgId as string,
+    p_project_id: projectId as string,
     p_filename: sanitizeFilename(filename),
   });
 
   if (error) {
-    console.error('Error generating storage path:', error);
+    console.error("Error generating storage path:", error);
     // Fallback to client-side generation
     const uuid = crypto.randomUUID();
     const safeFilename = sanitizeFilename(filename);
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    return `${orgId ?? 'shared'}/${projectId ?? 'general'}/${year}/${month}/${uuid}_${safeFilename}`;
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    return `${orgId ?? "shared"}/${projectId ?? "general"}/${year}/${month}/${uuid}_${safeFilename}`;
   }
 
   return data;
@@ -477,7 +498,7 @@ export async function uploadFile(
     entityType?: string;
     entityId?: string;
     description?: string;
-  }
+  },
 ): Promise<RepositoryResult<FileWithUrl>> {
   // Validate file
   const validation = validateFile(file);
@@ -486,9 +507,9 @@ export async function uploadFile(
       data: null,
       error: {
         message: validation.error!,
-        details: '',
-        hint: '',
-        code: 'VALIDATION_ERROR',
+        details: "",
+        hint: "",
+        code: "VALIDATION_ERROR",
       } as never,
     };
   }
@@ -500,11 +521,14 @@ export async function uploadFile(
       const duplicate = await findDuplicateFile(
         checksum,
         options.ownerId,
-        options.projectId
+        options.projectId,
       );
 
       if (duplicate) {
-        const url = await getSignedUrl(duplicate.bucket, duplicate.storage_path);
+        const url = await getSignedUrl(
+          duplicate.bucket,
+          duplicate.storage_path,
+        );
         return {
           data: { ...duplicate, url },
           error: null,
@@ -516,7 +540,7 @@ export async function uploadFile(
     const storagePath = await generateStoragePath(
       options.orgId ?? null,
       options.projectId ?? null,
-      file.name
+      file.name,
     );
 
     // Upload to storage
@@ -524,7 +548,7 @@ export async function uploadFile(
       .from(options.bucket)
       .upload(storagePath, file, {
         cacheControl: getCacheControl(file.type),
-        contentType: file.type || 'application/octet-stream',
+        contentType: file.type || "application/octet-stream",
         upsert: false,
       });
 
@@ -533,9 +557,9 @@ export async function uploadFile(
         data: null,
         error: {
           message: uploadError.message,
-          details: '',
-          hint: '',
-          code: 'STORAGE_ERROR',
+          details: "",
+          hint: "",
+          code: "STORAGE_ERROR",
         } as never,
       };
     }
@@ -574,10 +598,10 @@ export async function uploadFile(
     return {
       data: null,
       error: {
-        message: err instanceof Error ? err.message : 'Upload failed',
-        details: '',
-        hint: '',
-        code: 'UNKNOWN',
+        message: err instanceof Error ? err.message : "Upload failed",
+        details: "",
+        hint: "",
+        code: "UNKNOWN",
       } as never,
     };
   }

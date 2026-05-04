@@ -1,34 +1,37 @@
 /**
  * Document Viewer Modal
- * 
+ *
  * Full-featured document viewer with comments panel
  */
 
-import { useState, useCallback } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import { useState, useCallback } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  FileText, 
-  History, 
-  MessageSquare, 
-  CheckCircle2, 
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  FileText,
+  History,
+  MessageSquare,
+  CheckCircle2,
   Clock,
   ShieldCheck,
-} from 'lucide-react';
-import { DocumentViewer } from '@/components/DocumentViewer';
-import { DocumentComments, type DocumentComment } from '@/components/DocumentComments';
-import { useDocumentComments } from '@/hooks/useDocumentComments';
-import { useCan } from '@/hooks/useCan';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { DocumentViewer } from "@/components/DocumentViewer";
+import {
+  DocumentComments,
+  type DocumentComment,
+} from "@/components/DocumentComments";
+import { useDocumentComments } from "@/hooks/useDocumentComments";
+import { useCan } from "@/hooks/useCan";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export interface DocumentForViewer {
   id: string;
@@ -37,7 +40,7 @@ export interface DocumentForViewer {
   description?: string | null;
   document_type: string;
   version: number;
-  status: 'pending' | 'approved';
+  status: "pending" | "approved";
   mime_type?: string | null;
   size_bytes?: number | null;
   checksum?: string | null;
@@ -69,34 +72,40 @@ export function DocumentViewerModal({
   onViewHistory,
 }: DocumentViewerModalProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState<'viewer' | 'comments'>('viewer');
+  const [activeTab, setActiveTab] = useState<"viewer" | "comments">("viewer");
   const { can } = useCan();
-  
-  const { 
-    comments, 
+
+  const {
+    comments,
     isLoading: commentsLoading,
     addComment,
     deleteComment,
     canDeleteComment,
   } = useDocumentComments(document?.id, document?.version);
 
-  const canAddComment = can('documents:upload'); // Staff can comment
-  const isPdf = document?.mime_type === 'application/pdf';
+  const canAddComment = can("documents:upload"); // Staff can comment
+  const isPdf = document?.mime_type === "application/pdf";
 
-  const handleAddComment = useCallback(async (comment: string, pageNumber?: number) => {
-    if (!document) return;
-    await addComment(
-      document.project_id,
-      document.id,
-      document.version,
-      comment,
-      pageNumber
-    );
-  }, [document, addComment]);
+  const handleAddComment = useCallback(
+    async (comment: string, pageNumber?: number) => {
+      if (!document) return;
+      await addComment(
+        document.project_id,
+        document.id,
+        document.version,
+        comment,
+        pageNumber,
+      );
+    },
+    [document, addComment],
+  );
 
-  const handleDeleteComment = useCallback(async (commentId: string) => {
-    await deleteComment(commentId);
-  }, [deleteComment]);
+  const handleDeleteComment = useCallback(
+    async (commentId: string) => {
+      await deleteComment(commentId);
+    },
+    [deleteComment],
+  );
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
@@ -104,7 +113,7 @@ export function DocumentViewerModal({
 
   const handlePageClick = useCallback((pageNumber: number) => {
     setCurrentPage(pageNumber);
-    setActiveTab('viewer');
+    setActiveTab("viewer");
   }, []);
 
   if (!document) return null;
@@ -126,17 +135,24 @@ export function DocumentViewerModal({
         <DialogHeader className="p-4 border-b border-border shrink-0">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <DialogTitle className="text-base truncate">{document.name}</DialogTitle>
+              <DialogTitle className="text-base truncate">
+                {document.name}
+              </DialogTitle>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className="text-xs text-muted-foreground">Versão {document.version}</span>
-                <Badge 
-                  variant={document.status === 'approved' ? 'default' : 'secondary'}
+                <span className="text-xs text-muted-foreground">
+                  Versão {document.version}
+                </span>
+                <Badge
+                  variant={
+                    document.status === "approved" ? "default" : "secondary"
+                  }
                   className={cn(
                     "text-xs gap-1",
-                    document.status === 'approved' && "bg-[hsl(var(--success))]"
+                    document.status === "approved" &&
+                      "bg-[hsl(var(--success))]",
                   )}
                 >
-                  {document.status === 'approved' ? (
+                  {document.status === "approved" ? (
                     <>
                       <CheckCircle2 className="h-3 w-3" />
                       Aprovado
@@ -149,8 +165,8 @@ export function DocumentViewerModal({
                   )}
                 </Badge>
                 {document.checksum && (
-                  <span 
-                    className="text-xs text-muted-foreground font-mono flex items-center gap-1" 
+                  <span
+                    className="text-xs text-muted-foreground font-mono flex items-center gap-1"
                     title={document.checksum}
                   >
                     <ShieldCheck className="h-3 w-3 text-[hsl(var(--success))]" />
@@ -159,12 +175,12 @@ export function DocumentViewerModal({
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 shrink-0">
               {versionHistory.length > 1 && onViewHistory && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="gap-2"
                   onClick={onViewHistory}
                 >
@@ -182,16 +198,19 @@ export function DocumentViewerModal({
           <div className="flex-1 min-w-0">
             {/* Mobile Tab Switcher */}
             <div className="md:hidden border-b border-border">
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'viewer' | 'comments')}>
+              <Tabs
+                value={activeTab}
+                onValueChange={(v) => setActiveTab(v as "viewer" | "comments")}
+              >
                 <TabsList className="w-full justify-start rounded-none h-auto p-0 bg-transparent">
-                  <TabsTrigger 
-                    value="viewer" 
+                  <TabsTrigger
+                    value="viewer"
                     className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Documento
                   </TabsTrigger>
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="comments"
                     className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
                   >
@@ -204,7 +223,7 @@ export function DocumentViewerModal({
 
             {/* Mobile Content */}
             <div className="md:hidden h-[calc(100%-49px)]">
-              {activeTab === 'viewer' ? (
+              {activeTab === "viewer" ? (
                 document.url && (
                   <DocumentViewer
                     url={document.url}
@@ -221,7 +240,9 @@ export function DocumentViewerModal({
                   isPdf={isPdf}
                   currentPage={currentPage}
                   canAddComment={canAddComment}
-                  canDeleteComment={(c) => canDeleteComment(comments.find(cc => cc.id === c.id)!)}
+                  canDeleteComment={(c) =>
+                    canDeleteComment(comments.find((cc) => cc.id === c.id)!)
+                  }
                   onAddComment={handleAddComment}
                   onDeleteComment={handleDeleteComment}
                   onPageClick={handlePageClick}
@@ -252,7 +273,9 @@ export function DocumentViewerModal({
               isPdf={isPdf}
               currentPage={currentPage}
               canAddComment={canAddComment}
-              canDeleteComment={(c) => canDeleteComment(comments.find(cc => cc.id === c.id)!)}
+              canDeleteComment={(c) =>
+                canDeleteComment(comments.find((cc) => cc.id === c.id)!)
+              }
               onAddComment={handleAddComment}
               onDeleteComment={handleDeleteComment}
               onPageClick={handlePageClick}
@@ -265,7 +288,9 @@ export function DocumentViewerModal({
         {versionHistory.length > 1 && (
           <div className="border-t border-border p-3 shrink-0 bg-muted/30">
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              <span className="text-xs text-muted-foreground shrink-0">Versões:</span>
+              <span className="text-xs text-muted-foreground shrink-0">
+                Versões:
+              </span>
               {versionHistory.map((ver) => (
                 <Button
                   key={ver.id}
@@ -275,7 +300,7 @@ export function DocumentViewerModal({
                   onClick={() => onVersionSelect?.(ver)}
                 >
                   v{ver.version}
-                  {ver.status === 'approved' && (
+                  {ver.status === "approved" && (
                     <CheckCircle2 className="h-3 w-3 ml-1 text-[hsl(var(--success))]" />
                   )}
                 </Button>

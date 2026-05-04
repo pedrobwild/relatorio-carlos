@@ -1,10 +1,13 @@
-import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useMeetingAvailability, deriveMeetingState } from '@/hooks/useMeetingAvailability';
-import { MeetingScheduledCard } from './MeetingScheduledCard';
-import { MeetingAvailabilitySummary } from './MeetingAvailabilitySummary';
-import { MeetingAvailabilityForm } from './MeetingAvailabilityForm';
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  useMeetingAvailability,
+  deriveMeetingState,
+} from "@/hooks/useMeetingAvailability";
+import { MeetingScheduledCard } from "./MeetingScheduledCard";
+import { MeetingAvailabilitySummary } from "./MeetingAvailabilitySummary";
+import { MeetingAvailabilityForm } from "./MeetingAvailabilityForm";
 
 interface MeetingAvailabilityCardProps {
   stageId: string;
@@ -12,8 +15,15 @@ interface MeetingAvailabilityCardProps {
   isAdmin: boolean;
 }
 
-export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: MeetingAvailabilityCardProps) {
-  const { data: existing, isLoading } = useMeetingAvailability(stageId, projectId);
+export function MeetingAvailabilityCard({
+  stageId,
+  projectId,
+  isAdmin,
+}: MeetingAvailabilityCardProps) {
+  const { data: existing, isLoading } = useMeetingAvailability(
+    stageId,
+    projectId,
+  );
   const [isEditing, setIsEditing] = useState(false);
   const meetingState = deriveMeetingState(existing ?? null);
 
@@ -29,11 +39,11 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
     );
   }
 
-  if (meetingState === 'scheduled' && existing) {
+  if (meetingState === "scheduled" && existing) {
     return <MeetingScheduledCard availability={existing} />;
   }
 
-  if (meetingState === 'awaiting_scheduling' && existing && !isEditing) {
+  if (meetingState === "awaiting_scheduling" && existing && !isEditing) {
     return (
       <MeetingAvailabilitySummary
         existing={existing}

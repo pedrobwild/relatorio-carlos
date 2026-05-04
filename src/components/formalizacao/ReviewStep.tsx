@@ -1,11 +1,14 @@
-import { useMemo } from 'react';
-import { User, Building2, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { FORMALIZATION_TYPE_LABELS, type FormalizationType } from '@/types/formalization';
-import DOMPurify from 'dompurify';
+import { useMemo } from "react";
+import { User, Building2, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  FORMALIZATION_TYPE_LABELS,
+  type FormalizationType,
+} from "@/types/formalization";
+import DOMPurify from "dompurify";
 
 interface ReviewStepProps {
   formData: {
@@ -15,7 +18,7 @@ interface ReviewStepProps {
     body_md: string;
     data: Record<string, unknown>;
     parties: Array<{
-      party_type: 'customer' | 'company';
+      party_type: "customer" | "company";
       display_name: string;
       email: string;
       role_label?: string;
@@ -26,16 +29,36 @@ interface ReviewStepProps {
   isSubmitting: boolean;
 }
 
-export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps) {
-  const customerParties = formData.parties.filter(p => p.party_type === 'customer');
-  const companyParties = formData.parties.filter(p => p.party_type === 'company');
+export function ReviewStep({
+  formData,
+  onSubmit,
+  isSubmitting,
+}: ReviewStepProps) {
+  const customerParties = formData.parties.filter(
+    (p) => p.party_type === "customer",
+  );
+  const companyParties = formData.parties.filter(
+    (p) => p.party_type === "company",
+  );
 
   // BUG FIX: Sanitiza HTML para prevenir XSS
   const sanitizedBody = useMemo(() => {
-    const htmlContent = formData.body_md.replace(/\n/g, '<br>');
+    const htmlContent = formData.body_md.replace(/\n/g, "<br>");
     return DOMPurify.sanitize(htmlContent, {
-      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'br', 'p', 'ul', 'ol', 'li', 'a', 'span'],
-      ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+      ALLOWED_TAGS: [
+        "b",
+        "i",
+        "em",
+        "strong",
+        "br",
+        "p",
+        "ul",
+        "ol",
+        "li",
+        "a",
+        "span",
+      ],
+      ALLOWED_ATTR: ["href", "target", "rel", "class"],
     });
   }, [formData.body_md]);
 
@@ -60,11 +83,11 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-caption">{formData.summary}</p>
-          
+
           <Separator />
-          
-          <div 
-            className="prose prose-sm dark:prose-invert max-w-none text-body [&_*]:!font-[inherit] [&_span]:!text-inherit"
+
+          <div
+            className="prose prose-sm max-w-none text-body [&_*]:!font-[inherit] [&_span]:!text-inherit"
             dangerouslySetInnerHTML={{ __html: sanitizedBody }}
           />
         </CardContent>
@@ -84,9 +107,14 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
             </div>
             <div className="space-y-2">
               {customerParties.map((party, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                >
                   <div>
-                    <p className="text-body font-medium">{party.display_name}</p>
+                    <p className="text-body font-medium">
+                      {party.display_name}
+                    </p>
                     <p className="text-tiny">{party.email}</p>
                   </div>
                   {party.must_sign && (
@@ -110,9 +138,14 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
             </div>
             <div className="space-y-2">
               {companyParties.map((party, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                >
                   <div>
-                    <p className="text-body font-medium">{party.display_name}</p>
+                    <p className="text-body font-medium">
+                      {party.display_name}
+                    </p>
                     <p className="text-tiny">{party.email}</p>
                   </div>
                   {party.must_sign && (
@@ -132,15 +165,17 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
       <Card className="bg-primary/5 border-primary/20">
         <CardContent className="p-4">
           <p className="text-caption">
-            <strong className="text-foreground">Importante:</strong> Após enviar para ciência, o conteúdo será travado e não poderá ser alterado. As partes receberão notificação para dar ciência.
+            <strong className="text-foreground">Importante:</strong> Após enviar
+            para ciência, o conteúdo será travado e não poderá ser alterado. As
+            partes receberão notificação para dar ciência.
           </p>
         </CardContent>
       </Card>
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="flex-1 min-h-[44px]"
           onClick={() => onSubmit(false)}
           disabled={isSubmitting}
@@ -148,13 +183,13 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
         >
           Salvar Rascunho
         </Button>
-        <Button 
+        <Button
           className="flex-1 min-h-[44px]"
           onClick={() => onSubmit(true)}
           disabled={isSubmitting}
           aria-label="Enviar para ciência"
         >
-          {isSubmitting ? 'Enviando...' : 'Enviar para Ciência'}
+          {isSubmitting ? "Enviando..." : "Enviar para Ciência"}
         </Button>
       </div>
     </div>

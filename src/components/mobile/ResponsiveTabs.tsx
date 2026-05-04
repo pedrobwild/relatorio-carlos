@@ -16,8 +16,9 @@ import { cn } from "@/lib/utils";
 
 export const Tabs = TabsPrimitive.Root;
 
-interface ResponsiveTabsListProps
-  extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.List> {
+interface ResponsiveTabsListProps extends React.ComponentPropsWithoutRef<
+  typeof TabsPrimitive.List
+> {
   ariaLabel?: string;
 }
 

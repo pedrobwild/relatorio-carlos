@@ -38,11 +38,26 @@ interface SyncLog {
   synced_at: string | null;
 }
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof CheckCircle2 }> = {
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    icon: typeof CheckCircle2;
+  }
+> = {
   success: { label: "Sucesso", variant: "default", icon: CheckCircle2 },
   failed: { label: "Falhou", variant: "destructive", icon: XCircle },
-  auto_corrected: { label: "Corrigido IA", variant: "secondary", icon: Sparkles },
-  needs_manual_review: { label: "Revisão Manual", variant: "outline", icon: AlertTriangle },
+  auto_corrected: {
+    label: "Corrigido IA",
+    variant: "secondary",
+    icon: Sparkles,
+  },
+  needs_manual_review: {
+    label: "Revisão Manual",
+    variant: "outline",
+    icon: AlertTriangle,
+  },
   pending: { label: "Pendente", variant: "outline", icon: RefreshCw },
 };
 
@@ -50,7 +65,11 @@ export function IntegrationMonitorCard() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
 
-  const { data: logs, isLoading, refetch } = useQuery({
+  const {
+    data: logs,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["integration-sync-logs", filter],
     queryFn: async () => {
       let query = supabase
@@ -74,8 +93,14 @@ export function IntegrationMonitorCard() {
     total: logs?.length ?? 0,
     success: logs?.filter((l) => l.sync_status === "success").length ?? 0,
     failed: logs?.filter((l) => l.sync_status === "failed").length ?? 0,
-    corrected: logs?.filter((l) => l.sync_status === "auto_corrected" || l.ai_diagnosis?.startsWith("✅")).length ?? 0,
-    review: logs?.filter((l) => l.sync_status === "needs_manual_review").length ?? 0,
+    corrected:
+      logs?.filter(
+        (l) =>
+          l.sync_status === "auto_corrected" ||
+          l.ai_diagnosis?.startsWith("✅"),
+      ).length ?? 0,
+    review:
+      logs?.filter((l) => l.sync_status === "needs_manual_review").length ?? 0,
   };
 
   return (
@@ -101,9 +126,17 @@ export function IntegrationMonitorCard() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 border-b">
         <StatCard label="Total" value={stats.total} />
-        <StatCard label="Sucesso" value={stats.success} color="text-green-600" />
+        <StatCard
+          label="Sucesso"
+          value={stats.success}
+          color="text-green-600"
+        />
         <StatCard label="Falhas" value={stats.failed} color="text-red-600" />
-        <StatCard label="Corrigidos IA" value={stats.corrected} color="text-purple-600" />
+        <StatCard
+          label="Corrigidos IA"
+          value={stats.corrected}
+          color="text-purple-600"
+        />
         <StatCard label="Revisão" value={stats.review} color="text-amber-600" />
       </div>
 
@@ -129,14 +162,17 @@ export function IntegrationMonitorCard() {
       {/* Logs */}
       <div className="divide-y max-h-[500px] overflow-y-auto">
         {isLoading ? (
-          <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+          <div className="p-8 text-center text-muted-foreground">
+            Carregando...
+          </div>
         ) : !logs?.length ? (
           <div className="p-8 text-center text-muted-foreground">
             Nenhum registro de sincronização encontrado
           </div>
         ) : (
           logs.map((log) => {
-            const config = statusConfig[log.sync_status] ?? statusConfig.pending;
+            const config =
+              statusConfig[log.sync_status] ?? statusConfig.pending;
             const Icon = config.icon;
             const isExpanded = expandedId === log.id;
 
@@ -153,10 +189,10 @@ export function IntegrationMonitorCard() {
                         log.sync_status === "success"
                           ? "text-green-600"
                           : log.sync_status === "failed"
-                          ? "text-red-600"
-                          : log.sync_status === "needs_manual_review"
-                          ? "text-amber-600"
-                          : "text-purple-600"
+                            ? "text-red-600"
+                            : log.sync_status === "needs_manual_review"
+                              ? "text-amber-600"
+                              : "text-purple-600"
                       }`}
                     />
                     <div className="flex-1 min-w-0">
@@ -176,13 +212,16 @@ export function IntegrationMonitorCard() {
                       </div>
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
                         {log.source_system} → {log.target_system}
-                        {log.error_message && ` • ${log.error_message.slice(0, 60)}...`}
+                        {log.error_message &&
+                          ` • ${log.error_message.slice(0, 60)}...`}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs text-muted-foreground">
                         {log.created_at
-                          ? format(new Date(log.created_at), "dd/MM HH:mm", { locale: ptBR })
+                          ? format(new Date(log.created_at), "dd/MM HH:mm", {
+                              locale: ptBR,
+                            })
                           : "—"}
                       </p>
                       {log.attempts && log.attempts > 1 && (
@@ -203,11 +242,11 @@ export function IntegrationMonitorCard() {
                   <div className="px-3 pb-3 space-y-3">
                     {/* Error */}
                     {log.error_message && (
-                      <div className="bg-red-50 dark:bg-red-950/20 rounded p-3">
-                        <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-1">
+                      <div className="bg-red-50 rounded p-3">
+                        <p className="text-xs font-medium text-red-700 mb-1">
                           Erro
                         </p>
-                        <p className="text-xs text-red-600 dark:text-red-300 font-mono whitespace-pre-wrap">
+                        <p className="text-xs text-red-600 font-mono whitespace-pre-wrap">
                           {log.error_message}
                         </p>
                       </div>
@@ -215,12 +254,12 @@ export function IntegrationMonitorCard() {
 
                     {/* AI Diagnosis */}
                     {log.ai_diagnosis && (
-                      <div className="bg-purple-50 dark:bg-purple-950/20 rounded p-3">
-                        <p className="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1 flex items-center gap-1">
+                      <div className="bg-purple-50 rounded p-3">
+                        <p className="text-xs font-medium text-purple-700 mb-1 flex items-center gap-1">
                           <Sparkles className="h-3 w-3" />
                           Diagnóstico IA
                         </p>
-                        <p className="text-xs text-purple-600 dark:text-purple-300 whitespace-pre-wrap">
+                        <p className="text-xs text-purple-600 whitespace-pre-wrap">
                           {log.ai_diagnosis}
                         </p>
                       </div>
@@ -230,18 +269,20 @@ export function IntegrationMonitorCard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {log.payload && (
                         <div className="bg-muted/50 rounded p-3">
-                          <p className="text-xs font-medium mb-1">Payload Original</p>
+                          <p className="text-xs font-medium mb-1">
+                            Payload Original
+                          </p>
                           <pre className="text-xs font-mono overflow-auto max-h-40">
                             {JSON.stringify(log.payload, null, 2)}
                           </pre>
                         </div>
                       )}
                       {log.corrected_payload && (
-                        <div className="bg-green-50 dark:bg-green-950/20 rounded p-3">
-                          <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">
+                        <div className="bg-green-50 rounded p-3">
+                          <p className="text-xs font-medium text-green-700 mb-1">
                             Payload Corrigido
                           </p>
-                          <pre className="text-xs font-mono overflow-auto max-h-40 text-green-600 dark:text-green-300">
+                          <pre className="text-xs font-mono overflow-auto max-h-40 text-green-600">
                             {JSON.stringify(log.corrected_payload, null, 2)}
                           </pre>
                         </div>
@@ -250,9 +291,19 @@ export function IntegrationMonitorCard() {
 
                     {/* Metadata */}
                     <div className="flex gap-4 text-xs text-muted-foreground">
-                      <span>Source ID: <code className="bg-muted px-1 rounded">{log.source_id}</code></span>
+                      <span>
+                        Source ID:{" "}
+                        <code className="bg-muted px-1 rounded">
+                          {log.source_id}
+                        </code>
+                      </span>
                       {log.target_id && (
-                        <span>Target ID: <code className="bg-muted px-1 rounded">{log.target_id}</code></span>
+                        <span>
+                          Target ID:{" "}
+                          <code className="bg-muted px-1 rounded">
+                            {log.target_id}
+                          </code>
+                        </span>
                       )}
                     </div>
                   </div>

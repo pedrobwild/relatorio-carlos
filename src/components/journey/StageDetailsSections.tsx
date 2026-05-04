@@ -1,10 +1,17 @@
 import {
-  AlertTriangle, Info, Target, ClipboardCheck, Wrench,
-  ArrowRight, Package, HelpCircle, Lock,
-} from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { cn } from '@/lib/utils';
-import { JourneyStage } from '@/hooks/useProjectJourney';
+  AlertTriangle,
+  Info,
+  Target,
+  ClipboardCheck,
+  Wrench,
+  ArrowRight,
+  Package,
+  HelpCircle,
+  Lock,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+import { JourneyStage } from "@/hooks/useProjectJourney";
 
 /* ─── helpers ─── */
 
@@ -12,7 +19,7 @@ import { JourneyStage } from '@/hooks/useProjectJourney';
 function toBullets(text: string): string[] {
   return text
     .split(/\n/)
-    .map((l) => l.replace(/^[\s•\-\d.]+/, '').trim())
+    .map((l) => l.replace(/^[\s•\-\d.]+/, "").trim())
     .filter(Boolean);
 }
 
@@ -30,12 +37,25 @@ interface ParsedSections {
 }
 
 const sectionPatterns: { key: keyof ParsedSections; regex: RegExp }[] = [
-  { key: 'objective', regex: /(?:^|\n)#+\s*(?:objetivo|sobre)[^\n]*/i },
-  { key: 'clientActions', regex: /(?:^|\n)#+\s*(?:o que voc[êe]|sua[s]? a[çc][ãa]o|checklist|to.?do)[^\n]*/i },
-  { key: 'bwildActions', regex: /(?:^|\n)#+\s*(?:o que a bwild|bwild est[áa]|nosso trabalho)[^\n]*/i },
-  { key: 'nextStep', regex: /(?:^|\n)#+\s*(?:o que vem|pr[óo]xim[oa]|depois)[^\n]*/i },
-  { key: 'materials', regex: /(?:^|\n)#+\s*(?:materiais|documentos necess[áa]rios)[^\n]*/i },
-  { key: 'faq', regex: /(?:^|\n)#+\s*(?:d[úu]vidas|perguntas|faq)[^\n]*/i },
+  { key: "objective", regex: /(?:^|\n)#+\s*(?:objetivo|sobre)[^\n]*/i },
+  {
+    key: "clientActions",
+    regex:
+      /(?:^|\n)#+\s*(?:o que voc[êe]|sua[s]? a[çc][ãa]o|checklist|to.?do)[^\n]*/i,
+  },
+  {
+    key: "bwildActions",
+    regex: /(?:^|\n)#+\s*(?:o que a bwild|bwild est[áa]|nosso trabalho)[^\n]*/i,
+  },
+  {
+    key: "nextStep",
+    regex: /(?:^|\n)#+\s*(?:o que vem|pr[óo]xim[oa]|depois)[^\n]*/i,
+  },
+  {
+    key: "materials",
+    regex: /(?:^|\n)#+\s*(?:materiais|documentos necess[áa]rios)[^\n]*/i,
+  },
+  { key: "faq", regex: /(?:^|\n)#+\s*(?:d[úu]vidas|perguntas|faq)[^\n]*/i },
 ];
 
 function parseSections(description: string | null): ParsedSections {
@@ -63,8 +83,8 @@ function parseSections(description: string | null): ParsedSections {
       let found = false;
       for (const { key, regex } of sectionPatterns) {
         if (regex.test(part)) {
-          const content = part.replace(/^[#\s]+[^\n]*\n?/, '').trim();
-          if (key === 'objective' || key === 'nextStep') {
+          const content = part.replace(/^[#\s]+[^\n]*\n?/, "").trim();
+          if (key === "objective" || key === "nextStep") {
             (result[key] as string | null) = content;
           } else {
             (result[key] as string[]) = toBullets(content);
@@ -74,9 +94,11 @@ function parseSections(description: string | null): ParsedSections {
         }
       }
       if (!found) {
-        const trimmed = part.replace(/^[#\s]+[^\n]*\n?/, '').trim();
+        const trimmed = part.replace(/^[#\s]+[^\n]*\n?/, "").trim();
         if (trimmed) {
-          result.remaining = result.remaining ? result.remaining + '\n' + trimmed : trimmed;
+          result.remaining = result.remaining
+            ? result.remaining + "\n" + trimmed
+            : trimmed;
         }
       }
     }
@@ -97,7 +119,12 @@ interface SectionBlockProps {
   className?: string;
 }
 
-function SectionBlock({ icon: Icon, title, children, className }: SectionBlockProps) {
+function SectionBlock({
+  icon: Icon,
+  title,
+  children,
+  className,
+}: SectionBlockProps) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <h4 className="flex items-center gap-2 text-card-label">
@@ -115,7 +142,10 @@ function BulletList({ items }: { items: string[] }) {
     <ul className="space-y-1 list-none p-0 m-0">
       {items.map((item, i) => (
         <li key={i} className="text-body flex items-start gap-2">
-          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0" aria-hidden />
+          <span
+            className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0"
+            aria-hidden
+          />
           <span>{item}</span>
         </li>
       ))}
@@ -159,7 +189,10 @@ export function StageDetailsSections({ stage }: StageDetailsSectionsProps) {
 
       {/* ② O que você precisa fazer */}
       {sections.clientActions.length > 0 && (
-        <SectionBlock icon={ClipboardCheck} title="O que você precisa fazer agora">
+        <SectionBlock
+          icon={ClipboardCheck}
+          title="O que você precisa fazer agora"
+        >
           <BulletList items={sections.clientActions} />
         </SectionBlock>
       )}
@@ -194,9 +227,14 @@ export function StageDetailsSections({ stage }: StageDetailsSectionsProps) {
 
       {/* Warning */}
       {stage.warning_text && (
-        <Alert variant="destructive" className="bg-[hsl(var(--warning-light))] border-[hsl(var(--warning)/0.3)] text-[hsl(var(--warning))]">
+        <Alert
+          variant="destructive"
+          className="bg-[hsl(var(--warning-light))] border-[hsl(var(--warning)/0.3)] text-[hsl(var(--warning))]"
+        >
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-sm">{stage.warning_text}</AlertDescription>
+          <AlertDescription className="text-sm">
+            {stage.warning_text}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -205,7 +243,7 @@ export function StageDetailsSections({ stage }: StageDetailsSectionsProps) {
         <Alert className="bg-[hsl(var(--info-light))] border-[hsl(var(--info)/0.3)]">
           <Lock className="h-4 w-4 text-[hsl(var(--info))]" />
           <AlertDescription className="text-[hsl(var(--info))] text-sm">
-            <span className="font-medium">Depende de:</span>{' '}
+            <span className="font-medium">Depende de:</span>{" "}
             {stage.dependencies_text}
           </AlertDescription>
         </Alert>

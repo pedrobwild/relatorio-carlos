@@ -15,14 +15,19 @@ const Pendencias = () => {
   const { sortedItems, stats, isLoading } = usePendencias({ projectId });
   const { paths } = useProjectNavigation();
 
-  const getActionUrl = (item: typeof sortedItems[0]) => {
+  const getActionUrl = (item: (typeof sortedItems)[0]) => {
     if (item.actionUrl) return item.actionUrl;
     switch (item.type) {
-      case "invoice": return paths.financeiro;
-      case "signature": return paths.formalizacoes;
-      case "approval_3d": return paths.projeto3D;
-      case "approval_exec": return paths.executivo;
-      default: return paths.relatorio;
+      case "invoice":
+        return paths.financeiro;
+      case "signature":
+        return paths.formalizacoes;
+      case "approval_3d":
+        return paths.projeto3D;
+      case "approval_exec":
+        return paths.executivo;
+      default:
+        return paths.relatorio;
     }
   };
 
@@ -55,18 +60,26 @@ const Pendencias = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-rose-500" />
-            <span className="text-caption md:text-sm text-rose-600 font-medium">Atrasados</span>
+            <span className="text-caption md:text-sm text-rose-600 font-medium">
+              Atrasados
+            </span>
           </div>
-          <p className="text-h2 md:text-2xl font-bold text-rose-600">{stats.overdueCount}</p>
+          <p className="text-h2 md:text-2xl font-bold text-rose-600">
+            {stats.overdueCount}
+          </p>
         </div>
       </div>
       <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 md:p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 md:w-5 md:h-5 text-amber-500" />
-            <span className="text-caption md:text-sm text-amber-600 font-medium">Urgentes</span>
+            <span className="text-caption md:text-sm text-amber-600 font-medium">
+              Urgentes
+            </span>
           </div>
-          <p className="text-h2 md:text-2xl font-bold text-amber-600">{stats.urgentCount}</p>
+          <p className="text-h2 md:text-2xl font-bold text-amber-600">
+            {stats.urgentCount}
+          </p>
         </div>
       </div>
     </>
@@ -76,7 +89,8 @@ const Pendencias = () => {
     <Alert className="border-primary/20 bg-primary/5">
       <Info className="h-4 w-4 text-primary" />
       <AlertDescription className="text-caption text-foreground/80">
-        <strong>Importante:</strong> Será acrescido 1 dia à data de entrega a cada dia sem retorno após o vencimento do prazo.
+        <strong>Importante:</strong> Será acrescido 1 dia à data de entrega a
+        cada dia sem retorno após o vencimento do prazo.
       </AlertDescription>
     </Alert>
   );
@@ -129,7 +143,9 @@ const Pendencias = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Clock className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm font-medium">Total pendentes</span>
+                      <span className="text-sm font-medium">
+                        Total pendentes
+                      </span>
                     </div>
                     <p className="text-2xl font-bold">{stats.total}</p>
                   </div>
@@ -142,9 +158,7 @@ const Pendencias = () => {
 
           {/* Mobile Layout */}
           <div className="lg:hidden">
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {summaryCards}
-            </div>
+            <div className="grid grid-cols-2 gap-2 mb-4">{summaryCards}</div>
             <div className="mb-4">{infoBanner}</div>
             {itemsList(true)}
           </div>

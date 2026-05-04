@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,34 +6,38 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
-import type { ObraTaskInput, ObraTask, ObraTaskPriority } from '@/hooks/useObraTasks';
-import { useStaffUsers } from '@/hooks/useStaffUsers';
-import { useDialogDraft } from '@/hooks/useDialogDraft';
-import { AutosaveIndicator } from '@/components/ui/AutosaveIndicator';
-import { toast } from 'sonner';
-import { trackAmplitude } from '@/lib/amplitude';
-import { formatCurrencyBRL, parseCurrencyBRL } from '@/lib/currencyMask';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileFullscreenSheet } from '@/components/mobile';
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import type {
+  ObraTaskInput,
+  ObraTask,
+  ObraTaskPriority,
+} from "@/hooks/useObraTasks";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import { useDialogDraft } from "@/hooks/useDialogDraft";
+import { AutosaveIndicator } from "@/components/ui/AutosaveIndicator";
+import { toast } from "sonner";
+import { trackAmplitude } from "@/lib/amplitude";
+import { formatCurrencyBRL, parseCurrencyBRL } from "@/lib/currencyMask";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileFullscreenSheet } from "@/components/mobile";
 
 interface Props {
   open: boolean;
@@ -54,10 +58,10 @@ const priorities: {
   label: string;
   dot: string;
 }[] = [
-  { value: 'baixa', label: 'Baixa', dot: 'bg-muted-foreground/60' },
-  { value: 'media', label: 'Média', dot: 'bg-info' },
-  { value: 'alta', label: 'Alta', dot: 'bg-warning' },
-  { value: 'critica', label: 'Crítica', dot: 'bg-destructive' },
+  { value: "baixa", label: "Baixa", dot: "bg-muted-foreground/60" },
+  { value: "media", label: "Média", dot: "bg-info" },
+  { value: "alta", label: "Alta", dot: "bg-warning" },
+  { value: "critica", label: "Crítica", dot: "bg-destructive" },
 ];
 
 interface AtividadeDraft {
@@ -70,31 +74,61 @@ interface AtividadeDraft {
   priority: ObraTaskPriority;
 }
 
-export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData, draftScope }: Props) {
+export function AtividadeFormDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  initialData,
+  draftScope,
+}: Props) {
   const isMobile = useIsMobile();
   const { data: staffUsers = [] } = useStaffUsers();
-  const [title, setTitle] = useState(initialData?.title || '');
-  const [description, setDescription] = useState(initialData?.description || '');
-  const [responsibleUserId, setResponsibleUserId] = useState(initialData?.responsible_user_id || 'none');
-  const [dueDate, setDueDate] = useState(initialData?.due_date || '');
-  const [startDate, setStartDate] = useState(initialData?.start_date || '');
-  const [cost, setCost] = useState(
-    initialData?.cost != null ? formatCurrencyBRL(String(Math.round(initialData.cost * 100))) : ''
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [description, setDescription] = useState(
+    initialData?.description || "",
   );
-  const [priority, setPriority] = useState<ObraTaskPriority>(initialData?.priority || 'media');
+  const [responsibleUserId, setResponsibleUserId] = useState(
+    initialData?.responsible_user_id || "none",
+  );
+  const [dueDate, setDueDate] = useState(initialData?.due_date || "");
+  const [startDate, setStartDate] = useState(initialData?.start_date || "");
+  const [cost, setCost] = useState(
+    initialData?.cost != null
+      ? formatCurrencyBRL(String(Math.round(initialData.cost * 100)))
+      : "",
+  );
+  const [priority, setPriority] = useState<ObraTaskPriority>(
+    initialData?.priority || "media",
+  );
 
   // Autosave draft (per scope + new/editing target)
-  const draftKey = `atividade-${draftScope || 'global'}-${initialData?.id || 'new'}`;
+  const draftKey = `atividade-${draftScope || "global"}-${initialData?.id || "new"}`;
   const { restored, clearDraft, lastSavedAt } = useDialogDraft<AtividadeDraft>({
     key: draftKey,
     enabled: open,
-    values: { title, description, responsibleUserId, dueDate, startDate, cost, priority },
+    values: {
+      title,
+      description,
+      responsibleUserId,
+      dueDate,
+      startDate,
+      cost,
+      priority,
+    },
     isDirty: (v) =>
-      !!(v.title.trim() || v.description.trim() || (v.responsibleUserId && v.responsibleUserId !== 'none') || v.dueDate || v.startDate || v.cost),
+      !!(
+        v.title.trim() ||
+        v.description.trim() ||
+        (v.responsibleUserId && v.responsibleUserId !== "none") ||
+        v.dueDate ||
+        v.startDate ||
+        v.cost
+      ),
     onRestore: (draft) => {
       if (draft.title !== undefined) setTitle(draft.title);
       if (draft.description !== undefined) setDescription(draft.description);
-      if (draft.responsibleUserId !== undefined) setResponsibleUserId(draft.responsibleUserId || 'none');
+      if (draft.responsibleUserId !== undefined)
+        setResponsibleUserId(draft.responsibleUserId || "none");
       if (draft.dueDate !== undefined) setDueDate(draft.dueDate);
       if (draft.startDate !== undefined) setStartDate(draft.startDate);
       if (draft.cost !== undefined) setCost(draft.cost);
@@ -105,8 +139,8 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
   // Notify the user once when a draft is restored
   useEffect(() => {
     if (restored) {
-      toast.info('Rascunho restaurado', {
-        description: 'Recuperamos as informações que você havia preenchido.',
+      toast.info("Rascunho restaurado", {
+        description: "Recuperamos as informações que você havia preenchido.",
         duration: 4000,
       });
     }
@@ -118,10 +152,11 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
   const isValid = !!trimmedTitle && !titleTooLong && !dateRangeInvalid;
 
   const disabledReason = useMemo(() => {
-    if (!trimmedTitle) return 'Informe o título da atividade.';
+    if (!trimmedTitle) return "Informe o título da atividade.";
     if (titleTooLong) return `Título excede ${TITLE_MAX} caracteres.`;
-    if (dateRangeInvalid) return 'O prazo não pode ser anterior à data de início.';
-    return '';
+    if (dateRangeInvalid)
+      return "O prazo não pode ser anterior à data de início.";
+    return "";
   }, [trimmedTitle, titleTooLong, dateRangeInvalid]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -132,18 +167,21 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
     onSubmit({
       title: trimmedTitle,
       description: description.trim() || null,
-      responsible_user_id: responsibleUserId && responsibleUserId !== 'none' ? responsibleUserId : null,
+      responsible_user_id:
+        responsibleUserId && responsibleUserId !== "none"
+          ? responsibleUserId
+          : null,
       due_date: dueDate || null,
       start_date: startDate || null,
       cost: Number.isFinite(numericCost) ? numericCost : null,
       priority,
     });
-    trackAmplitude('Activity Saved', {
-      mode: isEdit ? 'update' : 'create',
+    trackAmplitude("Activity Saved", {
+      mode: isEdit ? "update" : "create",
       activity_id: initialData?.id ?? null,
       project_scope: draftScope ?? null,
       priority,
-      has_responsible: !!(responsibleUserId && responsibleUserId !== 'none'),
+      has_responsible: !!(responsibleUserId && responsibleUserId !== "none"),
       has_due_date: !!dueDate,
     });
     clearDraft();
@@ -151,28 +189,28 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
   };
 
   const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setResponsibleUserId('none');
-    setDueDate('');
-    setStartDate('');
-    setCost('');
-    setPriority('media');
+    setTitle("");
+    setDescription("");
+    setResponsibleUserId("none");
+    setDueDate("");
+    setStartDate("");
+    setCost("");
+    setPriority("media");
   };
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && initialData) {
       setTitle(initialData.title);
-      setDescription(initialData.description || '');
-      setResponsibleUserId(initialData.responsible_user_id || 'none');
-      setDueDate(initialData.due_date || '');
-      setStartDate(initialData.start_date || '');
+      setDescription(initialData.description || "");
+      setResponsibleUserId(initialData.responsible_user_id || "none");
+      setDueDate(initialData.due_date || "");
+      setStartDate(initialData.start_date || "");
       setCost(
         initialData.cost != null
           ? formatCurrencyBRL(String(Math.round(initialData.cost * 100)))
-          : ''
+          : "",
       );
-      setPriority(initialData.priority || 'media');
+      setPriority(initialData.priority || "media");
     } else if (!isOpen) {
       // Keep the draft on close (so accidental close doesn't lose data).
       // Only reset the local UI state.
@@ -183,20 +221,19 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
 
   const titleCount = title.length;
   const titleCounterClass = cn(
-    'text-[11px] tabular-nums',
-    titleTooLong ? 'text-destructive' : titleCount > TITLE_MAX * 0.85 ? 'text-warning' : 'text-muted-foreground',
+    "text-[11px] tabular-nums",
+    titleTooLong
+      ? "text-destructive"
+      : titleCount > TITLE_MAX * 0.85
+        ? "text-warning"
+        : "text-muted-foreground",
   );
 
   // Campos do formulário — partilhados entre Dialog (desktop) e
   // MobileFullscreenSheet (mobile). Mantém indentação/espaçamento mais
   // generosos no mobile para melhorar tap-target e ritmo vertical.
   const fields = (
-    <div
-      className={cn(
-        'space-y-5',
-        isMobile ? 'px-4 py-5' : 'px-5 py-4',
-      )}
-    >
+    <div className={cn("space-y-5", isMobile ? "px-4 py-5" : "px-5 py-4")}>
       {/* Título */}
       <div className="space-y-1.5">
         <div className="flex items-baseline justify-between gap-2">
@@ -233,7 +270,10 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
           <Label htmlFor="responsible" className="text-xs font-medium">
             Responsável
           </Label>
-          <Select value={responsibleUserId} onValueChange={setResponsibleUserId}>
+          <Select
+            value={responsibleUserId}
+            onValueChange={setResponsibleUserId}
+          >
             <SelectTrigger id="responsible">
               <SelectValue placeholder="Sem responsável" />
             </SelectTrigger>
@@ -259,7 +299,10 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
           <Label htmlFor="priority" className="text-xs font-medium">
             Prioridade
           </Label>
-          <Select value={priority} onValueChange={(v) => setPriority(v as ObraTaskPriority)}>
+          <Select
+            value={priority}
+            onValueChange={(v) => setPriority(v as ObraTaskPriority)}
+          >
             <SelectTrigger id="priority">
               <SelectValue />
             </SelectTrigger>
@@ -269,7 +312,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
                   <span className="flex items-center gap-2">
                     <span
                       aria-hidden
-                      className={cn('inline-block h-2 w-2 rounded-full', p.dot)}
+                      className={cn("inline-block h-2 w-2 rounded-full", p.dot)}
                     />
                     {p.label}
                   </span>
@@ -354,7 +397,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
     </div>
   );
 
-  const submitLabel = initialData ? 'Salvar alterações' : 'Criar atividade';
+  const submitLabel = initialData ? "Salvar alterações" : "Criar atividade";
 
   // Footer mobile — Cancelar + Salvar com tap-target ≥ 44px e
   // hierarquia clara. Sem tooltip (não funciona bem em touch); a
@@ -382,7 +425,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
           type="submit"
           form="atividade-form"
           disabled={!isValid}
-          aria-describedby={!isValid ? 'atividade-disabled-reason' : undefined}
+          aria-describedby={!isValid ? "atividade-disabled-reason" : undefined}
           className="h-11 flex-[2]"
         >
           {submitLabel}
@@ -403,11 +446,11 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
       <MobileFullscreenSheet
         open={open}
         onOpenChange={handleOpenChange}
-        title={initialData ? 'Editar atividade' : 'Nova atividade'}
+        title={initialData ? "Editar atividade" : "Nova atividade"}
         description={
           initialData
-            ? 'Atualize as informações da atividade.'
-            : 'Cadastre uma tarefa interna da equipe.'
+            ? "Atualize as informações da atividade."
+            : "Cadastre uma tarefa interna da equipe."
         }
         closeAriaLabel="Cancelar e voltar"
         footer={mobileFooter}
@@ -422,24 +465,20 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
   // ── Desktop: dialog centralizado (preserva o comportamento original).
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className="sm:max-w-lg max-h-[92dvh] flex flex-col gap-0 p-0 overflow-hidden"
-      >
+      <DialogContent className="sm:max-w-lg max-h-[92dvh] flex flex-col gap-0 p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border-subtle">
           <DialogTitle className="text-base">
-            {initialData ? 'Editar atividade' : 'Nova atividade'}
+            {initialData ? "Editar atividade" : "Nova atividade"}
           </DialogTitle>
           <DialogDescription className="text-xs">
             {initialData
-              ? 'Atualize as informações da atividade.'
-              : 'Cadastre uma tarefa interna da equipe para esta obra.'}
+              ? "Atualize as informações da atividade."
+              : "Cadastre uma tarefa interna da equipe para esta obra."}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto">
-            {fields}
-          </div>
+          <div className="flex-1 overflow-y-auto">{fields}</div>
 
           <DialogFooter className="border-t border-border-subtle bg-muted/30 px-5 py-3 gap-2 sm:justify-between">
             <AutosaveIndicator

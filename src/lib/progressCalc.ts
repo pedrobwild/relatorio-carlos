@@ -15,7 +15,9 @@ export interface ProgressActivity {
 export function calcWeightedProgress(activities: ProgressActivity[]): number {
   if (activities.length === 0) return 0;
 
-  const hasWeights = activities.some(a => a.weight !== undefined && a.weight > 0);
+  const hasWeights = activities.some(
+    (a) => a.weight !== undefined && a.weight > 0,
+  );
   const totalWeight = hasWeights
     ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
     : activities.length;
@@ -24,7 +26,7 @@ export function calcWeightedProgress(activities: ProgressActivity[]): number {
 
   const completedWeight = activities.reduce((sum, a) => {
     if (a.actualEnd) {
-      return sum + (hasWeights ? (a.weight || 0) : 1);
+      return sum + (hasWeights ? a.weight || 0 : 1);
     }
     return sum;
   }, 0);

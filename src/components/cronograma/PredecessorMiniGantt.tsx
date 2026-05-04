@@ -7,10 +7,10 @@
  *
  * Não depende de libs externas (Gantt full é overkill aqui).
  */
-import { useMemo } from 'react';
-import { differenceInCalendarDays } from 'date-fns';
-import { parseLocalDate } from '@/lib/activityStatus';
-import { cn } from '@/lib/utils';
+import { useMemo } from "react";
+import { differenceInCalendarDays } from "date-fns";
+import { parseLocalDate } from "@/lib/activityStatus";
+import { cn } from "@/lib/utils";
 
 export interface MiniGanttBar {
   id: string;
@@ -23,7 +23,7 @@ export interface MiniGanttBar {
 
 export interface PredecessorMiniGanttProps {
   predecessors: MiniGanttBar[];
-  current: Omit<MiniGanttBar, 'current'>;
+  current: Omit<MiniGanttBar, "current">;
   width?: number;
   className?: string;
 }
@@ -53,7 +53,8 @@ export function PredecessorMiniGantt({
       .reduce((max, ms) => Math.max(max, ms), Number.NEGATIVE_INFINITY);
     const total = Math.max(
       1,
-      differenceInCalendarDays(new Date(endMsLocal), new Date(startMsLocal)) + 1,
+      differenceInCalendarDays(new Date(endMsLocal), new Date(startMsLocal)) +
+        1,
     );
     return { startMs: startMsLocal, totalDays: total };
   }, [bars]);
@@ -65,7 +66,7 @@ export function PredecessorMiniGantt({
     return (
       <div
         className={cn(
-          'text-xs text-muted-foreground italic px-1 py-2',
+          "text-xs text-muted-foreground italic px-1 py-2",
           className,
         )}
       >
@@ -81,7 +82,7 @@ export function PredecessorMiniGantt({
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      className={cn('block', className)}
+      className={cn("block", className)}
     >
       {bars.map((bar, index) => {
         const start = parseLocalDate(bar.start).getTime();
@@ -107,9 +108,7 @@ export function PredecessorMiniGantt({
               height={ROW_HEIGHT}
               rx={2}
               className={cn(
-                bar.current
-                  ? 'fill-primary'
-                  : 'fill-muted-foreground/40',
+                bar.current ? "fill-primary" : "fill-muted-foreground/40",
               )}
             />
           </g>

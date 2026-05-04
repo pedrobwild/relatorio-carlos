@@ -1,9 +1,22 @@
 import { useState } from "react";
-import { Upload, X, Loader2, FileText, CheckCircle2, History } from "lucide-react";
+import {
+  Upload,
+  X,
+  Loader2,
+  FileText,
+  CheckCircle2,
+  History,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { invokeFunctionRaw } from "@/infra/edgeFunctions";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -14,7 +27,10 @@ interface DocumentVersionUploadProps {
   onSuccess?: () => void;
 }
 
-export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUploadProps) {
+export function DocumentVersionUpload({
+  document,
+  onSuccess,
+}: DocumentVersionUploadProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -65,14 +81,14 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
 
     try {
       const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
-      uploadFormData.append('parentDocumentId', document.id);
+      uploadFormData.append("file", file);
+      uploadFormData.append("parentDocumentId", document.id);
       if (changeNotes.trim()) {
-        uploadFormData.append('changeNotes', changeNotes.trim());
+        uploadFormData.append("changeNotes", changeNotes.trim());
       }
 
-      const response = await invokeFunctionRaw('document-version-upload', {
-        method: 'POST',
+      const response = await invokeFunctionRaw("document-version-upload", {
+        method: "POST",
         body: uploadFormData,
       });
 
@@ -80,9 +96,11 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
 
       if (!response.ok) {
         if (response.status === 409 && result.duplicateVersion) {
-          throw new Error(`Este arquivo já existe como versão ${result.duplicateVersion}`);
+          throw new Error(
+            `Este arquivo já existe como versão ${result.duplicateVersion}`,
+          );
         }
-        throw new Error(result.error || 'Falha no upload');
+        throw new Error(result.error || "Falha no upload");
       }
 
       toast({
@@ -95,7 +113,10 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
       onSuccess?.();
     } catch (error: unknown) {
       console.error("Version upload error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Não foi possível enviar a nova versão";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível enviar a nova versão";
       toast({
         title: "Erro ao enviar",
         description: errorMessage,
@@ -107,10 +128,13 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if (!isOpen) resetForm();
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) resetForm();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
           <History className="w-3.5 h-3.5" />
@@ -128,7 +152,9 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
         <div className="space-y-4 mt-4">
           {/* Current document info */}
           <div className="p-3 bg-muted/50 rounded-lg border">
-            <p className="text-caption text-muted-foreground mb-1">Documento atual</p>
+            <p className="text-caption text-muted-foreground mb-1">
+              Documento atual
+            </p>
             <p className="text-body font-medium">{document.name}</p>
             <div className="flex items-center gap-3 mt-1 text-caption text-muted-foreground">
               <span>Versão {document.version}</span>
@@ -140,7 +166,7 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
                     className="ml-1 px-1.5 py-0.5 rounded bg-muted hover:bg-accent text-[10px] font-sans text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => {
                       navigator.clipboard.writeText(document.checksum!);
-                      toast({ title: 'Checksum copiado' });
+                      toast({ title: "Checksum copiado" });
                     }}
                   >
                     Copiar
@@ -155,7 +181,10 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
             className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
               dragOver ? "border-primary bg-primary/5" : "border-border"
             } ${file ? "bg-primary/5 border-primary" : ""}`}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
           >
@@ -184,7 +213,9 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
                 <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                 <p className="text-body">Arraste o novo arquivo ou</p>
                 <label className="cursor-pointer">
-                  <span className="text-primary underline">clique para selecionar</span>
+                  <span className="text-primary underline">
+                    clique para selecionar
+                  </span>
                   <input
                     type="file"
                     className="hidden"
@@ -216,20 +247,28 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
           </div>
 
           {/* Info about versioning */}
-          <div className="p-3 bg-info-light dark:bg-[hsl(var(--info))]/10 rounded-lg text-caption border border-[hsl(var(--info))]/20">
+          <div className="p-3 bg-info-light rounded-lg text-caption border border-[hsl(var(--info))]/20">
             <p className="text-[hsl(var(--info))]">
-              <strong>Controle de versão:</strong> O sistema calculará automaticamente 
-              o checksum SHA256 para verificação de integridade. Arquivos duplicados 
-              serão detectados e rejeitados.
+              <strong>Controle de versão:</strong> O sistema calculará
+              automaticamente o checksum SHA256 para verificação de integridade.
+              Arquivos duplicados serão detectados e rejeitados.
             </p>
           </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={uploading}>
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={uploading}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleUpload} disabled={uploading || !file} className="gap-2">
+            <Button
+              onClick={handleUpload}
+              disabled={uploading || !file}
+              className="gap-2"
+            >
               {uploading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />

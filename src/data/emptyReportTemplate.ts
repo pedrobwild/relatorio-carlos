@@ -11,7 +11,7 @@ export const createEmptyReportTemplate = (
   clientName: string,
   weekNumber: number,
   periodStart: string,
-  periodEnd: string
+  periodEnd: string,
 ): WeeklyReportData => ({
   projectId,
   projectName,
@@ -22,7 +22,7 @@ export const createEmptyReportTemplate = (
   periodEnd,
   issuedAt: "",
   preparedBy: "",
-  
+
   // Empty KPIs - to be calculated
   kpis: {
     physicalPlanned: 0,
@@ -30,34 +30,34 @@ export const createEmptyReportTemplate = (
     scheduleVarianceDays: 0,
   },
   nextMilestones: [],
-  
+
   // Empty summary
   executiveSummary: "",
-  
+
   // Empty activities
   activities: [],
-  
+
   // Empty deliverables
   deliverablesCompleted: [],
-  
+
   // Empty lookahead
   lookaheadTasks: [],
-  
+
   // Empty risks
   risksAndIssues: [],
-  
+
   // Empty quality items
   qualityItems: [],
-  
+
   // Empty client decisions
   clientDecisions: [],
-  
+
   // Empty incidents
   incidents: [],
-  
+
   // Empty gallery
   gallery: [],
-  
+
   // Empty rooms progress
   roomsProgress: [],
 });

@@ -1,7 +1,7 @@
-import { CheckCircle2, Clock, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { formatDate, type PartyRow, type AckRow } from './types';
+import { CheckCircle2, Clock, Users } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { formatDate, type PartyRow, type AckRow } from "./types";
 
 interface PartiesCardProps {
   parties: PartyRow[];
@@ -10,7 +10,12 @@ interface PartiesCardProps {
   partiesTotal: number;
 }
 
-export function PartiesCard({ parties, acknowledgements, partiesSigned, partiesTotal }: PartiesCardProps) {
+export function PartiesCard({
+  parties,
+  acknowledgements,
+  partiesSigned,
+  partiesTotal,
+}: PartiesCardProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -23,7 +28,10 @@ export function PartiesCard({ parties, acknowledgements, partiesSigned, partiesT
         {parties.length === 0 ? (
           <div className="text-sm text-muted-foreground py-4 text-center">
             <p>Nenhuma parte cadastrada.</p>
-            <p className="text-xs mt-1">As partes serão adicionadas quando a formalização for enviada para assinatura.</p>
+            <p className="text-xs mt-1">
+              As partes serão adicionadas quando a formalização for enviada para
+              assinatura.
+            </p>
           </div>
         ) : (
           parties.map((party) => {
@@ -33,7 +41,9 @@ export function PartiesCard({ parties, acknowledgements, partiesSigned, partiesT
               <div
                 key={party.id}
                 className={`flex items-center justify-between p-3 rounded-lg border ${
-                  isSigned ? 'bg-success/10 border-success/30' : 'bg-muted/50 border-border'
+                  isSigned
+                    ? "bg-success/10 border-success/30"
+                    : "bg-muted/50 border-border"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -42,14 +52,17 @@ export function PartiesCard({ parties, acknowledgements, partiesSigned, partiesT
                       <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />
                     </div>
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
-                      <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
+                      <Clock className="h-4 w-4 text-amber-600" />
                     </div>
                   )}
                   <div>
                     <p className="font-medium text-sm">{party.display_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {party.role_label || (party.party_type === 'customer' ? 'Cliente' : 'Empresa')}
+                      {party.role_label ||
+                        (party.party_type === "customer"
+                          ? "Cliente"
+                          : "Empresa")}
                       {party.email && ` · ${party.email}`}
                     </p>
                   </div>
@@ -57,13 +70,21 @@ export function PartiesCard({ parties, acknowledgements, partiesSigned, partiesT
                 <div className="text-right">
                   {isSigned ? (
                     <div>
-                      <Badge variant="outline" className="bg-success/10 text-[hsl(var(--success))] border-success/30">
+                      <Badge
+                        variant="outline"
+                        className="bg-success/10 text-[hsl(var(--success))] border-success/30"
+                      >
                         Assinado
                       </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">{formatDate(ack!.acknowledged_at)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDate(ack!.acknowledged_at)}
+                      </p>
                     </div>
                   ) : (
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-50 text-amber-700 border-amber-200"
+                    >
                       Pendente
                     </Badge>
                   )}
@@ -76,13 +97,19 @@ export function PartiesCard({ parties, acknowledgements, partiesSigned, partiesT
         {parties.length > 0 && (
           <div className="pt-3 border-t mt-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Progresso de assinaturas</span>
-              <span className="font-medium">{partiesSigned}/{partiesTotal}</span>
+              <span className="text-muted-foreground">
+                Progresso de assinaturas
+              </span>
+              <span className="font-medium">
+                {partiesSigned}/{partiesTotal}
+              </span>
             </div>
             <div className="h-2 bg-muted rounded-full mt-2 overflow-hidden">
               <div
                 className="h-full bg-[hsl(var(--success))] rounded-full transition-all duration-300"
-                style={{ width: `${(partiesSigned / (partiesTotal || 1)) * 100}%` }}
+                style={{
+                  width: `${(partiesSigned / (partiesTotal || 1)) * 100}%`,
+                }}
               />
             </div>
           </div>

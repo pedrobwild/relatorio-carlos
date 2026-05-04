@@ -42,7 +42,9 @@ describe("PhotoCaptureButton", () => {
     createObjectURLSpy = vi
       .spyOn(URL, "createObjectURL")
       .mockImplementation(() => "blob:mock");
-    revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    revokeObjectURLSpy = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -52,21 +54,27 @@ describe("PhotoCaptureButton", () => {
 
   it("renders the upload label on desktop", () => {
     render(<PhotoCaptureButton onCapture={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /selecionar foto/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /selecionar foto/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders the camera label on mobile", () => {
     setInnerWidth(375);
     setMatchMedia(true);
     render(<PhotoCaptureButton onCapture={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /tirar foto/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /tirar foto/i }),
+    ).toBeInTheDocument();
   });
 
   it("uses capture=environment when alwaysCapture is true", () => {
     const { container } = render(
       <PhotoCaptureButton onCapture={vi.fn()} alwaysCapture />,
     );
-    const input = container.querySelector("input[type=file]") as HTMLInputElement;
+    const input = container.querySelector(
+      "input[type=file]",
+    ) as HTMLInputElement;
     expect(input.getAttribute("capture")).toBe("environment");
   });
 
@@ -74,7 +82,9 @@ describe("PhotoCaptureButton", () => {
     const user = userEvent.setup();
     const onCapture = vi.fn();
     const { container } = render(<PhotoCaptureButton onCapture={onCapture} />);
-    const input = container.querySelector("input[type=file]") as HTMLInputElement;
+    const input = container.querySelector(
+      "input[type=file]",
+    ) as HTMLInputElement;
 
     const file = new File(["abc"], "photo.jpg", { type: "image/jpeg" });
     await user.upload(input, file);
@@ -95,7 +105,9 @@ describe("PhotoCaptureButton", () => {
   it("removes a pending photo when the trash button is clicked", async () => {
     const user = userEvent.setup();
     const { container } = render(<PhotoCaptureButton onCapture={vi.fn()} />);
-    const input = container.querySelector("input[type=file]") as HTMLInputElement;
+    const input = container.querySelector(
+      "input[type=file]",
+    ) as HTMLInputElement;
 
     const file = new File(["abc"], "photo.jpg", { type: "image/jpeg" });
     await user.upload(input, file);
@@ -114,13 +126,17 @@ describe("PhotoCaptureButton", () => {
     const user = userEvent.setup();
     const onCapture = vi.fn();
     const { container } = render(<PhotoCaptureButton onCapture={onCapture} />);
-    const input = container.querySelector("input[type=file]") as HTMLInputElement;
+    const input = container.querySelector(
+      "input[type=file]",
+    ) as HTMLInputElement;
 
     const file = new File(["abc"], "doc.pdf", { type: "application/pdf" });
     await user.upload(input, file);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /selecionar foto/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /selecionar foto/i }),
+      ).toBeInTheDocument();
     });
     expect(screen.queryByAltText(/foto 1/i)).toBeNull();
   });

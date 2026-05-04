@@ -1,13 +1,13 @@
 /**
  * Prefetch helpers for TanStack Query
- * 
+ *
  * Enables prefetching data on hover/focus for instant tab switching.
  */
 
-import { queryClient } from '@/lib/queryClient';
-import { queryKeys, QueryKeys } from '@/lib/queryKeys';
-import { supabase } from '@/integrations/supabase/client';
-import { perf } from '@/lib/perf';
+import { queryClient } from "@/lib/queryClient";
+import { queryKeys, QueryKeys } from "@/lib/queryKeys";
+import { supabase } from "@/integrations/supabase/client";
+import { perf } from "@/lib/perf";
 
 // Track which prefetches have been triggered to avoid duplicates
 const prefetchedKeys = new Set<string>();
@@ -15,24 +15,26 @@ const prefetchedKeys = new Set<string>();
 /**
  * Prefetch documents for a project
  */
-export async function prefetchDocuments(projectId: string | undefined): Promise<void> {
+export async function prefetchDocuments(
+  projectId: string | undefined,
+): Promise<void> {
   if (!projectId) return;
-  
+
   const key = `documents-${projectId}`;
   if (prefetchedKeys.has(key)) return;
   prefetchedKeys.add(key);
 
   perf.mark(`prefetch-docs-${projectId}`);
-  
+
   await queryClient.prefetchQuery({
     queryKey: queryKeys.documents.list(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_documents')
-        .select('id, name, document_type, status, version, created_at')
-        .eq('project_id', projectId)
-        .order('document_type')
-        .order('version', { ascending: false });
+        .from("project_documents")
+        .select("id, name, document_type, status, version, created_at")
+        .eq("project_id", projectId)
+        .order("document_type")
+        .order("version", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -46,23 +48,25 @@ export async function prefetchDocuments(projectId: string | undefined): Promise<
 /**
  * Prefetch activities for a project (for Gantt/Schedule)
  */
-export async function prefetchActivities(projectId: string | undefined): Promise<void> {
+export async function prefetchActivities(
+  projectId: string | undefined,
+): Promise<void> {
   if (!projectId) return;
-  
+
   const key = `activities-${projectId}`;
   if (prefetchedKeys.has(key)) return;
   prefetchedKeys.add(key);
 
   perf.mark(`prefetch-activities-${projectId}`);
-  
+
   await queryClient.prefetchQuery({
     queryKey: queryKeys.activities.list(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_activities')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('sort_order', { ascending: true });
+        .from("project_activities")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("sort_order", { ascending: true });
 
       if (error) throw error;
       return data;
@@ -76,23 +80,25 @@ export async function prefetchActivities(projectId: string | undefined): Promise
 /**
  * Prefetch weekly reports for a project
  */
-export async function prefetchWeeklyReports(projectId: string | undefined): Promise<void> {
+export async function prefetchWeeklyReports(
+  projectId: string | undefined,
+): Promise<void> {
   if (!projectId) return;
-  
+
   const key = `reports-${projectId}`;
   if (prefetchedKeys.has(key)) return;
   prefetchedKeys.add(key);
 
   perf.mark(`prefetch-reports-${projectId}`);
-  
+
   await queryClient.prefetchQuery({
     queryKey: queryKeys.weeklyReports.list(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('weekly_reports')
-        .select('id, week_number, week_start, week_end, updated_at')
-        .eq('project_id', projectId)
-        .order('week_number', { ascending: false });
+        .from("weekly_reports")
+        .select("id, week_number, week_start, week_end, updated_at")
+        .eq("project_id", projectId)
+        .order("week_number", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -106,9 +112,11 @@ export async function prefetchWeeklyReports(projectId: string | undefined): Prom
 /**
  * Prefetch payments for a project
  */
-export async function prefetchPayments(projectId: string | undefined): Promise<void> {
+export async function prefetchPayments(
+  projectId: string | undefined,
+): Promise<void> {
   if (!projectId) return;
-  
+
   const key = `payments-${projectId}`;
   if (prefetchedKeys.has(key)) return;
   prefetchedKeys.add(key);
@@ -117,10 +125,12 @@ export async function prefetchPayments(projectId: string | undefined): Promise<v
     queryKey: queryKeys.payments.list(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_payments')
-        .select('id, installment_number, description, amount, due_date, paid_at')
-        .eq('project_id', projectId)
-        .order('installment_number', { ascending: true });
+        .from("project_payments")
+        .select(
+          "id, installment_number, description, amount, due_date, paid_at",
+        )
+        .eq("project_id", projectId)
+        .order("installment_number", { ascending: true });
 
       if (error) throw error;
       return data;
@@ -132,9 +142,11 @@ export async function prefetchPayments(projectId: string | undefined): Promise<v
 /**
  * Prefetch purchases for a project
  */
-export async function prefetchPurchases(projectId: string | undefined): Promise<void> {
+export async function prefetchPurchases(
+  projectId: string | undefined,
+): Promise<void> {
   if (!projectId) return;
-  
+
   const key = `purchases-${projectId}`;
   if (prefetchedKeys.has(key)) return;
   prefetchedKeys.add(key);
@@ -143,10 +155,10 @@ export async function prefetchPurchases(projectId: string | undefined): Promise<
     queryKey: queryKeys.purchases.list(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_purchases')
-        .select('id, item_name, status, required_by_date, estimated_cost')
-        .eq('project_id', projectId)
-        .order('required_by_date', { ascending: true });
+        .from("project_purchases")
+        .select("id, item_name, status, required_by_date, estimated_cost")
+        .eq("project_id", projectId)
+        .order("required_by_date", { ascending: true });
 
       if (error) throw error;
       return data;
@@ -158,9 +170,11 @@ export async function prefetchPurchases(projectId: string | undefined): Promise<
 /**
  * Prefetch formalizations for a project
  */
-export async function prefetchFormalizations(projectId: string | undefined): Promise<void> {
+export async function prefetchFormalizations(
+  projectId: string | undefined,
+): Promise<void> {
   if (!projectId) return;
-  
+
   const key = `formalizations-${projectId}`;
   if (prefetchedKeys.has(key)) return;
   prefetchedKeys.add(key);
@@ -169,10 +183,10 @@ export async function prefetchFormalizations(projectId: string | undefined): Pro
     queryKey: queryKeys.formalizacoes.list({ projectId }),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('formalizations')
-        .select('id, title, type, status, created_at, updated_at')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
+        .from("formalizations")
+        .select("id, title, type, status, created_at, updated_at")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -184,9 +198,11 @@ export async function prefetchFormalizations(projectId: string | undefined): Pro
 /**
  * Prefetch pending items for a project
  */
-export async function prefetchPendingItems(projectId: string | undefined): Promise<void> {
+export async function prefetchPendingItems(
+  projectId: string | undefined,
+): Promise<void> {
   if (!projectId) return;
-  
+
   const key = `pending-${projectId}`;
   if (prefetchedKeys.has(key)) return;
   prefetchedKeys.add(key);
@@ -195,11 +211,11 @@ export async function prefetchPendingItems(projectId: string | undefined): Promi
     queryKey: queryKeys.pendingItems.list(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('pending_items')
-        .select('id, title, type, status, due_date')
-        .eq('project_id', projectId)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+        .from("pending_items")
+        .select("id, title, type, status, due_date")
+        .eq("project_id", projectId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -218,30 +234,33 @@ export function clearPrefetchCache(): void {
 /**
  * Prefetch data based on tab name
  */
-export function prefetchForTab(tabName: string, projectId: string | undefined): void {
+export function prefetchForTab(
+  tabName: string,
+  projectId: string | undefined,
+): void {
   if (!projectId) return;
 
   switch (tabName) {
-    case 'curvaS':
-    case 'gantt':
+    case "curvaS":
+    case "gantt":
       prefetchActivities(projectId);
       break;
-    case 'relatorio':
+    case "relatorio":
       prefetchWeeklyReports(projectId);
       break;
-    case 'documentos':
+    case "documentos":
       prefetchDocuments(projectId);
       break;
-    case 'pendencias':
+    case "pendencias":
       prefetchPendingItems(projectId);
       break;
-    case 'financeiro':
+    case "financeiro":
       prefetchPayments(projectId);
       break;
-    case 'compras':
+    case "compras":
       prefetchPurchases(projectId);
       break;
-    case 'formalizacoes':
+    case "formalizacoes":
       prefetchFormalizations(projectId);
       break;
   }

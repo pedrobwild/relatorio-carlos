@@ -7,8 +7,8 @@
  * QuickCreate apareçam imediatamente. Cache compartilhado com o seletor de
  * Compras (`fornecedores-prestadores`) para evitar refetch redundante.
  */
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface PrestadorOption {
   id: string;
@@ -19,14 +19,14 @@ export interface PrestadorOption {
 
 export function useFornecedoresPrestadores() {
   return useQuery<PrestadorOption[]>({
-    queryKey: ['fornecedores-prestadores'],
+    queryKey: ["fornecedores-prestadores"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('fornecedores')
-        .select('id, nome, categoria, status')
-        .eq('supplier_type', 'prestador')
-        .in('status', ['ativo', 'rascunho'])
-        .order('nome');
+        .from("fornecedores")
+        .select("id, nome, categoria, status")
+        .eq("supplier_type", "prestador")
+        .in("status", ["ativo", "rascunho"])
+        .order("nome");
       if (error) throw error;
       return (data ?? []) as PrestadorOption[];
     },

@@ -13,11 +13,11 @@
  * Apenas Admin/Engineer podem criar/remover (RLS reforça server-side).
  */
 
-import { useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
 export interface NonWorkingDay {
   id: string;
@@ -34,13 +34,13 @@ export interface NewNonWorkingDay {
   reason?: string | null;
 }
 
-const QUERY_KEY = ['non-working-days'] as const;
+const QUERY_KEY = ["non-working-days"] as const;
 
 async function fetchNonWorkingDays(): Promise<NonWorkingDay[]> {
   const { data, error } = await supabase
-    .from('project_non_working_days')
-    .select('id, project_id, day, reason, created_at, created_by')
-    .order('day', { ascending: true });
+    .from("project_non_working_days")
+    .select("id, project_id, day, reason, created_at, created_by")
+    .order("day", { ascending: true });
   if (error) throw error;
   return (data ?? []) as NonWorkingDay[];
 }
@@ -57,22 +57,28 @@ export function useNonWorkingDays(projectId?: string | null) {
   /** Conjunto efetivo (globais + da obra atual quando informada). */
   const effective = useMemo(() => {
     if (!projectId) return all;
-    return all.filter((d) => d.project_id === null || d.project_id === projectId);
+    return all.filter(
+      (d) => d.project_id === null || d.project_id === projectId,
+    );
   }, [all, projectId]);
 
   /** Set de YYYY-MM-DD para checagem O(1). */
-  const dateSet = useMemo(() => new Set(effective.map((d) => d.day)), [effective]);
+  const dateSet = useMemo(
+    () => new Set(effective.map((d) => d.day)),
+    [effective],
+  );
 
-  const isNonWorking = (date: Date): boolean => dateSet.has(format(date, 'yyyy-MM-dd'));
+  const isNonWorking = (date: Date): boolean =>
+    dateSet.has(format(date, "yyyy-MM-dd"));
   const reasonFor = (date: Date): string | null => {
-    const key = format(date, 'yyyy-MM-dd');
+    const key = format(date, "yyyy-MM-dd");
     return effective.find((d) => d.day === key)?.reason ?? null;
   };
 
   const create = useMutation({
     mutationFn: async (input: NewNonWorkingDay) => {
       const { data, error } = await supabase
-        .from('project_non_working_days')
+        .from("project_non_working_days")
         .insert({
           project_id: input.project_id,
           day: input.day,
@@ -85,29 +91,34 @@ export function useNonWorkingDays(projectId?: string | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('Dia não útil registrado');
+      toast.success("Dia não útil registrado");
     },
     onError: (err: any) => {
-      const msg = err?.message ?? '';
-      if (msg.includes('duplicate') || msg.includes('unique')) {
-        toast.error('Esta data já está marcada como não útil para o escopo selecionado');
+      const msg = err?.message ?? "";
+      if (msg.includes("duplicate") || msg.includes("unique")) {
+        toast.error(
+          "Esta data já está marcada como não útil para o escopo selecionado",
+        );
       } else {
-        toast.error('Não foi possível registrar o dia não útil');
+        toast.error("Não foi possível registrar o dia não útil");
       }
     },
   });
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('project_non_working_days').delete().eq('id', id);
+      const { error } = await supabase
+        .from("project_non_working_days")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
       return id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('Dia não útil removido');
+      toast.success("Dia não útil removido");
     },
-    onError: () => toast.error('Erro ao remover dia não útil'),
+    onError: () => toast.error("Erro ao remover dia não útil"),
   });
 
   return {

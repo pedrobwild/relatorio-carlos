@@ -67,9 +67,12 @@ export function AIReportGenerator({
     setIsGenerating(true);
     setCurrentStep(0);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-weekly-report", {
-        body: { projectId, weekNumber, weekStart, weekEnd },
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "generate-weekly-report",
+        {
+          body: { projectId, weekNumber, weekStart, weekEnd },
+        },
+      );
 
       if (cancelledRef.current) return;
       if (error) throw error;
@@ -79,7 +82,8 @@ export function AIReportGenerator({
 
       const merged: WeeklyReportData = {
         ...currentData,
-        executiveSummary: generated.executiveSummary || currentData.executiveSummary,
+        executiveSummary:
+          generated.executiveSummary || currentData.executiveSummary,
         lookaheadTasks: generated.lookaheadTasks?.length
           ? generated.lookaheadTasks
           : currentData.lookaheadTasks,
@@ -96,7 +100,8 @@ export function AIReportGenerator({
       toast.success("Relatório gerado com IA! Revise e edite antes de salvar.");
     } catch (err: unknown) {
       if (cancelledRef.current) return;
-      const message = err instanceof Error ? err.message : "Erro ao gerar relatório com IA";
+      const message =
+        err instanceof Error ? err.message : "Erro ao gerar relatório com IA";
       console.error("AI generation error:", err);
       toast.error(message);
     } finally {
@@ -142,49 +147,59 @@ export function AIReportGenerator({
             <div className="space-y-4 py-4">
               {GENERATION_STEPS.map((step, idx) => (
                 <div key={idx} className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-all duration-300",
-                    idx < currentStep
-                      ? "bg-[hsl(var(--success))] text-white"
-                      : idx === currentStep
-                      ? "bg-primary text-white animate-pulse"
-                      : "bg-muted text-muted-foreground"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-all duration-300",
+                      idx < currentStep
+                        ? "bg-[hsl(var(--success))] text-white"
+                        : idx === currentStep
+                          ? "bg-primary text-white animate-pulse"
+                          : "bg-muted text-muted-foreground",
+                    )}
+                  >
                     {idx < currentStep ? "✓" : idx + 1}
                   </div>
-                  <span className={cn(
-                    "text-sm transition-colors duration-300",
-                    idx === currentStep ? "text-foreground font-medium" : 
-                    idx < currentStep ? "text-muted-foreground line-through" : "text-muted-foreground"
-                  )}>
+                  <span
+                    className={cn(
+                      "text-sm transition-colors duration-300",
+                      idx === currentStep
+                        ? "text-foreground font-medium"
+                        : idx < currentStep
+                          ? "text-muted-foreground line-through"
+                          : "text-muted-foreground",
+                    )}
+                  >
                     {step.label}
                   </span>
                 </div>
               ))}
               <div className="h-1.5 bg-muted rounded-full overflow-hidden mt-2">
-                <div 
+                <div
                   className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${((currentStep + 1) / GENERATION_STEPS.length) * 100}%` }}
+                  style={{
+                    width: `${((currentStep + 1) / GENERATION_STEPS.length) * 100}%`,
+                  }}
                 />
               </div>
             </div>
           ) : (
             <DialogDescription>
-              A IA analisará as atividades, etapas, conversas e pendências do projeto
-              para gerar automaticamente o resumo executivo, tarefas da próxima semana,
-              riscos e decisões pendentes.
-              <br /><br />
-              <strong>O conteúdo atual será substituído.</strong> Você poderá revisar e
-              editar antes de salvar.
+              A IA analisará as atividades, etapas, conversas e pendências do
+              projeto para gerar automaticamente o resumo executivo, tarefas da
+              próxima semana, riscos e decisões pendentes.
+              <br />
+              <br />
+              <strong>O conteúdo atual será substituído.</strong> Você poderá
+              revisar e editar antes de salvar.
             </DialogDescription>
           )}
         </DialogHeader>
         {!isGenerating && (
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleGenerate}>
-              Gerar relatório
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancelar
             </Button>
+            <Button onClick={handleGenerate}>Gerar relatório</Button>
           </DialogFooter>
         )}
       </DialogContent>

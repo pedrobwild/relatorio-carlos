@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from './useAuth';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "./useAuth";
+import { toast } from "sonner";
 import {
   getInspectionsByProject,
   getInspectionById,
@@ -8,17 +8,27 @@ import {
   createInspectionWithItems,
   updateInspectionItem,
   completeInspection,
-} from '@/infra/repositories/inspectionsRepository';
+} from "@/infra/repositories/inspectionsRepository";
 
 // eslint-disable-next-line no-duplicate-imports
-import type { Inspection, InspectionItemResult, InspectionItem, InspectionStatus } from '@/infra/repositories/inspectionsRepository';
-export type { Inspection, InspectionItem, InspectionStatus, InspectionItemResult };
+import type {
+  Inspection,
+  InspectionItemResult,
+  InspectionItem,
+  InspectionStatus,
+} from "@/infra/repositories/inspectionsRepository";
+export type {
+  Inspection,
+  InspectionItem,
+  InspectionStatus,
+  InspectionItemResult,
+};
 
 // ── Queries ──
 
 export function useInspections(projectId: string | undefined) {
   return useQuery({
-    queryKey: ['inspections', projectId],
+    queryKey: ["inspections", projectId],
     queryFn: () => getInspectionsByProject(projectId!),
     enabled: !!projectId,
   });
@@ -26,7 +36,7 @@ export function useInspections(projectId: string | undefined) {
 
 export function useInspection(inspectionId: string | undefined) {
   return useQuery({
-    queryKey: ['inspection', inspectionId],
+    queryKey: ["inspection", inspectionId],
     queryFn: () => getInspectionById(inspectionId!),
     enabled: !!inspectionId,
   });
@@ -34,7 +44,7 @@ export function useInspection(inspectionId: string | undefined) {
 
 export function useInspectionItems(inspectionId: string | undefined) {
   return useQuery({
-    queryKey: ['inspection-items', inspectionId],
+    queryKey: ["inspection-items", inspectionId],
     queryFn: () => getInspectionItems(inspectionId!),
     enabled: !!inspectionId,
   });
@@ -58,16 +68,18 @@ export function useCreateInspection() {
       client_present?: boolean;
       client_name?: string;
     }) => {
-      if (!user) throw new Error('Não autenticado');
+      if (!user) throw new Error("Não autenticado");
       const id = await createInspectionWithItems(params);
       return { id, project_id: params.project_id } as Inspection;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['inspections', data.project_id] });
-      toast.success('Vistoria criada com sucesso');
+      queryClient.invalidateQueries({
+        queryKey: ["inspections", data.project_id],
+      });
+      toast.success("Vistoria criada com sucesso");
     },
     onError: (err: Error) => {
-      toast.error('Erro ao criar vistoria: ' + err.message);
+      toast.error("Erro ao criar vistoria: " + err.message);
     },
   });
 }
@@ -92,7 +104,9 @@ export function useUpdateInspectionItem() {
       return params;
     },
     onSuccess: (params) => {
-      queryClient.invalidateQueries({ queryKey: ['inspection-items', params.inspection_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["inspection-items", params.inspection_id],
+      });
     },
   });
 }
@@ -106,10 +120,14 @@ export function useCompleteInspection() {
       return params;
     },
     onSuccess: (params) => {
-      queryClient.invalidateQueries({ queryKey: ['inspections', params.project_id] });
-      queryClient.invalidateQueries({ queryKey: ['inspection', params.id] });
-      queryClient.invalidateQueries({ queryKey: ['inspection-items', params.id] });
-      toast.success('Vistoria finalizada');
+      queryClient.invalidateQueries({
+        queryKey: ["inspections", params.project_id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["inspection", params.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["inspection-items", params.id],
+      });
+      toast.success("Vistoria finalizada");
     },
   });
 }

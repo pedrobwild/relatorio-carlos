@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   Bot,
   Send,
@@ -9,30 +9,30 @@ import {
   Clock,
   History,
   Info,
-} from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-import { PageHeader } from '@/components/layout/PageHeader';
-import { PageContainer } from '@/components/layout/PageContainer';
-import { ProjectSubNav } from '@/components/layout/ProjectSubNav';
-import { useProjectNavigation } from '@/hooks/useProjectNavigation';
-import { useCanFeature } from '@/hooks/useCan';
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useCanFeature } from "@/hooks/useCan";
 
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -40,84 +40,84 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from "@/components/ui/sheet";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
+} from "@/components/ui/accordion";
 
 import {
   useAgentEventsQuery,
   useBwildAgentMutation,
   useProjectStateMemoryQuery,
-} from '@/hooks/useBwildAgent';
+} from "@/hooks/useBwildAgent";
 import type {
   AgentEventSource,
   AgentEventType,
   BwildAgentEvent,
   ProjectState,
   RoutedAgent,
-} from '@/infra/repositories/agentMemory.repository';
-import type { BwildAgentResponse } from '@/infra/edgeFunctions';
+} from "@/infra/repositories/agentMemory.repository";
+import type { BwildAgentResponse } from "@/infra/edgeFunctions";
 
 const EVENT_TYPE_LABEL: Record<AgentEventType, string> = {
-  new_project: 'Novo projeto',
-  project_update: 'Atualização do projeto',
-  schedule_request: 'Cronograma',
-  budget_request: 'Orçamento',
-  field_problem: 'Problema em campo',
-  client_message: 'Mensagem ao cliente',
-  supplier_quote: 'Cotação de fornecedor',
-  purchase_decision: 'Decisão de compra',
-  quality_inspection: 'Inspeção de qualidade',
-  scope_change: 'Mudança de escopo',
-  handover: 'Entrega / pós-obra',
+  new_project: "Novo projeto",
+  project_update: "Atualização do projeto",
+  schedule_request: "Cronograma",
+  budget_request: "Orçamento",
+  field_problem: "Problema em campo",
+  client_message: "Mensagem ao cliente",
+  supplier_quote: "Cotação de fornecedor",
+  purchase_decision: "Decisão de compra",
+  quality_inspection: "Inspeção de qualidade",
+  scope_change: "Mudança de escopo",
+  handover: "Entrega / pós-obra",
 };
 
 const SOURCE_LABEL: Record<AgentEventSource, string> = {
-  cliente: 'Cliente',
-  equipe: 'Equipe',
-  fornecedor: 'Fornecedor',
-  gestor: 'Gestor',
-  vistoria: 'Vistoria',
-  documento: 'Documento',
+  cliente: "Cliente",
+  equipe: "Equipe",
+  fornecedor: "Fornecedor",
+  gestor: "Gestor",
+  vistoria: "Vistoria",
+  documento: "Documento",
 };
 
 const ROUTED_AGENT_LABEL: Record<RoutedAgent, string> = {
-  master_bwild: 'Master BWild',
-  schedule_planner: 'Planejador',
-  cost_engineer: 'Eng. de Custos',
-  procurement_manager: 'Suprimentos',
-  field_engineer: 'Eng. de Campo',
-  root_cause_engineer: 'Diagnóstico',
-  coordination_engineer: 'Compatibilização',
-  risk_manager: 'Riscos',
-  quality_controller: 'Qualidade',
-  client_communication: 'Comunicação',
-  supplier_evaluator: 'Aval. Fornecedor',
-  millwork_agent: 'Marcenaria',
-  stonework_agent: 'Marmoraria',
-  delay_recovery: 'Recup. de Atraso',
-  handover_postwork: 'Entrega / Pós-obra',
+  master_bwild: "Master BWild",
+  schedule_planner: "Planejador",
+  cost_engineer: "Eng. de Custos",
+  procurement_manager: "Suprimentos",
+  field_engineer: "Eng. de Campo",
+  root_cause_engineer: "Diagnóstico",
+  coordination_engineer: "Compatibilização",
+  risk_manager: "Riscos",
+  quality_controller: "Qualidade",
+  client_communication: "Comunicação",
+  supplier_evaluator: "Aval. Fornecedor",
+  millwork_agent: "Marcenaria",
+  stonework_agent: "Marmoraria",
+  delay_recovery: "Recup. de Atraso",
+  handover_postwork: "Entrega / Pós-obra",
 };
 
 const STATE_SECTION_LABEL: Record<keyof ProjectState, string> = {
-  project_context: 'Contexto do projeto',
-  technical_scope: 'Escopo técnico',
-  design_status: 'Status do projeto/design',
-  schedule_state: 'Cronograma',
-  financial_state: 'Financeiro',
-  procurement_state: 'Suprimentos',
-  execution_state: 'Execução',
-  quality_state: 'Qualidade',
-  communication_state: 'Comunicação',
+  project_context: "Contexto do projeto",
+  technical_scope: "Escopo técnico",
+  design_status: "Status do projeto/design",
+  schedule_state: "Cronograma",
+  financial_state: "Financeiro",
+  procurement_state: "Suprimentos",
+  execution_state: "Execução",
+  quality_state: "Qualidade",
+  communication_state: "Comunicação",
 };
 
 const Assessor = () => {
   const { paths } = useProjectNavigation();
-  const canUse = useCanFeature('assessor:use');
+  const canUse = useCanFeature("assessor:use");
 
   if (!canUse) {
     return (
@@ -127,9 +127,9 @@ const Assessor = () => {
           backTo={paths.relatorio}
           maxWidth="xl"
           breadcrumbs={[
-            { label: 'Painel de Obras', href: '/gestao/painel-obras' },
-            { label: 'Obra', href: paths.relatorio },
-            { label: 'Assessor' },
+            { label: "Painel de Obras", href: "/gestao/painel-obras" },
+            { label: "Obra", href: paths.relatorio },
+            { label: "Assessor" },
           ]}
         />
         <ProjectSubNav />
@@ -155,9 +155,9 @@ const AssessorContent = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { paths } = useProjectNavigation();
 
-  const [eventType, setEventType] = useState<AgentEventType>('field_problem');
-  const [source, setSource] = useState<AgentEventSource | 'none'>('gestor');
-  const [content, setContent] = useState('');
+  const [eventType, setEventType] = useState<AgentEventType>("field_problem");
+  const [source, setSource] = useState<AgentEventSource | "none">("gestor");
+  const [content, setContent] = useState("");
 
   const memoryQuery = useProjectStateMemoryQuery(projectId);
   const eventsQuery = useAgentEventsQuery(projectId, 20);
@@ -175,10 +175,10 @@ const AssessorContent = () => {
       {
         event_type: eventType,
         content: trimmed,
-        source: source === 'none' ? undefined : source,
+        source: source === "none" ? undefined : source,
       },
       {
-        onSuccess: () => setContent(''),
+        onSuccess: () => setContent(""),
       },
     );
   };
@@ -186,7 +186,8 @@ const AssessorContent = () => {
   const memoryFilled = useMemo(() => {
     const state = memoryQuery.data?.state ?? {};
     return Object.entries(state).filter(
-      ([, value]) => value && typeof value === 'object' && Object.keys(value).length > 0,
+      ([, value]) =>
+        value && typeof value === "object" && Object.keys(value).length > 0,
     );
   }, [memoryQuery.data]);
 
@@ -197,9 +198,9 @@ const AssessorContent = () => {
         backTo={paths.relatorio}
         maxWidth="xl"
         breadcrumbs={[
-          { label: 'Painel de Obras', href: '/gestao/painel-obras' },
-          { label: 'Obra', href: paths.relatorio },
-          { label: 'Assessor' },
+          { label: "Painel de Obras", href: "/gestao/painel-obras" },
+          { label: "Obra", href: paths.relatorio },
+          { label: "Assessor" },
         ]}
       >
         <div className="flex items-center gap-2">
@@ -257,11 +258,13 @@ const AssessorContent = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(EVENT_TYPE_LABEL).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
+                        {Object.entries(EVENT_TYPE_LABEL).map(
+                          ([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -269,7 +272,9 @@ const AssessorContent = () => {
                     <Label htmlFor="source">Fonte</Label>
                     <Select
                       value={source}
-                      onValueChange={(v) => setSource(v as AgentEventSource | 'none')}
+                      onValueChange={(v) =>
+                        setSource(v as AgentEventSource | "none")
+                      }
                     >
                       <SelectTrigger id="source">
                         <SelectValue />
@@ -305,7 +310,7 @@ const AssessorContent = () => {
                   </p>
                   <Button onClick={submit} disabled={!canSubmit}>
                     <Send className="h-4 w-4 mr-2" />
-                    {mutation.isPending ? 'Consultando…' : 'Consultar'}
+                    {mutation.isPending ? "Consultando…" : "Consultar"}
                   </Button>
                 </div>
 
@@ -314,7 +319,7 @@ const AssessorContent = () => {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Falha na consulta</AlertTitle>
                     <AlertDescription>
-                      {mutation.error?.message ?? 'Erro desconhecido.'}
+                      {mutation.error?.message ?? "Erro desconhecido."}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -387,7 +392,9 @@ function ResponsePanel({ response }: ResponsePanelProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Badge variant="outline">{ROUTED_AGENT_LABEL[response.routed_agent]}</Badge>
+        <Badge variant="outline">
+          {ROUTED_AGENT_LABEL[response.routed_agent]}
+        </Badge>
         <span>via {response.routing_reason}</span>
         <span className="ml-auto inline-flex items-center gap-1">
           <Clock className="h-3 w-3" />
@@ -492,7 +499,13 @@ function ResponsePanel({ response }: ResponsePanelProps) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
@@ -509,7 +522,11 @@ interface EventsListProps {
   highlightedEventId: string | null;
 }
 
-function EventsList({ isLoading, events, highlightedEventId }: EventsListProps) {
+function EventsList({
+  isLoading,
+  events,
+  highlightedEventId,
+}: EventsListProps) {
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -532,11 +549,16 @@ function EventsList({ isLoading, events, highlightedEventId }: EventsListProps) 
         <li
           key={event.id}
           className={
-            'py-3 ' + (event.id === highlightedEventId ? 'bg-primary/5 -mx-2 px-2 rounded' : '')
+            "py-3 " +
+            (event.id === highlightedEventId
+              ? "bg-primary/5 -mx-2 px-2 rounded"
+              : "")
           }
         >
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <Badge variant="outline">{EVENT_TYPE_LABEL[event.event_type]}</Badge>
+            <Badge variant="outline">
+              {EVENT_TYPE_LABEL[event.event_type]}
+            </Badge>
             {event.routed_agent && (
               <Badge variant="secondary">
                 {ROUTED_AGENT_LABEL[event.routed_agent]}
@@ -554,10 +576,12 @@ function EventsList({ isLoading, events, highlightedEventId }: EventsListProps) 
               })}
             </span>
           </div>
-          <p className="text-sm text-foreground/90 line-clamp-2">{event.content}</p>
-          {event.status !== 'success' && (
+          <p className="text-sm text-foreground/90 line-clamp-2">
+            {event.content}
+          </p>
+          {event.status !== "success" && (
             <p className="text-xs text-destructive mt-1">
-              {event.status}: {event.error_message ?? 'Erro desconhecido'}
+              {event.status}: {event.error_message ?? "Erro desconhecido"}
             </p>
           )}
         </li>
@@ -573,7 +597,12 @@ interface MemoryDrawerProps {
   updatedAt?: string;
 }
 
-function MemoryDrawerContent({ isLoading, state, version, updatedAt }: MemoryDrawerProps) {
+function MemoryDrawerContent({
+  isLoading,
+  state,
+  version,
+  updatedAt,
+}: MemoryDrawerProps) {
   if (isLoading) {
     return (
       <div className="mt-6 space-y-3">
@@ -595,17 +624,19 @@ function MemoryDrawerContent({ isLoading, state, version, updatedAt }: MemoryDra
     );
   }
 
-  const sections = (Object.keys(STATE_SECTION_LABEL) as Array<keyof ProjectState>)
+  const sections = (
+    Object.keys(STATE_SECTION_LABEL) as Array<keyof ProjectState>
+  )
     .map((key) => [key, state[key]] as const)
     .filter(([, value]) => value && Object.keys(value).length > 0);
 
   return (
     <div className="mt-6 space-y-4">
       <div className="text-xs text-muted-foreground flex items-center gap-3">
-        {typeof version === 'number' && <span>versão {version}</span>}
+        {typeof version === "number" && <span>versão {version}</span>}
         {updatedAt && (
           <span>
-            atualizado{' '}
+            atualizado{" "}
             {formatDistanceToNow(new Date(updatedAt), {
               addSuffix: true,
               locale: ptBR,
@@ -613,7 +644,10 @@ function MemoryDrawerContent({ isLoading, state, version, updatedAt }: MemoryDra
           </span>
         )}
       </div>
-      <Accordion type="multiple" defaultValue={sections.map(([k]) => String(k))}>
+      <Accordion
+        type="multiple"
+        defaultValue={sections.map(([k]) => String(k))}
+      >
         {sections.map(([key, value]) => (
           <AccordionItem key={String(key)} value={String(key)}>
             <AccordionTrigger className="text-sm">

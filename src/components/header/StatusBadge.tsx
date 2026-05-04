@@ -23,7 +23,7 @@ export function StatusBadge({
       <div
         className={cn(
           "inline-flex items-center gap-1.5 rounded-full font-semibold bg-primary/12 text-primary border border-primary/20",
-          size === "sm" ? "px-2.5 py-1 text-xs" : "px-4 py-2 text-sm"
+          size === "sm" ? "px-2.5 py-1 text-xs" : "px-4 py-2 text-sm",
         )}
         role="status"
         aria-label="Fase de Projeto"
@@ -41,7 +41,7 @@ export function StatusBadge({
         isOnTrack
           ? "bg-success/12 text-success border-success/20"
           : "bg-warning/12 text-warning border-warning/20",
-        size === "sm" ? "px-2.5 py-1 text-xs" : "px-4 py-2 text-sm"
+        size === "sm" ? "px-2.5 py-1 text-xs" : "px-4 py-2 text-sm",
       )}
       role="status"
       aria-label={isOnTrack ? "Projeto no prazo" : "Atenção ao prazo"}
@@ -56,7 +56,7 @@ export function StatusBadge({
         <span
           className={cn(
             "font-bold tabular-nums",
-            size === "sm" ? "text-[10px]" : "text-xs opacity-80"
+            size === "sm" ? "text-[10px]" : "text-xs opacity-80",
           )}
         >
           {progressDiff >= 0 ? "+" : ""}

@@ -1,29 +1,33 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { useState, useEffect } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useCreateInspection, useInspectionItems, useInspection } from '@/hooks/useInspections';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Skeleton } from '@/components/ui/skeleton';
-import { INSPECTION_TYPES, type InspectionType } from './inspectionConstants';
+} from "@/components/ui/select";
+import {
+  useCreateInspection,
+  useInspectionItems,
+  useInspection,
+} from "@/hooks/useInspections";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { INSPECTION_TYPES, type InspectionType } from "./inspectionConstants";
 
 interface Props {
   projectId: string;
@@ -33,44 +37,57 @@ interface Props {
   duplicateFromInspectionId?: string;
 }
 
-export function DuplicateInspectionDialog({ projectId, open, onOpenChange, duplicateFromInspectionId }: Props) {
-  const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split('T')[0]);
-  const [activityId, setActivityId] = useState<string>('');
-  const [inspectionType, setInspectionType] = useState<InspectionType>('rotina');
+export function DuplicateInspectionDialog({
+  projectId,
+  open,
+  onOpenChange,
+  duplicateFromInspectionId,
+}: Props) {
+  const [inspectionDate, setInspectionDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
+  const [activityId, setActivityId] = useState<string>("");
+  const [inspectionType, setInspectionType] =
+    useState<InspectionType>("rotina");
   const [clientPresent, setClientPresent] = useState(false);
-  const [clientName, setClientName] = useState('');
-  const [notes, setNotes] = useState('');
+  const [clientName, setClientName] = useState("");
+  const [notes, setNotes] = useState("");
   const [items, setItems] = useState<{ description: string }[]>([]);
-  const [newItemText, setNewItemText] = useState('');
+  const [newItemText, setNewItemText] = useState("");
 
   const createInspection = useCreateInspection();
 
-  const { data: sourceItems, isLoading: loadingSource } = useInspectionItems(duplicateFromInspectionId);
+  const { data: sourceItems, isLoading: loadingSource } = useInspectionItems(
+    duplicateFromInspectionId,
+  );
   const { data: sourceInspection } = useInspection(duplicateFromInspectionId);
 
   // Pre-fill items and type from source inspection
   useEffect(() => {
     if (sourceItems && sourceItems.length > 0) {
-      setItems(sourceItems.map(i => ({ description: i.description })));
+      setItems(sourceItems.map((i) => ({ description: i.description })));
     }
   }, [sourceItems]);
 
   useEffect(() => {
     if (sourceInspection) {
-      setInspectionType(((sourceInspection as any).inspection_type || 'rotina') as InspectionType);
+      setInspectionType(
+        ((sourceInspection as any).inspection_type ||
+          "rotina") as InspectionType,
+      );
       setClientPresent((sourceInspection as any).client_present || false);
-      setClientName((sourceInspection as any).client_name || '');
+      setClientName((sourceInspection as any).client_name || "");
     }
   }, [sourceInspection]);
 
   const { data: activities = [] } = useQuery({
-    queryKey: ['project-activities', projectId],
+    queryKey: ["project-activities", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_activities')
-        .select('id, description')
-        .eq('project_id', projectId)
-        .order('sort_order');
+        .from("project_activities")
+        .select("id, description")
+        .eq("project_id", projectId)
+        .order("sort_order");
       if (error) throw error;
       return data ?? [];
     },
@@ -79,12 +96,12 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
 
   const handleAddCustomItem = () => {
     if (!newItemText.trim()) return;
-    setItems(prev => [...prev, { description: newItemText.trim() }]);
-    setNewItemText('');
+    setItems((prev) => [...prev, { description: newItemText.trim() }]);
+    setNewItemText("");
   };
 
   const handleRemoveItem = (index: number) => {
-    setItems(prev => prev.filter((_, i) => i !== index));
+    setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = () => {
@@ -92,12 +109,14 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
     createInspection.mutate(
       {
         project_id: projectId,
-        activity_id: activityId && activityId !== 'none' ? activityId : undefined,
+        activity_id:
+          activityId && activityId !== "none" ? activityId : undefined,
         inspection_date: inspectionDate,
         notes: notes || undefined,
         inspection_type: inspectionType,
         client_present: clientPresent,
-        client_name: clientPresent && clientName.trim() ? clientName.trim() : undefined,
+        client_name:
+          clientPresent && clientName.trim() ? clientName.trim() : undefined,
         items: items.map((item, i) => ({
           description: item.description,
           sort_order: i,
@@ -105,7 +124,7 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
       },
       {
         onSuccess: () => onOpenChange(false),
-      }
+      },
     );
   };
 
@@ -127,13 +146,20 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
             {/* Inspection type */}
             <div className="space-y-2">
               <Label>Tipo de Vistoria</Label>
-              <Select value={inspectionType} onValueChange={(v) => setInspectionType(v as InspectionType)}>
+              <Select
+                value={inspectionType}
+                onValueChange={(v) => setInspectionType(v as InspectionType)}
+              >
                 <SelectTrigger className="h-11 sm:h-10">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper"  sideOffset={4}>
-                  {INSPECTION_TYPES.map(t => (
-                    <SelectItem key={t.value} value={t.value} className="min-h-[44px]">
+                <SelectContent position="popper" sideOffset={4}>
+                  {INSPECTION_TYPES.map((t) => (
+                    <SelectItem
+                      key={t.value}
+                      value={t.value}
+                      className="min-h-[44px]"
+                    >
                       {t.emoji} {t.label}
                     </SelectItem>
                   ))}
@@ -157,10 +183,12 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
                 <SelectTrigger className="h-11 sm:h-10">
                   <SelectValue placeholder="Selecione uma atividade" />
                 </SelectTrigger>
-                <SelectContent position="popper"  sideOffset={4}>
+                <SelectContent position="popper" sideOffset={4}>
                   <SelectItem value="none">Nenhuma</SelectItem>
-                  {activities.map(a => (
-                    <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>
+                  {activities.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.description}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -185,7 +213,7 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
                   placeholder="Adicionar item..."
                   value={newItemText}
                   onChange={(e) => setNewItemText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustomItem()}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddCustomItem()}
                   className="h-11 sm:h-10"
                 />
                 <Button
@@ -202,8 +230,13 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
               {items.length > 0 && (
                 <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
                   {items.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between px-3 py-2.5 text-sm gap-2">
-                      <span className="truncate text-xs sm:text-sm">{item.description}</span>
+                    <div
+                      key={i}
+                      className="flex items-center justify-between px-3 py-2.5 text-sm gap-2"
+                    >
+                      <span className="truncate text-xs sm:text-sm">
+                        {item.description}
+                      </span>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -218,22 +251,29 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
               )}
 
               <p className="text-xs text-muted-foreground">
-                {items.length} {items.length === 1 ? 'item' : 'itens'} no checklist
+                {items.length} {items.length === 1 ? "item" : "itens"} no
+                checklist
               </p>
             </div>
           </div>
         )}
 
         <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 sm:h-10 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="h-11 sm:h-10 w-full sm:w-auto"
+          >
             Cancelar
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={items.length === 0 || createInspection.isPending || loadingSource}
+            disabled={
+              items.length === 0 || createInspection.isPending || loadingSource
+            }
             className="h-11 sm:h-10 w-full sm:w-auto"
           >
-            {createInspection.isPending ? 'Criando...' : 'Criar Vistoria'}
+            {createInspection.isPending ? "Criando..." : "Criar Vistoria"}
           </Button>
         </DialogFooter>
       </DialogContent>

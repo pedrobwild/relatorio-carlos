@@ -39,15 +39,17 @@ interface MobileRecordCardProps {
   tone?: "default" | "warning" | "destructive" | "success";
 }
 
-const chipToneClass: Record<NonNullable<MobileRecordCardChip["tone"]>, string> = {
-  neutral:
-    "bg-muted/60 text-foreground/80 border border-border-subtle",
+const chipToneClass: Record<
+  NonNullable<MobileRecordCardChip["tone"]>,
+  string
+> = {
+  neutral: "bg-muted/60 text-foreground/80 border border-border-subtle",
   info: "bg-info/10 text-info border border-info/25",
   success: "bg-success/10 text-success border border-success/25",
   warning: "bg-warning/10 text-warning border border-warning/30",
-  destructive: "bg-destructive/10 text-destructive border border-destructive/25",
-  muted:
-    "bg-muted/40 text-muted-foreground border border-dashed border-border",
+  destructive:
+    "bg-destructive/10 text-destructive border border-destructive/25",
+  muted: "bg-muted/40 text-muted-foreground border border-dashed border-border",
 };
 
 const toneAccent: Record<NonNullable<MobileRecordCardProps["tone"]>, string> = {

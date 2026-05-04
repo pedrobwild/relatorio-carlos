@@ -16,7 +16,8 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
   const [isOpen, setIsOpen] = useState(true);
 
   const isHtml = /<[a-z][\s\S]*>/i.test(data.executiveSummary);
-  const isEmpty = !data.executiveSummary || data.executiveSummary.trim().length < 50;
+  const isEmpty =
+    !data.executiveSummary || data.executiveSummary.trim().length < 50;
 
   const sanitizedHtml = useMemo(() => {
     if (isHtml) {
@@ -26,7 +27,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
   }, [data.executiveSummary, isHtml]);
 
   // For plain text fallback
-  const paragraphs = isHtml ? [] : data.executiveSummary.split('\n\n');
+  const paragraphs = isHtml ? [] : data.executiveSummary.split("\n\n");
   const firstParagraph = paragraphs[0] || "";
   const remainingParagraphs = paragraphs.slice(1);
 
@@ -37,7 +38,8 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
           <FileText className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
           <div>
             <p className="text-sm text-muted-foreground leading-[1.6]">
-              Seu relatório está sendo finalizado pela equipe. Detalhes técnicos disponíveis abaixo ⬇️
+              Seu relatório está sendo finalizado pela equipe. Detalhes técnicos
+              disponíveis abaixo ⬇️
             </p>
           </div>
         </div>
@@ -65,9 +67,11 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
     <div className="space-y-6">
       <div className="bg-card rounded-lg border border-border overflow-hidden">
         <div className="px-4 py-2.5 bg-primary-dark">
-          <h3 className="text-base font-semibold text-white tracking-tight">Resumo Executivo</h3>
+          <h3 className="text-base font-semibold text-white tracking-tight">
+            Resumo Executivo
+          </h3>
         </div>
-        
+
         {/* Desktop: Always show full content */}
         <div className="hidden sm:block px-5 py-4 sm:px-6 sm:py-5">
           {renderContent()}
@@ -76,9 +80,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
         {/* Mobile: Collapsible content */}
         <div className="sm:hidden">
           {isEmpty ? (
-            <div className="px-4 py-3">
-              {renderContent()}
-            </div>
+            <div className="px-4 py-3">{renderContent()}</div>
           ) : isHtml ? (
             <Collapsible open={isOpen} onOpenChange={setIsOpen}>
               <div className="px-4 py-3">
@@ -89,7 +91,9 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
               <CollapsibleTrigger asChild>
                 <button className="w-full py-2.5 px-4 border-t border-border flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
                   <span>{isOpen ? "Ver menos" : "Continuar lendo"}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
               </CollapsibleTrigger>
             </Collapsible>
@@ -102,7 +106,10 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                 <CollapsibleContent className="overflow-hidden">
                   <div className="space-y-3 mt-3">
                     {remainingParagraphs.map((paragraph, index) => (
-                      <p key={index} className="text-sm leading-[1.65] text-foreground/85">
+                      <p
+                        key={index}
+                        className="text-sm leading-[1.65] text-foreground/85"
+                      >
                         {paragraph}
                       </p>
                     ))}
@@ -113,8 +120,14 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                 <CollapsibleTrigger asChild>
                   <button className="w-full py-2.5 px-4 border-t border-border flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
                     <span>{isOpen ? "Ver menos" : "Continuar lendo"}</span>
-                    {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-xs font-semibold">+{remainingParagraphs.length}</span>}
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                    {!isOpen && (
+                      <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-xs font-semibold">
+                        +{remainingParagraphs.length}
+                      </span>
+                    )}
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
                 </CollapsibleTrigger>
               )}
@@ -127,7 +140,9 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
       {data.deliverablesCompleted.length > 0 && (
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           <div className="px-4 py-2.5 bg-primary-dark">
-            <h3 className="text-base font-semibold text-white tracking-tight">Entregáveis concluídos na semana</h3>
+            <h3 className="text-base font-semibold text-white tracking-tight">
+              Entregáveis concluídos na semana
+            </h3>
           </div>
           <div className="px-5 py-4 sm:px-6 sm:py-5">
             <ul className="space-y-3">
@@ -140,7 +155,10 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                   {item.subItems && item.subItems.length > 0 && (
                     <ul className="ml-6 space-y-1 border-l-2 border-border pl-3">
                       {item.subItems.map((subItem) => (
-                        <li key={subItem.id} className="text-sm text-foreground/75 leading-[1.6]">
+                        <li
+                          key={subItem.id}
+                          className="text-sm text-foreground/75 leading-[1.6]"
+                        >
                           {subItem.description}
                         </li>
                       ))}

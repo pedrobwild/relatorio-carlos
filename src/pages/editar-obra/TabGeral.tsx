@@ -1,31 +1,57 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Building2, Calendar, DollarSign, Map, User, Info, RefreshCw, CalendarRange } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { countBusinessDaysInclusive } from '@/lib/businessDays';
-import type { Project, Customer, Activity } from './types';
-import { ScheduleSyncAlert } from './ScheduleSyncAlert';
-import { WeeklyRecalcPreviewDialog } from './WeeklyRecalcPreviewDialog';
+import { useEffect, useMemo, useState } from "react";
+import {
+  Building2,
+  Calendar,
+  DollarSign,
+  Map,
+  User,
+  Info,
+  RefreshCw,
+  CalendarRange,
+} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { countBusinessDaysInclusive } from "@/lib/businessDays";
+import type { Project, Customer, Activity } from "./types";
+import { ScheduleSyncAlert } from "./ScheduleSyncAlert";
+import { WeeklyRecalcPreviewDialog } from "./WeeklyRecalcPreviewDialog";
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
-  active: 'A obra está em execução. O cliente pode acompanhar atualizações pelo portal.',
-  paused: 'A obra está temporariamente pausada. O cliente será notificado.',
-  completed: 'A obra foi concluída. O cliente terá acesso de leitura ao histórico.',
-  cancelled: 'A obra foi cancelada. Os dados serão preservados para consulta.',
+  active:
+    "A obra está em execução. O cliente pode acompanhar atualizações pelo portal.",
+  paused: "A obra está temporariamente pausada. O cliente será notificado.",
+  completed:
+    "A obra foi concluída. O cliente terá acesso de leitura ao histórico.",
+  cancelled: "A obra foi cancelada. Os dados serão preservados para consulta.",
 };
 
 interface TabGeralProps {
   project: Project;
   customer: Customer | null;
   activities?: Activity[];
-  onProjectChange: (field: keyof Project, value: string | number | boolean | null) => void;
+  onProjectChange: (
+    field: keyof Project,
+    value: string | number | boolean | null,
+  ) => void;
   onCustomerChange: (field: keyof Customer, value: string | null) => void;
   onRecalculateSchedule?: () => void;
   onRecalculateWeekly?: () => void;
@@ -46,10 +72,10 @@ export function TabGeral({
 }: TabGeralProps) {
   // Dias úteis derivados do intervalo atual planned_start..planned_end
   const derivedDuration = useMemo(() => {
-    if (!project.planned_start_date || !project.planned_end_date) return '';
-    const s = new Date(project.planned_start_date + 'T00:00:00');
-    const e = new Date(project.planned_end_date + 'T00:00:00');
-    if (e < s) return '';
+    if (!project.planned_start_date || !project.planned_end_date) return "";
+    const s = new Date(project.planned_start_date + "T00:00:00");
+    const e = new Date(project.planned_end_date + "T00:00:00");
+    if (e < s) return "";
     return String(countBusinessDaysInclusive(s, e));
   }, [project.planned_start_date, project.planned_end_date]);
 
@@ -64,11 +90,14 @@ export function TabGeral({
   const MAX_BUSINESS_DAYS = 2000; // ~8 anos úteis — limite defensivo
   const durationError: string | null = (() => {
     const raw = durationInput.trim();
-    if (!raw) return 'Informe a duração em dias úteis.';
-    if (!/^\d+$/.test(raw)) return 'Use apenas números inteiros (sem vírgulas ou pontos).';
+    if (!raw) return "Informe a duração em dias úteis.";
+    if (!/^\d+$/.test(raw))
+      return "Use apenas números inteiros (sem vírgulas ou pontos).";
     const n = Number(raw);
-    if (!Number.isFinite(n) || n <= 0) return 'A duração deve ser maior que zero.';
-    if (n > MAX_BUSINESS_DAYS) return `Duração muito alta. Use até ${MAX_BUSINESS_DAYS} dias úteis.`;
+    if (!Number.isFinite(n) || n <= 0)
+      return "A duração deve ser maior que zero.";
+    if (n > MAX_BUSINESS_DAYS)
+      return `Duração muito alta. Use até ${MAX_BUSINESS_DAYS} dias úteis.`;
     return null;
   })();
 
@@ -78,7 +107,6 @@ export function TabGeral({
     const n = parseInt(durationInput, 10);
     onApplyBusinessDaysDuration?.(n);
   };
-
 
   return (
     <div className="space-y-6">
@@ -94,16 +122,29 @@ export function TabGeral({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <Label>Condomínio *</Label>
-              <Input value={project.name} onChange={(e) => onProjectChange('name', e.target.value)} />
+              <Input
+                value={project.name}
+                onChange={(e) => onProjectChange("name", e.target.value)}
+              />
             </div>
             <div>
               <Label>Unidade</Label>
-              <Input value={project.unit_name || ''} onChange={(e) => onProjectChange('unit_name', e.target.value || null)} />
+              <Input
+                value={project.unit_name || ""}
+                onChange={(e) =>
+                  onProjectChange("unit_name", e.target.value || null)
+                }
+              />
             </div>
             <div>
               <Label>Status</Label>
-              <Select value={project.status} onValueChange={(v) => onProjectChange('status', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={project.status}
+                onValueChange={(v) => onProjectChange("status", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Em andamento</SelectItem>
                   <SelectItem value="paused">Pausada</SelectItem>
@@ -133,23 +174,50 @@ export function TabGeral({
         <CardContent>
           {/* Mobile: stacked detail cards */}
           <div className="sm:hidden space-y-3">
-            <DetailItem label="Endereço" value={project.address} onChange={(v) => onProjectChange('address', v)} />
-            <DetailItem label="Bairro" value={project.bairro} onChange={(v) => onProjectChange('bairro', v)} />
-            <DetailItem label="CEP" value={project.cep} onChange={(v) => onProjectChange('cep', v)} placeholder="00000-000" />
+            <DetailItem
+              label="Endereço"
+              value={project.address}
+              onChange={(v) => onProjectChange("address", v)}
+            />
+            <DetailItem
+              label="Bairro"
+              value={project.bairro}
+              onChange={(v) => onProjectChange("bairro", v)}
+            />
+            <DetailItem
+              label="CEP"
+              value={project.cep}
+              onChange={(v) => onProjectChange("cep", v)}
+              placeholder="00000-000"
+            />
           </div>
           {/* Desktop: grid */}
           <div className="hidden sm:grid grid-cols-2 gap-4">
             <div>
               <Label>Endereço</Label>
-              <Input value={project.address || ''} onChange={(e) => onProjectChange('address', e.target.value || null)} />
+              <Input
+                value={project.address || ""}
+                onChange={(e) =>
+                  onProjectChange("address", e.target.value || null)
+                }
+              />
             </div>
             <div>
               <Label>Bairro</Label>
-              <Input value={project.bairro || ''} onChange={(e) => onProjectChange('bairro', e.target.value || null)} />
+              <Input
+                value={project.bairro || ""}
+                onChange={(e) =>
+                  onProjectChange("bairro", e.target.value || null)
+                }
+              />
             </div>
             <div>
               <Label>CEP</Label>
-              <Input value={project.cep || ''} onChange={(e) => onProjectChange('cep', e.target.value || null)} placeholder="00000-000" />
+              <Input
+                value={project.cep || ""}
+                onChange={(e) => onProjectChange("cep", e.target.value || null)}
+                placeholder="00000-000"
+              />
             </div>
           </div>
         </CardContent>
@@ -160,10 +228,21 @@ export function TabGeral({
         <CardContent className="pt-6">
           <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/50">
             <div className="space-y-0.5">
-              <Label htmlFor="is_project_phase" className="text-sm font-medium">Obra em fase de projeto</Label>
-              <p className="text-xs text-muted-foreground">Ative se a obra ainda está em fase de aprovação (Projeto 3D → Executivo → Liberação)</p>
+              <Label htmlFor="is_project_phase" className="text-sm font-medium">
+                Obra em fase de projeto
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Ative se a obra ainda está em fase de aprovação (Projeto 3D →
+                Executivo → Liberação)
+              </p>
             </div>
-            <Switch id="is_project_phase" checked={project.is_project_phase} onCheckedChange={(checked) => onProjectChange('is_project_phase', checked)} />
+            <Switch
+              id="is_project_phase"
+              checked={project.is_project_phase}
+              onCheckedChange={(checked) =>
+                onProjectChange("is_project_phase", checked)
+              }
+            />
           </div>
         </CardContent>
       </Card>
@@ -176,7 +255,10 @@ export function TabGeral({
             Cronograma
           </CardTitle>
           {project.is_project_phase && (
-            <CardDescription>Obra em fase de projeto. As datas podem ser definidas ou marcadas como "Em definição".</CardDescription>
+            <CardDescription>
+              Obra em fase de projeto. As datas podem ser definidas ou marcadas
+              como "Em definição".
+            </CardDescription>
           )}
         </CardHeader>
         <CardContent className="space-y-4">
@@ -188,15 +270,41 @@ export function TabGeral({
             isBusy={isSaving}
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <DateFieldWithPending label="Início Previsto" required={!project.is_project_phase} showPending={project.is_project_phase} value={project.planned_start_date} onChange={(v) => onProjectChange('planned_start_date', v)} id="start" />
-            <DateFieldWithPending label="Término Previsto" required={!project.is_project_phase} showPending={project.is_project_phase} value={project.planned_end_date} onChange={(v) => onProjectChange('planned_end_date', v)} id="end" />
+            <DateFieldWithPending
+              label="Início Previsto"
+              required={!project.is_project_phase}
+              showPending={project.is_project_phase}
+              value={project.planned_start_date}
+              onChange={(v) => onProjectChange("planned_start_date", v)}
+              id="start"
+            />
+            <DateFieldWithPending
+              label="Término Previsto"
+              required={!project.is_project_phase}
+              showPending={project.is_project_phase}
+              value={project.planned_end_date}
+              onChange={(v) => onProjectChange("planned_end_date", v)}
+              id="end"
+            />
             <div>
               <Label>Início Real</Label>
-              <Input type="date" value={project.actual_start_date || ''} onChange={(e) => onProjectChange('actual_start_date', e.target.value || null)} />
+              <Input
+                type="date"
+                value={project.actual_start_date || ""}
+                onChange={(e) =>
+                  onProjectChange("actual_start_date", e.target.value || null)
+                }
+              />
             </div>
             <div>
               <Label>Término Real</Label>
-              <Input type="date" value={project.actual_end_date || ''} onChange={(e) => onProjectChange('actual_end_date', e.target.value || null)} />
+              <Input
+                type="date"
+                value={project.actual_end_date || ""}
+                onChange={(e) =>
+                  onProjectChange("actual_end_date", e.target.value || null)
+                }
+              />
             </div>
           </div>
 
@@ -206,11 +314,15 @@ export function TabGeral({
               <div className="flex items-start gap-2">
                 <CalendarRange className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <Label htmlFor="business_days_duration" className="text-sm font-medium">
+                  <Label
+                    htmlFor="business_days_duration"
+                    className="text-sm font-medium"
+                  >
                     Dias úteis de execução
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    A partir do Início Previsto, calcula o Término automaticamente, pulando finais de semana e feriados de SP.
+                    A partir do Início Previsto, calcula o Término
+                    automaticamente, pulando finais de semana e feriados de SP.
                   </p>
                 </div>
               </div>
@@ -231,14 +343,16 @@ export function TabGeral({
                   onBlur={() => setDurationTouched(true)}
                   aria-invalid={!!(durationTouched && durationError)}
                   aria-describedby="business_days_duration_msg"
-                  className={`sm:w-40 ${durationTouched && durationError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                  className={`sm:w-40 ${durationTouched && durationError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                   disabled={!project.planned_start_date || isSaving}
                 />
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={handleApplyDuration}
-                  disabled={!project.planned_start_date || isSaving || !!durationError}
+                  disabled={
+                    !project.planned_start_date || isSaving || !!durationError
+                  }
                   className="sm:w-auto"
                 >
                   Aplicar duração
@@ -247,17 +361,18 @@ export function TabGeral({
               <p
                 id="business_days_duration_msg"
                 className={`text-xs ${
-                  durationTouched && durationError ? 'text-destructive' : 'text-muted-foreground'
+                  durationTouched && durationError
+                    ? "text-destructive"
+                    : "text-muted-foreground"
                 }`}
-                role={durationTouched && durationError ? 'alert' : undefined}
+                role={durationTouched && durationError ? "alert" : undefined}
               >
                 {!project.planned_start_date
-                  ? 'Defina o Início Previsto para usar a duração em dias úteis.'
+                  ? "Defina o Início Previsto para usar a duração em dias úteis."
                   : durationTouched && durationError
                     ? durationError
-                    : 'Inteiro maior que zero. Pula sábados, domingos e feriados de SP.'}
+                    : "Inteiro maior que zero. Pula sábados, domingos e feriados de SP."}
               </p>
-
             </div>
           )}
 
@@ -267,9 +382,12 @@ export function TabGeral({
               <div className="flex items-start gap-2 flex-1 min-w-0">
                 <RefreshCw className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                 <div>
-                  <p className="text-sm font-medium">Recalcular etapas semana a semana</p>
+                  <p className="text-sm font-medium">
+                    Recalcular etapas semana a semana
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    Reorganiza cada etapa do cronograma em uma semana útil (Seg→Sex), preservando a ordem, a partir do Início Previsto.
+                    Reorganiza cada etapa do cronograma em uma semana útil
+                    (Seg→Sex), preservando a ordem, a partir do Início Previsto.
                   </p>
                 </div>
               </div>
@@ -306,42 +424,64 @@ export function TabGeral({
             <Calendar className="h-5 w-5" />
             Datas-Chave do Projeto
           </CardTitle>
-          <CardDescription>Marcos importantes da jornada do cliente</CardDescription>
+          <CardDescription>
+            Marcos importantes da jornada do cliente
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {/* Mobile: stacked */}
           <div className="sm:hidden space-y-3">
-            {([
-              ['date_briefing_arch', 'Briefing com Arquiteta'],
-              ['date_approval_3d', 'Aprovação 3D'],
-              ['date_approval_exec', 'Aprovação Executivo'],
-              ['date_approval_obra', 'Aprovação Obra'],
-              ['date_official_start', 'Início Oficial'],
-              ['date_mobilization_start', 'Início Mobilização'],
-              ['date_official_delivery', 'Entrega Oficial'],
-              ['contract_signing_date', 'Assinatura do Contrato'],
-            ] as const).map(([field, label]) => (
-              <div key={field} className="flex items-center justify-between rounded-lg border p-3">
+            {(
+              [
+                ["date_briefing_arch", "Briefing com Arquiteta"],
+                ["date_approval_3d", "Aprovação 3D"],
+                ["date_approval_exec", "Aprovação Executivo"],
+                ["date_approval_obra", "Aprovação Obra"],
+                ["date_official_start", "Início Oficial"],
+                ["date_mobilization_start", "Início Mobilização"],
+                ["date_official_delivery", "Entrega Oficial"],
+                ["contract_signing_date", "Assinatura do Contrato"],
+              ] as const
+            ).map(([field, label]) => (
+              <div
+                key={field}
+                className="flex items-center justify-between rounded-lg border p-3"
+              >
                 <Label className="text-sm">{label}</Label>
-                <Input type="date" value={project[field] || ''} onChange={(e) => onProjectChange(field, e.target.value || null)} className="w-auto max-w-[160px]" />
+                <Input
+                  type="date"
+                  value={project[field] || ""}
+                  onChange={(e) =>
+                    onProjectChange(field, e.target.value || null)
+                  }
+                  className="w-auto max-w-[160px]"
+                />
               </div>
             ))}
           </div>
           {/* Desktop: grid */}
           <div className="hidden sm:grid grid-cols-2 gap-4">
-            {([
-              ['date_briefing_arch', 'Briefing com Arquiteta'],
-              ['date_approval_3d', 'Aprovação 3D'],
-              ['date_approval_exec', 'Aprovação Executivo'],
-              ['date_approval_obra', 'Aprovação Obra'],
-              ['date_official_start', 'Início Oficial'],
-              ['date_mobilization_start', 'Início Mobilização'],
-              ['date_official_delivery', 'Entrega Oficial'],
-              ['contract_signing_date', 'Assinatura do Contrato'],
-            ] as const).map(([field, label]) => (
+            {(
+              [
+                ["date_briefing_arch", "Briefing com Arquiteta"],
+                ["date_approval_3d", "Aprovação 3D"],
+                ["date_approval_exec", "Aprovação Executivo"],
+                ["date_approval_obra", "Aprovação Obra"],
+                ["date_official_start", "Início Oficial"],
+                ["date_mobilization_start", "Início Mobilização"],
+                ["date_official_delivery", "Entrega Oficial"],
+                ["contract_signing_date", "Assinatura do Contrato"],
+              ] as const
+            ).map(([field, label]) => (
               <div key={field}>
                 <Label>{label}</Label>
-                <Input type="date" value={project[field] || ''} onChange={(e) => onProjectChange(field, e.target.value || null)} />
+                <Input
+                  type="date"
+                  value={project[field] || ""}
+                  onChange={(e) =>
+                    onProjectChange(field, e.target.value || null)
+                  }
+                />
               </div>
             ))}
           </div>
@@ -359,7 +499,17 @@ export function TabGeral({
         <CardContent>
           <div>
             <Label>Valor do Contrato (R$)</Label>
-            <Input type="number" step="0.01" value={project.contract_value || ''} onChange={(e) => onProjectChange('contract_value', e.target.value ? parseFloat(e.target.value) : null)} />
+            <Input
+              type="number"
+              step="0.01"
+              value={project.contract_value || ""}
+              onChange={(e) =>
+                onProjectChange(
+                  "contract_value",
+                  e.target.value ? parseFloat(e.target.value) : null,
+                )
+              }
+            />
           </div>
         </CardContent>
       </Card>
@@ -377,21 +527,42 @@ export function TabGeral({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <Label>Nome Completo</Label>
-                <Input value={customer.customer_name} onChange={(e) => onCustomerChange('customer_name', e.target.value)} />
+                <Input
+                  value={customer.customer_name}
+                  onChange={(e) =>
+                    onCustomerChange("customer_name", e.target.value)
+                  }
+                />
               </div>
               <div>
                 <Label>E-mail</Label>
-                <Input type="email" value={customer.customer_email} onChange={(e) => onCustomerChange('customer_email', e.target.value)} />
+                <Input
+                  type="email"
+                  value={customer.customer_email}
+                  onChange={(e) =>
+                    onCustomerChange("customer_email", e.target.value)
+                  }
+                />
               </div>
               <div>
                 <Label>Telefone</Label>
-                <Input value={customer.customer_phone || ''} onChange={(e) => onCustomerChange('customer_phone', e.target.value || null)} />
+                <Input
+                  value={customer.customer_phone || ""}
+                  onChange={(e) =>
+                    onCustomerChange("customer_phone", e.target.value || null)
+                  }
+                />
               </div>
             </div>
             {customer.customer_user_id || customer.invitation_accepted_at ? (
-              <Badge className="bg-green-500/10 text-green-600">Cadastrado no portal</Badge>
+              <Badge className="bg-green-500/10 text-green-600">
+                Cadastrado no portal
+              </Badge>
             ) : customer.invitation_sent_at ? (
-              <Badge variant="outline">Convite enviado em {format(new Date(customer.invitation_sent_at), 'dd/MM/yyyy')}</Badge>
+              <Badge variant="outline">
+                Convite enviado em{" "}
+                {format(new Date(customer.invitation_sent_at), "dd/MM/yyyy")}
+              </Badge>
             ) : null}
           </CardContent>
         </Card>
@@ -402,36 +573,78 @@ export function TabGeral({
 
 /** Date field with optional "Em definição" checkbox */
 function DateFieldWithPending({
-  label, required, showPending, value, onChange, id,
+  label,
+  required,
+  showPending,
+  value,
+  onChange,
+  id,
 }: {
-  label: string; required: boolean; showPending: boolean; value: string | null; onChange: (v: string | null) => void; id: string;
+  label: string;
+  required: boolean;
+  showPending: boolean;
+  value: string | null;
+  onChange: (v: string | null) => void;
+  id: string;
 }) {
   return (
     <div className="space-y-2">
-      <Label>{label} {required && '*'}</Label>
+      <Label>
+        {label} {required && "*"}
+      </Label>
       {showPending && (
         <div className="flex items-center gap-2">
-          <Checkbox id={`${id}_undefined`} checked={!value} onCheckedChange={(checked) => { if (checked) onChange(null); }} />
-          <Label htmlFor={`${id}_undefined`} className="text-xs text-muted-foreground cursor-pointer">Em definição</Label>
+          <Checkbox
+            id={`${id}_undefined`}
+            checked={!value}
+            onCheckedChange={(checked) => {
+              if (checked) onChange(null);
+            }}
+          />
+          <Label
+            htmlFor={`${id}_undefined`}
+            className="text-xs text-muted-foreground cursor-pointer"
+          >
+            Em definição
+          </Label>
         </div>
       )}
-      {(!showPending || value) ? (
-        <Input type="date" value={value || ''} onChange={(e) => onChange(e.target.value || null)} />
+      {!showPending || value ? (
+        <Input
+          type="date"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value || null)}
+        />
       ) : (
-        <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">Em definição</div>
+        <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">
+          Em definição
+        </div>
       )}
     </div>
   );
 }
 
 /** Mobile-friendly detail item */
-function DetailItem({ label, value, onChange, placeholder }: {
-  label: string; value: string | null | undefined; onChange: (v: string | null) => void; placeholder?: string;
+function DetailItem({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string | null | undefined;
+  onChange: (v: string | null) => void;
+  placeholder?: string;
 }) {
   return (
     <div className="flex flex-col gap-1.5 rounded-lg border p-3">
       <Label className="text-xs text-muted-foreground">{label}</Label>
-      <Input value={value || ''} onChange={(e) => onChange(e.target.value || null)} placeholder={placeholder} className="border-0 p-0 h-auto shadow-none focus-visible:ring-0" />
+      <Input
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        placeholder={placeholder}
+        className="border-0 p-0 h-auto shadow-none focus-visible:ring-0"
+      />
     </div>
   );
 }

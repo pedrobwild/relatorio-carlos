@@ -2,7 +2,7 @@
  * CalendarMonthGrid — Google-Calendar style month view.
  * Renders a 7-col grid (Mon-Sun) for the visible month. Each activity becomes
  * a colored bar spanning its [planned_start, planned_end] interval, clipped
- * to each week row. Up to 3 lanes per row by default; clicking "+N mais"
+ * to each week row. Up to 3 lanes per row by default; clicking"+N mais"
  * expands the entire week inline so every lane is visible without leaving
  * the month view.
  *
@@ -10,7 +10,7 @@
  * FOOTER_AREA) so the overlay grid always aligns with the day columns
  * regardless of how many lanes are shown.
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from "react";
 import {
   differenceInCalendarDays,
   eachDayOfInterval,
@@ -21,14 +21,30 @@ import {
   isSameMonth,
   startOfMonth,
   startOfWeek,
-} from 'date-fns';
-import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound, CalendarClock, ShoppingCart } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { getProjectColor } from '@/lib/taskUtils';
-import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
-import type { WeekActivity } from '@/hooks/useWeekActivities';
-import type { PurchaseCalendarEvent } from '@/hooks/usePurchasesByCreationRange';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+} from "date-fns";
+import {
+  ChevronsDownUp,
+  ChevronsUpDown,
+  CalendarDays,
+  CheckCircle2,
+  PlayCircle,
+  Clock,
+  AlertTriangle,
+  UserRound,
+  CalendarClock,
+  ShoppingCart,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getProjectColor } from "@/lib/taskUtils";
+import { parseLocalDate, getTodayLocal } from "@/lib/activityStatus";
+import type { WeekActivity } from "@/hooks/useWeekActivities";
+import type { PurchaseCalendarEvent } from "@/hooks/usePurchasesByCreationRange";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,16 +54,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { ptBR } from 'date-fns/locale';
+} from "@/components/ui/alert-dialog";
+import { ptBR } from "date-fns/locale";
 
 /**
  * Determina o status visual de uma atividade para exibir no tooltip:
- * - "Concluída": tem actual_end
- * - "Em andamento": tem actual_start mas não actual_end
- * - "Atrasada (não concluída)": planned_end < hoje e não foi concluída
- * - "Atrasada (não iniciada)": planned_start <= hoje, sem actual_start, e ainda não venceu
- * - "Planejada": ainda não iniciada e dentro do prazo
+ * -"Concluída": tem actual_end
+ * -"Em andamento": tem actual_start mas não actual_end
+ * -"Atrasada (não concluída)": planned_end < hoje e não foi concluída
+ * -"Atrasada (não iniciada)": planned_start <= hoje, sem actual_start, e ainda não venceu
+ * -"Planejada": ainda não iniciada e dentro do prazo
  */
 function getActivityStatus(a: WeekActivity): {
   label: string;
@@ -56,20 +72,40 @@ function getActivityStatus(a: WeekActivity): {
 } {
   const today = getTodayLocal();
   if (a.actual_end) {
-    return { label: 'Concluída', Icon: CheckCircle2, className: 'text-emerald-600 dark:text-emerald-400' };
+    return {
+      label: "Concluída",
+      Icon: CheckCircle2,
+      className: "text-emerald-600",
+    };
   }
   if (a.actual_start) {
-    return { label: 'Em andamento', Icon: PlayCircle, className: 'text-blue-600 dark:text-blue-400' };
+    return {
+      label: "Em andamento",
+      Icon: PlayCircle,
+      className: "text-blue-600",
+    };
   }
   const plannedStart = parseLocalDate(a.planned_start);
   const plannedEnd = parseLocalDate(a.planned_end);
   if (plannedEnd < today) {
-    return { label: 'Atrasada — não concluída', Icon: AlertTriangle, className: 'text-destructive' };
+    return {
+      label: "Atrasada — não concluída",
+      Icon: AlertTriangle,
+      className: "text-destructive",
+    };
   }
   if (plannedStart <= today) {
-    return { label: 'Atrasada — não iniciada', Icon: AlertTriangle, className: 'text-destructive' };
+    return {
+      label: "Atrasada — não iniciada",
+      Icon: AlertTriangle,
+      className: "text-destructive",
+    };
   }
-  return { label: 'Planejada', Icon: Clock, className: 'text-muted-foreground' };
+  return {
+    label: "Planejada",
+    Icon: Clock,
+    className: "text-muted-foreground",
+  };
 }
 
 interface Props {
@@ -97,18 +133,18 @@ interface Props {
 // Layout tokens (px). Keeping these fixed guarantees lanes never overlap and
 // stay perfectly aligned with the day columns underneath them.
 const MAX_BARS_PER_ROW = 3;
-const DAY_NUMBER_AREA = 30;   // top space reserved for the day number chip
-const LANE_HEIGHT = 30;       // 26px bar (2 linhas) + ~4px vertical gap
-const LANE_GAP = 4;           // visual gap between lanes
-const FOOTER_AREA = 24;       // bottom space for "+N mais" / Expandir / Recolher
+const DAY_NUMBER_AREA = 30; // top space reserved for the day number chip
+const LANE_HEIGHT = 30; // 26px bar (2 linhas) + ~4px vertical gap
+const LANE_GAP = 4; // visual gap between lanes
+const FOOTER_AREA = 24; // bottom space for"+N mais" / Expandir / Recolher
 const ROW_BASE_PADDING = 8;
 const EXPANDED_BOTTOM_PADDING = 16; // extra breathing room below last lane when expanded
-const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+const WEEKDAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 interface BarSegment {
   activity: WeekActivity;
   startCol: number; // 0..6
-  span: number;     // 1..7
+  span: number; // 1..7
   startsBefore: boolean;
   endsAfter: boolean;
 }
@@ -188,7 +224,7 @@ export function CalendarMonthGrid({
             <AlertDialogTitle>Replanejar cronograma?</AlertDialogTitle>
             <AlertDialogDescription>
               Você sairá do calendário e abrirá o cronograma da obra
-              {replanTarget ? ` "${replanTarget.projectName}"` : ''} para revisar
+              {replanTarget ? `"${replanTarget.projectName}"` : ""} para revisar
               etapas anteriores ainda não concluídas. Deseja continuar?
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -273,7 +309,10 @@ function WeekRow({
       for (const lane of out) {
         const conflict = lane.some(
           (other) =>
-            !(seg.startCol + seg.span - 1 < other.startCol || seg.startCol > other.startCol + other.span - 1),
+            !(
+              seg.startCol + seg.span - 1 < other.startCol ||
+              seg.startCol > other.startCol + other.span - 1
+            ),
         );
         if (!conflict) {
           lane.push(seg);
@@ -302,16 +341,18 @@ function WeekRow({
     }
   }
 
-  const showsFooter = overflow; // either "Expandir" (collapsed) or "Recolher" (expanded)
-  // When collapsed, reserve a thin strip for the per-column "+N mais" markers
+  const showsFooter = overflow; // either"Expandir" (collapsed) or"Recolher" (expanded)
+  // When collapsed, reserve a thin strip for the per-column"+N mais" markers
   // so they don't collide with the footer toggle.
   const moreStripHeight = !expanded && overflow ? 18 : 0;
-  const lanesArea = visibleLanes.length * LANE_HEIGHT + Math.max(0, visibleLanes.length - 1) * LANE_GAP;
+  const lanesArea =
+    visibleLanes.length * LANE_HEIGHT +
+    Math.max(0, visibleLanes.length - 1) * LANE_GAP;
   // The week row must always reserve enough vertical space to render every
-  // visible lane + day number + optional "+N mais" strip + optional footer
+  // visible lane + day number + optional"+N mais" strip + optional footer
   // toggle, so bars never spill into the next week row. When expanded, add
   // extra bottom padding so the last bar never visually collides with the
-  // "Recolher" toggle anchored to the row's bottom-right.
+  //"Recolher" toggle anchored to the row's bottom-right.
   const minHeight =
     DAY_NUMBER_AREA +
     lanesArea +
@@ -325,37 +366,41 @@ function WeekRow({
   const finalHeight = expanded ? minHeight : Math.max(110, minHeight);
 
   return (
-    <div className="relative grid grid-cols-7" style={{ minHeight: finalHeight }}>
+    <div
+      className="relative grid grid-cols-7"
+      style={{ minHeight: finalHeight }}
+    >
       {/* Day cells (background + day number + purchase badge) */}
       {week.map((day, di) => {
         const inMonth = isSameMonth(day, monthStart);
         const isToday = isSameDay(day, today);
-        const dayKey = format(day, 'yyyy-MM-dd');
+        const dayKey = format(day, "yyyy-MM-dd");
         const dayPurchases = purchasesByDay?.get(dayKey) ?? [];
         return (
           <div
             key={di}
             className={cn(
-              'relative border-r last:border-r-0 px-1.5 pt-1 pb-1',
-              !inMonth && 'bg-muted/20 text-muted-foreground/60',
+              "relative border-r last:border-r-0 px-1.5 pt-1 pb-1",
+              !inMonth && "bg-muted/20 text-muted-foreground/60",
             )}
           >
             <div className="flex items-center justify-between gap-1">
               <div
                 className={cn(
-                  'inline-flex items-center justify-center h-6 min-w-6 text-xs rounded-full',
-                  isToday && 'bg-primary text-primary-foreground font-semibold px-1.5',
-                  !isToday && 'font-medium',
+                  "inline-flex items-center justify-center h-6 min-w-6 text-xs rounded-full",
+                  isToday &&
+                    "bg-primary text-primary-foreground font-semibold px-1.5",
+                  !isToday && "font-medium",
                 )}
               >
-                {format(day, 'd')}
+                {format(day, "d")}
               </div>
               {dayPurchases.length > 0 && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 px-1.5 h-5 text-[10px] font-semibold leading-none hover:bg-amber-500/25 transition-colors pointer-events-auto"
+                      className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 text-amber-700 border border-amber-500/30 px-1.5 h-5 text-[10px] font-semibold leading-none hover:bg-amber-500/25 transition-colors pointer-events-auto"
                       aria-label={`${dayPurchases.length} solicitação(ões) de compra criada(s) neste dia`}
                     >
                       <ShoppingCart className="h-2.5 w-2.5" />
@@ -375,16 +420,20 @@ function WeekRow({
                         {dayPurchases.length} compra(s) solicitada(s)
                       </div>
                       <div className="text-[10px] text-muted-foreground mt-0.5">
-                        {format(day, "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
+                        {format(day, "dd'de' MMM'de' yyyy", { locale: ptBR })}
                       </div>
                     </div>
                     <div className="max-h-[260px] overflow-y-auto divide-y">
                       {dayPurchases.slice(0, 8).map((p) => (
                         <div key={p.id} className="px-3 py-2 text-[11px]">
-                          <div className="font-medium truncate">{p.item_name}</div>
+                          <div className="font-medium truncate">
+                            {p.item_name}
+                          </div>
                           <div className="text-[10px] text-muted-foreground truncate">
                             {p.project_name}
-                            {p.supplier_name && <span> · {p.supplier_name}</span>}
+                            {p.supplier_name && (
+                              <span> · {p.supplier_name}</span>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -425,13 +474,14 @@ function WeekRow({
                 const startDate = parseLocalDate(seg.activity.planned_start);
                 const endDate = parseLocalDate(seg.activity.planned_end);
                 const sameDay = isSameDay(startDate, endDate);
-                const durationDays = differenceInCalendarDays(endDate, startDate) + 1;
+                const durationDays =
+                  differenceInCalendarDays(endDate, startDate) + 1;
                 // Estados visuais da barra:
-                // - "completed": atividade concluída (actual_end) → mantém cor original com leve fade
-                // - "overdue": data planejada já passou e não foi concluída → cinza + badge de alerta
-                // - "past": já passou e foi concluída → acinzentada (passado)
-                // - "current/future": mantém cor cheia
-                // Usa o "hoje" local (mesmo cálculo do restante da grade) para
+                // -"completed": atividade concluída (actual_end) → mantém cor original com leve fade
+                // -"overdue": data planejada já passou e não foi concluída → cinza + badge de alerta
+                // -"past": já passou e foi concluída → acinzentada (passado)
+                // -"current/future": mantém cor cheia
+                // Usa o"hoje" local (mesmo cálculo do restante da grade) para
                 // evitar divergência entre datas-só-data (sem fuso) e Date()
                 // (com fuso do navegador).
                 const isCompleted = !!seg.activity.actual_end;
@@ -440,7 +490,11 @@ function WeekRow({
                 const isOverdueEnd = isPastEnd && !isCompleted;
                 // Não iniciada no prazo: já passou (ou é) a data de início planejada,
                 // não foi marcada como iniciada e ainda não venceu o prazo final.
-                const isOverdueStart = !isStarted && !isCompleted && startDate <= today && !isPastEnd;
+                const isOverdueStart =
+                  !isStarted &&
+                  !isCompleted &&
+                  startDate <= today &&
+                  !isPastEnd;
                 const isOverdue = isOverdueEnd || isOverdueStart;
                 const isPastDone = isPastEnd && isCompleted;
                 return (
@@ -453,24 +507,31 @@ function WeekRow({
                           gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
                         }}
                         className={cn(
-                          'relative h-full overflow-hidden px-1.5 py-[1px] mx-[1px] text-left rounded-sm border flex flex-col justify-center',
-                          'hover:ring-2 hover:ring-primary/40 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/40',
+                          "relative h-full overflow-hidden px-1.5 py-[1px] mx-[1px] text-left rounded-sm border flex flex-col justify-center",
+                          "hover:ring-2 hover:ring-primary/40 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/40",
                           // Cor padrão (em andamento / futura / atrasada-não-iniciada mantém cor da obra)
                           !isPastEnd && [color.bg, color.border],
                           // Concluída no passado: cinza neutro
-                          isPastDone && 'bg-muted/60 border-muted-foreground/20 text-muted-foreground',
+                          isPastDone &&
+                            "bg-muted/60 border-muted-foreground/20 text-muted-foreground",
                           // Atrasada (passou o fim sem concluir): cinza com borda vermelha
-                          isOverdueEnd && 'bg-muted/70 border-destructive/50 text-muted-foreground',
+                          isOverdueEnd &&
+                            "bg-muted/70 border-destructive/50 text-muted-foreground",
                           // Atrasada por não ter iniciado: mantém cor da obra mas adiciona contorno destrutivo
-                          isOverdueStart && 'ring-1 ring-destructive/60 border-destructive/60',
-                          seg.startsBefore && 'rounded-l-none border-l-0',
-                          seg.endsAfter && 'rounded-r-none border-r-0',
+                          isOverdueStart &&
+                            "ring-1 ring-destructive/60 border-destructive/60",
+                          seg.startsBefore && "rounded-l-none border-l-0",
+                          seg.endsAfter && "rounded-r-none border-r-0",
                         )}
                       >
                         {isOverdue && (
                           <span
                             className="absolute -top-1 -right-1 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-none shadow-sm ring-1 ring-background z-10"
-                            title={isOverdueStart ? 'Atividade atrasada — não iniciada' : 'Atividade atrasada — não concluída'}
+                            title={
+                              isOverdueStart
+                                ? "Atividade atrasada — não iniciada"
+                                : "Atividade atrasada — não concluída"
+                            }
                             aria-label="Atrasada"
                           >
                             !
@@ -479,8 +540,8 @@ function WeekRow({
                         {/* Layout em duas linhas: atividade (destaque) + condomínio/cliente (contexto) */}
                         <span
                           className={cn(
-                            'block truncate text-[10.5px] leading-[11px] font-semibold',
-                            isPastDone && 'line-through opacity-80',
+                            "block truncate text-[10.5px] leading-[11px] font-semibold",
+                            isPastDone && "line-through opacity-80",
                           )}
                           title={seg.activity.description}
                         >
@@ -488,11 +549,19 @@ function WeekRow({
                         </span>
                         <span
                           className="block truncate text-[9px] leading-[10px] opacity-70 mt-[1px]"
-                          title={[seg.activity.project_name, seg.activity.client_name].filter(Boolean).join(' · ')}
+                          title={[
+                            seg.activity.project_name,
+                            seg.activity.client_name,
+                          ]
+                            .filter(Boolean)
+                            .join(" ·")}
                         >
                           {seg.activity.project_name}
                           {seg.activity.client_name && (
-                            <span className="opacity-80"> · {seg.activity.client_name}</span>
+                            <span className="opacity-80">
+                              {" "}
+                              · {seg.activity.client_name}
+                            </span>
                           )}
                         </span>
                       </button>
@@ -507,7 +576,13 @@ function WeekRow({
                     >
                       <div className="flex flex-col">
                         {/* Header colorido com a cor da obra */}
-                        <div className={cn('px-3 py-2 border-b', color.bg, color.border)}>
+                        <div
+                          className={cn(
+                            "px-3 py-2 border-b",
+                            color.bg,
+                            color.border,
+                          )}
+                        >
                           <div className="text-[11px] font-semibold leading-tight break-words">
                             {seg.activity.project_name}
                           </div>
@@ -526,7 +601,10 @@ function WeekRow({
 
                           {seg.activity.etapa && (
                             <div className="text-[10.5px] text-muted-foreground break-words">
-                              Etapa: <span className="font-medium text-foreground">{seg.activity.etapa}</span>
+                              Etapa:{" "}
+                              <span className="font-medium text-foreground">
+                                {seg.activity.etapa}
+                              </span>
                             </div>
                           )}
 
@@ -536,44 +614,60 @@ function WeekRow({
                               {sameDay ? (
                                 <span>
                                   <span className="text-foreground font-medium">
-                                    {format(startDate, "dd 'de' MMM", { locale: ptBR })}
-                                  </span>{' '}
-                                  · 1 dia
+                                    {format(startDate, "dd'de' MMM", {
+                                      locale: ptBR,
+                                    })}
+                                  </span>
+                                  {""}· 1 dia
                                 </span>
                               ) : (
                                 <>
                                   <span>
                                     <span className="text-foreground font-medium">
-                                      {format(startDate, "dd 'de' MMM", { locale: ptBR })}
+                                      {format(startDate, "dd'de' MMM", {
+                                        locale: ptBR,
+                                      })}
                                     </span>
-                                    {' → '}
+                                    {" →"}
                                     <span className="text-foreground font-medium">
-                                      {format(endDate, "dd 'de' MMM", { locale: ptBR })}
+                                      {format(endDate, "dd'de' MMM", {
+                                        locale: ptBR,
+                                      })}
                                     </span>
                                   </span>
                                   <span className="opacity-80">
-                                    {durationDays} {durationDays === 1 ? 'dia' : 'dias'}
+                                    {durationDays}{" "}
+                                    {durationDays === 1 ? "dia" : "dias"}
                                   </span>
                                 </>
                               )}
                             </div>
                           </div>
 
-                          {(seg.activity.actual_start || seg.activity.actual_end) && (
+                          {(seg.activity.actual_start ||
+                            seg.activity.actual_end) && (
                             <div className="text-[10.5px] text-muted-foreground border-t pt-1.5">
                               {seg.activity.actual_start && (
                                 <div>
-                                  Iniciada em{' '}
+                                  Iniciada em{""}
                                   <span className="text-foreground font-medium">
-                                    {format(parseLocalDate(seg.activity.actual_start), "dd/MM/yyyy", { locale: ptBR })}
+                                    {format(
+                                      parseLocalDate(seg.activity.actual_start),
+                                      "dd/MM/yyyy",
+                                      { locale: ptBR },
+                                    )}
                                   </span>
                                 </div>
                               )}
                               {seg.activity.actual_end && (
                                 <div>
-                                  Concluída em{' '}
+                                  Concluída em{""}
                                   <span className="text-foreground font-medium">
-                                    {format(parseLocalDate(seg.activity.actual_end), "dd/MM/yyyy", { locale: ptBR })}
+                                    {format(
+                                      parseLocalDate(seg.activity.actual_end),
+                                      "dd/MM/yyyy",
+                                      { locale: ptBR },
+                                    )}
                                   </span>
                                 </div>
                               )}
@@ -582,7 +676,12 @@ function WeekRow({
 
                           {/* Status + Responsável em linhas separadas para não truncar */}
                           <div className="flex flex-col gap-1.5 pt-1.5 border-t">
-                            <div className={cn('flex items-center gap-1.5 text-[10.5px] font-medium', status.className)}>
+                            <div
+                              className={cn(
+                                "flex items-center gap-1.5 text-[10.5px] font-medium",
+                                status.className,
+                              )}
+                            >
                               <StatusIcon className="h-3 w-3 shrink-0" />
                               <span>{status.label}</span>
                             </div>
@@ -601,9 +700,9 @@ function WeekRow({
                           </div>
 
                           {/* CTA: Replanejar cronograma — aparece quando esta obra
-                              tem alguma atividade anterior à semana visível ainda
-                              não concluída (sinal forte de que o cronograma está
-                              fora do plano e precisa ser revisto). */}
+ tem alguma atividade anterior à semana visível ainda
+ não concluída (sinal forte de que o cronograma está
+ fora do plano e precisa ser revisto). */}
                           {(() => {
                             if (
                               !projectsWithOverduePrevious?.ids.has(
@@ -618,9 +717,13 @@ function WeekRow({
                                 seg.activity.project_id,
                               );
                             const latestLabel = latestIso
-                              ? format(parseLocalDate(latestIso), "dd/MM/yyyy", {
-                                  locale: ptBR,
-                                })
+                              ? format(
+                                  parseLocalDate(latestIso),
+                                  "dd/MM/yyyy",
+                                  {
+                                    locale: ptBR,
+                                  },
+                                )
                               : null;
                             return (
                               <div className="pt-2 border-t">
@@ -637,20 +740,20 @@ function WeekRow({
                                   title={
                                     latestLabel
                                       ? `Há etapas anteriores a ${latestLabel} ainda não concluídas. Abrir o cronograma para replanejar.`
-                                      : 'Esta obra tem etapas anteriores não concluídas. Abrir o cronograma para replanejar.'
+                                      : "Esta obra tem etapas anteriores não concluídas. Abrir o cronograma para replanejar."
                                   }
                                 >
                                   <CalendarClock className="h-3.5 w-3.5 shrink-0" />
                                   <span className="truncate">
                                     {latestLabel
                                       ? `Replanejar — pendência anterior a ${latestLabel}`
-                                      : 'Replanejar cronograma'}
+                                      : "Replanejar cronograma"}
                                   </span>
                                 </button>
                                 <p className="text-[9.5px] text-muted-foreground mt-1 leading-snug">
                                   {latestLabel
                                     ? `Etapa pendente fora desta semana (anterior a ${latestLabel}).`
-                                    : 'Há etapas anteriores desta obra ainda não concluídas.'}
+                                    : "Há etapas anteriores desta obra ainda não concluídas."}
                                 </p>
                               </div>
                             );
@@ -665,7 +768,7 @@ function WeekRow({
           </div>
         ))}
 
-        {/* Per-column "+N mais" indicators (only when collapsed) */}
+        {/* Per-column"+N mais" indicators (only when collapsed) */}
         {!expanded && (
           <div
             className="absolute left-0 right-0 grid grid-cols-7"

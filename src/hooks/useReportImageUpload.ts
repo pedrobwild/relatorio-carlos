@@ -18,14 +18,14 @@ export function useReportImageUpload() {
   /**
    * Uploads all blob URLs in the gallery to storage and returns updated gallery with permanent URLs.
    * Skips photos that already have permanent URLs.
-   * 
+   *
    * Path format: {userId}/{projectId}/week-{weekNumber}/{photoId}-{timestamp}.{ext}
    * This format satisfies RLS policies that check storage.foldername(name)[1] = auth.uid()
    */
   const uploadGalleryPhotos = async (
     projectId: string,
     weekNumber: number,
-    gallery: GalleryPhoto[]
+    gallery: GalleryPhoto[],
   ): Promise<UploadResult> => {
     if (!gallery || gallery.length === 0) {
       return { success: true, photos: [] };
@@ -33,7 +33,7 @@ export function useReportImageUpload() {
 
     // Find photos with blob URLs that need uploading
     const photosToUpload = gallery.filter(
-      (photo) => photo.url && photo.url.startsWith("blob:")
+      (photo) => photo.url && photo.url.startsWith("blob:"),
     );
 
     if (photosToUpload.length === 0) {
@@ -42,7 +42,9 @@ export function useReportImageUpload() {
     }
 
     // Get current user ID for path construction (required by RLS)
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Sessão expirada. Faça login novamente.");
       return { success: false, photos: gallery };
@@ -67,7 +69,9 @@ export function useReportImageUpload() {
 
           // Validate file size against bucket limit
           if (blob.size > MAX_FILE_SIZE) {
-            toast.error(`Arquivo muito grande: ${(blob.size / 1024 / 1024).toFixed(1)}MB. Máximo: 50MB.`);
+            toast.error(
+              `Arquivo muito grande: ${(blob.size / 1024 / 1024).toFixed(1)}MB. Máximo: 50MB.`,
+            );
             failedCount++;
             continue;
           }
@@ -75,7 +79,7 @@ export function useReportImageUpload() {
           // Determine file extension from MIME type
           const mimeType = blob.type;
           const extension = getExtensionFromMimeType(mimeType);
-          
+
           // Create unique filename with userId as first segment (required by RLS)
           const timestamp = Date.now();
           const filename = `${user.id}/${projectId}/week-${weekNumber}/${photo.id}-${timestamp}${extension}`;
@@ -90,10 +94,12 @@ export function useReportImageUpload() {
 
           if (error) {
             console.error("Upload error for photo:", photo.id, error);
-            
+
             // Provide user-friendly error messages
             if (error.message?.includes("row-level security")) {
-              toast.error("Sem permissão para enviar arquivos. Verifique suas credenciais.");
+              toast.error(
+                "Sem permissão para enviar arquivos. Verifique suas credenciais.",
+              );
             } else if (error.message?.includes("Payload too large")) {
               toast.error(`Arquivo muito grande para envio.`);
             } else {
@@ -115,7 +121,9 @@ export function useReportImageUpload() {
           };
 
           uploadedCount++;
-          setUploadProgress(Math.round((uploadedCount / photosToUpload.length) * 100));
+          setUploadProgress(
+            Math.round((uploadedCount / photosToUpload.length) * 100),
+          );
         } catch (photoError) {
           console.error("Error processing photo:", photo.id, photoError);
           failedCount++;
@@ -124,15 +132,21 @@ export function useReportImageUpload() {
 
       // Revoke old blob URLs to free memory (only for successfully uploaded)
       photosToUpload.forEach((photo) => {
-        const updated = updatedGallery.find(p => p.id === photo.id);
+        const updated = updatedGallery.find((p) => p.id === photo.id);
         // Only revoke if URL changed (upload succeeded)
-        if (updated && updated.url !== photo.url && photo.url.startsWith("blob:")) {
+        if (
+          updated &&
+          updated.url !== photo.url &&
+          photo.url.startsWith("blob:")
+        ) {
           URL.revokeObjectURL(photo.url);
         }
       });
 
       if (failedCount > 0) {
-        toast.error(`${failedCount} foto(s) não foram enviadas. Tente novamente.`);
+        toast.error(
+          `${failedCount} foto(s) não foram enviadas. Tente novamente.`,
+        );
         return { success: false, photos: updatedGallery };
       }
 

@@ -61,7 +61,10 @@ export function ConsentSettingsDialog({ open, onOpenChange }: Props) {
         <div className="space-y-5 py-2">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
-              <Label htmlFor="consent-analytics" className="text-sm font-medium">
+              <Label
+                htmlFor="consent-analytics"
+                className="text-sm font-medium"
+              >
                 Analytics de uso
               </Label>
               <p className="text-xs text-muted-foreground">

@@ -19,7 +19,12 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import type { Insight, DataQualityWarning, InsightVisualizationHint, MetricSnapshot } from "@/lib/assistant";
+import type {
+  Insight,
+  DataQualityWarning,
+  InsightVisualizationHint,
+  MetricSnapshot,
+} from "@/lib/assistant";
 import { AssistantAnalysisPanel } from "./AssistantAnalysisPanel";
 
 export interface AssistantMessageResultData {
@@ -93,7 +98,9 @@ export function AssistantChat({
     });
   }, [messages.length, isLoading]);
 
-  const updateLastAssistant = (updater: (m: AssistantMessage) => AssistantMessage) => {
+  const updateLastAssistant = (
+    updater: (m: AssistantMessage) => AssistantMessage,
+  ) => {
     setMessages((prev) => {
       const next = [...prev];
       for (let i = next.length - 1; i >= 0; i--) {
@@ -113,7 +120,12 @@ export function AssistantChat({
     setMessages((prev) => [
       ...prev,
       { role: "user", content: trimmed },
-      { role: "assistant", content: "", pending: true, result_data: { status: "streaming" } },
+      {
+        role: "assistant",
+        content: "",
+        pending: true,
+        result_data: { status: "streaming" },
+      },
     ]);
     setInput("");
     setIsLoading(true);
@@ -149,7 +161,9 @@ export function AssistantChat({
 
       if (!resp.ok || !resp.body) {
         const txt = await resp.text().catch(() => "");
-        throw new Error(`Falha (${resp.status}): ${txt.slice(0, 200) || "sem corpo"}`);
+        throw new Error(
+          `Falha (${resp.status}): ${txt.slice(0, 200) || "sem corpo"}`,
+        );
       }
 
       const reader = resp.body.getReader();
@@ -196,7 +210,12 @@ export function AssistantChat({
                 ...m,
                 pending: !accumulated,
                 content: accumulated,
-                result_data: { ...(m.result_data ?? {}), status: "streaming", phase: payload.phase as string, statusMessage: message },
+                result_data: {
+                  ...(m.result_data ?? {}),
+                  status: "streaming",
+                  phase: payload.phase as string,
+                  statusMessage: message,
+                },
               }));
               break;
             }
@@ -205,7 +224,11 @@ export function AssistantChat({
               domainText = payload.domain as string;
               updateLastAssistant((m) => ({
                 ...m,
-                result_data: { ...(m.result_data ?? {}), sql: sqlText, domain: domainText },
+                result_data: {
+                  ...(m.result_data ?? {}),
+                  sql: sqlText,
+                  domain: domainText,
+                },
               }));
               break;
             }
@@ -214,7 +237,11 @@ export function AssistantChat({
               finalRows = payload.preview as unknown[];
               updateLastAssistant((m) => ({
                 ...m,
-                result_data: { ...(m.result_data ?? {}), rows: finalRows, rows_returned: rowsReturned },
+                result_data: {
+                  ...(m.result_data ?? {}),
+                  rows: finalRows,
+                  rows_returned: rowsReturned,
+                },
               }));
               break;
             }
@@ -224,9 +251,15 @@ export function AssistantChat({
                 result_data: {
                   ...(m.result_data ?? {}),
                   insights: payload.insights as Insight[] | null,
-                  data_quality: payload.data_quality as DataQualityWarning[] | null,
-                  visualizations: payload.visualizations as InsightVisualizationHint[] | null,
-                  suggested_questions: payload.suggested_questions as string[] | null,
+                  data_quality: payload.data_quality as
+                    | DataQualityWarning[]
+                    | null,
+                  visualizations: payload.visualizations as
+                    | InsightVisualizationHint[]
+                    | null,
+                  suggested_questions: payload.suggested_questions as
+                    | string[]
+                    | null,
                   confidence: payload.confidence as number | null,
                   limitations: payload.limitations as string[] | null,
                 },
@@ -237,7 +270,11 @@ export function AssistantChat({
               const chunk = (payload.content as string) ?? "";
               if (chunk) {
                 accumulated += chunk;
-                updateLastAssistant((m) => ({ ...m, pending: false, content: accumulated }));
+                updateLastAssistant((m) => ({
+                  ...m,
+                  pending: false,
+                  content: accumulated,
+                }));
               }
               break;
             }
@@ -253,17 +290,32 @@ export function AssistantChat({
                   sql: payload.sql as string,
                   domain: payload.domain as string,
                   status: finalStatus,
-                  insights: (payload.insights as Insight[] | null) ?? m.result_data?.insights ?? null,
+                  insights:
+                    (payload.insights as Insight[] | null) ??
+                    m.result_data?.insights ??
+                    null,
                   data_quality:
-                    (payload.data_quality as DataQualityWarning[] | null) ?? m.result_data?.data_quality ?? null,
+                    (payload.data_quality as DataQualityWarning[] | null) ??
+                    m.result_data?.data_quality ??
+                    null,
                   visualizations:
-                    (payload.visualizations as InsightVisualizationHint[] | null) ??
+                    (payload.visualizations as
+                      | InsightVisualizationHint[]
+                      | null) ??
                     m.result_data?.visualizations ??
                     null,
                   suggested_questions:
-                    (payload.suggested_questions as string[] | null) ?? m.result_data?.suggested_questions ?? null,
-                  confidence: (payload.confidence as number | null) ?? m.result_data?.confidence ?? null,
-                  limitations: (payload.limitations as string[] | null) ?? m.result_data?.limitations ?? null,
+                    (payload.suggested_questions as string[] | null) ??
+                    m.result_data?.suggested_questions ??
+                    null,
+                  confidence:
+                    (payload.confidence as number | null) ??
+                    m.result_data?.confidence ??
+                    null,
+                  limitations:
+                    (payload.limitations as string[] | null) ??
+                    m.result_data?.limitations ??
+                    null,
                 },
               }));
               break;
@@ -304,8 +356,9 @@ export function AssistantChat({
                 Assistente BWild
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Pergunte sobre pagamentos, compras, cronogramas, NCs, pendências e atendimento.
-                Eu trago números, insights e próximos passos — sempre respeitando suas permissões.
+                Pergunte sobre pagamentos, compras, cronogramas, NCs, pendências
+                e atendimento. Eu trago números, insights e próximos passos —
+                sempre respeitando suas permissões.
               </p>
             </div>
           )}
@@ -363,7 +416,13 @@ export function AssistantChat({
   );
 }
 
-function MessageBubble({ message, onAsk }: { message: AssistantMessage; onAsk: (q: string) => void }) {
+function MessageBubble({
+  message,
+  onAsk,
+}: {
+  message: AssistantMessage;
+  onAsk: (q: string) => void;
+}) {
   const [showSql, setShowSql] = useState(false);
 
   if (message.role === "user") {
@@ -380,7 +439,8 @@ function MessageBubble({ message, onAsk }: { message: AssistantMessage; onAsk: (
   const isStreaming = status === "streaming";
   const isError = status && status !== "success" && status !== "streaming";
   const phaseMessage = message.result_data?.statusMessage;
-  const rows = (message.result_data?.rows as Record<string, unknown>[] | undefined) ?? [];
+  const rows =
+    (message.result_data?.rows as Record<string, unknown>[] | undefined) ?? [];
   const hasAnalysis =
     !isError &&
     !!message.result_data &&
@@ -416,10 +476,12 @@ function MessageBubble({ message, onAsk }: { message: AssistantMessage; onAsk: (
           {message.pending ? (
             <div className="flex items-center gap-2 text-muted-foreground py-1">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-xs">{phaseMessage ?? "Consultando dados..."}</span>
+              <span className="text-xs">
+                {phaseMessage ?? "Consultando dados..."}
+              </span>
             </div>
           ) : (
-            <div className="prose prose-sm max-w-none dark:prose-invert prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5">
+            <div className="prose prose-sm max-w-none prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {message.content || "_Sem resposta_"}
               </ReactMarkdown>
@@ -444,7 +506,8 @@ function MessageBubble({ message, onAsk }: { message: AssistantMessage; onAsk: (
                 insights: message.result_data?.insights ?? [],
                 visualizations: message.result_data?.visualizations ?? [],
                 data_quality: message.result_data?.data_quality ?? [],
-                suggested_questions: message.result_data?.suggested_questions ?? [],
+                suggested_questions:
+                  message.result_data?.suggested_questions ?? [],
                 limitations: message.result_data?.limitations ?? [],
                 confidence: message.result_data?.confidence ?? undefined,
               }}

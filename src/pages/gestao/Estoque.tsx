@@ -1,7 +1,16 @@
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Package, Plus, Loader2, ArrowDownToLine, ArrowUpFromLine, Wrench, Building2, Warehouse } from "lucide-react";
+import {
+  Package,
+  Plus,
+  Loader2,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Wrench,
+  Building2,
+  Warehouse,
+} from "lucide-react";
 import EstoqueSaidas from "./EstoqueSaidas";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -80,7 +89,11 @@ type StockMovement = {
 // ─── Schemas ─────────────────────────────────────────────────────────────────
 
 const itemSchema = z.object({
-  name: z.string().trim().min(2, "Nome deve ter ao menos 2 caracteres").max(120),
+  name: z
+    .string()
+    .trim()
+    .min(2, "Nome deve ter ao menos 2 caracteres")
+    .max(120),
   unit: z.string().trim().min(1, "Unidade obrigatória").max(20),
   category: z.string().trim().max(60).optional().or(z.literal("")),
   description: z.string().trim().max(500).optional().or(z.literal("")),
@@ -99,10 +112,10 @@ const movementSchema = z
     invoice_number: z.string().trim().max(60).optional().or(z.literal("")),
     notes: z.string().trim().max(500).optional().or(z.literal("")),
   })
-  .refine(
-    (v) => (v.location_type === "obra" ? !!v.project_id : true),
-    { path: ["project_id"], message: "Selecione a obra" },
-  );
+  .refine((v) => (v.location_type === "obra" ? !!v.project_id : true), {
+    path: ["project_id"],
+    message: "Selecione a obra",
+  });
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
@@ -113,14 +126,20 @@ export default function Estoque() {
   const VALID_TABS = ["saldo", "movimentacoes", "saidas", "itens"] as const;
   const urlTab = searchParams.get("tab");
   const initialTab =
-    urlTab && (VALID_TABS as readonly string[]).includes(urlTab) ? urlTab : "saldo";
+    urlTab && (VALID_TABS as readonly string[]).includes(urlTab)
+      ? urlTab
+      : "saldo";
   const [tab, setTab] = useState<string>(initialTab);
   const [movDialogOpen, setMovDialogOpen] = useState(false);
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
 
   // Sync tab → URL (and vice-versa)
   useEffect(() => {
-    if (urlTab && (VALID_TABS as readonly string[]).includes(urlTab) && urlTab !== tab) {
+    if (
+      urlTab &&
+      (VALID_TABS as readonly string[]).includes(urlTab) &&
+      urlTab !== tab
+    ) {
       setTab(urlTab);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -240,7 +259,8 @@ export default function Estoque() {
       toast.success("Movimentação registrada — saldo atualizado");
       setMovDialogOpen(false);
     },
-    onError: (e: any) => toast.error(e?.message ?? "Falha ao registrar movimentação"),
+    onError: (e: any) =>
+      toast.error(e?.message ?? "Falha ao registrar movimentação"),
   });
 
   const itemMap = useMemo(() => {
@@ -262,15 +282,18 @@ export default function Estoque() {
   const tabMeta: Record<string, { title: string; description: string }> = {
     saldo: {
       title: "Saldo atual",
-      description: "Saldos consolidados por material e localização (estoque central ou obra).",
+      description:
+        "Saldos consolidados por material e localização (estoque central ou obra).",
     },
     movimentacoes: {
       title: "Movimentações",
-      description: "Histórico cronológico de entradas, saídas e ajustes de materiais.",
+      description:
+        "Histórico cronológico de entradas, saídas e ajustes de materiais.",
     },
     saidas: {
       title: "Saídas de materiais",
-      description: "Registre retiradas do estoque ou da obra. O saldo é reduzido automaticamente.",
+      description:
+        "Registre retiradas do estoque ou da obra. O saldo é reduzido automaticamente.",
     },
     itens: {
       title: "Itens cadastrados",
@@ -293,7 +316,11 @@ export default function Estoque() {
               <ArrowUpFromLine className="h-4 w-4" />
               Registrar saída
             </Button>
-            <Button onClick={() => setMovDialogOpen(true)} disabled={noItems} className="gap-2">
+            <Button
+              onClick={() => setMovDialogOpen(true)}
+              disabled={noItems}
+              className="gap-2"
+            >
               <ArrowDownToLine className="h-4 w-4" />
               Registrar entrada
             </Button>
@@ -311,7 +338,11 @@ export default function Estoque() {
               <ArrowUpFromLine className="h-4 w-4" />
               Registrar saída
             </Button>
-            <Button onClick={() => setMovDialogOpen(true)} disabled={noItems} className="gap-2">
+            <Button
+              onClick={() => setMovDialogOpen(true)}
+              disabled={noItems}
+              className="gap-2"
+            >
               <ArrowDownToLine className="h-4 w-4" />
               Registrar entrada
             </Button>
@@ -348,7 +379,9 @@ export default function Estoque() {
             <Package className="h-6 w-6" />
             Estoque · {meta.title}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">{meta.description}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {meta.description}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">{renderActions()}</div>
       </header>
@@ -391,7 +424,10 @@ export default function Estoque() {
 
           {/* Itens */}
           <TabsContent value="itens">
-            <ItemsTable items={itemsQ.data ?? []} onAdd={() => setItemDialogOpen(true)} />
+            <ItemsTable
+              items={itemsQ.data ?? []}
+              onAdd={() => setItemDialogOpen(true)}
+            />
           </TabsContent>
         </Tabs>
       )}
@@ -457,11 +493,15 @@ function BalancesTable({
             const negative = Number(b.quantity) < 0;
             return (
               <TableRow key={b.id}>
-                <TableCell className="font-medium">{item?.name ?? "—"}</TableCell>
+                <TableCell className="font-medium">
+                  {item?.name ?? "—"}
+                </TableCell>
                 <TableCell>
                   <LocationBadge
                     locationType={b.location_type}
-                    projectName={b.project_id ? projectMap.get(b.project_id) : undefined}
+                    projectName={
+                      b.project_id ? projectMap.get(b.project_id) : undefined
+                    }
                   />
                 </TableCell>
                 <TableCell
@@ -470,11 +510,17 @@ function BalancesTable({
                     negative && "text-destructive",
                   )}
                 >
-                  {Number(b.quantity).toLocaleString("pt-BR", { maximumFractionDigits: 3 })}
+                  {Number(b.quantity).toLocaleString("pt-BR", {
+                    maximumFractionDigits: 3,
+                  })}
                 </TableCell>
-                <TableCell className="text-muted-foreground">{item?.unit ?? "—"}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {item?.unit ?? "—"}
+                </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {format(new Date(b.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                  {format(new Date(b.updated_at), "dd/MM/yyyy HH:mm", {
+                    locale: ptBR,
+                  })}
                 </TableCell>
               </TableRow>
             );
@@ -528,20 +574,32 @@ function MovementsTable({
             return (
               <TableRow key={m.id}>
                 <TableCell className="text-sm">
-                  {format(new Date(m.movement_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+                  {format(
+                    new Date(m.movement_date + "T00:00:00"),
+                    "dd/MM/yyyy",
+                    { locale: ptBR },
+                  )}
                 </TableCell>
                 <TableCell>
                   <MovementBadge type={m.movement_type} />
                 </TableCell>
-                <TableCell className="font-medium">{item?.name ?? "—"}</TableCell>
+                <TableCell className="font-medium">
+                  {item?.name ?? "—"}
+                </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
-                  {Number(m.quantity).toLocaleString("pt-BR", { maximumFractionDigits: 3 })}{" "}
-                  <span className="text-xs text-muted-foreground">{item?.unit}</span>
+                  {Number(m.quantity).toLocaleString("pt-BR", {
+                    maximumFractionDigits: 3,
+                  })}{" "}
+                  <span className="text-xs text-muted-foreground">
+                    {item?.unit}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <LocationBadge
                     locationType={m.location_type}
-                    projectName={m.project_id ? projectMap.get(m.project_id) : undefined}
+                    projectName={
+                      m.project_id ? projectMap.get(m.project_id) : undefined
+                    }
                   />
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
@@ -559,7 +617,13 @@ function MovementsTable({
 
 // ─── Items Table ────────────────────────────────────────────────────────────
 
-function ItemsTable({ items, onAdd }: { items: StockItem[]; onAdd: () => void }) {
+function ItemsTable({
+  items,
+  onAdd,
+}: {
+  items: StockItem[];
+  onAdd: () => void;
+}) {
   if (items.length === 0) {
     return (
       <EmptyState
@@ -587,7 +651,9 @@ function ItemsTable({ items, onAdd }: { items: StockItem[]; onAdd: () => void })
             <TableRow key={it.id}>
               <TableCell className="font-medium">{it.name}</TableCell>
               <TableCell className="text-muted-foreground">{it.unit}</TableCell>
-              <TableCell className="text-muted-foreground">{it.category || "—"}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {it.category || "—"}
+              </TableCell>
               <TableCell className="text-xs text-muted-foreground line-clamp-2">
                 {it.description || "—"}
               </TableCell>
@@ -659,7 +725,12 @@ function NewItemDialog({
   onSubmit: (v: z.infer<typeof itemSchema>) => void;
   loading: boolean;
 }) {
-  const [form, setForm] = useState({ name: "", unit: "un", category: "", description: "" });
+  const [form, setForm] = useState({
+    name: "",
+    unit: "un",
+    category: "",
+    description: "",
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const submit = () => {
@@ -718,12 +789,16 @@ function NewItemDialog({
               <Input
                 id="item-unit"
                 value={form.unit}
-                onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, unit: e.target.value }))
+                }
                 placeholder="un, kg, m, m², saco"
                 maxLength={20}
                 aria-invalid={!!errors.unit}
               />
-              {errors.unit && <p className="text-xs text-destructive">{errors.unit}</p>}
+              {errors.unit && (
+                <p className="text-xs text-destructive">{errors.unit}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -731,7 +806,9 @@ function NewItemDialog({
               <Input
                 id="item-cat"
                 value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, category: e.target.value }))
+                }
                 placeholder="Ex: Acabamento"
                 maxLength={60}
               />
@@ -743,7 +820,9 @@ function NewItemDialog({
             <Textarea
               id="item-desc"
               value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, description: e.target.value }))
+              }
               placeholder="Detalhes opcionais sobre o item"
               maxLength={500}
               rows={3}
@@ -818,7 +897,8 @@ function NewMovementDialog({
       quantity: form.quantity,
       movement_date: form.movement_date,
       location_type: form.location_type,
-      project_id: form.location_type === "obra" ? form.project_id || null : null,
+      project_id:
+        form.location_type === "obra" ? form.project_id || null : null,
       supplier_name: form.supplier_name,
       unit_cost: form.unit_cost ? Number(form.unit_cost) : null,
       invoice_number: form.invoice_number,
@@ -851,7 +931,8 @@ function NewMovementDialog({
         <DialogHeader>
           <DialogTitle>Registrar movimentação</DialogTitle>
           <DialogDescription>
-            Lance entradas, saídas ou ajustes. O saldo do item será atualizado automaticamente.
+            Lance entradas, saídas ou ajustes. O saldo do item será atualizado
+            automaticamente.
           </DialogDescription>
         </DialogHeader>
 
@@ -887,12 +968,15 @@ function NewMovementDialog({
               <SelectContent position="popper">
                 {items.map((it) => (
                   <SelectItem key={it.id} value={it.id}>
-                    {it.name} <span className="text-muted-foreground">({it.unit})</span>
+                    {it.name}{" "}
+                    <span className="text-muted-foreground">({it.unit})</span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.item_id && <p className="text-xs text-destructive">{errors.item_id}</p>}
+            {errors.item_id && (
+              <p className="text-xs text-destructive">{errors.item_id}</p>
+            )}
           </div>
 
           {/* Qtd + Data */}
@@ -906,11 +990,15 @@ function NewMovementDialog({
                 step="0.001"
                 min="0"
                 value={form.quantity}
-                onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, quantity: e.target.value }))
+                }
                 placeholder="0"
                 aria-invalid={!!errors.quantity}
               />
-              {errors.quantity && <p className="text-xs text-destructive">{errors.quantity}</p>}
+              {errors.quantity && (
+                <p className="text-xs text-destructive">{errors.quantity}</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="mov-date">Data *</Label>
@@ -918,11 +1006,15 @@ function NewMovementDialog({
                 id="mov-date"
                 type="date"
                 value={form.movement_date}
-                onChange={(e) => setForm((f) => ({ ...f, movement_date: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, movement_date: e.target.value }))
+                }
                 aria-invalid={!!errors.movement_date}
               />
               {errors.movement_date && (
-                <p className="text-xs text-destructive">{errors.movement_date}</p>
+                <p className="text-xs text-destructive">
+                  {errors.movement_date}
+                </p>
               )}
             </div>
           </div>
@@ -933,8 +1025,16 @@ function NewMovementDialog({
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
-                variant={form.location_type === "estoque" ? "default" : "outline"}
-                onClick={() => setForm((f) => ({ ...f, location_type: "estoque", project_id: "" }))}
+                variant={
+                  form.location_type === "estoque" ? "default" : "outline"
+                }
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    location_type: "estoque",
+                    project_id: "",
+                  }))
+                }
                 className="gap-2"
               >
                 <Warehouse className="h-4 w-4" /> Estoque central
@@ -942,7 +1042,9 @@ function NewMovementDialog({
               <Button
                 type="button"
                 variant={form.location_type === "obra" ? "default" : "outline"}
-                onClick={() => setForm((f) => ({ ...f, location_type: "obra" }))}
+                onClick={() =>
+                  setForm((f) => ({ ...f, location_type: "obra" }))
+                }
                 className="gap-2"
               >
                 <Building2 className="h-4 w-4" /> Obra
@@ -982,7 +1084,9 @@ function NewMovementDialog({
                 <Input
                   id="mov-sup"
                   value={form.supplier_name}
-                  onChange={(e) => setForm((f) => ({ ...f, supplier_name: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, supplier_name: e.target.value }))
+                  }
                   placeholder="Opcional"
                   maxLength={120}
                 />
@@ -992,7 +1096,9 @@ function NewMovementDialog({
                 <Input
                   id="mov-nf"
                   value={form.invoice_number}
-                  onChange={(e) => setForm((f) => ({ ...f, invoice_number: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, invoice_number: e.target.value }))
+                  }
                   placeholder="Opcional"
                   maxLength={60}
                 />
@@ -1005,7 +1111,9 @@ function NewMovementDialog({
             <Textarea
               id="mov-notes"
               value={form.notes}
-              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, notes: e.target.value }))
+              }
               placeholder="Opcional"
               maxLength={500}
               rows={2}

@@ -25,7 +25,9 @@ export function GestaoShell({ children }: GestaoShellProps) {
           {/* Mobile/tablet header — slim */}
           <header className="h-12 border-b border-border-subtle surface-glass flex items-center px-3 gap-2 shrink-0 z-40 md:hidden">
             <SidebarTrigger className="shrink-0 h-10 w-10 min-h-[44px] min-w-[44px]" />
-            <span className="text-sm font-bold text-foreground truncate flex-1">Gestão</span>
+            <span className="text-sm font-bold text-foreground truncate flex-1">
+              Gestão
+            </span>
             <GlobalSearchDialog />
             <NotificationBell />
             <UserMenu />
@@ -45,7 +47,9 @@ export function GestaoShell({ children }: GestaoShellProps) {
             </div>
           </header>
 
-          <main id="main-content" className="pb-bottom-nav">{children}</main>
+          <main id="main-content" className="pb-bottom-nav">
+            {children}
+          </main>
         </div>
       </div>
       <MobileBottomNav />

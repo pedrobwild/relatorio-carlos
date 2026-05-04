@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from './useAuth';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "./useAuth";
+import { toast } from "sonner";
 import {
   getNcsByProject,
   getNcHistory,
@@ -9,17 +9,22 @@ import {
   updateNcEvidencePhotos,
   transitionNcStatus,
   deleteNonConformity,
-} from '@/infra/repositories/ncsRepository';
+} from "@/infra/repositories/ncsRepository";
 
 // eslint-disable-next-line no-duplicate-imports
-import type { NonConformity, NcHistoryEntry, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
+import type {
+  NonConformity,
+  NcHistoryEntry,
+  NcSeverity,
+  NcStatus,
+} from "@/infra/repositories/ncsRepository";
 export type { NonConformity, NcHistoryEntry, NcSeverity, NcStatus };
 
 // ── Queries ──
 
 export function useNonConformities(projectId: string | undefined) {
   return useQuery({
-    queryKey: ['non-conformities', projectId],
+    queryKey: ["non-conformities", projectId],
     queryFn: () => getNcsByProject(projectId!),
     enabled: !!projectId,
   });
@@ -27,7 +32,7 @@ export function useNonConformities(projectId: string | undefined) {
 
 export function useNcHistory(ncId: string | undefined) {
   return useQuery({
-    queryKey: ['nc-history', ncId],
+    queryKey: ["nc-history", ncId],
     queryFn: () => getNcHistory(ncId!),
     enabled: !!ncId,
   });
@@ -52,15 +57,17 @@ export function useCreateNonConformity() {
       category?: string;
       estimated_cost?: number;
     }) => {
-      if (!user) throw new Error('Não autenticado');
+      if (!user) throw new Error("Não autenticado");
       return createNonConformity({ ...params, created_by: user.id });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['non-conformities', data.project_id] });
-      toast.success('Não conformidade registrada');
+      queryClient.invalidateQueries({
+        queryKey: ["non-conformities", data.project_id],
+      });
+      toast.success("Não conformidade registrada");
     },
     onError: (err: Error) => {
-      toast.error('Erro: ' + err.message);
+      toast.error("Erro: " + err.message);
     },
   });
 }
@@ -80,7 +87,7 @@ export function useUpdateNcStatus() {
       evidence_photos_before?: string[];
       evidence_photos_after?: string[];
     }) => {
-      if (!user) throw new Error('Não autenticado');
+      if (!user) throw new Error("Não autenticado");
       await transitionNcStatus({
         nc_id: params.nc.id,
         new_status: params.new_status,
@@ -93,12 +100,14 @@ export function useUpdateNcStatus() {
       });
     },
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['non-conformities', vars.nc.project_id] });
-      queryClient.invalidateQueries({ queryKey: ['nc-history', vars.nc.id] });
-      toast.success('Status atualizado');
+      queryClient.invalidateQueries({
+        queryKey: ["non-conformities", vars.nc.project_id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["nc-history", vars.nc.id] });
+      toast.success("Status atualizado");
     },
     onError: (err: Error) => {
-      toast.error('Erro: ' + err.message);
+      toast.error("Erro: " + err.message);
     },
   });
 }
@@ -124,11 +133,13 @@ export function useUpdateNonConformity() {
       return params;
     },
     onSuccess: (params) => {
-      queryClient.invalidateQueries({ queryKey: ['non-conformities', params.project_id] });
-      toast.success('NC atualizada');
+      queryClient.invalidateQueries({
+        queryKey: ["non-conformities", params.project_id],
+      });
+      toast.success("NC atualizada");
     },
     onError: (err: Error) => {
-      toast.error('Erro: ' + err.message);
+      toast.error("Erro: " + err.message);
     },
   });
 }
@@ -142,12 +153,16 @@ export function useDeleteNonConformity() {
       return params;
     },
     onSuccess: (params) => {
-      queryClient.invalidateQueries({ queryKey: ['non-conformities', params.project_id] });
-      queryClient.invalidateQueries({ queryKey: ['non-conformities', 'global'] });
-      toast.success('Não conformidade excluída');
+      queryClient.invalidateQueries({
+        queryKey: ["non-conformities", params.project_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["non-conformities", "global"],
+      });
+      toast.success("Não conformidade excluída");
     },
     onError: (err: Error) => {
-      toast.error('Erro ao excluir: ' + err.message);
+      toast.error("Erro ao excluir: " + err.message);
     },
   });
 }
@@ -166,10 +181,12 @@ export function useUpdateNcEvidence() {
       return params;
     },
     onSuccess: (params) => {
-      queryClient.invalidateQueries({ queryKey: ['non-conformities', params.project_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["non-conformities", params.project_id],
+      });
     },
     onError: (err: Error) => {
-      toast.error('Erro ao salvar evidências: ' + err.message);
+      toast.error("Erro ao salvar evidências: " + err.message);
     },
   });
 }

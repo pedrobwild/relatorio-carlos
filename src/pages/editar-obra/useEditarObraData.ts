@@ -1,15 +1,22 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ToastAction, type ToastActionElement } from '@/components/ui/toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
-import { invalidateActivityQueries } from '@/lib/queryKeys';
-import { shiftActivityDates, type ShiftMode } from '@/lib/shiftActivityDates';
-import { recalculateWeeklyActivities } from '@/lib/weeklySchedule';
-import { addBusinessDays } from '@/lib/businessDays';
-import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
-import type { StudioInfo } from './TabFichaTecnica';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { ToastAction, type ToastActionElement } from "@/components/ui/toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useProjectMembers, type ProjectRole } from "@/hooks/useProjectMembers";
+import { invalidateActivityQueries } from "@/lib/queryKeys";
+import { shiftActivityDates, type ShiftMode } from "@/lib/shiftActivityDates";
+import { recalculateWeeklyActivities } from "@/lib/weeklySchedule";
+import { addBusinessDays } from "@/lib/businessDays";
+import type {
+  Project,
+  Customer,
+  Activity,
+  Payment,
+  Engineer,
+  AvailableEngineer,
+} from "./types";
+import type { StudioInfo } from "./TabFichaTecnica";
 
 /**
  * Snapshot used to undo the last schedule shift.
@@ -18,7 +25,7 @@ import type { StudioInfo } from './TabFichaTecnica';
  */
 type ShiftUndoSnapshot = {
   /** 'save' = both project + activity dates were saved; 'recalc-only' = only activities changed. */
-  origin: 'save' | 'recalc-only';
+  origin: "save" | "recalc-only";
   activities: Array<{ id: string; planned_start: string; planned_end: string }>;
   /** Previous persisted project dates — only meaningful when origin === 'save'. */
   projectStart: string | null;
@@ -27,18 +34,37 @@ type ShiftUndoSnapshot = {
 };
 
 const ALLOWED_ACTIVITY_FIELDS = [
-  'description', 'etapa', 'detailed_description',
-  'planned_start', 'planned_end', 'actual_start', 'actual_end',
-  'weight', 'status', 'progress', 'sort_order',
+  "description",
+  "etapa",
+  "detailed_description",
+  "planned_start",
+  "planned_end",
+  "actual_start",
+  "actual_end",
+  "weight",
+  "status",
+  "progress",
+  "sort_order",
 ] as const;
 
-const DEBOUNCE_FIELDS = new Set(['description', 'etapa', 'detailed_description']);
+const DEBOUNCE_FIELDS = new Set([
+  "description",
+  "etapa",
+  "detailed_description",
+]);
 const DEBOUNCE_MS = 600;
 
 export function useEditarObraData(projectId: string | undefined) {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { members, addMember, removeMember, updateRole, isAddingMember, isRemovingMember } = useProjectMembers(projectId);
+  const {
+    members,
+    addMember,
+    removeMember,
+    updateRole,
+    isAddingMember,
+    isRemovingMember,
+  } = useProjectMembers(projectId);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -48,9 +74,11 @@ export function useEditarObraData(projectId: string | undefined) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [engineers, setEngineers] = useState<Engineer[]>([]);
-  const [availableEngineers, setAvailableEngineers] = useState<AvailableEngineer[]>([]);
+  const [availableEngineers, setAvailableEngineers] = useState<
+    AvailableEngineer[]
+  >([]);
   const [studioInfo, setStudioInfo] = useState<StudioInfo>({
-    project_id: projectId || '',
+    project_id: projectId || "",
     nome_do_empreendimento: null,
     endereco_completo: null,
     bairro: null,
@@ -62,9 +90,14 @@ export function useEditarObraData(projectId: string | undefined) {
     data_recebimento_chaves: null,
   });
 
-  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {},
+  );
   // Snapshot of project planned dates as last persisted (used to detect shift on save)
-  const persistedProjectDatesRef = useRef<{ start: string | null; end: string | null }>({ start: null, end: null });
+  const persistedProjectDatesRef = useRef<{
+    start: string | null;
+    end: string | null;
+  }>({ start: null, end: null });
 
   // Cleanup debounce timers on unmount
   useEffect(() => {
@@ -85,9 +118,9 @@ export function useEditarObraData(projectId: string | undefined) {
     setLoading(true);
     try {
       const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId!)
+        .from("projects")
+        .select("*")
+        .eq("id", projectId!)
         .single();
       if (projectError) throw projectError;
       setProject(projectData);
@@ -97,44 +130,49 @@ export function useEditarObraData(projectId: string | undefined) {
       };
 
       const { data: customerData } = await supabase
-        .from('project_customers')
-        .select('*')
-        .eq('project_id', projectId!)
+        .from("project_customers")
+        .select("*")
+        .eq("project_id", projectId!)
         .single();
       setCustomer(customerData || null);
 
       const { data: activitiesData } = await supabase
-        .from('project_activities')
-        .select('*')
-        .eq('project_id', projectId!)
-        .order('sort_order', { ascending: true });
+        .from("project_activities")
+        .select("*")
+        .eq("project_id", projectId!)
+        .order("sort_order", { ascending: true });
       setActivities(activitiesData || []);
 
       const { data: paymentsData } = await supabase
-        .from('project_payments')
-        .select('*')
-        .eq('project_id', projectId!)
-        .order('installment_number', { ascending: true });
+        .from("project_payments")
+        .select("*")
+        .eq("project_id", projectId!)
+        .order("installment_number", { ascending: true });
       setPayments(paymentsData || []);
 
       const { data: engineersData } = await supabase
-        .from('project_engineers')
-        .select('*, profiles:engineer_user_id(display_name, email)')
-        .eq('project_id', projectId!);
-      setEngineers((engineersData || []).map(e => {
-        const profiles = (e as Record<string, unknown>).profiles as { display_name: string | null; email: string | null } | null;
-        return {
-          ...e,
-          display_name: profiles?.display_name ?? undefined,
-          email: profiles?.email ?? undefined,
-        };
-      }));
+        .from("project_engineers")
+        .select("*, profiles:engineer_user_id(display_name, email)")
+        .eq("project_id", projectId!);
+      setEngineers(
+        (engineersData || []).map((e) => {
+          const profiles = (e as Record<string, unknown>).profiles as {
+            display_name: string | null;
+            email: string | null;
+          } | null;
+          return {
+            ...e,
+            display_name: profiles?.display_name ?? undefined,
+            email: profiles?.email ?? undefined,
+          };
+        }),
+      );
 
       // Fetch studio info
       const { data: studioData } = await supabase
-        .from('project_studio_info')
-        .select('*')
-        .eq('project_id', projectId!)
+        .from("project_studio_info")
+        .select("*")
+        .eq("project_id", projectId!)
         .maybeSingle();
       if (studioData) {
         setStudioInfo(studioData as StudioInfo);
@@ -154,18 +192,27 @@ export function useEditarObraData(projectId: string | undefined) {
       }
 
       const { data: staffProfiles } = await supabase
-        .from('profiles')
-        .select('user_id, display_name, email, role')
-        .in('role', ['admin', 'manager', 'engineer']);
-      const assignedUserIds = new Set((engineersData || []).map(e => e.engineer_user_id));
-      const memberUserIds = new Set(members.map(m => m.user_id));
+        .from("profiles")
+        .select("user_id, display_name, email, role")
+        .in("role", ["admin", "manager", "engineer"]);
+      const assignedUserIds = new Set(
+        (engineersData || []).map((e) => e.engineer_user_id),
+      );
+      const memberUserIds = new Set(members.map((m) => m.user_id));
       setAvailableEngineers(
-        (staffProfiles || []).filter(p => !assignedUserIds.has(p.user_id) && !memberUserIds.has(p.user_id))
+        (staffProfiles || []).filter(
+          (p) =>
+            !assignedUserIds.has(p.user_id) && !memberUserIds.has(p.user_id),
+        ),
       );
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error('Error fetching data:', err);
-      toast({ title: 'Erro ao carregar dados', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("Error fetching data:", err);
+      toast({
+        title: "Erro ao carregar dados",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -174,31 +221,43 @@ export function useEditarObraData(projectId: string | undefined) {
   const fetchAvailableEngineers = async () => {
     try {
       const { data: staffProfiles } = await supabase
-        .from('profiles')
-        .select('user_id, display_name, email, role')
-        .in('role', ['admin', 'manager', 'engineer']);
-      const memberUserIds = new Set(members.map(m => m.user_id));
-      const engineerUserIds = new Set(engineers.map(e => e.engineer_user_id));
+        .from("profiles")
+        .select("user_id, display_name, email, role")
+        .in("role", ["admin", "manager", "engineer"]);
+      const memberUserIds = new Set(members.map((m) => m.user_id));
+      const engineerUserIds = new Set(engineers.map((e) => e.engineer_user_id));
       setAvailableEngineers(
-        (staffProfiles || []).filter(p => !memberUserIds.has(p.user_id) && !engineerUserIds.has(p.user_id))
+        (staffProfiles || []).filter(
+          (p) =>
+            !memberUserIds.has(p.user_id) && !engineerUserIds.has(p.user_id),
+        ),
       );
     } catch (err) {
-      console.error('Error fetching available engineers:', err);
+      console.error("Error fetching available engineers:", err);
     }
   };
 
   // --- Mutations ---
 
-  const handleProjectChange = (field: keyof Project, value: string | number | boolean | null) => {
+  const handleProjectChange = (
+    field: keyof Project,
+    value: string | number | boolean | null,
+  ) => {
     if (project) setProject({ ...project, [field]: value });
   };
 
-  const handleCustomerChange = (field: keyof Customer, value: string | null) => {
+  const handleCustomerChange = (
+    field: keyof Customer,
+    value: string | null,
+  ) => {
     if (customer) setCustomer({ ...customer, [field]: value });
   };
 
-  const handleStudioInfoChange = (field: keyof StudioInfo, value: string | number | null) => {
-    setStudioInfo(prev => ({ ...prev, [field]: value }));
+  const handleStudioInfoChange = (
+    field: keyof StudioInfo,
+    value: string | number | null,
+  ) => {
+    setStudioInfo((prev) => ({ ...prev, [field]: value }));
   };
 
   // Shift dialog state. `mode = 'save'` runs the full save flow (default).
@@ -208,15 +267,27 @@ export function useEditarObraData(projectId: string | undefined) {
     startChanged: boolean;
     endChanged: boolean;
     activityCount: number;
-    mode: 'save' | 'recalc-only';
+    mode: "save" | "recalc-only";
     oldStart: string | null;
     oldEnd: string | null;
     newStart: string | null;
     newEnd: string | null;
-  }>({ open: false, startChanged: false, endChanged: false, activityCount: 0, mode: 'save', oldStart: null, oldEnd: null, newStart: null, newEnd: null });
+  }>({
+    open: false,
+    startChanged: false,
+    endChanged: false,
+    activityCount: 0,
+    mode: "save",
+    oldStart: null,
+    oldEnd: null,
+    newStart: null,
+    newEnd: null,
+  });
 
   // Last shift snapshot — enables the "Desfazer" action after a save/recalc that shifted activities.
-  const [lastShiftUndo, setLastShiftUndo] = useState<ShiftUndoSnapshot | null>(null);
+  const [lastShiftUndo, setLastShiftUndo] = useState<ShiftUndoSnapshot | null>(
+    null,
+  );
 
   /**
    * Reverts the last schedule shift: restores activity planned dates and,
@@ -228,47 +299,73 @@ export function useEditarObraData(projectId: string | undefined) {
     setSaving(true);
     try {
       // Restore activity dates
-      const updates = snapshot.activities.map(a =>
+      const updates = snapshot.activities.map((a) =>
         supabase
-          .from('project_activities')
-          .update({ planned_start: a.planned_start, planned_end: a.planned_end })
-          .eq('id', a.id)
+          .from("project_activities")
+          .update({
+            planned_start: a.planned_start,
+            planned_end: a.planned_end,
+          })
+          .eq("id", a.id),
       );
       const results = await Promise.all(updates);
-      const failed = results.find(r => r.error);
+      const failed = results.find((r) => r.error);
       if (failed?.error) throw failed.error;
 
       // Restore project dates if the shift came from a save flow
-      if (snapshot.origin === 'save' && project) {
+      if (snapshot.origin === "save" && project) {
         const { error: projError } = await supabase
-          .from('projects')
+          .from("projects")
           .update({
             planned_start_date: snapshot.projectStart,
             planned_end_date: snapshot.projectEnd,
           })
-          .eq('id', project.id);
+          .eq("id", project.id);
         if (projError) throw projError;
-        setProject(p => p ? { ...p, planned_start_date: snapshot.projectStart, planned_end_date: snapshot.projectEnd } : p);
-        persistedProjectDatesRef.current = { start: snapshot.projectStart, end: snapshot.projectEnd };
+        setProject((p) =>
+          p
+            ? {
+                ...p,
+                planned_start_date: snapshot.projectStart,
+                planned_end_date: snapshot.projectEnd,
+              }
+            : p,
+        );
+        persistedProjectDatesRef.current = {
+          start: snapshot.projectStart,
+          end: snapshot.projectEnd,
+        };
       }
 
       // Restore local activities state
-      const restoredMap = new Map(snapshot.activities.map(a => [a.id, a]));
-      setActivities(prev => prev.map(a => {
-        const r = restoredMap.get(a.id);
-        return r ? { ...a, planned_start: r.planned_start, planned_end: r.planned_end } : a;
-      }));
+      const restoredMap = new Map(snapshot.activities.map((a) => [a.id, a]));
+      setActivities((prev) =>
+        prev.map((a) => {
+          const r = restoredMap.get(a.id);
+          return r
+            ? {
+                ...a,
+                planned_start: r.planned_start,
+                planned_end: r.planned_end,
+              }
+            : a;
+        }),
+      );
 
       if (projectId) invalidateActivityQueries(projectId);
       setLastShiftUndo(null);
       toast({
-        title: 'Sincronização desfeita',
+        title: "Sincronização desfeita",
         description: `Datas anteriores restauradas (${snapshot.activities.length} atividade(s)).`,
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error('Error undoing shift:', err);
-      toast({ title: 'Erro ao desfazer', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("Error undoing shift:", err);
+      toast({
+        title: "Erro ao desfazer",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -279,10 +376,10 @@ export function useEditarObraData(projectId: string | undefined) {
     (handler: () => void): ToastActionElement =>
       React.createElement(
         ToastAction,
-        { altText: 'Desfazer sincronização', onClick: handler },
-        'Desfazer'
+        { altText: "Desfazer sincronização", onClick: handler },
+        "Desfazer",
       ) as unknown as ToastActionElement,
-    []
+    [],
   );
 
   const performSave = async (shiftMode: ShiftMode | null) => {
@@ -290,7 +387,7 @@ export function useEditarObraData(projectId: string | undefined) {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('projects')
+        .from("projects")
         .update({
           name: project.name,
           unit_name: project.unit_name,
@@ -313,7 +410,7 @@ export function useEditarObraData(projectId: string | undefined) {
           date_mobilization_start: project.date_mobilization_start || null,
           contract_signing_date: project.contract_signing_date || null,
         })
-        .eq('id', project.id);
+        .eq("id", project.id);
       if (error) throw error;
 
       const oldStart = persistedProjectDatesRef.current.start;
@@ -325,7 +422,7 @@ export function useEditarObraData(projectId: string | undefined) {
       let undoSnapshot: ShiftUndoSnapshot | null = null;
       if (shiftMode && activities.length > 0) {
         // Capture pre-shift snapshot for undo
-        const preShiftSnapshot = activities.map(a => ({
+        const preShiftSnapshot = activities.map((a) => ({
           id: a.id,
           planned_start: a.planned_start,
           planned_end: a.planned_end,
@@ -340,23 +437,28 @@ export function useEditarObraData(projectId: string | undefined) {
         );
         if (changedIds.length > 0) {
           const updates = shifted
-            .filter(a => changedIds.includes(a.id))
-            .map(a =>
+            .filter((a) => changedIds.includes(a.id))
+            .map((a) =>
               supabase
-                .from('project_activities')
-                .update({ planned_start: a.planned_start, planned_end: a.planned_end })
-                .eq('id', a.id)
+                .from("project_activities")
+                .update({
+                  planned_start: a.planned_start,
+                  planned_end: a.planned_end,
+                })
+                .eq("id", a.id),
             );
           const results = await Promise.all(updates);
-          const failed = results.find(r => r.error);
+          const failed = results.find((r) => r.error);
           if (failed?.error) throw failed.error;
           setActivities(shifted);
           shiftedCount = changedIds.length;
           if (projectId) invalidateActivityQueries(projectId);
           // Only snapshot the activities that actually changed (smaller payload, precise revert)
           undoSnapshot = {
-            origin: 'save',
-            activities: preShiftSnapshot.filter(s => changedIds.includes(s.id)),
+            origin: "save",
+            activities: preShiftSnapshot.filter((s) =>
+              changedIds.includes(s.id),
+            ),
             projectStart: oldStart,
             projectEnd: oldEnd,
             createdAt: Date.now(),
@@ -369,61 +471,72 @@ export function useEditarObraData(projectId: string | undefined) {
 
       if (customer) {
         const { error: customerError } = await supabase
-          .from('project_customers')
+          .from("project_customers")
           .update({
             customer_name: customer.customer_name,
             customer_email: customer.customer_email,
             customer_phone: customer.customer_phone,
           })
-          .eq('id', customer.id);
+          .eq("id", customer.id);
         if (customerError) throw customerError;
       }
 
       // Save studio info (upsert)
       const { project_id, ...studioFields } = studioInfo;
-      const hasStudioData = Object.values(studioFields).some(v => v !== null && v !== '');
+      const hasStudioData = Object.values(studioFields).some(
+        (v) => v !== null && v !== "",
+      );
       if (hasStudioData) {
         const { error: studioError } = await supabase
-          .from('project_studio_info')
-          .upsert({
-            project_id: project.id,
-            ...studioFields,
-          }, { onConflict: 'project_id' });
+          .from("project_studio_info")
+          .upsert(
+            {
+              project_id: project.id,
+              ...studioFields,
+            },
+            { onConflict: "project_id" },
+          );
         if (studioError) throw studioError;
       }
 
       const statusLabels: Record<string, string> = {
-        active: 'Em andamento',
-        paused: 'Pausada',
-        completed: 'Concluída',
-        cancelled: 'Cancelada',
+        active: "Em andamento",
+        paused: "Pausada",
+        completed: "Concluída",
+        cancelled: "Cancelada",
       };
       const statusLabel = statusLabels[project.status] || project.status;
-      const modeLabel = shiftMode === 'preserve-duration' ? 'duração mantida' : 'proporcional';
-      const description = shiftedCount > 0
-        ? `Obra atualizada · Status: ${statusLabel} · ${shiftedCount} atividade(s) realinhada(s) (${modeLabel})`
-        : `Obra atualizada · Status: ${statusLabel}`;
+      const modeLabel =
+        shiftMode === "preserve-duration" ? "duração mantida" : "proporcional";
+      const description =
+        shiftedCount > 0
+          ? `Obra atualizada · Status: ${statusLabel} · ${shiftedCount} atividade(s) realinhada(s) (${modeLabel})`
+          : `Obra atualizada · Status: ${statusLabel}`;
 
       if (undoSnapshot) {
         setLastShiftUndo(undoSnapshot);
         const snap = undoSnapshot;
         toast({
-          title: 'Salvo!',
+          title: "Salvo!",
           description,
           duration: 12000,
           action: buildUndoAction(() => {
             // Only undo if this snapshot is still the current one
-            setLastShiftUndo(current => current === snap ? snap : current);
+            setLastShiftUndo((current) => (current === snap ? snap : current));
             void undoLastShift();
           }),
         });
       } else {
-        toast({ title: 'Salvo!', description });
+        toast({ title: "Salvo!", description });
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error('Error saving:', err);
-      toast({ title: 'Erro ao salvar', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("Error saving:", err);
+      toast({
+        title: "Erro ao salvar",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -440,9 +553,10 @@ export function useEditarObraData(projectId: string | undefined) {
     // Validation: end date must not be before start date
     if (newStart && newEnd && newEnd < newStart) {
       toast({
-        title: 'Datas inválidas',
-        description: 'A data de término prevista não pode ser anterior à data de início prevista. Corrija antes de salvar.',
-        variant: 'destructive',
+        title: "Datas inválidas",
+        description:
+          "A data de término prevista não pode ser anterior à data de início prevista. Corrija antes de salvar.",
+        variant: "destructive",
       });
       return;
     }
@@ -458,7 +572,7 @@ export function useEditarObraData(projectId: string | undefined) {
         startChanged,
         endChanged,
         activityCount: activities.length,
-        mode: 'save',
+        mode: "save",
         oldStart,
         oldEnd,
         newStart,
@@ -476,29 +590,37 @@ export function useEditarObraData(projectId: string | undefined) {
    */
   const recalculateSchedule = () => {
     if (!project || activities.length === 0) return;
-    const valid = activities.filter(a => a.planned_start && a.planned_end);
+    const valid = activities.filter((a) => a.planned_start && a.planned_end);
     if (valid.length === 0) {
-      toast({ title: 'Cronograma vazio', description: 'Não há atividades para recalcular.' });
+      toast({
+        title: "Cronograma vazio",
+        description: "Não há atividades para recalcular.",
+      });
       return;
     }
     const newStart = project.planned_start_date || null;
     const newEnd = project.planned_end_date || null;
     if (!newStart && !newEnd) {
       toast({
-        title: 'Datas do projeto não definidas',
-        description: 'Defina o início ou término previsto antes de recalcular.',
-        variant: 'destructive',
+        title: "Datas do projeto não definidas",
+        description: "Defina o início ou término previsto antes de recalcular.",
+        variant: "destructive",
       });
       return;
     }
-    const starts = valid.map(a => new Date(a.planned_start).getTime());
-    const ends = valid.map(a => new Date(a.planned_end).getTime());
-    const scheduleStart = new Date(Math.min(...starts)).toISOString().slice(0, 10);
+    const starts = valid.map((a) => new Date(a.planned_start).getTime());
+    const ends = valid.map((a) => new Date(a.planned_end).getTime());
+    const scheduleStart = new Date(Math.min(...starts))
+      .toISOString()
+      .slice(0, 10);
     const scheduleEnd = new Date(Math.max(...ends)).toISOString().slice(0, 10);
     const startChanged = !!newStart && newStart !== scheduleStart;
     const endChanged = !!newEnd && newEnd !== scheduleEnd;
     if (!startChanged && !endChanged) {
-      toast({ title: 'Já sincronizado', description: 'O cronograma já está alinhado com as datas do projeto.' });
+      toast({
+        title: "Já sincronizado",
+        description: "O cronograma já está alinhado com as datas do projeto.",
+      });
       return;
     }
     setShiftDialogState({
@@ -506,7 +628,7 @@ export function useEditarObraData(projectId: string | undefined) {
       startChanged,
       endChanged,
       activityCount: valid.length,
-      mode: 'recalc-only',
+      mode: "recalc-only",
       oldStart: scheduleStart,
       oldEnd: scheduleEnd,
       newStart,
@@ -522,65 +644,84 @@ export function useEditarObraData(projectId: string | undefined) {
   const recalculateScheduleWeekly = async () => {
     if (!project || !projectId) return;
     if (activities.length === 0) {
-      toast({ title: 'Cronograma vazio', description: 'Adicione etapas antes de recalcular.' });
+      toast({
+        title: "Cronograma vazio",
+        description: "Adicione etapas antes de recalcular.",
+      });
       return;
     }
     const start = project.planned_start_date;
     if (!start) {
       toast({
-        title: 'Defina o Início Previsto',
-        description: 'Informe a data de início antes de recalcular semana a semana.',
-        variant: 'destructive',
+        title: "Defina o Início Previsto",
+        description:
+          "Informe a data de início antes de recalcular semana a semana.",
+        variant: "destructive",
       });
       return;
     }
 
     setSaving(true);
     try {
-      const ordered = [...activities].sort((a, b) => a.sort_order - b.sort_order);
+      const ordered = [...activities].sort(
+        (a, b) => a.sort_order - b.sort_order,
+      );
       const recalculated = recalculateWeeklyActivities(ordered, start);
 
-      const preShiftSnapshot = activities.map(a => ({
+      const preShiftSnapshot = activities.map((a) => ({
         id: a.id,
         planned_start: a.planned_start,
         planned_end: a.planned_end,
       }));
 
       const changedIds: string[] = [];
-      const updatedById = new Map(recalculated.map(r => [r.id, r]));
-      const next = activities.map(a => {
+      const updatedById = new Map(recalculated.map((r) => [r.id, r]));
+      const next = activities.map((a) => {
         const r = updatedById.get(a.id);
         if (!r) return a;
-        if (r.planned_start !== a.planned_start || r.planned_end !== a.planned_end) {
+        if (
+          r.planned_start !== a.planned_start ||
+          r.planned_end !== a.planned_end
+        ) {
           changedIds.push(a.id);
-          return { ...a, planned_start: r.planned_start, planned_end: r.planned_end };
+          return {
+            ...a,
+            planned_start: r.planned_start,
+            planned_end: r.planned_end,
+          };
         }
         return a;
       });
 
       if (changedIds.length === 0) {
-        toast({ title: 'Já alinhado', description: 'O cronograma já está semana a semana.' });
+        toast({
+          title: "Já alinhado",
+          description: "O cronograma já está semana a semana.",
+        });
         return;
       }
 
       const updates = next
-        .filter(a => changedIds.includes(a.id))
-        .map(a =>
+        .filter((a) => changedIds.includes(a.id))
+        .map((a) =>
           supabase
-            .from('project_activities')
-            .update({ planned_start: a.planned_start, planned_end: a.planned_end })
-            .eq('id', a.id)
+            .from("project_activities")
+            .update({
+              planned_start: a.planned_start,
+              planned_end: a.planned_end,
+            })
+            .eq("id", a.id),
         );
       const results = await Promise.all(updates);
-      const failed = results.find(r => r.error);
+      const failed = results.find((r) => r.error);
       if (failed?.error) throw failed.error;
 
       setActivities(next);
       invalidateActivityQueries(projectId);
 
       const undoSnapshot: ShiftUndoSnapshot = {
-        origin: 'recalc-only',
-        activities: preShiftSnapshot.filter(s => changedIds.includes(s.id)),
+        origin: "recalc-only",
+        activities: preShiftSnapshot.filter((s) => changedIds.includes(s.id)),
         projectStart: null,
         projectEnd: null,
         createdAt: Date.now(),
@@ -588,15 +729,21 @@ export function useEditarObraData(projectId: string | undefined) {
       setLastShiftUndo(undoSnapshot);
 
       toast({
-        title: 'Cronograma recalculado',
+        title: "Cronograma recalculado",
         description: `${changedIds.length} etapa(s) reorganizada(s) semana a semana (Seg→Sex).`,
         duration: 12000,
-        action: buildUndoAction(() => { void undoLastShift(); }),
+        action: buildUndoAction(() => {
+          void undoLastShift();
+        }),
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error('Error recalculating weekly:', err);
-      toast({ title: 'Erro ao recalcular', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("Error recalculating weekly:", err);
+      toast({
+        title: "Erro ao recalcular",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -608,20 +755,28 @@ export function useEditarObraData(projectId: string | undefined) {
    * Retorna a nova data de término (yyyy-MM-dd) ou null se não pôde calcular.
    */
   const applyBusinessDaysDuration = (days: number): string | null => {
-    if (!project || !project.planned_start_date || !Number.isFinite(days) || days <= 0) return null;
-    const start = new Date(project.planned_start_date + 'T00:00:00');
+    if (
+      !project ||
+      !project.planned_start_date ||
+      !Number.isFinite(days) ||
+      days <= 0
+    )
+      return null;
+    const start = new Date(project.planned_start_date + "T00:00:00");
     const end = addBusinessDays(start, days - 1);
-    const iso = end.toISOString().split('T')[0];
-    setProject(p => p ? { ...p, planned_end_date: iso } : p);
+    const iso = end.toISOString().split("T")[0];
+    setProject((p) => (p ? { ...p, planned_end_date: iso } : p));
     return iso;
   };
   const performRecalcOnly = async (shiftMode: ShiftMode) => {
     if (!project || activities.length === 0) return;
-    const valid = activities.filter(a => a.planned_start && a.planned_end);
+    const valid = activities.filter((a) => a.planned_start && a.planned_end);
     if (valid.length === 0) return;
-    const starts = valid.map(a => new Date(a.planned_start).getTime());
-    const ends = valid.map(a => new Date(a.planned_end).getTime());
-    const scheduleStart = new Date(Math.min(...starts)).toISOString().slice(0, 10);
+    const starts = valid.map((a) => new Date(a.planned_start).getTime());
+    const ends = valid.map((a) => new Date(a.planned_end).getTime());
+    const scheduleStart = new Date(Math.min(...starts))
+      .toISOString()
+      .slice(0, 10);
     const scheduleEnd = new Date(Math.max(...ends)).toISOString().slice(0, 10);
     const newStart = project.planned_start_date || null;
     const newEnd = project.planned_end_date || null;
@@ -629,7 +784,7 @@ export function useEditarObraData(projectId: string | undefined) {
     setSaving(true);
     try {
       // Capture pre-shift snapshot for undo
-      const preShiftSnapshot = activities.map(a => ({
+      const preShiftSnapshot = activities.map((a) => ({
         id: a.id,
         planned_start: a.planned_start,
         planned_end: a.planned_end,
@@ -643,43 +798,56 @@ export function useEditarObraData(projectId: string | undefined) {
         shiftMode,
       );
       if (changedIds.length === 0) {
-        toast({ title: 'Nada a recalcular', description: 'Nenhuma atividade precisou ser ajustada.' });
+        toast({
+          title: "Nada a recalcular",
+          description: "Nenhuma atividade precisou ser ajustada.",
+        });
         return;
       }
       const updates = shifted
-        .filter(a => changedIds.includes(a.id))
-        .map(a =>
+        .filter((a) => changedIds.includes(a.id))
+        .map((a) =>
           supabase
-            .from('project_activities')
-            .update({ planned_start: a.planned_start, planned_end: a.planned_end })
-            .eq('id', a.id)
+            .from("project_activities")
+            .update({
+              planned_start: a.planned_start,
+              planned_end: a.planned_end,
+            })
+            .eq("id", a.id),
         );
       const results = await Promise.all(updates);
-      const failed = results.find(r => r.error);
+      const failed = results.find((r) => r.error);
       if (failed?.error) throw failed.error;
       setActivities(shifted);
       if (projectId) invalidateActivityQueries(projectId);
 
       const undoSnapshot: ShiftUndoSnapshot = {
-        origin: 'recalc-only',
-        activities: preShiftSnapshot.filter(s => changedIds.includes(s.id)),
+        origin: "recalc-only",
+        activities: preShiftSnapshot.filter((s) => changedIds.includes(s.id)),
         projectStart: null,
         projectEnd: null,
         createdAt: Date.now(),
       };
       setLastShiftUndo(undoSnapshot);
 
-      const modeLabel = shiftMode === 'preserve-duration' ? 'duração mantida' : 'proporcional';
+      const modeLabel =
+        shiftMode === "preserve-duration" ? "duração mantida" : "proporcional";
       toast({
-        title: 'Cronograma recalculado',
+        title: "Cronograma recalculado",
         description: `${changedIds.length} atividade(s) realinhada(s) (${modeLabel}).`,
         duration: 12000,
-        action: buildUndoAction(() => { void undoLastShift(); }),
+        action: buildUndoAction(() => {
+          void undoLastShift();
+        }),
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error('Error recalculating:', err);
-      toast({ title: 'Erro ao recalcular', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("Error recalculating:", err);
+      toast({
+        title: "Erro ao recalcular",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -687,9 +855,9 @@ export function useEditarObraData(projectId: string | undefined) {
 
   const handleShiftDialogConfirm = async (mode: ShiftMode | null) => {
     const dialogMode = shiftDialogState.mode;
-    setShiftDialogState(s => ({ ...s, open: false }));
+    setShiftDialogState((s) => ({ ...s, open: false }));
     if (mode === null) return;
-    if (dialogMode === 'recalc-only') {
+    if (dialogMode === "recalc-only") {
       await performRecalcOnly(mode);
     } else {
       await performSave(mode);
@@ -697,75 +865,105 @@ export function useEditarObraData(projectId: string | undefined) {
   };
 
   const setShiftDialogOpen = (open: boolean) => {
-    setShiftDialogState(s => ({ ...s, open }));
+    setShiftDialogState((s) => ({ ...s, open }));
   };
 
-
   // Activities
-  const addActivity = async (newActivity: { description: string; planned_start: string; planned_end: string; weight: string; etapa?: string; detailed_description?: string }) => {
-    if (!newActivity.description || !newActivity.planned_start || !newActivity.planned_end) {
-      toast({ title: 'Preencha todos os campos', variant: 'destructive' });
+  const addActivity = async (newActivity: {
+    description: string;
+    planned_start: string;
+    planned_end: string;
+    weight: string;
+    etapa?: string;
+    detailed_description?: string;
+  }) => {
+    if (
+      !newActivity.description ||
+      !newActivity.planned_start ||
+      !newActivity.planned_end
+    ) {
+      toast({ title: "Preencha todos os campos", variant: "destructive" });
       return false;
     }
     try {
-      const nextOrder = activities.length > 0 ? Math.max(...activities.map(a => a.sort_order)) + 1 : 1;
+      const nextOrder =
+        activities.length > 0
+          ? Math.max(...activities.map((a) => a.sort_order)) + 1
+          : 1;
       const { data, error } = await supabase
-        .from('project_activities')
-        .insert([{
-          project_id: projectId!,
-          description: newActivity.description,
-          planned_start: newActivity.planned_start,
-          planned_end: newActivity.planned_end,
-          weight: parseFloat(newActivity.weight) || 5,
-          sort_order: nextOrder,
-          created_by: user?.id ?? '',
-          etapa: newActivity.etapa?.trim() || null,
-          detailed_description: newActivity.detailed_description?.trim() || null,
-        }])
+        .from("project_activities")
+        .insert([
+          {
+            project_id: projectId!,
+            description: newActivity.description,
+            planned_start: newActivity.planned_start,
+            planned_end: newActivity.planned_end,
+            weight: parseFloat(newActivity.weight) || 5,
+            sort_order: nextOrder,
+            created_by: user?.id ?? "",
+            etapa: newActivity.etapa?.trim() || null,
+            detailed_description:
+              newActivity.detailed_description?.trim() || null,
+          },
+        ])
         .select()
         .single();
       if (error) throw error;
       setActivities([...activities, data]);
       if (projectId) invalidateActivityQueries(projectId);
-      toast({ title: 'Atividade adicionada!' });
+      toast({ title: "Atividade adicionada!" });
       return true;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro';
-      toast({ title: 'Erro', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro";
+      toast({ title: "Erro", description: message, variant: "destructive" });
       return false;
     }
   };
 
   // BUG-G: Field allowlist validation
-  const updateActivity = useCallback(async (id: string, field: string, value: string | number | null) => {
-    if (!(ALLOWED_ACTIVITY_FIELDS as readonly string[]).includes(field)) {
-      console.error(`[updateActivity] Campo inválido: "${field}"`);
-      return;
-    }
-    try {
-      const { error } = await supabase.from('project_activities').update({ [field]: value }).eq('id', id);
-      if (error) throw error;
-      setActivities(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
-      if (projectId) invalidateActivityQueries(projectId);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro';
-      toast({ title: 'Erro ao atualizar', description: message, variant: 'destructive' });
-    }
-  }, [toast, projectId]);
+  const updateActivity = useCallback(
+    async (id: string, field: string, value: string | number | null) => {
+      if (!(ALLOWED_ACTIVITY_FIELDS as readonly string[]).includes(field)) {
+        console.error(`[updateActivity] Campo inválido: "${field}"`);
+        return;
+      }
+      try {
+        const { error } = await supabase
+          .from("project_activities")
+          .update({ [field]: value })
+          .eq("id", id);
+        if (error) throw error;
+        setActivities((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)),
+        );
+        if (projectId) invalidateActivityQueries(projectId);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Erro";
+        toast({
+          title: "Erro ao atualizar",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    },
+    [toast, projectId],
+  );
 
   // BUG-B: Debounced version for text fields
   const debouncedUpdateActivity = useCallback(
     (id: string, field: string, value: string | number | null) => {
       // Optimistic local update immediately
-      setActivities(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
-      
+      setActivities((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)),
+      );
+
       const key = `${id}_${field}`;
       clearTimeout(debounceTimers.current[key]);
       debounceTimers.current[key] = setTimeout(() => {
         updateActivity(id, field, value);
       }, DEBOUNCE_MS);
     },
-    [updateActivity]
+    [updateActivity],
   );
 
   // Smart update: auto-debounce text fields, immediate for others
@@ -777,19 +975,26 @@ export function useEditarObraData(projectId: string | undefined) {
         await updateActivity(id, field, value);
       }
     },
-    [updateActivity, debouncedUpdateActivity]
+    [updateActivity, debouncedUpdateActivity],
   );
 
   const deleteActivity = async (id: string) => {
     try {
-      const { error } = await supabase.from('project_activities').delete().eq('id', id);
+      const { error } = await supabase
+        .from("project_activities")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
-      setActivities(activities.filter(a => a.id !== id));
+      setActivities(activities.filter((a) => a.id !== id));
       if (projectId) invalidateActivityQueries(projectId);
-      toast({ title: 'Atividade removida' });
+      toast({ title: "Atividade removida" });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro';
-      toast({ title: 'Erro ao remover', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro";
+      toast({
+        title: "Erro ao remover",
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -817,19 +1022,22 @@ export function useEditarObraData(projectId: string | undefined) {
     setActivities(normalized);
 
     try {
-      const orderedIds = normalized.map(a => a.id);
-      const { error: rpcError } = await supabase.rpc('reorder_project_activities', {
-        p_project_id: projectId!,
-        p_ordered_ids: orderedIds,
-      });
+      const orderedIds = normalized.map((a) => a.id);
+      const { error: rpcError } = await supabase.rpc(
+        "reorder_project_activities",
+        {
+          p_project_id: projectId!,
+          p_ordered_ids: orderedIds,
+        },
+      );
 
       if (rpcError) {
         // Fallback: caminho antigo, um update por atividade
         const updates = normalized.map((activity) =>
           supabase
-            .from('project_activities')
+            .from("project_activities")
             .update({ sort_order: activity.sort_order })
-            .eq('id', activity.id)
+            .eq("id", activity.id),
         );
         const results = await Promise.all(updates);
         const failed = results.find((r) => r.error);
@@ -837,28 +1045,41 @@ export function useEditarObraData(projectId: string | undefined) {
       }
 
       if (projectId) invalidateActivityQueries(projectId);
-      toast({ title: 'Ordem das atividades atualizada' });
+      toast({ title: "Ordem das atividades atualizada" });
     } catch (err: unknown) {
       setActivities(previousActivities);
-      const message = err instanceof Error ? err.message : 'Erro';
-      toast({ title: 'Erro ao reordenar', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro";
+      toast({
+        title: "Erro ao reordenar",
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 
   // Payments
-  const addPayment = async (newPayment: { description: string; amount: string; due_date: string; dueDatePending: boolean; payment_method: string }) => {
+  const addPayment = async (newPayment: {
+    description: string;
+    amount: string;
+    due_date: string;
+    dueDatePending: boolean;
+    payment_method: string;
+  }) => {
     if (!newPayment.description || !newPayment.amount) {
-      toast({ title: 'Preencha descrição e valor', variant: 'destructive' });
+      toast({ title: "Preencha descrição e valor", variant: "destructive" });
       return false;
     }
     if (!newPayment.dueDatePending && !newPayment.due_date) {
-      toast({ title: 'Preencha todos os campos', variant: 'destructive' });
+      toast({ title: "Preencha todos os campos", variant: "destructive" });
       return false;
     }
     try {
-      const nextInstallment = payments.length > 0 ? Math.max(...payments.map(p => p.installment_number)) + 1 : 1;
+      const nextInstallment =
+        payments.length > 0
+          ? Math.max(...payments.map((p) => p.installment_number)) + 1
+          : 1;
       const { data, error } = await supabase
-        .from('project_payments')
+        .from("project_payments")
         .insert({
           project_id: projectId!,
           installment_number: nextInstallment,
@@ -871,58 +1092,88 @@ export function useEditarObraData(projectId: string | undefined) {
         .single();
       if (error) throw error;
       setPayments([...payments, data]);
-      toast({ title: 'Parcela adicionada!' });
+      toast({ title: "Parcela adicionada!" });
       return true;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro';
-      toast({ title: 'Erro', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro";
+      toast({ title: "Erro", description: message, variant: "destructive" });
       return false;
     }
   };
 
-  const updatePayment = async (id: string, field: string, value: string | number | null) => {
+  const updatePayment = async (
+    id: string,
+    field: string,
+    value: string | number | null,
+  ) => {
     try {
-      const { error } = await supabase.from('project_payments').update({ [field]: value }).eq('id', id);
+      const { error } = await supabase
+        .from("project_payments")
+        .update({ [field]: value })
+        .eq("id", id);
       if (error) throw error;
-      setPayments(payments.map(p => p.id === id ? { ...p, [field]: value } : p));
+      setPayments(
+        payments.map((p) => (p.id === id ? { ...p, [field]: value } : p)),
+      );
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro';
-      toast({ title: 'Erro ao atualizar', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro";
+      toast({
+        title: "Erro ao atualizar",
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 
   const togglePaymentPaid = async (payment: Payment) => {
     try {
       const newPaidAt = payment.paid_at ? null : new Date().toISOString();
-      const { error } = await supabase.from('project_payments').update({ paid_at: newPaidAt }).eq('id', payment.id);
+      const { error } = await supabase
+        .from("project_payments")
+        .update({ paid_at: newPaidAt })
+        .eq("id", payment.id);
       if (error) throw error;
-      setPayments(payments.map(p => p.id === payment.id ? { ...p, paid_at: newPaidAt } : p));
+      setPayments(
+        payments.map((p) =>
+          p.id === payment.id ? { ...p, paid_at: newPaidAt } : p,
+        ),
+      );
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro';
-      toast({ title: 'Erro', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro";
+      toast({ title: "Erro", description: message, variant: "destructive" });
     }
   };
 
   const deletePayment = async (id: string) => {
     try {
-      const { error } = await supabase.from('project_payments').delete().eq('id', id);
+      const { error } = await supabase
+        .from("project_payments")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
-      setPayments(payments.filter(p => p.id !== id));
-      toast({ title: 'Parcela removida' });
+      setPayments(payments.filter((p) => p.id !== id));
+      toast({ title: "Parcela removida" });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro';
-      toast({ title: 'Erro ao remover', description: message, variant: 'destructive' });
+      const message = err instanceof Error ? err.message : "Erro";
+      toast({
+        title: "Erro ao remover",
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 
   // Team
-  const handleAddMember = async (selectedEngineer: string, role: ProjectRole = 'engineer') => {
+  const handleAddMember = async (
+    selectedEngineer: string,
+    role: ProjectRole = "engineer",
+  ) => {
     if (!selectedEngineer || !projectId) return;
     try {
       await addMember({ projectId, userId: selectedEngineer, role });
       await fetchAvailableEngineers();
     } catch (err) {
-      console.error('Error adding member:', err);
+      console.error("Error adding member:", err);
     }
   };
 
@@ -930,7 +1181,7 @@ export function useEditarObraData(projectId: string | undefined) {
     try {
       await removeMember({ memberId });
     } catch (err) {
-      console.error('Error removing member:', err);
+      console.error("Error removing member:", err);
     }
   };
 
@@ -938,7 +1189,7 @@ export function useEditarObraData(projectId: string | undefined) {
     try {
       await updateRole({ memberId, role: newRole });
     } catch (err) {
-      console.error('Error updating role:', err);
+      console.error("Error updating role:", err);
     }
   };
 

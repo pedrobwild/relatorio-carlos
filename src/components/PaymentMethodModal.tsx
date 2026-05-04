@@ -1,20 +1,57 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, CheckCircle2, ChevronDown, Copy, Loader2, Sparkles, Upload, Trash2, FileText, Download, FileDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { supabase } from '@/integrations/supabase/client';
-import { useBoletoUpload, useBoletoDelete, downloadBoleto } from '@/hooks/useBoletoUpload';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { validatePixKey, getPixTypeLabel, PIX_MAX_LENGTH } from '@/lib/pixValidation';
-import { validateBoletoLine } from '@/lib/boletoValidation';
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+  Copy,
+  Loader2,
+  Sparkles,
+  Upload,
+  Trash2,
+  FileText,
+  Download,
+  FileDown,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  useBoletoUpload,
+  useBoletoDelete,
+  downloadBoleto,
+} from "@/hooks/useBoletoUpload";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import {
+  validatePixKey,
+  getPixTypeLabel,
+  PIX_MAX_LENGTH,
+} from "@/lib/pixValidation";
+import { validateBoletoLine } from "@/lib/boletoValidation";
 
-type PaymentMethod = 'pix' | 'boleto' | 'cartao' | 'transferencia' | 'cheque' | '';
+type PaymentMethod =
+  | "pix"
+  | "boleto"
+  | "cartao"
+  | "transferencia"
+  | "cheque"
+  | "";
 
 interface PaymentMethodModalProps {
   open: boolean;
@@ -30,16 +67,16 @@ interface PaymentMethodModalProps {
   onSaved?: () => void;
 }
 
-const METHOD_LABELS: Record<Exclude<PaymentMethod, ''>, string> = {
-  pix: 'PIX',
-  boleto: 'Boleto',
-  cartao: 'Cartão',
-  transferencia: 'Transferência',
-  cheque: 'Cheque',
+const METHOD_LABELS: Record<Exclude<PaymentMethod, "">, string> = {
+  pix: "PIX",
+  boleto: "Boleto",
+  cartao: "Cartão",
+  transferencia: "Transferência",
+  cheque: "Cheque",
 };
 
 function formatBoletoLine(digits: string): string {
-  const d = digits.replace(/\D/g, '').slice(0, 48);
+  const d = digits.replace(/\D/g, "").slice(0, 48);
   if (d.length < 47) return d;
   // Padrão 5.5 5.6 5.6 1 14 → 47 dígitos
   // Ex: 00190.00009 03374.477008 06550.034184 4 89160000045678
@@ -59,22 +96,22 @@ export function PaymentMethodModal({
   initialBoletoPath,
   onSaved,
 }: PaymentMethodModalProps) {
-  const [method, setMethod] = useState<PaymentMethod>(initialMethod || '');
-  const [pixKey, setPixKey] = useState<string>(initialPixKey || '');
-  const [boletoCode, setBoletoCode] = useState<string>(initialBoletoCode || '');
+  const [method, setMethod] = useState<PaymentMethod>(initialMethod || "");
+  const [pixKey, setPixKey] = useState<string>(initialPixKey || "");
+  const [boletoCode, setBoletoCode] = useState<string>(initialBoletoCode || "");
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
-  const [openSection, setOpenSection] = useState<string>('');
+  const [openSection, setOpenSection] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const boletoUpload = useBoletoUpload();
   const boletoDelete = useBoletoDelete();
 
   useEffect(() => {
     if (open) {
-      setMethod(initialMethod || '');
-      setPixKey(initialPixKey || '');
-      setBoletoCode(initialBoletoCode || '');
-      setOpenSection(initialMethod || '');
+      setMethod(initialMethod || "");
+      setPixKey(initialPixKey || "");
+      setBoletoCode(initialBoletoCode || "");
+      setOpenSection(initialMethod || "");
     }
   }, [open, initialMethod, initialPixKey, initialBoletoCode]);
 
@@ -86,14 +123,16 @@ export function PaymentMethodModal({
       reader.readAsDataURL(file);
     });
 
-  const handleBoletoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBoletoFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = "";
     if (!file) return;
 
     // Garante que a seção do Boleto esteja aberta para o feedback aparecer
-    setMethod('boleto');
-    setOpenSection('boleto');
+    setMethod("boleto");
+    setOpenSection("boleto");
 
     // 1) Upload para storage
     boletoUpload.mutate(
@@ -104,14 +143,19 @@ export function PaymentMethodModal({
           setExtracting(true);
           try {
             const dataUrl = await fileToBase64(file);
-            const { data, error } = await supabase.functions.invoke('extract-boleto-code', {
-              body: { fileBase64: dataUrl, mimeType: file.type },
-            });
+            const { data, error } = await supabase.functions.invoke(
+              "extract-boleto-code",
+              {
+                body: { fileBase64: dataUrl, mimeType: file.type },
+              },
+            );
             if (error) throw error;
-            const extracted = (data?.code || '').toString().replace(/\D/g, '');
+            const extracted = (data?.code || "").toString().replace(/\D/g, "");
 
             if (extracted.length === 0) {
-              toast.info('Não foi possível extrair o código automaticamente. Preencha manualmente.');
+              toast.info(
+                "Não foi possível extrair o código automaticamente. Preencha manualmente.",
+              );
               return;
             }
 
@@ -124,18 +168,22 @@ export function PaymentMethodModal({
             if (result.valid && extracted.length >= 47) {
               // Persiste apenas se a linha digitável for válida
               await supabase
-                .from('project_payments')
+                .from("project_payments")
                 .update({ boleto_code: extracted })
-                .eq('id', paymentId);
-              toast.success('Código extraído e validado pela IA ✓');
+                .eq("id", paymentId);
+              toast.success("Código extraído e validado pela IA ✓");
             } else if (extracted.length >= 47 && !result.valid) {
-              toast.warning(`IA leu o código, mas a validação falhou: ${result.error}. Revise antes de salvar.`);
+              toast.warning(
+                `IA leu o código, mas a validação falhou: ${result.error}. Revise antes de salvar.`,
+              );
             } else {
-              toast.warning(`Código parcialmente reconhecido (${extracted.length}/47 dígitos). Complete manualmente.`);
+              toast.warning(
+                `Código parcialmente reconhecido (${extracted.length}/47 dígitos). Complete manualmente.`,
+              );
             }
           } catch (err) {
-            console.error('Erro ao extrair código:', err);
-            toast.error('Não foi possível extrair o código automaticamente.');
+            console.error("Erro ao extrair código:", err);
+            toast.error("Não foi possível extrair o código automaticamente.");
           } finally {
             setExtracting(false);
           }
@@ -149,7 +197,10 @@ export function PaymentMethodModal({
     return validatePixKey(pixKey);
   }, [pixKey]);
 
-  const boletoDigits = useMemo(() => boletoCode.replace(/\D/g, ''), [boletoCode]);
+  const boletoDigits = useMemo(
+    () => boletoCode.replace(/\D/g, ""),
+    [boletoCode],
+  );
   const boletoValidation = useMemo(() => {
     if (boletoDigits.length === 0) return null;
     return validateBoletoLine(boletoDigits);
@@ -157,54 +208,62 @@ export function PaymentMethodModal({
 
   const handleSave = async () => {
     // Validação PIX antes de salvar
-    if (method === 'pix') {
+    if (method === "pix") {
       const result = validatePixKey(pixKey);
       if (!result.valid) {
-        toast.error(result.error || 'Chave PIX inválida');
-        setOpenSection('pix');
+        toast.error(result.error || "Chave PIX inválida");
+        setOpenSection("pix");
         return;
       }
     }
 
     // Validação da linha digitável do boleto antes de salvar
-    if (method === 'boleto' && boletoDigits.length > 0) {
+    if (method === "boleto" && boletoDigits.length > 0) {
       const result = validateBoletoLine(boletoDigits);
       if (!result.valid) {
-        toast.error(result.error || 'Linha digitável inválida');
-        setOpenSection('boleto');
+        toast.error(result.error || "Linha digitável inválida");
+        setOpenSection("boleto");
         return;
       }
     }
 
     setSaving(true);
     try {
-      const normalizedPix = method === 'pix' && pixKey.trim()
-        ? validatePixKey(pixKey).normalized
-        : null;
-      const updates: { payment_method: string | null; pix_key: string | null; boleto_code: string | null } = {
+      const normalizedPix =
+        method === "pix" && pixKey.trim()
+          ? validatePixKey(pixKey).normalized
+          : null;
+      const updates: {
+        payment_method: string | null;
+        pix_key: string | null;
+        boleto_code: string | null;
+      } = {
         payment_method: method || null,
-        pix_key: method === 'pix' ? normalizedPix : null,
-        boleto_code: method === 'boleto' ? (boletoDigits || null) : null,
+        pix_key: method === "pix" ? normalizedPix : null,
+        boleto_code: method === "boleto" ? boletoDigits || null : null,
       };
-      const { error } = await supabase.from('project_payments').update(updates).eq('id', paymentId);
+      const { error } = await supabase
+        .from("project_payments")
+        .update(updates)
+        .eq("id", paymentId);
       if (error) throw error;
-      toast.success('Forma de pagamento salva');
+      toast.success("Forma de pagamento salva");
       onSaved?.();
       onOpenChange(false);
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao salvar forma de pagamento');
+      toast.error("Erro ao salvar forma de pagamento");
     } finally {
       setSaving(false);
     }
   };
 
   const sections: { value: PaymentMethod; label: string }[] = [
-    { value: 'pix', label: 'PIX' },
-    { value: 'boleto', label: 'Boleto' },
-    { value: 'cartao', label: 'Cartão' },
-    { value: 'transferencia', label: 'Transferência' },
-    { value: 'cheque', label: 'Cheque' },
+    { value: "pix", label: "PIX" },
+    { value: "boleto", label: "Boleto" },
+    { value: "cartao", label: "Cartão" },
+    { value: "transferencia", label: "Transferência" },
+    { value: "cheque", label: "Cheque" },
   ];
 
   return (
@@ -218,11 +277,23 @@ export function PaymentMethodModal({
         </DialogHeader>
 
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Selecione a forma de pagamento</Label>
-          <Tabs value={method} onValueChange={(v) => { setMethod(v as PaymentMethod); setOpenSection(v); }}>
+          <Label className="text-xs text-muted-foreground">
+            Selecione a forma de pagamento
+          </Label>
+          <Tabs
+            value={method}
+            onValueChange={(v) => {
+              setMethod(v as PaymentMethod);
+              setOpenSection(v);
+            }}
+          >
             <TabsList className="grid grid-cols-5 w-full h-auto">
               {sections.map((s) => (
-                <TabsTrigger key={s.value} value={s.value as string} className="text-xs py-2">
+                <TabsTrigger
+                  key={s.value}
+                  value={s.value as string}
+                  className="text-xs py-2"
+                >
                   {s.label}
                 </TabsTrigger>
               ))}
@@ -232,17 +303,27 @@ export function PaymentMethodModal({
 
         <div className="space-y-3">
           {/* PIX */}
-          <Collapsible open={openSection === 'pix'} onOpenChange={(o) => setOpenSection(o ? 'pix' : '')}>
+          <Collapsible
+            open={openSection === "pix"}
+            onOpenChange={(o) => setOpenSection(o ? "pix" : "")}
+          >
             <CollapsibleTrigger asChild>
               <button
                 type="button"
                 className={cn(
-                  'w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors',
-                  method === 'pix' ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
+                  "w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors",
+                  method === "pix"
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-muted/50",
                 )}
               >
                 <span className="text-sm font-medium">PIX</span>
-                <ChevronDown className={cn('h-4 w-4 transition-transform', openSection === 'pix' && 'rotate-180')} />
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 transition-transform",
+                    openSection === "pix" && "rotate-180",
+                  )}
+                />
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent className="px-4 py-3 space-y-3 border border-t-0 rounded-b-lg">
@@ -251,20 +332,27 @@ export function PaymentMethodModal({
                 <ul className="list-disc pl-4 space-y-0.5">
                   <li>CPF (11 dígitos) ou CNPJ (14 dígitos)</li>
                   <li>E-mail (até 77 caracteres)</li>
-                  <li>Telefone no formato <code className="font-mono">+55DDDNNNNNNNNN</code></li>
+                  <li>
+                    Telefone no formato{" "}
+                    <code className="font-mono">+55DDDNNNNNNNNN</code>
+                  </li>
                   <li>Chave aleatória (UUID)</li>
                   <li>Copia e Cola (BR Code/EMV completo)</li>
                 </ul>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pix-key" className="text-xs">Chave PIX ou Copia e Cola</Label>
+                <Label htmlFor="pix-key" className="text-xs">
+                  Chave PIX ou Copia e Cola
+                </Label>
                 {pixKey.length > 80 ? (
                   <Textarea
                     id="pix-key"
                     placeholder="Cole aqui a chave ou o código Copia e Cola"
                     value={pixKey}
-                    onChange={(e) => setPixKey(e.target.value.slice(0, PIX_MAX_LENGTH))}
+                    onChange={(e) =>
+                      setPixKey(e.target.value.slice(0, PIX_MAX_LENGTH))
+                    }
                     rows={4}
                     className="font-mono text-xs"
                     maxLength={PIX_MAX_LENGTH}
@@ -274,7 +362,9 @@ export function PaymentMethodModal({
                     id="pix-key"
                     placeholder="CPF, CNPJ, e-mail, +55…, UUID ou Copia e Cola"
                     value={pixKey}
-                    onChange={(e) => setPixKey(e.target.value.slice(0, PIX_MAX_LENGTH))}
+                    onChange={(e) =>
+                      setPixKey(e.target.value.slice(0, PIX_MAX_LENGTH))
+                    }
                     maxLength={PIX_MAX_LENGTH}
                   />
                 )}
@@ -292,26 +382,40 @@ export function PaymentMethodModal({
                       </span>
                     )
                   ) : (
-                    <span className="text-muted-foreground">A chave será exibida ao cliente no pagamento.</span>
+                    <span className="text-muted-foreground">
+                      A chave será exibida ao cliente no pagamento.
+                    </span>
                   )}
-                  <span className="text-muted-foreground tabular-nums">{pixKey.length}/{PIX_MAX_LENGTH}</span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {pixKey.length}/{PIX_MAX_LENGTH}
+                  </span>
                 </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
 
           {/* Boleto */}
-          <Collapsible open={openSection === 'boleto'} onOpenChange={(o) => setOpenSection(o ? 'boleto' : '')}>
+          <Collapsible
+            open={openSection === "boleto"}
+            onOpenChange={(o) => setOpenSection(o ? "boleto" : "")}
+          >
             <CollapsibleTrigger asChild>
               <button
                 type="button"
                 className={cn(
-                  'w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors',
-                  method === 'boleto' ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
+                  "w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors",
+                  method === "boleto"
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-muted/50",
                 )}
               >
                 <span className="text-sm font-medium">Boleto</span>
-                <ChevronDown className={cn('h-4 w-4 transition-transform', openSection === 'boleto' && 'rotate-180')} />
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 transition-transform",
+                    openSection === "boleto" && "rotate-180",
+                  )}
+                />
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent className="px-4 py-3 space-y-3 border border-t-0 rounded-b-lg">
@@ -327,7 +431,9 @@ export function PaymentMethodModal({
                 {initialBoletoPath ? (
                   <div className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2">
                     <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="text-xs flex-1 truncate">Boleto anexado</span>
+                    <span className="text-xs flex-1 truncate">
+                      Boleto anexado
+                    </span>
                     <Button
                       type="button"
                       variant="ghost"
@@ -343,7 +449,12 @@ export function PaymentMethodModal({
                       variant="ghost"
                       size="sm"
                       className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                      onClick={() => boletoDelete.mutate({ paymentId, boletoPath: initialBoletoPath })}
+                      onClick={() =>
+                        boletoDelete.mutate({
+                          paymentId,
+                          boletoPath: initialBoletoPath,
+                        })
+                      }
                       disabled={boletoDelete.isPending}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -359,11 +470,20 @@ export function PaymentMethodModal({
                     disabled={boletoUpload.isPending || extracting}
                   >
                     {boletoUpload.isPending ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
+                        Enviando...
+                      </>
                     ) : extracting ? (
-                      <><Sparkles className="h-4 w-4 mr-2 animate-pulse" /> IA lendo o boleto...</>
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2 animate-pulse" /> IA
+                        lendo o boleto...
+                      </>
                     ) : (
-                      <><Upload className="h-4 w-4 mr-2" /> Anexar boleto (PDF ou imagem)</>
+                      <>
+                        <Upload className="h-4 w-4 mr-2" /> Anexar boleto (PDF
+                        ou imagem)
+                      </>
                     )}
                   </Button>
                 )}
@@ -386,13 +506,21 @@ export function PaymentMethodModal({
                   id="boleto-code"
                   placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
                   value={formatBoletoLine(boletoCode)}
-                  onChange={(e) => setBoletoCode(e.target.value.replace(/\D/g, '').slice(0, 48))}
+                  onChange={(e) =>
+                    setBoletoCode(
+                      e.target.value.replace(/\D/g, "").slice(0, 48),
+                    )
+                  }
                   className={cn(
-                    'font-mono text-xs',
-                    boletoValidation && !boletoValidation.valid && 'border-destructive focus-visible:ring-destructive',
-                    boletoValidation?.valid && 'border-success/60',
+                    "font-mono text-xs",
+                    boletoValidation &&
+                      !boletoValidation.valid &&
+                      "border-destructive focus-visible:ring-destructive",
+                    boletoValidation?.valid && "border-success/60",
                   )}
-                  aria-invalid={boletoValidation ? !boletoValidation.valid : undefined}
+                  aria-invalid={
+                    boletoValidation ? !boletoValidation.valid : undefined
+                  }
                 />
                 <div className="flex items-center justify-between text-xs">
                   {boletoValidation ? (
@@ -400,7 +528,8 @@ export function PaymentMethodModal({
                       <span className="flex items-center gap-1 text-success">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Linha digitável válida
-                        {boletoValidation.type === 'arrecadacao' && ' (arrecadação)'}
+                        {boletoValidation.type === "arrecadacao" &&
+                          " (arrecadação)"}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-destructive">
@@ -409,9 +538,13 @@ export function PaymentMethodModal({
                       </span>
                     )
                   ) : (
-                    <span className="text-muted-foreground">Cole, digite ou anexe um arquivo para extração via IA.</span>
+                    <span className="text-muted-foreground">
+                      Cole, digite ou anexe um arquivo para extração via IA.
+                    </span>
                   )}
-                  <span className="text-muted-foreground tabular-nums">{boletoDigits.length}/47</span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {boletoDigits.length}/47
+                  </span>
                 </div>
 
                 {boletoValidation?.valid && (
@@ -436,9 +569,9 @@ export function PaymentMethodModal({
                           const formatted = formatBoletoLine(boletoCode);
                           try {
                             await navigator.clipboard.writeText(formatted);
-                            toast.success('Linha digitável copiada');
+                            toast.success("Linha digitável copiada");
                           } catch {
-                            toast.error('Não foi possível copiar');
+                            toast.error("Não foi possível copiar");
                           }
                         }}
                       >
@@ -452,12 +585,14 @@ export function PaymentMethodModal({
                         className="h-7 px-2 text-xs flex-1"
                         title="Copia apenas os 47 dígitos, sem pontos nem espaços. Útil para colar em internet banking e ERPs."
                         onClick={async () => {
-                          const digits = boletoCode.replace(/\D/g, '');
+                          const digits = boletoCode.replace(/\D/g, "");
                           try {
                             await navigator.clipboard.writeText(digits);
-                            toast.success('Linha digitável copiada (texto puro, sem máscara)');
+                            toast.success(
+                              "Linha digitável copiada (texto puro, sem máscara)",
+                            );
                           } catch {
-                            toast.error('Não foi possível copiar');
+                            toast.error("Não foi possível copiar");
                           }
                         }}
                       >
@@ -471,18 +606,20 @@ export function PaymentMethodModal({
                         className="h-7 px-2 text-xs flex-1"
                         onClick={() => {
                           const formatted = formatBoletoLine(boletoCode);
-                          const digits = boletoCode.replace(/\D/g, '');
+                          const digits = boletoCode.replace(/\D/g, "");
                           const content = `Boleto - Parcela #${installmentNumber}\n${description}\n\nLinha digitável:\n${formatted}\n\nApenas dígitos:\n${digits}\n`;
-                          const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                          const blob = new Blob([content], {
+                            type: "text/plain;charset=utf-8",
+                          });
                           const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
+                          const a = document.createElement("a");
                           a.href = url;
                           a.download = `boleto-parcela-${installmentNumber}.txt`;
                           document.body.appendChild(a);
                           a.click();
                           document.body.removeChild(a);
                           URL.revokeObjectURL(url);
-                          toast.success('Arquivo .txt baixado');
+                          toast.success("Arquivo .txt baixado");
                         }}
                       >
                         <FileDown className="h-3.5 w-3.5 mr-1" />
@@ -496,23 +633,37 @@ export function PaymentMethodModal({
           </Collapsible>
 
           {/* Demais métodos */}
-          {(['cartao', 'transferencia', 'cheque'] as const).map((m) => (
-            <Collapsible key={m} open={openSection === m} onOpenChange={(o) => setOpenSection(o ? m : '')}>
+          {(["cartao", "transferencia", "cheque"] as const).map((m) => (
+            <Collapsible
+              key={m}
+              open={openSection === m}
+              onOpenChange={(o) => setOpenSection(o ? m : "")}
+            >
               <CollapsibleTrigger asChild>
                 <button
                   type="button"
                   className={cn(
-                    'w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors',
-                    method === m ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
+                    "w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors",
+                    method === m
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/50",
                   )}
                 >
-                  <span className="text-sm font-medium">{METHOD_LABELS[m]}</span>
-                  <ChevronDown className={cn('h-4 w-4 transition-transform', openSection === m && 'rotate-180')} />
+                  <span className="text-sm font-medium">
+                    {METHOD_LABELS[m]}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      openSection === m && "rotate-180",
+                    )}
+                  />
                 </button>
               </CollapsibleTrigger>
               <CollapsibleContent className="px-4 py-3 border border-t-0 rounded-b-lg">
                 <p className="text-xs text-muted-foreground">
-                  Selecione esta opção para registrar o pagamento via {METHOD_LABELS[m].toLowerCase()}. Sem campos adicionais.
+                  Selecione esta opção para registrar o pagamento via{" "}
+                  {METHOD_LABELS[m].toLowerCase()}. Sem campos adicionais.
                 </p>
               </CollapsibleContent>
             </Collapsible>
@@ -520,7 +671,11 @@ export function PaymentMethodModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={saving}
+          >
             Cancelar
           </Button>
           <Button
@@ -528,8 +683,12 @@ export function PaymentMethodModal({
             disabled={
               saving ||
               !method ||
-              (method === 'boleto' && boletoDigits.length > 0 && boletoValidation?.valid === false) ||
-              (method === 'pix' && pixKey.trim().length > 0 && pixValidation?.valid === false)
+              (method === "boleto" &&
+                boletoDigits.length > 0 &&
+                boletoValidation?.valid === false) ||
+              (method === "pix" &&
+                pixKey.trim().length > 0 &&
+                pixValidation?.valid === false)
             }
           >
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

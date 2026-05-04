@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from "react";
 
-const PREFIX = 'bwild-dialog-draft-';
+const PREFIX = "bwild-dialog-draft-";
 
 interface UseDialogDraftOptions<T> {
   /** Unique storage key (e.g. `atividade-new-${obraId}` or `fornecedor-edit-${id}`). */

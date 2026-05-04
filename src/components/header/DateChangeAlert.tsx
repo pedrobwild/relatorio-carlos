@@ -1,7 +1,12 @@
 import { AlertCircle } from "lucide-react";
 import {
-  AlertDialog, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel,
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { formatDateFull } from "./types";
 
@@ -14,7 +19,14 @@ interface DateChangeAlertProps {
   contractClause: string;
 }
 
-export function DateChangeAlert({ open, onOpenChange, originalDate, newDate, reason, contractClause }: DateChangeAlertProps) {
+export function DateChangeAlert({
+  open,
+  onOpenChange,
+  originalDate,
+  newDate,
+  reason,
+  contractClause,
+}: DateChangeAlertProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-sm">
@@ -26,13 +38,21 @@ export function DateChangeAlert({ open, onOpenChange, originalDate, newDate, rea
           <AlertDialogDescription className="space-y-3 text-left">
             <p>
               A data prevista de término foi alterada de{" "}
-              <span className="font-semibold line-through text-muted-foreground">{formatDateFull(originalDate)}</span>{" "}
-              para <span className="font-semibold text-foreground">{formatDateFull(newDate)}</span>.
+              <span className="font-semibold line-through text-muted-foreground">
+                {formatDateFull(originalDate)}
+              </span>{" "}
+              para{" "}
+              <span className="font-semibold text-foreground">
+                {formatDateFull(newDate)}
+              </span>
+              .
             </p>
             <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
               <p className="text-sm font-medium text-warning mb-1">Motivo:</p>
               <p className="text-sm text-foreground">
-                {reason}, de acordo com a <span className="font-semibold">cláusula {contractClause}</span> do contrato.
+                {reason}, de acordo com a{" "}
+                <span className="font-semibold">cláusula {contractClause}</span>{" "}
+                do contrato.
               </p>
             </div>
           </AlertDialogDescription>

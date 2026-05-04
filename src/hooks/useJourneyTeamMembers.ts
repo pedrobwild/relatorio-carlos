@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export interface JourneyTeamMember {
   id: string;
@@ -18,23 +18,32 @@ export interface JourneyTeamMember {
 
 export type JourneyTeamMemberInput = Pick<
   JourneyTeamMember,
-  'project_id' | 'display_name' | 'role_title' | 'description' | 'email' | 'phone' | 'photo_url'
+  | "project_id"
+  | "display_name"
+  | "role_title"
+  | "description"
+  | "email"
+  | "phone"
+  | "photo_url"
 > & { stage_context?: string };
 
-export function useJourneyTeamMembers(projectId: string | undefined, stageContext: string = 'welcome') {
+export function useJourneyTeamMembers(
+  projectId: string | undefined,
+  stageContext: string = "welcome",
+) {
   const queryClient = useQueryClient();
-  const queryKey = ['journey-team-members', projectId, stageContext];
+  const queryKey = ["journey-team-members", projectId, stageContext];
 
   const query = useQuery({
     queryKey,
     queryFn: async () => {
       if (!projectId) return [];
       const { data, error } = await supabase
-        .from('journey_team_members')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('stage_context', stageContext)
-        .order('sort_order', { ascending: true });
+        .from("journey_team_members")
+        .select("*")
+        .eq("project_id", projectId)
+        .eq("stage_context", stageContext)
+        .order("sort_order", { ascending: true });
       if (error) throw error;
       return (data || []) as JourneyTeamMember[];
     },
@@ -45,17 +54,22 @@ export function useJourneyTeamMembers(projectId: string | undefined, stageContex
     mutationFn: async (input: JourneyTeamMemberInput) => {
       // Get next sort_order
       const { data: existing } = await supabase
-        .from('journey_team_members')
-        .select('sort_order')
-        .eq('project_id', input.project_id)
-        .order('sort_order', { ascending: false })
+        .from("journey_team_members")
+        .select("sort_order")
+        .eq("project_id", input.project_id)
+        .order("sort_order", { ascending: false })
         .limit(1);
 
-      const sortOrder = existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
+      const sortOrder =
+        existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
 
       const { data, error } = await supabase
-        .from('journey_team_members')
-        .insert({ ...input, sort_order: sortOrder, stage_context: input.stage_context || stageContext })
+        .from("journey_team_members")
+        .insert({
+          ...input,
+          sort_order: sortOrder,
+          stage_context: input.stage_context || stageContext,
+        })
         .select()
         .single();
       if (error) throw error;
@@ -63,17 +77,20 @@ export function useJourneyTeamMembers(projectId: string | undefined, stageContex
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Membro adicionado com sucesso');
+      toast.success("Membro adicionado com sucesso");
     },
-    onError: () => toast.error('Erro ao adicionar membro'),
+    onError: () => toast.error("Erro ao adicionar membro"),
   });
 
   const updateMember = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<JourneyTeamMember> & { id: string }) => {
+    mutationFn: async ({
+      id,
+      ...updates
+    }: Partial<JourneyTeamMember> & { id: string }) => {
       const { data, error } = await supabase
-        .from('journey_team_members')
+        .from("journey_team_members")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
       if (error) throw error;
@@ -81,44 +98,50 @@ export function useJourneyTeamMembers(projectId: string | undefined, stageContex
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Membro atualizado');
+      toast.success("Membro atualizado");
     },
-    onError: () => toast.error('Erro ao atualizar membro'),
+    onError: () => toast.error("Erro ao atualizar membro"),
   });
 
   const removeMember = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('journey_team_members')
+        .from("journey_team_members")
         .delete()
-        .eq('id', id);
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Membro removido');
+      toast.success("Membro removido");
     },
-    onError: () => toast.error('Erro ao remover membro'),
+    onError: () => toast.error("Erro ao remover membro"),
   });
 
   const uploadPhoto = useMutation({
-    mutationFn: async ({ file, memberId }: { file: File; memberId?: string }) => {
-      if (!projectId) throw new Error('Project ID required');
-      const fileExt = file.name.split('.').pop();
+    mutationFn: async ({
+      file,
+      memberId,
+    }: {
+      file: File;
+      memberId?: string;
+    }) => {
+      if (!projectId) throw new Error("Project ID required");
+      const fileExt = file.name.split(".").pop();
       const filePath = `team-photos/${projectId}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('project-documents')
+        .from("project-documents")
         .upload(filePath, file, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('project-documents')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("project-documents").getPublicUrl(filePath);
 
       return publicUrl;
     },
-    onError: () => toast.error('Erro ao enviar foto'),
+    onError: () => toast.error("Erro ao enviar foto"),
   });
 
   return {

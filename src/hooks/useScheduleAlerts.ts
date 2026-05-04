@@ -11,13 +11,13 @@
  * memória para acomodar a regra das 18h sem complicar a SQL.
  */
 
-import { useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { queryKeys, invalidateActivityQueries } from '@/lib/queryKeys';
+import { useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { queryKeys, invalidateActivityQueries } from "@/lib/queryKeys";
 
-export type ScheduleAlertKind = 'missing_start' | 'missing_end';
+export type ScheduleAlertKind = "missing_start" | "missing_end";
 
 export interface ScheduleAlertActivity {
   id: string;
@@ -82,7 +82,7 @@ function deriveAlerts(
     // Missing start: hoje passou da data prevista e ainda não há actual_start.
     // Regra: plannedStart < hoje (ou seja, virou pelo menos um dia).
     if (!row.actual_start && plannedStart < today) {
-      kinds.push('missing_start');
+      kinds.push("missing_start");
     }
 
     // Missing end: actual_end ausente E
@@ -93,20 +93,20 @@ function deriveAlerts(
       const endIsTodayAfter18 =
         row.planned_end === todayStr && localNowHour >= END_OF_DAY_HOUR;
       if (endIsBeforeToday || endIsTodayAfter18) {
-        kinds.push('missing_end');
+        kinds.push("missing_end");
       }
     }
 
     if (kinds.length === 0) continue;
 
     // Dias de atraso: prioriza atraso de término; se ausente, usa atraso de início.
-    const reference = kinds.includes('missing_end') ? plannedEnd : plannedStart;
+    const reference = kinds.includes("missing_end") ? plannedEnd : plannedStart;
     const days = Math.max(diffDays(today, reference), 0);
 
     alerts.push({
       id: row.id,
       project_id: row.project_id,
-      project_name: row.projects?.name ?? 'Obra sem nome',
+      project_name: row.projects?.name ?? "Obra sem nome",
       description: row.description,
       etapa: row.etapa,
       planned_start: row.planned_start,
@@ -120,8 +120,9 @@ function deriveAlerts(
 
   // Mais atrasado primeiro; em empate, alfabético por obra.
   alerts.sort((a, b) => {
-    if (a.days_overdue !== b.days_overdue) return b.days_overdue - a.days_overdue;
-    return a.project_name.localeCompare(b.project_name, 'pt-BR');
+    if (a.days_overdue !== b.days_overdue)
+      return b.days_overdue - a.days_overdue;
+    return a.project_name.localeCompare(b.project_name, "pt-BR");
   });
 
   return alerts;
@@ -131,7 +132,12 @@ export function useScheduleAlerts() {
   const queryClient = useQueryClient();
   const queryKey = queryKeys.activities.alerts();
 
-  const { data: alerts = [], isLoading, error, refetch } = useQuery({
+  const {
+    data: alerts = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey,
     queryFn: async () => {
       const today = todayISO();
@@ -140,14 +146,14 @@ export function useScheduleAlerts() {
       // sem actual_start com planned_start < hoje. Trazemos um pouco extra e
       // filtramos no cliente para aplicar a regra das 18h.
       const { data, error: queryError } = await supabase
-        .from('project_activities')
+        .from("project_activities")
         .select(
-          'id, project_id, description, etapa, planned_start, planned_end, actual_start, actual_end, projects:project_id(id, name)',
+          "id, project_id, description, etapa, planned_start, planned_end, actual_start, actual_end, projects:project_id(id, name)",
         )
         .or(
           `and(actual_start.is.null,planned_start.lte.${today}),and(actual_end.is.null,planned_end.lte.${today})`,
         )
-        .order('planned_start', { ascending: true });
+        .order("planned_start", { ascending: true });
 
       if (queryError) throw queryError;
 
@@ -161,18 +167,18 @@ export function useScheduleAlerts() {
     mutationFn: async (activityId: string) => {
       const today = todayISO();
       const { error: updateError } = await supabase
-        .from('project_activities')
+        .from("project_activities")
         .update({ actual_start: today })
-        .eq('id', activityId);
+        .eq("id", activityId);
       if (updateError) throw updateError;
       return { activityId, projectId: undefined as string | undefined };
     },
     onSuccess: () => {
-      toast.success('Início sinalizado');
+      toast.success("Início sinalizado");
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
     },
-    onError: () => toast.error('Erro ao sinalizar início'),
+    onError: () => toast.error("Erro ao sinalizar início"),
   });
 
   const markCompleted = useMutation({
@@ -180,9 +186,9 @@ export function useScheduleAlerts() {
       const today = todayISO();
       // Garante que actual_start exista antes de fechar.
       const { data: current, error: fetchError } = await supabase
-        .from('project_activities')
-        .select('actual_start')
-        .eq('id', activityId)
+        .from("project_activities")
+        .select("actual_start")
+        .eq("id", activityId)
         .single();
       if (fetchError) throw fetchError;
 
@@ -192,29 +198,31 @@ export function useScheduleAlerts() {
       if (!current?.actual_start) updates.actual_start = today;
 
       const { error: updateError } = await supabase
-        .from('project_activities')
+        .from("project_activities")
         .update(updates)
-        .eq('id', activityId);
+        .eq("id", activityId);
       if (updateError) throw updateError;
     },
     onSuccess: (_data, activityId) => {
-      toast.success('Atividade marcada como concluída');
+      toast.success("Atividade marcada como concluída");
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
       // Best-effort: invalida cache por projeto se conhecido
-      const cached = queryClient.getQueryData<ScheduleAlertActivity[]>(queryKey);
+      const cached =
+        queryClient.getQueryData<ScheduleAlertActivity[]>(queryKey);
       const projectId = cached?.find((a) => a.id === activityId)?.project_id;
       if (projectId) invalidateActivityQueries(projectId, activityId);
     },
-    onError: () => toast.error('Erro ao concluir atividade'),
+    onError: () => toast.error("Erro ao concluir atividade"),
   });
 
   const summary = useMemo(() => {
     const missingStart = alerts.filter((a) =>
-      a.kinds.includes('missing_start'),
+      a.kinds.includes("missing_start"),
     ).length;
-    const missingEnd = alerts.filter((a) => a.kinds.includes('missing_end'))
-      .length;
+    const missingEnd = alerts.filter((a) =>
+      a.kinds.includes("missing_end"),
+    ).length;
     const projects = new Set(alerts.map((a) => a.project_id)).size;
     return { total: alerts.length, missingStart, missingEnd, projects };
   }, [alerts]);

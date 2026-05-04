@@ -1,44 +1,53 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Sparkles, FileText } from 'lucide-react';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Search, Sparkles, FileText } from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useFormalizacoes } from '@/hooks/useFormalizacoes';
-import { useUserRole } from '@/hooks/useUserRole';
-import { useCan } from '@/hooks/useCan';
-import { EmptyState } from '@/components/EmptyState';
-import { useProjectNavigation } from '@/hooks/useProjectNavigation';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { PageContainer } from '@/components/layout/PageContainer';
-import { ProjectSubNav } from '@/components/layout/ProjectSubNav';
-import { FormalizacaoCard, FormalizacaoSkeleton } from '@/components/tabs/formalizacoes/FormalizacaoCard';
-import { matchesSearch } from '@/lib/searchNormalize';
-import { DesktopSidebar } from '@/components/tabs/formalizacoes/DesktopSidebar';
-import { MobileFormalizacoes } from '@/components/tabs/formalizacoes/MobileFormalizacoes';
-import { Card } from '@/components/ui/card';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useFormalizacoes } from "@/hooks/useFormalizacoes";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useCan } from "@/hooks/useCan";
+import { EmptyState } from "@/components/EmptyState";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import {
+  FormalizacaoCard,
+  FormalizacaoSkeleton,
+} from "@/components/tabs/formalizacoes/FormalizacaoCard";
+import { matchesSearch } from "@/lib/searchNormalize";
+import { DesktopSidebar } from "@/components/tabs/formalizacoes/DesktopSidebar";
+import { MobileFormalizacoes } from "@/components/tabs/formalizacoes/MobileFormalizacoes";
+import { Card } from "@/components/ui/card";
 export default function Formalizacoes() {
   const navigate = useNavigate();
   const { paths, projectId } = useProjectNavigation();
   const { isAdmin } = useUserRole();
   const { can } = useCan();
-  const [activeTab, setActiveTab] = useState('pendentes');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState("pendentes");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
-  const canCreate = can('formalizations:create');
-  const { data: formalizacoes, isLoading } = useFormalizacoes({ projectId: projectId ?? undefined });
+  const canCreate = can("formalizations:create");
+  const { data: formalizacoes, isLoading } = useFormalizacoes({
+    projectId: projectId ?? undefined,
+  });
 
-  const filteredFormalizacoes = formalizacoes?.filter(f => {
-    if (activeTab === 'pendentes' && f.status !== 'pending_signatures') return false;
-    if (activeTab === 'finalizadas' && f.status !== 'signed') return false;
-    if (!matchesSearch(searchTerm, [f.title])) return false;
-    if (typeFilter !== 'all' && f.type !== typeFilter) return false;
-    return true;
-  }) || [];
+  const filteredFormalizacoes =
+    formalizacoes?.filter((f) => {
+      if (activeTab === "pendentes" && f.status !== "pending_signatures")
+        return false;
+      if (activeTab === "finalizadas" && f.status !== "signed") return false;
+      if (!matchesSearch(searchTerm, [f.title])) return false;
+      if (typeFilter !== "all" && f.type !== typeFilter) return false;
+      return true;
+    }) || [];
 
-  const pendingCount = formalizacoes?.filter(f => f.status === 'pending_signatures').length || 0;
-  const signedCount = formalizacoes?.filter(f => f.status === 'signed').length || 0;
+  const pendingCount =
+    formalizacoes?.filter((f) => f.status === "pending_signatures").length || 0;
+  const signedCount =
+    formalizacoes?.filter((f) => f.status === "signed").length || 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,9 +56,9 @@ export default function Formalizacoes() {
         backTo={paths.relatorio}
         maxWidth="xl"
         breadcrumbs={[
-          { label: 'Minhas Obras', href: '/minhas-obras' },
-          { label: 'Obra', href: paths.relatorio },
-          { label: 'Formalizações' },
+          { label: "Minhas Obras", href: "/minhas-obras" },
+          { label: "Obra", href: paths.relatorio },
+          { label: "Formalizações" },
         ]}
       >
         {canCreate && (
@@ -95,32 +104,47 @@ export default function Formalizacoes() {
 
               {isLoading ? (
                 <div className="grid grid-cols-2 gap-4">
-                  {[1, 2, 3, 4].map(i => <FormalizacaoSkeleton key={i} />)}
+                  {[1, 2, 3, 4].map((i) => (
+                    <FormalizacaoSkeleton key={i} />
+                  ))}
                 </div>
               ) : filteredFormalizacoes.length === 0 ? (
                 <Card className="border-dashed">
                   <EmptyState
                     variant="formalizations"
-                    title={activeTab === 'pendentes' ? 'Nenhuma pendência!' : 'Nenhuma formalização encontrada'}
+                    title={
+                      activeTab === "pendentes"
+                        ? "Nenhuma pendência!"
+                        : "Nenhuma formalização encontrada"
+                    }
                     description={
-                      activeTab === 'pendentes'
-                        ? 'Você está em dia com todas as formalizações.'
+                      activeTab === "pendentes"
+                        ? "Você está em dia com todas as formalizações."
                         : canCreate
-                          ? 'Crie uma nova formalização para começar.'
-                          : 'As formalizações serão criadas pela equipe técnica.'
+                          ? "Crie uma nova formalização para começar."
+                          : "As formalizações serão criadas pela equipe técnica."
                     }
                     action={
-                      activeTab !== 'pendentes' && canCreate
-                        ? { label: 'Nova formalização', onClick: () => navigate(paths.formalizacoesNova), icon: Plus }
+                      activeTab !== "pendentes" && canCreate
+                        ? {
+                            label: "Nova formalização",
+                            onClick: () => navigate(paths.formalizacoesNova),
+                            icon: Plus,
+                          }
                         : undefined
                     }
-                    icon={activeTab === 'pendentes' ? Sparkles : undefined}
+                    icon={activeTab === "pendentes" ? Sparkles : undefined}
                   />
                 </Card>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
                   {filteredFormalizacoes.map((f, i) => (
-                    <FormalizacaoCard key={f.id} formalizacao={f} basePath={paths.formalizacoes} index={i} />
+                    <FormalizacaoCard
+                      key={f.id}
+                      formalizacao={f}
+                      basePath={paths.formalizacoes}
+                      index={i}
+                    />
                   ))}
                 </div>
               )}

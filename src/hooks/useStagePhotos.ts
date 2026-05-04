@@ -38,11 +38,14 @@ export function useStagePhotos(stageId: string, projectId: string) {
             .from(BUCKET)
             .createSignedUrl(photo.storage_path, 3600);
           return { ...photo, url: urlData?.signedUrl || "" } as StagePhoto;
-        })
+        }),
       );
 
       return withUrls
-        .filter((r): r is PromiseFulfilledResult<StagePhoto> => r.status === "fulfilled")
+        .filter(
+          (r): r is PromiseFulfilledResult<StagePhoto> =>
+            r.status === "fulfilled",
+        )
         .map((r) => r.value);
     },
     enabled: !!stageId,
@@ -51,7 +54,9 @@ export function useStagePhotos(stageId: string, projectId: string) {
 
   const uploadMutation = useMutation({
     mutationFn: async (files: File[]) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
       const uploaded: StagePhoto[] = [];

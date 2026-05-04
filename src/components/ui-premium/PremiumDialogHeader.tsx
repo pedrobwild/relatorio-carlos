@@ -12,11 +12,11 @@
  *  - linha 2: título h2 dominante
  *  - linha 3: descrição muted
  */
-import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 interface PremiumHeaderProps {
   icon?: LucideIcon;
@@ -49,8 +49,8 @@ function BaseHeader({
   return (
     <div
       className={cn(
-        'flex items-start justify-between gap-4 px-6 py-5',
-        !flush && 'border-b border-border-subtle',
+        "flex items-start justify-between gap-4 px-6 py-5",
+        !flush && "border-b border-border-subtle",
         className,
       )}
     >
@@ -79,7 +79,9 @@ function BaseHeader({
           )}
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {actions && (
+        <div className="flex items-center gap-2 shrink-0">{actions}</div>
+      )}
     </div>
   );
 }
@@ -113,11 +115,14 @@ interface PremiumFooterProps {
  * Footer padronizado para dialogs/sheets — encosta no fim com border-top
  * sutil e padding consistente. Botões à direita.
  */
-export function PremiumDialogFooter({ children, className }: PremiumFooterProps) {
+export function PremiumDialogFooter({
+  children,
+  className,
+}: PremiumFooterProps) {
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center justify-end gap-2 px-6 py-4 border-t border-border-subtle surface-sunken',
+        "flex flex-wrap items-center justify-end gap-2 px-6 py-4 border-t border-border-subtle surface-sunken",
         className,
       )}
     >
@@ -136,5 +141,5 @@ export function PremiumDialogBody({
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={cn('px-6 py-5', className)}>{children}</div>;
+  return <div className={cn("px-6 py-5", className)}>{children}</div>;
 }

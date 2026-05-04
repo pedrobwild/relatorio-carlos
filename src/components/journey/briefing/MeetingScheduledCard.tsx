@@ -1,16 +1,18 @@
-import { useMemo } from 'react';
-import { CalendarCheck, CheckCircle2, Copy, ExternalLink } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import type { MeetingAvailability } from '@/hooks/useMeetingAvailability';
+import { useMemo } from "react";
+import { CalendarCheck, CheckCircle2, Copy, ExternalLink } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import type { MeetingAvailability } from "@/hooks/useMeetingAvailability";
 
 interface MeetingScheduledCardProps {
   availability: MeetingAvailability;
 }
 
-export function MeetingScheduledCard({ availability }: MeetingScheduledCardProps) {
-  const meetText = availability.meeting_details_text || '';
+export function MeetingScheduledCard({
+  availability,
+}: MeetingScheduledCardProps) {
+  const meetText = availability.meeting_details_text || "";
 
   const meetLink = useMemo(() => {
     const match = meetText.match(/https:\/\/meet\.google\.com\/[a-z-]+/i);
@@ -19,21 +21,21 @@ export function MeetingScheduledCard({ availability }: MeetingScheduledCardProps
 
   const handleCopy = () => {
     navigator.clipboard.writeText(meetText).then(() => {
-      toast.success('Detalhes copiados para a área de transferência.');
+      toast.success("Detalhes copiados para a área de transferência.");
     });
   };
 
   return (
-    <Card className="border-green-200 dark:border-green-800/40 bg-green-50/50 dark:bg-green-950/20">
+    <Card className="border-green-200 bg-green-50/50">
       <CardContent className="pt-6 space-y-4">
         <div className="flex items-start gap-3">
-            <div className="shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mt-0.5">
-            <CalendarCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+          <div className="shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+            <CalendarCheck className="h-4 w-4 text-green-600" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               Reunião Agendada
-              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Confira os detalhes da sua Reunião de Briefing abaixo.

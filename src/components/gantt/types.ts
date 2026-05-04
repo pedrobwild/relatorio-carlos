@@ -1,13 +1,17 @@
-import { Activity } from '@/types/report';
-import type { ActivityStatus } from '@/lib/activityStatus';
-import type { GanttTask } from '@/lib/mapCronogramaParaGantt';
+import { Activity } from "@/types/report";
+import type { ActivityStatus } from "@/lib/activityStatus";
+import type { GanttTask } from "@/lib/mapCronogramaParaGantt";
 
-export type ZoomLevel = 'week' | 'month' | 'quarter';
+export type ZoomLevel = "week" | "month" | "quarter";
 
 export interface GanttChartProps {
   activities: Activity[];
   reportDate?: string;
-  onActivityDateChange?: (activityId: string, newPlannedStart: string, newPlannedEnd: string) => void;
+  onActivityDateChange?: (
+    activityId: string,
+    newPlannedStart: string,
+    newPlannedEnd: string,
+  ) => void;
   editable?: boolean;
   showBaseline?: boolean;
   showFullChart?: boolean;
@@ -18,7 +22,7 @@ export interface GanttChartProps {
 
 export interface DragState {
   activityId: string;
-  dragType: 'move' | 'resize-start' | 'resize-end';
+  dragType: "move" | "resize-start" | "resize-end";
   startX: number;
   originalStart: string;
   originalEnd: string;

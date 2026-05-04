@@ -57,7 +57,9 @@ export function plannedProgressAt(
   date: Date,
 ): number {
   if (!activities.length) return 0;
-  const hasWeights = activities.some(a => a.weight !== undefined && a.weight !== null);
+  const hasWeights = activities.some(
+    (a) => a.weight !== undefined && a.weight !== null,
+  );
   const total = hasWeights
     ? activities.reduce((s, a) => s + toNumericWeight(a.weight), 0)
     : activities.length;
@@ -81,7 +83,9 @@ export function actualProgressAt(
   date: Date,
 ): number {
   if (!activities.length) return 0;
-  const hasWeights = activities.some(a => a.weight !== undefined && a.weight !== null);
+  const hasWeights = activities.some(
+    (a) => a.weight !== undefined && a.weight !== null,
+  );
   const total = hasWeights
     ? activities.reduce((s, a) => s + toNumericWeight(a.weight), 0)
     : activities.length;
@@ -100,7 +104,11 @@ export function actualProgressAt(
     if (!refEnd || refEnd <= refStart) return sum + w;
     const frac = Math.min(
       1,
-      Math.max(0, (date.getTime() - refStart.getTime()) / (refEnd.getTime() - refStart.getTime())),
+      Math.max(
+        0,
+        (date.getTime() - refStart.getTime()) /
+          (refEnd.getTime() - refStart.getTime()),
+      ),
     );
     return sum + w * frac;
   }, 0);

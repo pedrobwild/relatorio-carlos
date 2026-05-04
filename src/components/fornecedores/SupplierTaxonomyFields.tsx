@@ -28,7 +28,10 @@ export function SupplierTaxonomyFields({
   onSupplierTypeChange,
   onSupplierSubcategoryChange,
 }: SupplierTaxonomyFieldsProps) {
-  const normalizedTaxonomy = normalizeSupplierTaxonomy(supplierType, supplierSubcategory);
+  const normalizedTaxonomy = normalizeSupplierTaxonomy(
+    supplierType,
+    supplierSubcategory,
+  );
   const resolvedType = normalizedTaxonomy.supplier_type;
   const resolvedSubcategory = normalizedTaxonomy.supplier_subcategory;
   const availableSubcategories = getSubcategoriesByType(resolvedType);
@@ -37,7 +40,10 @@ export function SupplierTaxonomyFields({
     const nextType = value as SupplierType;
     onSupplierTypeChange(nextType);
 
-    if (resolvedSubcategory && !isValidSupplierSubcategory(nextType, resolvedSubcategory)) {
+    if (
+      resolvedSubcategory &&
+      !isValidSupplierSubcategory(nextType, resolvedSubcategory)
+    ) {
       onSupplierSubcategoryChange(null);
     }
   };
@@ -69,7 +75,11 @@ export function SupplierTaxonomyFields({
           disabled={!resolvedType}
         >
           <SelectTrigger aria-label="Subcategoria do fornecedor">
-            <SelectValue placeholder={resolvedType ? "Selecione..." : "Escolha a categoria primeiro"} />
+            <SelectValue
+              placeholder={
+                resolvedType ? "Selecione..." : "Escolha a categoria primeiro"
+              }
+            />
           </SelectTrigger>
           <SelectContent position="popper">
             {availableSubcategories.map((sub) => (

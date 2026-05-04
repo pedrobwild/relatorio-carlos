@@ -23,13 +23,17 @@ describe("planAnalysis", () => {
   });
 
   it("classifies forecast intent", () => {
-    const plan = planAnalysis("Qual a previsão de pagamentos para os próximos 30 dias?");
+    const plan = planAnalysis(
+      "Qual a previsão de pagamentos para os próximos 30 dias?",
+    );
     expect(plan.intent).toBe("forecast");
     expect(plan.dateRangeSql).toContain("30 days");
   });
 
   it("classifies data quality intent", () => {
-    const plan = planAnalysis("Quais dados estão inconsistentes ou incompletos?");
+    const plan = planAnalysis(
+      "Quais dados estão inconsistentes ou incompletos?",
+    );
     expect(plan.intent).toBe("data_quality");
     expect(plan.expectedInsightTypes).toContain("quality");
   });

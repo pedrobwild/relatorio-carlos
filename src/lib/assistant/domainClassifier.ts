@@ -104,9 +104,10 @@ export function classifyDomain(question: string): {
   scores: Record<InsightDomain, number>;
   isExecutive: boolean;
 } {
-  const scores = Object.fromEntries(
-    CLUES.map((c) => [c.domain, 0]),
-  ) as Record<InsightDomain, number>;
+  const scores = Object.fromEntries(CLUES.map((c) => [c.domain, 0])) as Record<
+    InsightDomain,
+    number
+  >;
   scores.outros = 0;
   scores.formalizacoes = 0;
   scores.arquivos = 0;
@@ -123,7 +124,10 @@ export function classifyDomain(question: string): {
 
   let domain: InsightDomain = "outros";
   let max = 0;
-  for (const [d, score] of Object.entries(scores) as [InsightDomain, number][]) {
+  for (const [d, score] of Object.entries(scores) as [
+    InsightDomain,
+    number,
+  ][]) {
     if (score > max) {
       max = score;
       domain = d;

@@ -13,7 +13,7 @@
  * - Detalhes técnicos ficam atrás de um <details> (apenas para DEV/QA).
  * - Sempre que possível oferecer botão "Tentar de novo".
  */
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 import {
   AlertTriangle,
   WifiOff,
@@ -24,10 +24,10 @@ import {
   Search,
   RefreshCw,
   MessageSquareWarning,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import type { UserError, UserErrorKind } from '@/lib/errorMapping';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { UserError, UserErrorKind } from "@/lib/errorMapping";
 
 interface ErrorViewProps {
   /** Categoria do erro — direciona ícone e tom. Default: unknown. */
@@ -47,7 +47,7 @@ interface ErrorViewProps {
   /** Esconde container/borda — útil dentro de SectionCard. */
   bare?: boolean;
   /** Tamanho do bloco. Default: md. */
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
@@ -55,44 +55,47 @@ const kindConfig: Record<
   UserErrorKind,
   { icon: typeof AlertTriangle; defaultTitle: string }
 > = {
-  forbidden: { icon: Lock, defaultTitle: 'Sem acesso a este conteúdo' },
-  auth: { icon: KeyRound, defaultTitle: 'Sessão expirada' },
-  server: { icon: ServerCrash, defaultTitle: 'Problema no servidor' },
-  network: { icon: WifiOff, defaultTitle: 'Sem conexão' },
-  conflict: { icon: AlertTriangle, defaultTitle: 'Dados conflitantes' },
-  not_found: { icon: Search, defaultTitle: 'Não encontramos o que você procura' },
-  validation: { icon: AlertTriangle, defaultTitle: 'Dados inválidos' },
-  rate_limit: { icon: Clock, defaultTitle: 'Muitas tentativas' },
-  storage: { icon: AlertTriangle, defaultTitle: 'Problema com o arquivo' },
-  unknown: { icon: AlertTriangle, defaultTitle: 'Algo deu errado' },
+  forbidden: { icon: Lock, defaultTitle: "Sem acesso a este conteúdo" },
+  auth: { icon: KeyRound, defaultTitle: "Sessão expirada" },
+  server: { icon: ServerCrash, defaultTitle: "Problema no servidor" },
+  network: { icon: WifiOff, defaultTitle: "Sem conexão" },
+  conflict: { icon: AlertTriangle, defaultTitle: "Dados conflitantes" },
+  not_found: {
+    icon: Search,
+    defaultTitle: "Não encontramos o que você procura",
+  },
+  validation: { icon: AlertTriangle, defaultTitle: "Dados inválidos" },
+  rate_limit: { icon: Clock, defaultTitle: "Muitas tentativas" },
+  storage: { icon: AlertTriangle, defaultTitle: "Problema com o arquivo" },
+  unknown: { icon: AlertTriangle, defaultTitle: "Algo deu errado" },
 };
 
 const sizeConfig = {
   sm: {
-    padding: 'py-8 px-4',
-    iconBox: 'h-10 w-10',
-    iconSize: 'h-5 w-5',
-    title: 'text-sm',
-    desc: 'text-xs max-w-xs',
+    padding: "py-8 px-4",
+    iconBox: "h-10 w-10",
+    iconSize: "h-5 w-5",
+    title: "text-sm",
+    desc: "text-xs max-w-xs",
   },
   md: {
-    padding: 'py-12 px-6',
-    iconBox: 'h-12 w-12',
-    iconSize: 'h-6 w-6',
-    title: 'text-base',
-    desc: 'text-sm max-w-sm',
+    padding: "py-12 px-6",
+    iconBox: "h-12 w-12",
+    iconSize: "h-6 w-6",
+    title: "text-base",
+    desc: "text-sm max-w-sm",
   },
   lg: {
-    padding: 'py-16 px-8',
-    iconBox: 'h-14 w-14',
-    iconSize: 'h-7 w-7',
-    title: 'text-lg',
-    desc: 'text-sm max-w-md',
+    padding: "py-16 px-8",
+    iconBox: "h-14 w-14",
+    iconSize: "h-7 w-7",
+    title: "text-lg",
+    desc: "text-sm max-w-md",
   },
 };
 
 export function ErrorView({
-  kind = 'unknown',
+  kind = "unknown",
   title,
   description,
   onRetry,
@@ -100,40 +103,48 @@ export function ErrorView({
   correlationId,
   technicalDetails,
   bare = false,
-  size = 'md',
+  size = "md",
   className,
 }: ErrorViewProps) {
   const cfg = sizeConfig[size];
   const { icon: Icon, defaultTitle } = kindConfig[kind];
-  const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+  const isDev =
+    typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV);
 
   return (
     <div
       role="alert"
       aria-live="polite"
       className={cn(
-        'flex flex-col items-center justify-center text-center',
+        "flex flex-col items-center justify-center text-center",
         cfg.padding,
-        !bare && 'rounded-xl border border-border-subtle bg-surface',
+        !bare && "rounded-xl border border-border-subtle bg-surface",
         className,
       )}
     >
       <div
         className={cn(
-          'flex items-center justify-center rounded-full surface-sunken mb-4',
+          "flex items-center justify-center rounded-full surface-sunken mb-4",
           cfg.iconBox,
         )}
         aria-hidden
       >
-        <Icon className={cn('text-muted-foreground', cfg.iconSize)} />
+        <Icon className={cn("text-muted-foreground", cfg.iconSize)} />
       </div>
 
-      <h3 className={cn('font-semibold text-foreground leading-tight', cfg.title)}>
+      <h3
+        className={cn("font-semibold text-foreground leading-tight", cfg.title)}
+      >
         {title ?? defaultTitle}
       </h3>
 
       {description && (
-        <p className={cn('text-muted-foreground leading-relaxed mt-1.5', cfg.desc)}>
+        <p
+          className={cn(
+            "text-muted-foreground leading-relaxed mt-1.5",
+            cfg.desc,
+          )}
+        >
           {description}
         </p>
       )}
@@ -147,7 +158,12 @@ export function ErrorView({
             </Button>
           )}
           {onReport && (
-            <Button onClick={onReport} variant="outline" size="sm" className="h-9">
+            <Button
+              onClick={onReport}
+              variant="outline"
+              size="sm"
+              className="h-9"
+            >
               <MessageSquareWarning className="h-4 w-4 mr-1.5" />
               Reportar problema
             </Button>
@@ -192,7 +208,7 @@ export function ErrorViewFromUserError({
   onReport?: () => void;
   correlationId?: string;
   bare?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   className?: string;
 }) {
   return (

@@ -18,7 +18,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, FileBarChart, Search, Sparkles, AlertCircle, Clock, Database, Download, FileText, FileSpreadsheet } from "lucide-react";
+import {
+  Loader2,
+  FileBarChart,
+  Search,
+  Sparkles,
+  AlertCircle,
+  Clock,
+  Database,
+  Download,
+  FileText,
+  FileSpreadsheet,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -50,7 +61,13 @@ interface LogRow {
   created_at: string;
 }
 
-const STATUS_LABELS: Record<string, { label: string; variant: "default" | "destructive" | "secondary" | "outline" }> = {
+const STATUS_LABELS: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "destructive" | "secondary" | "outline";
+  }
+> = {
   success: { label: "Sucesso", variant: "default" },
   sql_blocked: { label: "SQL Bloqueado", variant: "destructive" },
   sql_error: { label: "Erro SQL", variant: "destructive" },
@@ -94,9 +111,11 @@ export default function AssistenteLogs() {
         .select("id, nome, email")
         .in("id", userIds);
       const map: Record<string, string> = {};
-      (profiles ?? []).forEach((p: { id: string; nome: string | null; email: string | null }) => {
-        map[p.id] = p.nome ?? p.email ?? p.id.slice(0, 8);
-      });
+      (profiles ?? []).forEach(
+        (p: { id: string; nome: string | null; email: string | null }) => {
+          map[p.id] = p.nome ?? p.email ?? p.id.slice(0, 8);
+        },
+      );
       setUserMap(map);
     }
     setLoading(false);
@@ -107,11 +126,15 @@ export default function AssistenteLogs() {
     return logs.filter((l) => {
       if (statusFilter !== "all" && l.status !== statusFilter) return false;
       if (domainFilter !== "all" && l.domain !== domainFilter) return false;
-      if (q && !(
-        l.question.toLowerCase().includes(q) ||
-        (l.answer_summary ?? "").toLowerCase().includes(q) ||
-        (userMap[l.user_id] ?? "").toLowerCase().includes(q)
-      )) return false;
+      if (
+        q &&
+        !(
+          l.question.toLowerCase().includes(q) ||
+          (l.answer_summary ?? "").toLowerCase().includes(q) ||
+          (userMap[l.user_id] ?? "").toLowerCase().includes(q)
+        )
+      )
+        return false;
       return true;
     });
   }, [logs, search, statusFilter, domainFilter, userMap]);
@@ -120,8 +143,14 @@ export default function AssistenteLogs() {
     const total = logs.length;
     const success = logs.filter((l) => l.status === "success").length;
     const errors = total - success;
-    const avgLatency = total > 0 ? Math.round(logs.reduce((s, l) => s + (l.latency_ms ?? 0), 0) / total) : 0;
-    const totalTokens = logs.reduce((s, l) => s + (l.tokens_input ?? 0) + (l.tokens_output ?? 0), 0);
+    const avgLatency =
+      total > 0
+        ? Math.round(logs.reduce((s, l) => s + (l.latency_ms ?? 0), 0) / total)
+        : 0;
+    const totalTokens = logs.reduce(
+      (s, l) => s + (l.tokens_input ?? 0) + (l.tokens_output ?? 0),
+      0,
+    );
     return { total, success, errors, avgLatency, totalTokens };
   }, [logs]);
 
@@ -151,22 +180,26 @@ export default function AssistenteLogs() {
       if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
       return s;
     };
-    const rows = filtered.map((l) => [
-      new Date(l.created_at).toLocaleString("pt-BR"),
-      userMap[l.user_id] ?? l.user_id,
-      l.question,
-      l.answer_summary ?? "",
-      l.domain ?? "",
-      STATUS_LABELS[l.status]?.label ?? l.status,
-      l.rows_returned ?? "",
-      l.latency_ms ?? "",
-      l.tokens_input ?? "",
-      l.tokens_output ?? "",
-      (l.tokens_input ?? 0) + (l.tokens_output ?? 0),
-      l.model ?? "",
-      l.error_message ?? "",
-      l.generated_sql ?? "",
-    ].map(escape).join(","));
+    const rows = filtered.map((l) =>
+      [
+        new Date(l.created_at).toLocaleString("pt-BR"),
+        userMap[l.user_id] ?? l.user_id,
+        l.question,
+        l.answer_summary ?? "",
+        l.domain ?? "",
+        STATUS_LABELS[l.status]?.label ?? l.status,
+        l.rows_returned ?? "",
+        l.latency_ms ?? "",
+        l.tokens_input ?? "",
+        l.tokens_output ?? "",
+        (l.tokens_input ?? 0) + (l.tokens_output ?? 0),
+        l.model ?? "",
+        l.error_message ?? "",
+        l.generated_sql ?? "",
+      ]
+        .map(escape)
+        .join(","),
+    );
     const csv = "\uFEFF" + headers.join(",") + "\n" + rows.join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -186,7 +219,11 @@ export default function AssistenteLogs() {
       toast.error("Nenhum log para exportar");
       return;
     }
-    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: "a4",
+    });
     const pageWidth = doc.internal.pageSize.getWidth();
     const generatedAt = new Date().toLocaleString("pt-BR");
 
@@ -207,16 +244,18 @@ export default function AssistenteLogs() {
 
     autoTable(doc, {
       startY: 88,
-      head: [[
-        "Data/Hora",
-        "Usuário",
-        "Pergunta",
-        "Domínio",
-        "Status",
-        "Linhas",
-        "Latência",
-        "Tokens",
-      ]],
+      head: [
+        [
+          "Data/Hora",
+          "Usuário",
+          "Pergunta",
+          "Domínio",
+          "Status",
+          "Linhas",
+          "Latência",
+          "Tokens",
+        ],
+      ],
       body: filtered.map((l) => [
         new Date(l.created_at).toLocaleString("pt-BR"),
         userMap[l.user_id] ?? l.user_id.slice(0, 8),
@@ -225,10 +264,21 @@ export default function AssistenteLogs() {
         STATUS_LABELS[l.status]?.label ?? l.status,
         String(l.rows_returned ?? "—"),
         l.latency_ms ? `${l.latency_ms}ms` : "—",
-        ((l.tokens_input ?? 0) + (l.tokens_output ?? 0)).toLocaleString("pt-BR"),
+        ((l.tokens_input ?? 0) + (l.tokens_output ?? 0)).toLocaleString(
+          "pt-BR",
+        ),
       ]),
-      styles: { fontSize: 8, cellPadding: 4, overflow: "linebreak", valign: "top" },
-      headStyles: { fillColor: [31, 41, 55], textColor: 255, fontStyle: "bold" },
+      styles: {
+        fontSize: 8,
+        cellPadding: 4,
+        overflow: "linebreak",
+        valign: "top",
+      },
+      headStyles: {
+        fillColor: [31, 41, 55],
+        textColor: 255,
+        fontStyle: "bold",
+      },
       alternateRowStyles: { fillColor: [248, 250, 252] },
       columnStyles: {
         0: { cellWidth: 90 },
@@ -270,12 +320,18 @@ export default function AssistenteLogs() {
             <h1 className="text-2xl font-bold">Logs do Assistente IA</h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            Histórico técnico de todas as perguntas feitas ao assistente. Apenas equipe interna tem acesso.
+            Histórico técnico de todas as perguntas feitas ao assistente. Apenas
+            equipe interna tem acesso.
           </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2" disabled={loading || filtered.length === 0}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={loading || filtered.length === 0}
+            >
               <Download className="h-4 w-4" />
               Exportar
             </Button>
@@ -300,10 +356,28 @@ export default function AssistenteLogs() {
       {/* Stats */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
         <StatCard icon={Sparkles} label="Total" value={stats.total} />
-        <StatCard icon={Sparkles} label="Sucesso" value={stats.success} accent="text-green-600" />
-        <StatCard icon={AlertCircle} label="Erros" value={stats.errors} accent="text-destructive" />
-        <StatCard icon={Clock} label="Latência média" value={`${stats.avgLatency}ms`} />
-        <StatCard icon={Database} label="Tokens totais" value={stats.totalTokens.toLocaleString("pt-BR")} />
+        <StatCard
+          icon={Sparkles}
+          label="Sucesso"
+          value={stats.success}
+          accent="text-green-600"
+        />
+        <StatCard
+          icon={AlertCircle}
+          label="Erros"
+          value={stats.errors}
+          accent="text-destructive"
+        />
+        <StatCard
+          icon={Clock}
+          label="Latência média"
+          value={`${stats.avgLatency}ms`}
+        />
+        <StatCard
+          icon={Database}
+          label="Tokens totais"
+          value={stats.totalTokens.toLocaleString("pt-BR")}
+        />
       </div>
 
       {/* Filtros */}
@@ -383,7 +457,8 @@ export default function AssistenteLogs() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((l) => {
-                    const statusInfo = STATUS_LABELS[l.status] ?? STATUS_LABELS.other;
+                    const statusInfo =
+                      STATUS_LABELS[l.status] ?? STATUS_LABELS.other;
                     return (
                       <TableRow key={l.id}>
                         <TableCell className="text-xs whitespace-nowrap">
@@ -392,7 +467,10 @@ export default function AssistenteLogs() {
                         <TableCell className="text-xs">
                           {userMap[l.user_id] ?? l.user_id.slice(0, 8)}
                         </TableCell>
-                        <TableCell className="max-w-[280px] truncate" title={l.question}>
+                        <TableCell
+                          className="max-w-[280px] truncate"
+                          title={l.question}
+                        >
                           {l.question}
                         </TableCell>
                         <TableCell>
@@ -403,16 +481,28 @@ export default function AssistenteLogs() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={statusInfo.variant} className="text-[10px]">
+                          <Badge
+                            variant={statusInfo.variant}
+                            className="text-[10px]"
+                          >
                             {statusInfo.label}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right text-xs">{l.rows_returned ?? "—"}</TableCell>
-                        <TableCell className={cn("text-right text-xs", (l.latency_ms ?? 0) > 5000 && "text-destructive")}>
+                        <TableCell className="text-right text-xs">
+                          {l.rows_returned ?? "—"}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            "text-right text-xs",
+                            (l.latency_ms ?? 0) > 5000 && "text-destructive",
+                          )}
+                        >
                           {l.latency_ms ? `${l.latency_ms}ms` : "—"}
                         </TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground">
-                          {((l.tokens_input ?? 0) + (l.tokens_output ?? 0)).toLocaleString("pt-BR")}
+                          {(
+                            (l.tokens_input ?? 0) + (l.tokens_output ?? 0)
+                          ).toLocaleString("pt-BR")}
                         </TableCell>
                       </TableRow>
                     );

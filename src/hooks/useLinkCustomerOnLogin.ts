@@ -1,6 +1,6 @@
 /**
  * useLinkCustomerOnLogin Hook
- * 
+ *
  * Automatically links logged-in users to their projects based on email matching.
  * This solves the case where a user is registered as a customer in project_customers
  * (by email) but their user_id hasn't been linked yet.
@@ -13,19 +13,19 @@
  *  3. A sessionStorage flag prevents the lookup from repeating within a tab session.
  */
 
-import { useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { logInfo, logError } from '@/lib/errorLogger';
+import { useEffect } from "react";
+import { User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { logInfo, logError } from "@/lib/errorLogger";
 
-const SESSION_FLAG_PREFIX = 'bwild:customer-linked:';
+const SESSION_FLAG_PREFIX = "bwild:customer-linked:";
 
 // Module-level dedup: only one in-flight link operation per user id at a time
 const inFlight = new Map<string, Promise<void>>();
 
 function getSessionFlag(userId: string): boolean {
   try {
-    return sessionStorage.getItem(SESSION_FLAG_PREFIX + userId) === '1';
+    return sessionStorage.getItem(SESSION_FLAG_PREFIX + userId) === "1";
   } catch {
     return false;
   }
@@ -33,7 +33,7 @@ function getSessionFlag(userId: string): boolean {
 
 function setSessionFlag(userId: string): void {
   try {
-    sessionStorage.setItem(SESSION_FLAG_PREFIX + userId, '1');
+    sessionStorage.setItem(SESSION_FLAG_PREFIX + userId, "1");
   } catch {
     // ignore
   }
@@ -46,8 +46,14 @@ async function linkCustomerToProjects(user: User): Promise<void> {
   // Staff is detected via the JWT user_metadata.role written by our auth flow.
   const role = (user.user_metadata as { role?: string } | null)?.role;
   const STAFF_ROLES = new Set([
-    'admin', 'manager', 'engineer', 'gestor',
-    'suprimentos', 'financeiro', 'cs', 'arquitetura',
+    "admin",
+    "manager",
+    "engineer",
+    "gestor",
+    "suprimentos",
+    "financeiro",
+    "cs",
+    "arquitetura",
   ]);
   if (role && STAFF_ROLES.has(role)) {
     setSessionFlag(user.id);
@@ -56,14 +62,14 @@ async function linkCustomerToProjects(user: User): Promise<void> {
 
   try {
     const { data: unlinkedProjects, error: fetchError } = await supabase
-      .from('project_customers')
-      .select('id, project_id, customer_name')
-      .eq('customer_email', user.email)
-      .is('customer_user_id', null);
+      .from("project_customers")
+      .select("id, project_id, customer_name")
+      .eq("customer_email", user.email)
+      .is("customer_user_id", null);
 
     if (fetchError) {
-      logError('Error fetching unlinked projects', fetchError, {
-        component: 'useLinkCustomerOnLogin',
+      logError("Error fetching unlinked projects", fetchError, {
+        component: "useLinkCustomerOnLogin",
         email: user.email,
       });
       return;
@@ -75,14 +81,14 @@ async function linkCustomerToProjects(user: User): Promise<void> {
     }
 
     const { error: updateError } = await supabase
-      .from('project_customers')
+      .from("project_customers")
       .update({ customer_user_id: user.id })
-      .eq('customer_email', user.email)
-      .is('customer_user_id', null);
+      .eq("customer_email", user.email)
+      .is("customer_user_id", null);
 
     if (updateError) {
-      logError('Error linking customer to projects', updateError, {
-        component: 'useLinkCustomerOnLogin',
+      logError("Error linking customer to projects", updateError, {
+        component: "useLinkCustomerOnLogin",
         userId: user.id,
         email: user.email,
       });
@@ -92,17 +98,17 @@ async function linkCustomerToProjects(user: User): Promise<void> {
     // Ensure project_members entries exist (needed for RLS and queries)
     for (const proj of unlinkedProjects) {
       await supabase
-        .from('project_members')
+        .from("project_members")
         .upsert(
-          { project_id: proj.project_id, user_id: user.id, role: 'viewer' },
-          { onConflict: 'project_id,user_id' }
+          { project_id: proj.project_id, user_id: user.id, role: "viewer" },
+          { onConflict: "project_id,user_id" },
         );
     }
 
     const projectNames = unlinkedProjects
       .map((p) => p.customer_name || p.project_id)
-      .join(', ');
-    logInfo('Customer linked to projects on login', {
+      .join(", ");
+    logInfo("Customer linked to projects on login", {
       userId: user.id,
       email: user.email,
       linkedCount: unlinkedProjects.length,
@@ -111,8 +117,8 @@ async function linkCustomerToProjects(user: User): Promise<void> {
 
     setSessionFlag(user.id);
   } catch (err) {
-    logError('Unexpected error linking customer', err, {
-      component: 'useLinkCustomerOnLogin',
+    logError("Unexpected error linking customer", err, {
+      component: "useLinkCustomerOnLogin",
       userId: user.id,
     });
   }

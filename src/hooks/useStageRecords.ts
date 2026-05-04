@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export type RecordCategory = 'decision' | 'conversation' | 'history';
-export type RecordResponsible = 'client' | 'bwild';
+export type RecordCategory = "decision" | "conversation" | "history";
+export type RecordResponsible = "client" | "bwild";
 
 export interface StageRecord {
   id: string;
@@ -19,15 +19,18 @@ export interface StageRecord {
   created_at: string;
 }
 
-export function useStageRecords(stageId: string | undefined, projectId: string | undefined) {
+export function useStageRecords(
+  stageId: string | undefined,
+  projectId: string | undefined,
+) {
   return useQuery({
-    queryKey: ['stage-records', stageId],
+    queryKey: ["stage-records", stageId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('journey_stage_records')
-        .select('*')
-        .eq('stage_id', stageId!)
-        .order('record_date', { ascending: false });
+        .from("journey_stage_records")
+        .select("*")
+        .eq("stage_id", stageId!)
+        .order("record_date", { ascending: false });
       if (error) throw error;
       return (data || []) as StageRecord[];
     },
@@ -51,28 +54,27 @@ export function useCreateStageRecord() {
       evidence_url?: string;
       created_by: string;
     }) => {
-      const { error } = await supabase
-        .from('journey_stage_records')
-        .insert({
-          stage_id: input.stage_id,
-          project_id: input.project_id,
-          category: input.category,
-          title: input.title,
-          description: input.description ?? null,
-          record_date: input.record_date ?? new Date().toISOString().split('T')[0],
-          responsible: input.responsible ?? 'bwild',
-          evidence_url: input.evidence_url ?? null,
-          created_by: input.created_by,
-        });
+      const { error } = await supabase.from("journey_stage_records").insert({
+        stage_id: input.stage_id,
+        project_id: input.project_id,
+        category: input.category,
+        title: input.title,
+        description: input.description ?? null,
+        record_date:
+          input.record_date ?? new Date().toISOString().split("T")[0],
+        responsible: input.responsible ?? "bwild",
+        evidence_url: input.evidence_url ?? null,
+        created_by: input.created_by,
+      });
       if (error) throw error;
       return { stageId: input.stage_id };
     },
     onSuccess: ({ stageId }) => {
-      qc.invalidateQueries({ queryKey: ['stage-records', stageId] });
-      toast.success('Registro salvo com sucesso');
+      qc.invalidateQueries({ queryKey: ["stage-records", stageId] });
+      toast.success("Registro salvo com sucesso");
     },
     onError: () => {
-      toast.error('Erro ao salvar registro. Tente novamente.');
+      toast.error("Erro ao salvar registro. Tente novamente.");
     },
   });
 }
@@ -83,18 +85,18 @@ export function useDeleteStageRecord() {
   return useMutation({
     mutationFn: async ({ id, stageId }: { id: string; stageId: string }) => {
       const { error } = await supabase
-        .from('journey_stage_records')
+        .from("journey_stage_records")
         .delete()
-        .eq('id', id);
+        .eq("id", id);
       if (error) throw error;
       return { stageId };
     },
     onSuccess: ({ stageId }) => {
-      qc.invalidateQueries({ queryKey: ['stage-records', stageId] });
-      toast.success('Registro removido');
+      qc.invalidateQueries({ queryKey: ["stage-records", stageId] });
+      toast.success("Registro removido");
     },
     onError: () => {
-      toast.error('Erro ao remover registro. Tente novamente.');
+      toast.error("Erro ao remover registro. Tente novamente.");
     },
   });
 }

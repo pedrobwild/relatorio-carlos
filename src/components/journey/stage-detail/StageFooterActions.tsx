@@ -1,9 +1,16 @@
-import { CheckCircle2, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CheckCircle2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface CompleteStageButtonProps {
   stageName: string;
@@ -11,12 +18,21 @@ interface CompleteStageButtonProps {
   projectId: string;
   nextStageName?: string | null;
   isPending: boolean;
-  onComplete: (opts: { stageId: string; projectId: string }, callbacks?: { onSuccess?: () => void }) => void;
+  onComplete: (
+    opts: { stageId: string; projectId: string },
+    callbacks?: { onSuccess?: () => void },
+  ) => void;
   onSuccess?: () => void;
 }
 
 export function CompleteStageButton({
-  stageName, stageId, projectId, nextStageName, isPending, onComplete, onSuccess,
+  stageName,
+  stageId,
+  projectId,
+  nextStageName,
+  isPending,
+  onComplete,
+  onSuccess,
 }: CompleteStageButtonProps) {
   return (
     <AlertDialog>
@@ -39,11 +55,14 @@ export function CompleteStageButton({
           <AlertDialogTitle>Concluir "{stageName}"?</AlertDialogTitle>
           <AlertDialogDescription>
             A data de conclusão será registrada e a próxima etapa
-            {nextStageName ? ` ("${nextStageName}")` : ''} será liberada automaticamente.
+            {nextStageName ? ` ("${nextStageName}")` : ""} será liberada
+            automaticamente.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="min-h-[44px]">Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="min-h-[44px]">
+            Cancelar
+          </AlertDialogCancel>
           <AlertDialogAction
             className="min-h-[44px]"
             onClick={() => onComplete({ stageId, projectId }, { onSuccess })}

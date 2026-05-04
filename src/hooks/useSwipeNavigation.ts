@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 let warned = false;
 
@@ -19,7 +19,7 @@ export function useSwipeNavigation(_routes: string[]): void {
       warned = true;
       // eslint-disable-next-line no-console
       console.warn(
-        '[useSwipeNavigation] Deprecated. Cross-route swipe is disabled — use useScopedSwipe on a specific element instead.',
+        "[useSwipeNavigation] Deprecated. Cross-route swipe is disabled — use useScopedSwipe on a specific element instead.",
       );
     }
   }, []);

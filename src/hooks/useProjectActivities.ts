@@ -1,17 +1,17 @@
 /**
  * Project Activities Hook - TanStack Query Version
- * 
+ *
  * Migrated from useState/useEffect to useQuery/useMutation pattern
  * with optimistic updates for Gantt chart interactions.
  */
 
-import { useEffect, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
-import { toast } from 'sonner';
-import { queryKeys, invalidateActivityQueries } from '@/lib/queryKeys';
-import { QUERY_TIMING } from '@/lib/queryClient';
+import { useEffect, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { toast } from "sonner";
+import { queryKeys, invalidateActivityQueries } from "@/lib/queryKeys";
+import { QUERY_TIMING } from "@/lib/queryClient";
 
 export interface ProjectActivity {
   id: string;
@@ -48,12 +48,14 @@ export interface ActivityInput {
 }
 
 // Fetch activities for a project
-async function fetchProjectActivities(projectId: string): Promise<ProjectActivity[]> {
+async function fetchProjectActivities(
+  projectId: string,
+): Promise<ProjectActivity[]> {
   const { data, error } = await supabase
-    .from('project_activities')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('sort_order', { ascending: true });
+    .from("project_activities")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("sort_order", { ascending: true });
 
   if (error) throw error;
   return data || [];
@@ -64,11 +66,11 @@ export function useProjectActivities(projectId: string | undefined) {
   const queryClient = useQueryClient();
 
   // Main query for activities
-  const { 
-    data: activities = [], 
-    isLoading: loading, 
+  const {
+    data: activities = [],
+    isLoading: loading,
     error,
-    refetch 
+    refetch,
   } = useQuery({
     queryKey: queryKeys.activities.list(projectId),
     queryFn: () => fetchProjectActivities(projectId!),
@@ -84,19 +86,28 @@ export function useProjectActivities(projectId: string | undefined) {
     const channel = supabase
       .channel(`project_activities:${projectId}`)
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'project_activities', filter: `project_id=eq.${projectId}` },
-        () => { invalidateActivityQueries(projectId); }
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "project_activities",
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => {
+          invalidateActivityQueries(projectId);
+        },
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [projectId]);
 
   // Save all activities (bulk replace)
   const saveActivitiesMutation = useMutation({
     mutationFn: async (newActivities: ActivityInput[]) => {
       if (!projectId || !user) {
-        throw new Error('Projeto ou usuário não encontrado');
+        throw new Error("Projeto ou usuário não encontrado");
       }
 
       const rows = newActivities.map((activity, index) => ({
@@ -114,36 +125,42 @@ export function useProjectActivities(projectId: string | undefined) {
       }));
 
       // Atomic RPC: delete + insert in a single transaction (no race condition)
-      const { error: rpcError } = await supabase.rpc('replace_project_activities' as any, {
-        p_project_id: projectId,
-        p_rows: rows,
-      });
+      const { error: rpcError } = await supabase.rpc(
+        "replace_project_activities" as any,
+        {
+          p_project_id: projectId,
+          p_rows: rows,
+        },
+      );
 
       // Fallback: if RPC doesn't exist, use legacy insert-then-delete
       if (rpcError) {
-        console.warn('[saveActivities] RPC fallback:', rpcError.message);
+        console.warn("[saveActivities] RPC fallback:", rpcError.message);
 
-        const activitiesToInsert = rows.map(r => ({ ...r, project_id: projectId }));
+        const activitiesToInsert = rows.map((r) => ({
+          ...r,
+          project_id: projectId,
+        }));
 
         const { data: existingRows } = await supabase
-          .from('project_activities')
-          .select('id')
-          .eq('project_id', projectId);
+          .from("project_activities")
+          .select("id")
+          .eq("project_id", projectId);
 
-        const oldIds = (existingRows ?? []).map(r => r.id);
+        const oldIds = (existingRows ?? []).map((r) => r.id);
 
         if (activitiesToInsert.length > 0) {
           const { error: insertError } = await supabase
-            .from('project_activities')
+            .from("project_activities")
             .insert(activitiesToInsert);
           if (insertError) throw insertError;
         }
 
         if (oldIds.length > 0) {
           const { error: deleteError } = await supabase
-            .from('project_activities')
+            .from("project_activities")
             .delete()
-            .in('id', oldIds);
+            .in("id", oldIds);
           if (deleteError) throw deleteError;
         }
       }
@@ -163,34 +180,39 @@ export function useProjectActivities(projectId: string | undefined) {
 
   // Update single activity with optimistic update
   const updateActivityMutation = useMutation({
-    mutationFn: async ({ activityId, updates }: { 
-      activityId: string; 
-      updates: Partial<ActivityInput> 
+    mutationFn: async ({
+      activityId,
+      updates,
+    }: {
+      activityId: string;
+      updates: Partial<ActivityInput>;
     }) => {
       const { error: updateError } = await supabase
-        .from('project_activities')
+        .from("project_activities")
         .update(updates)
-        .eq('id', activityId);
+        .eq("id", activityId);
 
       if (updateError) throw updateError;
       return { activityId, updates };
     },
     // Optimistic update for smooth Gantt drag experience
     onMutate: async ({ activityId, updates }) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.activities.list(projectId) });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.activities.list(projectId),
+      });
 
       const previousActivities = queryClient.getQueryData<ProjectActivity[]>(
-        queryKeys.activities.list(projectId)
+        queryKeys.activities.list(projectId),
       );
 
       if (previousActivities) {
         queryClient.setQueryData<ProjectActivity[]>(
           queryKeys.activities.list(projectId),
-          previousActivities.map(act =>
+          previousActivities.map((act) =>
             act.id === activityId
               ? { ...act, ...updates, updated_at: new Date().toISOString() }
-              : act
-          )
+              : act,
+          ),
         );
       }
 
@@ -200,10 +222,10 @@ export function useProjectActivities(projectId: string | undefined) {
       if (context?.previousActivities) {
         queryClient.setQueryData(
           queryKeys.activities.list(projectId),
-          context.previousActivities
+          context.previousActivities,
         );
       }
-      toast.error('Erro ao atualizar atividade');
+      toast.error("Erro ao atualizar atividade");
     },
     onSettled: () => {
       if (projectId) {
@@ -215,9 +237,9 @@ export function useProjectActivities(projectId: string | undefined) {
   // Save baseline mutation
   const saveBaselineMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId) throw new Error('Projeto não encontrado');
+      if (!projectId) throw new Error("Projeto não encontrado");
 
-      const { error } = await supabase.rpc('save_project_baseline' as any, {
+      const { error } = await supabase.rpc("save_project_baseline" as any, {
         p_project_id: projectId,
       });
 
@@ -226,52 +248,54 @@ export function useProjectActivities(projectId: string | undefined) {
       return true;
     },
     onSuccess: () => {
-      toast.success('Baseline salvo com sucesso!');
+      toast.success("Baseline salvo com sucesso!");
       if (projectId) {
         invalidateActivityQueries(projectId);
       }
     },
     onError: () => {
-      toast.error('Erro ao salvar baseline');
+      toast.error("Erro ao salvar baseline");
     },
   });
 
   // Clear baseline mutation
   const clearBaselineMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId) throw new Error('Projeto não encontrado');
+      if (!projectId) throw new Error("Projeto não encontrado");
 
       const { error: updateError } = await supabase
-        .from('project_activities')
+        .from("project_activities")
         .update({
           baseline_start: null,
           baseline_end: null,
           baseline_saved_at: null,
         })
-        .eq('project_id', projectId);
+        .eq("project_id", projectId);
 
       if (updateError) throw updateError;
       return true;
     },
     onSuccess: () => {
-      toast.success('Baseline removido');
+      toast.success("Baseline removido");
       if (projectId) {
         invalidateActivityQueries(projectId);
       }
     },
     onError: () => {
-      toast.error('Erro ao remover baseline');
+      toast.error("Erro ao remover baseline");
     },
   });
 
   // Computed: has baseline
-  const hasBaseline = useMemo(() => 
-    activities.some(a => a.baseline_saved_at !== null),
-    [activities]
+  const hasBaseline = useMemo(
+    () => activities.some((a) => a.baseline_saved_at !== null),
+    [activities],
   );
 
   // Public API (backwards compatible)
-  const saveActivities = async (newActivities: ActivityInput[]): Promise<boolean> => {
+  const saveActivities = async (
+    newActivities: ActivityInput[],
+  ): Promise<boolean> => {
     try {
       await saveActivitiesMutation.mutateAsync(newActivities);
       return true;
@@ -280,7 +304,10 @@ export function useProjectActivities(projectId: string | undefined) {
     }
   };
 
-  const updateActivity = async (activityId: string, updates: Partial<ActivityInput>): Promise<boolean> => {
+  const updateActivity = async (
+    activityId: string,
+    updates: Partial<ActivityInput>,
+  ): Promise<boolean> => {
     try {
       await updateActivityMutation.mutateAsync({ activityId, updates });
       return true;
@@ -336,19 +363,18 @@ export function useActivityStats(projectId: string | undefined) {
 
     const totalWeight = activities.reduce((sum, a) => sum + a.weight, 0);
     const completedWeight = activities
-      .filter(a => a.actual_end !== null)
+      .filter((a) => a.actual_end !== null)
       .reduce((sum, a) => sum + a.weight, 0);
-    
-    const progressPercentage = totalWeight > 0 
-      ? Math.round((completedWeight / totalWeight) * 100) 
-      : 0;
+
+    const progressPercentage =
+      totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
 
     const inProgress = activities.filter(
-      a => a.actual_start !== null && a.actual_end === null
+      (a) => a.actual_start !== null && a.actual_end === null,
     ).length;
 
-    const completed = activities.filter(a => a.actual_end !== null).length;
-    const pending = activities.filter(a => a.actual_start === null).length;
+    const completed = activities.filter((a) => a.actual_end !== null).length;
+    const pending = activities.filter((a) => a.actual_start === null).length;
 
     return {
       total: activities.length,

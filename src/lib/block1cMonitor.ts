@@ -16,17 +16,17 @@
  * 3) Auditoria (quando persistido via telemetry.track com persist=true)
  */
 
-import { captureMessage } from './errorMonitoring';
-import { logInfo } from './errorLogger';
+import { captureMessage } from "./errorMonitoring";
+import { logInfo } from "./errorLogger";
 
 export type Block1CArea =
-  | 'cpf-cnpj'
-  | 'parcelas'
-  | 'duracao'
-  | 'peso-atividade'
-  | 'lead-time'
-  | 'sort-order'
-  | 'timer-cleanup';
+  | "cpf-cnpj"
+  | "parcelas"
+  | "duracao"
+  | "peso-atividade"
+  | "lead-time"
+  | "sort-order"
+  | "timer-cleanup";
 
 interface SafeParseIntOptions {
   /** Identifica a origem da chamada para correlação em logs. */
@@ -47,45 +47,41 @@ interface SafeParseIntOptions {
  */
 export function safeParseInt(
   raw: string | number | null | undefined,
-  options: SafeParseIntOptions
+  options: SafeParseIntOptions,
 ): number {
   const fallback = options.fallback ?? 0;
 
-  if (raw === null || raw === undefined || raw === '') {
+  if (raw === null || raw === undefined || raw === "") {
     return fallback;
   }
 
-  const asString = typeof raw === 'string' ? raw.trim() : String(raw);
+  const asString = typeof raw === "string" ? raw.trim() : String(raw);
   const parsed = parseInt(asString, 10);
 
   if (Number.isNaN(parsed)) {
-    captureMessage(
-      `[1C] parseInt retornou NaN em ${options.area}`,
-      'warning',
-      {
-        feature: 'diagnostics',
-        action: 'block1c_parseint_nan',
-        block: '1C',
-        area: options.area,
-        context: options.context,
-        rawValue: asString.slice(0, 50), // limita para evitar payload grande
-      }
-    );
+    captureMessage(`[1C] parseInt retornou NaN em ${options.area}`, "warning", {
+      feature: "diagnostics",
+      action: "block1c_parseint_nan",
+      block: "1C",
+      area: options.area,
+      context: options.context,
+      rawValue: asString.slice(0, 50), // limita para evitar payload grande
+    });
     return fallback;
   }
 
   if (options.rejectNegative && parsed < 0) {
     captureMessage(
       `[1C] parseInt retornou valor negativo em ${options.area}`,
-      'warning',
+      "warning",
       {
-        feature: 'diagnostics',
-        action: 'block1c_parseint_negative',
-        block: '1C',
+        feature: "diagnostics",
+        action: "block1c_parseint_negative",
+        block: "1C",
         area: options.area,
         context: options.context,
         parsed,
-      }
+      },
     );
     return fallback;
   }
@@ -101,11 +97,11 @@ export function safeParseInt(
  */
 export function trackBlock1CUsage(
   area: Block1CArea,
-  payload: Record<string, unknown> = {}
+  payload: Record<string, unknown> = {},
 ): void {
   logInfo(`[1C] uso em ${area}`, {
-    component: 'block1c-monitor',
-    block: '1C',
+    component: "block1c-monitor",
+    block: "1C",
     area,
     ...payload,
   });
@@ -118,7 +114,7 @@ export function trackBlock1CUsage(
 export function createMonitoredTimeout(
   callback: () => void,
   delayMs: number,
-  area: Block1CArea
+  area: Block1CArea,
 ): () => void {
   let cancelled = false;
   const handle = setTimeout(() => {
@@ -126,13 +122,13 @@ export function createMonitoredTimeout(
       // Não deveria acontecer — se acontecer, é leak.
       captureMessage(
         `[1C] setTimeout disparou após cancelamento em ${area}`,
-        'warning',
+        "warning",
         {
-          feature: 'diagnostics',
-          action: 'block1c_timer_after_cancel',
-          block: '1C',
+          feature: "diagnostics",
+          action: "block1c_timer_after_cancel",
+          block: "1C",
           area,
-        }
+        },
       );
       return;
     }
@@ -141,14 +137,14 @@ export function createMonitoredTimeout(
     } catch (err) {
       captureMessage(
         `[1C] callback de setTimeout lançou erro em ${area}`,
-        'error',
+        "error",
         {
-          feature: 'diagnostics',
-          action: 'block1c_timer_callback_error',
-          block: '1C',
+          feature: "diagnostics",
+          action: "block1c_timer_callback_error",
+          block: "1C",
           area,
           error: err instanceof Error ? err.message : String(err),
-        }
+        },
       );
     }
   }, delayMs);

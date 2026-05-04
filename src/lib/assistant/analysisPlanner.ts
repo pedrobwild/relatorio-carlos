@@ -49,7 +49,11 @@ const INTENT_HINTS: Array<{
   },
   {
     intent: "prioritization",
-    patterns: [/priorit/i, /\bprioridade/i, /a[cç][oõ]es?\s+da\s+(semana|hoje)/i],
+    patterns: [
+      /priorit/i,
+      /\bprioridade/i,
+      /a[cç][oõ]es?\s+da\s+(semana|hoje)/i,
+    ],
   },
   {
     intent: "comparison",
@@ -136,7 +140,13 @@ export function planAnalysis(question: string): AnalysisPlan {
     case "executive":
       complexity = "advanced";
       strategy = "multi_query";
-      expectedInsightTypes = ["prioritization", "risk", "financial", "operational", "diagnostic"];
+      expectedInsightTypes = [
+        "prioritization",
+        "risk",
+        "financial",
+        "operational",
+        "diagnostic",
+      ];
       break;
     case "prioritization":
       complexity = "medium";
@@ -172,15 +182,19 @@ export function planAnalysis(question: string): AnalysisPlan {
       break;
   }
 
-  const requiredMetrics = metricsForDomain(domain).slice(0, 4).map((m) => m.id);
+  const requiredMetrics = metricsForDomain(domain)
+    .slice(0, 4)
+    .map((m) => m.id);
 
   const ambiguous =
     trimmed.length < 12 ||
     /^(o que|qual)\s*\??$/i.test(trimmed) ||
     /(ajuda|help)\s*\??$/i.test(trimmed);
 
-  if (intent === "executive") safetyNotes.push("Resposta executiva — não pedir esclarecimento.");
-  if (dateRange.granularity === "none") safetyNotes.push("Sem janela temporal explícita.");
+  if (intent === "executive")
+    safetyNotes.push("Resposta executiva — não pedir esclarecimento.");
+  if (dateRange.granularity === "none")
+    safetyNotes.push("Sem janela temporal explícita.");
 
   return {
     intent,
@@ -188,14 +202,16 @@ export function planAnalysis(question: string): AnalysisPlan {
     complexity,
     requiredMetrics,
     requiredDimensions: [],
-    requiredDateRange: dateRange.granularity === "none" ? undefined : dateRange.label,
+    requiredDateRange:
+      dateRange.granularity === "none" ? undefined : dateRange.label,
     dateRangeSql: dateRange.sqlFragment,
     sqlStrategy: strategy,
     expectedInsightTypes,
     needsClarification: ambiguous && intent !== "executive",
-    clarificationQuestion: ambiguous && intent !== "executive"
-      ? "Pode me dizer o domínio (financeiro, compras, cronograma, NCs, pendências ou CS) e o período?"
-      : undefined,
+    clarificationQuestion:
+      ambiguous && intent !== "executive"
+        ? "Pode me dizer o domínio (financeiro, compras, cronograma, NCs, pendências ou CS) e o período?"
+        : undefined,
     safetyNotes,
   };
 }

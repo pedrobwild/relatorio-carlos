@@ -4,7 +4,7 @@ import type {
   DbCheckResult,
   StorageCheckResult,
   RlsCheckResult,
-} from '@/infra/repositories/diagnostics.repository';
+} from "@/infra/repositories/diagnostics.repository";
 
 export interface DiagnosticsState {
   loading: boolean;

@@ -1,7 +1,7 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, ListChecks } from 'lucide-react';
-import { StageChecklist } from '../StageChecklist';
-import type { JourneyTodo } from '@/hooks/useProjectJourney';
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle2, ListChecks } from "lucide-react";
+import { StageChecklist } from "../StageChecklist";
+import type { JourneyTodo } from "@/hooks/useProjectJourney";
 
 interface ClientNextActionsCardProps {
   todos: JourneyTodo[];
@@ -10,9 +10,15 @@ interface ClientNextActionsCardProps {
   isAdmin: boolean;
 }
 
-export function ClientNextActionsCard({ todos, projectId, stageId, isAdmin }: ClientNextActionsCardProps) {
-  const clientTodos = todos.filter(t => t.owner === 'client');
-  const allDone = clientTodos.length > 0 && clientTodos.every(t => t.completed);
+export function ClientNextActionsCard({
+  todos,
+  projectId,
+  stageId,
+  isAdmin,
+}: ClientNextActionsCardProps) {
+  const clientTodos = todos.filter((t) => t.owner === "client");
+  const allDone =
+    clientTodos.length > 0 && clientTodos.every((t) => t.completed);
 
   return (
     <Card>
@@ -22,7 +28,9 @@ export function ClientNextActionsCard({ todos, projectId, stageId, isAdmin }: Cl
             <ListChecks className="h-4 w-4 text-accent-foreground" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground">O que você precisa fazer agora</h3>
+            <h3 className="text-sm font-semibold text-foreground">
+              O que você precisa fazer agora
+            </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Conclua estas ações para a reunião acontecer sem atrasos.
             </p>
@@ -33,7 +41,8 @@ export function ClientNextActionsCard({ todos, projectId, stageId, isAdmin }: Cl
           <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--success)/0.06)] border border-[hsl(var(--success)/0.15)] px-4 py-3">
             <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))] shrink-0" />
             <span className="text-sm text-[hsl(var(--success))] font-medium">
-              Sem pendências nesta etapa. Acompanhe a confirmação da reunião abaixo.
+              Sem pendências nesta etapa. Acompanhe a confirmação da reunião
+              abaixo.
             </span>
           </div>
         ) : (

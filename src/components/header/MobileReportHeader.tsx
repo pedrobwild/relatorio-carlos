@@ -5,9 +5,18 @@ import { ArrowLeft, Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProjectSwitcherSheet } from "@/components/mobile/ProjectSwitcherSheet";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { formatDateShort, type ProjectMetrics, type MilestoneItem, type MilestoneKey } from "./types";
+import {
+  formatDateShort,
+  type ProjectMetrics,
+  type MilestoneItem,
+  type MilestoneKey,
+} from "./types";
 import { MilestonesBar } from "./ProjectStateSection";
 import { ProgressSection } from "./ProgressSection";
 import type { ProjectWithCustomer } from "@/infra/repositories";
@@ -31,7 +40,10 @@ interface MobileReportHeaderProps {
   displayEndDate: string | null;
   milestoneItems: MilestoneItem[];
   canEditMilestones: boolean;
-  onMilestoneDateChange?: (key: MilestoneKey, date: string | null) => Promise<void>;
+  onMilestoneDateChange?: (
+    key: MilestoneKey,
+    date: string | null,
+  ) => Promise<void>;
   isStaff: boolean;
   hasActivities: boolean;
   cronogramaPath: string;
@@ -42,18 +54,41 @@ interface MobileReportHeaderProps {
 }
 
 export function MobileReportHeader({
-  projectName, unitName, clientName, address, bairro, cep,
-  otherProjects, pendenciasStats, pendenciasPath, onGoBack, onProjectSwitch,
-  showMetrics, metrics, displayStartDate, displayEndDate,
-  milestoneItems, canEditMilestones, onMilestoneDateChange,
-  isStaff, hasActivities, cronogramaPath, isProjectPhase, activities, startDate, effectiveEndDate,
+  projectName,
+  unitName,
+  clientName,
+  address,
+  bairro,
+  cep,
+  otherProjects,
+  pendenciasStats,
+  pendenciasPath,
+  onGoBack,
+  onProjectSwitch,
+  showMetrics,
+  metrics,
+  displayStartDate,
+  displayEndDate,
+  milestoneItems,
+  canEditMilestones,
+  onMilestoneDateChange,
+  isStaff,
+  hasActivities,
+  cronogramaPath,
+  isProjectPhase,
+  activities,
+  startDate,
+  effectiveEndDate,
 }: MobileReportHeaderProps) {
   const addressParts = [address, bairro, cep].filter(Boolean);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const progressPct = metrics.totalWorkingDays > 0
-    ? Math.round((metrics.elapsedWorkingDays / metrics.totalWorkingDays) * 100)
-    : 0;
+  const progressPct =
+    metrics.totalWorkingDays > 0
+      ? Math.round(
+          (metrics.elapsedWorkingDays / metrics.totalWorkingDays) * 100,
+        )
+      : 0;
 
   return (
     <div className="md:hidden">
@@ -61,7 +96,13 @@ export function MobileReportHeader({
         {/* Top Bar — always visible */}
         <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={onGoBack} className="h-8 w-8 rounded-full" aria-label="Voltar">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onGoBack}
+              className="h-8 w-8 rounded-full"
+              aria-label="Voltar"
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <img src={bwildLogo} alt="Bwild" className="h-7 w-auto" />
@@ -71,20 +112,26 @@ export function MobileReportHeader({
             className={cn(
               "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all border active:scale-[0.97]",
               pendenciasStats.overdueCount > 0
-                ? 'bg-destructive/10 text-destructive border-destructive/20'
+                ? "bg-destructive/10 text-destructive border-destructive/20"
                 : pendenciasStats.urgentCount > 0
-                  ? 'bg-warning/10 text-warning border-warning/20'
-                  : 'bg-secondary text-foreground border-border'
+                  ? "bg-warning/10 text-warning border-warning/20"
+                  : "bg-secondary text-foreground border-border",
             )}
             aria-label={`${pendenciasStats.total} pendências`}
           >
             <Bell className="w-3.5 h-3.5" />
             <span className="text-xs font-semibold">Pendências</span>
             <Badge
-              variant={pendenciasStats.overdueCount > 0 ? "destructive" : "secondary"}
+              variant={
+                pendenciasStats.overdueCount > 0 ? "destructive" : "secondary"
+              }
               className={cn(
                 "min-w-4 h-4 px-1 text-[10px] font-bold",
-                pendenciasStats.overdueCount > 0 ? '' : pendenciasStats.urgentCount > 0 ? 'bg-warning text-warning-foreground' : 'bg-muted-foreground text-white'
+                pendenciasStats.overdueCount > 0
+                  ? ""
+                  : pendenciasStats.urgentCount > 0
+                    ? "bg-warning text-warning-foreground"
+                    : "bg-muted-foreground text-white",
               )}
             >
               {pendenciasStats.total}
@@ -108,8 +155,13 @@ export function MobileReportHeader({
           {showMetrics && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground font-medium">{metrics.currentActivity}</span>
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-medium tabular-nums shrink-0">
+                <span className="text-muted-foreground font-medium">
+                  {metrics.currentActivity}
+                </span>
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0 h-5 font-medium tabular-nums shrink-0"
+                >
                   {metrics.completedActivities}/{metrics.totalActivities}
                 </Badge>
               </div>
@@ -120,44 +172,72 @@ export function MobileReportHeader({
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
-                <span className="text-[10px] font-bold tabular-nums text-muted-foreground shrink-0">{progressPct}%</span>
+                <span className="text-[10px] font-bold tabular-nums text-muted-foreground shrink-0">
+                  {progressPct}%
+                </span>
               </div>
 
               {/* Expandable details */}
               <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
                 <CollapsibleTrigger asChild>
                   <button className="flex items-center gap-1 text-xs text-primary font-medium w-full justify-center py-1 hover:bg-primary/5 rounded-md transition-colors min-h-[36px]">
-                    {detailsOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    {detailsOpen ? (
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    ) : (
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    )}
                     {detailsOpen ? "Ocultar detalhes" : "Ver detalhes"}
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-3 pt-2">
                   {/* Address */}
                   {addressParts.length > 0 && (
-                    <p className="text-xs text-muted-foreground">{addressParts.join(' · ')}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {addressParts.join(" · ")}
+                    </p>
                   )}
 
                   {/* Dates */}
                   <div className="flex items-center justify-between gap-3 px-1">
                     <div>
-                      <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Início</span>
-                      <span className="text-sm font-bold tabular-nums text-foreground">{displayStartDate ? formatDateShort(displayStartDate) : '—'}</span>
+                      <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">
+                        Início
+                      </span>
+                      <span className="text-sm font-bold tabular-nums text-foreground">
+                        {displayStartDate
+                          ? formatDateShort(displayStartDate)
+                          : "—"}
+                      </span>
                     </div>
                     <div className="flex-1 h-px bg-border mx-2" />
                     <div className="text-right">
-                      <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Entrega</span>
-                      <span className="text-sm font-bold tabular-nums text-foreground">{displayEndDate ? formatDateShort(displayEndDate) : '—'}</span>
+                      <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">
+                        Entrega
+                      </span>
+                      <span className="text-sm font-bold tabular-nums text-foreground">
+                        {displayEndDate ? formatDateShort(displayEndDate) : "—"}
+                      </span>
                     </div>
                   </div>
 
                   {/* Milestones */}
-                  <MilestonesBar milestoneItems={milestoneItems} canEdit={canEditMilestones} isMobile onMilestoneDateChange={onMilestoneDateChange} />
+                  <MilestonesBar
+                    milestoneItems={milestoneItems}
+                    canEdit={canEditMilestones}
+                    isMobile
+                    onMilestoneDateChange={onMilestoneDateChange}
+                  />
 
                   {/* Day counter */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-meta tabular-nums">{metrics.elapsedWorkingDays}/{metrics.totalWorkingDays} dias úteis</span>
-                      <span className="text-meta tabular-nums">Restam {metrics.remainingWorkingDays}</span>
+                      <span className="text-meta tabular-nums">
+                        {metrics.elapsedWorkingDays}/{metrics.totalWorkingDays}{" "}
+                        dias úteis
+                      </span>
+                      <span className="text-meta tabular-nums">
+                        Restam {metrics.remainingWorkingDays}
+                      </span>
                     </div>
                   </div>
                 </CollapsibleContent>

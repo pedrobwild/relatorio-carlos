@@ -1,15 +1,15 @@
-import { useState, useRef, useCallback } from 'react';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { useGanttData } from './gantt/useGanttData';
-import { useDragHandlers } from './gantt/useDragHandlers';
-import { GanttHeader } from './gantt/GanttHeader';
-import { GanttLegend } from './gantt/GanttLegend';
-import { GanttActivityLabels } from './gantt/GanttActivityLabels';
-import { GanttDebugColumn } from './gantt/GanttDebugColumn';
-import { GanttTimeline } from './gantt/GanttTimeline';
-import type { GanttChartProps, ZoomLevel } from './gantt/types';
+import { useState, useRef, useCallback } from "react";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { useGanttData } from "./gantt/useGanttData";
+import { useDragHandlers } from "./gantt/useDragHandlers";
+import { GanttHeader } from "./gantt/GanttHeader";
+import { GanttLegend } from "./gantt/GanttLegend";
+import { GanttActivityLabels } from "./gantt/GanttActivityLabels";
+import { GanttDebugColumn } from "./gantt/GanttDebugColumn";
+import { GanttTimeline } from "./gantt/GanttTimeline";
+import type { GanttChartProps, ZoomLevel } from "./gantt/types";
 
-const ZOOM_LEVELS: ZoomLevel[] = ['week', 'month', 'quarter'];
+const ZOOM_LEVELS: ZoomLevel[] = ["week", "month", "quarter"];
 
 const GanttChart = ({
   activities,
@@ -22,13 +22,14 @@ const GanttChart = ({
   selectedActivityId,
   onActivitySelect,
 }: GanttChartProps) => {
-  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('month');
+  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>("month");
   const [baselineVisible, setBaselineVisible] = useState(showBaseline);
   const [debugMode, setDebugMode] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
 
   const [internalShowFull, setInternalShowFull] = useState(true);
-  const showFullChart = controlledShowFull !== undefined ? controlledShowFull : internalShowFull;
+  const showFullChart =
+    controlledShowFull !== undefined ? controlledShowFull : internalShowFull;
 
   const handleToggleFullChart = () => {
     const newValue = !showFullChart;
@@ -52,16 +53,19 @@ const GanttChart = ({
     dependencyLines,
   } = useGanttData(activities, reportDate, showFullChart);
 
-  const { dragState, handleDragStart, handleDragMove, handleDragEnd } = useDragHandlers(
-    activities,
-    totalDays,
-    chartRef,
-    editable,
-    onActivityDateChange,
-  );
+  const { dragState, handleDragStart, handleDragMove, handleDragEnd } =
+    useDragHandlers(
+      activities,
+      totalDays,
+      chartRef,
+      editable,
+      onActivityDateChange,
+    );
 
   const currentZoomIndex = ZOOM_LEVELS.indexOf(zoomLevel);
-  const hasAnyBaseline = activities.some(a => a.baselineStart && a.baselineEnd);
+  const hasAnyBaseline = activities.some(
+    (a) => a.baselineStart && a.baselineEnd,
+  );
 
   const handleZoomIn = useCallback(() => {
     const idx = ZOOM_LEVELS.indexOf(zoomLevel);
@@ -73,13 +77,18 @@ const GanttChart = ({
     if (idx < ZOOM_LEVELS.length - 1) setZoomLevel(ZOOM_LEVELS[idx + 1]);
   }, [zoomLevel]);
 
-  const handleToggleBaseline = useCallback(() => setBaselineVisible(v => !v), []);
-  const handleToggleDebug = useCallback(() => setDebugMode(v => !v), []);
+  const handleToggleBaseline = useCallback(
+    () => setBaselineVisible((v) => !v),
+    [],
+  );
+  const handleToggleDebug = useCallback(() => setDebugMode((v) => !v), []);
 
   if (activities.length === 0) {
     return (
       <div className="bg-card rounded-lg border border-border p-8 text-center">
-        <p className="text-muted-foreground">Nenhuma atividade cadastrada no cronograma.</p>
+        <p className="text-muted-foreground">
+          Nenhuma atividade cadastrada no cronograma.
+        </p>
       </div>
     );
   }
@@ -114,7 +123,10 @@ const GanttChart = ({
           onToggleDebug={handleToggleDebug}
         />
 
-        <div key={showFullChart ? 'full' : 'windowed'} className="flex animate-fade-in">
+        <div
+          key={showFullChart ? "full" : "windowed"}
+          className="flex animate-fade-in"
+        >
           <GanttActivityLabels
             activities={activities}
             ganttTasks={ganttTasks}
@@ -122,7 +134,12 @@ const GanttChart = ({
             onActivitySelect={onActivitySelect}
           />
 
-          {debugMode && <GanttDebugColumn ganttTasks={ganttTasks} getBarStyle={getBarStyle} />}
+          {debugMode && (
+            <GanttDebugColumn
+              ganttTasks={ganttTasks}
+              getBarStyle={getBarStyle}
+            />
+          )}
 
           <GanttTimeline
             activities={activities}

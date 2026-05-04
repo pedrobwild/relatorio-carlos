@@ -14,13 +14,15 @@ export function normalizeSupplierTaxonomy(
   supplierType: string | null | undefined,
   supplierSubcategory: string | null | undefined,
 ): NormalizedSupplierTaxonomy {
-  const normalizedSubcategory = typeof supplierSubcategory === "string"
-    ? supplierSubcategory.trim() || null
-    : null;
+  const normalizedSubcategory =
+    typeof supplierSubcategory === "string"
+      ? supplierSubcategory.trim() || null
+      : null;
 
-  const directType = typeof supplierType === "string" && isValidSupplierType(supplierType)
-    ? supplierType
-    : null;
+  const directType =
+    typeof supplierType === "string" && isValidSupplierType(supplierType)
+      ? supplierType
+      : null;
 
   const inferredType = normalizedSubcategory
     ? inferTypeFromSubcategory(normalizedSubcategory)

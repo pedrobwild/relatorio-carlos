@@ -47,78 +47,179 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
   {
     label: "Executivo",
     icon: Compass,
-    color: "text-cyan-600 dark:text-cyan-400",
+    color: "text-cyan-600",
     questions: [
-      { label: "O que priorizar hoje", question: "O que eu preciso priorizar hoje no portal?" },
-      { label: "Maiores riscos agora", question: "Quais são os maiores riscos da operação agora? Resumo executivo." },
-      { label: "5 ações de impacto", question: "Quais 5 ações geram mais impacto esta semana?" },
-      { label: "Qualidade dos dados", question: "Quais dados parecem ruins, incompletos ou inconsistentes?" },
+      {
+        label: "O que priorizar hoje",
+        question: "O que eu preciso priorizar hoje no portal?",
+      },
+      {
+        label: "Maiores riscos agora",
+        question:
+          "Quais são os maiores riscos da operação agora? Resumo executivo.",
+      },
+      {
+        label: "5 ações de impacto",
+        question: "Quais 5 ações geram mais impacto esta semana?",
+      },
+      {
+        label: "Qualidade dos dados",
+        question: "Quais dados parecem ruins, incompletos ou inconsistentes?",
+      },
     ],
   },
   {
     label: "Financeiro",
     icon: Wallet,
-    color: "text-emerald-600 dark:text-emerald-400",
+    color: "text-emerald-600",
     questions: [
-      { label: "Vencidos por obra", question: "Quais pagamentos estão vencidos e qual o total por obra?" },
-      { label: "A pagar hoje", question: "Qual o valor total de pagamentos com vencimento hoje, agrupado por obra?" },
-      { label: "Próximos 7 dias", question: "Quais pagamentos vencem nos próximos 7 dias? Mostre obra, vencimento, descrição e valor, ordenados por data." },
-      { label: "Recebido este mês", question: "Quanto foi recebido em pagamentos neste mês, total e por obra?" },
-      { label: "Concentração em aberto", question: "Quais obras concentram maior valor em aberto?" },
+      {
+        label: "Vencidos por obra",
+        question: "Quais pagamentos estão vencidos e qual o total por obra?",
+      },
+      {
+        label: "A pagar hoje",
+        question:
+          "Qual o valor total de pagamentos com vencimento hoje, agrupado por obra?",
+      },
+      {
+        label: "Próximos 7 dias",
+        question:
+          "Quais pagamentos vencem nos próximos 7 dias? Mostre obra, vencimento, descrição e valor, ordenados por data.",
+      },
+      {
+        label: "Recebido este mês",
+        question:
+          "Quanto foi recebido em pagamentos neste mês, total e por obra?",
+      },
+      {
+        label: "Concentração em aberto",
+        question: "Quais obras concentram maior valor em aberto?",
+      },
     ],
   },
   {
     label: "Compras & Fornecedores",
     icon: PackageCheck,
-    color: "text-blue-600 dark:text-blue-400",
+    color: "text-blue-600",
     questions: [
-      { label: "Compras atrasadas", question: "Quais compras estão atrasadas? Mostre obra, item, fornecedor e dias de atraso." },
-      { label: "Top fornecedores por uso", question: "Quais são os 10 fornecedores mais usados em project_purchases? Mostre nome e quantidade de compras." },
-      { label: "Itens sem fornecedor", question: "Quais compras estão sem fornecedor associado?" },
-      { label: "Custo real vs estimado", question: "Onde o custo real ultrapassou o estimado? Top 10 com maior excesso." },
-      { label: "Críticas da semana", question: "Quais compras são críticas para esta semana?" },
+      {
+        label: "Compras atrasadas",
+        question:
+          "Quais compras estão atrasadas? Mostre obra, item, fornecedor e dias de atraso.",
+      },
+      {
+        label: "Top fornecedores por uso",
+        question:
+          "Quais são os 10 fornecedores mais usados em project_purchases? Mostre nome e quantidade de compras.",
+      },
+      {
+        label: "Itens sem fornecedor",
+        question: "Quais compras estão sem fornecedor associado?",
+      },
+      {
+        label: "Custo real vs estimado",
+        question:
+          "Onde o custo real ultrapassou o estimado? Top 10 com maior excesso.",
+      },
+      {
+        label: "Críticas da semana",
+        question: "Quais compras são críticas para esta semana?",
+      },
     ],
   },
   {
     label: "Cronograma",
     icon: CalendarClock,
-    color: "text-purple-600 dark:text-purple-400",
+    color: "text-purple-600",
     questions: [
-      { label: "Atividades atrasadas", question: "Liste todas as atividades atrasadas (planned_end < hoje e actual_end IS NULL). Mostre obra, descrição, etapa e dias de atraso." },
-      { label: "Atividades da semana", question: "Quais atividades têm planned_start ou planned_end dentro da semana atual? Agrupe por obra." },
-      { label: "Etapas com mais atraso", question: "Quais etapas concentram mais atrasos? Conte atividades atrasadas por etapa." },
-      { label: "Sem responsável", question: "Quais atividades não têm responsável definido?" },
+      {
+        label: "Atividades atrasadas",
+        question:
+          "Liste todas as atividades atrasadas (planned_end < hoje e actual_end IS NULL). Mostre obra, descrição, etapa e dias de atraso.",
+      },
+      {
+        label: "Atividades da semana",
+        question:
+          "Quais atividades têm planned_start ou planned_end dentro da semana atual? Agrupe por obra.",
+      },
+      {
+        label: "Etapas com mais atraso",
+        question:
+          "Quais etapas concentram mais atrasos? Conte atividades atrasadas por etapa.",
+      },
+      {
+        label: "Sem responsável",
+        question: "Quais atividades não têm responsável definido?",
+      },
     ],
   },
   {
     label: "NCs & Pendências",
     icon: AlertTriangle,
-    color: "text-amber-600 dark:text-amber-400",
+    color: "text-amber-600",
     questions: [
-      { label: "NCs em aberto por obra", question: "Quantas non_conformities estão com status diferente de 'closed', agrupadas por obra?" },
-      { label: "NCs críticas abertas", question: "Quais NCs com severidade crítica estão em aberto? Mostre obra, título, deadline e responsável." },
-      { label: "NCs vencidas", question: "Liste NCs com deadline < hoje e status diferente de 'closed'. Mostre obra, título, severidade e dias de atraso." },
-      { label: "Pendências do cliente", question: "Quais pending_items estão com status 'pending' e due_date nos próximos 7 dias? Mostre obra, título e vencimento." },
-      { label: "Pendências bloqueadoras", question: "Quais pendências bloqueando obras estão atrasadas?" },
+      {
+        label: "NCs em aberto por obra",
+        question:
+          "Quantas non_conformities estão com status diferente de'closed', agrupadas por obra?",
+      },
+      {
+        label: "NCs críticas abertas",
+        question:
+          "Quais NCs com severidade crítica estão em aberto? Mostre obra, título, deadline e responsável.",
+      },
+      {
+        label: "NCs vencidas",
+        question:
+          "Liste NCs com deadline < hoje e status diferente de'closed'. Mostre obra, título, severidade e dias de atraso.",
+      },
+      {
+        label: "Pendências do cliente",
+        question:
+          "Quais pending_items estão com status'pending' e due_date nos próximos 7 dias? Mostre obra, título e vencimento.",
+      },
+      {
+        label: "Pendências bloqueadoras",
+        question: "Quais pendências bloqueando obras estão atrasadas?",
+      },
     ],
   },
   {
     label: "CS — Atendimento",
     icon: ClipboardList,
-    color: "text-rose-600 dark:text-rose-400",
+    color: "text-rose-600",
     questions: [
-      { label: "Tickets críticos abertos", question: "Quais cs_tickets críticos (severity = 'critical') estão sem resolved_at? Mostre obra e situação." },
-      { label: "Tickets sem responsável", question: "Quais tickets de atendimento estão sem responsible_user_id?" },
-      { label: "Por obra", question: "Quais obras têm mais tickets de CS abertos?" },
+      {
+        label: "Tickets críticos abertos",
+        question:
+          "Quais cs_tickets críticos (severity ='critical') estão sem resolved_at? Mostre obra e situação.",
+      },
+      {
+        label: "Tickets sem responsável",
+        question: "Quais tickets de atendimento estão sem responsible_user_id?",
+      },
+      {
+        label: "Por obra",
+        question: "Quais obras têm mais tickets de CS abertos?",
+      },
     ],
   },
   {
     label: "Visão geral",
     icon: TrendingUp,
-    color: "text-cyan-600 dark:text-cyan-400",
+    color: "text-cyan-600",
     questions: [
-      { label: "Obras ativas", question: "Quantas obras (projects) estão com status 'active' e não foram arquivadas? Liste nome e data de início." },
-      { label: "Resumo financeiro do mês", question: "Qual o total recebido (paid_at no mês atual) e o total a receber (paid_at nulo) deste mês?" },
+      {
+        label: "Obras ativas",
+        question:
+          "Quantas obras (projects) estão com status'active' e não foram arquivadas? Liste nome e data de início.",
+      },
+      {
+        label: "Resumo financeiro do mês",
+        question:
+          "Qual o total recebido (paid_at no mês atual) e o total a receber (paid_at nulo) deste mês?",
+      },
     ],
   },
 ];
@@ -162,9 +263,12 @@ export default function AssistenteConsultas() {
     setShowSql(false);
 
     try {
-      const { data, error } = await supabase.functions.invoke("assistant-chat", {
-        body: { question: trimmed, stream: false },
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "assistant-chat",
+        {
+          body: { question: trimmed, stream: false },
+        },
+      );
       if (error) throw error;
       if (data?.error && !data?.answer) throw new Error(data.error);
       setResult(data as Result);
@@ -193,9 +297,12 @@ export default function AssistenteConsultas() {
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight">Consultas do Assistente</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Consultas do Assistente
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Pergunte em linguagem natural — receba números, insights e próximos passos. As respostas respeitam suas permissões.
+              Pergunte em linguagem natural — receba números, insights e
+              próximos passos. As respostas respeitam suas permissões.
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -230,9 +337,17 @@ export default function AssistenteConsultas() {
             />
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <p className="text-xs text-muted-foreground">
-                Dica: <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px]">Ctrl/⌘ + Enter</kbd> para enviar
+                Dica:{" "}
+                <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px]">
+                  Ctrl/⌘ + Enter
+                </kbd>{" "}
+                para enviar
               </p>
-              <Button type="submit" disabled={isLoading || !question.trim()} className="gap-2">
+              <Button
+                type="submit"
+                disabled={isLoading || !question.trim()}
+                className="gap-2"
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -259,12 +374,16 @@ export default function AssistenteConsultas() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Resposta para:
                 </CardTitle>
-                <p className="text-sm font-semibold mt-1 break-words">{lastQuestion}</p>
+                <p className="text-sm font-semibold mt-1 break-words">
+                  {lastQuestion}
+                </p>
               </div>
               {result && (
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {result.domain && (
-                    <Badge variant="secondary" className="text-[10px]">{result.domain}</Badge>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {result.domain}
+                    </Badge>
                   )}
                   <Badge
                     variant={isError ? "destructive" : "outline"}
@@ -272,7 +391,9 @@ export default function AssistenteConsultas() {
                   >
                     {result.rows_returned} resultado(s)
                   </Badge>
-                  {typeof result.confidence === "number" && <ConfidenceBadge confidence={result.confidence} />}
+                  {typeof result.confidence === "number" && (
+                    <ConfidenceBadge confidence={result.confidence} />
+                  )}
                   {typeof result.latency_ms === "number" && (
                     <Badge variant="outline" className="text-[10px]">
                       {result.latency_ms} ms
@@ -287,7 +408,9 @@ export default function AssistenteConsultas() {
             {isLoading && (
               <div className="flex items-center gap-2 text-muted-foreground py-6 justify-center">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Gerando consulta, executando análise e produzindo insights...</span>
+                <span className="text-sm">
+                  Gerando consulta, executando análise e produzindo insights...
+                </span>
               </div>
             )}
             {result && !isLoading && (
@@ -300,7 +423,7 @@ export default function AssistenteConsultas() {
                       : "bg-muted/40 border border-border",
                   )}
                 >
-                  <div className="prose prose-sm max-w-none dark:prose-invert prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5">
+                  <div className="prose prose-sm max-w-none prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {result.answer || "_Sem resposta_"}
                     </ReactMarkdown>
@@ -337,7 +460,11 @@ export default function AssistenteConsultas() {
                       onClick={() => setShowSql((v) => !v)}
                       className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {showSql ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                      {showSql ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3" />
+                      )}
                       <Database className="h-3 w-3" />
                       Ver consulta SQL gerada
                     </button>

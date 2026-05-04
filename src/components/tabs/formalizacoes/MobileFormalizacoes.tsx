@@ -1,12 +1,27 @@
-import { Clock, CheckCircle2, FileText, Plus, Search, Filter, Sparkles, FileCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FORMALIZATION_TYPE_LABELS } from '@/types/formalization';
-import { FormalizacaoCard, FormalizacaoSkeleton } from './FormalizacaoCard';
+import {
+  Clock,
+  CheckCircle2,
+  FileText,
+  Plus,
+  Search,
+  Filter,
+  Sparkles,
+  FileCheck,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FORMALIZATION_TYPE_LABELS } from "@/types/formalization";
+import { FormalizacaoCard, FormalizacaoSkeleton } from "./FormalizacaoCard";
 
 interface MobileFormalizacoesProps {
   formalizacoes: any[];
@@ -27,9 +42,20 @@ interface MobileFormalizacoesProps {
 }
 
 export function MobileFormalizacoes({
-  formalizacoes, isLoading, activeTab, setActiveTab,
-  searchTerm, setSearchTerm, typeFilter, setTypeFilter,
-  pendingCount, signedCount, basePath, onCreateNew, canCreate, isStaff,
+  formalizacoes,
+  isLoading,
+  activeTab,
+  setActiveTab,
+  searchTerm,
+  setSearchTerm,
+  typeFilter,
+  setTypeFilter,
+  pendingCount,
+  signedCount,
+  basePath,
+  onCreateNew,
+  canCreate,
+  isStaff,
 }: MobileFormalizacoesProps) {
   return (
     <div className="lg:hidden space-y-5">
@@ -41,9 +67,12 @@ export function MobileFormalizacoes({
             <FileCheck className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <p className="font-medium text-sm text-foreground">Proteção para ambas as partes</p>
+            <p className="font-medium text-sm text-foreground">
+              Proteção para ambas as partes
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Todas as combinações importantes ficam registradas com ciência formal.
+              Todas as combinações importantes ficam registradas com ciência
+              formal.
             </p>
           </div>
         </CardContent>
@@ -52,30 +81,36 @@ export function MobileFormalizacoes({
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-3">
         <button
-          onClick={() => setActiveTab('pendentes')}
+          onClick={() => setActiveTab("pendentes")}
           className={`p-3 rounded-lg border text-left transition-all hover:shadow-sm ${
-            activeTab === 'pendentes'
-              ? 'border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20'
-              : 'border-border hover:border-amber-500/30'
+            activeTab === "pendentes"
+              ? "border-amber-500/50 bg-amber-50/50"
+              : "border-border hover:border-amber-500/30"
           }`}
         >
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-amber-600" />
-            <span className="text-2xl font-bold text-amber-600">{pendingCount}</span>
+            <span className="text-2xl font-bold text-amber-600">
+              {pendingCount}
+            </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Aguardando ciência</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Aguardando ciência
+          </p>
         </button>
         <button
-          onClick={() => setActiveTab('finalizadas')}
+          onClick={() => setActiveTab("finalizadas")}
           className={`p-3 rounded-lg border text-left transition-all hover:shadow-sm ${
-            activeTab === 'finalizadas'
-              ? 'border-green-500/50 bg-green-50/50 dark:bg-green-950/20'
-              : 'border-border hover:border-green-500/30'
+            activeTab === "finalizadas"
+              ? "border-green-500/50 bg-green-50/50"
+              : "border-border hover:border-green-500/30"
           }`}
         >
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <span className="text-2xl font-bold text-green-600">{signedCount}</span>
+            <span className="text-2xl font-bold text-green-600">
+              {signedCount}
+            </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">Finalizadas</p>
         </button>
@@ -94,14 +129,19 @@ export function MobileFormalizacoes({
           />
         </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-full sm:w-[200px] h-10" aria-label="Filtrar por tipo">
+          <SelectTrigger
+            className="w-full sm:w-[200px] h-10"
+            aria-label="Filtrar por tipo"
+          >
             <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
             <SelectValue placeholder="Filtrar por tipo" />
           </SelectTrigger>
           <SelectContent className="bg-background border shadow-lg">
             <SelectItem value="all">Todos os tipos</SelectItem>
             {Object.entries(FORMALIZATION_TYPE_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -110,11 +150,17 @@ export function MobileFormalizacoes({
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3 h-11">
-          <TabsTrigger value="pendentes" className="relative gap-1.5 data-[state=active]:bg-amber-100 dark:data-[state=active]:bg-amber-900/30">
+          <TabsTrigger
+            value="pendentes"
+            className="relative gap-1.5 data-[state=active]:bg-amber-100"
+          >
             <Clock className="h-3.5 w-3.5" />
             <span className="hidden xs:inline">Pendentes</span>
             {pendingCount > 0 && (
-              <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-[10px] animate-pulse">
+              <Badge
+                variant="destructive"
+                className="ml-1 h-5 px-1.5 text-[10px] animate-pulse"
+              >
                 {pendingCount}
               </Badge>
             )}
@@ -123,7 +169,10 @@ export function MobileFormalizacoes({
             <FileText className="h-3.5 w-3.5" />
             <span className="hidden xs:inline">Todas</span>
           </TabsTrigger>
-          <TabsTrigger value="finalizadas" className="gap-1.5 data-[state=active]:bg-green-100 dark:data-[state=active]:bg-green-900/30">
+          <TabsTrigger
+            value="finalizadas"
+            className="gap-1.5 data-[state=active]:bg-green-100"
+          >
             <CheckCircle2 className="h-3.5 w-3.5" />
             <span className="hidden xs:inline">Finalizadas</span>
           </TabsTrigger>
@@ -132,27 +181,31 @@ export function MobileFormalizacoes({
         <TabsContent value={activeTab} className="mt-4 space-y-3">
           {isLoading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map(i => <FormalizacaoSkeleton key={i} />)}
+              {[1, 2, 3].map((i) => (
+                <FormalizacaoSkeleton key={i} />
+              ))}
             </div>
           ) : formalizacoes.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="p-8 text-center">
                 <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                  {activeTab === 'pendentes' ? (
+                  {activeTab === "pendentes" ? (
                     <Sparkles className="h-8 w-8 text-muted-foreground/50" />
                   ) : (
                     <FileText className="h-8 w-8 text-muted-foreground/50" />
                   )}
                 </div>
                 <p className="font-medium text-foreground">
-                  {activeTab === 'pendentes' ? 'Nenhuma pendência!' : 'Nenhuma formalização encontrada'}
+                  {activeTab === "pendentes"
+                    ? "Nenhuma pendência!"
+                    : "Nenhuma formalização encontrada"}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {activeTab === 'pendentes'
-                    ? 'Você está em dia com todas as formalizações.'
-                    : 'Crie uma nova formalização para começar.'}
+                  {activeTab === "pendentes"
+                    ? "Você está em dia com todas as formalizações."
+                    : "Crie uma nova formalização para começar."}
                 </p>
-                {activeTab !== 'pendentes' && isStaff && (
+                {activeTab !== "pendentes" && isStaff && (
                   <Button onClick={onCreateNew} className="mt-4" size="sm">
                     <Plus className="h-4 w-4 mr-1.5" />
                     Nova formalização
@@ -162,7 +215,13 @@ export function MobileFormalizacoes({
             </Card>
           ) : (
             formalizacoes.map((f, i) => (
-              <FormalizacaoCard key={f.id} formalizacao={f} basePath={basePath} index={i} showStatusLabel={false} />
+              <FormalizacaoCard
+                key={f.id}
+                formalizacao={f}
+                basePath={basePath}
+                index={i}
+                showStatusLabel={false}
+              />
             ))
           )}
         </TabsContent>

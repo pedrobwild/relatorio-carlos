@@ -20,7 +20,11 @@ interface BoletoUploadButtonProps {
   boletoPath: string | null;
 }
 
-export function BoletoUploadButton({ paymentId, projectId, boletoPath }: BoletoUploadButtonProps) {
+export function BoletoUploadButton({
+  paymentId,
+  projectId,
+  boletoPath,
+}: BoletoUploadButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadMutation = useBoletoUpload();
   const deleteMutation = useBoletoDelete();
@@ -32,7 +36,7 @@ export function BoletoUploadButton({ paymentId, projectId, boletoPath }: BoletoU
     }
     // Reset input
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -68,12 +72,16 @@ export function BoletoUploadButton({ paymentId, projectId, boletoPath }: BoletoU
           <AlertDialogHeader>
             <AlertDialogTitle>Remover boleto?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O boleto será removido permanentemente.
+              Esta ação não pode ser desfeita. O boleto será removido
+              permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Remover
             </AlertDialogAction>
           </AlertDialogFooter>

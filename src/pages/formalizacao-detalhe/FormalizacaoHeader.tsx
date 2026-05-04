@@ -1,11 +1,17 @@
-import { ArrowLeft, Download, Trash2, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft, Download, Trash2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import bwildLogo from '@/assets/bwild-logo-dark.png';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import bwildLogo from "@/assets/bwild-logo-dark.png";
 
 interface FormalizacaoHeaderProps {
   title: string;
@@ -19,8 +25,14 @@ interface FormalizacaoHeaderProps {
 }
 
 export function FormalizacaoHeader({
-  title, status, isAdmin, downloadingPdf, isDeleting,
-  onGoBack, onDownloadPdf, onDelete,
+  title,
+  status,
+  isAdmin,
+  downloadingPdf,
+  isDeleting,
+  onGoBack,
+  onDownloadPdf,
+  onDelete,
 }: FormalizacaoHeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
@@ -38,7 +50,9 @@ export function FormalizacaoHeader({
             </Button>
             <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
             <span className="text-muted-foreground/30 hidden sm:inline">|</span>
-            <span className="text-sm font-medium truncate hidden sm:inline">{title}</span>
+            <span className="text-sm font-medium truncate hidden sm:inline">
+              {title}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -54,10 +68,12 @@ export function FormalizacaoHeader({
               ) : (
                 <Download className="h-4 w-4 sm:mr-2" />
               )}
-              <span className="hidden sm:inline">{downloadingPdf ? 'Gerando...' : 'PDF'}</span>
+              <span className="hidden sm:inline">
+                {downloadingPdf ? "Gerando..." : "PDF"}
+              </span>
             </Button>
 
-            {isAdmin && status !== 'signed' && (
+            {isAdmin && status !== "signed" && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -66,14 +82,20 @@ export function FormalizacaoHeader({
                     className="min-h-[44px] h-11 w-11 text-destructive hover:text-destructive hover:bg-destructive/10"
                     disabled={isDeleting}
                   >
-                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    {isDeleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Excluir formalização</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tem certeza que deseja excluir esta formalização? Esta ação é irreversível e removerá permanentemente o documento e todo o histórico associado.
+                      Tem certeza que deseja excluir esta formalização? Esta
+                      ação é irreversível e removerá permanentemente o documento
+                      e todo o histórico associado.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

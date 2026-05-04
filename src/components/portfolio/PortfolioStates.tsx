@@ -1,10 +1,16 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 import {
-  Building2, Plus, SearchX, AlertTriangle, RefreshCw, WifiOff, Clock,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+  Building2,
+  Plus,
+  SearchX,
+  AlertTriangle,
+  RefreshCw,
+  WifiOff,
+  Clock,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 // ─── KPI Strip Skeleton ──────────────────────────────────────────────────────
 
@@ -35,7 +41,11 @@ export function KpiStripSkeleton() {
 
 export function SidebarSkeleton() {
   return (
-    <div className="space-y-4" aria-busy="true" aria-label="Carregando painel lateral">
+    <div
+      className="space-y-4"
+      aria-busy="true"
+      aria-label="Carregando painel lateral"
+    >
       {/* Inbox skeleton */}
       <div className="rounded-xl border border-border/40 bg-card">
         <div className="p-3 border-b border-border/30 flex items-center gap-2">
@@ -88,7 +98,11 @@ export function SidebarSkeleton() {
 
 export function GridSkeleton({ rows = 6 }: { rows?: number }) {
   return (
-    <div className="space-y-1" aria-busy="true" aria-label="Carregando lista de obras">
+    <div
+      className="space-y-1"
+      aria-busy="true"
+      aria-label="Carregando lista de obras"
+    >
       {/* Header row */}
       <div className="flex items-center gap-4 px-4 py-2.5 rounded-lg bg-muted/30">
         <Skeleton className="h-4 w-4 rounded shrink-0" />
@@ -177,8 +191,8 @@ export function EmptyPortfolio({ onCreateProject }: EmptyPortfolioProps) {
         Nenhuma obra cadastrada
       </h3>
       <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6 leading-relaxed">
-        Crie sua primeira obra para começar a gerenciar cronogramas,
-        pendências, documentos e toda a jornada do cliente em um só lugar.
+        Crie sua primeira obra para começar a gerenciar cronogramas, pendências,
+        documentos e toda a jornada do cliente em um só lugar.
       </p>
       <Button onClick={onCreateProject} className="gap-2">
         <Plus className="h-4 w-4" />
@@ -195,7 +209,10 @@ interface NoFilterResultsProps {
   activeFilterCount: number;
 }
 
-export function NoFilterResults({ onClearFilters, activeFilterCount }: NoFilterResultsProps) {
+export function NoFilterResults({
+  onClearFilters,
+  activeFilterCount,
+}: NoFilterResultsProps) {
   return (
     <div
       className="rounded-xl border border-dashed border-border/50 bg-muted/5 p-12 text-center"
@@ -210,10 +227,14 @@ export function NoFilterResults({ onClearFilters, activeFilterCount }: NoFilterR
       <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-5 leading-relaxed">
         {activeFilterCount > 1
           ? `Os ${activeFilterCount} filtros ativos não retornaram resultados. Ajuste os critérios ou limpe os filtros.`
-          : 'O filtro aplicado não retornou resultados. Ajuste o critério ou limpe o filtro.'
-        }
+          : "O filtro aplicado não retornou resultados. Ajuste o critério ou limpe o filtro."}
       </p>
-      <Button variant="outline" size="sm" onClick={onClearFilters} className="gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onClearFilters}
+        className="gap-2"
+      >
         <RefreshCw className="h-3.5 w-3.5" />
         Limpar todos os filtros
       </Button>
@@ -231,7 +252,9 @@ interface ErrorStateProps {
 export function PortfolioErrorState({ error, onRetry }: ErrorStateProps) {
   const isNetworkError =
     error instanceof Error &&
-    (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed'));
+    (error.message.includes("fetch") ||
+      error.message.includes("network") ||
+      error.message.includes("Failed"));
 
   return (
     <div
@@ -242,17 +265,21 @@ export function PortfolioErrorState({ error, onRetry }: ErrorStateProps) {
         {isNetworkError ? (
           <WifiOff className="h-7 w-7 text-destructive/60" aria-hidden="true" />
         ) : (
-          <AlertTriangle className="h-7 w-7 text-destructive/60" aria-hidden="true" />
+          <AlertTriangle
+            className="h-7 w-7 text-destructive/60"
+            aria-hidden="true"
+          />
         )}
       </div>
       <h3 className="text-sm font-semibold text-foreground mb-1">
-        {isNetworkError ? 'Sem conexão com o servidor' : 'Erro ao carregar obras'}
+        {isNetworkError
+          ? "Sem conexão com o servidor"
+          : "Erro ao carregar obras"}
       </h3>
       <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-5 leading-relaxed">
         {isNetworkError
-          ? 'Verifique sua conexão com a internet e tente novamente.'
-          : 'Ocorreu um problema ao carregar os dados. Tente novamente em alguns instantes.'
-        }
+          ? "Verifique sua conexão com a internet e tente novamente."
+          : "Ocorreu um problema ao carregar os dados. Tente novamente em alguns instantes."}
       </p>
       <Button variant="outline" size="sm" onClick={onRetry} className="gap-2">
         <RefreshCw className="h-3.5 w-3.5" />
@@ -269,22 +296,23 @@ interface StaleDataBannerProps {
   isRefetching?: boolean;
 }
 
-export function StaleDataBanner({ onRefresh, isRefetching }: StaleDataBannerProps) {
+export function StaleDataBanner({
+  onRefresh,
+  isRefetching,
+}: StaleDataBannerProps) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-amber-500/15 bg-amber-500/[0.04] px-4 py-2 text-xs text-amber-700 dark:text-amber-400">
+    <div className="flex items-center gap-2 rounded-lg border border-amber-500/15 bg-amber-500/[0.04] px-4 py-2 text-xs text-amber-700">
       <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-      <span className="flex-1">
-        Os dados podem estar desatualizados.
-      </span>
+      <span className="flex-1">Os dados podem estar desatualizados.</span>
       <Button
         variant="ghost"
         size="sm"
         onClick={onRefresh}
         disabled={isRefetching}
-        className="h-6 px-2 text-xs gap-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-800"
+        className="h-6 px-2 text-xs gap-1.5 text-amber-700 hover:text-amber-800"
       >
-        <RefreshCw className={cn('h-3 w-3', isRefetching && 'animate-spin')} />
-        {isRefetching ? 'Atualizando…' : 'Atualizar'}
+        <RefreshCw className={cn("h-3 w-3", isRefetching && "animate-spin")} />
+        {isRefetching ? "Atualizando…" : "Atualizar"}
       </Button>
     </div>
   );
@@ -297,14 +325,23 @@ interface PartialErrorBannerProps {
   onRetry?: () => void;
 }
 
-export function PartialErrorBanner({ section, onRetry }: PartialErrorBannerProps) {
+export function PartialErrorBanner({
+  section,
+  onRetry,
+}: PartialErrorBannerProps) {
   return (
     <div className="rounded-lg border border-destructive/10 bg-destructive/[0.03] p-3 text-center">
       <p className="text-xs text-muted-foreground">
-        Não foi possível carregar <span className="font-medium text-foreground">{section}</span>.
+        Não foi possível carregar{" "}
+        <span className="font-medium text-foreground">{section}</span>.
       </p>
       {onRetry && (
-        <Button variant="ghost" size="sm" onClick={onRetry} className="mt-1.5 h-6 px-2 text-xs gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onRetry}
+          className="mt-1.5 h-6 px-2 text-xs gap-1"
+        >
           <RefreshCw className="h-3 w-3" />
           Tentar novamente
         </Button>

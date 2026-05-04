@@ -3,7 +3,7 @@
  * Used in FormalizacaoNova to populate the body_md field.
  */
 
-import type { FormalizationType } from '@/types/formalization';
+import type { FormalizationType } from "@/types/formalization";
 
 export interface FormalizationTemplate {
   type: FormalizationType;
@@ -12,11 +12,14 @@ export interface FormalizationTemplate {
   body_md: string;
 }
 
-export const formalizationTemplates: Partial<Record<FormalizationType, FormalizationTemplate>> = {
+export const formalizationTemplates: Partial<
+  Record<FormalizationType, FormalizationTemplate>
+> = {
   budget_item_swap: {
-    type: 'budget_item_swap',
-    title: 'Troca de Item de Orçamento',
-    summary: 'Substituição de item previsto no orçamento original por alternativa equivalente.',
+    type: "budget_item_swap",
+    title: "Troca de Item de Orçamento",
+    summary:
+      "Substituição de item previsto no orçamento original por alternativa equivalente.",
     body_md: `## Troca de Item de Orçamento
 
 ### Item Original
@@ -42,9 +45,9 @@ export const formalizationTemplates: Partial<Record<FormalizationType, Formaliza
 `,
   },
   meeting_minutes: {
-    type: 'meeting_minutes',
-    title: 'Ata de Reunião',
-    summary: 'Registro de decisões e encaminhamentos da reunião.',
+    type: "meeting_minutes",
+    title: "Ata de Reunião",
+    summary: "Registro de decisões e encaminhamentos da reunião.",
     body_md: `## Ata de Reunião
 
 ### Informações Gerais
@@ -79,9 +82,9 @@ export const formalizationTemplates: Partial<Record<FormalizationType, Formaliza
 `,
   },
   exception_custody: {
-    type: 'exception_custody',
-    title: 'Termo de Custódia',
-    summary: 'Registro de custódia temporária de item ou material.',
+    type: "exception_custody",
+    title: "Termo de Custódia",
+    summary: "Registro de custódia temporária de item ou material.",
     body_md: `## Termo de Custódia de Exceção
 
 ### Identificação do Item
@@ -110,9 +113,9 @@ export const formalizationTemplates: Partial<Record<FormalizationType, Formaliza
 `,
   },
   scope_change: {
-    type: 'scope_change',
-    title: 'Alteração de Escopo',
-    summary: 'Registro de alteração no escopo original do projeto.',
+    type: "scope_change",
+    title: "Alteração de Escopo",
+    summary: "Registro de alteração no escopo original do projeto.",
     body_md: `## Alteração de Escopo
 
 ### Descrição da Alteração

@@ -1,5 +1,5 @@
-import { Loader2, ArrowDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Loader2, ArrowDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PullToRefreshIndicatorProps {
   pulling: boolean;
@@ -29,8 +29,8 @@ export function PullToRefreshIndicator({
       ) : (
         <ArrowDown
           className={cn(
-            'h-5 w-5 text-muted-foreground transition-transform duration-200',
-            ready && 'rotate-180 text-primary',
+            "h-5 w-5 text-muted-foreground transition-transform duration-200",
+            ready && "rotate-180 text-primary",
           )}
         />
       )}

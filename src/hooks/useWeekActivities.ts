@@ -7,12 +7,12 @@
  * when the user marks actual start / actual end.
  */
 
-import { useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
-import { toast } from 'sonner';
-import { invalidateActivityQueries } from '@/lib/queryKeys';
+import { useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { toast } from "sonner";
+import { invalidateActivityQueries } from "@/lib/queryKeys";
 
 export interface WeekActivity {
   id: string;
@@ -56,7 +56,7 @@ export interface WeekActivity {
 export interface SubActivityInput {
   description: string;
   planned_start: string; // YYYY-MM-DD
-  planned_end: string;   // YYYY-MM-DD
+  planned_end: string; // YYYY-MM-DD
   /** Opcional: Staff responsável por esta micro-etapa. */
   responsible_user_id?: string | null;
   /**
@@ -68,14 +68,18 @@ export interface SubActivityInput {
 
 interface FetchArgs {
   weekStart: string; // YYYY-MM-DD
-  weekEnd: string;   // YYYY-MM-DD
+  weekEnd: string; // YYYY-MM-DD
 }
 
-async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<WeekActivity[]> {
+async function fetchWeekActivities({
+  weekStart,
+  weekEnd,
+}: FetchArgs): Promise<WeekActivity[]> {
   // Interval intersection: planned_start <= weekEnd AND planned_end >= weekStart
   const { data, error } = await supabase
-    .from('project_activities')
-    .select(`
+    .from("project_activities")
+    .select(
+      `
       id,
       project_id,
       description,
@@ -104,7 +108,8 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       ),
       responsible:responsible_user_id ( id, nome ),
       fornecedor:fornecedor_id ( id, nome )
-    `)
+    `,
+    )
     // Trazemos atividades cujo intervalo PLANEJADO intersecta a semana
     // OU cujo `actual_start` (data real de início) cai dentro da semana.
     // O segundo caso é essencial para o filtro "obras em andamento nesta
@@ -115,14 +120,14 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     .or(
       `and(planned_start.lte.${weekEnd},planned_end.gte.${weekStart}),and(actual_start.gte.${weekStart},actual_start.lte.${weekEnd})`,
     )
-    .order('planned_start', { ascending: true });
+    .order("planned_start", { ascending: true });
 
   if (error) throw error;
 
   return (data ?? []).map((row: any) => ({
     id: row.id,
     project_id: row.project_id,
-    project_name: row.projects?.name ?? 'Obra sem nome',
+    project_name: row.projects?.name ?? "Obra sem nome",
     // Preferimos o nome real do contratante (project_customers.customer_name)
     // pois projects.client_name geralmente vem vazio no banco atual.
     client_name:
@@ -154,9 +159,14 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
 export function useWeekActivities(weekStart: string, weekEnd: string) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const queryKey = ['week-activities', weekStart, weekEnd] as const;
+  const queryKey = ["week-activities", weekStart, weekEnd] as const;
 
-  const { data: activities = [], isLoading, error, refetch } = useQuery({
+  const {
+    data: activities = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey,
     queryFn: () => fetchWeekActivities({ weekStart, weekEnd }),
     enabled: !!user && !!weekStart && !!weekEnd,
@@ -176,9 +186,9 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
       };
     }) => {
       const { error: err } = await supabase
-        .from('project_activities')
+        .from("project_activities")
         .update(updates)
-        .eq('id', activityId);
+        .eq("id", activityId);
       if (err) throw err;
       return { activityId, updates };
     },
@@ -195,12 +205,14 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     },
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(queryKey, ctx.prev);
-      toast.error('Erro ao salvar atividade');
+      toast.error("Erro ao salvar atividade");
     },
     onSuccess: (_, vars) => {
-      const projectId = activities.find((a) => a.id === vars.activityId)?.project_id;
+      const projectId = activities.find(
+        (a) => a.id === vars.activityId,
+      )?.project_id;
       if (projectId) invalidateActivityQueries(projectId);
-      toast.success('Atividade atualizada');
+      toast.success("Atividade atualizada");
     },
   });
 
@@ -218,12 +230,12 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
       parent: WeekActivity;
       subs: SubActivityInput[];
     }) => {
-      if (!user) throw new Error('Sessão expirada');
+      if (!user) throw new Error("Sessão expirada");
       // Pega o sort_order da mãe para inserir os children logo após (incremento decimal-like via +1, +2...)
       const { data: parentRow, error: pErr } = await supabase
-        .from('project_activities')
-        .select('sort_order, etapa, weight')
-        .eq('id', parent.id)
+        .from("project_activities")
+        .select("sort_order, etapa, weight")
+        .eq("id", parent.id)
         .single();
       if (pErr) throw pErr;
 
@@ -235,7 +247,9 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
       // sistema de progresso continua funcionando porque as views de cliente
       // filtram por parent_activity_id IS NULL.
       const childWeight =
-        subs.length > 0 ? Math.max(0.01, Number((parent.weight / subs.length).toFixed(2))) : 0;
+        subs.length > 0
+          ? Math.max(0.01, Number((parent.weight / subs.length).toFixed(2)))
+          : 0;
 
       const rows = subs.map((s, idx) => ({
         project_id: parent.project_id,
@@ -253,25 +267,27 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
         responsible_user_id:
           s.responsible_user_id !== undefined
             ? s.responsible_user_id
-            : parent.responsible_user_id ?? null,
+            : (parent.responsible_user_id ?? null),
         // Mesma lógica para o prestador (fornecedor): herda da mãe quando
         // o usuário não escolhe explicitamente uma opção na linha.
         fornecedor_id:
           s.fornecedor_id !== undefined
             ? s.fornecedor_id
-            : parent.fornecedor_id ?? null,
+            : (parent.fornecedor_id ?? null),
       }));
 
-      const { error: insErr } = await supabase.from('project_activities').insert(rows);
+      const { error: insErr } = await supabase
+        .from("project_activities")
+        .insert(rows);
       if (insErr) throw insErr;
       return { parentId: parent.id, count: subs.length };
     },
     onError: (err: any) => {
-      toast.error(err?.message ?? 'Erro ao criar micro-etapas');
+      toast.error(err?.message ?? "Erro ao criar micro-etapas");
     },
     onSuccess: (res, vars) => {
       invalidateActivityQueries(vars.parent.project_id);
-      queryClient.invalidateQueries({ queryKey: ['week-activities'] });
+      queryClient.invalidateQueries({ queryKey: ["week-activities"] });
       toast.success(`${res.count} micro-etapa(s) criada(s)`);
     },
   });
@@ -282,18 +298,18 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
   const mergeSubActivities = useMutation({
     mutationFn: async (parentId: string) => {
       const { error: err } = await supabase
-        .from('project_activities')
+        .from("project_activities")
         .delete()
-        .eq('parent_activity_id', parentId);
+        .eq("parent_activity_id", parentId);
       if (err) throw err;
       return parentId;
     },
-    onError: () => toast.error('Erro ao mesclar micro-etapas'),
+    onError: () => toast.error("Erro ao mesclar micro-etapas"),
     onSuccess: (parentId) => {
       const projectId = activities.find((a) => a.id === parentId)?.project_id;
       if (projectId) invalidateActivityQueries(projectId);
-      queryClient.invalidateQueries({ queryKey: ['week-activities'] });
-      toast.success('Micro-etapas removidas');
+      queryClient.invalidateQueries({ queryKey: ["week-activities"] });
+      toast.success("Micro-etapas removidas");
     },
   });
 
@@ -301,18 +317,18 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
   const removeSubActivity = useMutation({
     mutationFn: async (subId: string) => {
       const { error: err } = await supabase
-        .from('project_activities')
+        .from("project_activities")
         .delete()
-        .eq('id', subId);
+        .eq("id", subId);
       if (err) throw err;
       return subId;
     },
-    onError: () => toast.error('Erro ao remover micro-etapa'),
+    onError: () => toast.error("Erro ao remover micro-etapa"),
     onSuccess: (subId) => {
       const projectId = activities.find((a) => a.id === subId)?.project_id;
       if (projectId) invalidateActivityQueries(projectId);
-      queryClient.invalidateQueries({ queryKey: ['week-activities'] });
-      toast.success('Micro-etapa removida');
+      queryClient.invalidateQueries({ queryKey: ["week-activities"] });
+      toast.success("Micro-etapa removida");
     },
   });
 
@@ -351,7 +367,9 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
         return a.planned_end.localeCompare(b.planned_end);
       });
     }
-    return Array.from(map.values()).sort((x, y) => x.project_name.localeCompare(y.project_name, 'pt-BR'));
+    return Array.from(map.values()).sort((x, y) =>
+      x.project_name.localeCompare(y.project_name, "pt-BR"),
+    );
   }, [activities]);
 
   return {
@@ -372,7 +390,8 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     breakIntoSubActivities: (parent: WeekActivity, subs: SubActivityInput[]) =>
       breakIntoSubActivities.mutateAsync({ parent, subs }),
     isBreaking: breakIntoSubActivities.isPending,
-    mergeSubActivities: (parentId: string) => mergeSubActivities.mutateAsync(parentId),
+    mergeSubActivities: (parentId: string) =>
+      mergeSubActivities.mutateAsync(parentId),
     isMerging: mergeSubActivities.isPending,
     removeSubActivity: (subId: string) => removeSubActivity.mutateAsync(subId),
     isRemovingSub: removeSubActivity.isPending,

@@ -5,17 +5,17 @@
  * Falls back to `false` for unknown keys.
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
-import type { FeatureFlagKey } from '@/types/permissions';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import type { FeatureFlagKey } from "@/types/permissions";
 
-const FLAG_QUERY_KEY = ['feature-flags'] as const;
+const FLAG_QUERY_KEY = ["feature-flags"] as const;
 
 async function fetchFlags(): Promise<Record<string, boolean>> {
   const { data, error } = await supabase
-    .from('feature_flags')
-    .select('key, enabled');
+    .from("feature_flags")
+    .select("key, enabled");
 
   if (error) throw error;
 

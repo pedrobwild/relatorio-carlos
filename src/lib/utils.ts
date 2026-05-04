@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function safeJsonParse<T>(value: unknown, fallback: T): T {
   if (value == null) return fallback;
-  if (typeof value !== 'string') return fallback;
+  if (typeof value !== "string") return fallback;
   try {
     return JSON.parse(value) as T;
   } catch {

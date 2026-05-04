@@ -12,26 +12,26 @@
  * const prefs = useTablePreferences('painel-obras', columns);
  * <DataTableSettings prefs={prefs} columns={columns} />
  */
-import { Settings2, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+import { Settings2, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import type { DataTableColumn, TableDensity } from './DataTable';
-import type { UseTablePreferencesReturn } from './useTablePreferences';
+} from "@/components/ui/select";
+import type { DataTableColumn, TableDensity } from "./DataTable";
+import type { UseTablePreferencesReturn } from "./useTablePreferences";
 
 interface DataTableSettingsProps<T> {
   prefs: UseTablePreferencesReturn;
@@ -44,18 +44,18 @@ interface DataTableSettingsProps<T> {
   showZebra?: boolean;
   /** Mostra seção de colunas. */
   showColumns?: boolean;
-  align?: 'start' | 'center' | 'end';
+  align?: "start" | "center" | "end";
 }
 
 const densityLabels: Record<TableDensity, string> = {
-  compact: 'Compacta',
-  comfortable: 'Confortável',
-  spacious: 'Espaçada',
+  compact: "Compacta",
+  comfortable: "Confortável",
+  spacious: "Espaçada",
 };
 
 function getColumnLabel<T>(col: DataTableColumn<T>): string {
   if (col.label) return col.label;
-  if (typeof col.header === 'string') return col.header;
+  if (typeof col.header === "string") return col.header;
   return col.id;
 }
 
@@ -66,7 +66,7 @@ export function DataTableSettings<T>({
   showDensity = true,
   showZebra = true,
   showColumns = true,
-  align = 'end',
+  align = "end",
 }: DataTableSettingsProps<T>) {
   const visibleSet = new Set(prefs.visibleColumnIds);
 
@@ -75,7 +75,7 @@ export function DataTableSettings<T>({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          size={triggerLabel ? 'sm' : 'icon'}
+          size={triggerLabel ? "sm" : "icon"}
           className="gap-2"
           aria-label="Personalizar tabela"
         >
@@ -106,7 +106,10 @@ export function DataTableSettings<T>({
         <div className="px-4 py-3 space-y-3">
           {showZebra && (
             <div className="flex items-center justify-between">
-              <Label htmlFor="dt-zebra" className="text-sm font-normal cursor-pointer">
+              <Label
+                htmlFor="dt-zebra"
+                className="text-sm font-normal cursor-pointer"
+              >
                 Listras alternadas
               </Label>
               <Switch
@@ -128,7 +131,9 @@ export function DataTableSettings<T>({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(['compact', 'comfortable', 'spacious'] as TableDensity[]).map((d) => (
+                  {(
+                    ["compact", "comfortable", "spacious"] as TableDensity[]
+                  ).map((d) => (
                     <SelectItem key={d} value={d}>
                       {densityLabels[d]}
                     </SelectItem>
@@ -155,8 +160,10 @@ export function DataTableSettings<T>({
                       <li key={col.id}>
                         <label
                           className={
-                            'flex items-center gap-2 px-1 py-1.5 rounded-md text-sm cursor-pointer hover:bg-accent/50 ' +
-                            (disabled ? 'opacity-60 cursor-not-allowed hover:bg-transparent' : '')
+                            "flex items-center gap-2 px-1 py-1.5 rounded-md text-sm cursor-pointer hover:bg-accent/50 " +
+                            (disabled
+                              ? "opacity-60 cursor-not-allowed hover:bg-transparent"
+                              : "")
                           }
                         >
                           <Checkbox
@@ -164,7 +171,9 @@ export function DataTableSettings<T>({
                             disabled={disabled}
                             onCheckedChange={() => prefs.toggleColumn(col.id)}
                           />
-                          <span className="flex-1 truncate">{getColumnLabel(col)}</span>
+                          <span className="flex-1 truncate">
+                            {getColumnLabel(col)}
+                          </span>
                           {disabled && (
                             <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                               Fixa

@@ -1,15 +1,23 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface GenericFormEditorProps {
-  onComplete: (data: { title: string; summary: string; body_md: string; data: Record<string, unknown> }) => void;
+  onComplete: (data: {
+    title: string;
+    summary: string;
+    body_md: string;
+    data: Record<string, unknown>;
+  }) => void;
   initialData: { title: string; summary: string; body_md: string };
 }
 
-export function GenericFormEditor({ onComplete, initialData }: GenericFormEditorProps) {
+export function GenericFormEditor({
+  onComplete,
+  initialData,
+}: GenericFormEditorProps) {
   const [title, setTitle] = useState(initialData.title);
   const [summary, setSummary] = useState(initialData.summary);
   const [bodyMd, setBodyMd] = useState(initialData.body_md);
@@ -64,7 +72,8 @@ export function GenericFormEditor({ onComplete, initialData }: GenericFormEditor
             className="min-h-[300px] font-mono text-sm"
           />
           <p className="text-xs text-muted-foreground">
-            O template já vem pré-preenchido. Substitua os campos entre [colchetes] com as informações reais.
+            O template já vem pré-preenchido. Substitua os campos entre
+            [colchetes] com as informações reais.
           </p>
         </div>
       </div>

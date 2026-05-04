@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from "react";
 
-const DRAFT_PREFIX = 'bwild-draft-';
+const DRAFT_PREFIX = "bwild-draft-";
 
 interface UseFormDraftOptions<T> {
   /** Unique key for this form (e.g. 'create-nc-{projectId}') */
@@ -69,9 +69,12 @@ export function useFormDraft<T extends Record<string, unknown>>({
     };
   }, [values, storageKey, debounceMs, initialValues]);
 
-  const updateField = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
-    setValues(prev => ({ ...prev, [field]: value }));
-  }, []);
+  const updateField = useCallback(
+    <K extends keyof T>(field: K, value: T[K]) => {
+      setValues((prev) => ({ ...prev, [field]: value }));
+    },
+    [],
+  );
 
   const clearDraft = useCallback(() => {
     try {

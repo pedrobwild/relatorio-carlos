@@ -1,8 +1,8 @@
-import { ArrowRight, Sparkles } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
-import { JourneyStage } from '@/hooks/useProjectJourney';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Sparkles } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { JourneyStage } from "@/hooks/useProjectJourney";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface JourneyProgressBarProps {
   stages: JourneyStage[];
@@ -10,25 +10,36 @@ interface JourneyProgressBarProps {
   onNextClick?: () => void;
 }
 
-export function JourneyProgressBar({ stages, activeStageId, onNextClick }: JourneyProgressBarProps) {
+export function JourneyProgressBar({
+  stages,
+  activeStageId,
+  onNextClick,
+}: JourneyProgressBarProps) {
   const totalStages = stages.length;
-  const completedCount = stages.filter(s => s.status === 'completed').length;
-  const progressPct = totalStages > 0 ? Math.round((completedCount / totalStages) * 100) : 0;
+  const completedCount = stages.filter((s) => s.status === "completed").length;
+  const progressPct =
+    totalStages > 0 ? Math.round((completedCount / totalStages) * 100) : 0;
   const allDone = completedCount === totalStages;
 
   // Find current stage (first non-completed)
-  const currentStage = stages.find(s => s.status !== 'completed');
-  const currentIndex = currentStage ? stages.indexOf(currentStage) : totalStages;
+  const currentStage = stages.find((s) => s.status !== "completed");
+  const currentIndex = currentStage
+    ? stages.indexOf(currentStage)
+    : totalStages;
 
   // Find next stage after the active one
-  const activeIndex = stages.findIndex(s => s.id === activeStageId);
-  const nextStage = activeIndex >= 0 && activeIndex < totalStages - 1
-    ? stages[activeIndex + 1]
-    : null;
+  const activeIndex = stages.findIndex((s) => s.id === activeStageId);
+  const nextStage =
+    activeIndex >= 0 && activeIndex < totalStages - 1
+      ? stages[activeIndex + 1]
+      : null;
 
   // Only show "next step" hint when looking at a completed stage
-  const activeStage = stages.find(s => s.id === activeStageId);
-  const showNextHint = activeStage?.status === 'completed' && nextStage && nextStage.status !== 'completed';
+  const activeStage = stages.find((s) => s.id === activeStageId);
+  const showNextHint =
+    activeStage?.status === "completed" &&
+    nextStage &&
+    nextStage.status !== "completed";
 
   return (
     <div className="space-y-3">
@@ -48,7 +59,9 @@ export function JourneyProgressBar({ stages, activeStageId, onNextClick }: Journ
               Concluída!
             </motion.span>
           ) : (
-            <>Etapa {currentIndex + 1} de {totalStages}</>
+            <>
+              Etapa {currentIndex + 1} de {totalStages}
+            </>
           )}
         </span>
       </div>
@@ -65,7 +78,7 @@ export function JourneyProgressBar({ stages, activeStageId, onNextClick }: Journ
             onClick={onNextClick}
             className={cn(
               "hidden md:flex w-full items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5",
-              "hover:bg-primary/10 transition-colors text-left group cursor-pointer"
+              "hover:bg-primary/10 transition-colors text-left group cursor-pointer",
             )}
           >
             <div className="p-1.5 rounded-full bg-primary/10 shrink-0">
@@ -73,7 +86,9 @@ export function JourneyProgressBar({ stages, activeStageId, onNextClick }: Journ
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-primary">Próxima etapa</p>
-              <p className="text-sm font-semibold text-foreground truncate">{nextStage.name}</p>
+              <p className="text-sm font-semibold text-foreground truncate">
+                {nextStage.name}
+              </p>
             </div>
             <ArrowRight className="h-4 w-4 text-primary shrink-0" />
           </motion.button>

@@ -25,7 +25,10 @@ export type AmplitudeEvent =
   | "next_action_displayed"
   | "next_action_clicked";
 
-export type AmplitudeProps = Record<string, string | number | boolean | null | undefined>;
+export type AmplitudeProps = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
 
 const API_KEY = import.meta.env.VITE_AMPLITUDE_API_KEY;
 const isClient = typeof window !== "undefined";
@@ -50,7 +53,7 @@ export function initAmplitudeIfConsented(): void {
   if (!API_KEY) {
     if (import.meta.env.DEV && !initialized) {
       console.warn(
-        "[amplitude] VITE_AMPLITUDE_API_KEY não configurada — analytics desativado."
+        "[amplitude] VITE_AMPLITUDE_API_KEY não configurada — analytics desativado.",
       );
     }
     return;
@@ -89,7 +92,10 @@ export function initAmplitudeIfConsented(): void {
  * Dispara um evento. No-op se o consentimento não foi concedido,
  * a chave não existe, ou rodando em SSR/test.
  */
-export function trackAmplitude(event: AmplitudeEvent, props?: AmplitudeProps): void {
+export function trackAmplitude(
+  event: AmplitudeEvent,
+  props?: AmplitudeProps,
+): void {
   if (!isClient || !API_KEY) return;
   if (!isAllowed("analytics")) return;
   // Garante init lazy (caso o consentimento tenha sido dado depois do boot).
@@ -98,7 +104,8 @@ export function trackAmplitude(event: AmplitudeEvent, props?: AmplitudeProps): v
   try {
     amplitude.track(event, props);
   } catch (err) {
-    if (import.meta.env.DEV) console.warn("[amplitude] track falhou", event, err);
+    if (import.meta.env.DEV)
+      console.warn("[amplitude] track falhou", event, err);
   }
 }
 

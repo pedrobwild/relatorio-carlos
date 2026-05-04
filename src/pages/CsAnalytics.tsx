@@ -8,15 +8,19 @@
  *
  * Para a operação (CRUD/lista filtrável), ver `CsOperacional`.
  */
-import { useNavigate } from 'react-router-dom';
-import { ListChecks } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { ListChecks } from "lucide-react";
 
-import { PageContainer } from '@/components/layout/PageContainer';
-import { Button } from '@/components/ui/button';
-import { PageHeader, PageSkeleton } from '@/components/ui-premium';
+import { PageContainer } from "@/components/layout/PageContainer";
+import { Button } from "@/components/ui/button";
+import { PageHeader, PageSkeleton } from "@/components/ui-premium";
 
-import { useCsTickets, type CsTicketSeverity, type CsTicketStatus } from '@/hooks/useCsTickets';
-import { CsDashboard } from '@/components/cs/CsDashboard';
+import {
+  useCsTickets,
+  type CsTicketSeverity,
+  type CsTicketStatus,
+} from "@/hooks/useCsTickets";
+import { CsDashboard } from "@/components/cs/CsDashboard";
 
 export default function CsAnalytics() {
   const navigate = useNavigate();
@@ -34,10 +38,10 @@ export default function CsAnalytics() {
     severity?: CsTicketSeverity | null;
   }) => {
     const params = new URLSearchParams();
-    if (status) params.set('status', status);
-    if (severity) params.set('severity', severity);
+    if (status) params.set("status", status);
+    if (severity) params.set("severity", severity);
     const qs = params.toString();
-    navigate(`/gestao/cs/operacional${qs ? `?${qs}` : ''}`);
+    navigate(`/gestao/cs/operacional${qs ? `?${qs}` : ""}`);
   };
 
   return (
@@ -50,7 +54,7 @@ export default function CsAnalytics() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/gestao/cs/operacional')}
+            onClick={() => navigate("/gestao/cs/operacional")}
           >
             <ListChecks className="h-4 w-4 mr-1.5" />
             Ir para operacional

@@ -1,4 +1,4 @@
-import type { JourneyStage } from '@/hooks/useProjectJourney';
+import type { JourneyStage } from "@/hooks/useProjectJourney";
 
 /**
  * Shared visual state derivation for journey stage presentation.
@@ -12,12 +12,12 @@ import type { JourneyStage } from '@/hooks/useProjectJourney';
  */
 
 export type VisualState =
-  | 'completed'
-  | 'current'
-  | 'next'
-  | 'blocked'
-  | 'validating'
-  | 'future';
+  | "completed"
+  | "current"
+  | "next"
+  | "blocked"
+  | "validating"
+  | "future";
 
 /* ─── Context-aware (needs full stage list) ─── */
 
@@ -26,36 +26,39 @@ export function deriveVisualState(
   index: number,
   stages: JourneyStage[],
 ): VisualState {
-  if (stage.status === 'completed') return 'completed';
+  if (stage.status === "completed") return "completed";
 
-  const firstNonCompletedIdx = stages.findIndex(s => s.status !== 'completed');
+  const firstNonCompletedIdx = stages.findIndex(
+    (s) => s.status !== "completed",
+  );
 
-  if (stage.status === 'in_progress' || stage.status === 'waiting_action') {
+  if (stage.status === "in_progress" || stage.status === "waiting_action") {
     const isVisualCurrent = index === firstNonCompletedIdx;
-    if (stage.status === 'waiting_action' && isVisualCurrent) return 'validating';
-    if (isVisualCurrent) return 'current';
+    if (stage.status === "waiting_action" && isVisualCurrent)
+      return "validating";
+    if (isVisualCurrent) return "current";
     // Subsequent active stages
-    const prevCompleted = index > 0 && stages[index - 1].status === 'completed';
-    if (prevCompleted) return 'next';
-    return 'future';
+    const prevCompleted = index > 0 && stages[index - 1].status === "completed";
+    if (prevCompleted) return "next";
+    return "future";
   }
 
-  if (stage.status === 'pending') {
-    if (index > 0 && stages[index - 1].status === 'completed') return 'next';
-    if (stage.dependencies_text) return 'blocked';
-    if (index > 0) return 'blocked'; // previous stage not completed
-    return 'future';
+  if (stage.status === "pending") {
+    if (index > 0 && stages[index - 1].status === "completed") return "next";
+    if (stage.dependencies_text) return "blocked";
+    if (index > 0) return "blocked"; // previous stage not completed
+    return "future";
   }
 
-  return 'future';
+  return "future";
 }
 
 /* ─── Standalone (single stage, no list context) ─── */
 
 export function deriveVisualStateStandalone(stage: JourneyStage): VisualState {
-  if (stage.status === 'completed') return 'completed';
-  if (stage.status === 'waiting_action') return 'validating';
-  if (stage.status === 'in_progress') return 'current';
-  if (stage.dependencies_text) return 'blocked';
-  return 'future';
+  if (stage.status === "completed") return "completed";
+  if (stage.status === "waiting_action") return "validating";
+  if (stage.status === "in_progress") return "current";
+  if (stage.dependencies_text) return "blocked";
+  return "future";
 }

@@ -1,12 +1,12 @@
-import { useMemo } from 'react';
-import { ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { parseLocalDate } from '@/lib/activityStatus';
-import { journeyRepo, type ProjectWithCustomer } from '@/infra/repositories';
-import { useQuery } from '@tanstack/react-query';
-import { calcWeightedProgress } from '@/lib/progressCalc';
+import { useMemo } from "react";
+import { ChevronRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { parseLocalDate } from "@/lib/activityStatus";
+import { journeyRepo, type ProjectWithCustomer } from "@/infra/repositories";
+import { useQuery } from "@tanstack/react-query";
+import { calcWeightedProgress } from "@/lib/progressCalc";
 
 type ProjectData = ProjectWithCustomer & { is_project_phase?: boolean };
 
@@ -16,7 +16,10 @@ interface ProjectCardSummaryProps {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────
-function safeFormat(dateStr: string | null | undefined, fmt = 'dd/MM/yy'): string | null {
+function safeFormat(
+  dateStr: string | null | undefined,
+  fmt = "dd/MM/yy",
+): string | null {
   if (!dateStr) return null;
   try {
     return format(parseLocalDate(dateStr), fmt, { locale: ptBR });
@@ -28,7 +31,7 @@ function safeFormat(dateStr: string | null | undefined, fmt = 'dd/MM/yy'): strin
 /** Fetch current journey stage name for a project */
 function useCurrentJourneyStage(projectId: string, enabled: boolean) {
   return useQuery({
-    queryKey: ['project-current-stage', projectId],
+    queryKey: ["project-current-stage", projectId],
     queryFn: () => journeyRepo.getCurrentStageName(projectId),
     enabled,
     staleTime: 5 * 60 * 1000,
@@ -38,7 +41,7 @@ function useCurrentJourneyStage(projectId: string, enabled: boolean) {
 /** Fetch current cronograma activity (etapa) for obra projects */
 function useCurrentObraEtapa(projectId: string, enabled: boolean) {
   return useQuery({
-    queryKey: ['project-current-etapa', projectId],
+    queryKey: ["project-current-etapa", projectId],
     queryFn: () => journeyRepo.getCurrentObraEtapa(projectId),
     enabled,
     staleTime: 5 * 60 * 1000,
@@ -48,7 +51,7 @@ function useCurrentObraEtapa(projectId: string, enabled: boolean) {
 // ── Fetch activity-based progress ──────────────────────────────────────
 function useActivityProgress(projectId: string, enabled: boolean) {
   return useQuery({
-    queryKey: ['project-activity-progress', projectId],
+    queryKey: ["project-activity-progress", projectId],
     queryFn: async () => {
       const data = await journeyRepo.getActivityProgressData(projectId);
       if (data.length === 0) return 0;
@@ -60,46 +63,71 @@ function useActivityProgress(projectId: string, enabled: boolean) {
 }
 
 // ── Component ──────────────────────────────────────────────────────────
-export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps) {
+export function ProjectCardSummary({
+  project,
+  onClick,
+}: ProjectCardSummaryProps) {
   const isProjectPhase = !!project.is_project_phase;
-  const isActive = project.status === 'active';
+  const isActive = project.status === "active";
 
   // Fetch current stage info
-  const { data: journeyStageName } = useCurrentJourneyStage(project.id, isProjectPhase && isActive);
-  const { data: obraEtapa } = useCurrentObraEtapa(project.id, !isProjectPhase && isActive);
-  
-  // Fetch activity-based progress (unified calculation)
-  const { data: progress = 0 } = useActivityProgress(project.id, !isProjectPhase && isActive);
+  const { data: journeyStageName } = useCurrentJourneyStage(
+    project.id,
+    isProjectPhase && isActive,
+  );
+  const { data: obraEtapa } = useCurrentObraEtapa(
+    project.id,
+    !isProjectPhase && isActive,
+  );
 
-  const isCompletedJourney = isProjectPhase && project.status === 'completed';
+  // Fetch activity-based progress (unified calculation)
+  const { data: progress = 0 } = useActivityProgress(
+    project.id,
+    !isProjectPhase && isActive,
+  );
+
+  const isCompletedJourney = isProjectPhase && project.status === "completed";
 
   // Current stage label
   const currentStageLabel = useMemo(() => {
     if (isCompletedJourney) return null;
     if (!isActive) return null;
     if (isProjectPhase) {
-      return journeyStageName ? `Etapa atual: ${journeyStageName}` : 'Em acompanhamento';
+      return journeyStageName
+        ? `Etapa atual: ${journeyStageName}`
+        : "Em acompanhamento";
     }
-    return obraEtapa ? `Etapa atual: ${obraEtapa}` : 'Em acompanhamento';
-  }, [isActive, isProjectPhase, isCompletedJourney, journeyStageName, obraEtapa]);
+    return obraEtapa ? `Etapa atual: ${obraEtapa}` : "Em acompanhamento";
+  }, [
+    isActive,
+    isProjectPhase,
+    isCompletedJourney,
+    journeyStageName,
+    obraEtapa,
+  ]);
 
   // Time info
   const timeInfo = useMemo(() => {
-    if (isCompletedJourney) return 'Jornada de Projeto Concluída';
+    if (isCompletedJourney) return "Jornada de Projeto Concluída";
     if (isProjectPhase) {
       const start = safeFormat(project.planned_start_date);
       const end = safeFormat(project.planned_end_date);
-      if (!start && !end) return 'Datas em alinhamento';
+      if (!start && !end) return "Datas em alinhamento";
       if (start && end) return `Período estimado: ${start} – ${end}`;
       if (end) return `Entrega estimada: ${end}`;
-      return 'Datas em alinhamento';
+      return "Datas em alinhamento";
     }
     const end = safeFormat(project.planned_end_date);
     if (end) return `Entrega estimada: ${end}`;
     const start = safeFormat(project.planned_start_date);
     if (start) return `Início estimado: ${start}`;
-    return 'Datas em alinhamento';
-  }, [isProjectPhase, isCompletedJourney, project.planned_start_date, project.planned_end_date]);
+    return "Datas em alinhamento";
+  }, [
+    isProjectPhase,
+    isCompletedJourney,
+    project.planned_start_date,
+    project.planned_end_date,
+  ]);
 
   // Sub-label (unit / code)
   const subLabel = project.unit_name || undefined;
@@ -108,7 +136,12 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
     <Card
       className="cursor-pointer hover:shadow-md transition-all group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 outline-none"
       onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       tabIndex={0}
       role="button"
       aria-label={`Abrir detalhes de ${project.name}`}
@@ -121,7 +154,9 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
               {project.name}
             </h3>
             {subLabel && (
-              <p className="text-caption text-muted-foreground truncate">{subLabel}</p>
+              <p className="text-caption text-muted-foreground truncate">
+                {subLabel}
+              </p>
             )}
           </div>
           <ChevronRight
@@ -154,7 +189,9 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
         )}
 
         {isCompletedJourney && (
-          <p className="text-tiny font-medium text-[hsl(var(--success))]">{timeInfo}</p>
+          <p className="text-tiny font-medium text-[hsl(var(--success))]">
+            {timeInfo}
+          </p>
         )}
 
         {!isCompletedJourney && (isProjectPhase || !isActive) && (

@@ -1,7 +1,7 @@
-import { Shield, CheckCircle, XCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatusBadge } from './StatusBadge';
-import type { RlsCheckResult } from '@/infra/repositories/diagnostics.repository';
+import { Shield, CheckCircle, XCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "./StatusBadge";
+import type { RlsCheckResult } from "@/infra/repositories/diagnostics.repository";
 
 interface RlsChecksCardProps {
   rls: RlsCheckResult | null;
@@ -26,7 +26,7 @@ export const RlsChecksCard = ({ rls }: RlsChecksCardProps) => (
             {rls.checks.map((check, idx) => (
               <div
                 key={idx}
-                className={`p-2 rounded-md border ${check.passed ? 'border-green-200 bg-green-50 dark:bg-green-950/20' : 'border-red-200 bg-red-50 dark:bg-red-950/20'}`}
+                className={`p-2 rounded-md border ${check.passed ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}
               >
                 <div className="flex items-center gap-2">
                   {check.passed ? (
@@ -36,7 +36,9 @@ export const RlsChecksCard = ({ rls }: RlsChecksCardProps) => (
                   )}
                   <span className="text-sm font-medium">{check.name}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{check.details}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {check.details}
+                </p>
               </div>
             ))}
           </div>

@@ -6,26 +6,49 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
-import { useTeamContacts, TeamContact as TeamContactData } from "@/hooks/useTeamContacts";
+import {
+  useTeamContacts,
+  TeamContact as TeamContactData,
+} from "@/hooks/useTeamContacts";
 import { TeamContactEditModal } from "@/components/TeamContactEditModal";
 import { ProgressSection } from "@/components/header/ProgressSection";
 import { IdentityBar } from "@/components/header/IdentityBar";
-import { ProjectStateSection, MilestonesBar } from "@/components/header/ProjectStateSection";
+import {
+  ProjectStateSection,
+  MilestonesBar,
+} from "@/components/header/ProjectStateSection";
 import { MobileReportHeader } from "@/components/header/MobileReportHeader";
 import { DateChangeAlert } from "@/components/header/DateChangeAlert";
 import { ScheduleInconsistencyAlert } from "@/components/header/ScheduleInconsistencyAlert";
-import { useProjectMetrics, useMilestoneItems } from "@/components/header/useReportHeaderData";
-import type { ReportHeaderProps, MilestoneKey } from "@/components/header/types";
+import {
+  useProjectMetrics,
+  useMilestoneItems,
+} from "@/components/header/useReportHeaderData";
+import type {
+  ReportHeaderProps,
+  MilestoneKey,
+} from "@/components/header/types";
 
 // Re-export types for backward compatibility
 export type { MilestoneKey } from "@/components/header/types";
 
 const ReportHeader = ({
-  projectName, unitName, clientName, startDate, endDate, reportDate, activities,
-  isProjectPhase = false, milestoneDates, canEditMilestones = false, onMilestoneDateChange,
+  projectName,
+  unitName,
+  clientName,
+  startDate,
+  endDate,
+  reportDate,
+  activities,
+  isProjectPhase = false,
+  milestoneDates,
+  canEditMilestones = false,
+  onMilestoneDateChange,
 }: ReportHeaderProps) => {
   const [showDateChangeAlert, setShowDateChangeAlert] = useState(false);
-  const [editingContact, setEditingContact] = useState<TeamContactData | null>(null);
+  const [editingContact, setEditingContact] = useState<TeamContactData | null>(
+    null,
+  );
 
   const dateChangeInfo = {
     originalDate: "2025-09-14",
@@ -34,14 +57,23 @@ const ReportHeader = ({
     contractClause: "5.1.2",
   };
 
-  const effectiveEndDate = endDate === dateChangeInfo.originalDate ? dateChangeInfo.newDate : endDate;
+  const effectiveEndDate =
+    endDate === dateChangeInfo.originalDate ? dateChangeInfo.newDate : endDate;
 
   const earliestStartFromActivities = useMemo(() => {
-    const starts = activities.map(a => a.plannedStart).filter((d): d is string => !!d).sort();
+    const starts = activities
+      .map((a) => a.plannedStart)
+      .filter((d): d is string => !!d)
+      .sort();
     return starts[0] ?? null;
   }, [activities]);
   const effectiveStartDate = earliestStartFromActivities ?? startDate;
-  const projectMetrics = useProjectMetrics(effectiveStartDate, effectiveEndDate, reportDate, activities);
+  const projectMetrics = useProjectMetrics(
+    effectiveStartDate,
+    effectiveEndDate,
+    reportDate,
+    activities,
+  );
   const milestoneItems = useMilestoneItems(milestoneDates);
 
   const { paths, projectId } = useProjectNavigation();
@@ -52,15 +84,24 @@ const ReportHeader = ({
   const navigate = useNavigate();
 
   const {
-    contacts: dbContacts, upsertContact, isUpserting, uploadPhoto, isUploading, roleLabels,
+    contacts: dbContacts,
+    upsertContact,
+    isUpserting,
+    uploadPhoto,
+    isUploading,
+    roleLabels,
   } = useTeamContacts(projectId);
 
-  const otherProjects = useMemo(() => projects.filter(p => p.id !== projectId), [projects, projectId]);
+  const otherProjects = useMemo(
+    () => projects.filter((p) => p.id !== projectId),
+    [projects, projectId],
+  );
 
-  const handleProjectSwitch = (targetProjectId: string) => navigate(`/obra/${targetProjectId}/relatorio`);
+  const handleProjectSwitch = (targetProjectId: string) =>
+    navigate(`/obra/${targetProjectId}/relatorio`);
   const handleGoBack = () => {
     if (window.history.length > 1) navigate(-1);
-    else navigate(isStaff ? '/gestao' : '/minhas-obras', { replace: true });
+    else navigate(isStaff ? "/gestao" : "/minhas-obras", { replace: true });
   };
 
   const showMetrics = !(isProjectPhase && !isStaff);
@@ -176,10 +217,12 @@ const ReportHeader = ({
         open={!!editingContact}
         onOpenChange={(open) => !open && setEditingContact(null)}
         contact={editingContact}
-        roleLabel={editingContact ? roleLabels[editingContact.role_type] : ''}
-        onSave={async (data) => { await upsertContact(data); }}
+        roleLabel={editingContact ? roleLabels[editingContact.role_type] : ""}
+        onSave={async (data) => {
+          await upsertContact(data);
+        }}
         onUploadPhoto={async (file) => {
-          if (!editingContact) throw new Error('No contact selected');
+          if (!editingContact) throw new Error("No contact selected");
           return uploadPhoto({ file, roleType: editingContact.role_type });
         }}
         isSaving={isUpserting}

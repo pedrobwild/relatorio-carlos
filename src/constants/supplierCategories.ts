@@ -12,59 +12,62 @@
 
 // ── Types ────────────────────────────────────────────────────
 
-export const SUPPLIER_TYPES = ['prestadores', 'produtos'] as const;
+export const SUPPLIER_TYPES = ["prestadores", "produtos"] as const;
 export type SupplierType = (typeof SUPPLIER_TYPES)[number];
 
 export const SUPPLIER_TYPE_LABELS: Record<SupplierType, string> = {
-  prestadores: 'Prestadores',
-  produtos: 'Produtos',
+  prestadores: "Prestadores",
+  produtos: "Produtos",
 };
 
 // ── Subcategories ────────────────────────────────────────────
 
 const PRESTADORES_SUBCATEGORIES = [
-  'Marcenaria',
-  'Empreita',
-  'Vidraçaria Box',
-  'Vidraçaria Sacada',
-  'Eletricista',
-  'Pintor',
-  'Instalador de Piso',
-  'Técnico Ar-Condicionado',
-  'Gesseiro',
-  'Serviços Gerais',
-  'Limpeza',
-  'Pedreiro',
-  'Instalador Fechadura Digital',
-  'Cortinas',
-  'Marmoraria',
-  'Jardim Vertical',
+  "Marcenaria",
+  "Empreita",
+  "Vidraçaria Box",
+  "Vidraçaria Sacada",
+  "Eletricista",
+  "Pintor",
+  "Instalador de Piso",
+  "Técnico Ar-Condicionado",
+  "Gesseiro",
+  "Serviços Gerais",
+  "Limpeza",
+  "Pedreiro",
+  "Instalador Fechadura Digital",
+  "Cortinas",
+  "Marmoraria",
+  "Jardim Vertical",
 ] as const;
 
 const PRODUTOS_SUBCATEGORIES = [
-  'Eletrodomésticos',
-  'Enxoval',
-  'Espelhos',
-  'Decoração',
-  'Revestimentos',
-  'Luminárias',
-  'Cadeiras e Mesas',
-  'Camas',
-  'Sofás e Poltronas',
-  'Tapeçaria',
-  'Torneiras e Cubas',
-  'Materiais Elétricos',
-  'Materiais de Construção',
-  'Acessórios Banheiro',
-  'Fechadura Digital',
-  'Tintas',
+  "Eletrodomésticos",
+  "Enxoval",
+  "Espelhos",
+  "Decoração",
+  "Revestimentos",
+  "Luminárias",
+  "Cadeiras e Mesas",
+  "Camas",
+  "Sofás e Poltronas",
+  "Tapeçaria",
+  "Torneiras e Cubas",
+  "Materiais Elétricos",
+  "Materiais de Construção",
+  "Acessórios Banheiro",
+  "Fechadura Digital",
+  "Tintas",
 ] as const;
 
 export type PrestadorSubcategory = (typeof PRESTADORES_SUBCATEGORIES)[number];
 export type ProdutoSubcategory = (typeof PRODUTOS_SUBCATEGORIES)[number];
 export type SupplierSubcategory = PrestadorSubcategory | ProdutoSubcategory;
 
-export const SUPPLIER_SUBCATEGORIES_BY_TYPE: Record<SupplierType, readonly string[]> = {
+export const SUPPLIER_SUBCATEGORIES_BY_TYPE: Record<
+  SupplierType,
+  readonly string[]
+> = {
   prestadores: PRESTADORES_SUBCATEGORIES,
   produtos: PRODUTOS_SUBCATEGORIES,
 };
@@ -72,7 +75,9 @@ export const SUPPLIER_SUBCATEGORIES_BY_TYPE: Record<SupplierType, readonly strin
 // ── Helpers ──────────────────────────────────────────────────
 
 /** Get subcategories for a given type */
-export function getSubcategoriesByType(type: SupplierType | string | null | undefined): readonly string[] {
+export function getSubcategoriesByType(
+  type: SupplierType | string | null | undefined,
+): readonly string[] {
   if (!type || !isValidSupplierType(type)) return [];
   return SUPPLIER_SUBCATEGORIES_BY_TYPE[type as SupplierType];
 }
@@ -83,9 +88,14 @@ export function isValidSupplierType(value: string): value is SupplierType {
 }
 
 /** Validate a subcategory against its parent type */
-export function isValidSupplierSubcategory(type: string, subcategory: string): boolean {
+export function isValidSupplierSubcategory(
+  type: string,
+  subcategory: string,
+): boolean {
   if (!isValidSupplierType(type)) return false;
-  return SUPPLIER_SUBCATEGORIES_BY_TYPE[type as SupplierType].includes(subcategory);
+  return SUPPLIER_SUBCATEGORIES_BY_TYPE[type as SupplierType].includes(
+    subcategory,
+  );
 }
 
 /** Flat list of all subcategories (useful for search) */
@@ -94,8 +104,12 @@ export function getAllSupplierSubcategories(): string[] {
 }
 
 /** Infer supplier_type from a subcategory value */
-export function inferTypeFromSubcategory(subcategory: string): SupplierType | null {
-  if ((PRESTADORES_SUBCATEGORIES as readonly string[]).includes(subcategory)) return 'prestadores';
-  if ((PRODUTOS_SUBCATEGORIES as readonly string[]).includes(subcategory)) return 'produtos';
+export function inferTypeFromSubcategory(
+  subcategory: string,
+): SupplierType | null {
+  if ((PRESTADORES_SUBCATEGORIES as readonly string[]).includes(subcategory))
+    return "prestadores";
+  if ((PRODUTOS_SUBCATEGORIES as readonly string[]).includes(subcategory))
+    return "produtos";
   return null;
 }

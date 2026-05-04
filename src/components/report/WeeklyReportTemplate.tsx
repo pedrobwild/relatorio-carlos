@@ -57,7 +57,7 @@ const WeeklyReportTemplate = ({
     (updatedData: WeeklyReportData) => {
       onSaveReport?.(updatedData);
     },
-    [onSaveReport]
+    [onSaveReport],
   );
 
   const handleSaveAndClose = useCallback(
@@ -65,7 +65,7 @@ const WeeklyReportTemplate = ({
       setIsEditing(false);
       onSaveReport?.(updatedData);
     },
-    [onSaveReport]
+    [onSaveReport],
   );
 
   // If editing, show the editor
@@ -89,13 +89,17 @@ const WeeklyReportTemplate = ({
         <div className="max-w-[840px] mx-auto">
           <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="px-4 py-2.5 bg-primary-dark">
-              <h3 className="text-base font-semibold text-white">Relatório da Semana {safeData.weekNumber}</h3>
+              <h3 className="text-base font-semibold text-white">
+                Relatório da Semana {safeData.weekNumber}
+              </h3>
             </div>
             <div className="p-6 sm:p-8 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
                 <Clock className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h4 className="text-lg font-semibold mb-2">Relatório em preparação</h4>
+              <h4 className="text-lg font-semibold mb-2">
+                Relatório em preparação
+              </h4>
               <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
                 {isStaff
                   ? "Este relatório ainda não foi preenchido. Clique no botão abaixo para começar a editar."
@@ -119,7 +123,11 @@ const WeeklyReportTemplate = ({
       <div className="max-w-[840px] mx-auto space-y-6">
         {isStaff && (
           <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditing(true)}
+            >
               <Edit className="w-4 h-4 mr-2" />
               Editar Relatório
             </Button>
@@ -141,7 +149,10 @@ const WeeklyReportTemplate = ({
         )}
 
         {safeData.risksAndIssues.length > 0 && (
-          <RisksIssuesSection issues={safeData.risksAndIssues} isStaff={isStaff} />
+          <RisksIssuesSection
+            issues={safeData.risksAndIssues}
+            isStaff={isStaff}
+          />
         )}
 
         {safeData.incidents.length > 0 && (
@@ -151,7 +162,6 @@ const WeeklyReportTemplate = ({
         {safeData.clientDecisions.length > 0 && (
           <ClientDecisionsSection decisions={safeData.clientDecisions} />
         )}
-
 
         <div className="pt-2 border-t border-border/50">
           <ReportFooter data={safeData} />

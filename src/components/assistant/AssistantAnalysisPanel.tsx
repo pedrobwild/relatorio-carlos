@@ -33,7 +33,9 @@ export function AssistantAnalysisPanel({ analysis, rows, onAsk }: Props) {
 
   if (!hasContent && !rows?.length) return null;
 
-  const primaryViz = visualizations?.find((v) => v.type !== "kpi" && v.type !== "table");
+  const primaryViz = visualizations?.find(
+    (v) => v.type !== "kpi" && v.type !== "table",
+  );
 
   return (
     <div className="space-y-4">
@@ -42,7 +44,9 @@ export function AssistantAnalysisPanel({ analysis, rows, onAsk }: Props) {
           <Lightbulb className="h-3.5 w-3.5" />
           Análise automática
         </p>
-        {typeof confidence === "number" && <ConfidenceBadge confidence={confidence} />}
+        {typeof confidence === "number" && (
+          <ConfidenceBadge confidence={confidence} />
+        )}
       </div>
 
       {metrics.length > 0 && (
@@ -55,7 +59,9 @@ export function AssistantAnalysisPanel({ analysis, rows, onAsk }: Props) {
 
       {primaryViz && rows.length > 1 && (
         <div className="rounded-md border bg-card/40 p-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2">{primaryViz.title}</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            {primaryViz.title}
+          </p>
           <InsightVisualization hint={primaryViz} rows={rows} />
         </div>
       )}
@@ -68,7 +74,9 @@ export function AssistantAnalysisPanel({ analysis, rows, onAsk }: Props) {
         </div>
       )}
 
-      {data_quality && data_quality.length > 0 && <DataQualityWarnings warnings={data_quality} />}
+      {data_quality && data_quality.length > 0 && (
+        <DataQualityWarnings warnings={data_quality} />
+      )}
 
       {limitations && limitations.length > 0 && (
         <div className="rounded-md border border-border bg-muted/40 p-3">

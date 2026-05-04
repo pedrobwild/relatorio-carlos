@@ -6,16 +6,16 @@
  * navegador). Mantém retrocompatibilidade quando a chave não existe — o
  * padrão é apenas in-app habilitado.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
-export type ScheduleAlertChannel = 'inApp' | 'email' | 'push';
+export type ScheduleAlertChannel = "inApp" | "email" | "push";
 
 export interface ScheduleAlertPrefs {
   enabled: boolean;
   channels: Record<ScheduleAlertChannel, boolean>;
 }
 
-const STORAGE_KEY = 'schedule_alert_prefs_v1';
+const STORAGE_KEY = "schedule_alert_prefs_v1";
 
 const DEFAULT_PREFS: ScheduleAlertPrefs = {
   enabled: true,
@@ -23,7 +23,7 @@ const DEFAULT_PREFS: ScheduleAlertPrefs = {
 };
 
 function readPrefs(): ScheduleAlertPrefs {
-  if (typeof window === 'undefined') return DEFAULT_PREFS;
+  if (typeof window === "undefined") return DEFAULT_PREFS;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFS;
@@ -45,8 +45,8 @@ export function useScheduleAlertPrefs() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) setPrefs(readPrefs());
     };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const persist = useCallback((next: ScheduleAlertPrefs) => {

@@ -1,25 +1,40 @@
-import { useState } from 'react';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useState } from "react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
-  CalendarIcon, Check, CheckCircle2, Clock, Sparkles, X,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { journeyCopy } from '@/constants/journeyCopy';
+  CalendarIcon,
+  Check,
+  CheckCircle2,
+  Clock,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { journeyCopy } from "@/constants/journeyCopy";
 import {
   useStageDates,
   useCreateStageDate,
   useProposeStageDate,
   useConfirmStageDate,
-} from '@/hooks/useStageDates';
+} from "@/hooks/useStageDates";
 
-function TimePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function TimePicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <Input
       type="time"
@@ -32,7 +47,7 @@ function TimePicker({ value, onChange }: { value: string; onChange: (v: string) 
 }
 
 function buildISO(date: Date, time: string): string {
-  const [h, m] = time.split(':').map(Number);
+  const [h, m] = time.split(":").map(Number);
   const d = new Date(date);
   d.setHours(h || 0, m || 0, 0, 0);
   return d.toISOString();
@@ -46,47 +61,61 @@ interface MeetingCTAProps {
   ctaText?: string;
 }
 
-export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCTAProps) {
-  const stageKey = stageName.toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9_]/g, '');
+export function MeetingCTA({
+  stageName,
+  projectId,
+  isAdmin,
+  ctaText,
+}: MeetingCTAProps) {
+  const stageKey = stageName
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9_]/g, "");
   const { data: dates, isLoading } = useStageDates(projectId, stageKey);
   const createDate = useCreateStageDate(projectId);
   const propose = useProposeStageDate(projectId);
   const confirm = useConfirmStageDate(projectId);
 
-  const [mode, setMode] = useState<'idle' | 'propose' | 'confirm'>('idle');
+  const [mode, setMode] = useState<"idle" | "propose" | "confirm">("idle");
   const [pickerDate, setPickerDate] = useState<Date | undefined>();
-  const [pickerTime, setPickerTime] = useState('09:00');
-  const [notes, setNotes] = useState('');
+  const [pickerTime, setPickerTime] = useState("09:00");
+  const [notes, setNotes] = useState("");
 
-  const meetingDate = dates?.find((d) => d.date_type === 'meeting');
+  const meetingDate = dates?.find((d) => d.date_type === "meeting");
 
   const isConfirmed = !!meetingDate?.bwild_confirmed_at;
   const isProposed = !!meetingDate?.customer_proposed_at && !isConfirmed;
-  const isPending = propose.isPending || confirm.isPending || createDate.isPending;
+  const isPending =
+    propose.isPending || confirm.isPending || createDate.isPending;
 
   const handleOpenPropose = () => {
     if (meetingDate?.customer_proposed_at) {
       setPickerDate(parseISO(meetingDate.customer_proposed_at));
-      setPickerTime(format(parseISO(meetingDate.customer_proposed_at), 'HH:mm'));
+      setPickerTime(
+        format(parseISO(meetingDate.customer_proposed_at), "HH:mm"),
+      );
     } else {
       setPickerDate(undefined);
-      setPickerTime('09:00');
+      setPickerTime("09:00");
     }
-    setNotes('');
-    setMode('propose');
+    setNotes("");
+    setMode("propose");
   };
 
   const handleOpenConfirm = () => {
-    const ref = meetingDate?.customer_proposed_at || meetingDate?.bwild_confirmed_at;
+    const ref =
+      meetingDate?.customer_proposed_at || meetingDate?.bwild_confirmed_at;
     if (ref) {
       setPickerDate(parseISO(ref));
-      setPickerTime(format(parseISO(ref), 'HH:mm'));
+      setPickerTime(format(parseISO(ref), "HH:mm"));
     } else {
       setPickerDate(undefined);
-      setPickerTime('09:00');
+      setPickerTime("09:00");
     }
-    setNotes('');
-    setMode('confirm');
+    setNotes("");
+    setMode("confirm");
   };
 
   const handleSubmit = async () => {
@@ -106,32 +135,43 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
       createDate.mutate(
         {
           stage_key: stageKey,
-          date_type: 'meeting',
+          date_type: "meeting",
           title,
           customer_proposed_at: iso,
           notes: notes || undefined,
         },
-        { onSuccess: () => setMode('idle'), ...errorHandler },
+        { onSuccess: () => setMode("idle"), ...errorHandler },
       );
       return;
     }
 
-    if (mode === 'propose') {
+    if (mode === "propose") {
       propose.mutate(
-        { stage_date_id: meetingDate.id, datetime: iso, notes: notes || undefined },
-        { onSuccess: () => setMode('idle'), ...errorHandler },
+        {
+          stage_date_id: meetingDate.id,
+          datetime: iso,
+          notes: notes || undefined,
+        },
+        { onSuccess: () => setMode("idle"), ...errorHandler },
       );
-    } else if (mode === 'confirm') {
+    } else if (mode === "confirm") {
       confirm.mutate(
-        { stage_date_id: meetingDate.id, datetime: iso, notes: notes || undefined },
-        { onSuccess: () => setMode('idle'), ...errorHandler },
+        {
+          stage_date_id: meetingDate.id,
+          datetime: iso,
+          notes: notes || undefined,
+        },
+        { onSuccess: () => setMode("idle"), ...errorHandler },
       );
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card" aria-busy="true">
+      <div
+        className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card"
+        aria-busy="true"
+      >
         <Skeleton className="h-5 w-5 rounded-full" />
         <div className="flex-1 space-y-1.5">
           <Skeleton className="h-4 w-32" />
@@ -148,18 +188,34 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
         <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[hsl(var(--success-light))] border border-[hsl(var(--success)/0.2)]">
           <CheckCircle2 className="h-5 w-5 text-[hsl(var(--success))] shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[hsl(var(--success))]">{journeyCopy.dates.meeting.confirmed}</p>
+            <p className="text-sm font-semibold text-[hsl(var(--success))]">
+              {journeyCopy.dates.meeting.confirmed}
+            </p>
             <p className="text-xs text-[hsl(var(--success))]">
-              {format(parseISO(meetingDate.bwild_confirmed_at!), "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+              {format(
+                parseISO(meetingDate.bwild_confirmed_at!),
+                "EEEE, d 'de' MMMM 'às' HH:mm",
+                { locale: ptBR },
+              )}
             </p>
           </div>
           {!isAdmin && (
-            <Button variant="outline" size="sm" className="h-11 text-xs shrink-0 min-w-[44px]" onClick={handleOpenPropose}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-11 text-xs shrink-0 min-w-[44px]"
+              onClick={handleOpenPropose}
+            >
               {journeyCopy.dates.meeting.changeSuggestion}
             </Button>
           )}
           {isAdmin && (
-            <Button variant="outline" size="sm" className="h-11 text-xs shrink-0 min-w-[44px]" onClick={handleOpenConfirm}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-11 text-xs shrink-0 min-w-[44px]"
+              onClick={handleOpenConfirm}
+            >
               {journeyCopy.dates.meeting.adjust}
             </Button>
           )}
@@ -167,16 +223,20 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
 
         {/* Show divergence if customer proposed a different date */}
         {meetingDate.customer_proposed_at &&
-          meetingDate.customer_proposed_at !== meetingDate.bwild_confirmed_at && (
-          <p className="text-xs text-muted-foreground px-1">
-            💡 {journeyCopy.dates.divergence.customerSuggested}{' '}
-            <span className="font-medium">
-              {format(parseISO(meetingDate.customer_proposed_at), "dd/MM 'às' HH:mm")}
-            </span>
-          </p>
-        )}
+          meetingDate.customer_proposed_at !==
+            meetingDate.bwild_confirmed_at && (
+            <p className="text-xs text-muted-foreground px-1">
+              💡 {journeyCopy.dates.divergence.customerSuggested}{" "}
+              <span className="font-medium">
+                {format(
+                  parseISO(meetingDate.customer_proposed_at),
+                  "dd/MM 'às' HH:mm",
+                )}
+              </span>
+            </p>
+          )}
 
-        {mode !== 'idle' && (
+        {mode !== "idle" && (
           <DateTimeForm
             mode={mode}
             pickerDate={pickerDate}
@@ -189,7 +249,7 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
             onTimeChange={setPickerTime}
             onNotesChange={setNotes}
             onSubmit={handleSubmit}
-            onCancel={() => setMode('idle')}
+            onCancel={() => setMode("idle")}
           />
         )}
       </div>
@@ -203,17 +263,33 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
         <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[hsl(var(--warning-light))] border border-[hsl(var(--warning)/0.2)]">
           <Clock className="h-5 w-5 text-[hsl(var(--warning))] shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[hsl(var(--warning))]">{journeyCopy.dates.meeting.awaitingConfirmation}</p>
+            <p className="text-sm font-semibold text-[hsl(var(--warning))]">
+              {journeyCopy.dates.meeting.awaitingConfirmation}
+            </p>
             <p className="text-xs text-[hsl(var(--warning))]">
-              Sugestão: {format(parseISO(meetingDate.customer_proposed_at!), "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+              Sugestão:{" "}
+              {format(
+                parseISO(meetingDate.customer_proposed_at!),
+                "EEEE, d 'de' MMMM 'às' HH:mm",
+                { locale: ptBR },
+              )}
             </p>
           </div>
           {!isAdmin ? (
-            <Button variant="outline" size="sm" className="h-11 text-xs shrink-0 min-w-[44px]" onClick={handleOpenPropose}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-11 text-xs shrink-0 min-w-[44px]"
+              onClick={handleOpenPropose}
+            >
               {journeyCopy.dates.meeting.changeSuggestion}
             </Button>
           ) : (
-            <Button size="sm" className="h-11 text-xs shrink-0 gap-1.5 min-w-[44px]" onClick={handleOpenConfirm}>
+            <Button
+              size="sm"
+              className="h-11 text-xs shrink-0 gap-1.5 min-w-[44px]"
+              onClick={handleOpenConfirm}
+            >
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
               {journeyCopy.dates.meeting.confirmDate}
             </Button>
@@ -226,7 +302,7 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
           </p>
         )}
 
-        {mode !== 'idle' && (
+        {mode !== "idle" && (
           <DateTimeForm
             mode={mode}
             pickerDate={pickerDate}
@@ -239,7 +315,7 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
             onTimeChange={setPickerTime}
             onNotesChange={setNotes}
             onSubmit={handleSubmit}
-            onCancel={() => setMode('idle')}
+            onCancel={() => setMode("idle")}
           />
         )}
       </div>
@@ -249,8 +325,11 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
   // ─── No date yet ───
   return (
     <div className="space-y-2">
-      {mode === 'idle' ? (
-        <Button className="w-full md:w-auto min-h-[44px] gap-2" onClick={handleOpenPropose}>
+      {mode === "idle" ? (
+        <Button
+          className="w-full md:w-auto min-h-[44px] gap-2"
+          onClick={handleOpenPropose}
+        >
           <Sparkles className="h-4 w-4" />
           {ctaText || journeyCopy.dates.meeting.chooseDateCta}
         </Button>
@@ -267,7 +346,7 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
           onTimeChange={setPickerTime}
           onNotesChange={setNotes}
           onSubmit={handleSubmit}
-          onCancel={() => setMode('idle')}
+          onCancel={() => setMode("idle")}
         />
       )}
     </div>
@@ -290,7 +369,7 @@ function DateTimeForm({
   onSubmit,
   onCancel,
 }: {
-  mode: 'propose' | 'confirm';
+  mode: "propose" | "confirm";
   pickerDate: Date | undefined;
   pickerTime: string;
   notes: string;
@@ -306,18 +385,27 @@ function DateTimeForm({
   return (
     <div className="p-4 rounded-xl border border-border/60 bg-card shadow-[var(--shadow-sm)] space-y-3">
       <p className="text-xs font-medium text-foreground">
-        {mode === 'propose' ? journeyCopy.dates.form.proposeTitle : journeyCopy.dates.form.confirmTitle}
+        {mode === "propose"
+          ? journeyCopy.dates.form.proposeTitle
+          : journeyCopy.dates.form.confirmTitle}
       </p>
 
       <div className="flex items-center gap-2 flex-wrap">
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className={cn(
-              "h-11 min-h-[44px] text-xs flex-1 min-w-[140px] justify-start",
-              !pickerDate && "text-muted-foreground"
-            )} disabled={isPending}>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-11 min-h-[44px] text-xs flex-1 min-w-[140px] justify-start",
+                !pickerDate && "text-muted-foreground",
+              )}
+              disabled={isPending}
+            >
               <CalendarIcon className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-              {pickerDate ? format(pickerDate, "dd/MM/yyyy") : journeyCopy.dates.form.chooseDate}
+              {pickerDate
+                ? format(pickerDate, "dd/MM/yyyy")
+                : journeyCopy.dates.form.chooseDate}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -342,7 +430,7 @@ function DateTimeForm({
         disabled={isPending}
       />
 
-      {mode === 'propose' && !isStaff && hasConfirmed && (
+      {mode === "propose" && !isStaff && hasConfirmed && (
         <p className="text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
           ✨ {journeyCopy.dates.meeting.customerMicrocopy}
         </p>
@@ -360,9 +448,17 @@ function DateTimeForm({
           ) : (
             <Check className="h-3.5 w-3.5" />
           )}
-          {mode === 'propose' ? journeyCopy.dates.form.submitPropose : journeyCopy.dates.form.submitConfirm}
+          {mode === "propose"
+            ? journeyCopy.dates.form.submitPropose
+            : journeyCopy.dates.form.submitConfirm}
         </Button>
-        <Button variant="ghost" size="sm" className="h-11 min-h-[44px]" onClick={onCancel} disabled={isPending}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-11 min-h-[44px]"
+          onClick={onCancel}
+          disabled={isPending}
+        >
           <X className="h-3.5 w-3.5 mr-1" /> {journeyCopy.dates.form.cancel}
         </Button>
       </div>

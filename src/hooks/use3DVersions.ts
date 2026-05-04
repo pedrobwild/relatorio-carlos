@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export interface Version3D {
   id: string;
@@ -36,14 +36,14 @@ export interface Comment3D {
   updated_at: string;
 }
 
-const BUCKET = 'project-documents';
+const BUCKET = "project-documents";
 const MAX_FILES_PER_VERSION = 30;
 
 export function queryKeys3D(projectId: string | undefined) {
   return {
-    versions: ['3d-versions', projectId] as const,
-    images: (versionId: string) => ['3d-images', versionId] as const,
-    comments: (imageId: string) => ['3d-comments', imageId] as const,
+    versions: ["3d-versions", projectId] as const,
+    images: (versionId: string) => ["3d-images", versionId] as const,
+    comments: (imageId: string) => ["3d-comments", imageId] as const,
   };
 }
 
@@ -51,13 +51,14 @@ export function queryKeys3D(projectId: string | undefined) {
  * Validates files before upload: PNG only, size limit, count limit.
  */
 function validateFiles(files: File[]): string | null {
-  if (files.length === 0) return 'Selecione ao menos uma imagem.';
-  if (files.length > MAX_FILES_PER_VERSION) return `Máximo de ${MAX_FILES_PER_VERSION} imagens por versão.`;
+  if (files.length === 0) return "Selecione ao menos uma imagem.";
+  if (files.length > MAX_FILES_PER_VERSION)
+    return `Máximo de ${MAX_FILES_PER_VERSION} imagens por versão.`;
 
   for (const file of files) {
     // Accept .png extension OR image/png MIME (some systems set wrong MIME)
-    const isPngExt = file.name.toLowerCase().endsWith('.png');
-    const isPngMime = file.type === 'image/png';
+    const isPngExt = file.name.toLowerCase().endsWith(".png");
+    const isPngMime = file.type === "image/png";
     if (!isPngExt && !isPngMime) {
       return `Arquivo "${file.name}" não é PNG. Apenas .png é aceito.`;
     }
@@ -77,41 +78,44 @@ export function use3DVersions(projectId: string | undefined) {
     queryKey: keys.versions,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_3d_versions')
-        .select('*')
-        .eq('project_id', projectId!)
-        .eq('stage_key', 'projeto_3d')
-        .order('version_number', { ascending: false });
+        .from("project_3d_versions")
+        .select("*")
+        .eq("project_id", projectId!)
+        .eq("stage_key", "projeto_3d")
+        .order("version_number", { ascending: false });
       if (error) throw error;
-      return (data || []).map((v: any) => ({ ...v, images: [] })) as Version3D[];
+      return (data || []).map((v: any) => ({
+        ...v,
+        images: [],
+      })) as Version3D[];
     },
     enabled: !!projectId && !!user,
   });
 
   const createVersionMutation = useMutation({
     mutationFn: async (files: File[]) => {
-      if (!projectId || !user) throw new Error('Missing context');
+      if (!projectId || !user) throw new Error("Missing context");
 
       const validationErr = validateFiles(files);
       if (validationErr) throw new Error(validationErr);
 
       // 1. Get next version number (DB unique constraint protects against races)
       const { data: existing } = await supabase
-        .from('project_3d_versions')
-        .select('version_number')
-        .eq('project_id', projectId)
-        .eq('stage_key', 'projeto_3d')
-        .order('version_number', { ascending: false })
+        .from("project_3d_versions")
+        .select("version_number")
+        .eq("project_id", projectId)
+        .eq("stage_key", "projeto_3d")
+        .order("version_number", { ascending: false })
         .limit(1);
 
       const nextVersion = (existing?.[0]?.version_number ?? 0) + 1;
 
       // 2. Create version record
       const { data: version, error: vErr } = await supabase
-        .from('project_3d_versions')
+        .from("project_3d_versions")
         .insert({
           project_id: projectId,
-          stage_key: 'projeto_3d',
+          stage_key: "projeto_3d",
           version_number: nextVersion,
           created_by: user.id,
         })
@@ -120,8 +124,8 @@ export function use3DVersions(projectId: string | undefined) {
 
       if (vErr) {
         // Race condition: retry with incremented number
-        if (vErr.code === '23505') {
-          throw new Error('Conflito de versão. Tente novamente.');
+        if (vErr.code === "23505") {
+          throw new Error("Conflito de versão. Tente novamente.");
         }
         throw vErr;
       }
@@ -129,14 +133,18 @@ export function use3DVersions(projectId: string | undefined) {
       // 3. Upload files and create image records; cleanup on failure
       const uploadedPaths: string[] = [];
       try {
-        const imageInserts: Array<{ version_id: string; storage_path: string; sort_order: number }> = [];
+        const imageInserts: Array<{
+          version_id: string;
+          storage_path: string;
+          sort_order: number;
+        }> = [];
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const storagePath = `projects/${projectId}/3d/${version.id}/${Date.now()}_${i}.png`;
 
           const { error: uploadErr } = await supabase.storage
             .from(BUCKET)
-            .upload(storagePath, file, { contentType: 'image/png' });
+            .upload(storagePath, file, { contentType: "image/png" });
 
           if (uploadErr) throw uploadErr;
           uploadedPaths.push(storagePath);
@@ -150,29 +158,40 @@ export function use3DVersions(projectId: string | undefined) {
 
         if (imageInserts.length > 0) {
           const { error: imgErr } = await supabase
-            .from('project_3d_images')
+            .from("project_3d_images")
             .insert(imageInserts);
           if (imgErr) throw imgErr;
         }
       } catch (uploadError) {
         // Cleanup: remove uploaded files
         if (uploadedPaths.length > 0) {
-          try { await supabase.storage.from(BUCKET).remove(uploadedPaths); } catch { /* ignore cleanup failure */ }
+          try {
+            await supabase.storage.from(BUCKET).remove(uploadedPaths);
+          } catch {
+            /* ignore cleanup failure */
+          }
         }
         // Cleanup: remove orphan version record
-        try { await supabase.from('project_3d_versions').delete().eq('id', version.id); } catch { /* ignore cleanup failure */ }
+        try {
+          await supabase
+            .from("project_3d_versions")
+            .delete()
+            .eq("id", version.id);
+        } catch {
+          /* ignore cleanup failure */
+        }
         throw uploadError;
       }
 
       return version;
     },
     onSuccess: () => {
-      toast.success('Versão criada com sucesso');
+      toast.success("Versão criada com sucesso");
       qc.invalidateQueries({ queryKey: keys.versions });
     },
     onError: (err: any) => {
-      console.error('[3D Versions] Upload error:', err);
-      toast.error(err?.message || 'Erro ao criar versão');
+      console.error("[3D Versions] Upload error:", err);
+      toast.error(err?.message || "Erro ao criar versão");
     },
   });
 
@@ -192,10 +211,10 @@ export function use3DImages(versionId: string | undefined) {
     queryKey: keys.images(versionId!),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_3d_images')
-        .select('*')
-        .eq('version_id', versionId!)
-        .order('sort_order');
+        .from("project_3d_images")
+        .select("*")
+        .eq("version_id", versionId!)
+        .order("sort_order");
       if (error) throw error;
 
       // Bucket is private — use signed URLs
@@ -207,13 +226,13 @@ export function use3DImages(versionId: string | undefined) {
       const urlMap = new Map<string, string>();
       if (!signError && signedUrls) {
         signedUrls.forEach((item) => {
-          if (item.signedUrl) urlMap.set(item.path ?? '', item.signedUrl);
+          if (item.signedUrl) urlMap.set(item.path ?? "", item.signedUrl);
         });
       }
 
       const images: Image3D[] = (data || []).map((img: any) => ({
         ...img,
-        url: urlMap.get(img.storage_path) ?? '',
+        url: urlMap.get(img.storage_path) ?? "",
       }));
 
       return images;
@@ -232,21 +251,26 @@ export function use3DComments(imageId: string | undefined) {
     queryKey: keys.comments(imageId!),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_3d_comments')
-        .select('*')
-        .eq('image_id', imageId!)
-        .order('created_at');
+        .from("project_3d_comments")
+        .select("*")
+        .eq("image_id", imageId!)
+        .order("created_at");
       if (error) throw error;
 
-      const userIds = [...new Set((data || []).map((c: any) => c.author_user_id))];
+      const userIds = [
+        ...new Set((data || []).map((c: any) => c.author_user_id)),
+      ];
       let profileMap: Record<string, string> = {};
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, display_name')
-          .in('user_id', userIds);
+          .from("profiles")
+          .select("user_id, display_name")
+          .in("user_id", userIds);
         profileMap = Object.fromEntries(
-          (profiles || []).map((p: any) => [p.user_id, p.display_name || 'Usuário'])
+          (profiles || []).map((p: any) => [
+            p.user_id,
+            p.display_name || "Usuário",
+          ]),
         );
       }
 
@@ -254,16 +278,21 @@ export function use3DComments(imageId: string | undefined) {
         ...c,
         x_percent: Number(c.x_percent),
         y_percent: Number(c.y_percent),
-        author_name: profileMap[c.author_user_id] || 'Usuário',
+        author_name: profileMap[c.author_user_id] || "Usuário",
       })) as Comment3D[];
     },
     enabled: !!imageId,
   });
 
   const addComment = useMutation({
-    mutationFn: async (params: { imageId: string; text: string; x: number; y: number }) => {
-      if (!user) throw new Error('Not authenticated');
-      const { error } = await supabase.from('project_3d_comments').insert({
+    mutationFn: async (params: {
+      imageId: string;
+      text: string;
+      x: number;
+      y: number;
+    }) => {
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await supabase.from("project_3d_comments").insert({
         image_id: params.imageId,
         author_user_id: user.id,
         text: params.text,
@@ -275,18 +304,18 @@ export function use3DComments(imageId: string | undefined) {
     onSuccess: () => {
       if (imageId) qc.invalidateQueries({ queryKey: keys.comments(imageId) });
     },
-    onError: () => toast.error('Erro ao salvar comentário'),
+    onError: () => toast.error("Erro ao salvar comentário"),
   });
 
   const updateComment = useMutation({
     mutationFn: async (params: { commentId: string; x: number; y: number }) => {
       const { error } = await supabase
-        .from('project_3d_comments')
+        .from("project_3d_comments")
         .update({
           x_percent: clamp(params.x),
           y_percent: clamp(params.y),
         })
-        .eq('id', params.commentId);
+        .eq("id", params.commentId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -297,16 +326,16 @@ export function use3DComments(imageId: string | undefined) {
   const deleteComment = useMutation({
     mutationFn: async (commentId: string) => {
       const { error } = await supabase
-        .from('project_3d_comments')
+        .from("project_3d_comments")
         .delete()
-        .eq('id', commentId);
+        .eq("id", commentId);
       if (error) throw error;
     },
     onSuccess: () => {
       if (imageId) qc.invalidateQueries({ queryKey: keys.comments(imageId) });
-      toast.success('Comentário removido');
+      toast.success("Comentário removido");
     },
-    onError: () => toast.error('Erro ao remover comentário'),
+    onError: () => toast.error("Erro ao remover comentário"),
   });
 
   return {

@@ -29,7 +29,8 @@ interface MobileListItemProps {
 const toneClasses: Record<MobileListItemTone, string> = {
   default: "",
   warning: "bg-warning/5 hover:bg-warning/10 active:bg-warning/15",
-  destructive: "bg-destructive/5 hover:bg-destructive/10 active:bg-destructive/15",
+  destructive:
+    "bg-destructive/5 hover:bg-destructive/10 active:bg-destructive/15",
   success: "bg-success/5 hover:bg-success/10 active:bg-success/15",
 };
 
@@ -61,7 +62,11 @@ export function MobileListItem({
   className,
 }: MobileListItemProps) {
   const isInteractive = (!!onClick || !!href) && !disabled;
-  const Component: React.ElementType = href ? "a" : isInteractive ? "button" : "div";
+  const Component: React.ElementType = href
+    ? "a"
+    : isInteractive
+      ? "button"
+      : "div";
 
   const componentProps: React.HTMLAttributes<HTMLElement> & {
     href?: string;
@@ -74,7 +79,9 @@ export function MobileListItem({
       "border-b border-border-subtle last:border-b-0",
       isInteractive &&
         "active:scale-[0.99] transition-[transform,background-color] duration-150 cursor-pointer",
-      isInteractive && tone === "default" && "hover:bg-muted/50 active:bg-muted",
+      isInteractive &&
+        tone === "default" &&
+        "hover:bg-muted/50 active:bg-muted",
       tone !== "default" && toneClasses[tone],
       tone !== "default" && toneAccentBorder[tone],
       "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary",
@@ -98,9 +105,13 @@ export function MobileListItem({
       )}
 
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-medium text-foreground truncate">{title}</p>
+        <p className="text-[14px] font-medium text-foreground truncate">
+          {title}
+        </p>
         {subtitle && (
-          <p className="text-[12px] text-muted-foreground mt-0.5 line-clamp-2">{subtitle}</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5 line-clamp-2">
+            {subtitle}
+          </p>
         )}
       </div>
 

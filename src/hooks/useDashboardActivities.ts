@@ -3,9 +3,9 @@
  * Returns a Map<projectId, Activity[]>.
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Activity } from '@/types/report';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Activity } from "@/types/report";
 
 function mapDbActivity(row: {
   id: string;
@@ -24,8 +24,8 @@ function mapDbActivity(row: {
     description: row.description,
     plannedStart: row.planned_start,
     plannedEnd: row.planned_end,
-    actualStart: row.actual_start ?? '',
-    actualEnd: row.actual_end ?? '',
+    actualStart: row.actual_start ?? "",
+    actualEnd: row.actual_end ?? "",
     weight: row.weight,
     predecessorIds: row.predecessor_ids ?? undefined,
     baselineStart: row.baseline_start,
@@ -35,15 +35,17 @@ function mapDbActivity(row: {
 
 export function useDashboardActivities(projectIds: string[]) {
   return useQuery({
-    queryKey: ['dashboard-activities', projectIds.sort().join(',')],
+    queryKey: ["dashboard-activities", projectIds.sort().join(",")],
     queryFn: async (): Promise<Map<string, Activity[]>> => {
       if (!projectIds.length) return new Map();
 
       const { data, error } = await supabase
-        .from('project_activities')
-        .select('id, project_id, description, planned_start, planned_end, actual_start, actual_end, weight, predecessor_ids, baseline_start, baseline_end, sort_order')
-        .in('project_id', projectIds)
-        .order('sort_order', { ascending: true });
+        .from("project_activities")
+        .select(
+          "id, project_id, description, planned_start, planned_end, actual_start, actual_end, weight, predecessor_ids, baseline_start, baseline_end, sort_order",
+        )
+        .in("project_id", projectIds)
+        .order("sort_order", { ascending: true });
 
       if (error) throw error;
 

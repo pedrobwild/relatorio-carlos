@@ -66,7 +66,9 @@ export function ResponsivePageShell({
             "px-4 py-3 bottom-cta keyboard-aware pl-safe pr-safe",
           )}
         >
-          <div className={cn("mx-auto w-full", maxWidthMap[maxWidth])}>{stickyFooter}</div>
+          <div className={cn("mx-auto w-full", maxWidthMap[maxWidth])}>
+            {stickyFooter}
+          </div>
         </div>
       )}
     </>

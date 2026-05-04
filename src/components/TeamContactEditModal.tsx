@@ -1,17 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, Loader2, User } from 'lucide-react';
-import { TeamContact, TeamContactInput } from '@/hooks/useTeamContacts';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Camera, Loader2, User } from "lucide-react";
+import { TeamContact, TeamContactInput } from "@/hooks/useTeamContacts";
 
 interface TeamContactEditModalProps {
   open: boolean;
@@ -35,11 +35,11 @@ export function TeamContactEditModal({
   isUploading,
 }: TeamContactEditModalProps) {
   const [formData, setFormData] = useState({
-    display_name: '',
-    phone: '',
-    email: '',
-    crea: '',
-    photo_url: '',
+    display_name: "",
+    phone: "",
+    email: "",
+    crea: "",
+    photo_url: "",
   });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,11 +47,11 @@ export function TeamContactEditModal({
   useEffect(() => {
     if (contact) {
       setFormData({
-        display_name: contact.display_name || '',
-        phone: contact.phone || '',
-        email: contact.email || '',
-        crea: contact.crea || '',
-        photo_url: contact.photo_url || '',
+        display_name: contact.display_name || "",
+        phone: contact.phone || "",
+        email: contact.email || "",
+        crea: contact.crea || "",
+        photo_url: contact.photo_url || "",
       });
       setPreviewUrl(contact.photo_url);
     }
@@ -70,7 +70,7 @@ export function TeamContactEditModal({
 
     try {
       const url = await onUploadPhoto(file);
-      setFormData(prev => ({ ...prev, photo_url: url }));
+      setFormData((prev) => ({ ...prev, photo_url: url }));
     } catch (error) {
       // Reset preview on error
       setPreviewUrl(formData.photo_url || null);
@@ -107,7 +107,10 @@ export function TeamContactEditModal({
           <div className="flex justify-center">
             <div className="relative">
               <Avatar className="h-32 w-32 border-2 border-border">
-                <AvatarImage src={previewUrl || undefined} alt={formData.display_name} />
+                <AvatarImage
+                  src={previewUrl || undefined}
+                  alt={formData.display_name}
+                />
                 <AvatarFallback className="bg-accent text-4xl">
                   <User className="w-12 h-12" />
                 </AvatarFallback>
@@ -144,7 +147,12 @@ export function TeamContactEditModal({
             <Input
               id="display_name"
               value={formData.display_name}
-              onChange={e => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  display_name: e.target.value,
+                }))
+              }
               required
               placeholder="Nome completo"
             />
@@ -157,7 +165,9 @@ export function TeamContactEditModal({
               id="email"
               type="email"
               value={formData.email}
-              onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, email: e.target.value }))
+              }
               placeholder="email@bwild.com.br"
             />
           </div>
@@ -168,19 +178,23 @@ export function TeamContactEditModal({
             <Input
               id="phone"
               value={formData.phone}
-              onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, phone: e.target.value }))
+              }
               placeholder="(00) 00000-0000"
             />
           </div>
 
           {/* CREA (only for engineering) */}
-          {contact?.role_type === 'engenharia' && (
+          {contact?.role_type === "engenharia" && (
             <div className="space-y-2">
               <Label htmlFor="crea">CREA</Label>
               <Input
                 id="crea"
                 value={formData.crea}
-                onChange={e => setFormData(prev => ({ ...prev, crea: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, crea: e.target.value }))
+                }
                 placeholder="0000000000-UF"
               />
             </div>
@@ -202,7 +216,7 @@ export function TeamContactEditModal({
                   Salvando...
                 </>
               ) : (
-                'Salvar'
+                "Salvar"
               )}
             </Button>
           </DialogFooter>

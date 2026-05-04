@@ -1,11 +1,14 @@
-import { useState, type ReactNode } from 'react';
-import { Loader2, Check } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, type ReactNode } from "react";
+import { Loader2, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 /**
  * Padrão único de autosave para campos da lista de compras (linha + colapsado).
@@ -17,7 +20,7 @@ import { cn } from '@/lib/utils';
  * - Em caso de erro durante o save, retorna ao estado idle (o toast/handler
  *   global cuida da mensagem).
  */
-export type SaveState = 'idle' | 'saving' | 'saved';
+export type SaveState = "idle" | "saving" | "saved";
 
 /* ─── Indicador visual reutilizável ─── */
 export function AutosaveStatusIcon({
@@ -27,23 +30,23 @@ export function AutosaveStatusIcon({
   state: SaveState;
   className?: string;
 }) {
-  if (state === 'saving') {
+  if (state === "saving") {
     return (
       <Loader2
         aria-label="Salvando"
         className={cn(
-          'h-3 w-3 animate-spin text-muted-foreground pointer-events-none',
+          "h-3 w-3 animate-spin text-muted-foreground pointer-events-none",
           className,
         )}
       />
     );
   }
-  if (state === 'saved') {
+  if (state === "saved") {
     return (
       <Check
         aria-label="Salvo"
         className={cn(
-          'h-3 w-3 text-[hsl(var(--success))] pointer-events-none',
+          "h-3 w-3 text-[hsl(var(--success))] pointer-events-none",
           className,
         )}
       />
@@ -59,21 +62,21 @@ export function AutosaveStatusIcon({
 export function useFieldAutosave(
   currentValue: string | number | null | undefined,
 ) {
-  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [saveState, setSaveState] = useState<SaveState>("idle");
 
   const runSave = async (
     newVal: string,
     onSave: (val: string) => void | Promise<void>,
   ) => {
-    const oldVal = currentValue == null ? '' : String(currentValue);
+    const oldVal = currentValue == null ? "" : String(currentValue);
     if (newVal === oldVal) return; // nada mudou → não salva
-    setSaveState('saving');
+    setSaveState("saving");
     try {
       await onSave(newVal);
-      setSaveState('saved');
-      setTimeout(() => setSaveState('idle'), 1200);
+      setSaveState("saved");
+      setTimeout(() => setSaveState("idle"), 1200);
     } catch {
-      setSaveState('idle');
+      setSaveState("idle");
     }
   };
 
@@ -82,7 +85,7 @@ export function useFieldAutosave(
 
 /* ─── Inline Editable Input ─── */
 export function InlineField({
-  type = 'text',
+  type = "text",
   value,
   placeholder,
   onSave,
@@ -91,21 +94,21 @@ export function InlineField({
   inputClassName,
   inputMode,
 }: {
-  type?: 'text' | 'number' | 'date';
+  type?: "text" | "number" | "date";
   value: string | number | null;
   placeholder?: string;
   onSave: (val: string) => void | Promise<void>;
   className?: string;
   prefix?: string;
   inputClassName?: string;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
 }) {
   // Re-mount quando o valor externo muda para manter defaultValue em sincronia.
-  const stableKey = `${value ?? ''}`;
+  const stableKey = `${value ?? ""}`;
   const { saveState, runSave } = useFieldAutosave(value);
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn("relative", className)}>
       {prefix && (
         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
           {prefix}
@@ -116,13 +119,13 @@ export function InlineField({
         type={type}
         inputMode={inputMode}
         className={cn(
-          'h-8 text-sm bg-transparent border-transparent hover:border-input focus:border-input transition-colors',
-          prefix && 'pl-7',
-          saveState !== 'idle' && 'pr-7',
+          "h-8 text-sm bg-transparent border-transparent hover:border-input focus:border-input transition-colors",
+          prefix && "pl-7",
+          saveState !== "idle" && "pr-7",
           inputClassName,
         )}
         placeholder={placeholder}
-        defaultValue={value ?? ''}
+        defaultValue={value ?? ""}
         onBlur={(e) => runSave(e.target.value, onSave)}
       />
       <AutosaveStatusIcon
@@ -147,7 +150,7 @@ export function InlineTextarea({
   rows?: number;
   className?: string;
 }) {
-  const stableKey = `${value ?? ''}`;
+  const stableKey = `${value ?? ""}`;
   const { saveState, runSave } = useFieldAutosave(value);
 
   return (
@@ -156,12 +159,12 @@ export function InlineTextarea({
         key={stableKey}
         rows={rows}
         className={cn(
-          'text-sm bg-transparent border-input/40 hover:border-input focus:border-input transition-colors resize-none',
-          saveState !== 'idle' && 'pr-7',
+          "text-sm bg-transparent border-input/40 hover:border-input focus:border-input transition-colors resize-none",
+          saveState !== "idle" && "pr-7",
           className,
         )}
         placeholder={placeholder}
-        defaultValue={value ?? ''}
+        defaultValue={value ?? ""}
         onBlur={(e) => runSave(e.target.value, onSave)}
       />
       <AutosaveStatusIcon
@@ -192,17 +195,17 @@ export function InlineSelect({
   const handleChange = (next: string) => {
     // Convenção: 'none' → limpar campo (null).
     runSave(next, async (val) => {
-      await onSave(val === 'none' ? null : val);
+      await onSave(val === "none" ? null : val);
     });
   };
 
   return (
     <div className="relative">
-      <Select value={value || 'none'} onValueChange={handleChange}>
+      <Select value={value || "none"} onValueChange={handleChange}>
         <SelectTrigger
           className={cn(
-            'h-8 text-sm',
-            saveState !== 'idle' && 'pr-9',
+            "h-8 text-sm",
+            saveState !== "idle" && "pr-9",
             triggerClassName,
           )}
         >
@@ -210,7 +213,7 @@ export function InlineSelect({
         </SelectTrigger>
         <SelectContent>{children}</SelectContent>
       </Select>
-      {saveState !== 'idle' && (
+      {saveState !== "idle" && (
         <span className="absolute right-7 top-1/2 -translate-y-1/2">
           <AutosaveStatusIcon state={saveState} />
         </span>

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { scoreConfidence, rankInsights, confidenceLabel } from "../confidenceScoring";
+import {
+  scoreConfidence,
+  rankInsights,
+  confidenceLabel,
+} from "../confidenceScoring";
 import type { Insight } from "../insightTypes";
 
 describe("scoreConfidence", () => {
@@ -14,13 +18,21 @@ describe("scoreConfidence", () => {
   });
 
   it("drops sharply on guardrail errors", () => {
-    const c = scoreConfidence({ rowsReturned: 0, hasSql: false, hasGuardrailErrors: true });
+    const c = scoreConfidence({
+      rowsReturned: 0,
+      hasSql: false,
+      hasGuardrailErrors: true,
+    });
     expect(c).toBeLessThanOrEqual(0.2);
   });
 
   it("penalizes data quality issues", () => {
     const clean = scoreConfidence({ rowsReturned: 10, hasSql: true });
-    const dirty = scoreConfidence({ rowsReturned: 10, hasSql: true, dataQualityIssues: 4 });
+    const dirty = scoreConfidence({
+      rowsReturned: 10,
+      hasSql: true,
+      dataQualityIssues: 4,
+    });
     expect(dirty).toBeLessThan(clean);
   });
 
@@ -43,7 +55,11 @@ describe("scoreConfidence", () => {
 });
 
 describe("rankInsights", () => {
-  const make = (severity: Insight["severity"], confidence: number, id = severity): Insight => ({
+  const make = (
+    severity: Insight["severity"],
+    confidence: number,
+    id = severity,
+  ): Insight => ({
     id,
     type: "descriptive",
     domain: "outros",

@@ -1,5 +1,5 @@
-import { Clock } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function MeetingAwaitingCard() {
   return (
@@ -10,9 +10,12 @@ export function MeetingAwaitingCard() {
             <Clock className="h-4 w-4 text-accent-foreground" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground">Disponibilidade registrada</h3>
+            <h3 className="text-sm font-semibold text-foreground">
+              Disponibilidade registrada
+            </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Em breve o time de Arquitetura irá agendar a reunião. Por enquanto, basta aguardar.
+              Em breve o time de Arquitetura irá agendar a reunião. Por
+              enquanto, basta aguardar.
             </p>
           </div>
         </div>

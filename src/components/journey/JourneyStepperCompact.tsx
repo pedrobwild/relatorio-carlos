@@ -1,5 +1,5 @@
-import { JourneyStage } from '@/hooks/useProjectJourney';
-import { Progress } from '@/components/ui/progress';
+import { JourneyStage } from "@/hooks/useProjectJourney";
+import { Progress } from "@/components/ui/progress";
 
 /* ─── Component ─── */
 
@@ -10,11 +10,10 @@ interface JourneyStepperCompactProps {
   onStageClick: (stageId: string) => void;
 }
 
-export function JourneyStepperCompact({
-  stages,
-}: JourneyStepperCompactProps) {
-  const completedCount = stages.filter(s => s.status === 'completed').length;
-  const progressPct = stages.length > 0 ? Math.round((completedCount / stages.length) * 100) : 0;
+export function JourneyStepperCompact({ stages }: JourneyStepperCompactProps) {
+  const completedCount = stages.filter((s) => s.status === "completed").length;
+  const progressPct =
+    stages.length > 0 ? Math.round((completedCount / stages.length) * 100) : 0;
 
   return (
     <div className="space-y-3">

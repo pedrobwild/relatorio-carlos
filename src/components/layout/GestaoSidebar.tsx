@@ -193,7 +193,7 @@ export function GestaoSidebar() {
   const isActive = (item: NavItem) => {
     const currentPath = location.pathname;
     const currentSearch = location.search;
-    const currentFase = new URLSearchParams(currentSearch).get('fase');
+    const currentFase = new URLSearchParams(currentSearch).get("fase");
 
     // Painel de Obras (execução): ativo só quando a URL não está em ?fase=projetos
     if (item.path === "/gestao/painel-obras") {
@@ -201,11 +201,13 @@ export function GestaoSidebar() {
         currentPath === "/gestao/painel-obras" ||
         currentPath === "/gestao" ||
         currentPath.startsWith("/gestao/obra/");
-      return onPainel && currentFase !== 'projetos';
+      return onPainel && currentFase !== "projetos";
     }
     // Painel de Projetos: ativo só quando ?fase=projetos
     if (item.path === "/gestao/painel-obras?fase=projetos") {
-      return currentPath === "/gestao/painel-obras" && currentFase === 'projetos';
+      return (
+        currentPath === "/gestao/painel-obras" && currentFase === "projetos"
+      );
     }
     if (item.path === "/gestao/cs/operacional") {
       if (currentPath === "/gestao/cs/operacional") return true;
@@ -267,7 +269,7 @@ export function GestaoSidebar() {
                   "flex items-center justify-center gap-1.5 h-7 rounded text-[12px] font-medium transition-colors",
                   currentFase === "obras"
                     ? "bg-background text-sidebar-primary shadow-sm"
-                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
                 )}
               >
                 <Building2 className="h-3.5 w-3.5" />
@@ -282,7 +284,7 @@ export function GestaoSidebar() {
                   "flex items-center justify-center gap-1.5 h-7 rounded text-[12px] font-medium transition-colors",
                   currentFase === "projetos"
                     ? "bg-background text-sidebar-primary shadow-sm"
-                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
                 )}
               >
                 <ClipboardEdit className="h-3.5 w-3.5" />
@@ -294,7 +296,7 @@ export function GestaoSidebar() {
 
         {groups.map((group) => {
           const visibleItems = group.items.filter(
-            (item) => !item.adminOnly || isAdmin
+            (item) => !item.adminOnly || isAdmin,
           );
           if (visibleItems.length === 0) return null;
 
@@ -322,7 +324,14 @@ export function GestaoSidebar() {
                             className="flex items-center gap-2.5 w-full"
                             activeClassName=""
                           >
-                            <Icon className={cn("h-[15px] w-[15px] shrink-0", active ? "text-sidebar-primary" : "text-sidebar-foreground/70")} />
+                            <Icon
+                              className={cn(
+                                "h-[15px] w-[15px] shrink-0",
+                                active
+                                  ? "text-sidebar-primary"
+                                  : "text-sidebar-foreground/70",
+                              )}
+                            />
                             {!collapsed && (
                               <span className="truncate">{item.label}</span>
                             )}

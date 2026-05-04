@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Download, type LucideIcon } from "lucide-react";
 import PDFViewer from "@/components/PDFViewer";
 import type { ProjectDocument } from "@/hooks/useDocuments";
@@ -12,7 +18,13 @@ interface Props {
   trigger: React.ReactNode;
 }
 
-export function RelatedDocPDFModal({ doc, icon: Icon, open, onOpenChange, trigger }: Props) {
+export function RelatedDocPDFModal({
+  doc,
+  icon: Icon,
+  open,
+  onOpenChange,
+  trigger,
+}: Props) {
   const handleDownload = async () => {
     if (!doc.url) return;
     const response = await fetch(doc.url);
@@ -37,7 +49,12 @@ export function RelatedDocPDFModal({ doc, icon: Icon, open, onOpenChange, trigge
               <Icon className="w-5 h-5 text-primary shrink-0" />
               <span className="truncate">{doc.name}</span>
             </DialogTitle>
-            <Button onClick={handleDownload} size="sm" variant="outline" className="gap-2 shrink-0">
+            <Button
+              onClick={handleDownload}
+              size="sm"
+              variant="outline"
+              className="gap-2 shrink-0"
+            >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Download</span>
             </Button>

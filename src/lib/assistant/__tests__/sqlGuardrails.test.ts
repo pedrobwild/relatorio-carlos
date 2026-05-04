@@ -3,7 +3,9 @@ import { validateSql } from "../sqlGuardrails";
 
 describe("validateSql", () => {
   it("accepts a clean SELECT", () => {
-    const r = validateSql("SELECT id, amount FROM project_payments WHERE due_date < CURRENT_DATE");
+    const r = validateSql(
+      "SELECT id, amount FROM project_payments WHERE due_date < CURRENT_DATE",
+    );
     expect(r.ok).toBe(true);
     expect(r.errors).toHaveLength(0);
   });
@@ -23,7 +25,9 @@ describe("validateSql", () => {
   it("rejects DML/DDL", () => {
     expect(validateSql("UPDATE projects SET name='x'").ok).toBe(false);
     expect(validateSql("DROP TABLE projects").ok).toBe(false);
-    expect(validateSql("INSERT INTO projects (name) VALUES ('x')").ok).toBe(false);
+    expect(validateSql("INSERT INTO projects (name) VALUES ('x')").ok).toBe(
+      false,
+    );
   });
 
   it("rejects internal schemas", () => {
@@ -43,7 +47,9 @@ describe("validateSql", () => {
   });
 
   it("flags forbidden columns", () => {
-    const r = validateSql("SELECT project_payments.status FROM project_payments");
+    const r = validateSql(
+      "SELECT project_payments.status FROM project_payments",
+    );
     expect(r.errors.some((e) => e.code === "forbidden_column")).toBe(true);
   });
 

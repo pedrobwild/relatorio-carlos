@@ -10,8 +10,8 @@
  *
  * Acesso restrito a equipe staff (mesma RLS dos tickets).
  */
-import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Headset,
@@ -28,24 +28,24 @@ import {
   FileText,
   Loader2,
   RefreshCw,
-} from 'lucide-react';
-import { format, parseISO, formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+} from "lucide-react";
+import { format, parseISO, formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-import { PageContainer } from '@/components/layout/PageContainer';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
+import { PageContainer } from "@/components/layout/PageContainer";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { EmptyState } from '@/components/ui/states';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/select";
+import { EmptyState } from "@/components/ui/states";
+import { cn } from "@/lib/utils";
 
 import {
   CS_SEVERITY_OPTIONS,
@@ -55,30 +55,30 @@ import {
   type CsTicketStatus,
   useCsTickets,
   useUpdateCsTicket,
-} from '@/hooks/useCsTickets';
+} from "@/hooks/useCsTickets";
 import {
   useAddCsTicketComment,
   useCsTicketHistory,
   type CsTicketHistoryEntry,
   type CsTicketHistoryEventType,
-} from '@/hooks/useCsTicketHistory';
-import { useStaffUsers } from '@/hooks/useStaffUsers';
-import { CsTicketDialog } from '@/components/cs/CsTicketDialog';
-import { CsTicketActionsPanel } from '@/components/cs/CsTicketActionsPanel';
-import { formatDuration } from '@/hooks/useCsTicketActions';
+} from "@/hooks/useCsTicketHistory";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import { CsTicketDialog } from "@/components/cs/CsTicketDialog";
+import { CsTicketActionsPanel } from "@/components/cs/CsTicketActionsPanel";
+import { formatDuration } from "@/hooks/useCsTicketActions";
 
 // ----- helpers visuais (espelham CsTickets) -----
 
 const severityClass = (s: CsTicketSeverity): string => {
   switch (s) {
-    case 'baixa':
-      return 'bg-muted text-muted-foreground border border-border';
-    case 'media':
-      return 'bg-info/10 text-info border border-info/25';
-    case 'alta':
-      return 'bg-warning/10 text-warning border border-warning/30';
-    case 'critica':
-      return 'bg-destructive/10 text-destructive border border-destructive/25';
+    case "baixa":
+      return "bg-muted text-muted-foreground border border-border";
+    case "media":
+      return "bg-info/10 text-info border border-info/25";
+    case "alta":
+      return "bg-warning/10 text-warning border border-warning/30";
+    case "critica":
+      return "bg-destructive/10 text-destructive border border-destructive/25";
   }
 };
 const severityLabel = (s: CsTicketSeverity) =>
@@ -86,19 +86,19 @@ const severityLabel = (s: CsTicketSeverity) =>
 
 const statusClass = (s: CsTicketStatus): string => {
   switch (s) {
-    case 'aberto':
-      return 'bg-info/10 text-info border border-info/25';
-    case 'em_andamento':
-      return 'bg-warning/10 text-warning border border-warning/30';
-    case 'concluido':
-      return 'bg-success/10 text-success border border-success/25';
+    case "aberto":
+      return "bg-info/10 text-info border border-info/25";
+    case "em_andamento":
+      return "bg-warning/10 text-warning border border-warning/30";
+    case "concluido":
+      return "bg-success/10 text-success border border-success/25";
   }
 };
 const statusLabel = (s: CsTicketStatus) =>
   CS_STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s;
 
 const fmtDateTime = (iso: string | null | undefined) =>
-  iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '—';
+  iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "—";
 
 const fmtRelative = (iso: string) =>
   formatDistanceToNow(parseISO(iso), { locale: ptBR, addSuffix: true });
@@ -109,14 +109,42 @@ const EVENT_META: Record<
   CsTicketHistoryEventType,
   { icon: React.ElementType; label: string; tone: string }
 > = {
-  created: { icon: CheckCircle2, label: 'Ticket criado', tone: 'text-success' },
-  status_changed: { icon: RefreshCw, label: 'Status alterado', tone: 'text-info' },
-  severity_changed: { icon: AlertTriangle, label: 'Severidade alterada', tone: 'text-warning' },
-  responsible_changed: { icon: UserIcon, label: 'Responsável alterado', tone: 'text-foreground' },
-  action_plan_changed: { icon: ListChecks, label: 'Plano de ação atualizado', tone: 'text-primary' },
-  situation_changed: { icon: FileText, label: 'Situação atualizada', tone: 'text-foreground' },
-  description_changed: { icon: FileText, label: 'Descrição atualizada', tone: 'text-foreground' },
-  comment: { icon: MessageSquare, label: 'Comentário', tone: 'text-foreground' },
+  created: { icon: CheckCircle2, label: "Ticket criado", tone: "text-success" },
+  status_changed: {
+    icon: RefreshCw,
+    label: "Status alterado",
+    tone: "text-info",
+  },
+  severity_changed: {
+    icon: AlertTriangle,
+    label: "Severidade alterada",
+    tone: "text-warning",
+  },
+  responsible_changed: {
+    icon: UserIcon,
+    label: "Responsável alterado",
+    tone: "text-foreground",
+  },
+  action_plan_changed: {
+    icon: ListChecks,
+    label: "Plano de ação atualizado",
+    tone: "text-primary",
+  },
+  situation_changed: {
+    icon: FileText,
+    label: "Situação atualizada",
+    tone: "text-foreground",
+  },
+  description_changed: {
+    icon: FileText,
+    label: "Descrição atualizada",
+    tone: "text-foreground",
+  },
+  comment: {
+    icon: MessageSquare,
+    label: "Comentário",
+    tone: "text-foreground",
+  },
 };
 
 interface TimelineEntryProps {
@@ -130,62 +158,95 @@ function TimelineEntry({ entry, resolveResponsibleName }: TimelineEntryProps) {
 
   // Renderização do diff por tipo
   let body: React.ReactNode = null;
-  if (entry.event_type === 'status_changed') {
+  if (entry.event_type === "status_changed") {
     body = (
       <p className="text-sm text-foreground">
-        <span className="text-muted-foreground">de</span>{' '}
-        <span className={cn('px-1.5 py-0.5 rounded text-xs font-medium', statusClass(entry.old_value as CsTicketStatus))}>
+        <span className="text-muted-foreground">de</span>{" "}
+        <span
+          className={cn(
+            "px-1.5 py-0.5 rounded text-xs font-medium",
+            statusClass(entry.old_value as CsTicketStatus),
+          )}
+        >
           {statusLabel(entry.old_value as CsTicketStatus)}
-        </span>{' '}
-        <span className="text-muted-foreground">para</span>{' '}
-        <span className={cn('px-1.5 py-0.5 rounded text-xs font-medium', statusClass(entry.new_value as CsTicketStatus))}>
+        </span>{" "}
+        <span className="text-muted-foreground">para</span>{" "}
+        <span
+          className={cn(
+            "px-1.5 py-0.5 rounded text-xs font-medium",
+            statusClass(entry.new_value as CsTicketStatus),
+          )}
+        >
           {statusLabel(entry.new_value as CsTicketStatus)}
         </span>
       </p>
     );
-  } else if (entry.event_type === 'severity_changed') {
+  } else if (entry.event_type === "severity_changed") {
     body = (
       <p className="text-sm text-foreground">
-        <span className="text-muted-foreground">de</span>{' '}
-        <span className={cn('px-1.5 py-0.5 rounded text-xs font-medium', severityClass(entry.old_value as CsTicketSeverity))}>
+        <span className="text-muted-foreground">de</span>{" "}
+        <span
+          className={cn(
+            "px-1.5 py-0.5 rounded text-xs font-medium",
+            severityClass(entry.old_value as CsTicketSeverity),
+          )}
+        >
           {severityLabel(entry.old_value as CsTicketSeverity)}
-        </span>{' '}
-        <span className="text-muted-foreground">para</span>{' '}
-        <span className={cn('px-1.5 py-0.5 rounded text-xs font-medium', severityClass(entry.new_value as CsTicketSeverity))}>
+        </span>{" "}
+        <span className="text-muted-foreground">para</span>{" "}
+        <span
+          className={cn(
+            "px-1.5 py-0.5 rounded text-xs font-medium",
+            severityClass(entry.new_value as CsTicketSeverity),
+          )}
+        >
           {severityLabel(entry.new_value as CsTicketSeverity)}
         </span>
       </p>
     );
-  } else if (entry.event_type === 'responsible_changed') {
-    const oldName = resolveResponsibleName(entry.old_value || null) ?? 'Não atribuído';
-    const newName = resolveResponsibleName(entry.new_value || null) ?? 'Não atribuído';
+  } else if (entry.event_type === "responsible_changed") {
+    const oldName =
+      resolveResponsibleName(entry.old_value || null) ?? "Não atribuído";
+    const newName =
+      resolveResponsibleName(entry.new_value || null) ?? "Não atribuído";
     body = (
       <p className="text-sm text-foreground">
-        <span className="text-muted-foreground">de</span> <strong>{oldName}</strong>{' '}
-        <span className="text-muted-foreground">para</span> <strong>{newName}</strong>
+        <span className="text-muted-foreground">de</span>{" "}
+        <strong>{oldName}</strong>{" "}
+        <span className="text-muted-foreground">para</span>{" "}
+        <strong>{newName}</strong>
       </p>
     );
-  } else if (entry.event_type === 'created') {
+  } else if (entry.event_type === "created") {
     body = (
       <p className="text-sm text-muted-foreground">
-        Ticket aberto com status{' '}
-        <span className={cn('px-1.5 py-0.5 rounded text-xs font-medium', statusClass((entry.new_value as CsTicketStatus) ?? 'aberto'))}>
-          {statusLabel((entry.new_value as CsTicketStatus) ?? 'aberto')}
+        Ticket aberto com status{" "}
+        <span
+          className={cn(
+            "px-1.5 py-0.5 rounded text-xs font-medium",
+            statusClass((entry.new_value as CsTicketStatus) ?? "aberto"),
+          )}
+        >
+          {statusLabel((entry.new_value as CsTicketStatus) ?? "aberto")}
         </span>
       </p>
     );
-  } else if (entry.event_type === 'comment') {
+  } else if (entry.event_type === "comment") {
     body = (
       <div className="rounded-md bg-muted/40 border border-border px-3 py-2">
-        <p className="text-sm text-foreground whitespace-pre-wrap">{entry.notes}</p>
+        <p className="text-sm text-foreground whitespace-pre-wrap">
+          {entry.notes}
+        </p>
       </div>
     );
   } else {
     // action_plan_changed, situation_changed, description_changed → mostra preview
-    const preview = entry.new_value?.trim() || '(vazio)';
+    const preview = entry.new_value?.trim() || "(vazio)";
     body = (
       <div className="rounded-md bg-muted/40 border border-border px-3 py-2">
-        <p className="text-sm text-foreground whitespace-pre-wrap line-clamp-4">{preview}</p>
+        <p className="text-sm text-foreground whitespace-pre-wrap line-clamp-4">
+          {preview}
+        </p>
       </div>
     );
   }
@@ -195,7 +256,7 @@ function TimelineEntry({ entry, resolveResponsibleName }: TimelineEntryProps) {
       <div className="flex flex-col items-center">
         <div
           className={cn(
-            'h-8 w-8 rounded-full bg-card border border-border flex items-center justify-center shrink-0',
+            "h-8 w-8 rounded-full bg-card border border-border flex items-center justify-center shrink-0",
             meta.tone,
           )}
         >
@@ -205,11 +266,16 @@ function TimelineEntry({ entry, resolveResponsibleName }: TimelineEntryProps) {
       </div>
       <div className="flex-1 pb-5 min-w-0">
         <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-foreground">{meta.label}</span>
-          <span className="text-xs text-muted-foreground">
-            {entry.actor_name ? `por ${entry.actor_name}` : 'sistema'}
+          <span className="text-sm font-semibold text-foreground">
+            {meta.label}
           </span>
-          <span className="text-xs text-muted-foreground" title={fmtDateTime(entry.created_at)}>
+          <span className="text-xs text-muted-foreground">
+            {entry.actor_name ? `por ${entry.actor_name}` : "sistema"}
+          </span>
+          <span
+            className="text-xs text-muted-foreground"
+            title={fmtDateTime(entry.created_at)}
+          >
             • {fmtRelative(entry.created_at)}
           </span>
         </div>
@@ -227,13 +293,14 @@ export default function CsTicketDetalhe() {
   const navigate = useNavigate();
 
   const { data: tickets = [], isLoading } = useCsTickets();
-  const { data: history = [], isLoading: loadingHistory } = useCsTicketHistory(ticketId);
+  const { data: history = [], isLoading: loadingHistory } =
+    useCsTicketHistory(ticketId);
   const { data: staff = [] } = useStaffUsers();
   const update = useUpdateCsTicket();
   const addComment = useAddCsTicketComment();
 
   const [editOpen, setEditOpen] = useState(false);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
 
   const ticket = useMemo<CsTicket | undefined>(
     () => tickets.find((t) => t.id === ticketId),
@@ -248,7 +315,8 @@ export default function CsTicketDetalhe() {
     return m;
   }, [staff]);
 
-  const resolveResponsibleName = (id: string | null) => (id ? staffMap[id] ?? null : null);
+  const resolveResponsibleName = (id: string | null) =>
+    id ? (staffMap[id] ?? null) : null;
 
   if (isLoading) {
     return (
@@ -269,7 +337,11 @@ export default function CsTicketDetalhe() {
           icon={Headset}
           title="Ticket não encontrado"
           description="O ticket pode ter sido excluído ou você não tem permissão para visualizá-lo."
-          action={{ label: 'Voltar para CS', onClick: () => navigate('/gestao/cs/operacional'), icon: ArrowLeft }}
+          action={{
+            label: "Voltar para CS",
+            onClick: () => navigate("/gestao/cs/operacional"),
+            icon: ArrowLeft,
+          }}
         />
       </PageContainer>
     );
@@ -289,7 +361,7 @@ export default function CsTicketDetalhe() {
     const text = comment.trim();
     if (!text) return;
     await addComment.mutateAsync({ ticketId: ticket.id, notes: text });
-    setComment('');
+    setComment("");
   };
 
   return (
@@ -298,7 +370,7 @@ export default function CsTicketDetalhe() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => navigate('/gestao/cs/operacional')}
+        onClick={() => navigate("/gestao/cs/operacional")}
         className="mb-3 -ml-2 h-8 text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4 mr-1.5" />
@@ -317,8 +389,8 @@ export default function CsTicketDetalhe() {
               onClick={() => navigate(`/gestao/obra/${ticket.project_id}`)}
               className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 group"
             >
-              {ticket.project_name ?? 'Obra'}
-              {ticket.customer_name ? ` — ${ticket.customer_name}` : ''}
+              {ticket.project_name ?? "Obra"}
+              {ticket.customer_name ? ` — ${ticket.customer_name}` : ""}
               <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100" />
             </button>
             <h1 className="text-2xl font-bold tracking-tight leading-tight break-words">
@@ -326,12 +398,16 @@ export default function CsTicketDetalhe() {
             </h1>
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <CalendarClock className="h-3.5 w-3.5" />
-              Aberto em {fmtDateTime(ticket.created_at)} · Atualizado{' '}
+              Aberto em {fmtDateTime(ticket.created_at)} · Atualizado{" "}
               {fmtRelative(ticket.updated_at)}
             </p>
           </div>
         </div>
-        <Button onClick={() => setEditOpen(true)} variant="outline" className="shrink-0">
+        <Button
+          onClick={() => setEditOpen(true)}
+          variant="outline"
+          className="shrink-0"
+        >
           <Pencil className="h-4 w-4 mr-1.5" />
           Editar ticket
         </Button>
@@ -343,10 +419,13 @@ export default function CsTicketDetalhe() {
           <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
             Status atual
           </p>
-          <Select value={ticket.status} onValueChange={(v) => handleStatusChange(v as CsTicketStatus)}>
+          <Select
+            value={ticket.status}
+            onValueChange={(v) => handleStatusChange(v as CsTicketStatus)}
+          >
             <SelectTrigger
               className={cn(
-                'h-10 text-sm font-semibold border-0 px-3 rounded-md w-full',
+                "h-10 text-sm font-semibold border-0 px-3 rounded-md w-full",
                 statusClass(ticket.status),
               )}
             >
@@ -363,7 +442,7 @@ export default function CsTicketDetalhe() {
           {ticket.resolved_at && (
             <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3 text-success" />
-              Concluído em {fmtDateTime(ticket.resolved_at)} · resolução em{' '}
+              Concluído em {fmtDateTime(ticket.resolved_at)} · resolução em{" "}
               <span className="font-medium text-foreground">
                 {formatDuration(
                   new Date(ticket.resolved_at).getTime() -
@@ -384,13 +463,15 @@ export default function CsTicketDetalhe() {
           >
             <SelectTrigger
               className={cn(
-                'h-10 text-sm font-semibold border-0 px-3 rounded-md w-full',
+                "h-10 text-sm font-semibold border-0 px-3 rounded-md w-full",
                 severityClass(ticket.severity),
               )}
             >
               <SelectValue>
                 <span className="flex items-center gap-1.5">
-                  {ticket.severity === 'critica' && <AlertTriangle className="h-3.5 w-3.5" />}
+                  {ticket.severity === "critica" && (
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                  )}
                   {severityLabel(ticket.severity)}
                 </span>
               </SelectValue>
@@ -441,7 +522,9 @@ export default function CsTicketDetalhe() {
                 {ticket.description}
               </p>
             ) : (
-              <p className="text-sm italic text-muted-foreground">Sem descrição adicional.</p>
+              <p className="text-sm italic text-muted-foreground">
+                Sem descrição adicional.
+              </p>
             )}
           </section>
 
@@ -453,7 +536,7 @@ export default function CsTicketDetalhe() {
                 Histórico e atualizações
               </h2>
               <span className="text-xs text-muted-foreground ml-auto">
-                {history.length} {history.length === 1 ? 'evento' : 'eventos'}
+                {history.length} {history.length === 1 ? "evento" : "eventos"}
               </span>
             </div>
 
@@ -525,7 +608,9 @@ export default function CsTicketDetalhe() {
                     {ticket.responsible_name}
                   </p>
                 ) : (
-                  <p className="text-sm italic text-muted-foreground">Não atribuído</p>
+                  <p className="text-sm italic text-muted-foreground">
+                    Não atribuído
+                  </p>
                 )}
                 <p className="text-xs text-muted-foreground">Equipe staff</p>
               </div>
@@ -543,7 +628,7 @@ export default function CsTicketDetalhe() {
                 onClick={() => navigate(`/gestao/obra/${ticket.project_id}`)}
                 className="font-medium text-foreground hover:text-primary truncate text-right"
               >
-                {ticket.project_name ?? '—'}
+                {ticket.project_name ?? "—"}
               </button>
             </div>
             {ticket.customer_name && (
@@ -580,7 +665,11 @@ export default function CsTicketDetalhe() {
       </div>
 
       {/* Dialog de edição */}
-      <CsTicketDialog open={editOpen} onOpenChange={setEditOpen} ticket={ticket} />
+      <CsTicketDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        ticket={ticket}
+      />
     </PageContainer>
   );
 }
