@@ -1066,7 +1066,7 @@ function NewMovementDialog({
   };
 
   const submit = () => {
-    if (loading) return;
+    if (isBusy) return;
     const parsed = movementSchema.safeParse({
       item_id: form.item_id || undefined,
       new_item_name: form.new_item_name,
@@ -1090,6 +1090,7 @@ function NewMovementDialog({
       return;
     }
     setErrors({});
+    setSubmitting(true);
     onSubmit(parsed.data);
   };
 
@@ -1099,7 +1100,7 @@ function NewMovementDialog({
     <Dialog
       open={open}
       onOpenChange={(v) => {
-        if (loading && !v) return;
+        if (isBusy && !v) return;
         onOpenChange(v);
         if (!v) {
           reset();
