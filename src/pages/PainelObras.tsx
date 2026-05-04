@@ -2734,20 +2734,44 @@ function BoardView({
     });
   };
 
-  // Agrupa preservando a ordem canônica das etapas; "Sem etapa" entra no fim.
+  // Agrupa preservando a ordem canônica das etapas. Execução é subdividida
+  // por semana (S1, S2, ...) ordenada crescentemente. "Sem etapa" entra no fim.
   const groups = useMemo(() => {
     const map = new Map<string, PainelObra[]>();
     for (const o of obras) {
-      const key = o.etapa ?? BOARD_NONE_KEY;
+      let key: string;
+      if (o.etapa === 'Execução') {
+        const w = getEtapaWeek(o);
+        key = w != null ? `Execução::S${w}` : 'Execução::S?';
+      } else {
+        key = o.etapa ?? BOARD_NONE_KEY;
+      }
       const arr = map.get(key);
       if (arr) arr.push(o);
       else map.set(key, [o]);
     }
     const ordered: { key: string; label: string; etapa: PainelEtapa | null; items: PainelObra[] }[] = [];
     for (const e of ETAPA_OPTIONS) {
-      const items = map.get(e);
-      if (items && items.length > 0) {
-        ordered.push({ key: e, label: e, etapa: e, items });
+      if (e === 'Execução') {
+        // Coleta todas as semanas presentes e ordena S1, S2, ...
+        const weekKeys = Array.from(map.keys())
+          .filter((k) => k.startsWith('Execução::'))
+          .sort((a, b) => {
+            const na = a === 'Execução::S?' ? Number.POSITIVE_INFINITY : Number(a.slice('Execução::S'.length));
+            const nb = b === 'Execução::S?' ? Number.POSITIVE_INFINITY : Number(b.slice('Execução::S'.length));
+            return na - nb;
+          });
+        for (const k of weekKeys) {
+          const items = map.get(k);
+          if (!items || items.length === 0) continue;
+          const label = k === 'Execução::S?' ? 'Execução' : `Execução - S${k.slice('Execução::S'.length)}`;
+          ordered.push({ key: k, label, etapa: e, items });
+        }
+      } else {
+        const items = map.get(e);
+        if (items && items.length > 0) {
+          ordered.push({ key: e, label: e, etapa: e, items });
+        }
       }
     }
     const noneItems = map.get(BOARD_NONE_KEY);
