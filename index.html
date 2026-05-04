@@ -24,6 +24,16 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Tema claro forçado: remove classe .dark e limpa preferência antiga antes da hidratação.
+      try {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.style.colorScheme = 'light';
+        if (localStorage.getItem('theme') && localStorage.getItem('theme') !== 'light') {
+          localStorage.setItem('theme', 'light');
+        }
+      } catch (_) {}
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
