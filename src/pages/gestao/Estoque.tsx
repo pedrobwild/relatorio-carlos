@@ -129,6 +129,16 @@ const movementSchema = z
       path: ["item_id"],
       message: "Informe o item",
     },
+  )
+  .refine(
+    (v) =>
+      v.movement_type === "entrada" && !v.item_id && v.new_item_name && v.new_item_name.length >= 2
+        ? !!(v.new_item_unit && v.new_item_unit.trim().length >= 1)
+        : true,
+    {
+      path: ["new_item_unit"],
+      message: "Unidade obrigatória ao cadastrar novo item",
+    },
   );
 
 // ─── Page ────────────────────────────────────────────────────────────────────
