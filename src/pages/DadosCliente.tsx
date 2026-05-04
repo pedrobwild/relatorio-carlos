@@ -423,7 +423,10 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       className={cn(
         'mx-auto w-full',
         embedded ? 'max-w-3xl px-4 pt-3 pb-4 md:px-6 md:pt-4' : 'max-w-4xl p-4 md:p-6',
-        'pb-[calc(80px+env(safe-area-inset-bottom,0px))]',
+        // Reserva espaço para a sticky save bar + bottom nav (mobile) / safe-area (iOS).
+        embedded
+          ? 'pb-[calc(80px+env(safe-area-inset-bottom,0px))]'
+          : 'pb-[calc(80px+var(--bottom-nav-offset,0px))]',
       )}
     >
       {!embedded && (
@@ -917,9 +920,13 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
       {/* ── Sticky save bar ── */}
       <div
         className={cn(
-          'sticky bottom-0 -mx-4 md:-mx-6 mt-6',
+          'sticky -mx-4 md:-mx-6 mt-6',
           'bg-background/95 backdrop-blur border-t border-border-subtle',
           'pl-safe pr-safe pb-safe',
+          // Quando está dentro de um sheet/dialog (embedded), basta colar no bottom.
+          // Na rota /obra/:id/dados-cliente o ProjectShell renderiza a MobileBottomNav fixa,
+          // então elevamos a barra acima dela para não ser ocultada.
+          embedded ? 'bottom-0' : 'bottom-[var(--bottom-nav-offset,0px)] md:bottom-0',
         )}
       >
         <div className="px-4 md:px-6 py-3 flex items-center justify-end gap-2">
