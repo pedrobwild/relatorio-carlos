@@ -67,6 +67,60 @@ describe('getEtapaWeek', () => {
   });
 });
 
+describe('getEtapaWeek — bordas exatas em múltiplos de 7 dias', () => {
+  const start = '2026-04-01'; // S1 começa em 1/abr/2026
+
+  it('dia 6 → S1 e dia 7 → S2 (borda da 1ª semana)', () => {
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 7))).toBe(1);
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 8))).toBe(2);
+  });
+
+  it('dia 13 → S2 e dia 14 → S3 (borda da 2ª semana)', () => {
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 14))).toBe(2);
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 15))).toBe(3);
+  });
+
+  it('dia 20 → S3 e dia 21 → S4 (borda da 3ª semana)', () => {
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 21))).toBe(3);
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 22))).toBe(4);
+  });
+
+  it('dia 27 → S4 e dia 28 → S5 (borda da 4ª semana)', () => {
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 28))).toBe(4);
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 29))).toBe(5);
+  });
+
+  it('cada múltiplo exato de 7 dias inicia uma nova semana S{N+1}', () => {
+    // Para n = 1..12: dia (7n - 1) é S{n} e dia (7n) é S{n+1}.
+    for (let n = 1; n <= 12; n++) {
+      const ultimoDiaSn = new Date(2026, 3, 1 + (7 * n - 1));
+      const primeiroDiaSn1 = new Date(2026, 3, 1 + 7 * n);
+      expect(getEtapaWeek(exec(start), ultimoDiaSn), `dia ${7 * n - 1} → S${n}`).toBe(n);
+      expect(getEtapaWeek(exec(start), primeiroDiaSn1), `dia ${7 * n} → S${n + 1}`).toBe(n + 1);
+    }
+  });
+
+  it('a borda do dia 7 não é afetada pelo horário (00:00 e 23:59 são S2)', () => {
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 8, 0, 0, 0))).toBe(2);
+    expect(getEtapaWeek(exec(start), new Date(2026, 3, 8, 23, 59, 59))).toBe(2);
+  });
+
+  it('borda atravessando mês (start no fim do mês)', () => {
+    const s = '2026-04-25';
+    expect(getEtapaWeek(exec(s), new Date(2026, 4, 1))).toBe(1);  // dia 6
+    expect(getEtapaWeek(exec(s), new Date(2026, 4, 2))).toBe(2);  // dia 7
+    expect(getEtapaWeek(exec(s), new Date(2026, 4, 9))).toBe(3);  // dia 14
+    expect(getEtapaWeek(exec(s), new Date(2026, 4, 16))).toBe(4); // dia 21
+  });
+
+  it('borda atravessando ano (start em dezembro)', () => {
+    const s = '2025-12-25';
+    expect(getEtapaWeek(exec(s), new Date(2026, 0, 1))).toBe(2);  // dia 7
+    expect(getEtapaWeek(exec(s), new Date(2026, 0, 8))).toBe(3);  // dia 14
+    expect(getEtapaWeek(exec(s), new Date(2026, 0, 15))).toBe(4); // dia 21
+  });
+});
+
 describe('formatEtapaLabel', () => {
   it('devolve null quando obra não tem etapa', () => {
     expect(formatEtapaLabel({ etapa: null, inicio_etapa: null, inicio_oficial: null })).toBeNull();
