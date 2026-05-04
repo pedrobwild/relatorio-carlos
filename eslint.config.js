@@ -46,6 +46,44 @@ export default tseslint.config(
   },
   {
     /**
+     * SUPABASE GUARD — proíbe importar o client direto fora da camada de infra.
+     *
+     * Toda chamada ao Supabase deve passar por `@/infra/repositories/*` ou
+     * `@/infra/edgeFunctions` (vide docs/ARCHITECTURE.md). Importar
+     * `@/integrations/supabase/client` em pages/components duplica lógica
+     * de erro/loading e fura RLS quando alguém esquece um filtro.
+     *
+     * Exceções: a própria camada `src/infra/**`, o queryClient
+     * (que precisa fazer `signOut` em erros de auth) e o `lib/prefetch.ts`
+     * (que move queries inline para repositories incrementalmente).
+     */
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/infra/**",
+      "src/integrations/supabase/**",
+      "src/lib/queryClient.ts",
+      "src/lib/prefetch.ts",
+      "src/**/__tests__/**",
+      "src/**/*.test.{ts,tsx}",
+      "src/test/**",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "warn",
+        {
+          patterns: [
+            {
+              group: ["@/integrations/supabase/client", "@/integrations/supabase"],
+              message:
+                "Não importe o Supabase direto. Use os repositories em @/infra/repositories ou edge functions em @/infra/edgeFunctions.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    /**
      * Z-INDEX GUARD — proíbe sobrescrever `z-*` em componentes overlay
      * (Dialog, Sheet, Drawer, Select, Popover, Dropdown, ContextMenu,
      * HoverCard, Tooltip, Menubar, AlertDialog).

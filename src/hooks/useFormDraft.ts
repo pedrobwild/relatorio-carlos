@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { RESTORE_DRAFT_EVENT } from '@/components/TabDiscardDetector';
 
 const DRAFT_PREFIX = 'bwild-draft-';
 
@@ -47,6 +48,24 @@ export function useFormDraft<T extends Record<string, unknown>>({
   });
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Re-hydrate from localStorage when the tab is restored from a discard.
+  // TabDiscardDetector dispatches RESTORE_DRAFT_EVENT after Memory Saver wakeups.
+  useEffect(() => {
+    function handleRestore() {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (!saved) return;
+        const parsed = JSON.parse(saved) as Partial<T>;
+        setValues(prev => ({ ...prev, ...parsed }));
+        setHasDraft(true);
+      } catch {
+        // ignore — corrupted draft
+      }
+    }
+    window.addEventListener(RESTORE_DRAFT_EVENT, handleRestore);
+    return () => window.removeEventListener(RESTORE_DRAFT_EVENT, handleRestore);
+  }, [storageKey]);
 
   // Debounced persist
   useEffect(() => {

@@ -246,6 +246,23 @@ export const queryKeys = {
 } as const;
 
 // ============================================================================
+// Critical Query Keys
+// ============================================================================
+
+/**
+ * Query-key prefixes considered "critical" for real-time accuracy.
+ * On tab restoration (after Memory Saver discard), these are invalidated
+ * to refetch fresh data instead of doing a destructive `window.location.reload()`.
+ */
+export const CRITICAL_QUERY_KEYS: ReadonlyArray<readonly unknown[]> = [
+  queryKeys.projects.all,
+  queryKeys.pendingItems.all,
+  queryKeys.purchases.all,
+  queryKeys.payments.all,
+  queryKeys.activities.all,
+];
+
+// ============================================================================
 // Helper Types
 // ============================================================================
 

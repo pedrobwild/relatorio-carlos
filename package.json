@@ -12,6 +12,7 @@
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "check:file-size": "node scripts/check-file-size.mjs",
     "test:a11y": "playwright test a11y/",
     "audit:contrast": "node scripts/audit-contrast.mjs"
   },
