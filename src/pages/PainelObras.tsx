@@ -2680,6 +2680,9 @@ function loadBoardCollapsed(): Set<string> {
 function getBoardEtapaAccent(etapa: PainelEtapa | null): string {
   if (!etapa) return 'bg-muted-foreground/40';
   switch (etapa) {
+    case 'Projeto 3D':
+    case 'Projeto Executivo':
+    case 'Executivo Aprovado':
     case 'Medição':
     case 'Executivo':
     case 'Emissão RRT':
