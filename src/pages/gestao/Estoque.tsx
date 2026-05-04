@@ -169,6 +169,32 @@ export default function Estoque() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlTab]);
 
+  // Healthcheck dos índices parciais usados pelo trigger
+  // apply_stock_movement_to_balance. Roda uma vez ao montar; se algo
+  // estiver inconsistente, alerta o usuário antes que ele tente registrar
+  // uma entrada e bata em "no unique or exclusion constraint matching".
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc(
+        "check_stock_balance_indexes" as never,
+      );
+      if (cancelled || error) return;
+      const result = data as
+        | { ok: boolean; missing: string[]; details: unknown }
+        | null;
+      if (result && !result.ok) {
+        toast.error("Estoque indisponível para gravação", {
+          description: `Índices ausentes/incompatíveis: ${(result.missing ?? []).join(", ")}. Aplique as migrações pendentes.`,
+          duration: 10000,
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleTabChange = (next: string) => {
     setTab(next);
     const params = new URLSearchParams(searchParams);
