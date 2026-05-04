@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2, GripVertical, ChevronDown, FileText, BellRing } from 'lucide-react';
 import { isHoliday } from '@/lib/businessDays';
 import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
+import { useScheduleAlerts } from '@/hooks/useScheduleAlerts';
+import { Badge } from '@/components/ui/badge';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -156,6 +158,7 @@ function WeightSummary({ total }: { total: number }) {
 /* ── Main component ── */
 const Cronograma = () => {
   const navigate = useNavigate();
+  const { summary: alertsSummary } = useScheduleAlerts();
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const isMobile = useIsMobile();
@@ -617,10 +620,27 @@ const Cronograma = () => {
             plannedStartDate={project?.planned_start_date}
             plannedEndDate={project?.planned_end_date}
           />
-          <Link to="/gestao/alertas-cronograma">
-            <Button variant="outline" size="sm" className="text-xs" title="Abrir alertas do cronograma">
-              <BellRing className="w-4 h-4 mr-1.5" />
+          <Link
+            to={`/gestao/alertas-cronograma${projectId ? `?project=${projectId}` : ''}`}
+            aria-label={`Abrir alertas do cronograma${alertsSummary.total > 0 ? ` (${alertsSummary.total} pendente${alertsSummary.total === 1 ? '' : 's'})` : ''}`}
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs relative"
+              title="Abrir alertas do cronograma"
+            >
+              <BellRing className={cn('w-4 h-4 mr-1.5', alertsSummary.total > 0 && 'text-destructive')} />
               <span className="hidden sm:inline">Alertas</span>
+              {alertsSummary.total > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="ml-1.5 h-4 min-w-[1rem] px-1 text-[10px] leading-none rounded-full"
+                  aria-hidden="true"
+                >
+                  {alertsSummary.total > 99 ? '99+' : alertsSummary.total}
+                </Badge>
+              )}
             </Button>
           </Link>
           <Link to={paths.compras}>
