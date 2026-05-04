@@ -617,6 +617,12 @@ const Cronograma = () => {
             plannedStartDate={project?.planned_start_date}
             plannedEndDate={project?.planned_end_date}
           />
+          <Link to="/gestao/alertas-cronograma">
+            <Button variant="outline" size="sm" className="text-xs" title="Abrir alertas do cronograma">
+              <BellRing className="w-4 h-4 mr-1.5" />
+              <span className="hidden sm:inline">Alertas</span>
+            </Button>
+          </Link>
           <Link to={paths.compras}>
             <Button variant="outline" size="sm" className="text-xs">
               <ShoppingCart className="w-4 h-4 mr-1.5" />
