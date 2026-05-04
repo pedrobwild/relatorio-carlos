@@ -3056,7 +3056,7 @@ function MobilePainelView({
             }
             if (o.etapa) {
               chips.push({
-                label: o.etapa,
+                label: formatEtapaLabel(o) ?? o.etapa,
                 tone:
                   o.etapa === 'Finalizada'
                     ? 'success'
