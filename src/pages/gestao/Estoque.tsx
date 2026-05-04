@@ -1054,6 +1054,7 @@ function NewMovementDialog({
   };
 
   const submit = () => {
+    if (loading) return;
     const parsed = movementSchema.safeParse({
       item_id: form.item_id || undefined,
       new_item_name: form.new_item_name,
@@ -1086,6 +1087,7 @@ function NewMovementDialog({
     <Dialog
       open={open}
       onOpenChange={(v) => {
+        if (loading && !v) return;
         onOpenChange(v);
         if (!v) {
           reset();
@@ -1353,12 +1355,18 @@ function NewMovementDialog({
                     alt="Pré-visualização"
                     className="h-32 w-32 object-cover"
                   />
+                  {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/70">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                  )}
                   <Button
                     type="button"
                     variant="destructive"
                     size="sm"
                     className="absolute top-1 right-1 h-7 px-2"
                     onClick={() => handlePhotoPick(null)}
+                    disabled={loading}
                   >
                     Remover
                   </Button>
@@ -1370,6 +1378,7 @@ function NewMovementDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => cameraInputRef.current?.click()}
+                    disabled={loading}
                   >
                     Tirar foto
                   </Button>
@@ -1378,6 +1387,7 @@ function NewMovementDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => photoInputRef.current?.click()}
+                    disabled={loading}
                   >
                     Anexar imagem
                   </Button>
@@ -1404,13 +1414,23 @@ function NewMovementDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-2 items-stretch sm:items-center">
+          {loading && photoFile && (
+            <p className="text-xs text-muted-foreground sm:mr-auto flex items-center gap-2">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Enviando foto…
+            </p>
+          )}
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancelar
           </Button>
-          <Button onClick={submit} disabled={loading}>
+          <Button onClick={submit} disabled={loading} aria-busy={loading}>
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Registrar
+            {loading ? (photoFile ? "Enviando…" : "Salvando…") : "Registrar"}
           </Button>
         </DialogFooter>
       </DialogContent>
