@@ -222,8 +222,9 @@ export function DocumentViewer({
   );
 
   return (
-    <div 
+    <div
       ref={handleContainerRef}
+      data-no-swipe
       className={cn("flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden h-full relative", className)}
     >
       {/* Controls */}
