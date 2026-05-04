@@ -131,6 +131,14 @@ DECLARE
   v_problems   text[] := ARRAY[]::text[];
   v_ddls       text[] := ARRAY[]::text[];
   v_reasons    text[];
+  -- Validação estrutural posicional via pg_index
+  v_natts      int;     -- total de atributos no índice (key + INCLUDE)
+  v_nkeyatts   int;     -- atributos da CHAVE (sem INCLUDE)
+  v_indkey     int2[];  -- attnums na ordem real do índice
+  v_pos_attnum int2;
+  v_pos_name   text;
+  v_pos        int;
+  v_exp_len    int;
 BEGIN
   RAISE NOTICE '────── Stock balance index report (estrutural) ──────';
   FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
