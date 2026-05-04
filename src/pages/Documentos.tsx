@@ -95,6 +95,12 @@ const DocumentCard = ({
       className="bg-card border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/50 hover:border-primary/30 hover:shadow-sm transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98]"
       tabIndex={0}
       onClick={() => onOpenViewer(doc)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpenViewer(doc);
+        }
+      }}
       role="button"
       aria-label={`Abrir ${doc.name}`}
     >
