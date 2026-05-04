@@ -13,7 +13,7 @@ import { ExecutivoVersionsModal } from "@/components/executivo/ExecutivoVersions
 import { RelatedDocPDFModal } from "@/components/executivo/RelatedDocPDFModal";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
-import { format, parseISO } from "date-fns";
+import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 // ── Tacit Approval Banner ──────────────────────────────────────────────
@@ -203,6 +203,29 @@ const Executivo = () => {
   const artDoc = getLatestByCategory('art_rrt')[0];
   const planoReformaDoc = getLatestByCategory('plano_reforma')[0];
 
+  // Aprovação tácita = aprovado sem actor humano (approved_by IS NULL).
+  // Aprovação manual também marca approved_at, então não basta olhar status.
+  const isTacitApproval = useMemo(() => {
+    if (!executivoDoc) return false;
+    return executivoDoc.status === 'approved'
+      && !!executivoDoc.approved_at
+      && !executivoDoc.approved_by;
+  }, [executivoDoc]);
+
+  // Proxy de "dias silentes": intervalo entre upload e aprovação tácita —
+  // mesmo cálculo usado pelo trigger DB log_executive_tacit_approval para
+  // garantir paridade visual com o domain_event registrado.
+  const tacitDaysSilent = useMemo(() => {
+    if (!isTacitApproval || !executivoDoc?.created_at || !executivoDoc?.approved_at) {
+      return null;
+    }
+    const days = differenceInCalendarDays(
+      parseISO(executivoDoc.approved_at),
+      parseISO(executivoDoc.created_at),
+    );
+    return days > 0 ? days : null;
+  }, [isTacitApproval, executivoDoc?.created_at, executivoDoc?.approved_at]);
+
   const loading = projectLoading || docsLoading;
 
   const [artModalOpen, setArtModalOpen] = useState(false);
@@ -339,11 +362,12 @@ const Executivo = () => {
             {/* Desktop: Two-column layout */}
             <div className="hidden lg:grid lg:grid-cols-[1fr_340px] lg:gap-6">
               <div className="space-y-4">
-                {executivoDoc.status === 'approved' && (
+                {isTacitApproval && (
                   <TacitApprovalNotice
                     formalizacoesPath={paths.formalizacoes}
                     registeredAt={executivoDoc.approved_at}
                     documentHash={executivoDoc.checksum}
+                    daysSilent={tacitDaysSilent}
                   />
                 )}
                 <div className="h-[calc(100vh-260px)]">
@@ -375,8 +399,13 @@ const Executivo = () => {
 
             {/* Mobile/Tablet: Stack layout */}
             <div className="lg:hidden flex flex-col gap-3">
-              {executivoDoc.status === 'approved' && (
-                <TacitApprovalNotice formalizacoesPath={paths.formalizacoes} />
+              {isTacitApproval && (
+                <TacitApprovalNotice
+                  formalizacoesPath={paths.formalizacoes}
+                  registeredAt={executivoDoc.approved_at}
+                  documentHash={executivoDoc.checksum}
+                  daysSilent={tacitDaysSilent}
+                />
               )}
               <div>
                 <PDFViewer url={executivoDoc.url!} title="Projeto Executivo" />

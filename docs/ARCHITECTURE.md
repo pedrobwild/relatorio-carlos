@@ -324,6 +324,29 @@ docErrors.capture(error, { action: 'delete' });
 
 Para padrões detalhados de segurança, checklists obrigatórios antes de iniciar novos módulos e templates de RPCs de transição de estado, consulte **[docs/SECURITY_PATTERNS.md](./SECURITY_PATTERNS.md)**.
 
+## Cockpit de Decisão (JTBD)
+
+O *Cockpit de Decisão* responde, no topo de cada superfície, a única pergunta que importa: **"o que eu preciso fazer agora?"**. O padrão evita que o usuário tenha que navegar 3 níveis para descobrir o que está bloqueado.
+
+### Camadas
+
+| Camada | Onde mora | Função |
+| --- | --- | --- |
+| **Hook agregador** | `src/hooks/useNextActions.ts` | Combina `usePendencias`, `useClientDashboard` e `useFormalizacoes` em uma lista ranqueada (atraso > tácita > pagamento > aprovação), corta em 3 itens. Função pura `rankNextActions()` é testável isoladamente. |
+| **Bloco de UI** | `src/components/cockpit/NextActionsBlock.tsx` | Renderiza ≤3 cards com `StatusBadge` + CTA primário. Estado vazio é "Tudo em dia" (não some — preserva canal de confiança). Mobile-first: CTAs com `min-height: 44px`. |
+| **Tracking** | `src/lib/amplitude.ts` | Eventos `next_action_displayed` e `next_action_clicked` com payload `{ type, urgency, owner }`. Disparados pelo `NextActionsBlock` no mount e nos cliques. |
+| **Painel staff** | `src/pages/PainelObras.tsx` | `MetricRail` no topo + dot semântico na primeira coluna ("Sinal"). KPIs filtram a tabela via `useSearchParams`. Cor vermelha apenas no dot — nunca na linha inteira. |
+
+### Aprovação tácita rastreável
+
+A aprovação tácita do projeto executivo (cliente silente além do prazo contratual) é tratada como evento jurídico — não pode depender do front-end:
+
+1. **Trigger DB** `log_executive_tacit_approval` (`supabase/migrations/20260504061500_executive_tacit_approval_event.sql`) detecta `project_documents.status='approved' AND approved_by IS NULL` para `document_type='executive_project'` e insere `domain_events` row com `event_type='executive.tacit_approval'` carregando `{ document_id, document_hash, deadline_iso, days_silent, document_version, document_name }`.
+2. **Banner UI** `TacitApprovalNotice` em `src/pages/Executivo.tsx` consome `approved_at`/`checksum`/`created_at` do documento e exibe o texto humano: *"Aprovação automática registrada em DD/MM às HH:MM porque o prazo contratual de X dias venceu sem manifestação."* Mobile e desktop recebem o mesmo payload (paridade obrigatória).
+3. **`EVENT_TYPES.EXECUTIVE_TACIT_APPROVAL`** (`src/hooks/useDomainEvents.ts`) padroniza o tipo do evento para a `ActivityTimeline` e auditorias futuras.
+
+> **Regra de ouro:** quando a operação tem implicação jurídica (tácita, formalização, NC), a fonte da verdade é o trigger DB, não o front. Componentes apenas refletem o que o banco já registrou.
+
 ## Próximos Passos
 
 1. Migrar hooks legados para TanStack Query pattern
