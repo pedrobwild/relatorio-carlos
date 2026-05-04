@@ -170,8 +170,8 @@ BEGIN
     END IF;
 
     -- Normaliza o predicado para comparação tolerante a espaços/casing
-    v_pred_norm := lower(regexp_replace(COALESCE(v_pred_raw, ''), '\s+', ' ', 'g'));
-    v_pred_norm := trim(v_pred_norm);
+    -- Normaliza o predicado real para a mesma forma canônica do esperado
+    v_pred_norm := pg_temp.norm_pred(v_pred_raw);
 
     IF (r->>'unique')::bool AND NOT v_unique THEN
       v_reasons := array_append(v_reasons, 'não é UNIQUE');
