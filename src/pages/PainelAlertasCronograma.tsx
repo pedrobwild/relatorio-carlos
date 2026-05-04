@@ -623,9 +623,20 @@ function EmptyAlerts({ hasFilters }: { hasFilters: boolean }) {
 
 function AlertTableSkeleton() {
   return (
-    <div className="flex flex-col gap-2 py-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-12 w-full" />
+    <div className="flex flex-col gap-2 py-2" aria-busy="true" aria-live="polite">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="grid grid-cols-[1.2fr_1.4fr_1fr_0.6fr_0.6fr_0.5fr_1fr] items-center gap-3 px-2 py-2 border-b border-border/50"
+        >
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-5 w-24 rounded-full" />
+          <Skeleton className="h-4 w-14" />
+          <Skeleton className="h-4 w-14" />
+          <Skeleton className="h-5 w-10 rounded-full ml-auto" />
+          <Skeleton className="h-7 w-32 ml-auto rounded-md" />
+        </div>
       ))}
     </div>
   );
