@@ -154,10 +154,10 @@ describe('PainelObras — paridade rótulo renderizado × formatEtapaLabel', () 
       </Wrapper>,
     );
 
-    const groupButtons = Array.from(
-      container.querySelectorAll<HTMLButtonElement>('[aria-controls^="board-group-"]'),
+    const labelEls = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-testid="board-group-label"]'),
     );
-    const labels = groupButtons.map((b) => b.textContent?.trim() ?? '');
+    const labels = labelEls.map((el) => el.textContent?.trim() ?? '');
 
     // Todas as obras em Execução do fixture devem ter um grupo
     // cujo label começa exatamente com `formatEtapaLabel(obra)`.
