@@ -246,8 +246,47 @@ export default function Estoque() {
 
   const createMovement = useMutation({
     mutationFn: async (input: z.infer<typeof movementSchema>) => {
+      let itemId = input.item_id ?? null;
+
+      // Para ENTRADA: criar item on-the-fly se não veio item_id
+      if (input.movement_type === "entrada" && !itemId && input.new_item_name) {
+        const { data: newItem, error: itemErr } = await supabase
+          .from("stock_items")
+          .insert({
+            name: input.new_item_name.trim(),
+            unit: (input.new_item_unit || "un").trim() || "un",
+            created_by: user?.id ?? null,
+          })
+          .select("id")
+          .single();
+        if (itemErr) throw itemErr;
+        itemId = newItem.id;
+      }
+
+      if (!itemId) throw new Error("Item não informado");
+
+      // Upload da foto (opcional, apenas para entrada)
+      let photoPath: string | null = null;
+      const photoFile: File | null =
+        input.movement_type === "entrada" && input.photo_file instanceof File
+          ? input.photo_file
+          : null;
+      if (photoFile) {
+        const ext = (photoFile.name.split(".").pop() || "jpg").toLowerCase();
+        const path = `${itemId}/${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("stock-photos")
+          .upload(path, photoFile, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: photoFile.type || "image/jpeg",
+          });
+        if (upErr) throw upErr;
+        photoPath = path;
+      }
+
       const payload = {
-        item_id: input.item_id,
+        item_id: itemId,
         movement_type: input.movement_type,
         quantity: input.quantity,
         movement_date: input.movement_date,
@@ -257,6 +296,7 @@ export default function Estoque() {
         unit_cost: input.unit_cost ?? null,
         invoice_number: input.invoice_number || null,
         notes: input.notes || null,
+        photo_path: photoPath,
         created_by: user?.id ?? null,
       };
       const { data, error } = await supabase
@@ -268,6 +308,7 @@ export default function Estoque() {
       return data;
     },
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["stock", "items"] });
       qc.invalidateQueries({ queryKey: ["stock", "balances"] });
       qc.invalidateQueries({ queryKey: ["stock", "movements"] });
       toast.success("Movimentação registrada — saldo atualizado");
