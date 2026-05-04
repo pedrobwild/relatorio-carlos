@@ -19,6 +19,7 @@ import {
   ClipboardEdit,
   LucideIcon,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -33,6 +34,8 @@ import {
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useScheduleAlertsSummary } from "@/hooks/useScheduleAlerts";
+import { useScheduleAlertPrefs } from "@/hooks/useScheduleAlertPrefs";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
