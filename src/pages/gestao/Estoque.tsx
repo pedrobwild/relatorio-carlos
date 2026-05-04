@@ -1154,7 +1154,7 @@ function NewMovementDialog({
                 </p>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="mov-new-unit">Unidade</Label>
+                <Label htmlFor="mov-new-unit">Unidade *</Label>
                 <Input
                   id="mov-new-unit"
                   value={form.new_item_unit}
@@ -1163,7 +1163,11 @@ function NewMovementDialog({
                   }
                   placeholder="un, kg, m"
                   maxLength={20}
+                  aria-invalid={!!errors.new_item_unit}
                 />
+                {errors.new_item_unit && (
+                  <p className="text-xs text-destructive">{errors.new_item_unit}</p>
+                )}
               </div>
             </div>
           ) : (
