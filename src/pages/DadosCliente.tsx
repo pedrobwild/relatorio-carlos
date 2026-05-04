@@ -701,7 +701,15 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
                   onChange={(e) => updateStudio('key_location', e.target.value || null)}
                   placeholder="Ex.: portaria, com o zelador, cofre na entrada…"
                   maxLength={300}
+                  aria-invalid={!!keyLocationError}
+                  aria-describedby={keyLocationError ? 'key-location-error' : undefined}
+                  className={keyLocationError ? 'border-destructive focus-visible:ring-destructive' : ''}
                 />
+                {keyLocationError && (
+                  <p id="key-location-error" className="text-xs text-destructive" role="alert">
+                    {keyLocationError}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lock-password" className="text-xs font-medium text-muted-foreground">
@@ -714,7 +722,15 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
                   placeholder="Ex.: 1234#"
                   maxLength={50}
                   autoComplete="off"
+                  aria-invalid={!!lockPasswordError}
+                  aria-describedby={lockPasswordError ? 'lock-password-error' : undefined}
+                  className={lockPasswordError ? 'border-destructive focus-visible:ring-destructive' : ''}
                 />
+                {lockPasswordError && (
+                  <p id="lock-password-error" className="text-xs text-destructive" role="alert">
+                    {lockPasswordError}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="provider-access" className="text-xs font-medium text-muted-foreground">
