@@ -256,7 +256,53 @@ export default function Estoque() {
 
   const createMovement = useMutation({
     mutationFn: async (input: z.infer<typeof movementSchema>) => {
+      // ─── Pré-validação alinhada às regras do banco ─────────────────────
+      // 1) Tipo de movimentação dentro do enum aceito
+      if (!["entrada", "saida", "ajuste"].includes(input.movement_type)) {
+        throw new Error("Tipo de movimentação inválido");
+      }
+
+      // 2) Local dentro do enum aceito
+      if (!["estoque", "obra"].includes(input.location_type)) {
+        throw new Error("Local inválido (use Estoque ou Obra)");
+      }
+
+      // 3) Coerência local × project_id (casa com índices parciais do banco)
+      const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (input.location_type === "obra") {
+        if (!input.project_id || !uuidRe.test(input.project_id)) {
+          throw new Error("Selecione uma obra válida para movimentações em obra");
+        }
+        const projectExists = (projectsQ.data ?? []).some(
+          (p) => p.id === input.project_id,
+        );
+        if (!projectExists) {
+          throw new Error("Obra selecionada não encontrada — atualize a página");
+        }
+      } else if (input.location_type === "estoque" && input.project_id) {
+        // estoque central nunca tem project_id (regra do índice uniq_balance_estoque)
+        throw new Error("Movimentações no estoque central não devem ter obra associada");
+      }
+
+      // 4) Item: precisa existir OU ser cadastrado agora (somente em entrada)
+      const items = itemsQ.data ?? [];
       let itemId = input.item_id ?? null;
+
+      if (itemId) {
+        if (!uuidRe.test(itemId)) {
+          throw new Error("Item inválido");
+        }
+        const exists = items.some((it) => it.id === itemId);
+        if (!exists) {
+          throw new Error("Item não encontrado — atualize a página e tente novamente");
+        }
+      } else if (input.movement_type !== "entrada") {
+        throw new Error("Selecione um item existente para esta movimentação");
+      } else if (!input.new_item_name || input.new_item_name.trim().length < 2) {
+        throw new Error("Informe o nome do novo item (mínimo 2 caracteres)");
+      } else if (!input.new_item_unit || input.new_item_unit.trim().length < 1) {
+        throw new Error("Informe a unidade do novo item");
+      }
 
       // Para ENTRADA: criar item on-the-fly se não veio item_id
       if (input.movement_type === "entrada" && !itemId && input.new_item_name) {
