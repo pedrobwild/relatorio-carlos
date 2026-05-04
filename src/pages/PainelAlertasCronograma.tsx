@@ -10,7 +10,7 @@
  * tipo de pendência. O usuário pode marcar início, marcar conclusão (ambos
  * com data de hoje) ou abrir o cronograma da obra para replanejar.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -114,13 +114,22 @@ export default function PainelAlertasCronograma() {
   // Estado sincronizado com a URL (?q=&project=&kind=).
   // Mantém filtros ao sair/voltar para a página e permite atalhos pré-filtrados.
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchQuery = searchParams.get("q") ?? "";
+  const urlQuery = searchParams.get("q") ?? "";
   const filterProject = searchParams.get("project") ?? ALL;
   const filterKindRaw = searchParams.get("kind");
   const filterKind: AlertFilter =
     filterKindRaw === "missing_start" || filterKindRaw === "missing_end"
       ? filterKindRaw
       : "all";
+
+  // Busca: estado local com debounce para evitar atualizar URL a cada tecla.
+  const [searchInput, setSearchInput] = useState(urlQuery);
+  const debounceRef = useRef<number | null>(null);
+  useEffect(() => {
+    // Sincroniza quando a URL muda externamente (ex.: navegação)
+    setSearchInput(urlQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQuery]);
 
   const updateParam = (
     key: "q" | "project" | "kind",
@@ -137,9 +146,17 @@ export default function PainelAlertasCronograma() {
       { replace: true },
     );
   };
-  const setSearchQuery = (v: string) => updateParam("q", v, "");
+  const setSearchQuery = (v: string) => {
+    setSearchInput(v);
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(
+      () => updateParam("q", v, ""),
+      250,
+    );
+  };
   const setFilterProject = (v: string) => updateParam("project", v, ALL);
   const setFilterKind = (v: AlertFilter) => updateParam("kind", v, "all");
+  const searchQuery = urlQuery;
 
   const projectOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -235,10 +252,11 @@ export default function PainelAlertasCronograma() {
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  value={searchQuery}
+                  value={searchInput}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar por atividade, obra ou etapa…"
                   className="pl-8 h-9"
+                  aria-label="Buscar alertas"
                 />
               </div>
               <Select value={filterProject} onValueChange={setFilterProject}>
@@ -293,7 +311,7 @@ export default function PainelAlertasCronograma() {
                       onMarkStarted={() => markStarted.mutate(alert.id)}
                       onMarkCompleted={() => markCompleted.mutate(alert.id)}
                       onReplan={() => goToCronograma(alert.project_id)}
-                      pending={markStarted.isPending || markCompleted.isPending}
+                      pending={false}
                     />
                   ))}
                 </div>
@@ -324,9 +342,7 @@ export default function PainelAlertasCronograma() {
                           onMarkStarted={() => markStarted.mutate(alert.id)}
                           onMarkCompleted={() => markCompleted.mutate(alert.id)}
                           onReplan={() => goToCronograma(alert.project_id)}
-                          pending={
-                            markStarted.isPending || markCompleted.isPending
-                          }
+                          pending={false}
                         />
                       ))}
                     </TableBody>
@@ -605,9 +621,20 @@ function EmptyAlerts({ hasFilters }: { hasFilters: boolean }) {
 
 function AlertTableSkeleton() {
   return (
-    <div className="flex flex-col gap-2 py-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-12 w-full" />
+    <div className="flex flex-col gap-2 py-2" aria-busy="true" aria-live="polite">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="grid grid-cols-[1.2fr_1.4fr_1fr_0.6fr_0.6fr_0.5fr_1fr] items-center gap-3 px-2 py-2 border-b border-border/50"
+        >
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-5 w-24 rounded-full" />
+          <Skeleton className="h-4 w-14" />
+          <Skeleton className="h-4 w-14" />
+          <Skeleton className="h-5 w-10 rounded-full ml-auto" />
+          <Skeleton className="h-7 w-32 ml-auto rounded-md" />
+        </div>
       ))}
     </div>
   );

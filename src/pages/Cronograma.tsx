@@ -182,8 +182,7 @@ const Cronograma = () => {
   const navigate = useNavigate();
   const { summary: alertsSummary } = useScheduleAlerts();
   const { prefs: alertPrefs } = useScheduleAlertPrefs();
-  const showAlertBadge =
-    alertPrefs.enabled && alertPrefs.channels.inApp && alertsSummary.total > 0;
+  const showAlertBadge = alertPrefs.showBadge && alertsSummary.total > 0;
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const isMobile = useIsMobile();
