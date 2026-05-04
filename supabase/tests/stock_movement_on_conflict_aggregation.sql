@@ -156,11 +156,66 @@ BEGIN
     FOR i IN 1..array_length(v_ddls,1) LOOP
       RAISE NOTICE '%', v_ddls[i];
     END LOOP;
+
     IF current_setting('regress.dry_run', true) = 'on' THEN
       RAISE NOTICE '⚠ DRY-RUN: % problema(s) detectado(s) — abort SUPRIMIDO. Nenhum movimento será inserido.',
         array_length(v_problems,1);
+
+    ELSIF current_setting('regress.auto_fix', true) = 'on' THEN
+      -- ── AUTO-FIX: recria cada índice problemático no lugar ──
+      RAISE NOTICE '────── AUTO-FIX: recriando % índice(s) ──────', array_length(v_problems,1);
+      FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
+        -- Só age sobre os que constam em v_problems
+        IF EXISTS (
+          SELECT 1 FROM unnest(v_problems) p
+           WHERE p LIKE (r->>'name') || ':%'
+        ) THEN
+          RAISE NOTICE '  ↻ DROP + CREATE: %', r->>'name';
+          EXECUTE format('DROP INDEX IF EXISTS public.%I', r->>'name');
+          EXECUTE r->>'ddl';
+        END IF;
+      END LOOP;
+
+      -- Re-valida: tudo precisa estar OK depois do fix
+      DECLARE
+        v_still_bad text[] := ARRAY[]::text[];
+        v_ucols text[]; v_uunique bool; v_upred text;
+      BEGIN
+        FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
+          v_exp_cols := ARRAY(SELECT jsonb_array_elements_text(r->'columns'));
+          v_exp_pred := r->>'predicate';
+          SELECT i.indisunique,
+                 ARRAY(
+                   SELECT a.attname
+                     FROM unnest(i.indkey) WITH ORDINALITY AS k(attnum, ord)
+                     JOIN pg_attribute a ON a.attrelid=i.indrelid AND a.attnum=k.attnum
+                    ORDER BY k.ord),
+                 trim(lower(regexp_replace(
+                   COALESCE(pg_get_expr(i.indpred, i.indrelid), ''),
+                   '\s+', ' ', 'g')))
+            INTO v_uunique, v_ucols, v_upred
+            FROM pg_index i
+            JOIN pg_class c ON c.oid=i.indexrelid
+            JOIN pg_class t ON t.oid=i.indrelid
+            JOIN pg_namespace n ON n.oid=t.relnamespace
+           WHERE n.nspname='public' AND t.relname='stock_balances'
+             AND c.relname=(r->>'name');
+          IF NOT FOUND
+             OR ((r->>'unique')::bool AND NOT v_uunique)
+             OR v_ucols IS DISTINCT FROM v_exp_cols
+             OR v_upred IS DISTINCT FROM v_exp_pred THEN
+            v_still_bad := array_append(v_still_bad, r->>'name');
+          END IF;
+        END LOOP;
+        IF array_length(v_still_bad,1) > 0 THEN
+          RAISE EXCEPTION 'AUTO-FIX FAIL: índices ainda divergentes após recriação: %',
+            array_to_string(v_still_bad, ', ');
+        END IF;
+        RAISE NOTICE '✓ AUTO-FIX concluído: todos os índices conformes';
+      END;
+
     ELSE
-      RAISE EXCEPTION 'PRECHECK FAIL (% problema(s)): %',
+      RAISE EXCEPTION 'PRECHECK FAIL (% problema(s)): %  [dica: rode com -v auto_fix=1]',
         array_length(v_problems,1), array_to_string(v_problems, ' | ');
     END IF;
   END IF;
