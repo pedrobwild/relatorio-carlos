@@ -92,7 +92,10 @@ describe('DadosCliente · Acesso à obra (persistência)', () => {
   it('persiste Local da chave e Senha ao salvar e recarrega ao remontar', async () => {
     renderPage();
 
-    // Inputs aparecem após fetch inicial
+    // Tab "Informações do Projeto" abriga o card "Acesso à obra"
+    const infoTab = await screen.findByRole('tab', { name: /Informações do Projeto/i });
+    fireEvent.click(infoTab);
+
     const keyInput = await screen.findByLabelText(/Local da chave/i);
     const lockInput = await screen.findByLabelText(/Senha da fechadura eletrônica/i);
 
