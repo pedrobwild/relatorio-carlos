@@ -23,7 +23,9 @@ import {
   Search,
   RotateCcw,
   ExternalLink,
+  Bell,
 } from 'lucide-react';
+import { ScheduleAlertPrefsDialog } from '@/components/ScheduleAlertPrefsDialog';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader, MetricCard, MetricRail } from '@/components/ui-premium';
 import { Badge } from '@/components/ui/badge';
@@ -164,15 +166,25 @@ export default function PainelAlertasCronograma() {
           title="Alertas de Cronograma"
           description="Atividades com início ou término não sinalizados dentro do prazo previsto. Use as ações para registrar a evolução real ou replanejar o cronograma da obra."
           actions={
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => refetch()}
-              disabled={isLoading}
-            >
-              <RotateCcw className="h-4 w-4 mr-1.5" />
-              Atualizar
-            </Button>
+            <div className="flex items-center gap-2">
+              <ScheduleAlertPrefsDialog
+                trigger={
+                  <Button size="sm" variant="outline">
+                    <Bell className="h-4 w-4 mr-1.5" />
+                    Notificações
+                  </Button>
+                }
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                <RotateCcw className="h-4 w-4 mr-1.5" />
+                Atualizar
+              </Button>
+            </div>
           }
           flush
         />
