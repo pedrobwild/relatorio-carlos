@@ -18,23 +18,58 @@
 
 BEGIN;
 
--- ─── Pré-checagem: índices parciais necessários ─────────────────────
+-- ─── Pré-checagem + relatório dos índices parciais ─────────────────
+-- Imprime, via RAISE NOTICE (stdout do psql), quais índices exigidos
+-- existem, e — para os ausentes — o DDL exato que precisa ser aplicado
+-- antes de tentar inserir movimentos. Se algo faltar, aborta.
 DO $$
-DECLARE v_missing text[] := ARRAY[]::text[];
+DECLARE
+  v_required CONSTANT jsonb := jsonb_build_array(
+    jsonb_build_object(
+      'name', 'uniq_balance_estoque',
+      'ddl',  'CREATE UNIQUE INDEX uniq_balance_estoque ON public.stock_balances (item_id) '
+              'WHERE location_type = ''estoque'' AND project_id IS NULL;'
+    ),
+    jsonb_build_object(
+      'name', 'uniq_balance_obra',
+      'ddl',  'CREATE UNIQUE INDEX uniq_balance_obra ON public.stock_balances (item_id, project_id) '
+              'WHERE location_type = ''obra'' AND project_id IS NOT NULL;'
+    )
+  );
+  r jsonb;
+  v_def text;
+  v_found int := 0;
+  v_missing text[] := ARRAY[]::text[];
+  v_ddls   text[] := ARRAY[]::text[];
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_indexes
-                  WHERE schemaname='public' AND tablename='stock_balances'
-                    AND indexname='uniq_balance_estoque') THEN
-    v_missing := array_append(v_missing,'uniq_balance_estoque');
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_indexes
-                  WHERE schemaname='public' AND tablename='stock_balances'
-                    AND indexname='uniq_balance_obra') THEN
-    v_missing := array_append(v_missing,'uniq_balance_obra');
-  END IF;
+  RAISE NOTICE '────── Stock balance index report ──────';
+  FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
+    SELECT indexdef INTO v_def
+      FROM pg_indexes
+     WHERE schemaname='public' AND tablename='stock_balances'
+       AND indexname = r->>'name';
+
+    IF FOUND THEN
+      v_found := v_found + 1;
+      RAISE NOTICE '  ✓ % — %', r->>'name', v_def;
+    ELSE
+      v_missing := array_append(v_missing, r->>'name');
+      v_ddls    := array_append(v_ddls,    r->>'ddl');
+      RAISE NOTICE '  ✗ % — AUSENTE', r->>'name';
+    END IF;
+  END LOOP;
+  RAISE NOTICE 'Encontrados: % / %  |  Ausentes: %',
+    v_found, jsonb_array_length(v_required), COALESCE(array_length(v_missing,1), 0);
+
   IF array_length(v_missing,1) > 0 THEN
-    RAISE EXCEPTION 'PRECHECK FAIL: índices ausentes: %', array_to_string(v_missing,', ');
+    RAISE NOTICE '────── DDL sugerido ──────';
+    FOR i IN 1..array_length(v_ddls,1) LOOP
+      RAISE NOTICE '  %', v_ddls[i];
+    END LOOP;
+    RAISE EXCEPTION 'PRECHECK FAIL: índices ausentes (%): %',
+      array_length(v_missing,1), array_to_string(v_missing, ', ');
   END IF;
+  RAISE NOTICE '────────────────────────────────────────';
 END $$;
 
 -- ─── Cleanup PRÉ-execução (idempotente, baseado em prefixo) ─────────
