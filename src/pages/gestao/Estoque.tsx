@@ -1354,12 +1354,18 @@ function NewMovementDialog({
                     alt="Pré-visualização"
                     className="h-32 w-32 object-cover"
                   />
+                  {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/70">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                  )}
                   <Button
                     type="button"
                     variant="destructive"
                     size="sm"
                     className="absolute top-1 right-1 h-7 px-2"
                     onClick={() => handlePhotoPick(null)}
+                    disabled={loading}
                   >
                     Remover
                   </Button>
@@ -1371,6 +1377,7 @@ function NewMovementDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => cameraInputRef.current?.click()}
+                    disabled={loading}
                   >
                     Tirar foto
                   </Button>
@@ -1379,6 +1386,7 @@ function NewMovementDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => photoInputRef.current?.click()}
+                    disabled={loading}
                   >
                     Anexar imagem
                   </Button>
