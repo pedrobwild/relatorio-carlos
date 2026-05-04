@@ -37,12 +37,25 @@ BEGIN
   END IF;
 END $$;
 
--- ─── Cleanup de execuções anteriores ────────────────────────────────
-DELETE FROM public.stock_movements
- WHERE item_id IN (SELECT id FROM public.stock_items WHERE name='__regress_onconflict_item__');
-DELETE FROM public.stock_balances
- WHERE item_id IN (SELECT id FROM public.stock_items WHERE name='__regress_onconflict_item__');
-DELETE FROM public.stock_items WHERE name='__regress_onconflict_item__';
+-- ─── Cleanup PRÉ-execução (idempotente, baseado em prefixo) ─────────
+-- Pega tudo que tenha o prefixo de teste, não só o item exato — protege
+-- contra resíduos de execuções abortadas com nomes ligeiramente diferentes.
+DO $$
+DECLARE v_orphans int;
+BEGIN
+  -- Ordem importa: movimentos → saldos → item (FK)
+  DELETE FROM public.stock_movements
+   WHERE item_id IN (SELECT id FROM public.stock_items WHERE name LIKE '__regress\_%' ESCAPE '\');
+  DELETE FROM public.stock_balances
+   WHERE item_id IN (SELECT id FROM public.stock_items WHERE name LIKE '__regress\_%' ESCAPE '\');
+  DELETE FROM public.stock_items WHERE name LIKE '__regress\_%' ESCAPE '\';
+
+  -- Sanity: zero resíduos antes de começar
+  SELECT COUNT(*) INTO v_orphans FROM public.stock_items WHERE name LIKE '__regress\_%' ESCAPE '\';
+  IF v_orphans <> 0 THEN
+    RAISE EXCEPTION 'CLEANUP PRÉ FAIL: % item(ns) de teste residual(is)', v_orphans;
+  END IF;
+END $$;
 
 -- ─── Setup: item de teste + duas obras (se houver) ──────────────────
 DO $$
