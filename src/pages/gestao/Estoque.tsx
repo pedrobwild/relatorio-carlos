@@ -621,6 +621,7 @@ function MovementsTable({
             <TableHead className="text-right">Qtd.</TableHead>
             <TableHead>Local</TableHead>
             <TableHead>Fornecedor / NF</TableHead>
+            <TableHead>Foto</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -661,12 +662,82 @@ function MovementsTable({
                   {m.supplier_name || "—"}
                   {m.invoice_number ? ` • NF ${m.invoice_number}` : ""}
                 </TableCell>
+                <TableCell>
+                  <MovementPhotoCell path={m.photo_path} />
+                </TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+// ─── Movement Photo Cell ────────────────────────────────────────────────────
+
+function MovementPhotoCell({ path }: { path: string | null }) {
+  const [open, setOpen] = useState(false);
+  const { data: url } = useQuery({
+    queryKey: ["stock", "photo-url", path],
+    queryFn: async () => {
+      if (!path) return null;
+      const { data, error } = await supabase.storage
+        .from("stock-photos")
+        .createSignedUrl(path, 3600);
+      if (error) throw error;
+      return data?.signedUrl ?? null;
+    },
+    enabled: !!path,
+    staleTime: 50 * 60 * 1000,
+  });
+
+  if (!path) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  if (!url) {
+    return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="block h-10 w-10 rounded-md overflow-hidden border bg-muted hover:ring-2 hover:ring-ring transition"
+        aria-label="Ver foto do item"
+      >
+        <img src={url} alt="Foto do item" className="h-full w-full object-cover" />
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Foto do item</DialogTitle>
+            <DialogDescription>
+              Pré-visualização da foto registrada nesta entrada.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+            <img
+              src={url}
+              alt="Foto do item em tamanho ampliado"
+              className="max-h-[70vh] w-auto object-contain"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Fechar
+            </Button>
+            <Button asChild>
+              <a href={url} download target="_blank" rel="noopener noreferrer">
+                Baixar foto
+              </a>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
