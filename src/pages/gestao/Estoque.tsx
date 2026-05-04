@@ -974,8 +974,8 @@ function NewItemDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={submit} disabled={isBusy}>
-            {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          <Button onClick={submit} disabled={loading}>
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Cadastrar item
           </Button>
         </DialogFooter>
