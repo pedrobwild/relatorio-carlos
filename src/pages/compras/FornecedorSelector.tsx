@@ -42,7 +42,7 @@ export function FornecedorSelector({
       const { data, error } = await supabase
         .from("fornecedores")
         .select("id, nome, status")
-        .eq("supplier_type", "prestador")
+        .in("supplier_type", ["prestadores", "prestador"])
         .in("status", ["ativo", "rascunho"])
         .order("nome");
       if (error) throw error;
@@ -122,7 +122,7 @@ export function FornecedorSelector({
           </SelectContent>
         </Select>
         <QuickCreateFornecedor
-          supplierType="prestador"
+          supplierType="prestadores"
           onCreated={(id, nome) => onFornecedorChange(id, nome)}
           invalidateKeys={[["fornecedores-prestadores"]]}
         />

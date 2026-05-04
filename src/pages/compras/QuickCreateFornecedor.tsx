@@ -23,7 +23,7 @@ const schema = z.object({
 });
 
 interface Props {
-  supplierType: "prestador" | "produtos";
+  supplierType: "prestadores" | "produtos";
   onCreated: (id: string, nome: string) => void;
   /** Optional initial name (e.g., when user typed in a search box). */
   defaultName?: string;
@@ -62,7 +62,8 @@ export function QuickCreateFornecedor({
           telefone: parsed.data.telefone || null,
           supplier_type: supplierType,
           status: "rascunho",
-          categoria: supplierType === "prestador" ? "servicos" : "materiais",
+          categoria:
+            supplierType === "prestadores" ? "servicos" : "materiais",
         })
         .select("id, nome")
         .single();
@@ -116,7 +117,7 @@ export function QuickCreateFornecedor({
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder={
-                supplierType === "prestador"
+                supplierType === "prestadores"
                   ? "Ex: João Pintor"
                   : "Ex: Casa do Construtor"
               }
