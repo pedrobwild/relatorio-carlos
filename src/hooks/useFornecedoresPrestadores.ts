@@ -24,7 +24,7 @@ export function useFornecedoresPrestadores() {
       const { data, error } = await supabase
         .from("fornecedores")
         .select("id, nome, categoria, status")
-        .eq("supplier_type", "prestador")
+        .in("supplier_type", ["prestadores", "prestador"])
         .in("status", ["ativo", "rascunho"])
         .order("nome");
       if (error) throw error;
