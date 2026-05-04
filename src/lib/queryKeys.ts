@@ -47,12 +47,13 @@ export const queryKeys = {
   activities: {
     all: ['activities'] as const,
     lists: () => [...queryKeys.activities.all, 'list'] as const,
-    list: (projectId: string | undefined) => 
+    list: (projectId: string | undefined) =>
       [...queryKeys.activities.lists(), projectId] as const,
     detail: (activityId: string | undefined) =>
       [...queryKeys.activities.all, 'detail', activityId] as const,
     baseline: (projectId: string | undefined) =>
       [...queryKeys.activities.all, 'baseline', projectId] as const,
+    alerts: () => [...queryKeys.activities.all, 'alerts'] as const,
   },
 
   // ============================================================================

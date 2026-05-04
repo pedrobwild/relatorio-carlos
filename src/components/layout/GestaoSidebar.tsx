@@ -84,6 +84,11 @@ export function GestaoSidebar() {
           path: "/gestao/painel-obras?fase=projetos",
         },
         {
+          label: "Alertas de Cronograma",
+          icon: AlertTriangle,
+          path: "/gestao/alertas-cronograma",
+        },
+        {
           label: "Nova Obra",
           icon: Plus,
           path: "/gestao/nova-obra",
