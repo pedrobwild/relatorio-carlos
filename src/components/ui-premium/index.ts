@@ -44,3 +44,4 @@ export {
   PremiumDialogFooter,
   PremiumDialogBody,
 } from './PremiumDialogHeader';
+export { Glossary, type GlossaryProps } from './Glossary';
