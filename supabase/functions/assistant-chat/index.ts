@@ -329,6 +329,11 @@ Deno.serve(async (req) => {
       let externalCostCents = 0;
       const externalSourcesUsed: string[] = [];
       const planLimitations: string[] = [];
+      // Marca quando o PRIMEIRO step internal já produziu resultado (mesmo
+      // que zero linhas). Sem essa flag, um first-step com 0 linhas seguido
+      // de um segundo step que falha seria tratado erroneamente como falha
+      // de primeiro step (e abortaria a resposta).
+      let mainInternalRecorded = false;
 
       try {
         if (!conversationId) {
@@ -499,7 +504,7 @@ Deno.serve(async (req) => {
 
               // Falha do PRIMEIRO step internal = falha da resposta. Falha de
               // step subsequente = degradação (Formatter informa "step X falhou").
-              if (rows.length === 0 && rowsReturned === 0 && status === 'success') {
+              if (!mainInternalRecorded && status === 'success') {
                 status = stepStatus;
                 errorMessage = rpcErr.message;
                 break;
@@ -515,10 +520,12 @@ Deno.serve(async (req) => {
               rows: stepRows,
               rows_returned: stepRows.length,
             });
-            // Linhas "principais" para insights/analysis = primeiro internal step.
-            if (rows.length === 0 && rowsReturned === 0) {
+            // Linhas "principais" para insights/analysis = primeiro internal step
+            // que executou (mesmo que tenha vindo vazio).
+            if (!mainInternalRecorded) {
               rows = stepRows;
               rowsReturned = stepRows.length;
+              mainInternalRecorded = true;
             }
             send('step_result', {
               id: step.id,
@@ -862,6 +869,9 @@ async function runNonStreaming(opts: {
   let externalCostCents = 0;
   const externalSourcesUsed: string[] = [];
   const planLimitations: string[] = [];
+  // Mesma flag explicitada do handler streaming — distingue "primeiro step
+  // ainda não rodou" de "primeiro step rodou e retornou zero linhas".
+  let mainInternalRecorded = false;
 
   try {
     if (!conversationId) {
@@ -957,7 +967,7 @@ async function runNonStreaming(opts: {
             rows_returned: 0,
             error: r.error.message,
           });
-          if (rows.length === 0 && rowsReturned === 0 && status === 'success') {
+          if (!mainInternalRecorded && status === 'success') {
             status = stepStatus;
             errorMessage = r.error.message;
             break;
@@ -972,9 +982,10 @@ async function runNonStreaming(opts: {
           rows: stepRows,
           rows_returned: stepRows.length,
         });
-        if (rows.length === 0 && rowsReturned === 0) {
+        if (!mainInternalRecorded) {
           rows = stepRows;
           rowsReturned = stepRows.length;
+          mainInternalRecorded = true;
         }
         continue;
       }
