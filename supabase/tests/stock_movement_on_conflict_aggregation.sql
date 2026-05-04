@@ -84,14 +84,15 @@ BEGIN
   s := regexp_replace(s, '\s*,\s*', ',', 'g');
   s := regexp_replace(s, '\s*\(\s*', '(', 'g');
   s := regexp_replace(s, '\s*\)\s*', ')', 'g');
-  s := regexp_replace(s, '\s+is\s+not\s+null\b', ' is not null', 'gi');
-  s := regexp_replace(s, '\s+is\s+null\b',       ' is null',     'gi');
+  -- IMPORTANTE: em PostgreSQL POSIX, word boundary é \y (não \b, que é backspace).
+  s := regexp_replace(s, '\s+is\s+not\s+null\y', ' is not null', 'gi');
+  s := regexp_replace(s, '\s+is\s+null\y',       ' is null',     'gi');
   -- normaliza palavras-chave booleanas garantindo um espaço de cada lado,
   -- mesmo quando coladas a parênteses (ex.: ")and(" → ") and (")
-  s := regexp_replace(s, '\s*\band\b\s*', ' and ', 'gi');
-  s := regexp_replace(s, '\s*\bor\b\s*',  ' or ',  'gi');
-  s := regexp_replace(s, '\)and\(', ') and (', 'g');
-  s := regexp_replace(s, '\)or\(',  ') or (',  'g');
+  s := regexp_replace(s, '\)and\(', ') and (', 'gi');
+  s := regexp_replace(s, '\)or\(',  ') or (',  'gi');
+  s := regexp_replace(s, '\s*\yand\y\s*', ' and ', 'gi');
+  s := regexp_replace(s, '\s*\yor\y\s*',  ' or ',  'gi');
   RETURN btrim(s, ' ;');
 END $fn$;
 
