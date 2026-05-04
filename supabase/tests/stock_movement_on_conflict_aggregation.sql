@@ -53,15 +53,66 @@ BEGIN;
 -- comparamos a assinatura real (via pg_index) com a esperada e abortamos
 -- se qualquer divergência for detectada (ausente, não-único, colunas
 -- diferentes, predicado diferente).
+-- Função local de normalização: torna a comparação tolerante a
+-- diferenças cosméticas que NÃO afetam a semântica do predicado parcial.
+-- Aplica:
+--   • lower() — case-insensitive (PG normaliza identificadores p/ minúsculas)
+--   • colapsa whitespace (incluindo \n e \t) em um único espaço
+--   • remove espaços ao redor de parênteses e operadores (= , ;)
+--   • remove casts de string redundantes: ::text, ::varchar, ::bpchar,
+--       ::"text", ::character varying  (e variantes com espaço)
+--   • normaliza  is  null / is  not  null  e  =  /  <>
+--   • descasca pares de parênteses externos redundantes (até 4 níveis)
+--   • remove ponto-e-vírgula final
+CREATE OR REPLACE FUNCTION pg_temp.norm_pred(src text)
+RETURNS text
+LANGUAGE plpgsql IMMUTABLE
+AS $fn$
+DECLARE s text;
+BEGIN
+  IF src IS NULL THEN RETURN NULL; END IF;
+  s := lower(src);
+  -- colapsa qualquer whitespace
+  s := regexp_replace(s, '\s+', ' ', 'g');
+  -- remove casts de string redundantes (com ou sem aspas/espaço)
+  s := regexp_replace(s, '::\s*"?(text|varchar|bpchar|character\s+varying)"?', '', 'g');
+  -- normaliza espaçamento ao redor de parênteses e separadores
+  s := regexp_replace(s, '\s*\(\s*', '(', 'g');
+  s := regexp_replace(s, '\s*\)\s*', ')', 'g');
+  s := regexp_replace(s, '\s*,\s*', ',', 'g');
+  s := regexp_replace(s, '\s*=\s*', '=', 'g');
+  s := regexp_replace(s, '\s*<>\s*', '<>', 'g');
+  -- normaliza "is null" / "is not null"
+  s := regexp_replace(s, '\s+is\s+not\s+null', ' is not null', 'g');
+  s := regexp_replace(s, '\s+is\s+null',     ' is null',     'g');
+  -- remove ; final e trim
+  s := btrim(s, ' ;');
+  -- descasca parênteses externos redundantes: (X) → X, ((X)) → X, ...
+  FOR i IN 1..4 LOOP
+    IF s ~ '^\(.*\)$' AND
+       (length(s) - length(regexp_replace(substr(s,2,length(s)-2), '[^(]', '', 'g')))
+       =
+       (length(s) - length(regexp_replace(substr(s,2,length(s)-2), '[^)]', '', 'g')))
+    THEN
+      s := substr(s, 2, length(s) - 2);
+      s := btrim(s);
+    ELSE
+      EXIT;
+    END IF;
+  END LOOP;
+  RETURN s;
+END $fn$;
+
 DO $$
 DECLARE
+  -- Predicados esperados em forma CANÔNICA mínima (após norm_pred).
+  -- Não precisam mais embutir parênteses externos ou ::text.
   v_required CONSTANT jsonb := jsonb_build_array(
     jsonb_build_object(
       'name',      'uniq_balance_estoque',
       'unique',    true,
       'columns',   jsonb_build_array('item_id'),
-      -- normalizado: minúsculas, sem espaços extras, sem ponto-e-vírgula
-      'predicate', '((location_type = ''estoque''::text) and (project_id is null))',
+      'predicate', 'location_type=''estoque'' and project_id is null',
       'ddl',       'CREATE UNIQUE INDEX uniq_balance_estoque ON public.stock_balances (item_id) '
                 || 'WHERE location_type = ''estoque'' AND project_id IS NULL;'
     ),
@@ -69,7 +120,7 @@ DECLARE
       'name',      'uniq_balance_obra',
       'unique',    true,
       'columns',   jsonb_build_array('item_id','project_id'),
-      'predicate', '((location_type = ''obra''::text) and (project_id is not null))',
+      'predicate', 'location_type=''obra'' and project_id is not null',
       'ddl',       'CREATE UNIQUE INDEX uniq_balance_obra ON public.stock_balances (item_id, project_id) '
                 || 'WHERE location_type = ''obra'' AND project_id IS NOT NULL;'
     )
