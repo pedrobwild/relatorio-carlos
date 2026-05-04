@@ -919,6 +919,8 @@ function NewMovementDialog({
   const today = format(new Date(), "yyyy-MM-dd");
   const [form, setForm] = useState({
     item_id: "",
+    new_item_name: "",
+    new_item_unit: "un",
     movement_type: "entrada" as "entrada" | "saida" | "ajuste",
     quantity: "",
     movement_date: today,
@@ -929,11 +931,34 @@ function NewMovementDialog({
     invoice_number: "",
     notes: "",
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
+  const cameraInputRef = React.useRef<HTMLInputElement>(null);
 
-  const reset = () =>
+  React.useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
+
+  const handlePhotoPick = (file: File | null) => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    if (file) {
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    } else {
+      setPhotoFile(null);
+      setPhotoPreview(null);
+    }
+  };
+
+  const reset = () => {
     setForm({
       item_id: "",
+      new_item_name: "",
+      new_item_unit: "un",
       movement_type: "entrada",
       quantity: "",
       movement_date: today,
@@ -944,10 +969,14 @@ function NewMovementDialog({
       invoice_number: "",
       notes: "",
     });
+    handlePhotoPick(null);
+  };
 
   const submit = () => {
     const parsed = movementSchema.safeParse({
-      item_id: form.item_id,
+      item_id: form.item_id || undefined,
+      new_item_name: form.new_item_name,
+      new_item_unit: form.new_item_unit,
       movement_type: form.movement_type,
       quantity: form.quantity,
       movement_date: form.movement_date,
@@ -958,6 +987,7 @@ function NewMovementDialog({
       unit_cost: form.unit_cost ? Number(form.unit_cost) : null,
       invoice_number: form.invoice_number,
       notes: form.notes,
+      photo_file: photoFile,
     });
     if (!parsed.success) {
       const errs: Record<string, string> = {};
