@@ -16,6 +16,7 @@ import { AuthRedirect } from "@/components/AuthRedirect";
 import { ProjectShell } from "@/components/layout/ProjectShell";
 import { GestaoShell } from "@/components/layout/GestaoShell";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 /** Thin wrapper: shows AuthRedirect (which navigates away) + a spinner while it resolves. */
 const AuthRedirectPage = () => {
@@ -158,6 +159,7 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => (
   <ErrorBoundary name="AppRoot">
+    <ThemeProvider>
     <QueryProvider>
       <TooltipProvider>
         <Toaster />
@@ -403,6 +405,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </QueryProvider>
+    </ThemeProvider>
   </ErrorBoundary>
 );
 
