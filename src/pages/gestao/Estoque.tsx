@@ -321,7 +321,7 @@ export default function Estoque() {
       qc.invalidateQueries({ queryKey: ["stock", "items"] });
       qc.invalidateQueries({ queryKey: ["stock", "balances"] });
       qc.invalidateQueries({ queryKey: ["stock", "movements"] });
-      if (variables.type === "entrada") {
+      if (variables.movement_type === "entrada") {
         toast.success("Entrada registrada no estoque");
       } else {
         toast.success("Movimentação registrada — saldo atualizado");
@@ -329,7 +329,7 @@ export default function Estoque() {
       setMovDialogOpen(false);
     },
     onError: (e: any, variables) => {
-      const action = variables?.type === "entrada" ? "registrar entrada" : "registrar movimentação";
+      const action = variables?.movement_type === "entrada" ? "registrar entrada" : "registrar movimentação";
       toast.error(e?.message ? `Falha ao ${action}: ${e.message}` : `Falha ao ${action}`);
     },
   });
