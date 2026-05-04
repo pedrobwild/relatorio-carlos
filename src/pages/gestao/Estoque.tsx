@@ -1414,13 +1414,23 @@ function NewMovementDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-2 items-stretch sm:items-center">
+          {loading && photoFile && (
+            <p className="text-xs text-muted-foreground sm:mr-auto flex items-center gap-2">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Enviando foto…
+            </p>
+          )}
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancelar
           </Button>
-          <Button onClick={submit} disabled={loading}>
+          <Button onClick={submit} disabled={loading} aria-busy={loading}>
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Registrar
+            {loading ? (photoFile ? "Enviando…" : "Salvando…") : "Registrar"}
           </Button>
         </DialogFooter>
       </DialogContent>
