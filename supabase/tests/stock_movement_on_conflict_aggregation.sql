@@ -15,6 +15,20 @@
 --
 -- Como rodar:
 --   psql "$DATABASE_URL" -f supabase/tests/stock_movement_on_conflict_aggregation.sql
+--
+-- Modo DRY-RUN (apenas reporta índices ausentes/divergentes e o DDL
+-- sugerido, sem abortar e sem inserir nenhum movimento):
+--   psql "$DATABASE_URL" -v dry_run=1 -f supabase/tests/stock_movement_on_conflict_aggregation.sql
+
+-- Garante que :'dry_run' sempre exista
+\if :{?dry_run}
+\else
+  \set dry_run 0
+\endif
+-- Propaga o flag para uma GUC custom acessível pelos blocos DO via current_setting()
+SELECT set_config('regress.dry_run',
+                  CASE WHEN lower(:'dry_run') IN ('1','on','true','yes','y') THEN 'on' ELSE 'off' END,
+                  false);
 
 BEGIN;
 
@@ -128,11 +142,27 @@ BEGIN
     FOR i IN 1..array_length(v_ddls,1) LOOP
       RAISE NOTICE '%', v_ddls[i];
     END LOOP;
-    RAISE EXCEPTION 'PRECHECK FAIL (% problema(s)): %',
-      array_length(v_problems,1), array_to_string(v_problems, ' | ');
+    IF current_setting('regress.dry_run', true) = 'on' THEN
+      RAISE NOTICE '⚠ DRY-RUN: % problema(s) detectado(s) — abort SUPRIMIDO. Nenhum movimento será inserido.',
+        array_length(v_problems,1);
+    ELSE
+      RAISE EXCEPTION 'PRECHECK FAIL (% problema(s)): %',
+        array_length(v_problems,1), array_to_string(v_problems, ' | ');
+    END IF;
   END IF;
   RAISE NOTICE '──────────────────────────────────────────────────────';
 END $$;
+
+-- ═══════════════════════════════════════════════════════════════════
+-- DRY-RUN gate: encerra aqui sem inserir nada nem rodar cenários.
+-- Útil para healthcheck / CI: roda o relatório de índices e sai limpo.
+-- ═══════════════════════════════════════════════════════════════════
+\if :dry_run
+  \echo '── DRY-RUN ativo: pulando cleanup, setup e cenários de teste ──'
+  ROLLBACK;
+  \echo '── Fim do dry-run (transação revertida, banco intocado) ──'
+  \quit
+\endif
 
 -- ─── Cleanup PRÉ-execução (idempotente, baseado em prefixo) ─────────
 -- Pega tudo que tenha o prefixo de teste, não só o item exato — protege
@@ -300,6 +330,5 @@ BEGIN
   END IF;
   RAISE NOTICE '✓ Estado do banco preservado: nenhum resíduo de teste';
 END $$;
-
 
 COMMIT;
