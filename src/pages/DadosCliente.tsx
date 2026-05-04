@@ -185,6 +185,8 @@ export default function DadosCliente({ projectId: propProjectId, embedded = fals
         const raw = studioRes.data as StudioData;
         setStudio({
           ...raw,
+          key_location: raw.key_location ?? null,
+          electronic_lock_password: raw.electronic_lock_password ?? null,
           provider_access_instructions: sanitizeInlineRichText(raw.provider_access_instructions),
         });
       } else {
