@@ -18,58 +18,120 @@
 
 BEGIN;
 
--- ─── Pré-checagem + relatório dos índices parciais ─────────────────
--- Imprime, via RAISE NOTICE (stdout do psql), quais índices exigidos
--- existem, e — para os ausentes — o DDL exato que precisa ser aplicado
--- antes de tentar inserir movimentos. Se algo faltar, aborta.
+-- ─── Pré-checagem estrutural dos índices parciais ─────────────────
+-- Não basta o índice EXISTIR pelo nome: o trigger
+-- apply_stock_movement_to_balance depende de que as COLUNAS-chave e o
+-- PREDICADO parcial batam exatamente com a cláusula ON CONFLICT. Aqui
+-- comparamos a assinatura real (via pg_index) com a esperada e abortamos
+-- se qualquer divergência for detectada (ausente, não-único, colunas
+-- diferentes, predicado diferente).
 DO $$
 DECLARE
   v_required CONSTANT jsonb := jsonb_build_array(
     jsonb_build_object(
-      'name', 'uniq_balance_estoque',
-      'ddl',  'CREATE UNIQUE INDEX uniq_balance_estoque ON public.stock_balances (item_id) '
-              'WHERE location_type = ''estoque'' AND project_id IS NULL;'
+      'name',      'uniq_balance_estoque',
+      'unique',    true,
+      'columns',   jsonb_build_array('item_id'),
+      -- normalizado: minúsculas, sem espaços extras, sem ponto-e-vírgula
+      'predicate', '((location_type = ''estoque''::text) and (project_id is null))',
+      'ddl',       'CREATE UNIQUE INDEX uniq_balance_estoque ON public.stock_balances (item_id) '
+                || 'WHERE location_type = ''estoque'' AND project_id IS NULL;'
     ),
     jsonb_build_object(
-      'name', 'uniq_balance_obra',
-      'ddl',  'CREATE UNIQUE INDEX uniq_balance_obra ON public.stock_balances (item_id, project_id) '
-              'WHERE location_type = ''obra'' AND project_id IS NOT NULL;'
+      'name',      'uniq_balance_obra',
+      'unique',    true,
+      'columns',   jsonb_build_array('item_id','project_id'),
+      'predicate', '((location_type = ''obra''::text) and (project_id is not null))',
+      'ddl',       'CREATE UNIQUE INDEX uniq_balance_obra ON public.stock_balances (item_id, project_id) '
+                || 'WHERE location_type = ''obra'' AND project_id IS NOT NULL;'
     )
   );
-  r jsonb;
-  v_def text;
-  v_found int := 0;
-  v_missing text[] := ARRAY[]::text[];
-  v_ddls   text[] := ARRAY[]::text[];
+  r            jsonb;
+  v_oid        oid;
+  v_unique     bool;
+  v_cols       text[];
+  v_pred_raw   text;
+  v_pred_norm  text;
+  v_exp_cols   text[];
+  v_exp_pred   text;
+  v_ok         int := 0;
+  v_problems   text[] := ARRAY[]::text[];
+  v_ddls       text[] := ARRAY[]::text[];
+  v_reasons    text[];
 BEGIN
-  RAISE NOTICE '────── Stock balance index report ──────';
+  RAISE NOTICE '────── Stock balance index report (estrutural) ──────';
   FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
-    SELECT indexdef INTO v_def
-      FROM pg_indexes
-     WHERE schemaname='public' AND tablename='stock_balances'
-       AND indexname = r->>'name';
+    v_reasons := ARRAY[]::text[];
+    v_exp_cols := ARRAY(SELECT jsonb_array_elements_text(r->'columns'));
+    v_exp_pred := r->>'predicate';
 
-    IF FOUND THEN
-      v_found := v_found + 1;
-      RAISE NOTICE '  ✓ % — %', r->>'name', v_def;
-    ELSE
-      v_missing := array_append(v_missing, r->>'name');
-      v_ddls    := array_append(v_ddls,    r->>'ddl');
+    -- Localiza o índice por nome em public.stock_balances
+    SELECT i.indexrelid, i.indisunique,
+           ARRAY(
+             SELECT a.attname
+               FROM unnest(i.indkey) WITH ORDINALITY AS k(attnum, ord)
+               JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = k.attnum
+              ORDER BY k.ord
+           ),
+           pg_get_expr(i.indpred, i.indrelid)
+      INTO v_oid, v_unique, v_cols, v_pred_raw
+      FROM pg_index i
+      JOIN pg_class c ON c.oid = i.indexrelid
+      JOIN pg_class t ON t.oid = i.indrelid
+      JOIN pg_namespace n ON n.oid = t.relnamespace
+     WHERE n.nspname = 'public'
+       AND t.relname = 'stock_balances'
+       AND c.relname = (r->>'name');
+
+    IF NOT FOUND THEN
+      v_problems := array_append(v_problems, format('%s: AUSENTE', r->>'name'));
+      v_ddls     := array_append(v_ddls, r->>'ddl');
       RAISE NOTICE '  ✗ % — AUSENTE', r->>'name';
+      CONTINUE;
+    END IF;
+
+    -- Normaliza o predicado para comparação tolerante a espaços/casing
+    v_pred_norm := lower(regexp_replace(COALESCE(v_pred_raw, ''), '\s+', ' ', 'g'));
+    v_pred_norm := trim(v_pred_norm);
+
+    IF (r->>'unique')::bool AND NOT v_unique THEN
+      v_reasons := array_append(v_reasons, 'não é UNIQUE');
+    END IF;
+    IF v_cols IS DISTINCT FROM v_exp_cols THEN
+      v_reasons := array_append(v_reasons,
+        format('colunas divergem (esperado=%L, atual=%L)', v_exp_cols, v_cols));
+    END IF;
+    IF v_pred_norm IS DISTINCT FROM v_exp_pred THEN
+      v_reasons := array_append(v_reasons,
+        format('predicado diverge (esperado=%L, atual=%L)', v_exp_pred, v_pred_norm));
+    END IF;
+
+    IF array_length(v_reasons,1) IS NULL THEN
+      v_ok := v_ok + 1;
+      RAISE NOTICE '  ✓ % — UNIQUE=%, cols=%, pred=%',
+        r->>'name', v_unique, v_cols, v_pred_norm;
+    ELSE
+      v_problems := array_append(v_problems,
+        format('%s: %s', r->>'name', array_to_string(v_reasons, '; ')));
+      v_ddls := array_append(v_ddls,
+        format('-- recriar %s:%sDROP INDEX IF EXISTS public.%I;%s%s',
+               r->>'name', E'\n', r->>'name', E'\n', r->>'ddl'));
+      RAISE NOTICE '  ✗ % — DIVERGENTE: %', r->>'name', array_to_string(v_reasons, '; ');
     END IF;
   END LOOP;
-  RAISE NOTICE 'Encontrados: % / %  |  Ausentes: %',
-    v_found, jsonb_array_length(v_required), COALESCE(array_length(v_missing,1), 0);
 
-  IF array_length(v_missing,1) > 0 THEN
+  RAISE NOTICE 'OK: % / %  |  Problemas: %',
+    v_ok, jsonb_array_length(v_required), COALESCE(array_length(v_problems,1), 0);
+
+  IF array_length(v_problems,1) > 0 THEN
     RAISE NOTICE '────── DDL sugerido ──────';
     FOR i IN 1..array_length(v_ddls,1) LOOP
-      RAISE NOTICE '  %', v_ddls[i];
+      RAISE NOTICE '%', v_ddls[i];
     END LOOP;
-    RAISE EXCEPTION 'PRECHECK FAIL: índices ausentes (%): %',
-      array_length(v_missing,1), array_to_string(v_missing, ', ');
+    RAISE EXCEPTION 'PRECHECK FAIL (% problema(s)): %',
+      array_length(v_problems,1), array_to_string(v_problems, ' | ');
   END IF;
-  RAISE NOTICE '────────────────────────────────────────';
+  RAISE NOTICE '──────────────────────────────────────────────────────';
 END $$;
 
 -- ─── Cleanup PRÉ-execução (idempotente, baseado em prefixo) ─────────
