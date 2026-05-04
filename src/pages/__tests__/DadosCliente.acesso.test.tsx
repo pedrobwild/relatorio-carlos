@@ -95,7 +95,7 @@ describe('DadosCliente · Acesso à obra (persistência)', () => {
 
     // Tab "Informações do Projeto" abriga o card "Acesso à obra"
     const infoTab = await screen.findByRole('tab', { name: /Informações do Projeto/i });
-    fireEvent.click(infoTab);
+    await userEvent.click(infoTab);
 
     const keyInput = await screen.findByLabelText(/Local da chave/i);
     const lockInput = await screen.findByLabelText(/Senha da fechadura eletrônica/i);
@@ -120,7 +120,7 @@ describe('DadosCliente · Acesso à obra (persistência)', () => {
     renderPage();
 
     const infoTab2 = await screen.findByRole('tab', { name: /Informações do Projeto/i });
-    fireEvent.click(infoTab2);
+    await userEvent.click(infoTab2);
 
     const reloadedKey = await screen.findByLabelText(/Local da chave/i) as HTMLInputElement;
     const reloadedLock = await screen.findByLabelText(/Senha da fechadura eletrônica/i) as HTMLInputElement;
@@ -139,7 +139,7 @@ describe('DadosCliente · Acesso à obra (persistência)', () => {
     renderPage();
 
     const infoTab = await screen.findByRole('tab', { name: /Informações do Projeto/i });
-    fireEvent.click(infoTab);
+    await userEvent.click(infoTab);
 
     const keyInput = await screen.findByLabelText(/Local da chave/i) as HTMLInputElement;
     const lockInput = await screen.findByLabelText(/Senha da fechadura eletrônica/i) as HTMLInputElement;
