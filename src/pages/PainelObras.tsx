@@ -190,16 +190,13 @@ const computeOverdueDays = (obra: {
 };
 
 import { getEtapaWeek, formatEtapaLabel } from '@/lib/painelEtapaWeek';
+import { getStatusDotClass } from '@/lib/statusTone';
 
-const statusDotClass = (s: PainelStatus | null): string => {
-  switch (s) {
-    case 'Aguardando': return 'bg-info';
-    case 'Em dia':     return 'bg-success';
-    case 'Atrasado':   return 'bg-destructive';
-    case 'Paralisada': return 'bg-muted-foreground';
-    default:           return 'bg-muted';
-  }
-};
+// `statusDotClass` agora é uma fina camada sobre o helper central `getStatusDotClass`
+// (`src/lib/statusTone.ts`). Mantida como alias local para minimizar diff dos
+// muitos call-sites na tabela/kanban deste arquivo. Nova UI deve preferir
+// `<StatusBadge tone={getStatusTone(s)}>` direto.
+const statusDotClass = (s: PainelStatus | null): string => getStatusDotClass(s);
 
 const statusPillClass = (s: PainelStatus | null): string => {
   switch (s) {

@@ -6,6 +6,7 @@ import { AppHeader } from "@/components/AppHeader";
 import CreateReportModal from "@/components/CreateReportModal";
 import { ReportData } from "@/types/report";
 import { useAuth } from "@/hooks/useAuth";
+import { Heading } from "@/components/typography";
 import { isDemoMode } from "@/config/flags";
 
 // Demo data - only used when isDemoMode is true
@@ -67,9 +68,9 @@ const Home = () => {
           {/* Hero Section */}
           <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col items-center gap-2 md:gap-3 animate-fade-in">
-              <h1 className="text-h1 text-3xl md:text-5xl tracking-tight">
+              <Heading level="page" className="tracking-tight">
                 Portal do Cliente
-              </h1>
+              </Heading>
             </div>
             <p className="text-body text-muted-foreground max-w-md mx-auto leading-relaxed animate-fade-in [animation-delay:100ms] opacity-0 [animation-fill-mode:forwards] px-2">
               {isDemoMode 

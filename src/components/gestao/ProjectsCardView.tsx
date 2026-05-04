@@ -130,7 +130,7 @@ function ProjectCard({
         isOverdue
           ? 'border-destructive/30 bg-destructive/[0.02] hover:border-destructive/50'
           : isApproaching
-          ? 'border-amber-500/30 bg-amber-500/[0.02] hover:border-amber-500/50'
+          ? 'border-warning/30 bg-warning/[0.02] hover:border-warning/50'
           : 'border-border/50 hover:border-primary/30',
       )}
     >

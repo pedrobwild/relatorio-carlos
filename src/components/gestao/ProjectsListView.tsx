@@ -30,10 +30,10 @@ import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 
 const statusColors: Record<string, string> = {
-  draft: 'bg-slate-500/10 text-slate-600 border-slate-300/50 dark:text-slate-400 dark:border-slate-500/20',
-  active: 'bg-emerald-500/10 text-emerald-700 border-emerald-300/50 dark:text-emerald-400 dark:border-emerald-500/20',
-  completed: 'bg-blue-500/10 text-blue-700 border-blue-300/50 dark:text-blue-400 dark:border-blue-500/20',
-  paused: 'bg-amber-500/10 text-amber-700 border-amber-300/50 dark:text-amber-400 dark:border-amber-500/20',
+  draft: 'bg-muted text-muted-foreground border-border',
+  active: 'bg-success/10 text-success border-success/30',
+  completed: 'bg-info/10 text-info border-info/30',
+  paused: 'bg-warning/10 text-warning border-warning/30',
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
@@ -364,9 +364,9 @@ function ProjectRow({
         className={cn(
           'cursor-pointer transition-colors group/row border-b border-border/30 bg-white dark:bg-card',
           isOverdue
-            ? 'hover:bg-red-50/60 dark:hover:bg-destructive/[0.06]'
+            ? 'hover:bg-destructive/[0.06]'
             : isApproaching
-              ? 'hover:bg-amber-50/40 dark:hover:bg-amber-500/[0.05]'
+              ? 'hover:bg-warning/[0.06]'
               : 'hover:bg-muted/30',
         )}
       >
@@ -419,13 +419,13 @@ function ProjectRow({
           {currentStage ? (
             <div className="flex items-center gap-1.5 min-w-0">
               {currentStage.isAwaitingStart ? (
-                <Hourglass className="h-3 w-3 shrink-0 text-amber-500" />
+                <Hourglass className="h-3 w-3 shrink-0 text-warning" />
               ) : (
                 <HardHat className="h-3 w-3 shrink-0 text-primary" />
               )}
               <span className={cn(
                 'text-[11px] font-medium truncate max-w-[160px]',
-                currentStage.isAwaitingStart ? 'text-amber-600 dark:text-amber-400' : 'text-foreground/80',
+                currentStage.isAwaitingStart ? 'text-warning' : 'text-foreground/80',
               )}>
                 {currentStage.description}
               </span>
@@ -459,7 +459,7 @@ function ProjectRow({
             let cls: string;
             if (daysSinceUpdate === 0) {
               label = 'hoje';
-              cls = 'text-emerald-600 dark:text-emerald-400';
+              cls = 'text-success';
             } else if (daysSinceUpdate === 1) {
               label = 'ontem';
               cls = 'text-foreground/70';
@@ -468,7 +468,7 @@ function ProjectRow({
               cls = 'text-foreground/70';
             } else if (daysSinceUpdate <= 13) {
               label = `há ${daysSinceUpdate}d`;
-              cls = 'text-amber-600 dark:text-amber-400 font-semibold';
+              cls = 'text-warning font-semibold';
             } else {
               label = `há ${daysSinceUpdate}d`;
               cls = 'text-destructive font-bold';
@@ -493,15 +493,15 @@ function ProjectRow({
             <div className="flex flex-col items-center gap-0.5">
               <span className={cn(
                 'text-[13px] font-bold tabular-nums whitespace-nowrap leading-none',
-                isFinished ? 'text-emerald-600 dark:text-emerald-400' :
+                isFinished ? 'text-success' :
                 isOverdue ? 'text-destructive' :
-                isApproaching ? 'text-amber-600 dark:text-amber-400' :
+                isApproaching ? 'text-warning' :
                 'text-foreground',
               )}>
                 {format(plannedEnd, "dd/MM", { locale: ptBR })}
               </span>
               {isFinished ? (
-                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5 leading-none">
+                <span className="text-[9px] text-success font-medium flex items-center gap-0.5 leading-none">
                   <CheckCircle className="h-2.5 w-2.5" /> Entregue
                 </span>
               ) : isOverdue ? (
@@ -509,7 +509,7 @@ function ProjectRow({
                   <CalendarX className="h-2.5 w-2.5" /> {Math.abs(daysRemaining!)}d atraso
                 </span>
               ) : isApproaching ? (
-                <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5 leading-none">
+                <span className="text-[9px] text-warning font-medium flex items-center gap-0.5 leading-none">
                   <Clock className="h-2.5 w-2.5" /> {daysRemaining}d
                 </span>
               ) : (
@@ -531,7 +531,7 @@ function ProjectRow({
                   <div
                     className={cn(
                       'absolute inset-y-0 left-0 rounded-full transition-all',
-                      progressDeviation >= 0 ? 'bg-emerald-500' : progressDeviation >= -10 ? 'bg-amber-500' : 'bg-destructive',
+                      progressDeviation >= 0 ? 'bg-success' : progressDeviation >= -10 ? 'bg-warning' : 'bg-destructive',
                     )}
                     style={{ width: `${Math.min(100, progress)}%` }}
                   />

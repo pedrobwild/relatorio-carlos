@@ -190,7 +190,7 @@ export function ApprovalDialog({
                 Solicitar Ajuste
               </Button>
               <Button
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="gap-2 bg-success hover:bg-success/90 text-success-foreground"
                 onClick={() => setMode("approve")}
               >
                 <CheckCircle2 className="w-4 h-4" />
@@ -215,7 +215,7 @@ export function ApprovalDialog({
                 className={cn(
                   "gap-2",
                   mode === "approve"
-                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    ? "bg-success hover:bg-success/90 text-success-foreground"
                     : "bg-[hsl(var(--warning))] hover:bg-[hsl(var(--warning))]/90 text-[hsl(var(--warning-foreground))]"
                 )}
               >

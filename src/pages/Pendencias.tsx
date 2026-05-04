@@ -8,6 +8,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { PageSkeleton } from "@/components/ui-premium";
 import { EmptyState } from "@/components/EmptyState";
+import { Heading } from "@/components/typography";
 import { PendenciaItemCard } from "@/components/tabs/PendenciaItemCard";
 
 const Pendencias = () => {
@@ -51,22 +52,22 @@ const Pendencias = () => {
 
   const summaryCards = (
     <>
-      <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 md:p-4">
+      <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 md:p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-rose-500" />
-            <span className="text-caption md:text-sm text-rose-600 font-medium">Atrasados</span>
+            <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-destructive" />
+            <span className="text-caption md:text-sm text-destructive font-medium">Atrasados</span>
           </div>
-          <p className="text-h2 md:text-2xl font-bold text-rose-600">{stats.overdueCount}</p>
+          <Heading level="value" as="p" className="text-destructive">{stats.overdueCount}</Heading>
         </div>
       </div>
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 md:p-4">
+      <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 md:p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 md:w-5 md:h-5 text-amber-500" />
-            <span className="text-caption md:text-sm text-amber-600 font-medium">Urgentes</span>
+            <Clock className="w-4 h-4 md:w-5 md:h-5 text-warning" />
+            <span className="text-caption md:text-sm text-warning font-medium">Urgentes</span>
           </div>
-          <p className="text-h2 md:text-2xl font-bold text-amber-600">{stats.urgentCount}</p>
+          <Heading level="value" as="p" className="text-warning">{stats.urgentCount}</Heading>
         </div>
       </div>
     </>
