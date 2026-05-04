@@ -1525,7 +1525,9 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
               !obra.etapa && 'text-muted-foreground italic',
               obra.etapa === 'Finalizada' && 'text-success font-medium',
               obra.etapa === 'Vistoria reprovada' && 'text-destructive font-medium')}>
-              <SelectValue placeholder="Definir…" />
+              <SelectValue placeholder="Definir…">
+                {obra.etapa ? formatEtapaLabel(obra) : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>(nenhuma)</SelectItem>
