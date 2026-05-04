@@ -342,9 +342,7 @@ export default function PainelAlertasCronograma() {
                           onMarkStarted={() => markStarted.mutate(alert.id)}
                           onMarkCompleted={() => markCompleted.mutate(alert.id)}
                           onReplan={() => goToCronograma(alert.project_id)}
-                          pending={
-                            markStarted.isPending || markCompleted.isPending
-                          }
+                          pending={false}
                         />
                       ))}
                     </TableBody>
