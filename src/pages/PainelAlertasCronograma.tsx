@@ -252,10 +252,11 @@ export default function PainelAlertasCronograma() {
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  value={searchQuery}
+                  value={searchInput}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar por atividade, obra ou etapa…"
                   className="pl-8 h-9"
+                  aria-label="Buscar alertas"
                 />
               </div>
               <Select value={filterProject} onValueChange={setFilterProject}>
