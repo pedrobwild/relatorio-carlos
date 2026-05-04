@@ -131,6 +131,9 @@ DECLARE
   v_problems   text[] := ARRAY[]::text[];
   v_ddls       text[] := ARRAY[]::text[];
   v_reasons    text[];
+  -- Relatório JSON acumulado (1 entrada por índice esperado)
+  v_report     jsonb := '[]'::jsonb;
+  v_status     text;
   -- Validação estrutural posicional via pg_index
   v_natts      int;     -- total de atributos no índice (key + INCLUDE)
   v_nkeyatts   int;     -- atributos da CHAVE (sem INCLUDE)
