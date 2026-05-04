@@ -13,8 +13,7 @@ import { createQueryPersister, QUERY_CACHE_VERSION } from "@/lib/queryPersister"
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 import { AuthRedirect } from "@/components/AuthRedirect";
-import { ProjectShell } from "@/components/layout/ProjectShell";
-import { GestaoShell } from "@/components/layout/GestaoShell";
+import { AppShell } from "@/components/layout/AppShell";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 
 /** Thin wrapper: shows AuthRedirect (which navigates away) + a spinner while it resolves. */
@@ -96,13 +95,18 @@ const persister = createQueryPersister();
 // Cache max age: 24 hours
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
-// Wrapper component to provide project context + staff sidebar shell
+// Wrapper component to provide project context + project shell (variant=project).
 const ProjectPage = ({ children }: { children: React.ReactNode }) => (
   <ErrorBoundary name="ProjectPage" feature="general">
     <ProjectProvider>
-      <ProjectShell>{children}</ProjectShell>
+      <AppShell variant="project">{children}</AppShell>
     </ProjectProvider>
   </ErrorBoundary>
+);
+
+// Wrapper for /gestao/* routes — single portfolio shell variant.
+const PortfolioPage = ({ children }: { children: React.ReactNode }) => (
+  <AppShell variant="portfolio">{children}</AppShell>
 );
 
 const RouteFallback = () => (
@@ -174,34 +178,34 @@ const App = () => (
             <Route path="/redefinir-senha" element={withSuspense(<RedefinirSenha />)} />
             <Route path="/verificar/:hash" element={withSuspense(<VerificarAssinatura />)} />
             
-            {/* Staff-only routes — wrapped in GestaoShell */}
+            {/* Staff-only routes — wrapped in AppShell variant=portfolio */}
             {/* /gestao foi unificada no Painel de Obras */}
             <Route path="/gestao" element={<Navigate to="/gestao/painel-obras" replace />} />
-            <Route path="/gestao/nova-obra" element={<StaffRoute><GestaoShell>{withSuspense(<NovaObra />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/obra/:projectId" element={<StaffRoute><GestaoShell>{withSuspense(<EditarObra />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/obra/:projectId/wizard" element={<StaffRoute><GestaoShell>{withSuspense(<EditarObraWizard />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/arquivos" element={<ProtectedRoute><GestaoShell>{withSuspense(<Arquivos />)}</GestaoShell></ProtectedRoute>} />
-            <Route path="/gestao/calendario-compras" element={<StaffRoute><GestaoShell>{withSuspense(<CalendarioCompras />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/estoque" element={<StaffRoute><GestaoShell>{withSuspense(<Estoque />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/nova-obra" element={<StaffRoute><PortfolioPage>{withSuspense(<NovaObra />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/obra/:projectId" element={<StaffRoute><PortfolioPage>{withSuspense(<EditarObra />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/obra/:projectId/wizard" element={<StaffRoute><PortfolioPage>{withSuspense(<EditarObraWizard />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/arquivos" element={<ProtectedRoute><PortfolioPage>{withSuspense(<Arquivos />)}</PortfolioPage></ProtectedRoute>} />
+            <Route path="/gestao/calendario-compras" element={<StaffRoute><PortfolioPage>{withSuspense(<CalendarioCompras />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/estoque" element={<StaffRoute><PortfolioPage>{withSuspense(<Estoque />)}</PortfolioPage></StaffRoute>} />
             <Route path="/gestao/estoque/saidas" element={<Navigate to="/gestao/estoque?tab=saidas" replace />} />
-            <Route path="/gestao/calendario-obras" element={<ProtectedRoute><GestaoShell>{withSuspense(<CalendarioObras />)}</GestaoShell></ProtectedRoute>} />
-            <Route path="/gestao/fornecedores" element={<StaffRoute><GestaoShell>{withSuspense(<Fornecedores />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/fornecedores/:id" element={<StaffRoute><GestaoShell>{withSuspense(<FornecedorDetalhe />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/fornecedores/admin" element={<AdminRoute><GestaoShell>{withSuspense(<FornecedoresAdmin />)}</GestaoShell></AdminRoute>} />
-            <Route path="/gestao/orcamentos" element={<StaffRoute><GestaoShell>{withSuspense(<Orcamentos />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/orcamentos/:orcamentoId" element={<StaffRoute><GestaoShell>{withSuspense(<OrcamentoDetalhe />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/nao-conformidades" element={<StaffRoute><GestaoShell>{withSuspense(<NaoConformidadesGlobal />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/atividades" element={<StaffRoute><GestaoShell>{withSuspense(<GestaoAtividades />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/assistente" element={<StaffRoute><GestaoShell>{withSuspense(<Assistente />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/assistente/consultas" element={<StaffRoute><GestaoShell>{withSuspense(<AssistenteConsultas />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/assistente/logs" element={<AdminRoute><GestaoShell>{withSuspense(<AssistenteLogs />)}</GestaoShell></AdminRoute>} />
-            <Route path="/gestao/painel-obras" element={<StaffRoute><GestaoShell>{withSuspense(<PainelObras />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/alertas-cronograma" element={<StaffRoute><GestaoShell>{withSuspense(<PainelAlertasCronograma />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/lixeira" element={<StaffRoute><GestaoShell>{withSuspense(<Lixeira />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/calendario-obras" element={<ProtectedRoute><PortfolioPage>{withSuspense(<CalendarioObras />)}</PortfolioPage></ProtectedRoute>} />
+            <Route path="/gestao/fornecedores" element={<StaffRoute><PortfolioPage>{withSuspense(<Fornecedores />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/fornecedores/:id" element={<StaffRoute><PortfolioPage>{withSuspense(<FornecedorDetalhe />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/fornecedores/admin" element={<AdminRoute><PortfolioPage>{withSuspense(<FornecedoresAdmin />)}</PortfolioPage></AdminRoute>} />
+            <Route path="/gestao/orcamentos" element={<StaffRoute><PortfolioPage>{withSuspense(<Orcamentos />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/orcamentos/:orcamentoId" element={<StaffRoute><PortfolioPage>{withSuspense(<OrcamentoDetalhe />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/nao-conformidades" element={<StaffRoute><PortfolioPage>{withSuspense(<NaoConformidadesGlobal />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/atividades" element={<StaffRoute><PortfolioPage>{withSuspense(<GestaoAtividades />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/assistente" element={<StaffRoute><PortfolioPage>{withSuspense(<Assistente />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/assistente/consultas" element={<StaffRoute><PortfolioPage>{withSuspense(<AssistenteConsultas />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/assistente/logs" element={<AdminRoute><PortfolioPage>{withSuspense(<AssistenteLogs />)}</PortfolioPage></AdminRoute>} />
+            <Route path="/gestao/painel-obras" element={<StaffRoute><PortfolioPage>{withSuspense(<PainelObras />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/alertas-cronograma" element={<StaffRoute><PortfolioPage>{withSuspense(<PainelAlertasCronograma />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/lixeira" element={<StaffRoute><PortfolioPage>{withSuspense(<Lixeira />)}</PortfolioPage></StaffRoute>} />
             <Route path="/gestao/cs" element={<Navigate to="/gestao/cs/operacional" replace />} />
-            <Route path="/gestao/cs/operacional" element={<StaffRoute><GestaoShell>{withSuspense(<CsOperacional />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/cs/analytics" element={<StaffRoute><GestaoShell>{withSuspense(<CsAnalytics />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/cs/:ticketId" element={<StaffRoute><GestaoShell>{withSuspense(<CsTicketDetalhe />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/cs/operacional" element={<StaffRoute><PortfolioPage>{withSuspense(<CsOperacional />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/cs/analytics" element={<StaffRoute><PortfolioPage>{withSuspense(<CsAnalytics />)}</PortfolioPage></StaffRoute>} />
+            <Route path="/gestao/cs/:ticketId" element={<StaffRoute><PortfolioPage>{withSuspense(<CsTicketDetalhe />)}</PortfolioPage></StaffRoute>} />
             <Route path="/arquivos" element={<ProtectedRoute>{withSuspense(<Arquivos />)}</ProtectedRoute>} />
             
             {/* Admin-only routes */}

@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   GanttChartSquare,
-  TrendingUp,
   DollarSign,
   FolderOpen,
   ClipboardSignature,
@@ -12,17 +11,13 @@ import {
   Box,
   Ruler,
   Map,
-  ShoppingCart,
   Package,
-
   ClipboardCheck,
   ChevronDown,
   LucideIcon,
   Building2,
   UserCircle,
   ListChecks,
-  Receipt,
-  Bot,
 } from "lucide-react";
 import {
   Sidebar,
@@ -81,7 +76,6 @@ export function ProjectSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const navigate = useNavigate();
   const { projectId, paths } = useProjectNavigation();
   const { project } = useProject();
   const { stats: pendenciasStats } = usePendencias({ projectId });
@@ -99,10 +93,10 @@ export function ProjectSidebar() {
 
   const basePath = `/obra/${projectId}`;
 
-  // Define all groups, then reorder based on role
-  const allGroups: SidebarNavGroup[] = [
+  // 3 canonical groups (Bloco 2): Obra · Documentação · Operação
+  const groups: SidebarNavGroup[] = [
     {
-      label: "Visão Geral",
+      label: "Obra",
       items: [
         {
           label: L("dashboard"),
@@ -125,7 +119,7 @@ export function ProjectSidebar() {
       ],
     },
     {
-      label: "Projeto",
+      label: "Documentação",
       clientCollapsible: true,
       items: [
         {
@@ -148,10 +142,16 @@ export function ProjectSidebar() {
           icon: FolderOpen,
           path: paths.documentos,
         },
+        {
+          label: L("formalizacoes"),
+          icon: ClipboardSignature,
+          path: paths.formalizacoes,
+          badgeKey: "formalizacoes",
+        },
       ],
     },
     {
-      label: "Dia a Dia",
+      label: "Operação",
       items: [
         {
           label: L("cronograma"),
@@ -186,23 +186,11 @@ export function ProjectSidebar() {
           staffOnly: true,
         },
         {
-          label: L("assessor"),
-          icon: Bot,
-          path: paths.assessor,
-          staffOnly: true,
-          feature: "assessor:use",
-        },
-        {
           label: L("pendencias"),
           icon: AlertCircle,
           path: paths.pendencias,
           badgeKey: "pendencias",
         },
-      ],
-    },
-    {
-      label: "Gestão",
-      items: [
         {
           label: L("financeiro"),
           icon: DollarSign,
@@ -210,32 +198,14 @@ export function ProjectSidebar() {
           badgeKey: "financeiro",
         },
         {
-          label: L("formalizacoes"),
-          icon: ClipboardSignature,
-          path: paths.formalizacoes,
-          badgeKey: "formalizacoes",
-        },
-        {
           label: L("dadosCliente"),
           icon: UserCircle,
           path: paths.dadosCliente,
           staffOnly: true,
         },
-        {
-          label: L("orcamento"),
-          icon: Receipt,
-          path: paths.orcamento,
-          staffOnly: true,
-        },
       ],
     },
   ];
-
-  // For staff: promote "Dia a Dia" (with Pendências/Cronograma) above "Projeto"
-  // For clients: keep Visão Geral first (Jornada is prominent)
-  const groups = isStaff
-    ? [allGroups[0], allGroups[2], allGroups[1], allGroups[3]] // Visão Geral, Dia a Dia, Projeto, Gestão
-    : allGroups;
 
   const isActive = (item: SidebarNavItem) => {
     const currentPath = location.pathname;
@@ -321,40 +291,52 @@ export function ProjectSidebar() {
     );
   };
 
+  // Pre-compute which groups are visible so we know where to render separators.
+  const renderableGroups = groups
+    .map((group) => ({
+      group,
+      visibleItems: group.items.filter((item) => {
+        if (item.projectPhaseOnly && !isProjectPhase) return false;
+        if (item.staffOnly && !isStaff) return false;
+        if (item.feature && !can(item.feature)) return false;
+        return true;
+      }),
+    }))
+    .filter(({ visibleItems }) => visibleItems.length > 0);
+
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent className="pt-2">
-        {groups.map((group) => {
-          const visibleItems = group.items.filter((item) => {
-            if (item.projectPhaseOnly && !isProjectPhase) return false;
-            if (item.staffOnly && !isStaff) return false;
-            if (item.feature && !can(item.feature)) return false;
-            return true;
-          });
-
-          if (visibleItems.length === 0) return null;
-
+        {renderableGroups.map(({ group, visibleItems }, idx) => {
           // For clients, collapse secondary groups under a "Mais" toggle
           const shouldCollapse = !isStaff && group.clientCollapsible && !collapsed;
-          // Auto-open if any item in the group is active
           const hasActiveItem = visibleItems.some(isActive);
+          // Use a thin top separator (instead of repeating a gray label) for groups
+          // beyond the first — Bloco 2 cleanup.
+          const separatorClass =
+            idx > 0 ? "border-t border-border-subtle pt-2 mt-1" : "";
 
           if (shouldCollapse) {
             const isOpen = clientGroupOpen[group.label] ?? hasActiveItem;
             return (
-              <SidebarGroup key={group.label}>
-                <Collapsible open={isOpen} onOpenChange={(open) => setClientGroupOpen(prev => ({ ...prev, [group.label]: open }))}>
+              <SidebarGroup key={group.label} className={separatorClass}>
+                <Collapsible
+                  open={isOpen}
+                  onOpenChange={(open) =>
+                    setClientGroupOpen((prev) => ({ ...prev, [group.label]: open }))
+                  }
+                >
                   <CollapsibleTrigger className="w-full">
                     <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs font-semibold uppercase tracking-wider flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/80 transition-colors">
                       <span>{group.label}</span>
-                      <ChevronDown className={cn("h-3 w-3 transition-transform", isOpen && "rotate-180")} />
+                      <ChevronDown
+                        className={cn("h-3 w-3 transition-transform", isOpen && "rotate-180")}
+                      />
                     </SidebarGroupLabel>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarGroupContent>
-                      <SidebarMenu>
-                        {visibleItems.map(renderNavItem)}
-                      </SidebarMenu>
+                      <SidebarMenu>{visibleItems.map(renderNavItem)}</SidebarMenu>
                     </SidebarGroupContent>
                   </CollapsibleContent>
                 </Collapsible>
@@ -363,14 +345,12 @@ export function ProjectSidebar() {
           }
 
           return (
-            <SidebarGroup key={group.label}>
+            <SidebarGroup key={group.label} className={separatorClass}>
               <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs font-semibold uppercase tracking-wider">
                 {group.label}
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
-                  {visibleItems.map(renderNavItem)}
-                </SidebarMenu>
+                <SidebarMenu>{visibleItems.map(renderNavItem)}</SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           );

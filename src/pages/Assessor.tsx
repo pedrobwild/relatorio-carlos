@@ -15,7 +15,6 @@ import { ptBR } from 'date-fns/locale';
 
 import { PageHeader } from '@/components/layout/PageHeader';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { ProjectSubNav } from '@/components/layout/ProjectSubNav';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useCanFeature } from '@/hooks/useCan';
 
@@ -132,7 +131,6 @@ const Assessor = () => {
             { label: 'Assessor' },
           ]}
         />
-        <ProjectSubNav />
         <main className="py-6">
           <PageContainer maxWidth="xl">
             <Alert variant="destructive">
@@ -233,7 +231,6 @@ const AssessorContent = () => {
           </Sheet>
         </div>
       </PageHeader>
-      <ProjectSubNav />
 
       <main className="py-6">
         <PageContainer maxWidth="xl">

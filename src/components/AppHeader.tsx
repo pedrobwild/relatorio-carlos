@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,11 +10,41 @@ interface AppHeaderProps {
   showBackButton?: boolean;
   onBack?: () => void;
   children?: React.ReactNode;
+  /**
+   * Bypass the route guard. Use sparingly — only for routes that legitimately
+   * sit outside both `AppShell` (project/portfolio) and the public auth flow,
+   * such as the customer dashboard `/minhas-obras`.
+   */
+  forceRender?: boolean;
 }
 
-export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) {
+/**
+ * Routes where AppHeader is the canonical chrome. Everything else should be
+ * inside `AppShell` and rely on `ProjectSlimHeader` / `ProjectMobileHeader` /
+ * portfolio header. `forceRender` exists for legacy customer pages that still
+ * need a header but aren't shell-managed yet.
+ */
+const PUBLIC_HEADER_ROUTES = [
+  '/auth',
+  '/recuperar-senha',
+  '/redefinir-senha',
+  '/verificar/',
+  '/verificar-assinatura',
+];
+
+export function AppHeader({ showBackButton, onBack, children, forceRender }: AppHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading, signOut, isAuthenticated } = useAuth();
+
+  // Guard: outside the allowed public routes, AppHeader is a no-op (the shell
+  // owns the chrome). Pass `forceRender` to opt-in for legacy callers.
+  const isAllowedRoute = PUBLIC_HEADER_ROUTES.some((p) =>
+    location.pathname === p || location.pathname.startsWith(p),
+  );
+  if (!isAllowedRoute && !forceRender) {
+    return null;
+  }
   
 
   const handleSignOut = async () => {

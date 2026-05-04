@@ -12,7 +12,6 @@ import { useExecutivoVersions } from "@/hooks/useExecutivoVersions";
 import { ExecutivoVersionsModal } from "@/components/executivo/ExecutivoVersionsModal";
 import { RelatedDocPDFModal } from "@/components/executivo/RelatedDocPDFModal";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -282,7 +281,6 @@ const Executivo = () => {
           </>
         )}
       </PageHeader>
-      <ProjectSubNav />
 
       {hasDocument ? (
         <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">

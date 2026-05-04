@@ -8,7 +8,6 @@ import { useProjectPayments, useMarkPaymentPaid, ProjectPayment } from "@/hooks/
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { EmptyState } from "@/components/EmptyState";
 import { FinancialSummary } from "./financeiro/FinancialSummary";
 import { DesktopPaymentCard, MobilePaymentCard } from "./financeiro/PaymentCard";
@@ -73,7 +72,6 @@ const Financeiro = () => {
             { label: "Financeiro" },
           ]}
         />
-        <ProjectSubNav />
 
         <div className="flex-1 max-w-5xl mx-auto w-full">
           {payments.length === 0 ? (

@@ -45,7 +45,12 @@ interface MoreGroup {
   items: MoreItem[];
 }
 
-export function MobileMoreSheet() {
+interface MobileMoreSheetProps {
+  /** Sum of pending counts in sections not visible in the main bar. */
+  badgeCount?: number;
+}
+
+export function MobileMoreSheet({ badgeCount = 0 }: MobileMoreSheetProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const { paths } = useProjectNavigation();
@@ -129,7 +134,11 @@ export function MobileMoreSheet() {
             "focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary rounded-lg",
             isAnyActive ? "text-primary" : "text-foreground-muted",
           )}
-          aria-label="Mais opções"
+          aria-label={
+            badgeCount > 0
+              ? `Mais opções — ${badgeCount} pendências em outras seções`
+              : "Mais opções"
+          }
           aria-haspopup="dialog"
           aria-expanded={open}
         >
@@ -146,8 +155,17 @@ export function MobileMoreSheet() {
               )}
               strokeWidth={isAnyActive ? 2.25 : 2}
             />
-            {isAnyActive && (
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary" />
+            {badgeCount > 0 ? (
+              <span
+                className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-card"
+                aria-hidden="true"
+              >
+                {badgeCount > 99 ? "99+" : badgeCount}
+              </span>
+            ) : (
+              isAnyActive && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary" />
+              )
             )}
           </span>
           <span
@@ -157,6 +175,12 @@ export function MobileMoreSheet() {
             )}
           >
             Mais
+          </span>
+          {/* Live region: announce badge changes for screen readers */}
+          <span aria-live="polite" aria-atomic="true" className="sr-only">
+            {badgeCount > 0
+              ? `${badgeCount} pendências em outras seções`
+              : ""}
           </span>
         </button>
       </SheetTrigger>

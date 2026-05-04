@@ -52,7 +52,7 @@ export default function MinhasObras() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] overflow-x-hidden bg-gradient-to-b from-primary/5 via-background to-background pb-safe">
-      <AppHeader>
+      <AppHeader forceRender>
         <div className="ml-2">
           <h1 className="text-h3 font-bold">Portal do Cliente</h1>
         </div>

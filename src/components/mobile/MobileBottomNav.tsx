@@ -14,6 +14,7 @@ import { usePendencias } from "@/hooks/usePendencias";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useHiddenSectionsBadge } from "@/hooks/useHiddenSectionsBadge";
 import { cn } from "@/lib/utils";
 import { MobileMoreSheet } from "./MobileMoreSheet";
 import { MobileNotificationsSheet } from "./MobileNotificationsSheet";
@@ -58,6 +59,9 @@ export function MobileBottomNav() {
 
   const swipeRoutes = useMemo(() => navItems.map((i) => i.to), [navItems]);
   useSwipeNavigation(swipeRoutes);
+
+  // Sum of pending counts in sections NOT shown in the main bar — surfaces in "Mais".
+  const hiddenSectionsBadge = useHiddenSectionsBadge(swipeRoutes);
 
   return (
     <>
@@ -171,7 +175,7 @@ export function MobileBottomNav() {
           )}
 
           {/* Staff: More sheet with ALL tools */}
-          {isStaff && <MobileMoreSheet />}
+          {isStaff && <MobileMoreSheet badgeCount={hiddenSectionsBadge} />}
         </div>
       </nav>
 

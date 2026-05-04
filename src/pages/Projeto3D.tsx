@@ -8,7 +8,6 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { useProject3DPhotos, Project3DPhoto } from "@/hooks/useProject3DPhotos";
 import { cn } from "@/lib/utils";
 
@@ -102,7 +101,6 @@ const Projeto3D = () => {
           onChange={handleFiles}
         />
       </PageHeader>
-      <ProjectSubNav />
 
       <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
         <div className="max-w-7xl mx-auto space-y-6">

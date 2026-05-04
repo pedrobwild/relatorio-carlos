@@ -14,13 +14,9 @@ import { EmptyState } from "@/components/EmptyState";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { toast } from "sonner";
 import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { useProjectLayout } from "@/components/layout/ProjectLayoutContext";
 import { pdfLogger } from "@/lib/devLogger";
 import { prefetchForTab } from "@/lib/prefetch";
-import bwildLogo from "@/assets/bwild-logo-dark.png";
-import { UserMenu } from "@/components/layout/UserMenu";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { format } from "date-fns";
 import { useProjectPortal } from "@/hooks/useProjectPortal";
 import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
@@ -33,19 +29,6 @@ const FinanceiroContent = lazy(() => import("@/components/tabs/FinanceiroContent
 const DocumentosContent = lazy(() => import("@/components/tabs/DocumentosContent"));
 const FormalizacoesContent = lazy(() => import("@/components/tabs/FormalizacoesContent"));
 const PendenciasContent = lazy(() => import("@/components/tabs/PendenciasContent"));
-
-const MobileHeader = () => (
-  <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2">
-    <div className="flex items-center justify-between gap-2">
-      <img src={bwildLogo} alt="Bwild" className="h-7 w-auto shrink-0" />
-      <h1 className="font-bold text-sm text-foreground truncate flex-1 text-center">Portal do Cliente</h1>
-      <div className="flex items-center gap-1">
-        <NotificationBell />
-        <UserMenu />
-      </div>
-    </div>
-  </div>
-);
 
 const Index = () => {
   const navigate = useNavigate();
@@ -105,7 +88,6 @@ const Index = () => {
   if (projectLoading || activitiesLoading) {
     return (
       <div className="min-h-screen min-h-[100dvh] pb-safe">
-        {!hasShell && <MobileHeader />}
         <div className="px-4 md:p-4 lg:p-6 xl:p-8">
           <div className="max-w-[1600px] mx-auto space-y-6">
             <ContentSkeleton variant="cards" rows={3} />
@@ -165,7 +147,6 @@ const Index = () => {
   if (reportData.activities.length === 0) {
     return (
       <div className="min-h-screen min-h-[100dvh] pb-safe">
-        {!hasShell && <MobileHeader />}
         <div className="px-4 md:p-4 lg:p-6 xl:p-8">
           <div className="max-w-[1600px] mx-auto space-y-6">
             <ReportHeader
@@ -181,7 +162,6 @@ const Index = () => {
               canEditMilestones={isStaff}
               onMilestoneDateChange={isStaff ? handleMilestoneDateChange : undefined}
             />
-            <ProjectSubNav className="mt-3 -mx-3 md:-mx-4 lg:-mx-6 xl:-mx-8" />
             {!project?.is_project_phase && <OnboardingChecklist projectId={projectId} />}
             {canEditSchedule && (
               <EmptyState
@@ -199,7 +179,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe">
-      {!hasShell && <MobileHeader />}
       <div className="px-4 md:p-4 lg:p-6 xl:p-8">
         <div className="max-w-[1600px] mx-auto">
           {/* Cockpit "Ação necessária" — visível só para cliente, antes do relatório */}
@@ -212,37 +191,19 @@ const Index = () => {
           )}
           <div ref={reportRef}>
             <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-              {!hasShell && (
-                <ReportHeader
-                  projectName={reportData.projectName}
-                  unitName={reportData.unitName}
-                  clientName={reportData.clientName}
-                  startDate={reportData.startDate}
-                  endDate={reportData.endDate}
-                  reportDate={reportData.reportDate}
-                  activities={reportData.activities}
-                  isProjectPhase={project?.is_project_phase}
-                  milestoneDates={milestoneDates}
-                  canEditMilestones={isStaff}
-                  onMilestoneDateChange={isStaff ? handleMilestoneDateChange : undefined}
-                />
-              )}
-              {hasShell && (
-                <ReportHeader
-                  projectName={reportData.projectName}
-                  unitName={reportData.unitName}
-                  clientName={reportData.clientName}
-                  startDate={reportData.startDate}
-                  endDate={reportData.endDate}
-                  reportDate={reportData.reportDate}
-                  activities={reportData.activities}
-                  isProjectPhase={project?.is_project_phase}
-                  milestoneDates={milestoneDates}
-                  canEditMilestones={isStaff}
-                  onMilestoneDateChange={isStaff ? handleMilestoneDateChange : undefined}
-                />
-              )}
-              <ProjectSubNav className="mt-3 -mx-3 md:mx-0 rounded-none md:rounded-xl" />
+              <ReportHeader
+                projectName={reportData.projectName}
+                unitName={reportData.unitName}
+                clientName={reportData.clientName}
+                startDate={reportData.startDate}
+                endDate={reportData.endDate}
+                reportDate={reportData.reportDate}
+                activities={reportData.activities}
+                isProjectPhase={project?.is_project_phase}
+                milestoneDates={milestoneDates}
+                canEditMilestones={isStaff}
+                onMilestoneDateChange={isStaff ? handleMilestoneDateChange : undefined}
+              />
             </div>
 
             <div className="bg-card rounded-xl shadow-card overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>

@@ -19,7 +19,7 @@ interface ProjectContextType {
   setProject: (project: (Project & { is_project_phase?: boolean }) | null) => void;
 }
 
-const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
+export const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { projectId } = useParams<{ projectId: string }>();
