@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -83,6 +83,7 @@ type StockMovement = {
   unit_cost: number | null;
   invoice_number: string | null;
   notes: string | null;
+  photo_path: string | null;
   created_at: string;
 };
 
@@ -101,7 +102,9 @@ const itemSchema = z.object({
 
 const movementSchema = z
   .object({
-    item_id: z.string().uuid("Selecione um item"),
+    item_id: z.string().uuid().optional().nullable(),
+    new_item_name: z.string().trim().max(120).optional().or(z.literal("")),
+    new_item_unit: z.string().trim().max(20).optional().or(z.literal("")),
     movement_type: z.enum(["entrada", "saida", "ajuste"]),
     quantity: z.coerce.number().positive("Quantidade deve ser maior que zero"),
     movement_date: z.string().min(1, "Data obrigatória"),
@@ -111,11 +114,22 @@ const movementSchema = z
     unit_cost: z.coerce.number().nonnegative().optional().nullable(),
     invoice_number: z.string().trim().max(60).optional().or(z.literal("")),
     notes: z.string().trim().max(500).optional().or(z.literal("")),
+    photo_file: z.any().optional().nullable(),
   })
   .refine((v) => (v.location_type === "obra" ? !!v.project_id : true), {
     path: ["project_id"],
     message: "Selecione a obra",
-  });
+  })
+  .refine(
+    (v) =>
+      v.movement_type === "entrada"
+        ? !!(v.item_id || (v.new_item_name && v.new_item_name.length >= 2))
+        : !!v.item_id,
+    {
+      path: ["item_id"],
+      message: "Informe o item",
+    },
+  );
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
@@ -232,8 +246,47 @@ export default function Estoque() {
 
   const createMovement = useMutation({
     mutationFn: async (input: z.infer<typeof movementSchema>) => {
+      let itemId = input.item_id ?? null;
+
+      // Para ENTRADA: criar item on-the-fly se não veio item_id
+      if (input.movement_type === "entrada" && !itemId && input.new_item_name) {
+        const { data: newItem, error: itemErr } = await supabase
+          .from("stock_items")
+          .insert({
+            name: input.new_item_name.trim(),
+            unit: (input.new_item_unit || "un").trim() || "un",
+            created_by: user?.id ?? null,
+          })
+          .select("id")
+          .single();
+        if (itemErr) throw itemErr;
+        itemId = newItem.id;
+      }
+
+      if (!itemId) throw new Error("Item não informado");
+
+      // Upload da foto (opcional, apenas para entrada)
+      let photoPath: string | null = null;
+      const photoFile: File | null =
+        input.movement_type === "entrada" && input.photo_file instanceof File
+          ? input.photo_file
+          : null;
+      if (photoFile) {
+        const ext = (photoFile.name.split(".").pop() || "jpg").toLowerCase();
+        const path = `${itemId}/${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("stock-photos")
+          .upload(path, photoFile, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: photoFile.type || "image/jpeg",
+          });
+        if (upErr) throw upErr;
+        photoPath = path;
+      }
+
       const payload = {
-        item_id: input.item_id,
+        item_id: itemId,
         movement_type: input.movement_type,
         quantity: input.quantity,
         movement_date: input.movement_date,
@@ -243,6 +296,7 @@ export default function Estoque() {
         unit_cost: input.unit_cost ?? null,
         invoice_number: input.invoice_number || null,
         notes: input.notes || null,
+        photo_path: photoPath,
         created_by: user?.id ?? null,
       };
       const { data, error } = await supabase
@@ -254,6 +308,7 @@ export default function Estoque() {
       return data;
     },
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["stock", "items"] });
       qc.invalidateQueries({ queryKey: ["stock", "balances"] });
       qc.invalidateQueries({ queryKey: ["stock", "movements"] });
       toast.success("Movimentação registrada — saldo atualizado");
@@ -864,6 +919,8 @@ function NewMovementDialog({
   const today = format(new Date(), "yyyy-MM-dd");
   const [form, setForm] = useState({
     item_id: "",
+    new_item_name: "",
+    new_item_unit: "un",
     movement_type: "entrada" as "entrada" | "saida" | "ajuste",
     quantity: "",
     movement_date: today,
@@ -874,11 +931,34 @@ function NewMovementDialog({
     invoice_number: "",
     notes: "",
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const reset = () =>
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
+
+  const handlePhotoPick = (file: File | null) => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    if (file) {
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    } else {
+      setPhotoFile(null);
+      setPhotoPreview(null);
+    }
+  };
+
+  const reset = () => {
     setForm({
       item_id: "",
+      new_item_name: "",
+      new_item_unit: "un",
       movement_type: "entrada",
       quantity: "",
       movement_date: today,
@@ -889,10 +969,14 @@ function NewMovementDialog({
       invoice_number: "",
       notes: "",
     });
+    handlePhotoPick(null);
+  };
 
   const submit = () => {
     const parsed = movementSchema.safeParse({
-      item_id: form.item_id,
+      item_id: form.item_id || undefined,
+      new_item_name: form.new_item_name,
+      new_item_unit: form.new_item_unit,
       movement_type: form.movement_type,
       quantity: form.quantity,
       movement_date: form.movement_date,
@@ -903,6 +987,7 @@ function NewMovementDialog({
       unit_cost: form.unit_cost ? Number(form.unit_cost) : null,
       invoice_number: form.invoice_number,
       notes: form.notes,
+      photo_file: photoFile,
     });
     if (!parsed.success) {
       const errs: Record<string, string> = {};
@@ -955,29 +1040,80 @@ function NewMovementDialog({
             </div>
           </div>
 
-          {/* Item */}
-          <div className="space-y-1.5">
-            <Label>Item *</Label>
-            <Select
-              value={form.item_id}
-              onValueChange={(v) => setForm((f) => ({ ...f, item_id: v }))}
-            >
-              <SelectTrigger aria-invalid={!!errors.item_id}>
-                <SelectValue placeholder="Selecione o material" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {items.map((it) => (
-                  <SelectItem key={it.id} value={it.id}>
-                    {it.name}{" "}
-                    <span className="text-muted-foreground">({it.unit})</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.item_id && (
-              <p className="text-xs text-destructive">{errors.item_id}</p>
-            )}
-          </div>
+          {/* Item — texto livre na entrada, seleção na saída/ajuste */}
+          {isEntrada ? (
+            <div className="grid grid-cols-[1fr_120px] gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="mov-new-item">Item *</Label>
+                <Input
+                  id="mov-new-item"
+                  value={form.new_item_name}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      new_item_name: e.target.value,
+                      item_id: "",
+                    }))
+                  }
+                  placeholder="Ex: Cimento CP-II 50kg"
+                  list="stock-item-suggestions"
+                  maxLength={120}
+                  aria-invalid={!!errors.item_id}
+                />
+                <datalist id="stock-item-suggestions">
+                  {items.map((it) => (
+                    <option key={it.id} value={it.name} />
+                  ))}
+                </datalist>
+                {errors.item_id && (
+                  <p className="text-xs text-destructive">{errors.item_id}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Digite livremente. Itens já cadastrados aparecem como sugestão.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="mov-new-unit">Unidade</Label>
+                <Input
+                  id="mov-new-unit"
+                  value={form.new_item_unit}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, new_item_unit: e.target.value }))
+                  }
+                  placeholder="un, kg, m"
+                  maxLength={20}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>Item *</Label>
+              <Select
+                value={form.item_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, item_id: v }))}
+              >
+                <SelectTrigger aria-invalid={!!errors.item_id}>
+                  <SelectValue placeholder="Selecione o material" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {items.map((it) => (
+                    <SelectItem key={it.id} value={it.id}>
+                      {it.name}{" "}
+                      <span className="text-muted-foreground">({it.unit})</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.item_id && (
+                <p className="text-xs text-destructive">{errors.item_id}</p>
+              )}
+              {items.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Nenhum item cadastrado. Registre uma entrada primeiro.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Qtd + Data */}
           <div className="grid grid-cols-2 gap-3">
@@ -1103,6 +1239,68 @@ function NewMovementDialog({
                   maxLength={60}
                 />
               </div>
+            </div>
+          )}
+
+          {/* Foto do item — apenas em entrada */}
+          {isEntrada && (
+            <div className="space-y-1.5">
+              <Label>Foto do item</Label>
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="sr-only"
+                onChange={(e) => handlePhotoPick(e.target.files?.[0] ?? null)}
+              />
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) => handlePhotoPick(e.target.files?.[0] ?? null)}
+              />
+              {photoPreview ? (
+                <div className="relative inline-block rounded-lg overflow-hidden border bg-muted">
+                  <img
+                    src={photoPreview}
+                    alt="Pré-visualização"
+                    className="h-32 w-32 object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-1 right-1 h-7 px-2"
+                    onClick={() => handlePhotoPick(null)}
+                  >
+                    Remover
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    Tirar foto
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => photoInputRef.current?.click()}
+                  >
+                    Anexar imagem
+                  </Button>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Opcional. Útil para identificar visualmente o item recebido.
+              </p>
             </div>
           )}
 
