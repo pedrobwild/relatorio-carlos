@@ -95,12 +95,92 @@ import { StatusBadge } from '@/components/ui-premium';
 | 20 px   | `w-5 h-5`           | KPIs, cabeçalhos       |
 | 24 px   | `w-6 h-6`           | Empty state hero       |
 
-## Elevação · radius · z-index
+## Elevação · radius
 
 - **Elevação**: `elevation-{xs,sm,md,lg,xl}` (`src/index.css`). Default em
   `SectionCard` é `elevation-xs`. Evite `shadow-sm/md/lg` solto.
 - **Radius**: `rounded-{sm,md,lg}` mapeiam a `--radius` (10px). Default de
   cards é `rounded-lg`; `rounded-xl/2xl` requer justificativa (hero, modal).
-- **Z-index**: nunca sobrescrever `z-*` em `*Content` de Dialog / Sheet /
-  Drawer / Popover etc. Use tokens (`z-modal`, `z-popover`, `z-alert`) de
-  `tailwind.config.ts`.
+
+## Z-index
+
+Escala em `tailwind.config.ts` → `theme.extend.zIndex`. Nunca sobrescrever
+`z-*` em `*Content` de Dialog / Sheet / Drawer / Popover etc. — ESLint
+sinaliza.
+
+| Token              | Valor | Camada                          |
+|--------------------|-------|---------------------------------|
+| `z-base`           | 0     | Fluxo normal                    |
+| `z-sticky`         | 10    | Headers/colunas sticky de tabela |
+| `z-raised`         | 20    | Hover, badges destacados        |
+| `z-docked`         | 30    | Cantos sticky de tabela         |
+| `z-shell`          | 40    | Sidebar, app shell              |
+| `z-header`         | 50    | Top bar fixa                    |
+| `z-modal`          | 100   | Backdrop de modal               |
+| `z-modal-content`  | 101   | Conteúdo do modal               |
+| `z-popover`        | 200   | Popover, dropdown, select       |
+| `z-toast`          | 250   | Toast notifications             |
+| `z-alert`          | 300   | Backdrop de alert dialog        |
+| `z-alert-content`  | 301   | Conteúdo do alert dialog        |
+| `z-max`            | 2147483647 | Escape hatch (raro)        |
+
+## Animação
+
+Definidas em `tailwind.config.ts` → `theme.extend.animation`. Todas usam
+`ease-out` (curva padrão BWild) e duração entre 200–500ms.
+
+| Classe                  | Duração | Uso                              |
+|-------------------------|---------|----------------------------------|
+| `animate-fade-in`       | 400ms   | Entrada padrão (opacity + Y)     |
+| `animate-fade-in-up`    | 500ms   | Entrada hero (Y maior)           |
+| `animate-fade-in-scale` | 400ms   | Entrada de cards / dialogs       |
+| `animate-slide-in-right`/ `-left` | 400ms | Painéis laterais leves      |
+| `animate-slide-in-from-right`/ `-left` | 250ms | Drawers / sheets       |
+| `animate-shimmer`       | 1.6s ∞  | Skeletons (com `bg-[length:200%_100%]`) |
+| `animate-accordion-down`/ `-up` | 200ms | Radix Accordion              |
+
+Diretrizes:
+
+- Entrada de página/seção: `animate-fade-in` ou `-fade-in-up`.
+- Drawer/sheet: `-slide-in-from-{right,left}` (curva mais rápida, 250ms).
+- Skeleton: `animate-shimmer` no container com gradiente.
+- Não introduza novas durações sem token — adicione em `theme.extend.animation`.
+
+## Espaçamento
+
+Use a escala padrão do Tailwind (`p-{0..96}`, `gap-{0..96}`) — múltiplos
+de `0.25rem` (4px). Sem overrides no `tailwind.config.ts`.
+
+Convenções por contexto:
+
+| Contexto                  | Espaçamento padrão       |
+|---------------------------|--------------------------|
+| `SectionCard` interno     | `p-5 md:p-6` (20/24px)   |
+| Header de página          | `py-4` + `gap-3`         |
+| Stack vertical de cards   | `space-y-4` ou `gap-4`   |
+| Inline (icon + label)     | `gap-1.5` ou `gap-2`     |
+| Form fields verticalmente | `space-y-4`              |
+
+`px-1.5`/`py-0.5` (6px / 2px) só em microbadges. Para `MetricCard` /
+`PageHeader` etc., respeite o padding interno do componente — não embrulhe
+em outro `p-*`.
+
+## Breakpoints
+
+Padrões Tailwind (mobile-first). `2xl` foi customizado para 1400px em
+`theme.container.screens` (afeta apenas `container`, não `2xl:` em geral).
+
+| Token  | min-width | Uso                              |
+|--------|-----------|----------------------------------|
+| `sm:`  | 640 px    | Phone landscape / tablet pequeno |
+| `md:`  | 768 px    | Tablet / breakpoint principal    |
+| `lg:`  | 1024 px   | Laptop                           |
+| `xl:`  | 1280 px   | Desktop                          |
+| `2xl:` | 1536 px   | Wide / `container` em 1400 px    |
+
+Diretrizes:
+
+- Componentes nascem mobile-first; aplique variantes só onde a UI muda.
+- Toolbars e tabelas geralmente alternam em `md:` (768).
+- Layouts de duas colunas ativam em `lg:` (1024).
+- Não use `sm:` para "pequena diferença" — confunde com mobile portrait.
