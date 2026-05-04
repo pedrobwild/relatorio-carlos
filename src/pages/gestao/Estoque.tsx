@@ -1054,6 +1054,7 @@ function NewMovementDialog({
   };
 
   const submit = () => {
+    if (loading) return;
     const parsed = movementSchema.safeParse({
       item_id: form.item_id || undefined,
       new_item_name: form.new_item_name,
