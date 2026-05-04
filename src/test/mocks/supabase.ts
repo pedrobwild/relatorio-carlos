@@ -29,18 +29,14 @@ export const createMockSupabaseClient = () => {
       getSession: vi
         .fn()
         .mockResolvedValue({ data: { session: null }, error: null }),
-      signInWithPassword: vi
-        .fn()
-        .mockResolvedValue({
-          data: { session: mockSession, user: mockUser },
-          error: null,
-        }),
-      signUp: vi
-        .fn()
-        .mockResolvedValue({
-          data: { session: mockSession, user: mockUser },
-          error: null,
-        }),
+      signInWithPassword: vi.fn().mockResolvedValue({
+        data: { session: mockSession, user: mockUser },
+        error: null,
+      }),
+      signUp: vi.fn().mockResolvedValue({
+        data: { session: mockSession, user: mockUser },
+        error: null,
+      }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
       onAuthStateChange: vi.fn((callback) => {
         authStateListeners.push(callback);

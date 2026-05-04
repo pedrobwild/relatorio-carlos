@@ -432,16 +432,14 @@ export async function createProjectWithCustomer(input: {
 
     // If customer already has a user account, also add to project_members
     if (customerInsert?.customer_user_id) {
-      await supabase
-        .from("project_members")
-        .upsert(
-          {
-            project_id: project.id,
-            user_id: customerInsert.customer_user_id,
-            role: "viewer" as any,
-          },
-          { onConflict: "project_id,user_id" },
-        );
+      await supabase.from("project_members").upsert(
+        {
+          project_id: project.id,
+          user_id: customerInsert.customer_user_id,
+          role: "viewer" as any,
+        },
+        { onConflict: "project_id,user_id" },
+      );
     }
 
     return {

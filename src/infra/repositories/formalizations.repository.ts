@@ -151,9 +151,7 @@ export async function addEvidenceLink(
 /**
  * Get user profile (customer_org_id, display_name, email)
  */
-export async function getUserProfile(
-  userId: string,
-): Promise<
+export async function getUserProfile(userId: string): Promise<
   RepositoryResult<{
     customer_org_id: string;
     display_name: string | null;
