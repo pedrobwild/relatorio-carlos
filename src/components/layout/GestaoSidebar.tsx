@@ -57,6 +57,9 @@ export function GestaoSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+  const { total: alertsTotal } = useScheduleAlertsSummary();
+  const { prefs: alertPrefs } = useScheduleAlertPrefs();
+  const showAlertsBadge = alertPrefs.showBadge && alertsTotal > 0;
 
   const currentFase =
     new URLSearchParams(location.search).get("fase") === "projetos"
