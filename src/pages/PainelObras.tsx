@@ -190,6 +190,28 @@ const computeOverdueDays = (obra: {
 };
 
 /**
+ * Número da semana de execução (S{N}) a partir de `inicio_etapa` (fallback
+ * `inicio_oficial`). Semana 1 = primeiros 7 dias corridos. Retorna null
+ * quando não é etapa de Execução ou faltam dados.
+ */
+const getEtapaWeek = (obra: {
+  etapa: PainelEtapa | null;
+  inicio_etapa: string | null;
+  inicio_oficial: string | null;
+}): number | null => {
+  if (obra.etapa !== 'Execução') return null;
+  const startIso = obra.inicio_etapa ?? obra.inicio_oficial;
+  if (!startIso) return null;
+  const start = parseISO(startIso);
+  if (Number.isNaN(start.getTime())) return null;
+  const today = new Date();
+  const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diffDays = Math.floor((todayMid.getTime() - startMid.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(1, Math.floor(diffDays / 7) + 1);
+};
+
+/**
  * Rótulo exibido para a etapa. Para `Execução`, anexa `- S{N}` onde N é a
  * semana corrente desde o início da execução (inicio_etapa, com fallback
  * para inicio_oficial). Semana 1 corresponde aos primeiros 7 dias corridos.
@@ -200,16 +222,8 @@ const formatEtapaLabel = (obra: {
   inicio_oficial: string | null;
 }): string | null => {
   if (!obra.etapa) return null;
-  if (obra.etapa !== 'Execução') return obra.etapa;
-  const startIso = obra.inicio_etapa ?? obra.inicio_oficial;
-  if (!startIso) return obra.etapa;
-  const start = parseISO(startIso);
-  if (Number.isNaN(start.getTime())) return obra.etapa;
-  const today = new Date();
-  const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const diffDays = Math.floor((todayMid.getTime() - startMid.getTime()) / (1000 * 60 * 60 * 24));
-  const week = Math.max(1, Math.floor(diffDays / 7) + 1);
+  const week = getEtapaWeek(obra);
+  if (week == null) return obra.etapa;
   return `Execução - S${week}`;
 };
 
@@ -534,12 +548,22 @@ export default function PainelObras() {
         return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
       });
     } else {
-      // Ordenação padrão: entrega oficial mais próxima / já atrasada primeiro.
-      // Obras já entregues (com entrega_real) e sem data vão para o final.
+      // Ordenação padrão: pela etapa canônica e, dentro de Execução, pela
+      // semana S{N} (S1 → S2 → ...). Empata por entrega oficial mais próxima.
+      const etapaIndex = new Map<PainelEtapa, number>(
+        ETAPA_OPTIONS.map((e, i) => [e, i] as const),
+      );
       rows = [...rows].sort((a, b) => {
-        const aDelivered = !!a.entrega_real;
-        const bDelivered = !!b.entrega_real;
-        if (aDelivered !== bDelivered) return aDelivered ? 1 : -1;
+        const ai = a.etapa ? (etapaIndex.get(a.etapa) ?? ETAPA_OPTIONS.length) : ETAPA_OPTIONS.length + 1;
+        const bi = b.etapa ? (etapaIndex.get(b.etapa) ?? ETAPA_OPTIONS.length) : ETAPA_OPTIONS.length + 1;
+        if (ai !== bi) return ai - bi;
+        const aw = getEtapaWeek(a);
+        const bw = getEtapaWeek(b);
+        if (aw != null || bw != null) {
+          if (aw == null) return 1;
+          if (bw == null) return -1;
+          if (aw !== bw) return aw - bw;
+        }
         const av = a.entrega_oficial ?? '';
         const bv = b.entrega_oficial ?? '';
         if (!av && !bv) return 0;
@@ -2710,20 +2734,44 @@ function BoardView({
     });
   };
 
-  // Agrupa preservando a ordem canônica das etapas; "Sem etapa" entra no fim.
+  // Agrupa preservando a ordem canônica das etapas. Execução é subdividida
+  // por semana (S1, S2, ...) ordenada crescentemente. "Sem etapa" entra no fim.
   const groups = useMemo(() => {
     const map = new Map<string, PainelObra[]>();
     for (const o of obras) {
-      const key = o.etapa ?? BOARD_NONE_KEY;
+      let key: string;
+      if (o.etapa === 'Execução') {
+        const w = getEtapaWeek(o);
+        key = w != null ? `Execução::S${w}` : 'Execução::S?';
+      } else {
+        key = o.etapa ?? BOARD_NONE_KEY;
+      }
       const arr = map.get(key);
       if (arr) arr.push(o);
       else map.set(key, [o]);
     }
     const ordered: { key: string; label: string; etapa: PainelEtapa | null; items: PainelObra[] }[] = [];
     for (const e of ETAPA_OPTIONS) {
-      const items = map.get(e);
-      if (items && items.length > 0) {
-        ordered.push({ key: e, label: e, etapa: e, items });
+      if (e === 'Execução') {
+        // Coleta todas as semanas presentes e ordena S1, S2, ...
+        const weekKeys = Array.from(map.keys())
+          .filter((k) => k.startsWith('Execução::'))
+          .sort((a, b) => {
+            const na = a === 'Execução::S?' ? Number.POSITIVE_INFINITY : Number(a.slice('Execução::S'.length));
+            const nb = b === 'Execução::S?' ? Number.POSITIVE_INFINITY : Number(b.slice('Execução::S'.length));
+            return na - nb;
+          });
+        for (const k of weekKeys) {
+          const items = map.get(k);
+          if (!items || items.length === 0) continue;
+          const label = k === 'Execução::S?' ? 'Execução' : `Execução - S${k.slice('Execução::S'.length)}`;
+          ordered.push({ key: k, label, etapa: e, items });
+        }
+      } else {
+        const items = map.get(e);
+        if (items && items.length > 0) {
+          ordered.push({ key: e, label: e, etapa: e, items });
+        }
       }
     }
     const noneItems = map.get(BOARD_NONE_KEY);
