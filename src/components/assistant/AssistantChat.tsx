@@ -27,6 +27,16 @@ import type {
 } from "@/lib/assistant";
 import { AssistantAnalysisPanel } from "./AssistantAnalysisPanel";
 
+export interface ClarificationOption {
+  label: string;
+  resolved_question: string;
+}
+
+export interface QualityIssue {
+  severity: 'critical' | 'major' | 'minor';
+  message: string;
+}
+
 export interface AssistantMessageResultData {
   rows?: unknown[];
   rows_returned?: number;
@@ -42,6 +52,12 @@ export interface AssistantMessageResultData {
   confidence?: number | null;
   limitations?: string[] | null;
   metrics?: MetricSnapshot[] | null;
+  /** V5: pergunta ambígua — opções para o usuário escolher */
+  clarification?: { reason: string; options: ClarificationOption[] } | null;
+  /** V5: avisos do self-critic (não-bloqueantes) */
+  quality_warnings?: QualityIssue[] | null;
+  /** V5: resposta substituída após retry do critic */
+  was_refined?: boolean;
 }
 
 export interface AssistantMessage {
@@ -334,6 +350,46 @@ export function AssistantChat({
             }));
             break;
           }
+          case "clarification": {
+            const reason = (payload.reason as string) ?? 'Sua pergunta tem mais de uma interpretação.';
+            const options = (payload.options as ClarificationOption[] | undefined) ?? [];
+            updateLastAssistant((m) => ({
+              ...m,
+              pending: false,
+              content: '',
+              result_data: {
+                ...(m.result_data ?? {}),
+                status: 'clarification',
+                clarification: { reason, options },
+              },
+            }));
+            doneReceived = true; // não esperamos done; o servidor encerra a stream.
+            break;
+          }
+          case "quality_warning": {
+            const issues = (payload.issues as QualityIssue[] | undefined) ?? [];
+            updateLastAssistant((m) => ({
+              ...m,
+              result_data: {
+                ...(m.result_data ?? {}),
+                quality_warnings: issues,
+              },
+            }));
+            break;
+          }
+          case "answer_replaced": {
+            const newContent = (payload.content as string) ?? accumulated;
+            accumulated = newContent;
+            updateLastAssistant((m) => ({
+              ...m,
+              content: newContent,
+              result_data: {
+                ...(m.result_data ?? {}),
+                was_refined: true,
+              },
+            }));
+            break;
+          }
           case "error": {
             const msg = (payload.message as string) ?? "Erro";
             throw new Error(msg);
@@ -575,6 +631,24 @@ function MessageBubble({
                 {phaseMessage ?? "Consultando dados..."}
               </span>
             </div>
+          ) : message.result_data?.clarification ? (
+            <div className="space-y-2">
+              <p className="text-sm">
+                {message.result_data.clarification.reason}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {message.result_data.clarification.options.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => onAsk?.(opt.resolved_question)}
+                    className="text-xs px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-colors"
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="prose prose-sm max-w-none prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -583,6 +657,13 @@ function MessageBubble({
               {isStreaming && (
                 <span className="inline-block w-1.5 h-4 -mb-0.5 ml-0.5 bg-primary/70 animate-pulse rounded-sm align-middle" />
               )}
+            </div>
+          )}
+
+          {message.result_data?.was_refined && !message.pending && (
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Sparkles className="h-3 w-3" />
+              <span>Resposta refinada automaticamente</span>
             </div>
           )}
 

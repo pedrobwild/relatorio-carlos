@@ -18,15 +18,31 @@ import {
   type FormatterStep,
 } from './_lib/prompts.ts';
 import {
+  SYSTEM_PROMPT_V5,
+  FORMATTER_SYSTEM_PROMPT_V5,
+} from './_lib/promptsV5.ts';
+import {
   EXTERNAL_SOURCES,
   renderExternalSourcesCatalog,
 } from './_lib/externalSources.ts';
 import { dispatchExternalStep } from './_lib/dispatcher.ts';
+import { generateAdvancedInsights, generateDynamicFollowUps } from './_lib/advancedAnalysis.ts';
+import { detectClarification } from './_lib/clarification.ts';
+import { critiqueAnswer, shouldRetry } from './_lib/critic.ts';
+import { buildMemoryWindow, memoryToChatMessages } from './_lib/conversationMemory.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-const MODEL = 'google/gemini-3-flash-preview';
+// Modelos seletivos (v5): planner pode ser mais forte que formatter; ambos
+// configuráveis por env para A/B test sem deploy.
+const PLANNER_MODEL = Deno.env.get('ASSISTANT_PLANNER_MODEL') ?? 'google/gemini-3-flash-preview';
+const FORMATTER_MODEL = Deno.env.get('ASSISTANT_FORMATTER_MODEL') ?? 'google/gemini-3-flash-preview';
+const PROMPT_VERSION = (Deno.env.get('ASSISTANT_PROMPT_VERSION') ?? 'v5').toLowerCase();
+const USE_V5 = PROMPT_VERSION === 'v5';
+const MODEL = PLANNER_MODEL; // back-compat com logs/insert antigos
+const ACTIVE_SYSTEM_PROMPT = USE_V5 ? SYSTEM_PROMPT_V5 : SYSTEM_PROMPT;
+const ACTIVE_FORMATTER_PROMPT = USE_V5 ? FORMATTER_SYSTEM_PROMPT_V5 : FORMATTER_SYSTEM_PROMPT;
 
 const SCHEMA_CATALOG = renderCatalog();
 const EXTERNAL_CATALOG = renderExternalSourcesCatalog();
@@ -138,11 +154,33 @@ function buildAnalysis(opts: {
   domain: string;
   sql: string | null;
   status: string;
+  question?: string;
 }) {
-  const insights = generateInsights(opts.rows, opts.domain, opts.sql);
+  const baseInsights = generateInsights(opts.rows, opts.domain, opts.sql);
+  const advancedInsights = generateAdvancedInsights(opts.rows, opts.domain);
+  // Mescla básicos + avançados, deduplicando por texto.
+  const seen = new Set<string>();
+  const insights: string[] = [];
+  for (const it of [...baseInsights, ...advancedInsights]) {
+    const key = (typeof it === 'string' ? it : String(it)).trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    insights.push(it as string);
+  }
   const dataQuality = analyzeDataQuality(opts.rows);
   const visualizations = recommendVisualizations(opts.rows);
-  const followUps = suggestFollowUps(opts.domain);
+  const baseFollowUps = suggestFollowUps(opts.domain);
+  const dynamicFollowUps = generateDynamicFollowUps(opts.rows, opts.domain, opts.question ?? '');
+  // Prioriza dinâmicas (mais contextuais) e completa com as fixas.
+  const followSeen = new Set<string>();
+  const followUps: string[] = [];
+  for (const f of [...dynamicFollowUps, ...baseFollowUps]) {
+    const key = String(f).trim().toLowerCase();
+    if (!key || followSeen.has(key)) continue;
+    followSeen.add(key);
+    followUps.push(f as string);
+    if (followUps.length >= 5) break;
+  }
   const confidence = scoreConfidence({
     rowsReturned: opts.rowsReturned,
     hasSql: Boolean(opts.sql),
@@ -361,31 +399,48 @@ Deno.serve(async (req) => {
 
         send('status', { phase: 'thinking', message: 'Interpretando pergunta...' });
 
-        const { data: history } = await supabase
+        const { data: rawHistory } = await supabase
           .from('assistant_messages')
-          .select('role, content')
+          .select('role, content, created_at')
           .eq('conversation_id', conversationId)
-          .order('created_at', { ascending: true })
-          .limit(10);
+          .order('created_at', { ascending: false })
+          .limit(MEMORY_TOTAL_LIMIT);
+
+        // Reordena cronológico ascendente e aplica janela com sumarização das mais antigas.
+        const orderedHistory = (rawHistory ?? [])
+          .slice()
+          .reverse()
+          .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content as string }));
+        const memoryWindow = buildMemoryWindow(orderedHistory);
+
+        // Detecção de pergunta ambígua → emite 'clarification' e encerra cedo.
+        if (USE_V5) {
+          const clarif = detectClarification(question, orderedHistory);
+          if (clarif.needs_clarification) {
+            send('clarification', {
+              reason: clarif.reason,
+              options: clarif.options,
+            });
+            // Não persistimos resposta de assistente — esperamos a escolha do usuário.
+            return;
+          }
+        }
 
         const llmMessages = [
           {
             role: 'system',
             content:
-              SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG +
+              ACTIVE_SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG +
               '\n\n' + PLANNER_EXTERNAL_DELTA + '\n\n' + EXTERNAL_CATALOG,
           },
-          ...(history ?? []).map((m: { role: string; content: string }) => ({
-            role: m.role === 'assistant' ? 'assistant' : 'user',
-            content: m.content,
-          })),
+          ...memoryToChatMessages(memoryWindow),
         ];
 
         const llmResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: MODEL,
+            model: PLANNER_MODEL,
             messages: llmMessages,
             tools: [PLAN_TOOL],
             tool_choice: { type: 'function', function: { name: 'plan_query' } },
@@ -628,7 +683,7 @@ Deno.serve(async (req) => {
         send('rows', { rows_returned: rowsReturned, preview: rows.slice(0, 50) });
 
         if (status === 'success') {
-          analysis = buildAnalysis({ rows, rowsReturned, domain, sql: generatedSql, status });
+          analysis = buildAnalysis({ rows, rowsReturned, domain, sql: generatedSql, status, question });
           if (planLimitations.length) analysis.limitations.push(...planLimitations);
           send('analysis', {
             insights: analysis.insights,
@@ -677,10 +732,10 @@ Deno.serve(async (req) => {
             method: 'POST',
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: MODEL,
+              model: FORMATTER_MODEL,
               stream: true,
               messages: [
-                { role: 'system', content: FORMATTER_SYSTEM_PROMPT },
+                { role: 'system', content: ACTIVE_FORMATTER_PROMPT },
                 { role: 'user', content: formatterUserMessage },
               ],
             }),
@@ -748,6 +803,51 @@ Deno.serve(async (req) => {
               buffer = '';
             }
             if (!finalAnswer) finalAnswer = `Consulta retornou ${rowsReturned} linha(s).`;
+          }
+
+          // ---- Self-critic + retry único (V5) -------------------------------
+          if (USE_V5 && status === 'success' && finalAnswer && rows.length > 0) {
+            try {
+              const critique = critiqueAnswer({
+                answer: finalAnswer,
+                rows,
+                question,
+                hasEvidences: evidences.length > 0,
+              });
+              if (critique.issues.length > 0) {
+                send('quality_warning', { issues: critique.issues, score: critique.score });
+              }
+              if (shouldRetry(critique.issues)) {
+                send('status', { phase: 'refining', message: 'Refinando resposta...' });
+                const fixPrefix =
+                  'A resposta anterior teve estes problemas: ' +
+                  critique.issues.map((i) => `[${i.severity}] ${i.message}`).join('; ') +
+                  '. Refaça a resposta evitando todos esses erros. Mantenha headline, dados, e próximo passo.';
+                const retryResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    model: FORMATTER_MODEL,
+                    messages: [
+                      { role: 'system', content: ACTIVE_FORMATTER_PROMPT },
+                      { role: 'user', content: fixPrefix + '\n\n' + formatterUserMessage },
+                    ],
+                  }),
+                });
+                if (retryResp.ok) {
+                  const retryData = await retryResp.json();
+                  tokensIn += retryData?.usage?.prompt_tokens ?? 0;
+                  tokensOut += retryData?.usage?.completion_tokens ?? 0;
+                  const newAnswer = retryData?.choices?.[0]?.message?.content;
+                  if (typeof newAnswer === 'string' && newAnswer.length > 0) {
+                    finalAnswer = newAnswer;
+                    send('answer_replaced', { content: finalAnswer, reason: 'self_critic_retry' });
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn(`[assistant-chat] [req=${requestId}] critic falhou:`, e);
+            }
           }
         }
 
@@ -933,28 +1033,32 @@ async function runNonStreaming(opts: {
       conversation_id: conversationId, user_id: userId, role: 'user', content: question,
     });
 
-    const { data: history } = await supabase
+    const { data: rawHistoryNS } = await supabase
       .from('assistant_messages')
-      .select('role, content')
+      .select('role, content, created_at')
       .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true })
-      .limit(10);
+      .order('created_at', { ascending: false })
+      .limit(MEMORY_TOTAL_LIMIT);
+
+    const orderedHistoryNS = (rawHistoryNS ?? [])
+      .slice()
+      .reverse()
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content as string }));
+    const memoryWindowNS = buildMemoryWindow(orderedHistoryNS);
 
     const llmResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: MODEL,
+        model: PLANNER_MODEL,
         messages: [
           {
             role: 'system',
             content:
-              SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG +
+              ACTIVE_SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG +
               '\n\n' + PLANNER_EXTERNAL_DELTA + '\n\n' + EXTERNAL_CATALOG,
           },
-          ...(history ?? []).map((m: { role: string; content: string }) => ({
-            role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content,
-          })),
+          ...memoryToChatMessages(memoryWindowNS),
         ],
         tools: [PLAN_TOOL],
         tool_choice: { type: 'function', function: { name: 'plan_query' } },
@@ -1119,9 +1223,9 @@ async function runNonStreaming(opts: {
         method: 'POST',
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: MODEL,
+          model: FORMATTER_MODEL,
           messages: [
-            { role: 'system', content: FORMATTER_SYSTEM_PROMPT },
+            { role: 'system', content: ACTIVE_FORMATTER_PROMPT },
             { role: 'user', content: formatterUserMessage },
           ],
         }),
@@ -1130,6 +1234,44 @@ async function runNonStreaming(opts: {
       tokensIn += fd?.usage?.prompt_tokens ?? 0;
       tokensOut += fd?.usage?.completion_tokens ?? 0;
       finalAnswer = fd?.choices?.[0]?.message?.content ?? `Consulta retornou ${rowsReturned} linha(s).`;
+
+      // ---- Self-critic + retry único (V5, não-streaming) ----------------
+      if (USE_V5 && status === 'success' && finalAnswer && rows.length > 0) {
+        try {
+          const critique = critiqueAnswer({
+            answer: finalAnswer,
+            rows,
+            question,
+            hasEvidences: evidences.length > 0,
+          });
+          if (shouldRetry(critique.issues)) {
+            const fixPrefix =
+              'A resposta anterior teve estes problemas: ' +
+              critique.issues.map((i) => `[${i.severity}] ${i.message}`).join('; ') +
+              '. Refaça a resposta evitando todos esses erros.';
+            const retryResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: FORMATTER_MODEL,
+                messages: [
+                  { role: 'system', content: ACTIVE_FORMATTER_PROMPT },
+                  { role: 'user', content: fixPrefix + '\n\n' + formatterUserMessage },
+                ],
+              }),
+            });
+            if (retryResp.ok) {
+              const rd = await retryResp.json();
+              tokensIn += rd?.usage?.prompt_tokens ?? 0;
+              tokensOut += rd?.usage?.completion_tokens ?? 0;
+              const newAnswer = rd?.choices?.[0]?.message?.content;
+              if (typeof newAnswer === 'string' && newAnswer.length > 0) finalAnswer = newAnswer;
+            }
+          }
+        } catch (e) {
+          console.warn('[assistant-chat] critic não-streaming falhou:', e);
+        }
+      }
     }
 
     const { data: logRow } = await supabase
