@@ -692,6 +692,7 @@ Deno.serve(async (req) => {
             const reader = formatResp.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
+            let finishReason: string | null = null;
             const processLine = (line: string) => {
               let trimmed = line;
               if (trimmed.endsWith('\r')) trimmed = trimmed.slice(0, -1);
@@ -707,6 +708,8 @@ Deno.serve(async (req) => {
                   finalAnswer += delta;
                   send('delta', { content: delta });
                 }
+                const fr = json?.choices?.[0]?.finish_reason;
+                if (fr) finishReason = fr;
                 const usage = json?.usage;
                 if (usage) {
                   tokensIn += usage.prompt_tokens ?? 0;
