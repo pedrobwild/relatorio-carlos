@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { detectTruncation } from '../_shared/truncationDetector.ts';
 import { corsHeaders, corsResponse, jsonResponse } from '../_shared/cors.ts';
 import { renderCatalog } from './_lib/catalog.ts';
 import {
