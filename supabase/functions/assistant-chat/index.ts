@@ -264,6 +264,9 @@ function inferExternalKind(step: PlanStep): 'fetch' | 'web' {
 }
 
 Deno.serve(async (req) => {
+  // Correlação por requisição. Aceita X-Request-Id do cliente; senão gera um.
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+
   if (req.method === 'OPTIONS') return corsResponse();
 
   let body: { question?: string; conversation_id?: string | null; stream?: boolean } = {};
