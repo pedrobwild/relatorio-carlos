@@ -341,14 +341,31 @@ export function AssistantChat({
 
       // Final flush: garante que o último bloco SSE (sem \n\n final) seja processado
       buffer += decoder.decode();
+      const corr = `[req=${requestId}${serverRequestId ? ` srv=${serverRequestId}` : ""}]`;
       if (buffer.trim().length > 0) {
-        for (const block of buffer.split("\n\n")) {
-          if (block.trim()) processBlock(block);
+        const looksLikeSse =
+          buffer.includes("data:") || buffer.startsWith("event:");
+        if (looksLikeSse) {
+          // Logs em warn (regra de lint proíbe console.log).
+          console.warn(
+            `[AssistantChat] ${corr} SSE final flush: processando ${buffer.length}B residuais (seriam descartados sem flush)`,
+          );
+          for (const block of buffer.split("\n\n")) {
+            if (block.trim()) processBlock(block);
+          }
+        } else {
+          console.warn(
+            `[AssistantChat] ${corr} SSE final flush: descartando ${buffer.length}B sem 'data:'/'event:' (preview=${JSON.stringify(buffer.slice(0, 80))})`,
+          );
         }
         buffer = "";
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro inesperado";
+      console.error(
+        `[AssistantChat] [req=${requestId}${serverRequestId ? ` srv=${serverRequestId}` : ""}] erro no stream:`,
+        msg,
+      );
       toast.error(msg);
       updateLastAssistant((m) => ({
         ...m,
