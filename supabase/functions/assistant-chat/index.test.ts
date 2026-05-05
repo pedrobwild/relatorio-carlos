@@ -148,7 +148,7 @@ Deno.test("assistant-chat returns answer and persists assistant_logs", async () 
       const { data, error } = await supabase
         .from("assistant_logs")
         .select(
-          "id, user_id, question, status, rows_returned, latency_ms, created_at",
+          "id, user_id, question, status, rows_returned, latency_ms, created_at, answer_length, finish_reason, truncated, truncation_reason, answer_summary",
         )
         .eq("user_id", userId)
         .eq("question", TEST_QUESTION)
@@ -176,6 +176,67 @@ Deno.test("assistant-chat returns answer and persists assistant_logs", async () 
       payload.status,
       "Logged status should match response status",
     );
+
+    // ---- novos campos de telemetria de truncamento -----------------------
+    // answer_length deve refletir o tamanho real da resposta retornada e
+    // bater com o prefixo armazenado em answer_summary (até 280 chars).
+    assertEquals(
+      typeof logRow!.answer_length,
+      "number",
+      "answer_length deve ser numérico",
+    );
+    assertEquals(
+      logRow!.answer_length,
+      (payload.answer as string).length,
+      "answer_length deve ser igual ao length da resposta retornada",
+    );
+    assertEquals(
+      logRow!.answer_summary,
+      (payload.answer as string).slice(0, 280),
+      "answer_summary deve ser o prefixo (≤280) de answer",
+    );
+    // truncated é boolean (não-nulo) e truncation_reason segue a invariante:
+    //   truncated=false  <=> truncation_reason IS NULL
+    //   truncated=true   <=> truncation_reason IN (lista conhecida)
+    assertEquals(
+      typeof logRow!.truncated,
+      "boolean",
+      "truncated deve ser boolean",
+    );
+    const KNOWN_REASONS = new Set([
+      "finish_reason=length",
+      "answer_too_short",
+      "unclosed_code_fence",
+      "no_terminal_punctuation",
+    ]);
+    if (logRow!.truncated === true) {
+      assert(
+        typeof logRow!.truncation_reason === "string" &&
+          KNOWN_REASONS.has(logRow!.truncation_reason as string),
+        `truncation_reason inválido para truncated=true: ${logRow!.truncation_reason}`,
+      );
+    } else {
+      assertEquals(
+        logRow!.truncation_reason,
+        null,
+        "truncation_reason deve ser null quando truncated=false",
+      );
+    }
+    // finish_reason: pode ser null (stream sem finish) ou string ('stop' | 'length' | ...)
+    assert(
+      logRow!.finish_reason === null ||
+        typeof logRow!.finish_reason === "string",
+      `finish_reason deve ser null ou string, recebido: ${typeof logRow!.finish_reason}`,
+    );
+    // Coerência cruzada: se o LLM declarou 'length', o handler DEVE marcar truncated.
+    if (logRow!.finish_reason === "length") {
+      assertEquals(
+        logRow!.truncated,
+        true,
+        "finish_reason=length deve sempre marcar truncated=true",
+      );
+      assertEquals(logRow!.truncation_reason, "finish_reason=length");
+    }
   } finally {
     // Always sign out so we don't leave a lingering session.
     await supabase.auth.signOut();
