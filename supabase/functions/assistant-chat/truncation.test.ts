@@ -194,3 +194,104 @@ Deno.test('integration: status sql_error não dispara detecção de truncamento'
   assertEquals(payload.truncation_reason, null);
   assertEquals(payload.answer_length, 4);
 });
+
+// ===========================================================================
+// 7. JSON parcial no último chunk (conexão cai no meio do JSON) — o parser
+//    deve descartar APENAS a linha quebrada e ainda assim preencher os campos
+//    do assistant_logs de forma consistente com o conteúdo já acumulado.
+// ===========================================================================
+Deno.test('integration: chunk final com JSON parcial não corrompe campos do log', async () => {
+  const chunks = [
+    makeOpenAIChunk('Existem três obras ativas com prazos críticos no portfólio atual'),
+    // JSON parcial: cai no meio da string `"content":"...` — sem chave fechando
+    'data: {"choices":[{"delta":{"content":"adicional truncad',
+  ];
+  const { finalAnswer, finishReason } = await consumeStream(chunks);
+  const payload = buildLogPayload({ status: 'success', finalAnswer, finishReason });
+
+  // O conteúdo do chunk válido deve estar preservado; o parcial é descartado.
+  assert(finalAnswer.startsWith('Existem três obras ativas'));
+  assert(!finalAnswer.includes('adicional truncad'), 'JSON parcial não deve ser concatenado');
+  assertEquals(finishReason, null);
+  // Invariantes do log: tipos corretos e coerência truncated <-> reason
+  assertEquals(typeof payload.truncated, 'boolean');
+  assertEquals(payload.answer_length, finalAnswer.length);
+  assertEquals(payload.answer_summary, finalAnswer.slice(0, 280));
+  if (payload.truncated) {
+    assert(payload.truncation_reason !== null);
+  } else {
+    assertEquals(payload.truncation_reason, null);
+  }
+});
+
+// ===========================================================================
+// 8. Linhas SSE malformadas misturadas com chunks válidos — devem ser
+//    silenciosamente ignoradas sem quebrar o handler nem os campos do log.
+// ===========================================================================
+Deno.test('integration: linhas SSE malformadas no meio do stream são ignoradas', async () => {
+  const chunks = [
+    makeOpenAIChunk('Resumo executivo: '),
+    // ruído: data sem JSON válido
+    'data: not-a-json-at-all\n\n',
+    // ruído: chave faltando
+    'data: {"choices":[{"delta":{"content":}}]}\n\n',
+    // comentário SSE válido (deve ser ignorado)
+    ': keep-alive ping\n\n',
+    // chunk válido continuando o conteúdo
+    makeOpenAIChunk('5 obras ativas, 2 atrasadas e 1 pausada no momento.'),
+    makeOpenAIChunk('', 'stop'),
+  ];
+  const { finalAnswer, finishReason } = await consumeStream(chunks);
+  const payload = buildLogPayload({ status: 'success', finalAnswer, finishReason });
+
+  assertEquals(finishReason, 'stop');
+  assertEquals(
+    finalAnswer,
+    'Resumo executivo: 5 obras ativas, 2 atrasadas e 1 pausada no momento.',
+    'apenas chunks JSON válidos devem ser concatenados',
+  );
+  assertEquals(payload.truncated, false);
+  assertEquals(payload.truncation_reason, null);
+  assertEquals(payload.answer_length, finalAnswer.length);
+});
+
+// ===========================================================================
+// 9. Chunk final com data: parcial SEM \n\n + finish_reason=length em chunk
+//    anterior — exercita simultaneamente o final-flush, o JSON malformado e
+//    a heurística de truncamento.
+// ===========================================================================
+Deno.test('integration: final-flush + JSON malformado + finish=length', async () => {
+  const chunks = [
+    makeOpenAIChunk('Análise completa do portfólio com indicadores agregados de prazo e custo'),
+    makeOpenAIChunk('', 'length'),
+    // chunk final SEM \n\n com JSON impossível de parsear
+    'data: {"choices":[{"delta":{"content":"...mais conte',
+  ];
+  const { finalAnswer, finishReason } = await consumeStream(chunks);
+  const payload = buildLogPayload({ status: 'success', finalAnswer, finishReason });
+
+  // finish_reason vence sobre as outras heurísticas
+  assertEquals(finishReason, 'length');
+  assertEquals(payload.truncated, true);
+  assertEquals(payload.truncation_reason, 'finish_reason=length');
+  assertEquals(payload.answer_length, finalAnswer.length);
+  assert(!finalAnswer.includes('mais conte'), 'JSON parcial não deve vazar para finalAnswer');
+});
+
+// ===========================================================================
+// 10. Stream que termina SÓ com [DONE] e sem nenhum content — deve resultar
+//     em finalAnswer vazio e log consistente (não trava nem grava lixo).
+// ===========================================================================
+Deno.test('integration: stream só com [DONE] gera log com answer_length=0', async () => {
+  const chunks = ['data: [DONE]\n\n'];
+  const { finalAnswer, finishReason } = await consumeStream(chunks);
+  const payload = buildLogPayload({ status: 'success', finalAnswer, finishReason });
+
+  assertEquals(finalAnswer, '');
+  assertEquals(finishReason, null);
+  assertEquals(payload.answer_length, 0);
+  // answer vazia (0 chars) NÃO dispara answer_too_short (regra é >0 && <40)
+  assertEquals(payload.truncated, false);
+  assertEquals(payload.truncation_reason, null);
+  assertEquals(payload.answer_summary, '');
+});
