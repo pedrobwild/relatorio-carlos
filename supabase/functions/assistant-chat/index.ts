@@ -728,7 +728,18 @@ Deno.serve(async (req) => {
             // Final flush: o último data: pode chegar sem \n e seria descartado
             buffer += decoder.decode();
             if (buffer.length > 0) {
-              for (const line of buffer.split('\n')) processLine(line);
+              const trimmedTail = buffer.trim();
+              const hasSseData = trimmedTail.startsWith('data:') || trimmedTail.includes('\ndata:');
+              if (hasSseData) {
+                console.log(
+                  `[assistant-chat] [req=${requestId}] SSE final flush: processing ${buffer.length} bytes leftover (would be dropped without flush)`,
+                );
+                for (const line of buffer.split('\n')) processLine(line);
+              } else {
+                console.warn(
+                  `[assistant-chat] [req=${requestId}] SSE final flush: discarding ${buffer.length} bytes leftover sem 'data:' (preview=${JSON.stringify(buffer.slice(0, 80))})`,
+                );
+              }
               buffer = '';
             }
             if (!finalAnswer) finalAnswer = `Consulta retornou ${rowsReturned} linha(s).`;
