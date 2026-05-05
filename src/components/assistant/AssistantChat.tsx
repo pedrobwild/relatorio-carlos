@@ -137,14 +137,25 @@ export function AssistantChat({
     let sqlText: string | undefined;
     let domainText: string | undefined;
     let finalStatus: string | undefined;
+    let doneReceived = false;
     // Correlação com a edge function. Geramos do lado do cliente; o servidor
     // ecoa de volta no evento `conversation` (campo `request_id`).
-    const requestId =
+    const baseRequestId =
       (globalThis.crypto as Crypto | undefined)?.randomUUID?.() ??
       `req-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    let requestId = baseRequestId;
     let serverRequestId: string | undefined;
 
+    const MAX_ATTEMPTS = 3;
+    let attempt = 0;
+    let lastError: unknown = null;
+
     try {
+      while (attempt < MAX_ATTEMPTS) {
+      attempt++;
+      requestId = attempt === 1 ? baseRequestId : `${baseRequestId}-r${attempt}`;
+      doneReceived = false;
+      try {
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
       if (!token) throw new Error("Sessão expirada");
