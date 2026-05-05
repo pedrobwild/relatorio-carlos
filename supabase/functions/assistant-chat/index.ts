@@ -348,7 +348,7 @@ Deno.serve(async (req) => {
           if (convErr) throw new Error('Falha ao criar conversa: ' + convErr.message);
           conversationId = conv.id;
         }
-        send('conversation', { conversation_id: conversationId });
+        send('conversation', { conversation_id: conversationId, request_id: requestId });
 
         await supabase.from('assistant_messages').insert({
           conversation_id: conversationId,
