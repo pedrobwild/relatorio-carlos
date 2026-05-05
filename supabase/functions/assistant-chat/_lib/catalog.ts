@@ -228,6 +228,122 @@ export const CATALOG: CatalogTable[] = [
   },
 ];
 
+// ============================================================
+// KPIs nomeados — abstrações de NEGÓCIO que viram CTEs prontas.
+// O Planner pode referenciar pelo nome ("saldo da obra") em vez de
+// reconstruir a fórmula a cada pergunta.
+// ============================================================
+
+export interface NamedKpi {
+  name: string;
+  description: string;
+  formula_pseudo: string;
+  /** SQL CTE pronto pra colar no WITH ... */
+  cte_template: string;
+}
+
+export const NAMED_KPIS: NamedKpi[] = [
+  {
+    name: "saldo_obra",
+    description: "Liquidez da obra: recebido do cliente menos pago a fornecedor.",
+    formula_pseudo: "SUM(payments.amount WHERE paid) - SUM(purchases.actual_cost WHERE paid)",
+    cte_template: `saldo_obra AS (
+  SELECT
+    p.id AS project_id,
+    p.name AS obra,
+    COALESCE(SUM(pp.amount) FILTER (WHERE pp.paid_at IS NOT NULL), 0) AS recebido,
+    COALESCE(SUM(pc.actual_cost) FILTER (WHERE pc.paid_at IS NOT NULL), 0) AS pago,
+    COALESCE(SUM(pp.amount) FILTER (WHERE pp.paid_at IS NOT NULL), 0)
+      - COALESCE(SUM(pc.actual_cost) FILTER (WHERE pc.paid_at IS NOT NULL), 0) AS saldo
+  FROM projects p
+  LEFT JOIN project_payments pp ON pp.project_id = p.id
+  LEFT JOIN project_purchases pc ON pc.project_id = p.id
+  WHERE p.deleted_at IS NULL
+  GROUP BY p.id, p.name
+)`,
+  },
+  {
+    name: "exposicao_contratual",
+    description: "Quanto ainda falta o cliente pagar (contract_value − recebido).",
+    formula_pseudo: "contract_value - SUM(payments.amount WHERE paid)",
+    cte_template: `exposicao_contratual AS (
+  SELECT
+    p.id AS project_id,
+    p.name AS obra,
+    p.contract_value,
+    COALESCE(SUM(pp.amount) FILTER (WHERE pp.paid_at IS NOT NULL), 0) AS recebido,
+    p.contract_value - COALESCE(SUM(pp.amount) FILTER (WHERE pp.paid_at IS NOT NULL), 0) AS exposicao
+  FROM projects p
+  LEFT JOIN project_payments pp ON pp.project_id = p.id
+  WHERE p.deleted_at IS NULL
+  GROUP BY p.id, p.name, p.contract_value
+)`,
+  },
+  {
+    name: "estouro_orcamento",
+    description: "Quanto a obra estourou o orçamento estimado em compras.",
+    formula_pseudo: "SUM(GREATEST(actual - estimated, 0))",
+    cte_template: `estouro_orcamento AS (
+  SELECT
+    pc.project_id,
+    SUM(pc.estimated_cost) AS orcamento_estimado,
+    SUM(GREATEST(pc.actual_cost - pc.estimated_cost, 0)) AS estouro_total,
+    COUNT(*) FILTER (WHERE pc.actual_cost > pc.estimated_cost) AS itens_estouraram,
+    ROUND(
+      100.0 * SUM(GREATEST(pc.actual_cost - pc.estimated_cost, 0))
+        / NULLIF(SUM(pc.estimated_cost), 0),
+      1
+    ) AS estouro_pct
+  FROM project_purchases pc
+  WHERE pc.actual_cost IS NOT NULL
+  GROUP BY pc.project_id
+)`,
+  },
+  {
+    name: "margem_prevista",
+    description: "Margem teórica = (contrato − soma estimada de compras) / contrato.",
+    formula_pseudo: "(contract_value - SUM(estimated_cost)) / contract_value",
+    cte_template: `margem_prevista AS (
+  SELECT
+    p.id AS project_id,
+    p.name AS obra,
+    p.contract_value,
+    COALESCE(SUM(pc.estimated_cost), 0) AS custo_estimado,
+    p.contract_value - COALESCE(SUM(pc.estimated_cost), 0) AS margem_abs,
+    CASE WHEN p.contract_value > 0
+      THEN ROUND(100.0 * (p.contract_value - COALESCE(SUM(pc.estimated_cost), 0)) / p.contract_value, 1)
+      ELSE NULL
+    END AS margem_pct
+  FROM projects p
+  LEFT JOIN project_purchases pc ON pc.project_id = p.id AND pc.status <> 'cancelled'
+  WHERE p.deleted_at IS NULL
+  GROUP BY p.id, p.name, p.contract_value
+)`,
+  },
+  {
+    name: "atraso_cronograma",
+    description: "Atividades atrasadas por obra (planned_end < hoje sem actual_end).",
+    formula_pseudo: "COUNT(*) WHERE planned_end < CURRENT_DATE AND actual_end IS NULL",
+    cte_template: `atraso_cronograma AS (
+  SELECT
+    pa.project_id,
+    COUNT(*) FILTER (WHERE pa.planned_end < CURRENT_DATE AND pa.actual_end IS NULL) AS atividades_atrasadas,
+    SUM(pa.weight) FILTER (WHERE pa.planned_end < CURRENT_DATE AND pa.actual_end IS NULL) AS peso_atrasado,
+    MAX(CURRENT_DATE - pa.planned_end) FILTER (WHERE pa.planned_end < CURRENT_DATE AND pa.actual_end IS NULL) AS pior_atraso_dias
+  FROM project_activities pa
+  GROUP BY pa.project_id
+)`,
+  },
+];
+
+function renderNamedKpis(): string {
+  const lines: string[] = ["\n# KPIs NOMEADOS (use o nome no plano e cole o CTE no WITH)"];
+  for (const k of NAMED_KPIS) {
+    lines.push(`\n## ${k.name}\n${k.description}\nFórmula: ${k.formula_pseudo}\n\`\`\`sql\n${k.cte_template}\n\`\`\``);
+  }
+  return lines.join("\n");
+}
+
 export function renderCatalog(): string {
   const lines: string[] = ["# CATÁLOGO (apenas SELECT, RLS aplicada)"];
   for (const t of CATALOG) {
@@ -240,5 +356,6 @@ export function renderCatalog(): string {
     if (t.forbidden?.length) lines.push("NÃO existem (não invente): " + t.forbidden.join(", "));
     if (t.joinHints?.length) lines.push("Joins úteis: " + t.joinHints.join(" | "));
   }
+  lines.push(renderNamedKpis());
   return lines.join("\n");
 }
