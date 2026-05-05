@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, ArrowRight, Download, List } from "lucide-react";
+import { ArrowLeft, ArrowRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { WeeklyReport, Activity } from "@/types/report";

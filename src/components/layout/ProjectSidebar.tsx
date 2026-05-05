@@ -1,28 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  GanttChartSquare,
-  TrendingUp,
-  DollarSign,
-  FolderOpen,
-  ClipboardSignature,
-  AlertCircle,
-  FileText,
-  Box,
-  Ruler,
-  Map,
-  ShoppingCart,
-  Package,
-  ClipboardCheck,
-  ChevronDown,
-  LucideIcon,
-  Building2,
-  UserCircle,
-  ListChecks,
-  Receipt,
-  Bot,
-} from "lucide-react";
+import { LayoutDashboard, GanttChartSquare, TrendingUp, DollarSign, FolderOpen, ClipboardSignature, AlertCircle, FileText, Box, Ruler, Map, Package, ClipboardCheck, ChevronDown, LucideIcon, Building2, UserCircle, ListChecks, Receipt, Bot } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -88,7 +66,7 @@ export function ProjectSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const { projectId, paths } = useProjectNavigation();
   const { project } = useProject();
   const { stats: pendenciasStats } = usePendencias({ projectId });

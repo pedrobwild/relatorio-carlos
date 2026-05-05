@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,12 +15,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  TASK_STATUSES,
-  type ObraTask,
-  type ObraTaskStatus,
-  type ObraTaskInput,
-} from "@/hooks/useObraTasks";
+import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput } from "@/hooks/useObraTasks";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 

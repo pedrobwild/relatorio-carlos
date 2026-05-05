@@ -7,10 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as filesRepo from "@/infra/repositories/files.repository";
-import type {
-  FileFilters,
-  CreateFileInput,
-} from "@/infra/repositories/files.repository";
+import type { FileFilters } from "@/infra/repositories/files.repository";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 

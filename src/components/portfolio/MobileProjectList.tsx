@@ -10,7 +10,6 @@ import {
   FileText,
 } from "lucide-react";
 import { useProjectSummaryQuery } from "@/hooks/useProjectsQuery";
-import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { parseLocalDate, getTodayLocal } from "@/lib/activityStatus";

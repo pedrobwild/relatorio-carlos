@@ -126,7 +126,7 @@ export function useMutationWithRetry<TData, TVariables>(
   const [error, setError] = useState<Error | null>(null);
 
   const {
-    execute: executeWithRetry,
+    execute: _executeWithRetry,
     isRetrying,
     attempt,
     maxAttempts,

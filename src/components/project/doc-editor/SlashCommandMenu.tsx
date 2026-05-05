@@ -1,17 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Heading1,
-  Heading2,
-  Heading3,
-  Type,
-  List,
-  ListOrdered,
-  CheckSquare,
-  Quote,
-  Code,
-  Minus,
-  Image,
-} from "lucide-react";
+import { Heading1, Heading2, Heading3, Type, List, ListOrdered, CheckSquare, Quote, Code, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { matchesSearch } from "@/lib/searchNormalize";
 

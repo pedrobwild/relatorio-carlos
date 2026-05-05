@@ -1,18 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  AlertTriangle,
-  Clock,
-  FileSignature,
-  Receipt,
-  Palette,
-  Ruler,
-  ShoppingCart,
-  Calendar,
-  ChevronRight,
-  CheckCircle2,
-  MessageSquareWarning,
-} from "lucide-react";
+import { AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, ShoppingCart, Calendar, ChevronRight, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format, parseISO } from "date-fns";

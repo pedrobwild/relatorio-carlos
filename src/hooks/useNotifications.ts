@@ -2,13 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import {
-  fetchNotifications,
-  fetchUnreadCount,
-  markAsRead,
-  markAllAsRead,
-  type Notification,
-} from "@/infra/repositories/notifications.repository";
+import { fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead, type Notification } from "@/infra/repositories/notifications.repository";
 
 const NOTIFICATIONS_KEY = "notifications";
 const UNREAD_COUNT_KEY = "notifications-unread-count";

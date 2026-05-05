@@ -16,21 +16,7 @@ import {
   differenceInHours,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  AlertTriangle,
-  Clock,
-  Plus,
-  ChevronRight,
-  User,
-  Tag,
-  Building2,
-  RotateCcw,
-  BarChart3,
-  ChevronDown,
-  Filter,
-  Search,
-  X,
-} from "lucide-react";
+import { AlertTriangle, Clock, Plus, ChevronRight, User, Tag, Building2, RotateCcw, BarChart3, ChevronDown, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

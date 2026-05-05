@@ -4,7 +4,7 @@
  * Unit tests for the documents repository functions.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 // Mock Supabase
 vi.mock("@/integrations/supabase/client", () => ({
@@ -40,13 +40,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 // Import after mocking
-import {
-  DOCUMENT_CATEGORIES,
-  getDocumentVersionHistory,
-  getLatestDocumentsByCategory,
-  type ProjectDocument,
-  type DocumentCategory,
-} from "../documents.repository";
+import { DOCUMENT_CATEGORIES, getLatestDocumentsByCategory, type ProjectDocument, type DocumentCategory } from "../documents.repository";
 
 describe("DOCUMENT_CATEGORIES", () => {
   it("has all required categories", () => {

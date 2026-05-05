@@ -1,15 +1,5 @@
 import { useState } from "react";
-import {
-  Plus,
-  User,
-  UserPlus,
-  X,
-  Link2,
-  Mail,
-  CheckCircle2,
-  Loader2,
-  HelpCircle,
-} from "lucide-react";
+import { Plus, User, UserPlus, X, Link2, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,12 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -389,7 +374,7 @@ export function TabEquipe({
 /** Button to link a customer's user account by looking up their email in profiles */
 function CustomerLinkButton({
   customer,
-  projectId,
+  projectId: _projectId,
   onLinked,
 }: {
   customer: Customer;

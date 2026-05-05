@@ -1,11 +1,5 @@
 import { useState, useMemo } from "react";
-import {
-  X,
-  Check,
-  SlidersHorizontal,
-  CalendarDays,
-  DollarSign,
-} from "lucide-react";
+import { X, Check, SlidersHorizontal, CalendarDays } from "lucide-react";
 import {
   Sheet,
   SheetContent,

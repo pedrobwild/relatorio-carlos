@@ -32,11 +32,7 @@ import {
 import { useNovaObraSubmit } from "./nova-obra/useNovaObraSubmit";
 import { TemplateSelectorCard } from "./nova-obra/TemplateSelectorCard";
 import { ProjectInfoCard } from "./nova-obra/ProjectInfoCard";
-import {
-  ScheduleCard,
-  type ScheduleActivity,
-  createEmptyActivity,
-} from "./nova-obra/ScheduleCard";
+import { ScheduleCard, type ScheduleActivity } from "./nova-obra/ScheduleCard";
 import { FinancialCard } from "./nova-obra/FinancialCard";
 import { CustomerCard } from "./nova-obra/CustomerCard";
 import { BudgetUploadCard } from "./nova-obra/BudgetUploadCard";
@@ -258,7 +254,7 @@ export default function NovaObra() {
     contractState.aiMissingFields,
   ]);
 
-  const templateTotalDays = useMemo(() => {
+  const _templateTotalDays = useMemo(() => {
     if (!selectedTemplate?.default_activities) return 0;
     return (selectedTemplate.default_activities as TemplateActivity[]).reduce(
       (s, a) => s + a.durationDays,

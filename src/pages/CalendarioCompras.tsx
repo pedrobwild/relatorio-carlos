@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState, useEffect, useRef } from "react";
+import { Fragment, useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   format,
@@ -15,31 +15,7 @@ import {
   isValid,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  Check,
-  X,
-  Pencil,
-  CalendarIcon,
-  FilterX,
-  Plus,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
-  Package,
-  FileText,
-  Truck,
-  ArrowUpDown,
-  MoreHorizontal,
-  Trash2,
-  User,
-  Clock,
-  ThumbsUp,
-  CheckCircle2,
-  AlertTriangle,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon, FilterX, Plus, ChevronDown, ChevronUp, Package, FileText, Truck, ArrowUpDown, MoreHorizontal, Trash2, User, Clock, ThumbsUp, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";

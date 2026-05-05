@@ -37,7 +37,7 @@ export function useAddMeetingSlot() {
     mutationFn: async ({
       stageId,
       slotDatetime,
-      projectId,
+      projectId: _projectId,
     }: {
       stageId: string;
       slotDatetime: string;
@@ -68,7 +68,7 @@ export function useDeleteMeetingSlot() {
   return useMutation({
     mutationFn: async ({
       slotId,
-      projectId,
+      projectId: _projectId,
     }: {
       slotId: string;
       projectId: string;
@@ -104,7 +104,7 @@ export function useBookMeetingSlot() {
   return useMutation({
     mutationFn: async ({
       slotId,
-      projectId,
+      projectId: _projectId,
       projectName,
       customerName,
       customerEmail,

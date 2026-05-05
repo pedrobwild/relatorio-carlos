@@ -71,7 +71,7 @@ export function TeamContactEditModal({
     try {
       const url = await onUploadPhoto(file);
       setFormData((prev) => ({ ...prev, photo_url: url }));
-    } catch (error) {
+    } catch (_error) {
       // Reset preview on error
       setPreviewUrl(formData.photo_url || null);
     }

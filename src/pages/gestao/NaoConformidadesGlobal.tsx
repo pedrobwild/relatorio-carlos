@@ -36,13 +36,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { NonConformity, NcSeverity } from "@/hooks/useNonConformities";
+import type { NonConformity } from "@/hooks/useNonConformities";
 
 type DeadlineFilter = "all" | "overdue" | "today" | "this_week" | "no_deadline";
 
 export default function NaoConformidadesGlobal() {
   const { data: allNcs = [], projects, isLoading } = useAllNonConformities();
-  const { data: staffUsers = [] } = useStaffUsers();
+  const { data: _staffUsers = [] } = useStaffUsers();
   const { can } = useCan();
 
   const [searchQuery, setSearchQuery] = useState("");

@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useCepLookup, formatCep } from "@/hooks/useCepLookup";
 import { AiFieldIndicator } from "./AiFieldIndicator";

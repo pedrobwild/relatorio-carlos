@@ -6,7 +6,6 @@ import {
   WeeklyReport,
   Activity as ActivityType,
 } from "@/types/report";
-import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
@@ -18,12 +17,8 @@ import {
   patchPortalViewState,
 } from "@/lib/portalViewState";
 import { useWeeklyReports } from "@/hooks/useWeeklyReports";
-import {
-  generateWeeklyReports,
-  ExtendedWeeklyReport,
-} from "@/components/WeeklyReportsHistory";
+import { generateWeeklyReports } from "@/components/WeeklyReportsHistory";
 import type { MilestoneKey } from "@/components/ReportHeader";
-import { format } from "date-fns";
 
 // Demo data for projects without real data yet
 const demoReportData: ReportData = {

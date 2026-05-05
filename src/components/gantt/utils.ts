@@ -1,6 +1,5 @@
-import { differenceInDays } from "date-fns";
 import { parseLocalDate } from "@/lib/activityStatus";
-import type { BarStyle, TaskDisplayData, GanttTask } from "./types";
+import type { TaskDisplayData, GanttTask } from "./types";
 
 export function safeParseLocalDate(
   dateString: string | null | undefined,

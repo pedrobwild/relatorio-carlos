@@ -121,7 +121,7 @@ export function useJourneyTeamMembers(
   const uploadPhoto = useMutation({
     mutationFn: async ({
       file,
-      memberId,
+      memberId: _memberId,
     }: {
       file: File;
       memberId?: string;

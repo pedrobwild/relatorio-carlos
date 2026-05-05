@@ -1,23 +1,5 @@
-import { useState, useCallback, useMemo, memo } from "react";
-import {
-  Download,
-  FileText,
-  Box,
-  Ruler,
-  Award,
-  ClipboardList,
-  Receipt,
-  Shield,
-  Building,
-  CheckSquare,
-  FilePlus,
-  Loader2,
-  History,
-  ShieldCheck,
-  Plus,
-  ChevronRight,
-  Trash2,
-} from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, ChevronRight, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,17 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { useProject } from "@/contexts/ProjectContext";
@@ -320,11 +292,11 @@ const CategorySection = ({
 
 const DocumentosContent = () => {
   const { projectId } = useParams();
-  const { project, loading: projectLoading } = useProject();
+  const { project: _project, loading: projectLoading } = useProject();
   const {
     documents: dbDocuments,
     loading,
-    error,
+    error: _error,
     getLatestByCategory,
     getVersionHistory,
     refetch,

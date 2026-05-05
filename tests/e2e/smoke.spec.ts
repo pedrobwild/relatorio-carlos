@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { loginAs } from './fixtures/auth';
 
 /**
  * Smoke Tests - Quick sanity checks before deploy

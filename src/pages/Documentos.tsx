@@ -1,37 +1,10 @@
-import { useState, useCallback, useMemo, memo } from "react";
-import {
-  ArrowLeft,
-  Download,
-  FileText,
-  Box,
-  Ruler,
-  Award,
-  ClipboardList,
-  Receipt,
-  Shield,
-  Building,
-  CheckSquare,
-  FilePlus,
-  Loader2,
-  History,
-  ShieldCheck,
-  Plus,
-  MessageSquare,
-  ChevronRight,
-  Share2,
-  ExternalLink,
-} from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, MessageSquare, ChevronRight, Share2 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
@@ -41,9 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { DocumentViewer } from "@/components/DocumentViewer";
-import { DocumentComments } from "@/components/DocumentComments";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import {
@@ -53,7 +24,6 @@ import {
   ProjectDocument,
 } from "@/hooks/useDocuments";
 import { useJourneyVersionDocuments } from "@/hooks/useJourneyVersionDocuments";
-import { useDocumentComments } from "@/hooks/useDocumentComments";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useCan } from "@/hooks/useCan";
 import { DocumentUpload } from "@/components/DocumentUpload";
@@ -64,7 +34,6 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 
 const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
   contrato: <FileText className="w-5 h-5" />,
@@ -81,9 +50,9 @@ const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
 
 const DocumentCard = ({
   doc,
-  onViewHistory,
-  onVersionUploaded,
-  isStaff,
+  onViewHistory: _onViewHistory,
+  onVersionUploaded: _onVersionUploaded,
+  isStaff: _isStaff,
   onOpenViewer,
 }: {
   doc: ProjectDocument;

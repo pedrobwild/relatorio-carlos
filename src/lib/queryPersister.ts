@@ -158,7 +158,7 @@ export function createQueryPersister(): Persister | null {
         let parsed: PersistedClient;
         try {
           parsed = JSON.parse(data) as PersistedClient;
-        } catch (parseError) {
+        } catch (_parseError) {
           console.warn("[QueryPersist] Failed to parse cached data, clearing");
           safeStorage.removeItem(STORAGE_KEY);
           return undefined;

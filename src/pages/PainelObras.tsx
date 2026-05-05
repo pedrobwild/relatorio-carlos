@@ -38,14 +38,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import {
-  PageHeader,
-  PageToolbar,
-  MetricCard,
-  MetricRail,
-  SectionCard,
-  FilterPill,
-} from "@/components/ui-premium";
+import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard } from "@/components/ui-premium";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -665,7 +658,7 @@ export default function PainelObras() {
     filterRelacionamento !== ALL ||
     filterResponsavel !== ALL;
 
-  const summary = useMemo(() => {
+  const _summary = useMemo(() => {
     const displayed = obras.map((o) => computeDisplayStatus(o));
     return {
       total: obras.length,

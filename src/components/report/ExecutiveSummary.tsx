@@ -1,4 +1,4 @@
-import { WeeklyReportData, DeliverableItem } from "@/types/weeklyReport";
+import { WeeklyReportData } from "@/types/weeklyReport";
 import { CheckCircle2, ChevronDown, FileText } from "lucide-react";
 import { useState, useMemo } from "react";
 import {

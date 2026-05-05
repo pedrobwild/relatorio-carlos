@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { ArrowLeft, Bell, Building2, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";

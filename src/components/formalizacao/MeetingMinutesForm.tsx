@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
@@ -56,7 +55,7 @@ interface MeetingMinutesFormProps {
 
 export function MeetingMinutesForm({
   onComplete,
-  initialData,
+  initialData: _initialData,
 }: MeetingMinutesFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

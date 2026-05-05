@@ -23,7 +23,7 @@ export function StagePhotoGallery({
     upload,
     isUploading,
     deletePhoto,
-    isDeleting,
+    isDeleting: _isDeleting,
     updateCaption,
   } = useStagePhotos(stageId, projectId);
   const fileRef = useRef<HTMLInputElement>(null);

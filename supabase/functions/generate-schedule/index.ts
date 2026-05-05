@@ -163,7 +163,7 @@ const toolSchema = {
 };
 
 function buildUserPrompt(payload: any): string {
-  const { budgetItems, budgetFileBase64, budgetFileName, projectName, startDate, endDate, durationWeeks } = payload;
+  const { budgetItems, budgetFileBase64: _budgetFileBase64, budgetFileName, projectName, startDate, endDate, durationWeeks } = payload;
 
   let durationContext = "";
   if (startDate && endDate) {

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";

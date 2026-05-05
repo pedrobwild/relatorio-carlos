@@ -11,7 +11,6 @@ import {
   type CreateCommentInput,
 } from "@/infra/repositories/documents.repository";
 import { useAuth } from "@/hooks/useAuth";
-import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 
 export function useDocumentComments(
