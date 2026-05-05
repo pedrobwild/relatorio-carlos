@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { detectTruncation } from '../_shared/truncationDetector.ts';
 import { corsHeaders, corsResponse, jsonResponse } from '../_shared/cors.ts';
 import { renderCatalog } from './_lib/catalog.ts';
 import {
@@ -264,6 +265,9 @@ function inferExternalKind(step: PlanStep): 'fetch' | 'web' {
 }
 
 Deno.serve(async (req) => {
+  // Correlação por requisição. Aceita X-Request-Id do cliente; senão gera um.
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+
   if (req.method === 'OPTIONS') return corsResponse();
 
   let body: { question?: string; conversation_id?: string | null; stream?: boolean } = {};
@@ -317,6 +321,7 @@ Deno.serve(async (req) => {
       let tokensIn = 0;
       let tokensOut = 0;
       let finalAnswer = '';
+      let finishReason: string | null = null;
       let rows: Record<string, unknown>[] = [];
       let logId: string | null = null;
       let analysis: ReturnType<typeof buildAnalysis> | null = null;
@@ -345,7 +350,7 @@ Deno.serve(async (req) => {
           if (convErr) throw new Error('Falha ao criar conversa: ' + convErr.message);
           conversationId = conv.id;
         }
-        send('conversation', { conversation_id: conversationId });
+        send('conversation', { conversation_id: conversationId, request_id: requestId });
 
         await supabase.from('assistant_messages').insert({
           conversation_id: conversationId,
@@ -689,34 +694,70 @@ Deno.serve(async (req) => {
             const reader = formatResp.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
+            // finishReason é hoisted no escopo externo
+            const processLine = (line: string) => {
+              let trimmed = line;
+              if (trimmed.endsWith('\r')) trimmed = trimmed.slice(0, -1);
+              trimmed = trimmed.trim();
+              if (!trimmed || trimmed.startsWith(':')) return;
+              if (!trimmed.startsWith('data:')) return;
+              const payload = trimmed.slice(5).trim();
+              if (!payload || payload === '[DONE]') return;
+              try {
+                const json = JSON.parse(payload);
+                const delta = json?.choices?.[0]?.delta?.content;
+                if (delta) {
+                  finalAnswer += delta;
+                  send('delta', { content: delta });
+                }
+                const fr = json?.choices?.[0]?.finish_reason;
+                if (fr) finishReason = fr;
+                const usage = json?.usage;
+                if (usage) {
+                  tokensIn += usage.prompt_tokens ?? 0;
+                  tokensOut += usage.completion_tokens ?? 0;
+                }
+              } catch { /* ignore parse errors mid-buffer */ }
+            };
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
               buffer += decoder.decode(value, { stream: true });
-              const parts = buffer.split('\n');
-              buffer = parts.pop() ?? '';
-              for (const line of parts) {
-                const trimmed = line.trim();
-                if (!trimmed.startsWith('data:')) continue;
-                const payload = trimmed.slice(5).trim();
-                if (payload === '[DONE]') continue;
-                try {
-                  const json = JSON.parse(payload);
-                  const delta = json?.choices?.[0]?.delta?.content;
-                  if (delta) {
-                    finalAnswer += delta;
-                    send('delta', { content: delta });
-                  }
-                  const usage = json?.usage;
-                  if (usage) {
-                    tokensIn += usage.prompt_tokens ?? 0;
-                    tokensOut += usage.completion_tokens ?? 0;
-                  }
-                } catch { /* ignore parse errors mid-buffer */ }
+              let nlIdx: number;
+              while ((nlIdx = buffer.indexOf('\n')) !== -1) {
+                const line = buffer.slice(0, nlIdx);
+                buffer = buffer.slice(nlIdx + 1);
+                processLine(line);
               }
+            }
+            // Final flush: o último data: pode chegar sem \n e seria descartado
+            buffer += decoder.decode();
+            if (buffer.length > 0) {
+              const trimmedTail = buffer.trim();
+              const hasSseData = trimmedTail.startsWith('data:') || trimmedTail.includes('\ndata:');
+              if (hasSseData) {
+                console.log(
+                  `[assistant-chat] [req=${requestId}] SSE final flush: processing ${buffer.length} bytes leftover (would be dropped without flush)`,
+                );
+                for (const line of buffer.split('\n')) processLine(line);
+              } else {
+                console.warn(
+                  `[assistant-chat] [req=${requestId}] SSE final flush: discarding ${buffer.length} bytes leftover sem 'data:' (preview=${JSON.stringify(buffer.slice(0, 80))})`,
+                );
+              }
+              buffer = '';
             }
             if (!finalAnswer) finalAnswer = `Consulta retornou ${rowsReturned} linha(s).`;
           }
+        }
+
+        // Heurística de detecção de truncamento da resposta final
+        const { truncated: looksTruncated, truncationReason, answerLength: answerLen } =
+          detectTruncation({ status, finalAnswer, finishReason });
+        if (looksTruncated) {
+          console.warn(
+            `[assistant-chat] [req=${requestId}] resposta possivelmente truncada (len=${answerLen}, reason=${truncationReason}, finish=${finishReason})`,
+          );
         }
 
         const { data: logRow } = await supabase
@@ -735,6 +776,10 @@ Deno.serve(async (req) => {
             status,
             error_message: errorMessage,
             answer_summary: finalAnswer.slice(0, 280),
+            answer_length: answerLen,
+            finish_reason: finishReason,
+            truncated: looksTruncated,
+            truncation_reason: truncationReason,
             external_calls_count: externalCalls,
             external_cache_hits: externalCacheHits,
             external_cost_cents: externalCostCents,

@@ -9,7 +9,7 @@ import {
 import {
   EXTERNAL_SOURCES,
   findExternalSource,
-} from "../assistant-chat/_lib/externalSources.ts";
+} from "../_shared/externalSources.ts";
 
 const LEGACY_SYSTEM_PROMPT =
   `Você é um consultor especialista em software de gestão de obras e reformas residenciais.

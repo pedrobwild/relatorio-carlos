@@ -53,15 +53,60 @@ BEGIN;
 -- comparamos a assinatura real (via pg_index) com a esperada e abortamos
 -- se qualquer divergência for detectada (ausente, não-único, colunas
 -- diferentes, predicado diferente).
+-- Função local de normalização do predicado parcial.
+--
+-- Objetivo: tolerar diferenças COSMÉTICAS sem alterar a semântica.
+-- Aplica, na ordem:
+--   1. lower()                       — case-insensitive
+--   2. colapsa qualquer whitespace   — \n \t múltiplos espaços → 1
+--   3. remove casts de string redundantes:
+--        ::text, ::varchar, ::bpchar, ::"text", ::character varying
+--   4. normaliza espaçamento ao redor de operadores e separadores:
+--        '=', '<>', '<', '>', '<=', '>=', ',', '(', ')'
+--   5. normaliza 'is null' / 'is not null' (qualquer espaçamento interno)
+--   6. normaliza ' and ' / ' or '   (espaço único de cada lado)
+--   7. tira ; final e espaços nas pontas
+--
+-- NÃO mexe em parênteses estruturais — o predicado esperado deve refletir
+-- a forma de pg_get_expr() (que sempre adiciona parens externos e ao redor
+-- de cada subcláusula). Isso mantém a comparação estável e previsível.
+CREATE OR REPLACE FUNCTION pg_temp.norm_pred(src text)
+RETURNS text
+LANGUAGE plpgsql IMMUTABLE
+AS $fn$
+DECLARE s text;
+BEGIN
+  IF src IS NULL THEN RETURN NULL; END IF;
+  s := lower(src);
+  s := regexp_replace(s, '\s+', ' ', 'g');
+  s := regexp_replace(s, '::\s*"?(text|varchar|bpchar|character\s+varying)"?', '', 'g');
+  s := regexp_replace(s, '\s*(<=|>=|<>|=|<|>)\s*', '\1', 'g');
+  s := regexp_replace(s, '\s*,\s*', ',', 'g');
+  s := regexp_replace(s, '\s*\(\s*', '(', 'g');
+  s := regexp_replace(s, '\s*\)\s*', ')', 'g');
+  -- IMPORTANTE: em PostgreSQL POSIX, word boundary é \y (não \b, que é backspace).
+  s := regexp_replace(s, '\s+is\s+not\s+null\y', ' is not null', 'gi');
+  s := regexp_replace(s, '\s+is\s+null\y',       ' is null',     'gi');
+  -- normaliza palavras-chave booleanas garantindo um espaço de cada lado,
+  -- mesmo quando coladas a parênteses (ex.: ")and(" → ") and (")
+  s := regexp_replace(s, '\)and\(', ') and (', 'gi');
+  s := regexp_replace(s, '\)or\(',  ') or (',  'gi');
+  s := regexp_replace(s, '\s*\yand\y\s*', ' and ', 'gi');
+  s := regexp_replace(s, '\s*\yor\y\s*',  ' or ',  'gi');
+  RETURN btrim(s, ' ;');
+END $fn$;
+
 DO $$
 DECLARE
+  -- Predicados esperados na MESMA forma canônica produzida por norm_pred()
+  -- aplicada à saída de pg_get_expr() — ou seja: parens externos preservados,
+  -- sem casts ::text, lower-case, sem espaços supérfluos.
   v_required CONSTANT jsonb := jsonb_build_array(
     jsonb_build_object(
       'name',      'uniq_balance_estoque',
       'unique',    true,
       'columns',   jsonb_build_array('item_id'),
-      -- normalizado: minúsculas, sem espaços extras, sem ponto-e-vírgula
-      'predicate', '((location_type = ''estoque''::text) and (project_id is null))',
+      'predicate', '((location_type=''estoque'') and (project_id is null))',
       'ddl',       'CREATE UNIQUE INDEX uniq_balance_estoque ON public.stock_balances (item_id) '
                 || 'WHERE location_type = ''estoque'' AND project_id IS NULL;'
     ),
@@ -69,7 +114,7 @@ DECLARE
       'name',      'uniq_balance_obra',
       'unique',    true,
       'columns',   jsonb_build_array('item_id','project_id'),
-      'predicate', '((location_type = ''obra''::text) and (project_id is not null))',
+      'predicate', '((location_type=''obra'') and (project_id is not null))',
       'ddl',       'CREATE UNIQUE INDEX uniq_balance_obra ON public.stock_balances (item_id, project_id) '
                 || 'WHERE location_type = ''obra'' AND project_id IS NOT NULL;'
     )
@@ -86,6 +131,17 @@ DECLARE
   v_problems   text[] := ARRAY[]::text[];
   v_ddls       text[] := ARRAY[]::text[];
   v_reasons    text[];
+  -- Relatório JSON acumulado (1 entrada por índice esperado)
+  v_report     jsonb := '[]'::jsonb;
+  v_status     text;
+  -- Validação estrutural posicional via pg_index
+  v_natts      int;     -- total de atributos no índice (key + INCLUDE)
+  v_nkeyatts   int;     -- atributos da CHAVE (sem INCLUDE)
+  v_indkey     int2[];  -- attnums na ordem real do índice
+  v_pos_attnum int2;
+  v_pos_name   text;
+  v_pos        int;
+  v_exp_len    int;
 BEGIN
   RAISE NOTICE '────── Stock balance index report (estrutural) ──────';
   FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
@@ -101,8 +157,9 @@ BEGIN
                JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = k.attnum
               ORDER BY k.ord
            ),
-           pg_get_expr(i.indpred, i.indrelid)
-      INTO v_oid, v_unique, v_cols, v_pred_raw
+           pg_get_expr(i.indpred, i.indrelid),
+           i.indnatts, i.indnkeyatts, i.indkey::int2[]
+      INTO v_oid, v_unique, v_cols, v_pred_raw, v_natts, v_nkeyatts, v_indkey
       FROM pg_index i
       JOIN pg_class c ON c.oid = i.indexrelid
       JOIN pg_class t ON t.oid = i.indrelid
@@ -115,16 +172,63 @@ BEGIN
       v_problems := array_append(v_problems, format('%s: AUSENTE', r->>'name'));
       v_ddls     := array_append(v_ddls, r->>'ddl');
       RAISE NOTICE '  ✗ % — AUSENTE', r->>'name';
+      v_report := v_report || jsonb_build_array(jsonb_build_object(
+        'name',              r->>'name',
+        'status',            'missing',
+        'unique_expected',   (r->>'unique')::bool,
+        'columns_expected',  r->'columns',
+        'predicate_expected', r->>'predicate',
+        'reasons',           jsonb_build_array('índice ausente'),
+        'suggested_ddl',     r->>'ddl'
+      ));
       CONTINUE;
     END IF;
 
-    -- Normaliza o predicado para comparação tolerante a espaços/casing
-    v_pred_norm := lower(regexp_replace(COALESCE(v_pred_raw, ''), '\s+', ' ', 'g'));
-    v_pred_norm := trim(v_pred_norm);
+    -- Normaliza o predicado real para a mesma forma canônica do esperado
+    v_pred_norm := pg_temp.norm_pred(v_pred_raw);
 
     IF (r->>'unique')::bool AND NOT v_unique THEN
       v_reasons := array_append(v_reasons, 'não é UNIQUE');
     END IF;
+
+    -- ── Validação POSICIONAL via pg_index.indkey/indnkeyatts ──────
+    -- Garante (a) nº exato de colunas-chave, (b) sem INCLUDE columns,
+    -- (c) cada posição com o attnum/nome esperado — não basta ver que
+    -- o conjunto bate; a ORDEM importa para o ON CONFLICT do trigger.
+    v_exp_len := COALESCE(array_length(v_exp_cols, 1), 0);
+    IF v_nkeyatts <> v_exp_len THEN
+      v_reasons := array_append(v_reasons,
+        format('nº de colunas-chave divergente (esperado=%s, atual=%s)',
+               v_exp_len, v_nkeyatts));
+    END IF;
+    IF v_natts <> v_nkeyatts THEN
+      v_reasons := array_append(v_reasons,
+        format('índice possui %s coluna(s) INCLUDE — nenhuma é esperada',
+               v_natts - v_nkeyatts));
+    END IF;
+    -- Compara posição-a-posição (somente até o menor comprimento; a
+    -- divergência de tamanho já foi reportada acima)
+    FOR v_pos IN 1..LEAST(v_exp_len, v_nkeyatts) LOOP
+      v_pos_attnum := v_indkey[v_pos];
+      IF v_pos_attnum = 0 THEN
+        v_reasons := array_append(v_reasons,
+          format('posição %s é uma EXPRESSÃO (esperado coluna %L)',
+                 v_pos, v_exp_cols[v_pos]));
+        CONTINUE;
+      END IF;
+      SELECT a.attname INTO v_pos_name
+        FROM pg_attribute a
+       WHERE a.attrelid = (SELECT indrelid FROM pg_index WHERE indexrelid = v_oid)
+         AND a.attnum = v_pos_attnum;
+      IF v_pos_name IS DISTINCT FROM v_exp_cols[v_pos] THEN
+        v_reasons := array_append(v_reasons,
+          format('posição %s: esperado %L, atual %L (attnum=%s)',
+                 v_pos, v_exp_cols[v_pos], v_pos_name, v_pos_attnum));
+      END IF;
+    END LOOP;
+
+    -- Mantém a comparação por array como rede de segurança redundante
+    -- (pega casos esquisitos onde indkey/atributos saem de sincronia)
     IF v_cols IS DISTINCT FROM v_exp_cols THEN
       v_reasons := array_append(v_reasons,
         format('colunas divergem (esperado=%L, atual=%L)', v_exp_cols, v_cols));
@@ -136,9 +240,11 @@ BEGIN
 
     IF array_length(v_reasons,1) IS NULL THEN
       v_ok := v_ok + 1;
+      v_status := 'ok';
       RAISE NOTICE '  ✓ % — UNIQUE=%, cols=%, pred=%',
         r->>'name', v_unique, v_cols, v_pred_norm;
     ELSE
+      v_status := CASE WHEN v_oid IS NULL THEN 'missing' ELSE 'divergent' END;
       v_problems := array_append(v_problems,
         format('%s: %s', r->>'name', array_to_string(v_reasons, '; ')));
       v_ddls := array_append(v_ddls,
@@ -146,7 +252,35 @@ BEGIN
                r->>'name', E'\n', r->>'name', E'\n', r->>'ddl'));
       RAISE NOTICE '  ✗ % — DIVERGENTE: %', r->>'name', array_to_string(v_reasons, '; ');
     END IF;
+
+    -- Acumula entrada estruturada para o relatório JSON final
+    v_report := v_report || jsonb_build_array(jsonb_build_object(
+      'name',              r->>'name',
+      'status',            v_status,
+      'unique_expected',   (r->>'unique')::bool,
+      'unique_actual',     v_unique,
+      'columns_expected',  to_jsonb(v_exp_cols),
+      'columns_actual',    to_jsonb(v_cols),
+      'nkeyatts_expected', COALESCE(array_length(v_exp_cols,1), 0),
+      'nkeyatts_actual',   v_nkeyatts,
+      'natts_actual',      v_natts,
+      'predicate_expected', v_exp_pred,
+      'predicate_actual_raw',  v_pred_raw,
+      'predicate_actual_norm', v_pred_norm,
+      'reasons',           to_jsonb(v_reasons)
+    ));
   END LOOP;
+
+  -- ── Relatório JSON em stdout (linha única, prefixada para grep) ──
+  RAISE NOTICE 'PRECHECK_JSON %', jsonb_build_object(
+    'table',    'public.stock_balances',
+    'ok',       v_ok,
+    'total',    jsonb_array_length(v_required),
+    'problems', COALESCE(array_length(v_problems,1), 0),
+    'dry_run',  current_setting('regress.dry_run', true) = 'on',
+    'auto_fix', current_setting('regress.auto_fix', true) = 'on',
+    'indexes',  v_report
+  )::text;
 
   RAISE NOTICE 'OK: % / %  |  Problemas: %',
     v_ok, jsonb_array_length(v_required), COALESCE(array_length(v_problems,1), 0);
@@ -162,25 +296,37 @@ BEGIN
         array_length(v_problems,1);
 
     ELSIF current_setting('regress.auto_fix', true) = 'on' THEN
-      -- ── AUTO-FIX: recria cada índice problemático no lugar ──
-      RAISE NOTICE '────── AUTO-FIX: recriando % índice(s) ──────', array_length(v_problems,1);
-      FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
-        -- Só age sobre os que constam em v_problems
-        IF EXISTS (
-          SELECT 1 FROM unnest(v_problems) p
-           WHERE p LIKE (r->>'name') || ':%'
-        ) THEN
-          RAISE NOTICE '  ↻ DROP + CREATE: %', r->>'name';
-          EXECUTE format('DROP INDEX IF EXISTS public.%I', r->>'name');
-          EXECUTE r->>'ddl';
-        END IF;
-      END LOOP;
-
-      -- Re-valida: tudo precisa estar OK depois do fix
+      -- ── AUTO-FIX TRANSACIONAL ────────────────────────────────────
+      -- Toda recriação + revalidação ocorre dentro de uma SUBTRANSAÇÃO
+      -- (BEGIN…EXCEPTION…END do PL/pgSQL = SAVEPOINT implícito). Se
+      -- qualquer DDL falhar, ou a revalidação detectar índices ainda
+      -- divergentes, fazemos rollback do SAVEPOINT (descartando os
+      -- DROP/CREATE deste bloco) e RE-RAISE — o que aborta também a
+      -- transação externa do teste, garantindo ROLLBACK total e zero
+      -- mudança parcial no banco.
       DECLARE
         v_still_bad text[] := ARRAY[]::text[];
-        v_ucols text[]; v_uunique bool; v_upred text;
+        v_ucols     text[];
+        v_uunique   bool;
+        v_upred     text;
+        v_err_msg   text;
+        v_err_ctx   text;
       BEGIN
+        RAISE NOTICE '────── AUTO-FIX (subtransação): recriando % índice(s) ──────',
+          array_length(v_problems,1);
+
+        FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
+          IF EXISTS (
+            SELECT 1 FROM unnest(v_problems) p
+             WHERE p LIKE (r->>'name') || ':%'
+          ) THEN
+            RAISE NOTICE '  ↻ DROP + CREATE: %', r->>'name';
+            EXECUTE format('DROP INDEX IF EXISTS public.%I', r->>'name');
+            EXECUTE r->>'ddl';
+          END IF;
+        END LOOP;
+
+        -- Revalidação dentro da MESMA subtransação
         FOR r IN SELECT * FROM jsonb_array_elements(v_required) LOOP
           v_exp_cols := ARRAY(SELECT jsonb_array_elements_text(r->'columns'));
           v_exp_pred := r->>'predicate';
@@ -190,9 +336,7 @@ BEGIN
                      FROM unnest(i.indkey) WITH ORDINALITY AS k(attnum, ord)
                      JOIN pg_attribute a ON a.attrelid=i.indrelid AND a.attnum=k.attnum
                     ORDER BY k.ord),
-                 trim(lower(regexp_replace(
-                   COALESCE(pg_get_expr(i.indpred, i.indrelid), ''),
-                   '\s+', ' ', 'g')))
+                 pg_temp.norm_pred(pg_get_expr(i.indpred, i.indrelid))
             INTO v_uunique, v_ucols, v_upred
             FROM pg_index i
             JOIN pg_class c ON c.oid=i.indexrelid
@@ -207,11 +351,27 @@ BEGIN
             v_still_bad := array_append(v_still_bad, r->>'name');
           END IF;
         END LOOP;
+
         IF array_length(v_still_bad,1) > 0 THEN
-          RAISE EXCEPTION 'AUTO-FIX FAIL: índices ainda divergentes após recriação: %',
-            array_to_string(v_still_bad, ', ');
+          -- Dispara para o handler abaixo → rollback do SAVEPOINT + abort externo
+          RAISE EXCEPTION 'revalidação falhou para: %',
+            array_to_string(v_still_bad, ', ')
+            USING ERRCODE = 'data_exception';
         END IF;
-        RAISE NOTICE '✓ AUTO-FIX concluído: todos os índices conformes';
+
+        RAISE NOTICE '✓ AUTO-FIX concluído: todos os índices conformes (subtransação commit)';
+
+      EXCEPTION WHEN OTHERS THEN
+        -- Subtransação revertida automaticamente pelo PL/pgSQL.
+        GET STACKED DIAGNOSTICS
+          v_err_msg = MESSAGE_TEXT,
+          v_err_ctx = PG_EXCEPTION_CONTEXT;
+        RAISE NOTICE '✗ AUTO-FIX FAIL — SAVEPOINT revertido. Motivo: %', v_err_msg;
+        RAISE NOTICE '  contexto: %', v_err_ctx;
+        -- Re-raise para abortar a transação externa do teste (ROLLBACK total)
+        RAISE EXCEPTION 'AUTO-FIX ROLLBACK: %  [transação do teste será revertida — nenhuma mudança persistida]',
+          v_err_msg
+          USING ERRCODE = 'data_exception';
       END;
 
     ELSE

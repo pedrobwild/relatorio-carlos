@@ -97,11 +97,13 @@ export type Database = {
       }
       assistant_logs: {
         Row: {
+          answer_length: number | null
           answer_summary: string | null
           conversation_id: string | null
           created_at: string
           domain: string | null
           error_message: string | null
+          finish_reason: string | null
           generated_sql: string | null
           id: string
           latency_ms: number | null
@@ -111,14 +113,18 @@ export type Database = {
           status: string
           tokens_input: number | null
           tokens_output: number | null
+          truncated: boolean
+          truncation_reason: string | null
           user_id: string
         }
         Insert: {
+          answer_length?: number | null
           answer_summary?: string | null
           conversation_id?: string | null
           created_at?: string
           domain?: string | null
           error_message?: string | null
+          finish_reason?: string | null
           generated_sql?: string | null
           id?: string
           latency_ms?: number | null
@@ -128,14 +134,18 @@ export type Database = {
           status?: string
           tokens_input?: number | null
           tokens_output?: number | null
+          truncated?: boolean
+          truncation_reason?: string | null
           user_id: string
         }
         Update: {
+          answer_length?: number | null
           answer_summary?: string | null
           conversation_id?: string | null
           created_at?: string
           domain?: string | null
           error_message?: string | null
+          finish_reason?: string | null
           generated_sql?: string | null
           id?: string
           latency_ms?: number | null
@@ -145,6 +155,8 @@ export type Database = {
           status?: string
           tokens_input?: number | null
           tokens_output?: number | null
+          truncated?: boolean
+          truncation_reason?: string | null
           user_id?: string
         }
         Relationships: [
@@ -6480,6 +6492,16 @@ export type Database = {
       }
     }
     Functions: {
+      assistant_truncation_stats: {
+        Args: { hours_back?: number }
+        Returns: {
+          avg_answer_length: number
+          recent_truncated_at: string
+          total_responses: number
+          truncated_count: number
+          truncation_rate: number
+        }[]
+      }
       can_edit_atividades: { Args: { p_obra_id: string }; Returns: boolean }
       can_edit_cronograma: { Args: { p_obra_id: string }; Returns: boolean }
       can_manage_project: {
