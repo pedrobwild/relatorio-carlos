@@ -1,20 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import {
-  Plus,
-  Trash2,
-  Save,
-  Loader2,
-  AlertCircle,
-  Upload,
-  Bookmark,
-  ShoppingCart,
-  Wand2,
-  GripVertical,
-  ChevronDown,
-  FileText,
-  BellRing,
-} from "lucide-react";
+import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, GripVertical, ChevronDown, FileText, BellRing } from "lucide-react";
 import { isHoliday } from "@/lib/businessDays";
 import { AIScheduleGenerator } from "@/components/schedule/AIScheduleGenerator";
 import { useScheduleAlerts } from "@/hooks/useScheduleAlerts";
@@ -24,11 +10,6 @@ import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { DatePickerField } from "@/components/DatePickerField";
 import { useProject } from "@/contexts/ProjectContext";
 import {
@@ -191,7 +172,7 @@ const Cronograma = () => {
     loading: activitiesLoading,
     saveActivities,
     saveBaseline,
-    clearBaseline,
+    clearBaseline: _clearBaseline,
     hasBaseline,
   } = useProjectActivities(projectId);
   const [mobileEditMode, setMobileEditMode] = useState(false);
@@ -272,7 +253,7 @@ const Cronograma = () => {
     setSavingBaseline(true);
     try {
       await saveBaseline();
-    } catch (err) {
+    } catch {
       toast.error("Erro ao salvar baseline");
     } finally {
       setSavingBaseline(false);

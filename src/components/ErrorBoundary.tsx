@@ -72,6 +72,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // In DEV, provide additional context
     if (import.meta.env.DEV) {
+      /* eslint-disable no-console */
       console.group(`🔴 ErrorBoundary[${name}] caught an error`);
       console.error("Error:", error);
       console.error("Error name:", error.name);
@@ -79,6 +80,7 @@ export class ErrorBoundary extends Component<Props, State> {
       console.error("Component Stack:", errorInfo.componentStack);
       console.error("Correlation ID:", this.state.errorId);
       console.groupEnd();
+      /* eslint-enable no-console */
     }
   }
 

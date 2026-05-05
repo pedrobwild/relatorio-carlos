@@ -4,6 +4,7 @@
  * Events are logged to console and optionally persisted to database.
  * This provides visibility into user behavior and helps debug issues.
  */
+/* eslint-disable no-console */
 
 import { supabase } from "@/integrations/supabase/client";
 import { logInfo, logError } from "./errorLogger";

@@ -16,21 +16,7 @@ import {
   differenceInHours,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  AlertTriangle,
-  Clock,
-  Plus,
-  ChevronRight,
-  User,
-  Tag,
-  Building2,
-  RotateCcw,
-  BarChart3,
-  ChevronDown,
-  Filter,
-  Search,
-  X,
-} from "lucide-react";
+import { AlertTriangle, Clock, Plus, ChevronRight, User, Tag, Building2, RotateCcw, BarChart3, ChevronDown, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,7 +28,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
-import { NcSummaryCards, type NcFilter } from "./NcSummaryCards";
+import { NcSummaryCards } from "./NcSummaryCards";
 import { NcTimelineChart } from "./NcTimelineChart";
 import { NcConsolidatedReport } from "./NcConsolidatedReport";
 import type {

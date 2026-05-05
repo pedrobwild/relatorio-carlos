@@ -8,12 +8,14 @@ import type { StageDate } from "@/hooks/useStageDates";
 
 export type DateStatus = "confirmed" | "proposed" | "empty";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function getDateStatus(sd: StageDate): DateStatus {
   if (sd.bwild_confirmed_at) return "confirmed";
   if (sd.customer_proposed_at) return "proposed";
   return "empty";
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const statusConfig: Record<
   DateStatus,
   { label: string; badgeClass: string; icon: React.ElementType }
@@ -37,8 +39,10 @@ export const statusConfig: Record<
   },
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const typeLabels = journeyCopy.dates.types;
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function buildISO(date: Date, time: string): string {
   return combineDateAndTimeISO(date, time);
 }

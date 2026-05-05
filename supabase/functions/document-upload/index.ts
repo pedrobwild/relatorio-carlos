@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsResponse, jsonResponse } from "../_shared/cors.ts";
 import { authenticateRequest } from "../_shared/auth.ts";
@@ -19,7 +20,7 @@ const MAGIC_BYTES: Record<string, number[][]> = {
   'application/vnd.ms-excel': [[0xD0, 0xCF, 0x11, 0xE0]],        // OLE2
 };
 
-function validateMagicBytes(buffer: ArrayBuffer, claimedMime: string): boolean {
+function validateMagicBytes(buffer: ArrayBuffer, _claimedMime: string): boolean {
   const bytes = new Uint8Array(buffer).slice(0, 8);
   if (bytes.length < 3) return false;
 

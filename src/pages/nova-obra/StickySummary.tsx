@@ -1,15 +1,4 @@
-import {
-  Building2,
-  Calendar,
-  DollarSign,
-  User,
-  MapPin,
-  Check,
-  Circle,
-  Save,
-  HeartPulse,
-  Home,
-} from "lucide-react";
+import { Building2, Calendar, DollarSign, MapPin, Check, Circle, Save, HeartPulse } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { FormData } from "./types";

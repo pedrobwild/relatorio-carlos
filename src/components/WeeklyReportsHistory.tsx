@@ -32,7 +32,7 @@ const DAYS_AFTER_WEEK_END = 1; // Available next day at 20:00 (effectively 3 day
 const calculatePlannedProgress = (
   activities: Activity[],
   weekEndDate: Date,
-  projectStartDate: Date,
+  _projectStartDate: Date,
 ): number => {
   // Check if any activity has weight defined
   const hasWeights = activities.some((a) => a.weight !== undefined);
@@ -123,6 +123,7 @@ const isReportAvailableForCustomer = (
   };
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const generateWeeklyReports = (
   projectStartDate: string,
   reportDate: string,
@@ -300,7 +301,7 @@ const WeeklyReportsHistory = ({
   const latestReport = weeklyReportsAsc[weeklyReportsAsc.length - 1]; // Latest is the last one in ascending order
 
   // Prepare chart data (already in chronological order)
-  const chartData = weeklyReports.map((report) => ({
+  const _chartData = weeklyReports.map((report) => ({
     week: report.weekNumber,
     variance: report.variance,
     fill:
@@ -331,7 +332,7 @@ const WeeklyReportsHistory = ({
       <div className="space-y-2">
         {weeklyReports.map((report, index) => {
           const statusConfig = getStatusConfig(report.status);
-          const StatusIcon = statusConfig.icon;
+          const _StatusIcon = statusConfig.icon;
           const isLatest = report.weekNumber === latestReport?.weekNumber;
           const canAccess = isStaff || report.isAvailableForCustomer;
 

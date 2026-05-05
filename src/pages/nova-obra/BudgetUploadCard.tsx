@@ -34,7 +34,7 @@ function formatFileSize(bytes: number): string {
 export function BudgetUploadCard({
   file,
   onFileChange,
-  formData,
+  formData: _formData,
   onChange,
 }: BudgetUploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);

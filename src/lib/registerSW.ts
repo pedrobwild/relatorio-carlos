@@ -2,6 +2,7 @@
  * Register the offline cache service worker.
  * Guarded against iframes and preview hosts.
  */
+/* eslint-disable no-console */
 export function registerOfflineCacheSW() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 

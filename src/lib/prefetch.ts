@@ -5,7 +5,7 @@
  */
 
 import { queryClient } from "@/lib/queryClient";
-import { queryKeys, QueryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/lib/queryKeys";
 import { supabase } from "@/integrations/supabase/client";
 import { perf } from "@/lib/perf";
 

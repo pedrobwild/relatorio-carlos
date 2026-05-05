@@ -16,7 +16,7 @@ import {
   Eye,
   MessageSquareWarning,
 } from "lucide-react";
-import { use3DVersions, type Version3D } from "@/hooks/use3DVersions";
+import { use3DVersions } from "@/hooks/use3DVersions";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { format } from "date-fns";

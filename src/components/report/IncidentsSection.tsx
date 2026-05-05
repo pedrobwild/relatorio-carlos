@@ -1,4 +1,4 @@
-import { Incident, IncidentPhoto } from "@/types/weeklyReport";
+import { Incident } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {

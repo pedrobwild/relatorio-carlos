@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
@@ -163,7 +164,7 @@ const toolSchema = {
 };
 
 function buildUserPrompt(payload: any): string {
-  const { budgetItems, budgetFileBase64, budgetFileName, projectName, startDate, endDate, durationWeeks } = payload;
+  const { budgetItems, budgetFileBase64: _budgetFileBase64, budgetFileName, projectName, startDate, endDate, durationWeeks } = payload;
 
   let durationContext = "";
   if (startDate && endDate) {

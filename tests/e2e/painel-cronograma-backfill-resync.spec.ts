@@ -26,7 +26,7 @@ function admin(): SupabaseClient {
   });
 }
 
-async function getEntregaPainel(page: Page, projectId: string): Promise<string | null> {
+async function getEntregaPainel(page: Page, _projectId: string): Promise<string | null> {
   await page.goto('/gestao/painel-obras');
   await page.waitForLoadState('networkidle');
   const cell = page

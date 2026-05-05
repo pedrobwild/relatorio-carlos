@@ -1,18 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  AlertTriangle,
-  Clock,
-  FileSignature,
-  Receipt,
-  Palette,
-  Ruler,
-  ShoppingCart,
-  Calendar,
-  ChevronRight,
-  CheckCircle2,
-  MessageSquareWarning,
-} from "lucide-react";
+import { AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, ShoppingCart, Calendar, ChevronRight, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format, parseISO } from "date-fns";
@@ -32,6 +20,7 @@ import { toast } from "sonner";
 
 // ---- helpers ----
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getTypeIcon = (type: PendingType) => {
   const icons: Record<PendingType, React.ReactNode> = {
     decision: <AlertTriangle className="w-4 h-4" />,
@@ -44,6 +33,7 @@ export const getTypeIcon = (type: PendingType) => {
   return icons[type] || <Clock className="w-4 h-4" />;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getTypeLabel = (type: PendingType) => {
   const labels: Record<PendingType, string> = {
     decision: "Decisão",
@@ -56,6 +46,7 @@ export const getTypeLabel = (type: PendingType) => {
   return labels[type] || "Pendência";
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getTypeColor = (type: PendingType) => {
   const colors: Record<PendingType, string> = {
     decision: "bg-amber-500/15 text-amber-600 border-amber-500/30",
@@ -68,6 +59,7 @@ export const getTypeColor = (type: PendingType) => {
   return colors[type] || "bg-secondary text-muted-foreground border-border";
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getStatusBadge = (status: PendingStatus) => {
   switch (status) {
     case "atrasado":

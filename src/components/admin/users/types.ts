@@ -1,4 +1,3 @@
-import type { UserWithRole } from "@/hooks/useUsers";
 import type { AppRole } from "@/hooks/useUserRole";
 
 export type IdentifierType = "email" | "cpf";

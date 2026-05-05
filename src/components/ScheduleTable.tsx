@@ -8,11 +8,6 @@ import {
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
-import {
   Table,
   TableBody,
   TableCell,

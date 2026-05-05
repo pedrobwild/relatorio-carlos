@@ -6,7 +6,6 @@
  */
 
 import { supabase } from "@/infra/supabase";
-import { executeQuery } from "./base.repository";
 
 export interface DiagnosticResult {
   status: "ok" | "fail" | "warn";
@@ -105,7 +104,7 @@ export async function pingDb(): Promise<DbCheckResult> {
 
     if (result.error) {
       // If RLS blocks, try user_roles which should be accessible to logged user
-      const { data: fallbackData, error: fallbackError } = await supabase
+      const { data: _fallbackData, error: fallbackError } = await supabase
         .from("user_roles")
         .select("role")
         .limit(1);
@@ -154,7 +153,7 @@ export async function checkStorage(): Promise<StorageCheckResult> {
 
     if (result.error) {
       // Try to list files in a known bucket
-      const { data: filesData, error: filesError } = await supabase.storage
+      const { data: _filesData, error: filesError } = await supabase.storage
         .from("project-documents")
         .list("", { limit: 1 });
 
@@ -284,7 +283,7 @@ export async function checkRlsBasics(userId: string): Promise<RlsCheckResult> {
 export async function testSignedUrl(): Promise<DiagnosticResult> {
   try {
     // Try to create a signed URL for a test path
-    const { data, error } = await supabase.storage
+    const { data: _data, error } = await supabase.storage
       .from("project-documents")
       .createSignedUrl("_test/health-check.txt", 60);
 

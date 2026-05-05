@@ -110,13 +110,12 @@ export const ImportScheduleModal = ({
         return;
       }
 
-      const detectedHeaders = Object.keys(data[0]).map(
-        // eslint-disable-next-line no-control-regex
-        (h) =>
-          h
-            .trim()
-            .slice(0, 120)
-            .replace(/[\u0000-\u001F\u007F]/g, ""),
+      const detectedHeaders = Object.keys(data[0]).map((h) =>
+        h
+          .trim()
+          .slice(0, 120)
+          // eslint-disable-next-line no-control-regex
+          .replace(/[\u0000-\u001F\u007F]/g, ""),
       );
       setHeaders(detectedHeaders);
       setRawData(data);

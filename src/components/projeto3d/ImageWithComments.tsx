@@ -54,7 +54,7 @@ function getPercentFromEvent(
 }
 
 export function ImageWithComments({ image }: Props) {
-  const { comments, loading, addComment, updateComment, deleteComment } =
+  const { comments, loading: _loading, addComment, updateComment, deleteComment } =
     use3DComments(image.id);
   const { user } = useAuth();
   const { isStaff } = useUserRole();

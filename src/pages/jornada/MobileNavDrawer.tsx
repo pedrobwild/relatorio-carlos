@@ -43,7 +43,7 @@ export function MobileNavDrawer({
 }: MobileNavDrawerProps) {
   const [open, setOpen] = useState(false);
   const activeItem = navItems.find((i) => i.key === activeTab);
-  const ActiveIcon = activeItem?.icon ?? Map;
+  const _ActiveIcon = activeItem?.icon ?? Map;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

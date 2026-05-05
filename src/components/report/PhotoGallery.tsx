@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { GalleryPhoto } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { X, ChevronLeft, ChevronRight, ChevronDown, Play } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Play } from "lucide-react";
 
 const isVideoUrl = (url: string) => {
   if (!url) return false;
@@ -16,11 +16,6 @@ const isVideoUrl = (url: string) => {
   );
 };
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { cn } from "@/lib/utils";
@@ -31,7 +26,6 @@ interface PhotoGalleryProps {
 
 const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
@@ -79,8 +73,8 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
 
   if (photos.length === 0) return null;
 
-  const firstPhotos = photos.slice(0, 4);
-  const remainingPhotos = photos.slice(4);
+  const _firstPhotos = photos.slice(0, 4);
+  const _remainingPhotos = photos.slice(4);
 
   const PhotoItem = ({
     photo,

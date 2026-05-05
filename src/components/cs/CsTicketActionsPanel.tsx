@@ -71,7 +71,7 @@ const statusClass = (s: CsActionStatus): string => {
   }
 };
 
-const statusLabel = (s: CsActionStatus) =>
+const _statusLabel = (s: CsActionStatus) =>
   CS_ACTION_STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s;
 
 const fmtDate = (d: string | null) =>

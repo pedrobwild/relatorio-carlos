@@ -1,7 +1,5 @@
 import { WeeklyReportData } from "@/types/weeklyReport";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Phone, Mail, Calendar, Info } from "lucide-react";
+import { Phone, Mail, Info } from "lucide-react";
 
 interface ReportFooterProps {
   data: WeeklyReportData;

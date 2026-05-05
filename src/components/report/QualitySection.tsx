@@ -35,7 +35,7 @@ const getSeverityColor = (severity: PendingItem["severity"]) => {
 
 const ChecklistItem = ({
   item,
-  index,
+  index: _index,
   animationDelay = 0,
 }: {
   item: WeeklyReportQualityItem;

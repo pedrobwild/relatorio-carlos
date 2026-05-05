@@ -22,7 +22,7 @@ interface PDFViewerProps {
 
 const PDF_LOAD_TIMEOUT_MS = 30_000;
 
-const PDFViewer = ({ url, title }: PDFViewerProps) => {
+const PDFViewer = ({ url, title: _title }: PDFViewerProps) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1);

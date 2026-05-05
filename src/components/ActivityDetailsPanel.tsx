@@ -14,13 +14,8 @@ import {
 import { Activity } from "@/types/report";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  parseLocalDate,
-  computeEffectiveStatus,
-  getStatusLabel,
-} from "@/lib/activityStatus";
+import { parseLocalDate } from "@/lib/activityStatus";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -72,7 +67,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const formatDateFull = (dateStr: string | null | undefined): string => {
+const _formatDateFull = (dateStr: string | null | undefined): string => {
   if (!dateStr) return "—";
   const date = parseLocalDate(dateStr);
   return format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });

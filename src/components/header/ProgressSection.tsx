@@ -106,7 +106,7 @@ export function ProgressSection({
   );
 
   // HOJE position = planned progress at today, same scale as green bar
-  const todayPosition = useMemo(() => {
+  const _todayPosition = useMemo(() => {
     if (!projectStartDate || !projectEndDate || activities.length === 0)
       return null;
     const now = new Date();

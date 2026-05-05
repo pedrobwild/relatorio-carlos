@@ -4,12 +4,7 @@
  * Handles audit trail data access with filtering and pagination.
  */
 
-import {
-  supabase,
-  executeListQuery,
-  getPaginationRange,
-  type PaginationParams,
-} from "./base.repository";
+import { supabase, getPaginationRange, type PaginationParams } from "./base.repository";
 import type { Database } from "@/integrations/supabase/types";
 
 export type AuditoriaRow = Database["public"]["Tables"]["auditoria"]["Row"];

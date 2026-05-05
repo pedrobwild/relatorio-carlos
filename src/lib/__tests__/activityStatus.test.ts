@@ -1,11 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  parseLocalDate,
-  getTodayLocal,
-  computeEffectiveStatus,
-  validateDateRange,
-  validateProgress,
-} from "../activityStatus";
+import { parseLocalDate, computeEffectiveStatus, validateDateRange, validateProgress } from "../activityStatus";
 
 describe("parseLocalDate", () => {
   it("should parse YYYY-MM-DD to Date at midnight local time", () => {

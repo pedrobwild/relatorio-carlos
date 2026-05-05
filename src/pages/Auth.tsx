@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2,
@@ -18,7 +16,6 @@ import {
   HelpCircle,
 } from "lucide-react";
 import authBg from "@/assets/auth-bg.png";
-import bwildLogo from "@/assets/bwild-logo-transparent.png";
 import workflowLogo from "@/assets/bwild-workflow-manager.png";
 import { z } from "zod";
 import { logError, logInfo, logWarn } from "@/lib/errorLogger";
@@ -50,7 +47,7 @@ export default function Auth() {
   }>({});
   const hasRedirectedRef = useRef(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: _toast } = useToast();
 
   const redirectBasedOnRole = async (userId: string) => {
     try {

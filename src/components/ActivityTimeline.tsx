@@ -167,7 +167,7 @@ function TimelineContent({
 
 export function ActivityTimeline({
   projectId,
-  orgId,
+  orgId: _orgId,
   maxItems = 20,
   showHeader = true,
   className = "",

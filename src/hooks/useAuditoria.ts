@@ -3,13 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  listAudits,
-  getEntityAuditTrail,
-  getDistinctEntityTypes,
-  type AuditoriaFilters,
-  type AuditoriaWithUser,
-} from "@/infra/repositories/auditoria.repository";
+import { listAudits, getEntityAuditTrail, getDistinctEntityTypes, type AuditoriaFilters } from "@/infra/repositories/auditoria.repository";
 import { QUERY_TIMING } from "@/lib/queryClient";
 
 /**

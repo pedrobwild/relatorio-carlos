@@ -32,11 +32,7 @@ import {
 import { useNovaObraSubmit } from "./nova-obra/useNovaObraSubmit";
 import { TemplateSelectorCard } from "./nova-obra/TemplateSelectorCard";
 import { ProjectInfoCard } from "./nova-obra/ProjectInfoCard";
-import {
-  ScheduleCard,
-  type ScheduleActivity,
-  createEmptyActivity,
-} from "./nova-obra/ScheduleCard";
+import { ScheduleCard, type ScheduleActivity } from "./nova-obra/ScheduleCard";
 import { FinancialCard } from "./nova-obra/FinancialCard";
 import { CustomerCard } from "./nova-obra/CustomerCard";
 import { BudgetUploadCard } from "./nova-obra/BudgetUploadCard";
@@ -258,7 +254,7 @@ export default function NovaObra() {
     contractState.aiMissingFields,
   ]);
 
-  const templateTotalDays = useMemo(() => {
+  const _templateTotalDays = useMemo(() => {
     if (!selectedTemplate?.default_activities) return 0;
     return (selectedTemplate.default_activities as TemplateActivity[]).reduce(
       (s, a) => s + a.durationDays,
@@ -302,7 +298,7 @@ export default function NovaObra() {
   const handleApplyPrefill = useCallback(
     (result: ContractParseResult, fileName: string) => {
       if (import.meta.env.DEV)
-        console.log(
+        console.warn(
           "[AI Prefill] Full result:",
           JSON.stringify(result, null, 2),
         );
@@ -315,7 +311,7 @@ export default function NovaObra() {
         for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
           if (userEditedFieldsRef.current.has(formField)) {
             if (import.meta.env.DEV)
-              console.log(`[AI Prefill] Skipping ${formField} — user edited`);
+              console.warn(`[AI Prefill] Skipping ${formField} — user edited`);
             continue;
           }
 
@@ -324,7 +320,7 @@ export default function NovaObra() {
             | undefined;
           const aiValue = sectionData?.[mapping.aiField];
           if (import.meta.env.DEV)
-            console.log(
+            console.warn(
               `[AI Prefill] ${formField}: section=${mapping.section}, aiField=${mapping.aiField}, value=`,
               aiValue,
             );
@@ -343,10 +339,10 @@ export default function NovaObra() {
               (updates as Record<string, unknown>)[formField] = aiValue;
               prefilledFields.add(formField);
               if (import.meta.env.DEV)
-                console.log(`[AI Prefill] ✓ ${formField} = "${aiValue}"`);
+                console.warn(`[AI Prefill] ✓ ${formField} = "${aiValue}"`);
             } else {
               if (import.meta.env.DEV)
-                console.log(
+                console.warn(
                   `[AI Prefill] ${formField} skipped — current value:`,
                   currentValue,
                 );
@@ -371,11 +367,11 @@ export default function NovaObra() {
         updates.contract_document_name = fileName;
 
         if (import.meta.env.DEV) {
-          console.log(
+          console.warn(
             "[AI Prefill] Final updates:",
             JSON.stringify(updates, null, 2),
           );
-          console.log(
+          console.warn(
             "[AI Prefill] Prefilled fields:",
             Array.from(prefilledFields),
           );

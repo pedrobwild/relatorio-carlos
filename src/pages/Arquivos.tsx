@@ -6,18 +6,7 @@
  */
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import {
-  Search,
-  FileText,
-  Image,
-  Film,
-  File,
-  Eye,
-  Download,
-  Trash2,
-  Archive,
-  Filter,
-} from "lucide-react";
+import { Search, FileText, Image, Film, File, Eye, Download, Trash2, Archive } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AppHeader } from "@/components/AppHeader";
 import { ContentSkeleton } from "@/components/ContentSkeleton";

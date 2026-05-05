@@ -28,16 +28,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { PageContainer } from "@/components/layout/PageContainer";
-import {
-  PageHeader,
-  PageToolbar,
-  DataTable,
-  type DataTableColumn,
-  EmptyState,
-  TableSkeleton,
-  StatusBadge,
-  type StatusTone,
-} from "@/components/ui-premium";
+import { PageHeader, PageToolbar, DataTable, type DataTableColumn, EmptyState, TableSkeleton, type StatusTone } from "@/components/ui-premium";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

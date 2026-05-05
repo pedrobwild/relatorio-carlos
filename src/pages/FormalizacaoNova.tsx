@@ -9,7 +9,6 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { TemplateSelector } from "@/components/formalizacao/TemplateSelector";
 import { BudgetItemSwapForm } from "@/components/formalizacao/BudgetItemSwapForm";
@@ -116,7 +115,7 @@ export default function FormalizacaoNova() {
   const sendForSignature = useSendForSignature();
 
   const currentStepIndex = STEPS.findIndex((s) => s.key === currentStep);
-  const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
+  const _progress = ((currentStepIndex + 1) / STEPS.length) * 100;
 
   const handleTemplateSelect = (type: FormalizationType) => {
     const template = formalizationTemplates[type];

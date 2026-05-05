@@ -6,7 +6,7 @@
  */
 
 import { useMemo } from "react";
-import { AreaChart, Area, ResponsiveContainer, ReferenceLine } from "recharts";
+import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import { generateChartData } from "@/components/scurve/generateChartData";
 import type { Activity } from "@/types/report";
 

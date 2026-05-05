@@ -1,11 +1,4 @@
-import {
-  Check,
-  Clock,
-  Calendar,
-  Download,
-  FileText,
-  Loader2,
-} from "lucide-react";
+import { Check, Clock, Calendar, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -44,7 +37,7 @@ const FinanceiroContent = () => {
     return new Date(d);
   };
 
-  const getPaymentStatus = (
+  const _getPaymentStatus = (
     payment: ProjectPayment,
   ): "paid" | "pending" | "upcoming" => {
     if (payment.paid_at) return "paid";

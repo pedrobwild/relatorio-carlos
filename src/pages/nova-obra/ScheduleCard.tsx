@@ -274,6 +274,7 @@ function normalizeActivitiesWithDates(
   return changed ? normalized : null;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const createEmptyActivity = (): ScheduleActivity => ({
   id: crypto.randomUUID(),
   description: "",

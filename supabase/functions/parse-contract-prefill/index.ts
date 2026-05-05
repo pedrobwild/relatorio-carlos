@@ -1,4 +1,5 @@
-import { corsHeaders, corsResponse, jsonResponse } from '../_shared/cors.ts';
+/* eslint-disable no-console */
+import { corsResponse, jsonResponse } from '../_shared/cors.ts';
 
 interface ContractParseResult {
   customer: {
