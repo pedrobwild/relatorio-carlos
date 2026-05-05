@@ -26,6 +26,7 @@ import { BuildInfoCard } from "@/components/admin/health/BuildInfoCard";
 import { PerformanceCard } from "@/components/admin/health/PerformanceCard";
 import { AdminToolsCard } from "@/components/admin/health/AdminToolsCard";
 import { RlsChecksCard } from "@/components/admin/health/RlsChecksCard";
+import { AssistantTruncationCard } from "@/components/admin/health/AssistantTruncationCard";
 import type { DiagnosticsState } from "@/components/admin/health/types";
 
 export default function AdminHealth() {
@@ -162,6 +163,8 @@ export default function AdminHealth() {
           latencyHistory={state.latencyHistory}
           lastRun={state.lastRun}
         />
+
+        <AssistantTruncationCard />
 
         <AdminToolsCard state={state} roles={roles} isAdmin={isAdmin} />
 
