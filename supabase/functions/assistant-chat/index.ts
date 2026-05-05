@@ -689,31 +689,44 @@ Deno.serve(async (req) => {
             const reader = formatResp.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
+            const processLine = (line: string) => {
+              let trimmed = line;
+              if (trimmed.endsWith('\r')) trimmed = trimmed.slice(0, -1);
+              trimmed = trimmed.trim();
+              if (!trimmed || trimmed.startsWith(':')) return;
+              if (!trimmed.startsWith('data:')) return;
+              const payload = trimmed.slice(5).trim();
+              if (!payload || payload === '[DONE]') return;
+              try {
+                const json = JSON.parse(payload);
+                const delta = json?.choices?.[0]?.delta?.content;
+                if (delta) {
+                  finalAnswer += delta;
+                  send('delta', { content: delta });
+                }
+                const usage = json?.usage;
+                if (usage) {
+                  tokensIn += usage.prompt_tokens ?? 0;
+                  tokensOut += usage.completion_tokens ?? 0;
+                }
+              } catch (_) { /* ignore parse errors mid-buffer */ }
+            };
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
               buffer += decoder.decode(value, { stream: true });
-              const parts = buffer.split('\n');
-              buffer = parts.pop() ?? '';
-              for (const line of parts) {
-                const trimmed = line.trim();
-                if (!trimmed.startsWith('data:')) continue;
-                const payload = trimmed.slice(5).trim();
-                if (payload === '[DONE]') continue;
-                try {
-                  const json = JSON.parse(payload);
-                  const delta = json?.choices?.[0]?.delta?.content;
-                  if (delta) {
-                    finalAnswer += delta;
-                    send('delta', { content: delta });
-                  }
-                  const usage = json?.usage;
-                  if (usage) {
-                    tokensIn += usage.prompt_tokens ?? 0;
-                    tokensOut += usage.completion_tokens ?? 0;
-                  }
-                } catch (_) { /* ignore parse errors mid-buffer */ }
+              let nlIdx: number;
+              while ((nlIdx = buffer.indexOf('\n')) !== -1) {
+                const line = buffer.slice(0, nlIdx);
+                buffer = buffer.slice(nlIdx + 1);
+                processLine(line);
               }
+            }
+            // Final flush: o último data: pode chegar sem \n e seria descartado
+            buffer += decoder.decode();
+            if (buffer.length > 0) {
+              for (const line of buffer.split('\n')) processLine(line);
+              buffer = '';
             }
             if (!finalAnswer) finalAnswer = `Consulta retornou ${rowsReturned} linha(s).`;
           }
