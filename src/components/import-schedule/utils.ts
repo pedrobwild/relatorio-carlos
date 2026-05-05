@@ -5,6 +5,46 @@ import {
   type ActivityFormData,
 } from "./types";
 
+function stripControlChars(s: string): string {
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    const code = s.charCodeAt(i);
+    if (code <= 31 || code === 127) continue;
+    out += s[i];
+  }
+  return out;
+}
+
+export interface NormalizedData {
+  headers: string[];
+  rows: Record<string, unknown>[];
+}
+
+export function normalizeHeaders(
+  data: Record<string, unknown>[],
+): NormalizedData {
+  if (data.length === 0) return { headers: [], rows: [] };
+
+  const original = Object.keys(data[0]);
+  const seen = new Map<string, number>();
+  const cleaned = original.map((h) => {
+    const base = stripControlChars(h.trim().slice(0, 120)) || "Coluna";
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    return count === 0 ? base : `${base} (${count + 1})`;
+  });
+
+  const rows = data.map((row) => {
+    const out: Record<string, unknown> = {};
+    original.forEach((origKey, i) => {
+      out[cleaned[i]] = row[origKey];
+    });
+    return out;
+  });
+
+  return { headers: cleaned, rows };
+}
+
 export function autoMapColumns(detectedHeaders: string[]): ColumnMapping {
   const mapping: ColumnMapping = {
     description: "",
@@ -16,21 +56,40 @@ export function autoMapColumns(detectedHeaders: string[]): ColumnMapping {
   };
 
   const normalizedHeaders = detectedHeaders.map((h) => h.toLowerCase().trim());
+  const used = new Set<number>();
 
+  // Pass 1: exact match — guarantees "Início Real" wins actualStart over plannedStart's "início" alias.
   Object.entries(COLUMN_ALIASES).forEach(([field, aliases]) => {
-    const matchIndex = normalizedHeaders.findIndex((header) =>
-      aliases.some((alias) => header.includes(alias)),
+    const idx = normalizedHeaders.findIndex(
+      (h, i) => !used.has(i) && aliases.includes(h),
     );
-    if (matchIndex !== -1) {
-      mapping[field as keyof ColumnMapping] = detectedHeaders[matchIndex];
+    if (idx !== -1) {
+      mapping[field as keyof ColumnMapping] = detectedHeaders[idx];
+      used.add(idx);
+    }
+  });
+
+  // Pass 2: substring fallback for fields still unmapped, skipping already-claimed columns.
+  Object.entries(COLUMN_ALIASES).forEach(([field, aliases]) => {
+    if (mapping[field as keyof ColumnMapping]) return;
+    const idx = normalizedHeaders.findIndex(
+      (h, i) => !used.has(i) && aliases.some((a) => h.includes(a)),
+    );
+    if (idx !== -1) {
+      mapping[field as keyof ColumnMapping] = detectedHeaders[idx];
+      used.add(idx);
     }
   });
 
   return mapping;
 }
 
-export function parseDate(value: string | number | undefined): string {
-  if (!value) return "";
+export function parseDate(value: unknown): string {
+  if (value == null || value === "") return "";
+
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return formatLocalDate(value);
+  }
 
   if (typeof value === "number") {
     const date = XLSX.SSF.parse_date_code(value);
@@ -40,29 +99,29 @@ export function parseDate(value: string | number | undefined): string {
       const day = String(date.d).padStart(2, "0");
       return `${year}-${month}-${day}`;
     }
+    return "";
   }
 
   const strValue = String(value).trim();
   if (!strValue) return "";
 
-  const formats = [
-    /^(\d{4})-(\d{2})-(\d{2})$/,
-    /^(\d{2})\/(\d{2})\/(\d{4})$/,
-    /^(\d{2})-(\d{2})-(\d{4})$/,
-  ];
+  const isoMatch = strValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) return strValue;
 
-  if (formats[0].test(strValue)) return strValue;
+  const slashMatch = strValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (slashMatch) return `${slashMatch[3]}-${slashMatch[2]}-${slashMatch[1]}`;
 
-  const match1 = strValue.match(formats[1]);
-  if (match1) return `${match1[3]}-${match1[2]}-${match1[1]}`;
-
-  const match2 = strValue.match(formats[2]);
-  if (match2) return `${match2[3]}-${match2[2]}-${match2[1]}`;
-
-  const parsed = new Date(strValue);
-  if (!isNaN(parsed.getTime())) return parsed.toISOString().split("T")[0];
+  const dashMatch = strValue.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (dashMatch) return `${dashMatch[3]}-${dashMatch[2]}-${dashMatch[1]}`;
 
   return "";
+}
+
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export interface ImportError {
@@ -76,7 +135,7 @@ export interface MapResult {
 }
 
 export function mapRawToActivities(
-  rawData: Record<string, string>[],
+  rawData: Record<string, unknown>[],
   columnMapping: ColumnMapping,
 ): MapResult {
   const valid: ActivityFormData[] = [];
@@ -84,7 +143,7 @@ export function mapRawToActivities(
 
   rawData.forEach((row, index) => {
     const description = columnMapping.description
-      ? String(row[columnMapping.description] || "").trim()
+      ? String(row[columnMapping.description] ?? "").trim()
       : "";
     if (!description) {
       errors.push({ row: index + 2, reason: "Descrição vazia" });
@@ -119,7 +178,7 @@ export function mapRawToActivities(
         columnMapping.actualEnd ? row[columnMapping.actualEnd] : "",
       ),
       weight:
-        columnMapping.weight && row[columnMapping.weight]
+        columnMapping.weight && row[columnMapping.weight] != null
           ? String(
               parseFloat(
                 String(row[columnMapping.weight])

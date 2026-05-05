@@ -16,6 +16,8 @@ import {
   FIELD_LABELS,
 } from "./types";
 
+const NONE_VALUE = "__none__";
+
 interface MappingStepProps {
   headers: string[];
   columnMapping: ColumnMapping;
@@ -50,14 +52,16 @@ export const MappingStep = ({
             ) && <span className="text-destructive">*</span>}
           </Label>
           <Select
-            value={columnMapping[field]}
-            onValueChange={(value) => onMappingChange(field, value)}
+            value={columnMapping[field] || NONE_VALUE}
+            onValueChange={(value) =>
+              onMappingChange(field, value === NONE_VALUE ? "" : value)
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecionar coluna" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Não mapeado</SelectItem>
+              <SelectItem value={NONE_VALUE}>Não mapeado</SelectItem>
               {headers.map((header) => (
                 <SelectItem key={header} value={header}>
                   {header}

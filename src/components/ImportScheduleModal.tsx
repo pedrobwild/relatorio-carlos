@@ -21,7 +21,11 @@ import {
   REQUIRED_FIELDS,
   FIELD_LABELS,
 } from "./import-schedule/types";
-import { autoMapColumns, mapRawToActivities } from "./import-schedule/utils";
+import {
+  autoMapColumns,
+  mapRawToActivities,
+  normalizeHeaders,
+} from "./import-schedule/utils";
 import { UploadStep } from "./import-schedule/UploadStep";
 import { MappingStep } from "./import-schedule/MappingStep";
 import { PreviewStep } from "./import-schedule/PreviewStep";
@@ -38,7 +42,7 @@ export const ImportScheduleModal = ({
   onImport,
 }: ImportScheduleModalProps) => {
   const [step, setStep] = useState<ImportStep>("upload");
-  const [rawData, setRawData] = useState<Record<string, string>[]>([]);
+  const [rawData, setRawData] = useState<Record<string, unknown>[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
     description: "",
@@ -80,7 +84,7 @@ export const ImportScheduleModal = ({
     setIsProcessing(true);
     try {
       const fileName = file.name.toLowerCase();
-      let data: Record<string, string>[] = [];
+      let data: Record<string, unknown>[] = [];
 
       if (fileName.endsWith(".csv")) {
         const text = await file.text();
@@ -89,15 +93,15 @@ export const ImportScheduleModal = ({
           skipEmptyLines: true,
           transformHeader: (h) => h.trim(),
         });
-        data = result.data as Record<string, string>[];
+        data = result.data as Record<string, unknown>[];
       } else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
         const buffer = await file.arrayBuffer();
-        const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+        const workbook = XLSX.read(buffer, { type: "array" });
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
         data = XLSX.utils.sheet_to_json(firstSheet, {
           raw: false,
           dateNF: "yyyy-mm-dd",
-        }) as Record<string, string>[];
+        }) as Record<string, unknown>[];
       } else {
         toast.error(
           "Formato de arquivo não suportado. Use CSV ou Excel (.xlsx, .xls)",
@@ -110,24 +114,19 @@ export const ImportScheduleModal = ({
         return;
       }
 
-      const detectedHeaders = Object.keys(data[0]).map(
-        // eslint-disable-next-line no-control-regex
-        (h) =>
-          h
-            .trim()
-            .slice(0, 120)
-            .replace(/[\u0000-\u001F\u007F]/g, ""),
-      );
+      const { headers: detectedHeaders, rows: cleanedData } =
+        normalizeHeaders(data);
       setHeaders(detectedHeaders);
-      setRawData(data);
+      setRawData(cleanedData);
       setColumnMapping(autoMapColumns(detectedHeaders));
       setStep("mapping");
-      toast.success(`${data.length} linhas detectadas`);
+      toast.success(`${cleanedData.length} linhas detectadas`);
     } catch (error) {
       console.error("Error parsing file:", error);
       toast.error("Erro ao processar arquivo");
     } finally {
       setIsProcessing(false);
+      event.target.value = "";
     }
   };
 
