@@ -292,6 +292,7 @@ export function AssistantChat({
             break;
           }
           case "done": {
+            doneReceived = true;
             finalStatus = payload.status as string;
             updateLastAssistant((m) => ({
               ...m,
