@@ -137,6 +137,12 @@ export function AssistantChat({
     let sqlText: string | undefined;
     let domainText: string | undefined;
     let finalStatus: string | undefined;
+    // Correlação com a edge function. Geramos do lado do cliente; o servidor
+    // ecoa de volta no evento `conversation` (campo `request_id`).
+    const requestId =
+      (globalThis.crypto as Crypto | undefined)?.randomUUID?.() ??
+      `req-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    let serverRequestId: string | undefined;
 
     try {
       const { data: sess } = await supabase.auth.getSession();
@@ -151,6 +157,7 @@ export function AssistantChat({
           Authorization: `Bearer ${token}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           Accept: "text/event-stream",
+          "X-Request-Id": requestId,
         },
         body: JSON.stringify({
           question: trimmed,
