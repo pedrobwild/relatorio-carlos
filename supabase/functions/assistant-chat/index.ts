@@ -320,6 +320,7 @@ Deno.serve(async (req) => {
       let tokensIn = 0;
       let tokensOut = 0;
       let finalAnswer = '';
+      let finishReason: string | null = null;
       let rows: Record<string, unknown>[] = [];
       let logId: string | null = null;
       let analysis: ReturnType<typeof buildAnalysis> | null = null;
@@ -692,7 +693,7 @@ Deno.serve(async (req) => {
             const reader = formatResp.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
-            let finishReason: string | null = null;
+            // finishReason é hoisted no escopo externo
             const processLine = (line: string) => {
               let trimmed = line;
               if (trimmed.endsWith('\r')) trimmed = trimmed.slice(0, -1);
