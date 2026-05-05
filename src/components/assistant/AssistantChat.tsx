@@ -170,6 +170,156 @@ export function AssistantChat({
       const decoder = new TextDecoder();
       let buffer = "";
 
+      const processBlock = (block: string) => {
+        const lines = block.split("\n");
+        let ev = "message";
+        let dataStr = "";
+        for (const rawLine of lines) {
+          const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+          if (line.startsWith("event:")) ev = line.slice(6).trim();
+          else if (line.startsWith("data:")) dataStr += line.slice(5).trim();
+        }
+        if (!dataStr) return;
+        let payload: Record<string, unknown>;
+        try {
+          payload = JSON.parse(dataStr);
+        } catch {
+          return;
+        }
+
+        switch (ev) {
+          case "conversation": {
+            const id = payload.conversation_id as string | undefined;
+            if (id && id !== localConvId) {
+              localConvId = id;
+              setConvId(id);
+              onConversationChange?.(id);
+            }
+            break;
+          }
+          case "status": {
+            const message = (payload.message as string) ?? "Processando...";
+            updateLastAssistant((m) => ({
+              ...m,
+              pending: !accumulated,
+              content: accumulated,
+              result_data: {
+                ...(m.result_data ?? {}),
+                status: "streaming",
+                phase: payload.phase as string,
+                statusMessage: message,
+              },
+            }));
+            break;
+          }
+          case "sql": {
+            sqlText = payload.sql as string;
+            domainText = payload.domain as string;
+            updateLastAssistant((m) => ({
+              ...m,
+              result_data: {
+                ...(m.result_data ?? {}),
+                sql: sqlText,
+                domain: domainText,
+              },
+            }));
+            break;
+          }
+          case "rows": {
+            rowsReturned = payload.rows_returned as number;
+            finalRows = payload.preview as unknown[];
+            updateLastAssistant((m) => ({
+              ...m,
+              result_data: {
+                ...(m.result_data ?? {}),
+                rows: finalRows,
+                rows_returned: rowsReturned,
+              },
+            }));
+            break;
+          }
+          case "analysis": {
+            updateLastAssistant((m) => ({
+              ...m,
+              result_data: {
+                ...(m.result_data ?? {}),
+                insights: payload.insights as Insight[] | null,
+                data_quality: payload.data_quality as
+                  | DataQualityWarning[]
+                  | null,
+                visualizations: payload.visualizations as
+                  | InsightVisualizationHint[]
+                  | null,
+                suggested_questions: payload.suggested_questions as
+                  | string[]
+                  | null,
+                confidence: payload.confidence as number | null,
+                limitations: payload.limitations as string[] | null,
+              },
+            }));
+            break;
+          }
+          case "delta": {
+            const chunk = (payload.content as string) ?? "";
+            if (chunk) {
+              accumulated += chunk;
+              updateLastAssistant((m) => ({
+                ...m,
+                pending: false,
+                content: accumulated,
+              }));
+            }
+            break;
+          }
+          case "done": {
+            finalStatus = payload.status as string;
+            updateLastAssistant((m) => ({
+              ...m,
+              pending: false,
+              content: (payload.answer as string) ?? accumulated,
+              result_data: {
+                rows: payload.rows as unknown[],
+                rows_returned: payload.rows_returned as number,
+                sql: payload.sql as string,
+                domain: payload.domain as string,
+                status: finalStatus,
+                insights:
+                  (payload.insights as Insight[] | null) ??
+                  m.result_data?.insights ??
+                  null,
+                data_quality:
+                  (payload.data_quality as DataQualityWarning[] | null) ??
+                  m.result_data?.data_quality ??
+                  null,
+                visualizations:
+                  (payload.visualizations as
+                    | InsightVisualizationHint[]
+                    | null) ??
+                  m.result_data?.visualizations ??
+                  null,
+                suggested_questions:
+                  (payload.suggested_questions as string[] | null) ??
+                  m.result_data?.suggested_questions ??
+                  null,
+                confidence:
+                  (payload.confidence as number | null) ??
+                  m.result_data?.confidence ??
+                  null,
+                limitations:
+                  (payload.limitations as string[] | null) ??
+                  m.result_data?.limitations ??
+                  null,
+              },
+            }));
+            break;
+          }
+          case "error": {
+            const msg = (payload.message as string) ?? "Erro";
+            throw new Error(msg);
+          }
+        }
+      };
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -177,155 +327,16 @@ export function AssistantChat({
 
         const blocks = buffer.split("\n\n");
         buffer = blocks.pop() ?? "";
+        for (const block of blocks) processBlock(block);
+      }
 
-        for (const block of blocks) {
-          const lines = block.split("\n");
-          let ev = "message";
-          let dataStr = "";
-          for (const line of lines) {
-            if (line.startsWith("event:")) ev = line.slice(6).trim();
-            else if (line.startsWith("data:")) dataStr += line.slice(5).trim();
-          }
-          if (!dataStr) continue;
-          let payload: Record<string, unknown>;
-          try {
-            payload = JSON.parse(dataStr);
-          } catch {
-            continue;
-          }
-
-          switch (ev) {
-            case "conversation": {
-              const id = payload.conversation_id as string | undefined;
-              if (id && id !== localConvId) {
-                localConvId = id;
-                setConvId(id);
-                onConversationChange?.(id);
-              }
-              break;
-            }
-            case "status": {
-              const message = (payload.message as string) ?? "Processando...";
-              updateLastAssistant((m) => ({
-                ...m,
-                pending: !accumulated,
-                content: accumulated,
-                result_data: {
-                  ...(m.result_data ?? {}),
-                  status: "streaming",
-                  phase: payload.phase as string,
-                  statusMessage: message,
-                },
-              }));
-              break;
-            }
-            case "sql": {
-              sqlText = payload.sql as string;
-              domainText = payload.domain as string;
-              updateLastAssistant((m) => ({
-                ...m,
-                result_data: {
-                  ...(m.result_data ?? {}),
-                  sql: sqlText,
-                  domain: domainText,
-                },
-              }));
-              break;
-            }
-            case "rows": {
-              rowsReturned = payload.rows_returned as number;
-              finalRows = payload.preview as unknown[];
-              updateLastAssistant((m) => ({
-                ...m,
-                result_data: {
-                  ...(m.result_data ?? {}),
-                  rows: finalRows,
-                  rows_returned: rowsReturned,
-                },
-              }));
-              break;
-            }
-            case "analysis": {
-              updateLastAssistant((m) => ({
-                ...m,
-                result_data: {
-                  ...(m.result_data ?? {}),
-                  insights: payload.insights as Insight[] | null,
-                  data_quality: payload.data_quality as
-                    | DataQualityWarning[]
-                    | null,
-                  visualizations: payload.visualizations as
-                    | InsightVisualizationHint[]
-                    | null,
-                  suggested_questions: payload.suggested_questions as
-                    | string[]
-                    | null,
-                  confidence: payload.confidence as number | null,
-                  limitations: payload.limitations as string[] | null,
-                },
-              }));
-              break;
-            }
-            case "delta": {
-              const chunk = (payload.content as string) ?? "";
-              if (chunk) {
-                accumulated += chunk;
-                updateLastAssistant((m) => ({
-                  ...m,
-                  pending: false,
-                  content: accumulated,
-                }));
-              }
-              break;
-            }
-            case "done": {
-              finalStatus = payload.status as string;
-              updateLastAssistant((m) => ({
-                ...m,
-                pending: false,
-                content: (payload.answer as string) ?? accumulated,
-                result_data: {
-                  rows: payload.rows as unknown[],
-                  rows_returned: payload.rows_returned as number,
-                  sql: payload.sql as string,
-                  domain: payload.domain as string,
-                  status: finalStatus,
-                  insights:
-                    (payload.insights as Insight[] | null) ??
-                    m.result_data?.insights ??
-                    null,
-                  data_quality:
-                    (payload.data_quality as DataQualityWarning[] | null) ??
-                    m.result_data?.data_quality ??
-                    null,
-                  visualizations:
-                    (payload.visualizations as
-                      | InsightVisualizationHint[]
-                      | null) ??
-                    m.result_data?.visualizations ??
-                    null,
-                  suggested_questions:
-                    (payload.suggested_questions as string[] | null) ??
-                    m.result_data?.suggested_questions ??
-                    null,
-                  confidence:
-                    (payload.confidence as number | null) ??
-                    m.result_data?.confidence ??
-                    null,
-                  limitations:
-                    (payload.limitations as string[] | null) ??
-                    m.result_data?.limitations ??
-                    null,
-                },
-              }));
-              break;
-            }
-            case "error": {
-              const msg = (payload.message as string) ?? "Erro";
-              throw new Error(msg);
-            }
-          }
+      // Final flush: garante que o último bloco SSE (sem \n\n final) seja processado
+      buffer += decoder.decode();
+      if (buffer.trim().length > 0) {
+        for (const block of buffer.split("\n\n")) {
+          if (block.trim()) processBlock(block);
         }
+        buffer = "";
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro inesperado";
