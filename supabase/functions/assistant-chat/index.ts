@@ -751,27 +751,8 @@ Deno.serve(async (req) => {
         }
 
         // Heurística de detecção de truncamento da resposta final
-        const answerLen = finalAnswer.length;
-        const looksTruncated = (() => {
-          if (status !== 'success') return false;
-          if (typeof finishReason === 'string' && finishReason === 'length') return true;
-          if (answerLen > 0 && answerLen < 40) return true;
-          // termina no meio de uma frase/markdown (sem pontuação final e sem fechar code fence)
-          const tail = finalAnswer.trimEnd().slice(-1);
-          const opens = (finalAnswer.match(/```/g) ?? []).length;
-          if (opens % 2 === 1) return true;
-          if (answerLen > 60 && tail && !'.!?)`"\'>]}'.includes(tail)) return true;
-          return false;
-        })();
-        const truncationReason = looksTruncated
-          ? (finishReason === 'length'
-              ? 'finish_reason=length'
-              : answerLen < 40
-                ? 'answer_too_short'
-                : (finalAnswer.match(/```/g) ?? []).length % 2 === 1
-                  ? 'unclosed_code_fence'
-                  : 'no_terminal_punctuation')
-          : null;
+        const { truncated: looksTruncated, truncationReason, answerLength: answerLen } =
+          detectTruncation({ status, finalAnswer, finishReason });
         if (looksTruncated) {
           console.warn(
             `[assistant-chat] [req=${requestId}] resposta possivelmente truncada (len=${answerLen}, reason=${truncationReason}, finish=${finishReason})`,
