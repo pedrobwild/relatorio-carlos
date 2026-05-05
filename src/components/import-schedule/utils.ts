@@ -108,11 +108,23 @@ export function parseDate(value: unknown): string {
   const isoMatch = strValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (isoMatch) return strValue;
 
-  const slashMatch = strValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (slashMatch) return `${slashMatch[3]}-${slashMatch[2]}-${slashMatch[1]}`;
-
-  const dashMatch = strValue.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-  if (dashMatch) return `${dashMatch[3]}-${dashMatch[2]}-${dashMatch[1]}`;
+  // Accepts d/m/yyyy, dd/mm/yy, d-m-yyyy, etc. Assumes DD/MM/YYYY (PT-BR);
+  // 2-digit years map 00-69 → 2000-2069, 70-99 → 1970-1999.
+  const dmyMatch = strValue.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/);
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1]);
+    const month = Number(dmyMatch[2]);
+    const rawYear = Number(dmyMatch[3]);
+    if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
+      const year =
+        dmyMatch[3].length === 2
+          ? rawYear < 70
+            ? 2000 + rawYear
+            : 1900 + rawYear
+          : rawYear;
+      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+  }
 
   return "";
 }
