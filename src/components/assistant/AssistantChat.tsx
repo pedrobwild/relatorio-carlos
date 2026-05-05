@@ -197,6 +197,8 @@ export function AssistantChat({
         switch (ev) {
           case "conversation": {
             const id = payload.conversation_id as string | undefined;
+            const srvReqId = payload.request_id as string | undefined;
+            if (srvReqId) serverRequestId = srvReqId;
             if (id && id !== localConvId) {
               localConvId = id;
               setConvId(id);
