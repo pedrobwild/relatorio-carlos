@@ -16,7 +16,6 @@ const isVideoUrl = (url: string) => {
   );
 };
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { cn } from "@/lib/utils";
@@ -27,7 +26,6 @@ interface PhotoGalleryProps {
 
 const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 

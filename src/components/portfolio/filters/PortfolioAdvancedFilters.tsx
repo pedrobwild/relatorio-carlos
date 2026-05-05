@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { X, Check, SlidersHorizontal, CalendarDays } from "lucide-react";
+import { Check, SlidersHorizontal } from "lucide-react";
 import {
   Sheet,
   SheetContent,

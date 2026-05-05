@@ -10,7 +10,6 @@ import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { DatePickerField } from "@/components/DatePickerField";
 import { useProject } from "@/contexts/ProjectContext";
 import {
@@ -254,7 +253,7 @@ const Cronograma = () => {
     setSavingBaseline(true);
     try {
       await saveBaseline();
-    } catch (_err) {
+    } catch {
       toast.error("Erro ao salvar baseline");
     } finally {
       setSavingBaseline(false);

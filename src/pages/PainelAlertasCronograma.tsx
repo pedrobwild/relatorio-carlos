@@ -128,7 +128,7 @@ export default function PainelAlertasCronograma() {
   useEffect(() => {
     // Sincroniza quando a URL muda externamente (ex.: navegação)
     setSearchInput(urlQuery);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [urlQuery]);
 
   const updateParam = (

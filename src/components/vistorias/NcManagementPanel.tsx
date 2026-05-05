@@ -28,7 +28,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
-import { NcSummaryCards, type NcFilter } from "./NcSummaryCards";
+import { NcSummaryCards } from "./NcSummaryCards";
 import { NcTimelineChart } from "./NcTimelineChart";
 import { NcConsolidatedReport } from "./NcConsolidatedReport";
 import type {

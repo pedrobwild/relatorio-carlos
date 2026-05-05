@@ -5,7 +5,6 @@ import { EVENT_TYPES } from "./useDomainEvents";
 import { queryKeys } from "@/lib/queryKeys";
 import { QUERY_TIMING } from "@/lib/queryClient";
 
-type Formalization = Database["public"]["Tables"]["formalizations"]["Row"];
 type FormalizationInsert =
   Database["public"]["Tables"]["formalizations"]["Insert"];
 type FormalizationUpdate =

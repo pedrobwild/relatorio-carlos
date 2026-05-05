@@ -15,7 +15,7 @@ import { Activity } from "@/types/report";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { parseLocalDate, computeEffectiveStatus } from "@/lib/activityStatus";
+import { parseLocalDate } from "@/lib/activityStatus";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsResponse, jsonResponse } from "../_shared/cors.ts";
 import { authenticateRequest } from "../_shared/auth.ts";

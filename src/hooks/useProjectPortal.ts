@@ -409,6 +409,7 @@ export function useProjectPortal() {
     };
 
     // Console diagnostic — visível em dev e prod para debugging
+    // eslint-disable-next-line no-console
     console.info(
       "[ReportsTelemetry] effectiveStartDate diagnostic",
       diagnostic,

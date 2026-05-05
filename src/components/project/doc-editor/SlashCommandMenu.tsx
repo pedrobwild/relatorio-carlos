@@ -131,6 +131,7 @@ export function SlashCommandMenu({
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSlashCommands(
   editorRef: React.RefObject<HTMLDivElement | null>,
   exec: (cmd: string, val?: string) => void,

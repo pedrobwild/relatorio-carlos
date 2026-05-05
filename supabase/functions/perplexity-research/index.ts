@@ -168,7 +168,7 @@ serve(async (req) => {
           external_cost_cents: 1,
           external_sources_used: [source.id],
         });
-      } catch (_) { /* swallow — telemetria não crítica */ }
+      } catch { /* swallow — telemetria não crítica */ }
 
       return jsonResponse({
         success: true,

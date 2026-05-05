@@ -7,6 +7,7 @@
  * - Structured error formats
  * - Logging utilities
  */
+/* eslint-disable no-console */
 import { corsHeaders } from './cors.ts';
 export { corsHeaders };
 

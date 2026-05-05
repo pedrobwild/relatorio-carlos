@@ -33,15 +33,6 @@ async function ensureRows(page: Page) {
   return rows;
 }
 
-async function focusOutlineWidth(page: Page): Promise<number> {
-  return page.evaluate(() => {
-    const el = document.activeElement as HTMLElement | null;
-    if (!el) return 0;
-    const cs = getComputedStyle(el);
-    return parseFloat(cs.outlineWidth) || parseFloat(cs.getPropertyValue('--tw-ring-offset-width')) || 0;
-  });
-}
-
 test.describe('Painel de Obras — A11y do cabeçalho e ações', () => {
   test.use({ viewport: DESKTOP });
 

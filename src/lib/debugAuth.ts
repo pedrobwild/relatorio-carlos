@@ -5,6 +5,7 @@
  * Usage: localStorage.setItem('debug_auth', '1')
  * Disable: localStorage.removeItem('debug_auth')
  */
+/* eslint-disable no-console */
 
 const PREFIX_AUTH = "[DBG-AUTH]";
 const PREFIX_NAV = "[DBG-NAV]";

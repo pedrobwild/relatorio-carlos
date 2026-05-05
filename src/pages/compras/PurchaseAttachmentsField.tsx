@@ -383,6 +383,7 @@ export function PurchaseAttachmentsField(props: Props) {
  * Faz upload dos arquivos pendentes após a compra ter sido criada.
  * Não lança — apenas reporta via toast e console (best-effort).
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export async function uploadPendingAttachments(args: {
   pending: PendingAttachment[];
   purchaseId: string;

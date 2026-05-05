@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { corsResponse, jsonResponse } from '../_shared/cors.ts';
 
 interface ContractParseResult {

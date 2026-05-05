@@ -11,6 +11,7 @@ const ProjectLayoutContext = createContext<ProjectLayoutContextType>({
 
 export const ProjectLayoutProvider = ProjectLayoutContext.Provider;
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useProjectLayout() {
   return useContext(ProjectLayoutContext);
 }

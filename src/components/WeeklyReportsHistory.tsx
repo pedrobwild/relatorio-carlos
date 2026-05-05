@@ -123,6 +123,7 @@ const isReportAvailableForCustomer = (
   };
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const generateWeeklyReports = (
   projectStartDate: string,
   reportDate: string,

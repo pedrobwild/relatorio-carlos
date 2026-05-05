@@ -7,7 +7,6 @@ import {
   Rows2,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Table,
   TableBody,

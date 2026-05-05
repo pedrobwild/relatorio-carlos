@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formSchema, initialFormData, initialContractImportState, type FormData } from "./types";
+import { formSchema, initialFormData, initialContractImportState } from "./types";
 
 describe("Nova Obra Types", () => {
   describe("formSchema validation", () => {

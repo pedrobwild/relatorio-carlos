@@ -4,7 +4,7 @@
  * Centralized data access for formalizations, parties, evidence, and events.
  */
 
-import { supabase, executeQuery, executeListQuery, type RepositoryResult, type RepositoryListResult } from "./base.repository";
+import { supabase, executeQuery, type RepositoryResult } from "./base.repository";
 import type { Database, Json } from "@/integrations/supabase/types";
 
 // ============================================================================
