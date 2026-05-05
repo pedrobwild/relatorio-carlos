@@ -372,11 +372,57 @@ export function AssistantChat({
         }
         buffer = "";
       }
+      } catch (innerErr) {
+        lastError = innerErr;
+        const isAbort =
+          innerErr instanceof Error &&
+          (innerErr.name === "AbortError" || /aborted/i.test(innerErr.message));
+        // Não retentar em abort do usuário nem em erros explícitos do servidor (event: error)
+        const serverError =
+          innerErr instanceof Error && /^(Erro|Falha)/i.test(innerErr.message);
+        if (isAbort || serverError) throw innerErr;
+        if (attempt >= MAX_ATTEMPTS) throw innerErr;
+        const delay = 400 * Math.pow(2, attempt - 1);
+        console.warn(
+          `[AssistantChat] [req=${requestId}] stream incompleto/erro de rede, retry ${attempt}/${MAX_ATTEMPTS - 1} em ${delay}ms:`,
+          innerErr instanceof Error ? innerErr.message : innerErr,
+        );
+        // Reset estado parcial antes de retry para evitar duplicar conteúdo
+        accumulated = "";
+        updateLastAssistant((m) => ({
+          ...m,
+          pending: true,
+          content: "",
+          result_data: {
+            ...(m.result_data ?? {}),
+            status: "streaming",
+            statusMessage: `Reconectando... (tentativa ${attempt + 1})`,
+          },
+        }));
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+
+      // Sucesso de rede: se não veio `done` e não há conteúdo, força retry
+      if (!doneReceived && !accumulated) {
+        if (attempt < MAX_ATTEMPTS) {
+          console.warn(
+            `[AssistantChat] [req=${requestId}] stream finalizou sem 'done' e sem conteúdo, retry ${attempt}/${MAX_ATTEMPTS - 1}`,
+          );
+          const delay = 400 * Math.pow(2, attempt - 1);
+          await new Promise((r) => setTimeout(r, delay));
+          continue;
+        }
+        throw new Error("Resposta vazia do assistente após múltiplas tentativas");
+      }
+      break;
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro inesperado";
       console.error(
         `[AssistantChat] [req=${requestId}${serverRequestId ? ` srv=${serverRequestId}` : ""}] erro no stream:`,
         msg,
+        lastError ?? "",
       );
       toast.error(msg);
       updateLastAssistant((m) => ({
