@@ -137,6 +137,12 @@ export function AssistantChat({
     let sqlText: string | undefined;
     let domainText: string | undefined;
     let finalStatus: string | undefined;
+    // Correlação com a edge function. Geramos do lado do cliente; o servidor
+    // ecoa de volta no evento `conversation` (campo `request_id`).
+    const requestId =
+      (globalThis.crypto as Crypto | undefined)?.randomUUID?.() ??
+      `req-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    let serverRequestId: string | undefined;
 
     try {
       const { data: sess } = await supabase.auth.getSession();
@@ -151,6 +157,7 @@ export function AssistantChat({
           Authorization: `Bearer ${token}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           Accept: "text/event-stream",
+          "X-Request-Id": requestId,
         },
         body: JSON.stringify({
           question: trimmed,
@@ -190,6 +197,8 @@ export function AssistantChat({
         switch (ev) {
           case "conversation": {
             const id = payload.conversation_id as string | undefined;
+            const srvReqId = payload.request_id as string | undefined;
+            if (srvReqId) serverRequestId = srvReqId;
             if (id && id !== localConvId) {
               localConvId = id;
               setConvId(id);
@@ -332,14 +341,31 @@ export function AssistantChat({
 
       // Final flush: garante que o último bloco SSE (sem \n\n final) seja processado
       buffer += decoder.decode();
+      const corr = `[req=${requestId}${serverRequestId ? ` srv=${serverRequestId}` : ""}]`;
       if (buffer.trim().length > 0) {
-        for (const block of buffer.split("\n\n")) {
-          if (block.trim()) processBlock(block);
+        const looksLikeSse =
+          buffer.includes("data:") || buffer.startsWith("event:");
+        if (looksLikeSse) {
+          // Logs em warn (regra de lint proíbe console.log).
+          console.warn(
+            `[AssistantChat] ${corr} SSE final flush: processando ${buffer.length}B residuais (seriam descartados sem flush)`,
+          );
+          for (const block of buffer.split("\n\n")) {
+            if (block.trim()) processBlock(block);
+          }
+        } else {
+          console.warn(
+            `[AssistantChat] ${corr} SSE final flush: descartando ${buffer.length}B sem 'data:'/'event:' (preview=${JSON.stringify(buffer.slice(0, 80))})`,
+          );
         }
         buffer = "";
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro inesperado";
+      console.error(
+        `[AssistantChat] [req=${requestId}${serverRequestId ? ` srv=${serverRequestId}` : ""}] erro no stream:`,
+        msg,
+      );
       toast.error(msg);
       updateLastAssistant((m) => ({
         ...m,

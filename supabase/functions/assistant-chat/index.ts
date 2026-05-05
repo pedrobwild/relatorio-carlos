@@ -264,6 +264,9 @@ function inferExternalKind(step: PlanStep): 'fetch' | 'web' {
 }
 
 Deno.serve(async (req) => {
+  // Correlação por requisição. Aceita X-Request-Id do cliente; senão gera um.
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+
   if (req.method === 'OPTIONS') return corsResponse();
 
   let body: { question?: string; conversation_id?: string | null; stream?: boolean } = {};
@@ -345,7 +348,7 @@ Deno.serve(async (req) => {
           if (convErr) throw new Error('Falha ao criar conversa: ' + convErr.message);
           conversationId = conv.id;
         }
-        send('conversation', { conversation_id: conversationId });
+        send('conversation', { conversation_id: conversationId, request_id: requestId });
 
         await supabase.from('assistant_messages').insert({
           conversation_id: conversationId,
@@ -725,7 +728,18 @@ Deno.serve(async (req) => {
             // Final flush: o último data: pode chegar sem \n e seria descartado
             buffer += decoder.decode();
             if (buffer.length > 0) {
-              for (const line of buffer.split('\n')) processLine(line);
+              const trimmedTail = buffer.trim();
+              const hasSseData = trimmedTail.startsWith('data:') || trimmedTail.includes('\ndata:');
+              if (hasSseData) {
+                console.log(
+                  `[assistant-chat] [req=${requestId}] SSE final flush: processing ${buffer.length} bytes leftover (would be dropped without flush)`,
+                );
+                for (const line of buffer.split('\n')) processLine(line);
+              } else {
+                console.warn(
+                  `[assistant-chat] [req=${requestId}] SSE final flush: discarding ${buffer.length} bytes leftover sem 'data:' (preview=${JSON.stringify(buffer.slice(0, 80))})`,
+                );
+              }
               buffer = '';
             }
             if (!finalAnswer) finalAnswer = `Consulta retornou ${rowsReturned} linha(s).`;
