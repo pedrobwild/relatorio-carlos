@@ -73,3 +73,78 @@ describe("splitSseBuffer", () => {
     expect(rest).toBe(`event: a\ndata: {"v":1}`);
   });
 });
+
+describe("final flush behavior (stream sem \\n\\n final)", () => {
+  /**
+   * Simula o loop de leitura SSE do AssistantChat:
+   * - Acumula chunks no buffer
+   * - Em cada iteração, processa blocos completos (split por \n\n) e mantém o resto
+   * - Ao final do stream, faz flush do buffer residual se contiver `data:`/`event:`
+   */
+  function consumeStream(chunks: string[]): Array<{ event: string; data: unknown }> {
+    let buffer = "";
+    const out: Array<{ event: string; data: unknown }> = [];
+
+    for (const chunk of chunks) {
+      buffer += chunk;
+      const { blocks, rest } = splitSseBuffer(buffer);
+      buffer = rest;
+      for (const b of blocks) {
+        const parsed = parseSseBlock(b);
+        if (parsed) out.push(parsed);
+      }
+    }
+
+    // Final flush: processa o resto se parecer SSE válido
+    if (buffer.trim().length > 0) {
+      const looksLikeSse = buffer.includes("data:") || buffer.startsWith("event:");
+      if (looksLikeSse) {
+        for (const b of buffer.split("\n\n")) {
+          const parsed = parseSseBlock(b);
+          if (parsed) out.push(parsed);
+        }
+      }
+    }
+    return out;
+  }
+
+  it("processa o último bloco quando o stream termina sem \\n\\n", () => {
+    const events = consumeStream([
+      `event: delta\ndata: {"content":"oi"}\n\n`,
+      `event: done\ndata: {"status":"ok"}`, // sem terminador final
+    ]);
+    expect(events).toHaveLength(2);
+    expect(events[1]).toEqual({ event: "done", data: { status: "ok" } });
+  });
+
+  it("processa o último bloco com CRLF e sem terminador final", () => {
+    const events = consumeStream([
+      `event: delta\r\ndata: {"content":"a"}\r\n\r\n`,
+      `event: done\r\ndata: {"status":"ok"}`,
+    ]);
+    expect(events.map((e) => e.event)).toEqual(["delta", "done"]);
+    expect(events[1].data).toEqual({ status: "ok" });
+  });
+
+  it("descarta resíduos não-SSE silenciosamente (ex.: quebras finais soltas)", () => {
+    const events = consumeStream([
+      `event: delta\ndata: {"content":"x"}\n\n`,
+      `   \n  `, // ruído
+    ]);
+    expect(events).toHaveLength(1);
+    expect(events[0].event).toBe("delta");
+  });
+
+  it("lida com chunk fragmentado no meio de um bloco e flush final", () => {
+    const events = consumeStream([
+      `event: del`,
+      `ta\ndata: {"con`,
+      `tent":"hello"}\n\nevent: do`,
+      `ne\ndata: {"status":"ok"}`,
+    ]);
+    expect(events).toEqual([
+      { event: "delta", data: { content: "hello" } },
+      { event: "done", data: { status: "ok" } },
+    ]);
+  });
+});
