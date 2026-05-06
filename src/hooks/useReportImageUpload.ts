@@ -72,14 +72,14 @@ export function useReportImageUpload() {
           // Validate file size against bucket limit
           if (blob.size > MAX_FILE_SIZE) {
             toast.error(
-              `Arquivo muito grande: ${(blob.size / 1024 / 1024).toFixed(1)}MB. Máximo: 50MB.`,
+              `Arquivo muito grande: ${(blob.size / 1024 / 1024).toFixed(1)}MB. Máximo: 200MB.`,
             );
             failedCount++;
             continue;
           }
 
           // Determine file extension from MIME type
-          const mimeType = blob.type;
+          const mimeType = blob.type || "application/octet-stream";
           const extension = getExtensionFromMimeType(mimeType);
 
           // Create unique filename with userId as first segment (required by RLS)
@@ -95,31 +95,54 @@ export function useReportImageUpload() {
             });
 
           if (error) {
-            console.error("Upload error for photo:", photo.id, error);
+            console.error("Upload error for photo:", photo.id, error, {
+              mimeType,
+              size: blob.size,
+            });
 
-            // Provide user-friendly error messages
-            if (error.message?.includes("row-level security")) {
+            const msg = error.message || "";
+            if (msg.includes("row-level security")) {
               toast.error(
-                "Sem permissão para enviar arquivos. Verifique suas credenciais.",
+                "Sem permissão para enviar arquivos. Faça login novamente.",
               );
-            } else if (error.message?.includes("Payload too large")) {
-              toast.error(`Arquivo muito grande para envio.`);
+            } else if (
+              msg.includes("Payload too large") ||
+              msg.includes("exceeded the maximum")
+            ) {
+              toast.error(
+                `Arquivo muito grande (${(blob.size / 1024 / 1024).toFixed(1)}MB). Máximo permitido: 200MB.`,
+              );
+            } else if (
+              msg.includes("mime type") ||
+              msg.includes("not allowed") ||
+              msg.includes("invalid_mime_type")
+            ) {
+              toast.error(
+                `Formato não suportado: ${mimeType || "desconhecido"}. Use JPG, PNG, HEIC ou MP4.`,
+              );
             } else {
-              toast.error(`Falha ao enviar foto: ${error.message}`);
+              toast.error(`Falha ao enviar foto: ${msg}`);
             }
             failedCount++;
             continue;
           }
 
-          // Get public URL
-          const { data: urlData } = supabase.storage
+          // Bucket is private — generate a signed URL for viewing
+          const { data: urlData, error: urlError } = await supabase.storage
             .from("weekly-reports")
-            .getPublicUrl(data.path);
+            .createSignedUrl(data.path, SIGNED_URL_TTL_SECONDS);
+
+          if (urlError || !urlData?.signedUrl) {
+            console.error("Signed URL error:", urlError);
+            toast.error("Foto enviada, mas não foi possível gerar link.");
+            failedCount++;
+            continue;
+          }
 
           // Update the gallery entry with the permanent URL
           updatedGallery[index] = {
             ...updatedGallery[index],
-            url: urlData.publicUrl,
+            url: urlData.signedUrl,
           };
 
           uploadedCount++;
