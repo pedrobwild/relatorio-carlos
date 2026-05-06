@@ -82,9 +82,9 @@ export function useReportImageUpload() {
           const mimeType = blob.type || "application/octet-stream";
           const extension = getExtensionFromMimeType(mimeType);
 
-          // Create unique filename with userId as first segment (required by RLS)
+          // Create unique filename with projectId as first segment (required by RLS)
           const timestamp = Date.now();
-          const filename = `${user.id}/${projectId}/week-${weekNumber}/${photo.id}-${timestamp}${extension}`;
+          const filename = `${projectId}/${user.id}/week-${weekNumber}/${photo.id}-${timestamp}${extension}`;
 
           // Upload to storage
           const { data, error } = await supabase.storage
