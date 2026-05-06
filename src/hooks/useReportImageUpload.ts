@@ -21,8 +21,8 @@ export function useReportImageUpload() {
    * Uploads all blob URLs in the gallery to storage and returns updated gallery with permanent URLs.
    * Skips photos that already have permanent URLs.
    *
-   * Path format: {userId}/{projectId}/week-{weekNumber}/{photoId}-{timestamp}.{ext}
-   * This format satisfies RLS policies that check storage.foldername(name)[1] = auth.uid()
+   * Path format: {projectId}/{userId}/week-{weekNumber}/{photoId}-{timestamp}.{ext}
+   * First segment is projectId so RLS can check has_project_access().
    */
   const uploadGalleryPhotos = async (
     projectId: string,
@@ -82,9 +82,9 @@ export function useReportImageUpload() {
           const mimeType = blob.type || "application/octet-stream";
           const extension = getExtensionFromMimeType(mimeType);
 
-          // Create unique filename with userId as first segment (required by RLS)
+          // Create unique filename with projectId as first segment (required by RLS)
           const timestamp = Date.now();
-          const filename = `${user.id}/${projectId}/week-${weekNumber}/${photo.id}-${timestamp}${extension}`;
+          const filename = `${projectId}/${user.id}/week-${weekNumber}/${photo.id}-${timestamp}${extension}`;
 
           // Upload to storage
           const { data, error } = await supabase.storage
