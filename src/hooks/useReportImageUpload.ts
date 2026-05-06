@@ -21,8 +21,8 @@ export function useReportImageUpload() {
    * Uploads all blob URLs in the gallery to storage and returns updated gallery with permanent URLs.
    * Skips photos that already have permanent URLs.
    *
-   * Path format: {userId}/{projectId}/week-{weekNumber}/{photoId}-{timestamp}.{ext}
-   * This format satisfies RLS policies that check storage.foldername(name)[1] = auth.uid()
+   * Path format: {projectId}/{userId}/week-{weekNumber}/{photoId}-{timestamp}.{ext}
+   * First segment is projectId so RLS can check has_project_access().
    */
   const uploadGalleryPhotos = async (
     projectId: string,
