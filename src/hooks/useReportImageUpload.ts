@@ -8,8 +8,10 @@ interface UploadResult {
   photos: GalleryPhoto[];
 }
 
-// Max file size allowed by bucket: 50MB
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+// Max file size allowed by bucket: 200MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024;
+// Signed URL valid for 7 days (max allowed by Supabase Storage signed URLs is longer, but 7d covers report viewing window)
+const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export function useReportImageUpload() {
   const [isUploading, setIsUploading] = useState(false);
