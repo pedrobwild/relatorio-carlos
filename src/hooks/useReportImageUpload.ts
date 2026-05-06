@@ -196,11 +196,19 @@ export function useReportImageUpload() {
 function getExtensionFromMimeType(mimeType: string): string {
   const mimeMap: Record<string, string> = {
     "image/jpeg": ".jpg",
+    "image/jpg": ".jpg",
     "image/png": ".png",
     "image/webp": ".webp",
+    "image/heic": ".heic",
+    "image/heif": ".heif",
+    "image/gif": ".gif",
     "video/mp4": ".mp4",
     "video/quicktime": ".mov",
     "video/webm": ".webm",
+    "video/x-m4v": ".m4v",
+    "video/3gpp": ".3gp",
+    "video/3gpp2": ".3g2",
+    "video/x-matroska": ".mkv",
   };
   return mimeMap[mimeType] || ".bin";
 }
