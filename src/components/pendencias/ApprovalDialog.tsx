@@ -10,14 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  CheckCircle2,
-  MessageSquareWarning,
-  Calendar,
-  DollarSign,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
+import { CheckCircle2, MessageSquareWarning, Calendar, DollarSign, Clock } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {

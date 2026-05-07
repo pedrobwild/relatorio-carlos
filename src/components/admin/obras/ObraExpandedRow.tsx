@@ -44,7 +44,7 @@ export function ObraExpandedRow({
   const pendingDocsCount = summary.pending_documents_count ?? 0;
   const pendingSignatures = summary.pending_signatures_count ?? 0;
   const paidAmount = summary.paid_amount ?? 0;
-  const totalPayments = summary.total_payments ?? 0;
+  const _totalPayments = summary.total_payments ?? 0;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-3 px-4 bg-muted/30 rounded-md">

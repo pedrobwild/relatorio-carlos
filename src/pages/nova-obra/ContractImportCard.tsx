@@ -19,12 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import type {
-  FormData,
-  ContractImportState,
-  ContractParseResult,
-  ContractConflict,
-} from "./types";
+import type { FormData, ContractImportState, ContractParseResult } from "./types";
 
 interface ContractImportCardProps {
   contractState: ContractImportState;
@@ -40,7 +35,7 @@ const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 export function ContractImportCard({
   contractState,
   onContractStateChange,
-  formData,
+  formData: _formData,
   onApplyPrefill,
 }: ContractImportCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);

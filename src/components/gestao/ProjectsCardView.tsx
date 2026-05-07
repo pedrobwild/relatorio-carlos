@@ -165,7 +165,7 @@ function ProjectCard({
   ) => void;
 }) {
   const overdueCount = summary?.overdue_count ?? 0;
-  const pendingCount = summary?.pending_count ?? 0;
+  const _pendingCount = summary?.pending_count ?? 0;
   const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
   const pendingDocuments = summary?.pending_documents ?? 0;
   const progress = Math.max(

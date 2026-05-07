@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders, corsResponse, jsonResponse } from "../_shared/cors.ts";
+import { corsResponse, jsonResponse } from "../_shared/cors.ts";
 import { authenticateRequest } from "../_shared/auth.ts";
 import {
   hashQuery,
@@ -168,7 +168,7 @@ serve(async (req) => {
           external_cost_cents: 1,
           external_sources_used: [source.id],
         });
-      } catch (_) { /* swallow — telemetria não crítica */ }
+      } catch { /* swallow — telemetria não crítica */ }
 
       return jsonResponse({
         success: true,

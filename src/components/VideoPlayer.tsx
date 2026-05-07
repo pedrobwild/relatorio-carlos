@@ -109,7 +109,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
       }
     } catch (error) {
       if (import.meta.env.DEV)
-        console.log("Fullscreen not supported or blocked:", error);
+        console.warn("Fullscreen not supported or blocked:", error);
       if (
         video &&
         (video as unknown as VendorVideoElement).webkitEnterFullscreen

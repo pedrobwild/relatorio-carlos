@@ -79,7 +79,7 @@ export default function PortfolioPage() {
 
   // ── Duplicate modal ─────────────────────────────────────────────────────
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
-  const [duplicateTarget, setDuplicateTarget] =
+  const [duplicateTarget] =
     useState<ProjectWithCustomer | null>(null);
 
   // ── Stale projects dialog ──────────────────────────────────────────────

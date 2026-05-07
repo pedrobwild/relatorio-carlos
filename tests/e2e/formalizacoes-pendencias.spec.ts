@@ -43,7 +43,7 @@ test.describe('Formalizações + Pendências lifecycle', () => {
     const count = await detailLinks.count();
 
     if (count > 0) {
-      const href = await detailLinks.first().getAttribute('href');
+      const _href = await detailLinks.first().getAttribute('href');
       // Click the first "Ver detalhes" and verify navigation works
       await detailLinks.first().click();
       await staffPage.waitForLoadState('networkidle');

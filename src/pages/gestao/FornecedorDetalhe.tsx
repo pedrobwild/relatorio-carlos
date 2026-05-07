@@ -353,7 +353,7 @@ export default function FornecedorDetalhe() {
     );
   };
 
-  const s = editing ? form : supplier;
+  const _s = editing ? form : supplier;
 
   const normalizedSupplierTaxonomy = normalizeSupplierTaxonomy(
     supplier.supplier_type,

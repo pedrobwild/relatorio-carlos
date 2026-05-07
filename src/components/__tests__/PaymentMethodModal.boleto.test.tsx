@@ -156,7 +156,7 @@ describe("PaymentMethodModal — fluxo de boleto + IA", () => {
       error: null,
     });
 
-    const { container } = renderModal();
+    const { container: _container } = renderModal();
 
     const file = makePdfFile();
     const input = document.body.querySelector(
@@ -215,7 +215,7 @@ describe("PaymentMethodModal — fluxo de boleto + IA", () => {
       error: null,
     });
 
-    const { container } = renderModal();
+    const { container: _container } = renderModal();
     const input = document.body.querySelector(
       'input[type="file"]',
     ) as HTMLInputElement;
@@ -238,7 +238,7 @@ describe("PaymentMethodModal — fluxo de boleto + IA", () => {
       error: null,
     });
 
-    const { container } = renderModal();
+    const { container: _container } = renderModal();
     const input = document.body.querySelector(
       'input[type="file"]',
     ) as HTMLInputElement;
@@ -261,7 +261,7 @@ describe("PaymentMethodModal — fluxo de boleto + IA", () => {
       error: new Error("AI gateway down"),
     });
 
-    const { container } = renderModal();
+    const { container: _container } = renderModal();
     const input = document.body.querySelector(
       'input[type="file"]',
     ) as HTMLInputElement;
@@ -284,7 +284,7 @@ describe("PaymentMethodModal — fluxo de boleto + IA", () => {
       error: new Error("storage 500"),
     });
 
-    const { container } = renderModal();
+    const { container: _container } = renderModal();
     const input = document.body.querySelector(
       'input[type="file"]',
     ) as HTMLInputElement;

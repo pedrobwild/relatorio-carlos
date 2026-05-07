@@ -1,15 +1,5 @@
 import { useMemo } from "react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Line,
-  ComposedChart,
-} from "recharts";
+import { Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart } from "recharts";
 import { Activity } from "@/types/report";
 import { addWeeks, startOfWeek, endOfWeek, isBefore } from "date-fns";
 import { parseLocalDate } from "@/lib/activityStatus";

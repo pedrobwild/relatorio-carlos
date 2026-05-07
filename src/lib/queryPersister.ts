@@ -6,6 +6,7 @@
  * - Graceful handling of SSR/missing window
  * - Size limits to prevent quota issues
  */
+/* eslint-disable no-console */
 
 import type {
   Persister,
@@ -158,7 +159,7 @@ export function createQueryPersister(): Persister | null {
         let parsed: PersistedClient;
         try {
           parsed = JSON.parse(data) as PersistedClient;
-        } catch (parseError) {
+        } catch {
           console.warn("[QueryPersist] Failed to parse cached data, clearing");
           safeStorage.removeItem(STORAGE_KEY);
           return undefined;

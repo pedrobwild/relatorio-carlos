@@ -2,7 +2,6 @@ import { Check, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ProjectPayment } from "@/hooks/useProjectPayments";
 import { formatCurrency } from "./helpers";
 
 interface FinancialSummaryProps {

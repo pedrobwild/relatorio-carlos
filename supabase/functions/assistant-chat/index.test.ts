@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // Deno tests for the `assistant-chat` edge function.
 //
 // Validates two flows end-to-end against the deployed function:

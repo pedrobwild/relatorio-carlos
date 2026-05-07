@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Package, TrendingUp } from "lucide-react";
+import { Package } from "lucide-react";
 
 interface PurchaseRecord {
   id: string;

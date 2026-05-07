@@ -8,7 +8,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Ghost, ArrowRight, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ProjectWithCustomer } from "@/infra/repositories";

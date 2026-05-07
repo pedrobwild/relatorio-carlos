@@ -3,11 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { projectKeys } from "@/hooks/useProjectsQuery";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { addBusinessDays, isWeekend } from "@/lib/businessDays";
-import type {
-  ProjectTemplate,
-  TemplateActivity,
-} from "@/hooks/useProjectTemplates";
+import { addBusinessDays } from "@/lib/businessDays";
+import type { ProjectTemplate } from "@/hooks/useProjectTemplates";
 import type { FormData } from "./types";
 import type { ScheduleActivity } from "./ScheduleCard";
 import { safeParseInt, trackBlock1CUsage } from "@/lib/block1cMonitor";

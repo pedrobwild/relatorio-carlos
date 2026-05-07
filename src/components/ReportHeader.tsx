@@ -24,10 +24,7 @@ import {
   useProjectMetrics,
   useMilestoneItems,
 } from "@/components/header/useReportHeaderData";
-import type {
-  ReportHeaderProps,
-  MilestoneKey,
-} from "@/components/header/types";
+import type { ReportHeaderProps } from "@/components/header/types";
 
 // Re-export types for backward compatibility
 export type { MilestoneKey } from "@/components/header/types";
@@ -84,7 +81,7 @@ const ReportHeader = ({
   const navigate = useNavigate();
 
   const {
-    contacts: dbContacts,
+    contacts: _dbContacts,
     upsertContact,
     isUpserting,
     uploadPhoto,

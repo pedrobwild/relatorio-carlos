@@ -1,4 +1,4 @@
-import { corsHeaders, corsResponse, jsonResponse } from '../_shared/cors.ts';
+import { corsResponse, jsonResponse } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -15,7 +15,7 @@ const SERVICE_CATEGORIES = [
   'Empreiteira',
 ];
 
-const ITEM_CATEGORIES = [
+const _ITEM_CATEGORIES = [
   'Eletrodomésticos',
   'Móveis',
   'Iluminação',

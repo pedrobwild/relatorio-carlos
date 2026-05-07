@@ -20,7 +20,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Textarea } from "@/components/ui/textarea";
 import { InlineRichEditor } from "@/components/ui/inline-rich-editor";
 import {
   sanitizeInlineRichText,

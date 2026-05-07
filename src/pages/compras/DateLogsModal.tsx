@@ -6,18 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import {
-  Clock,
-  ShieldCheck,
-  ThumbsUp,
-  ShoppingCart,
-  Package,
-  Truck,
-  CheckCircle2,
-  ArrowRightCircle,
-  Warehouse,
-  Calendar,
-} from "lucide-react";
+import { Clock, ShieldCheck, ThumbsUp, ShoppingCart, Package, CheckCircle2, ArrowRightCircle, Warehouse, Calendar } from "lucide-react";
 import type { ProjectPurchase } from "@/hooks/useProjectPurchases";
 
 const fmtDate = (d: string | null) => {

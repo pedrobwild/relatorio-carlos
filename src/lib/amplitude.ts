@@ -8,6 +8,7 @@
  * - `trackAmplitude()` é no-op enquanto o consentimento não estiver concedido,
  *   ou se a chave de API não estiver configurada.
  */
+/* eslint-disable no-console */
 import * as amplitude from "@amplitude/unified";
 import { getConsent, isAllowed, subscribeConsent } from "@/lib/consent";
 

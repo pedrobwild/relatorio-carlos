@@ -10,6 +10,7 @@
  *   // ... do work
  *   perf.measure('Page Load', 'load-start');
  */
+/* eslint-disable no-console */
 
 const isDev = import.meta.env.DEV;
 

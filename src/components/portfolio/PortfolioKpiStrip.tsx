@@ -320,6 +320,7 @@ export function PortfolioKpiStrip({
 
 // ─── Filter helper ───────────────────────────────────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function applyKpiFilter(
   projects: ProjectWithCustomer[],
   summaries: ProjectSummary[],

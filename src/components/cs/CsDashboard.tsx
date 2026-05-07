@@ -12,21 +12,7 @@
  */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Headset,
-  AlertTriangle,
-  Clock,
-  CheckCircle2,
-  TrendingUp,
-  Flame,
-  Hourglass,
-  Ghost,
-  ArrowRight,
-  CalendarRange,
-  UserX,
-  UserCheck,
-  Check,
-} from "lucide-react";
+import { Headset, Clock, CheckCircle2, TrendingUp, Flame, Hourglass, Ghost, ArrowRight, CalendarRange, UserX, UserCheck, Check } from "lucide-react";
 import {
   differenceInDays,
   formatDistanceToNow,

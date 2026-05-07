@@ -1,5 +1,6 @@
+/* eslint-disable no-console */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { corsHeaders, corsResponse, jsonResponse } from "../_shared/cors.ts";
+import { corsResponse, jsonResponse } from "../_shared/cors.ts";
 
 /**
  * sync-suppliers-inbound

@@ -54,7 +54,7 @@ export function MobileFormalizacoes({
   signedCount,
   basePath,
   onCreateNew,
-  canCreate,
+  canCreate: _canCreate,
   isStaff,
 }: MobileFormalizacoesProps) {
   return (

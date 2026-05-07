@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from "react";
 import { useUserRole } from "./useUserRole";
-import { can, canAny, canAll, type Feature } from "@/config/permissions";
+import { canAny, canAll, type Feature } from "@/config/permissions";
 
 /**
  * Hook to check feature permissions based on user roles

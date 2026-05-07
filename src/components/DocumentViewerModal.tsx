@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   FileText,
   History,
@@ -29,8 +29,6 @@ import {
 } from "@/components/DocumentComments";
 import { useDocumentComments } from "@/hooks/useDocumentComments";
 import { useCan } from "@/hooks/useCan";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 export interface DocumentForViewer {

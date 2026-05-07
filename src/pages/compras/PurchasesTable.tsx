@@ -1103,8 +1103,8 @@ function PurchaseRow({
 /* ─── Main Table Component ─── */
 export function PurchasesTable({
   purchases,
-  getActivityName,
-  getDaysUntilRequired,
+  getActivityName: _getActivityName,
+  getDaysUntilRequired: _getDaysUntilRequired,
   onEdit,
   onDelete,
   onStatusChange,

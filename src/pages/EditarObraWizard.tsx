@@ -1,21 +1,8 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Send,
-  Check,
-  X,
-  Loader2,
-  Rocket,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import {
-  useProjectTemplates,
-  type ProjectTemplate,
-  type TemplateActivity,
-} from "@/hooks/useProjectTemplates";
 import { addBusinessDays } from "@/lib/businessDays";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,16 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { projectKeys } from "@/hooks/useProjectsQuery";
 
-import {
-  formSchema,
-  initialFormData,
-  initialContractImportState,
-  type FormData,
-  type ContractImportState,
-  type ContractParseResult,
-  type ContractConflict,
-} from "./nova-obra/types";
-import { useNovaObraSubmit } from "./nova-obra/useNovaObraSubmit";
+import { initialFormData, initialContractImportState, type FormData, type ContractImportState } from "./nova-obra/types";
 import { useEditProjectLoader } from "./nova-obra/useEditProjectLoader";
 import { ProjectInfoCard } from "./nova-obra/ProjectInfoCard";
 import { ScheduleCard, type ScheduleActivity } from "./nova-obra/ScheduleCard";

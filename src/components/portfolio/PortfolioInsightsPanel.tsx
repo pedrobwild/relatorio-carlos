@@ -49,7 +49,7 @@ export function PortfolioInsightsPanel({
   // ── Upcoming milestones ────────────────────────────────────────────────
   const upcomingMilestones = useMemo(() => {
     const now = Date.now();
-    const MS_30D = 30 * 24 * 60 * 60 * 1000;
+    const _MS_30D = 30 * 24 * 60 * 60 * 1000;
 
     return activeProjects
       .filter((p) => p.planned_end_date)

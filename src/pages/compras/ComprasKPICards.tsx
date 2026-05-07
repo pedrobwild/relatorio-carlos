@@ -1,11 +1,4 @@
-import {
-  Clock,
-  Package,
-  CheckCircle2,
-  AlertTriangle,
-  DollarSign,
-  TrendingUp,
-} from "lucide-react";
+import { Clock, Package, AlertTriangle, DollarSign, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -36,7 +29,7 @@ export function ComprasKPICards({
     totalItems || pendingCount + orderedCount + deliveredCount + overdueCount;
   const completionPercent =
     total > 0 ? Math.round((deliveredCount / total) * 100) : 0;
-  const costVariance =
+  const _costVariance =
     totalActualCost > 0 && totalEstimatedCost > 0
       ? ((totalActualCost - totalEstimatedCost) / totalEstimatedCost) * 100
       : null;

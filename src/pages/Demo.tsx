@@ -31,11 +31,7 @@ import WeeklyReportsHistory, {
 import WeeklyReportHeader from "@/components/WeeklyReportHeader";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
-import {
-  ReportData,
-  WeeklyReport,
-  Activity as ActivityType,
-} from "@/types/report";
+import { ReportData, WeeklyReport } from "@/types/report";
 import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { format } from "date-fns";

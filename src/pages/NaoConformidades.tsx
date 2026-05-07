@@ -1,11 +1,5 @@
 import { useState, useMemo } from "react";
-import {
-  Plus,
-  AlertTriangle,
-  Search,
-  LayoutList,
-  Columns3,
-} from "lucide-react";
+import { Plus, Search, LayoutList, Columns3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -35,7 +29,7 @@ export default function NaoConformidades() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
 
-  const openNcs = useMemo(
+  const _openNcs = useMemo(
     () => nonConformities.filter((nc) => nc.status !== "closed"),
     [nonConformities],
   );

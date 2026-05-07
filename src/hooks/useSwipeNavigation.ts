@@ -17,7 +17,7 @@ export function useSwipeNavigation(_routes: string[]): void {
   useEffect(() => {
     if (import.meta.env.DEV && !warned) {
       warned = true;
-      // eslint-disable-next-line no-console
+       
       console.warn(
         "[useSwipeNavigation] Deprecated. Cross-route swipe is disabled — use useScopedSwipe on a specific element instead.",
       );

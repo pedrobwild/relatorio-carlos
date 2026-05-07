@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
@@ -31,11 +32,6 @@ function formatDate(dateString: string | null): string {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function formatShortHash(hash: string | null): string {
-  if (!hash) return '-';
-  return hash.substring(0, 16) + '...' + hash.substring(hash.length - 16);
 }
 
 // Simple markdown to plain text conversion

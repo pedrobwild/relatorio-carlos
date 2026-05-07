@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import DOMPurify from "dompurify";
 import {
   Users,
@@ -65,7 +65,7 @@ export function JourneyWelcomeStage({
   projectId,
   isAdmin,
   onAdvance,
-  nextStageName,
+  nextStageName: _nextStageName,
 }: JourneyWelcomeStageProps) {
   const [teamExpanded, setTeamExpanded] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);

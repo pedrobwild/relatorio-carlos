@@ -1,6 +1,5 @@
 import { useMemo, useCallback } from "react";
 import { format, parseISO, differenceInDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { FileDown, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

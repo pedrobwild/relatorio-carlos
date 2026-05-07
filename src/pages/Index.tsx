@@ -44,7 +44,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LiveStatus } from "@/components/a11y/LiveStatus";
 
 // Lazy load heavy components
-const GanttChart = lazy(() => import("@/components/GanttChart"));
+const _GanttChart = lazy(() => import("@/components/GanttChart"));
 const WeeklyReportTemplate = lazy(
   () => import("@/components/report/WeeklyReportTemplate"),
 );
@@ -88,7 +88,7 @@ const Index = () => {
     projectError,
     activitiesLoading,
     isStaff,
-    isAdmin,
+    isAdmin: _isAdmin,
     canEditSchedule,
     paths,
     reportData,
@@ -109,7 +109,7 @@ const Index = () => {
     savingWeek,
     updateActivity,
     handleMilestoneDateChange,
-    handleActivityDateChange,
+    handleActivityDateChange: _handleActivityDateChange,
     handleReportClick,
     handleBackToList,
     handlePreviousWeek,

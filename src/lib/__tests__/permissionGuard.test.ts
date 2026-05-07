@@ -5,7 +5,6 @@ import {
   hasProjectPermission,
   checkPermission,
 } from "@/lib/permissionGuard";
-import type { AppRole } from "@/hooks/useUserRole";
 
 describe("permissionGuard", () => {
   // ── Module permissions ──────────────────────────────────────────────────

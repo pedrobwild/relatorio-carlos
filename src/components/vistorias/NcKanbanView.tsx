@@ -1,15 +1,7 @@
 import { useMemo } from "react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  AlertTriangle,
-  Clock,
-  ChevronRight,
-  User,
-  Tag,
-  RotateCcw,
-  Building2,
-} from "lucide-react";
+import { Clock, User, Tag, RotateCcw, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";

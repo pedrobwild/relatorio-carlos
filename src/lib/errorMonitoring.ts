@@ -8,6 +8,7 @@
  *   import { captureError, captureMessage } from '@/lib/errorMonitoring';
  *   captureError(error, { feature: 'documents', projectId: '...' });
  */
+/* eslint-disable no-console */
 
 export interface ErrorContext {
   feature?:

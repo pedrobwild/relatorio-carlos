@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { corsHeaders } from "../_shared/cors.ts";
 

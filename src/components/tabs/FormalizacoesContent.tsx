@@ -1,18 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Filter,
-  ChevronRight,
-  Sparkles,
-  Clock,
-  CheckCircle2,
-  FileText,
-} from "lucide-react";
+import { Plus, Search, Filter, Sparkles, Clock, CheckCircle2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,13 +25,7 @@ import {
   type FormalizationType,
   type FormalizationStatus,
 } from "@/types/formalization";
-import {
-  getStatusIcon,
-  getStatusBadgeVariant,
-  getTypeIcon,
-  formatFormalizationDate as formatDate,
-  formatFormalizationDateTime as formatDateTime,
-} from "@/lib/formalizationHelpers";
+import { getStatusIcon, getStatusBadgeVariant, getTypeIcon, formatFormalizationDateTime as formatDateTime } from "@/lib/formalizationHelpers";
 
 function FormalizacaoSkeleton() {
   return (
@@ -66,7 +50,7 @@ function FormalizacaoSkeleton() {
 const FormalizacoesContent = () => {
   const navigate = useNavigate();
   const { paths, projectId } = useProjectNavigation();
-  const { isStaff } = useUserRole();
+  const { isStaff: _isStaff } = useUserRole();
   const { can } = useCan();
   const [activeTab, setActiveTab] = useState("pendentes");
   const [searchTerm, setSearchTerm] = useState("");

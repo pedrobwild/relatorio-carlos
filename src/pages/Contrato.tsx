@@ -1,13 +1,4 @@
-import {
-  ArrowLeft,
-  Download,
-  ExternalLink,
-  FileText,
-  Calendar,
-  X,
-  Loader2,
-  FilePlus,
-} from "lucide-react";
+import { Download, ExternalLink, FileText, Calendar, X, Loader2, FilePlus } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,13 +9,11 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import bwildLogo from "@/assets/bwild-logo-dark.png";
 import PDFViewer from "@/components/PDFViewer";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -38,7 +27,7 @@ const Contrato = () => {
   } = useProject();
   const { paths } = useProjectNavigation();
   const {
-    documents,
+    documents: _documents,
     loading: docsLoading,
     getLatestByCategory,
   } = useDocuments(projectId);

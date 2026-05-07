@@ -1,20 +1,6 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  ChevronRight,
-  FileText,
-  Users,
-  Package,
-  RefreshCw,
-  Repeat,
-  FileEdit,
-} from "lucide-react";
+import { ChevronRight, FileText, Package, RefreshCw, Repeat, FileEdit } from "lucide-react";
 import {
   FORMALIZATION_TYPE_LABELS,
   type FormalizationType,

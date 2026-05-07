@@ -1,13 +1,5 @@
 import { useMemo } from "react";
-import {
-  AlertTriangle,
-  Clock,
-  ShieldAlert,
-  CheckCircle2,
-  ListChecks,
-  Tag,
-  DollarSign,
-} from "lucide-react";
+import { Clock, ShieldAlert, CheckCircle2, ListChecks, Tag, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type {
   NonConformity,

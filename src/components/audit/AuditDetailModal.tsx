@@ -30,6 +30,7 @@ const getActionConfig = (
   return configs[acao] || { label: acao, variant: "outline" };
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { getActionConfig };
 
 export function AuditDetailModal({ audit }: { audit: AuditoriaWithUser }) {

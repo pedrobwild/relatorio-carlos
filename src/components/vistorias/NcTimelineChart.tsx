@@ -1,11 +1,5 @@
 import { useMemo } from "react";
-import {
-  format,
-  parseISO,
-  startOfMonth,
-  eachMonthOfInterval,
-  subMonths,
-} from "date-fns";
+import { format, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   BarChart,

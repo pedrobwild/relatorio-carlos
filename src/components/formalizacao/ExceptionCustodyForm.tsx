@@ -42,7 +42,7 @@ interface ExceptionCustodyFormProps {
 
 export function ExceptionCustodyForm({
   onComplete,
-  initialData,
+  initialData: _initialData,
 }: ExceptionCustodyFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { WeeklyReport, Activity } from "@/types/report";
 import WeeklyProgressChart from "./WeeklyProgressChart";
 import { parseLocalDate } from "@/lib/activityStatus";
@@ -105,7 +104,7 @@ const ReportModalButton = ({
 
 const TechnicalReport = ({
   weeklyReport,
-  clientName,
+  clientName: _clientName,
   activities,
   endDate,
   projectStartDate,

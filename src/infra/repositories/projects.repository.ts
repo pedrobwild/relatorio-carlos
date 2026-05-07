@@ -479,7 +479,7 @@ export async function getProjectWithCustomerAndStages(projectId: string) {
 export async function cloneProjectForConstruction(
   sourceProjectId: string,
   newProjectData: Record<string, unknown>,
-  createdBy: string,
+  _createdBy: string,
 ): Promise<RepositoryResult<Project>> {
   return executeQuery(async () => {
     // 1. Create project

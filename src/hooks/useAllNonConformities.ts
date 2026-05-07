@@ -32,7 +32,7 @@ export function useAllNonConformities() {
       }
 
       const projectMap: Record<string, string> = {};
-      const projectList: { id: string; name: string }[] = [];
+      const _projectList: { id: string; name: string }[] = [];
       if (projectsResult.data) {
         projectsResult.data.forEach((p) => {
           projectMap[p.id] = p.name;

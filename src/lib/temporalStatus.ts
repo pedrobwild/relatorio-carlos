@@ -3,11 +3,7 @@
  * Adds human-readable time context to project status labels.
  */
 
-import {
-  differenceInDays,
-  differenceInWeeks,
-  differenceInMonths,
-} from "date-fns";
+import { differenceInDays } from "date-fns";
 
 /**
  * Format a duration in a human-readable way (pt-BR).

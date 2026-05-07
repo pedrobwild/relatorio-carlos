@@ -147,6 +147,7 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
         }}
         onSuccess={() => {
           if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
             console.info("[QueryPersist] Cache restored from localStorage");
           }
         }}

@@ -4,6 +4,7 @@
  * Centralized error logging with correlation IDs and context.
  * In production, this could be extended to send to external services.
  */
+/* eslint-disable no-console */
 
 export interface ErrorContext {
   userId?: string;

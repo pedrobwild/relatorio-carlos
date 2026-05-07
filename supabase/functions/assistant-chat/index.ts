@@ -308,7 +308,7 @@ Deno.serve(async (req) => {
       const send = (event: string, data: unknown) => {
         try {
           controller.enqueue(enc.encode(sseEvent(event, data)));
-        } catch (_) { /* connection closed */ }
+        } catch { /* connection closed */ }
       };
 
       const startedAt = Date.now();
@@ -717,7 +717,7 @@ Deno.serve(async (req) => {
                   tokensIn += usage.prompt_tokens ?? 0;
                   tokensOut += usage.completion_tokens ?? 0;
                 }
-              } catch (_) { /* ignore parse errors mid-buffer */ }
+              } catch { /* ignore parse errors mid-buffer */ }
             };
             while (true) {
               const { done, value } = await reader.read();
@@ -872,9 +872,9 @@ Deno.serve(async (req) => {
             status: 'other',
             error_message: message,
           });
-        } catch (_) { /* swallow */ }
+        } catch { /* swallow */ }
       } finally {
-        try { controller.close(); } catch (_) { /* ignore */ }
+        try { controller.close(); } catch { /* ignore */ }
       }
     },
   });

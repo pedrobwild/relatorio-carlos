@@ -502,8 +502,8 @@ export function CalendarRangeTimeline({
 function ProjectBars({
   lanes,
   dayWidth,
-  colorClass,
-  borderClass,
+  colorClass: _colorClass,
+  borderClass: _borderClass,
   onActivityClick,
   canBreak,
   onBreak,

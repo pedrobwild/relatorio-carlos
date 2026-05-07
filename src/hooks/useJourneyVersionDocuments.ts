@@ -11,15 +11,6 @@ import type { ProjectDocument } from "./useDocuments";
 
 const BUCKET = "project-documents";
 
-interface VersionWithFiles {
-  id: string;
-  stage_key: string;
-  version_number: number;
-  created_at: string;
-  created_by: string;
-  files: { id: string; storage_path: string; sort_order: number }[];
-}
-
 /**
  * Check if the "Liberação da Obra" stage is completed for a project,
  * and if so, return the latest Projeto 3D images and Projeto Executivo PDF

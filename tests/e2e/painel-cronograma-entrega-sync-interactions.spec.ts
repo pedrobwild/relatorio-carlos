@@ -16,7 +16,7 @@ const VIEWPORTS = [
   { id: 'mobile', width: 390, height: 844 },
 ] as const;
 
-async function getEntregaPainel(page: Page, projectId: string): Promise<string | null> {
+async function getEntregaPainel(page: Page, _projectId: string): Promise<string | null> {
   await page.goto('/gestao/painel-obras');
   await page.waitForLoadState('networkidle');
   const cell = page

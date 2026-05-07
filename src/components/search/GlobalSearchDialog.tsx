@@ -1,13 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  FileText,
-  FolderOpen,
-  DollarSign,
-  ClipboardSignature,
-  AlertCircle,
-} from "lucide-react";
+import { Search, FileText, FolderOpen, ClipboardSignature, AlertCircle } from "lucide-react";
 import {
   CommandDialog,
   CommandInput,

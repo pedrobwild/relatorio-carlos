@@ -59,6 +59,7 @@ export function AutosaveStatusIcon({
  * Hook compartilhado: encapsula a transição idle → saving → saved
  * e o no-op quando o valor não mudou.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFieldAutosave(
   currentValue: string | number | null | undefined,
 ) {

@@ -39,7 +39,7 @@ export function AddRecordForm({
   category,
   onClose,
   minutesOnly,
-  stageName,
+  stageName: _stageName,
 }: AddRecordFormProps) {
   const { user } = useAuth();
   const create = useCreateStageRecord();

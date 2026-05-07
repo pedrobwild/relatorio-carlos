@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, FileText, Building2, Eye, AlertCircle } from "lucide-react";
+import { Plus, Building2, Eye, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/AppHeader";
 import CreateReportModal from "@/components/CreateReportModal";

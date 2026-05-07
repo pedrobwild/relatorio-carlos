@@ -77,7 +77,7 @@ function parseSections(description: string | null): ParsedSections {
   if (hasHeaders) {
     // Split into sections by headers
     const parts = description.split(/(?=(?:^|\n)#+\s)/);
-    const matched = new Set<number>();
+    const _matched = new Set<number>();
 
     for (const part of parts) {
       let found = false;
@@ -161,7 +161,7 @@ interface StageDetailsSectionsProps {
 
 export function StageDetailsSections({ stage }: StageDetailsSectionsProps) {
   const sections = parseSections(stage.description);
-  const hasStructuredContent =
+  const _hasStructuredContent =
     sections.objective ||
     sections.clientActions.length > 0 ||
     sections.bwildActions.length > 0 ||

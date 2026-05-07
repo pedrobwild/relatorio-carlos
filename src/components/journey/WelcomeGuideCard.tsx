@@ -70,7 +70,7 @@ interface WelcomeGuideCardProps {
 }
 
 export function WelcomeGuideCard({
-  hero,
+  hero: _hero,
   onScrollToTeam,
 }: WelcomeGuideCardProps) {
   const [expanded, setExpanded] = useState(true);

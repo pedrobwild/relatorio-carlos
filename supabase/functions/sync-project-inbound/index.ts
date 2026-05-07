@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsResponse, jsonResponse } from "../_shared/cors.ts";
 

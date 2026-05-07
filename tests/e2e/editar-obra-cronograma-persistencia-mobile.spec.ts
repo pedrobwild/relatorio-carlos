@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import { test as authTest } from './fixtures/auth';
 
 /**
@@ -62,7 +62,7 @@ authTest.describe('EditarObra mobile — Persistência após recálculo + salvar
     await expect(staffPage.getByText(/Cronograma/i).first()).toBeVisible({ timeout: 15000 });
   });
 
-  authTest('término e duração permanecem após recalcular, salvar e recarregar', async ({ staffPage, testProjectId }) => {
+  authTest('término e duração permanecem após recalcular, salvar e recarregar', async ({ staffPage, testProjectId: _testProjectId }) => {
     const original = await getDates(staffPage);
 
     // 1. Define início conhecido e dispara recálculo

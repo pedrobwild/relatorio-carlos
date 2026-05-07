@@ -1,15 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  format,
-  differenceInCalendarDays,
-  startOfWeek,
-  endOfWeek,
-  isWithinInterval,
-  addWeeks,
-  isBefore,
-  isAfter,
-} from "date-fns";
+import { format, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   AlertTriangle,
@@ -142,7 +133,7 @@ export function CronogramaMobileView({
   onImport,
   onSaveBaseline,
   onGenerateAI,
-  projectName,
+  projectName: _projectName,
 }: Props) {
   const [filter, setFilter] = useState<FilterValue>("all");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
@@ -150,7 +141,7 @@ export function CronogramaMobileView({
   );
 
   // "Today" reference — refreshed every 60s to handle day rollover
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
   const todayRef = useRef(new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
@@ -328,7 +319,7 @@ export function CronogramaMobileView({
           if (items.length === 0) return null;
           const config = statusConfig[statusKey];
           const isOpen = expandedGroups.has(statusKey);
-          const Icon = config.icon;
+          const _Icon = config.icon;
 
           return (
             <Collapsible
