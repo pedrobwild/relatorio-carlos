@@ -1,60 +1,66 @@
+# Controle de migração PII em `projects`
 
-## Agente IA de Monitoramento de Sincronização
+Um card no **Admin → Sistema** que mostra o estado atual da PII duplicada em `projects` (`client_name`, `client_email`, `client_phone`) e permite executar a correção em duas etapas controladas por você. Nada acontece em background — só quando você clicar.
 
-### Arquitetura
+## O que o card mostra
 
+```text
+┌─ Migração PII em projects ─────────────────────────────┐
+│ Status:                                                │
+│   • Colunas legadas: presentes (3) | removidas         │
+│   • Obras com PII em projects: 2                       │
+│   • Obras já migradas para project_customers: 75       │
+│   • Divergências (projects ≠ project_customers): 0     │
+│                                                        │
+│ [ Rodar backfill ]   [ Remover colunas (irreversível) ]│
+└────────────────────────────────────────────────────────┘
 ```
-Sync falha → Trigger DB → Edge Function "sync-monitor-agent"
-  → Analisa erro com IA (Lovable AI / Gemini Flash)
-  → Corrige payload automaticamente
-  → Reenvia para a Edge Function correta
-  → Registra resultado na integration_sync_log
-  → Cria notificação para admins
-```
 
-### Componentes
+Botões ficam desabilitados quando não fazem sentido (ex.: "Remover colunas" só habilita se backfill estiver completo e divergências = 0; some quando colunas já foram removidas).
 
-#### 1. Trigger no Banco (tempo real)
-- Trigger na tabela `integration_sync_log` que dispara quando `sync_status = 'failed'`
-- Chama a edge function `sync-monitor-agent` via `pg_net`
+## Etapas
 
-#### 2. Edge Function `sync-monitor-agent`
-- Recebe o registro falhado (payload, error_message, entity_type)
-- Envia para Lovable AI (Gemini Flash) com prompt especializado:
-  - Analisa o `error_message` e o `payload`
-  - Identifica a causa (coluna inexistente, valor inválido, tipo incorreto, campo obrigatório ausente)
-  - Gera o payload corrigido
-- Reenvia o payload corrigido para a edge function correspondente (`sync-supplier-inbound` ou `sync-project-inbound`)
-- Atualiza o `integration_sync_log` com:
-  - `sync_status: 'auto_corrected'` ou `'retry_failed'`
-  - `error_message` atualizada com o diagnóstico da IA
-  - Incrementa `attempts`
-- Cria notificação para admins informando a correção
+**1. Backfill** — copia `projects.client_*` para `project_customers` quando faltar (UPSERT por `project_id`). Idempotente, pode ser rodado várias vezes. Mostra quantas linhas foram criadas/atualizadas.
 
-#### 3. Dashboard de Monitoramento (painel admin)
-- Nova aba "Integrações" em `/admin/sistema`
-- Cards com métricas: total sincronizados, falhados, corrigidos automaticamente
-- Tabela de logs com filtros por status, entidade, sistema
-- Detalhes de cada sync com payload original vs corrigido
+**2. Remover colunas** — `ALTER TABLE public.projects DROP COLUMN client_name, client_email, client_phone`. Exige `AlertDialog` com aviso explícito de que é irreversível e de que código que ainda lê essas colunas vai quebrar.
 
-#### 4. Limites de segurança
-- Máximo 3 tentativas automáticas por registro
-- Se a IA não conseguir corrigir, marca como `'needs_manual_review'`
-- Notificação urgente para admins em caso de falhas repetidas
+## Pré-requisito explicitado no card
 
-### Fluxo detalhado
+Antes de remover as colunas, o código abaixo precisa ser ajustado para ler/escrever em `project_customers`. O card lista isso como checklist visível para você não esquecer:
 
-1. Envision envia dados → `sync-supplier-inbound` ou `sync-project-inbound`
-2. Se falhar → registro na `integration_sync_log` com `status = 'failed'`
-3. Trigger detecta → chama `sync-monitor-agent`
-4. IA analisa o erro e payload
-5. IA gera payload corrigido
-6. Reenvio automático para a function correta
-7. Se sucesso → `status = 'auto_corrected'`
-8. Se falhar novamente → incrementa attempts, se < 3 volta ao passo 4
-9. Se esgotou tentativas → `status = 'needs_manual_review'` + notificação
+- `supabase/functions/sync-project-inbound/index.ts`
+- `supabase/functions/parse-budget-pdf/index.ts`
+- `supabase/functions/seed-demo-project/index.ts`
+- `supabase/functions/sync-monitor-agent/index.ts`
+- `src/hooks/useWeekActivities.ts`
+- `src/hooks/usePurchasesByCreationRange.ts`
+- `src/pages/nova-obra/useEditProjectLoader.ts`
+- `src/pages/CalendarioObras.tsx`
 
-### Tecnologias
-- **IA**: Lovable AI Gateway (google/gemini-3-flash-preview)
-- **Trigger**: pg_net para chamada assíncrona
-- **Notificações**: Sistema de notificações existente
+Esta etapa **não** é automatizada por este controle — o card só dispara o DB. Você decide quando o código está pronto.
+
+## Detalhes técnicos
+
+### Migration (nova, additive)
+
+Cria 3 funções `SECURITY DEFINER` restritas a `is_admin_v2()`:
+
+- `pii_projects_status()` → `jsonb` com `{columns_present, with_pii_in_projects, in_project_customers, divergences}`. Detecta presença das colunas via `information_schema.columns`.
+- `pii_projects_backfill()` → `jsonb` com `{inserted, updated}`. UPSERT em `project_customers` quando `projects.client_*` tiver dado e `project_customers` não.
+- `pii_projects_drop_legacy_columns()` → `void`. Faz `EXECUTE` do `ALTER TABLE ... DROP COLUMN IF EXISTS` para as 3 colunas. Aborta se backfill não foi feito (count > 0 de pendentes).
+
+Todas com `RAISE EXCEPTION` se chamadas por não-admin.
+
+### Frontend
+
+Novo componente `src/components/admin/PiiMigrationCard.tsx` (mesmo padrão de `FilesCleanupCard`):
+- `useQuery` chamando `supabase.rpc('pii_projects_status')`, `staleTime: 30s`.
+- Dois `useMutation` para backfill e drop, com `AlertDialog` de confirmação no drop.
+- Badges semânticos para o status (verde quando colunas removidas, âmbar quando há pendência).
+
+Adicionado em `src/pages/Admin.tsx` na aba `sistema`, acima do `IntegrationMonitorCard`.
+
+### O que NÃO entra agora
+
+- Nenhuma alteração nos 7 arquivos que ainda leem `client_*` de `projects`. Você roda o controle só depois que esse código for migrado (ou aceita que cliente e calendário/relatórios percam o nome do cliente até ajustar).
+- Nenhuma RLS nova; as 3 funções são o único caminho.
