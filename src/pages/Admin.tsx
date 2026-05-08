@@ -106,6 +106,7 @@ export default function Admin() {
 
           <TabsContent value="sistema">
             <div className="space-y-6">
+              <PiiMigrationCard />
               <IntegrationMonitorCard />
               <FilesCleanupCard />
 
