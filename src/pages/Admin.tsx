@@ -20,6 +20,7 @@ import { ObrasTab } from "@/components/admin/ObrasTab";
 import { TemplatesTab } from "@/components/admin/TemplatesTab";
 import { FilesCleanupCard } from "@/components/admin/FilesCleanupCard";
 import { IntegrationMonitorCard } from "@/components/admin/IntegrationMonitorCard";
+import { PiiMigrationCard } from "@/components/admin/PiiMigrationCard";
 import { InspectionTemplatesTab } from "@/components/admin/InspectionTemplatesTab";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 
@@ -105,6 +106,7 @@ export default function Admin() {
 
           <TabsContent value="sistema">
             <div className="space-y-6">
+              <PiiMigrationCard />
               <IntegrationMonitorCard />
               <FilesCleanupCard />
 

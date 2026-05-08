@@ -6747,6 +6747,9 @@ export type Database = {
         Returns: string
       }
       my_profile_role: { Args: never; Returns: string }
+      pii_projects_backfill: { Args: never; Returns: Json }
+      pii_projects_drop_legacy_columns: { Args: never; Returns: Json }
+      pii_projects_status: { Args: never; Returns: Json }
       reorder_project_activities: {
         Args: { p_ordered_ids: string[]; p_project_id: string }
         Returns: undefined
