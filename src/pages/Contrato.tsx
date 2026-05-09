@@ -14,7 +14,6 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -116,7 +115,6 @@ const Contrato = () => {
           </>
         )}
       </PageHeader>
-      <ProjectSubNav />
 
       {/* Content */}
       <div className="flex-1 min-h-0 p-2 sm:p-4 md:p-6 overflow-auto">

@@ -31,7 +31,6 @@ import { DocumentVersionUpload } from "@/components/DocumentVersionUpload";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -325,7 +324,6 @@ const Documentos = () => {
           <DocumentUpload projectId={projectId} onSuccess={refetch} />
         )}
       </PageHeader>
-      <ProjectSubNav />
 
       {/* Content */}
       <div className="flex-1 py-6">

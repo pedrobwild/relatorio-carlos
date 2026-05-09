@@ -84,10 +84,13 @@ export function ProjectSidebar() {
 
   const basePath = `/obra/${projectId}`;
 
-  // Define all groups, then reorder based on role
-  const allGroups: SidebarNavGroup[] = [
+  // Three canonical groups, in display order:
+  // 1. Obra — visão de cima da obra: dashboard, jornada, panorama, cronograma.
+  // 2. Documentação — contratos, projeto, executivo, documentos, formalizações.
+  // 3. Operação — dia-a-dia: compras, vistorias, NCs, atividades, pendências, financeiro.
+  const groups: SidebarNavGroup[] = [
     {
-      label: "Visão Geral",
+      label: "Obra",
       items: [
         {
           label: L("dashboard"),
@@ -107,10 +110,16 @@ export function ProjectSidebar() {
           staffOnly: true,
           disabledInProjectPhase: true,
         },
+        {
+          label: L("cronograma"),
+          icon: GanttChartSquare,
+          path: paths.cronograma,
+          disabledInProjectPhase: true,
+        },
       ],
     },
     {
-      label: "Projeto",
+      label: "Documentação",
       clientCollapsible: true,
       items: [
         {
@@ -133,17 +142,17 @@ export function ProjectSidebar() {
           icon: FolderOpen,
           path: paths.documentos,
         },
+        {
+          label: L("formalizacoes"),
+          icon: ClipboardSignature,
+          path: paths.formalizacoes,
+          badgeKey: "formalizacoes",
+        },
       ],
     },
     {
-      label: "Dia a Dia",
+      label: "Operação",
       items: [
-        {
-          label: L("cronograma"),
-          icon: GanttChartSquare,
-          path: paths.cronograma,
-          disabledInProjectPhase: true,
-        },
         {
           label: "Compras",
           icon: Package,
@@ -183,22 +192,11 @@ export function ProjectSidebar() {
           path: paths.pendencias,
           badgeKey: "pendencias",
         },
-      ],
-    },
-    {
-      label: "Gestão",
-      items: [
         {
           label: L("financeiro"),
           icon: DollarSign,
           path: paths.financeiro,
           badgeKey: "financeiro",
-        },
-        {
-          label: L("formalizacoes"),
-          icon: ClipboardSignature,
-          path: paths.formalizacoes,
-          badgeKey: "formalizacoes",
         },
         {
           label: L("dadosCliente"),
@@ -215,12 +213,6 @@ export function ProjectSidebar() {
       ],
     },
   ];
-
-  // For staff: promote "Dia a Dia" (with Pendências/Cronograma) above "Projeto"
-  // For clients: keep Visão Geral first (Jornada is prominent)
-  const groups = isStaff
-    ? [allGroups[0], allGroups[2], allGroups[1], allGroups[3]] // Visão Geral, Dia a Dia, Projeto, Gestão
-    : allGroups;
 
   const isActive = (item: SidebarNavItem) => {
     const currentPath = location.pathname;
