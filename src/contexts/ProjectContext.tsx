@@ -100,3 +100,11 @@ export function useProject() {
   }
   return context;
 }
+
+/** Like `useProject`, but returns null instead of throwing when called outside
+ * a `ProjectProvider`. Use in shared chrome (breadcrumbs, headers) that may
+ * render in both project and non-project routes. */
+// eslint-disable-next-line react-refresh/only-export-components
+export function useProjectOptional() {
+  return useContext(ProjectContext) ?? null;
+}

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { useProjectLayout } from "@/components/layout/ProjectLayoutContext";
+import { useObraBreadcrumbs } from "@/hooks/useObraBreadcrumbs";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 
 export interface BreadcrumbItem {
@@ -19,6 +20,7 @@ interface PageHeaderProps {
   className?: string;
   maxWidth?: "md" | "lg" | "xl" | "full";
   showLogo?: boolean;
+  /** Override the auto-derived breadcrumbs. Pass `[]` to hide them entirely. */
   breadcrumbs?: BreadcrumbItem[];
 }
 
@@ -37,9 +39,11 @@ export function PageHeader({
   className,
   maxWidth = "lg",
   showLogo = true,
-  breadcrumbs,
+  breadcrumbs: breadcrumbsProp,
 }: PageHeaderProps) {
   const { hasShell } = useProjectLayout();
+  const autoBreadcrumbs = useObraBreadcrumbs();
+  const breadcrumbs = breadcrumbsProp ?? autoBreadcrumbs;
   const BackWrapper = backTo ? Link : ("div" as React.ElementType);
   const backProps = backTo ? { to: backTo } : {};
 

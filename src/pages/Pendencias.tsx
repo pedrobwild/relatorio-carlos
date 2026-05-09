@@ -5,7 +5,6 @@ import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { PageSkeleton } from "@/components/ui-premium";
 import { EmptyState } from "@/components/EmptyState";
 import { PendenciaItemCard } from "@/components/tabs/PendenciaItemCard";
@@ -44,7 +43,6 @@ const Pendencias = () => {
             { label: "Pendências" },
           ]}
         />
-        <ProjectSubNav />
         <main className="py-6">
           <PageContainer maxWidth="xl">
             <PageSkeleton metrics content="cards" />
@@ -130,7 +128,6 @@ const Pendencias = () => {
           { label: "Pendências" },
         ]}
       />
-      <ProjectSubNav />
 
       <main className="py-6">
         <PageContainer maxWidth="xl">
