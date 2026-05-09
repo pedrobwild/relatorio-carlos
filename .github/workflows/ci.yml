@@ -30,7 +30,11 @@ jobs:
         run: npx tsc -b
 
       - name: Run unit tests
+        # Bump Node heap: vitest workers OOM with Node 20's default ~4 GB limit
+        # on this suite. ubuntu-latest has 7 GB RAM; 5 GB leaves headroom.
         run: npx vitest run
+        env:
+          NODE_OPTIONS: --max-old-space-size=5120
 
       - name: Audit contrast (WCAG AA tokens)
         run: npm run audit:contrast
