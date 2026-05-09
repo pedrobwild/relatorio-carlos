@@ -1,12 +1,96 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { WeeklyReportData } from "@/types/weeklyReport";
+import { GalleryPhoto, WeeklyReportData } from "@/types/weeklyReport";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
 import { useReportImageUpload } from "./useReportImageUpload";
 import { queryKeys } from "@/lib/queryKeys";
 import { reportLogger } from "@/lib/devLogger";
+
+const WEEKLY_REPORTS_BUCKET = "weekly-reports";
+// Signed URL TTL is 6h; the query refetches itself every 4h
+// (REFETCH_GALLERY_URLS_MS) so users on a long-open tab always get a refresh
+// before URLs expire — staleTime alone doesn't trigger timed refetches.
+const REFRESH_SIGNED_URL_TTL_SECONDS = 60 * 60 * 6;
+const REFETCH_GALLERY_URLS_MS = 1000 * 60 * 60 * 4;
+
+/**
+ * Extracts the storage path from a saved gallery URL. Handles three formats
+ * that exist in production data:
+ *   - public bucket URL:        .../object/public/weekly-reports/<path>
+ *   - signed URL:               .../object/sign/weekly-reports/<path>?token=...
+ *   - authenticated object URL: .../object/weekly-reports/<path>
+ *
+ * Returns null for blob/data URLs or anything that doesn't reference the
+ * weekly-reports bucket.
+ */
+function extractWeeklyReportPath(url: string | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("blob:") || url.startsWith("data:")) return null;
+  const marker = `/${WEEKLY_REPORTS_BUCKET}/`;
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  const tail = url.slice(idx + marker.length);
+  const queryIdx = tail.indexOf("?");
+  return queryIdx === -1 ? tail : tail.slice(0, queryIdx);
+}
+
+/**
+ * Regenerates signed URLs for every gallery photo across all reports in a
+ * single batched request. Saved URLs go stale (7-day signed-URL TTL or legacy
+ * public-bucket URLs that no longer resolve since the bucket went private),
+ * which is why customers see broken media even though the row reads fine.
+ *
+ * If signing fails we keep the original URL — staff may still resolve it via
+ * cache and we don't want to clobber the report with empty thumbnails.
+ */
+async function refreshGalleryUrls(
+  rows: WeeklyReportRow[],
+): Promise<WeeklyReportRow[]> {
+  const allPaths = new Set<string>();
+  for (const row of rows) {
+    const data = row.data as unknown as { gallery?: GalleryPhoto[] } | null;
+    const gallery = data?.gallery;
+    if (!gallery || gallery.length === 0) continue;
+    for (const photo of gallery) {
+      const path = extractWeeklyReportPath(photo.url);
+      if (path) allPaths.add(path);
+    }
+  }
+
+  if (allPaths.size === 0) return rows;
+
+  const paths = Array.from(allPaths);
+  const { data: signed, error } = await supabase.storage
+    .from(WEEKLY_REPORTS_BUCKET)
+    .createSignedUrls(paths, REFRESH_SIGNED_URL_TTL_SECONDS);
+
+  if (error || !signed) return rows;
+
+  const pathToUrl = new Map<string, string>();
+  for (const item of signed) {
+    if (item.signedUrl && !item.error && item.path) {
+      pathToUrl.set(item.path, item.signedUrl);
+    }
+  }
+  if (pathToUrl.size === 0) return rows;
+
+  return rows.map((row) => {
+    const data = row.data as unknown as { gallery?: GalleryPhoto[] } | null;
+    const gallery = data?.gallery;
+    if (!gallery || gallery.length === 0) return row;
+    const refreshed = gallery.map((photo) => {
+      const path = extractWeeklyReportPath(photo.url);
+      const fresh = path ? pathToUrl.get(path) : undefined;
+      return fresh ? { ...photo, url: fresh } : photo;
+    });
+    return {
+      ...row,
+      data: { ...(data ?? {}), gallery: refreshed } as unknown as Json,
+    };
+  });
+}
 
 interface WeeklyReportRow {
   id: string;
@@ -49,10 +133,13 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
         .order("week_number", { ascending: true });
 
       if (error) throw error;
-      return (data ?? []) as WeeklyReportRow[];
+      const rows = (data ?? []) as WeeklyReportRow[];
+      return await refreshGalleryUrls(rows);
     },
     enabled: !!projectId,
     staleTime: 30_000,
+    refetchInterval: REFETCH_GALLERY_URLS_MS,
+    refetchIntervalInBackground: false,
   });
 
   // Map week_number -> stored WeeklyReportData
