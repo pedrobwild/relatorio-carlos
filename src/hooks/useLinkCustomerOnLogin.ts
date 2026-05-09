@@ -60,17 +60,22 @@ async function linkCustomerToProjects(user: User): Promise<void> {
     return;
   }
 
+  // Normalize so the match is case-insensitive — both columns and the auth.jwt()
+  // email are now compared in lowercase by the RLS policies and the server-side
+  // trigger. The column has a BEFORE INSERT/UPDATE trigger that lowercases it.
+  const normalizedEmail = user.email.trim().toLowerCase();
+
   try {
     const { data: unlinkedProjects, error: fetchError } = await supabase
       .from("project_customers")
       .select("id, project_id, customer_name")
-      .eq("customer_email", user.email)
+      .eq("customer_email", normalizedEmail)
       .is("customer_user_id", null);
 
     if (fetchError) {
       logError("Error fetching unlinked projects", fetchError, {
         component: "useLinkCustomerOnLogin",
-        email: user.email,
+        email: normalizedEmail,
       });
       return;
     }
@@ -83,14 +88,14 @@ async function linkCustomerToProjects(user: User): Promise<void> {
     const { error: updateError } = await supabase
       .from("project_customers")
       .update({ customer_user_id: user.id })
-      .eq("customer_email", user.email)
+      .eq("customer_email", normalizedEmail)
       .is("customer_user_id", null);
 
     if (updateError) {
       logError("Error linking customer to projects", updateError, {
         component: "useLinkCustomerOnLogin",
         userId: user.id,
-        email: user.email,
+        email: normalizedEmail,
       });
       return;
     }
@@ -110,7 +115,7 @@ async function linkCustomerToProjects(user: User): Promise<void> {
       .join(", ");
     logInfo("Customer linked to projects on login", {
       userId: user.id,
-      email: user.email,
+      email: normalizedEmail,
       linkedCount: unlinkedProjects.length,
       projects: projectNames,
     });
