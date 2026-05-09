@@ -9,9 +9,11 @@ import { queryKeys } from "@/lib/queryKeys";
 import { reportLogger } from "@/lib/devLogger";
 
 const WEEKLY_REPORTS_BUCKET = "weekly-reports";
-// Refresh TTL: 1 hour. The query staleTime is 30s, so URLs are regenerated
-// well before they expire even on long sessions.
-const REFRESH_SIGNED_URL_TTL_SECONDS = 60 * 60;
+// Signed URL TTL is 6h; the query refetches itself every 4h
+// (REFETCH_GALLERY_URLS_MS) so users on a long-open tab always get a refresh
+// before URLs expire — staleTime alone doesn't trigger timed refetches.
+const REFRESH_SIGNED_URL_TTL_SECONDS = 60 * 60 * 6;
+const REFETCH_GALLERY_URLS_MS = 1000 * 60 * 60 * 4;
 
 /**
  * Extracts the storage path from a saved gallery URL. Handles three formats
@@ -136,6 +138,8 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
     },
     enabled: !!projectId,
     staleTime: 30_000,
+    refetchInterval: REFETCH_GALLERY_URLS_MS,
+    refetchIntervalInBackground: false,
   });
 
   // Map week_number -> stored WeeklyReportData
