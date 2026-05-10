@@ -1329,6 +1329,20 @@ export default function PainelObras() {
                       </SelectContent>
                     </Select>
 
+                    {/* Período (atividades do cronograma) */}
+                    <PeriodFilterChip
+                      from={periodFrom}
+                      to={periodTo}
+                      onChange={(f, t) => {
+                        setPeriodFrom(f);
+                        setPeriodTo(t);
+                      }}
+                      defaultPeriod={defaultPeriod}
+                      isLoading={periodLoading}
+                      chipBase={chipBase}
+                      chipActive={chipActive}
+                    />
+
                     {hasFilters && (
                       <Button
                         size="sm"
