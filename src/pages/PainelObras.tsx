@@ -686,6 +686,8 @@ export default function PainelObras() {
     setFilterStatuses(new Set());
     setFilterRelacionamento(ALL);
     setFilterResponsavel(ALL);
+    setPeriodFrom(null);
+    setPeriodTo(null);
   };
 
   const hasFilters =
@@ -693,7 +695,8 @@ export default function PainelObras() {
     filterEtapa !== ALL ||
     filterStatuses.size > 0 ||
     filterRelacionamento !== ALL ||
-    filterResponsavel !== ALL;
+    filterResponsavel !== ALL ||
+    periodActive;
 
   const _summary = useMemo(() => {
     const displayed = obras.map((o) => computeDisplayStatus(o));
