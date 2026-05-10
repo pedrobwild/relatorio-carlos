@@ -608,6 +608,11 @@ export default function PainelObras() {
           ? !o.responsavel_id
           : o.responsavel_id === filterResponsavel,
       );
+    // Filtro de período (cronograma): só mantém obras com atividades
+    // planejadas sobrepondo a janela [periodFrom, periodTo].
+    if (periodActive && !periodLoading) {
+      rows = rows.filter((o) => periodByProject.has(o.id));
+    }
     if (sortKey) {
       rows = [...rows].sort((a, b) => {
         if (sortKey === "atraso") {
