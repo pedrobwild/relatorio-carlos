@@ -4265,3 +4265,263 @@ function MobilePainelView({
     </div>
   );
 }
+
+// ----- Period filter chip (cronograma) -----
+interface PeriodFilterChipProps {
+  from: string | null;
+  to: string | null;
+  onChange: (from: string | null, to: string | null) => void;
+  defaultPeriod: { from: string; to: string };
+  isLoading: boolean;
+  chipBase: string;
+  chipActive: string;
+}
+
+function PeriodFilterChip({
+  from,
+  to,
+  onChange,
+  defaultPeriod,
+  isLoading,
+  chipBase,
+  chipActive,
+}: PeriodFilterChipProps) {
+  const active = !!from && !!to;
+  const label = active
+    ? `${format(parseISO(from!), "dd/MM", { locale: ptBR })} – ${format(parseISO(to!), "dd/MM", { locale: ptBR })}`
+    : "todo período";
+
+  const setRange = (f: Date | undefined, t: Date | undefined) => {
+    onChange(toIsoDate(f), toIsoDate(t));
+  };
+  const presetThisWeek = () => onChange(defaultPeriod.from, defaultPeriod.to);
+  const presetNext7 = () => {
+    const today = new Date();
+    onChange(toIsoDate(today), toIsoDate(addDays(today, 7)));
+  };
+  const presetThisMonth = () => {
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth(), 1);
+    const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    onChange(toIsoDate(first), toIsoDate(last));
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={cn(chipBase, active && chipActive)}
+          aria-label="Filtrar por período de atividades"
+        >
+          <CalendarIcon className="h-3.5 w-3.5 opacity-60" />
+          <span className="text-muted-foreground">Período</span>
+          <span className="text-foreground/90 tabular-nums">{label}</span>
+          {isLoading && active && (
+            <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto p-3 space-y-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px]"
+            onClick={presetThisWeek}
+          >
+            Esta semana
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px]"
+            onClick={presetNext7}
+          >
+            Próx. 7 dias
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px]"
+            onClick={presetThisMonth}
+          >
+            Este mês
+          </Button>
+          {active && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-[11px] text-muted-foreground"
+              onClick={() => onChange(null, null)}
+            >
+              Limpar
+            </Button>
+          )}
+        </div>
+        <Calendar
+          mode="range"
+          selected={{
+            from: from ? parseISO(from) : undefined,
+            to: to ? parseISO(to) : undefined,
+          }}
+          onSelect={(range) => setRange(range?.from, range?.to ?? range?.from)}
+          numberOfMonths={2}
+          locale={ptBR}
+          className="p-0 pointer-events-auto"
+        />
+        <p className="text-[10px] text-muted-foreground leading-snug">
+          Mostra obras com atividades planejadas que sobrepõem o período. O
+          colapsável de cada obra exibe a etapa programada e alerta de
+          pendências da semana anterior.
+        </p>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ----- Banner de cronograma do período (dentro do colapsável) -----
+function PeriodScheduleBanner({ projectId }: { projectId: string }) {
+  const { from, to, byProject, isLoading } = usePainelPeriodContext();
+  if (!from || !to) return null;
+
+  const bucket: PeriodProjectBucket | undefined = byProject.get(projectId);
+  if (isLoading && !bucket) {
+    return (
+      <Skeleton className="h-14 w-full rounded-md" />
+    );
+  }
+
+  const periodLabel = `${format(parseISO(from), "dd/MM", { locale: ptBR })} – ${format(parseISO(to), "dd/MM", { locale: ptBR })}`;
+
+  // Sem nada programado: nem deveria aparecer (filtro remove a obra), mas
+  // protegemos para o caso de o colapsável ser aberto antes do filtro recarregar.
+  if (!bucket || bucket.scheduled.length === 0) {
+    return (
+      <div className="rounded-md border border-border-subtle bg-surface px-3 py-2 text-xs text-muted-foreground">
+        Nenhuma atividade programada para {periodLabel}.
+      </div>
+    );
+  }
+
+  // Para cada atividade programada, decidimos o status:
+  //  - "ok" se ela já tem actual_start dentro/antes do período
+  //  - "pendente" se ainda não foi iniciada e o início planejado já passou
+  //  - "futura" se o início planejado é hoje/futuro dentro da janela
+  const todayIso = format(new Date(), "yyyy-MM-dd");
+  const items = bucket.scheduled.slice(0, 8).map((a) => {
+    const started = !!a.actual_start;
+    const finished = !!a.actual_end;
+    let badge: { tone: "ok" | "warn" | "info"; text: string };
+    if (finished) badge = { tone: "ok", text: "concluída" };
+    else if (started) badge = { tone: "ok", text: "em execução" };
+    else if (a.planned_start <= todayIso)
+      badge = { tone: "warn", text: "atrasada para iniciar" };
+    else badge = { tone: "info", text: "a iniciar" };
+    return { a, badge };
+  });
+
+  const overduePrior = bucket.overduePrior;
+
+  return (
+    <div className="rounded-md border border-border-subtle bg-surface">
+      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <CalendarIcon className="h-3.5 w-3.5" />
+          <span>
+            Cronograma de{" "}
+            <span className="font-medium text-foreground tabular-nums">
+              {periodLabel}
+            </span>
+          </span>
+        </div>
+        <span className="text-[11px] text-muted-foreground tabular-nums">
+          {bucket.scheduled.length}{" "}
+          {bucket.scheduled.length === 1 ? "atividade" : "atividades"}
+        </span>
+      </div>
+
+      {overduePrior.length > 0 && (
+        <div className="px-3 py-2 border-b border-warning/30 bg-warning/10">
+          <div className="flex items-start gap-2 text-xs text-warning-foreground">
+            <AlertTriangle className="h-3.5 w-3.5 mt-0.5 text-warning shrink-0" />
+            <div className="min-w-0">
+              <p className="font-medium">
+                {overduePrior.length}{" "}
+                {overduePrior.length === 1
+                  ? "etapa anterior em aberto"
+                  : "etapas anteriores em aberto"}{" "}
+                — pode comprometer este período
+              </p>
+              <ul className="mt-1 space-y-0.5">
+                {overduePrior.slice(0, 4).map((a) => (
+                  <li
+                    key={a.id}
+                    className="flex items-center gap-1.5 text-[11px] text-foreground/80"
+                  >
+                    <span className="truncate">{a.description}</span>
+                    <span className="tabular-nums text-muted-foreground shrink-0">
+                      planejada até{" "}
+                      {format(parseISO(a.planned_end), "dd/MM", {
+                        locale: ptBR,
+                      })}
+                    </span>
+                  </li>
+                ))}
+                {overduePrior.length > 4 && (
+                  <li className="text-[11px] text-muted-foreground">
+                    + {overduePrior.length - 4} outra(s)
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ul className="divide-y divide-border-subtle">
+        {items.map(({ a, badge }) => (
+          <li
+            key={a.id}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs"
+          >
+            <span className="truncate flex-1 text-foreground">
+              {a.description}
+            </span>
+            {a.etapa && (
+              <span className="hidden sm:inline text-[10px] text-muted-foreground uppercase tracking-wide truncate max-w-[120px]">
+                {a.etapa}
+              </span>
+            )}
+            <span className="tabular-nums text-muted-foreground shrink-0">
+              {format(parseISO(a.planned_start), "dd/MM", { locale: ptBR })}
+              {" – "}
+              {format(parseISO(a.planned_end), "dd/MM", { locale: ptBR })}
+            </span>
+            <span
+              className={cn(
+                "shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium border",
+                badge.tone === "ok" &&
+                  "bg-success/10 text-success border-success/25",
+                badge.tone === "warn" &&
+                  "bg-warning/10 text-warning border-warning/30",
+                badge.tone === "info" &&
+                  "bg-info/10 text-info border-info/25",
+              )}
+            >
+              {badge.text}
+            </span>
+          </li>
+        ))}
+        {bucket.scheduled.length > items.length && (
+          <li className="px-3 py-1.5 text-[11px] text-muted-foreground">
+            + {bucket.scheduled.length - items.length} outra(s) atividade(s)
+            no período
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
