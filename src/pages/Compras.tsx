@@ -21,6 +21,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { PurchaseAlertsPanel } from "@/components/PurchaseAlertsPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { AssessorSheet } from "@/components/agent";
 import { useComprasState } from "./compras/useComprasState";
 import { ComprasKPICards } from "./compras/ComprasKPICards";
 import { PurchasesTable } from "./compras/PurchasesTable";
@@ -332,7 +333,14 @@ export default function Compras() {
           { label: "Gestão", href: "/gestao" },
           { label: "Compras" },
         ]}
-      />
+      >
+        <div className="flex items-center gap-2">
+          <AssessorSheet
+            defaultEventType="purchase_decision"
+            placeholder="Ex: A marmoraria deu prazo de 30 dias para a bancada — vou conseguir instalar antes da marcenaria?"
+          />
+        </div>
+      </PageHeader>
       <div className="py-6">
         <PageContainer maxWidth="full">
           <Tabs value={activeTab} onValueChange={setActiveTab}>

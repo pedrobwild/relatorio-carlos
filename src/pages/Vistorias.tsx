@@ -18,6 +18,7 @@ import { CreateNcDialog } from "@/components/vistorias/CreateNcDialog";
 import { CorrectiveActionTemplatesAdmin } from "@/components/vistorias/CorrectiveActionTemplatesAdmin";
 import { useNonConformities } from "@/hooks/useNonConformities";
 import { useCan } from "@/hooks/useCan";
+import { AssessorSheet } from "@/components/agent";
 
 export default function Vistorias() {
   const { projectId } = useProjectNavigation();
@@ -63,6 +64,10 @@ export default function Vistorias() {
           >
             <Search className="h-4 w-4" />
           </Button>
+          <AssessorSheet
+            defaultEventType="quality_inspection"
+            placeholder="Ex: Encontrei 3 NCs críticas no banheiro do casal — revestimento, ralo e elétrica. O que preciso travar antes de avançar?"
+          />
           {can("inspections:create") && (
             <Button
               onClick={() => setShowCreateDialog(true)}
