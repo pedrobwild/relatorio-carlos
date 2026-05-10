@@ -665,6 +665,9 @@ export default function PainelObras() {
     filterStatuses,
     filterRelacionamento,
     filterResponsavel,
+    periodActive,
+    periodLoading,
+    periodByProject,
     sortKey,
     sortDir,
   ]);
