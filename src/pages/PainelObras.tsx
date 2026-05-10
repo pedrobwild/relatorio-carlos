@@ -1710,6 +1710,7 @@ export default function PainelObras() {
         </div>
       </PageContainer>
     </TooltipProvider>
+    </PainelPeriodProvider>
   );
 }
 
