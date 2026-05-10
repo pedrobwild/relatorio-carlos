@@ -1102,7 +1102,8 @@ export default function PainelObras() {
                 (filterEtapa !== ALL ? 1 : 0) +
                 filterStatuses.size +
                 (filterRelacionamento !== ALL ? 1 : 0) +
-                (filterResponsavel !== ALL ? 1 : 0);
+                (filterResponsavel !== ALL ? 1 : 0) +
+                (periodActive ? 1 : 0);
 
               const chipBase =
                 "h-8 inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface px-2.5 text-xs font-normal text-foreground/80 hover:bg-accent/60 hover:text-foreground transition-colors";
