@@ -27,7 +27,7 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-const MODEL = Deno.env.get('BWILD_AGENT_MODEL') ?? 'claude-sonnet-4-5';
+const MODEL = Deno.env.get('BWILD_AGENT_MODEL') ?? 'claude-sonnet-4-6';
 const MAX_TOKENS = 4096;
 const TOOL_NAME = 'bwild_agent_response';
 
