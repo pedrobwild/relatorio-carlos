@@ -4425,6 +4425,28 @@ function PeriodScheduleBanner({ projectId }: { projectId: string }) {
 
   const overduePrior = bucket.overduePrior;
 
+  // Resumo Previsto x Realizado para o período. Atrasadas = planejadas para
+  // terminar dentro do período, ainda sem actual_end e cuja entrega prevista
+  // já passou.
+  const summary = (() => {
+    let concluded = 0;
+    let inProgress = 0;
+    let notStarted = 0;
+    let lateFinish = 0;
+    for (const a of bucket.scheduled) {
+      if (a.actual_end) {
+        concluded += 1;
+        continue;
+      }
+      if (a.actual_start) inProgress += 1;
+      else notStarted += 1;
+      if (a.planned_end < todayIso) lateFinish += 1;
+    }
+    const total = bucket.scheduled.length;
+    const pct = total > 0 ? Math.round((concluded / total) * 100) : 0;
+    return { total, concluded, inProgress, notStarted, lateFinish, pct };
+  })();
+
   return (
     <div className="rounded-md border border-border-subtle bg-surface">
       <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle">
@@ -4441,6 +4463,58 @@ function PeriodScheduleBanner({ projectId }: { projectId: string }) {
           {bucket.scheduled.length}{" "}
           {bucket.scheduled.length === 1 ? "atividade" : "atividades"}
         </span>
+      </div>
+
+      {/* Resumo previsto x realizado */}
+      <div className="px-3 py-2 border-b border-border-subtle space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] text-muted-foreground">
+            Previsto × realizado
+          </span>
+          <span className="text-[11px] tabular-nums text-foreground/80">
+            <span className="font-medium text-foreground">
+              {summary.concluded}
+            </span>
+            <span className="text-muted-foreground">
+              {" "}/ {summary.total} concluídas
+            </span>
+            <span className="text-muted-foreground"> · {summary.pct}%</span>
+          </span>
+        </div>
+        <div
+          className="h-1.5 w-full rounded-full bg-muted overflow-hidden"
+          role="progressbar"
+          aria-valuenow={summary.pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Percentual concluído no período"
+        >
+          <div
+            className="h-full bg-success transition-all"
+            style={{ width: `${summary.pct}%` }}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <span className="inline-flex items-center gap-1 rounded-md border border-success/25 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+            {summary.concluded} concluída{summary.concluded === 1 ? "" : "s"}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md border border-info/25 bg-info/10 px-1.5 py-0.5 text-[10px] font-medium text-info">
+            <span className="h-1.5 w-1.5 rounded-full bg-info" />
+            {summary.inProgress} em execução
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md border border-border-subtle bg-muted/50 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
+            {summary.notStarted} não iniciada{summary.notStarted === 1 ? "" : "s"}
+          </span>
+          {summary.lateFinish > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-md border border-destructive/25 bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+              <AlertTriangle className="h-3 w-3" />
+              {summary.lateFinish} atrasada{summary.lateFinish === 1 ? "" : "s"}{" "}
+              (prazo vencido)
+            </span>
+          )}
+        </div>
       </div>
 
       {overduePrior.length > 0 && (
