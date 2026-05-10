@@ -23,6 +23,7 @@ import { Progress } from "@/components/ui/progress";
 import { ImportScheduleModal } from "@/components/ImportScheduleModal";
 import { CronogramaMobileView } from "@/components/cronograma/CronogramaMobileView";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { AssessorSheet } from "@/components/agent";
 import { cn } from "@/lib/utils";
 
 interface ActivityFormData {
@@ -741,6 +742,10 @@ const Cronograma = () => {
             <Upload className="w-4 h-4 mr-1.5" />
             <span className="hidden sm:inline">Importar</span>
           </Button>
+          <AssessorSheet
+            defaultEventType="schedule_request"
+            placeholder="Ex: A demolição encontrou parede de tijolo maciço — qual o impacto no caminho crítico?"
+          />
           <Button size="sm" onClick={handleSave} disabled={saving}>
             {saving ? (
               <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />

@@ -15,6 +15,7 @@ import { NcDetailDialog } from "@/components/vistorias/NcDetailDialog";
 import { CreateNcDialog } from "@/components/vistorias/CreateNcDialog";
 import { PageSkeleton } from "@/components/ui-premium";
 import { useCan } from "@/hooks/useCan";
+import { AssessorSheet } from "@/components/agent";
 import { cn } from "@/lib/utils";
 
 export default function NaoConformidades() {
@@ -82,6 +83,10 @@ export default function NaoConformidades() {
           >
             <Search className="h-4 w-4" />
           </Button>
+          <AssessorSheet
+            defaultEventType="field_problem"
+            placeholder="Ex: Surgiu uma fissura na alvenaria nova após a primeira chuva — como diagnostico a causa-raiz antes de pintar?"
+          />
           {can("ncs:create") && (
             <Button
               onClick={() => setShowCreateDialog(true)}

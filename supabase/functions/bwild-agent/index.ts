@@ -23,11 +23,13 @@ import {
   type ProjectState,
 } from './_lib/state.ts';
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-const MODEL = Deno.env.get('BWILD_AGENT_MODEL') ?? 'google/gemini-3-flash-preview';
+const MODEL = Deno.env.get('BWILD_AGENT_MODEL') ?? 'claude-sonnet-4-5';
+const MAX_TOKENS = 4096;
+const TOOL_NAME = 'bwild_agent_response';
 
 const VALID_EVENT_TYPES: AgentEventType[] = [
   'new_project',
@@ -60,8 +62,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return corsResponse();
   if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
 
-  if (!LOVABLE_API_KEY) {
-    return jsonResponse({ error: 'LOVABLE_API_KEY não configurada' }, 500);
+  if (!ANTHROPIC_API_KEY) {
+    return jsonResponse({ error: 'ANTHROPIC_API_KEY não configurada' }, 500);
   }
 
   // ---- Parse body --------------------------------------------------------
@@ -149,8 +151,6 @@ Deno.serve(async (req) => {
     '',
     'Input do usuário:',
     content,
-    '',
-    'Responda em JSON puro, sem markdown ou cercas de código, seguindo o schema do system prompt.',
   ].join('\n');
 
   let llmRespJson: unknown = null;
@@ -159,19 +159,66 @@ Deno.serve(async (req) => {
   let llmErrorMessage: string | null = null;
 
   try {
-    const llmResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const llmResp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
       },
       body: JSON.stringify({
         model: MODEL,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage },
+        max_tokens: MAX_TOKENS,
+        // System prompt is large (~2-4 KB) and stable per agent — cache it
+        // so subsequent calls within the 5-minute TTL only pay for the user
+        // message tokens.
+        system: [
+          {
+            type: 'text',
+            text: systemPrompt,
+            cache_control: { type: 'ephemeral' },
+          },
         ],
+        messages: [{ role: 'user', content: userMessage }],
+        tools: [
+          {
+            name: TOOL_NAME,
+            description:
+              'Resposta estruturada do agente BWild. memoria_atualizada deve conter APENAS as seções de estado que mudaram.',
+            input_schema: {
+              type: 'object',
+              properties: {
+                diagnostico: { type: 'string' },
+                premissas: { type: 'array', items: { type: 'string' } },
+                impactos: {
+                  type: 'object',
+                  properties: {
+                    prazo: { type: 'string' },
+                    custo: { type: 'string' },
+                    qualidade: { type: 'string' },
+                    retrabalho: { type: 'string' },
+                    cliente: { type: 'string' },
+                  },
+                },
+                recomendacao: { type: 'string' },
+                plano_de_acao: { type: 'array', items: { type: 'string' } },
+                riscos: { type: 'array', items: { type: 'string' } },
+                decisoes_necessarias: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                memoria_atualizada: {
+                  type: 'object',
+                  description:
+                    'Patch parcial do estado. Chaves válidas: project_context, technical_scope, design_status, schedule_state, financial_state, procurement_state, execution_state, quality_state, communication_state.',
+                  additionalProperties: true,
+                },
+              },
+              required: ['diagnostico', 'recomendacao'],
+            },
+          },
+        ],
+        tool_choice: { type: 'tool', name: TOOL_NAME },
       }),
     });
 
@@ -180,13 +227,22 @@ Deno.serve(async (req) => {
       llmErrorMessage = `LLM ${llmResp.status}: ${t.slice(0, 200)}`;
     } else {
       const llmData = await llmResp.json();
-      tokensIn = llmData?.usage?.prompt_tokens ?? 0;
-      tokensOut = llmData?.usage?.completion_tokens ?? 0;
-      const raw = llmData?.choices?.[0]?.message?.content ?? '';
-      try {
-        llmRespJson = JSON.parse(raw);
-      } catch {
-        llmErrorMessage = 'Resposta do modelo não é JSON válido';
+      const usage = llmData?.usage ?? {};
+      // Cached tokens count as input but at a discount; surface the total.
+      tokensIn =
+        (usage.input_tokens ?? 0) +
+        (usage.cache_creation_input_tokens ?? 0) +
+        (usage.cache_read_input_tokens ?? 0);
+      tokensOut = usage.output_tokens ?? 0;
+      const blocks: Array<{ type: string; name?: string; input?: unknown }> =
+        Array.isArray(llmData?.content) ? llmData.content : [];
+      const toolUse = blocks.find(
+        (b) => b.type === 'tool_use' && b.name === TOOL_NAME,
+      );
+      if (toolUse?.input && isPlainObject(toolUse.input)) {
+        llmRespJson = toolUse.input;
+      } else {
+        llmErrorMessage = 'Modelo não retornou tool_use estruturado';
       }
     }
   } catch (e) {

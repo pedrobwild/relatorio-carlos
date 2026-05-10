@@ -44,6 +44,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { formatBRL } from "@/lib/formatBRL";
 import { PageSkeleton, EmptyState, StatusBadge } from "@/components/ui-premium";
+import { AssessorSheet } from "@/components/agent";
 import {
   BUDGET_STATUS_TONE,
   BUDGET_STATUS_LABEL,
@@ -481,6 +482,13 @@ export default function OrcamentoDetalhe({
               ))}
             </SelectContent>
           </Select>
+
+          <div className="ml-auto">
+            <AssessorSheet
+              defaultEventType="budget_request"
+              placeholder="Ex: A margem está em 8% — onde posso reduzir custo sem comprometer a qualidade percebida?"
+            />
+          </div>
         </div>
       </div>
 
