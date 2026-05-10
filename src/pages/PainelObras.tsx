@@ -5,8 +5,16 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { format, parseISO } from "date-fns";
+import { addDays, endOfWeek, format, parseISO, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  usePainelPeriodActivities,
+  type PeriodProjectBucket,
+} from "@/hooks/usePainelPeriodActivities";
+import {
+  PainelPeriodProvider,
+  usePainelPeriodContext,
+} from "@/pages/PainelObras/painelPeriodContext";
 import {
   CalendarIcon,
   X,
