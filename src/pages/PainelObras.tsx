@@ -821,6 +821,14 @@ export default function PainelObras() {
   };
 
   return (
+    <PainelPeriodProvider
+      value={{
+        from: periodActive ? periodFrom : null,
+        to: periodActive ? periodTo : null,
+        byProject: periodByProject,
+        isLoading: periodLoading,
+      }}
+    >
     <TooltipProvider delayDuration={200}>
       <PageContainer maxWidth="full">
         <PageHeader
