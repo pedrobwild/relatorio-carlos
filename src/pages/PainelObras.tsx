@@ -2405,7 +2405,7 @@ function ObraRow({
  *    horizontal (overflow-x-auto), garantindo que o formulário caiba
  *    exatamente na área visível, sem provocar scroll vertical extra.
  */
-function ExpandedRowContent({ projectId }: { projectId: string }) {
+function ExpandedRowContent({ projectId, projectName }: { projectId: string; projectName?: string }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState<number | null>(null);
 
