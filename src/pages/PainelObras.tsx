@@ -4600,140 +4600,245 @@ function PeriodScheduleBanner({ projectId }: { projectId: string }) {
       )}
 
       {/* Detalhamento por etapa: previsto x realizado, com motivo de atraso */}
-      <details className="group border-b border-border-subtle">
-        <summary className="flex items-center justify-between gap-2 px-3 py-2 text-xs cursor-pointer select-none hover:bg-muted/40 list-none [&::-webkit-details-marker]:hidden">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
-            Detalhamento por etapa
-          </span>
-          <span className="text-[11px] text-muted-foreground tabular-nums">
-            {byEtapa.length} {byEtapa.length === 1 ? "etapa" : "etapas"}
-          </span>
-        </summary>
-        <div className="px-3 pb-3 pt-1 space-y-2">
-          {byEtapa.map(({ etapa, acts, concluded, total }) => {
-            const pct = total > 0 ? Math.round((concluded / total) * 100) : 0;
+      <PeriodEtapaDetails byEtapa={byEtapa} getDelayInfo={getDelayInfo} />
+    </div>
+  );
+}
+
+type StatusFilter = "all" | "concluded" | "open" | "overdue";
+
+function classifyActivity(
+  a: PeriodActivity,
+  hasDelay: boolean,
+): Exclude<StatusFilter, "all"> {
+  if (a.actual_end) return "concluded";
+  if (hasDelay) return "overdue";
+  return "open";
+}
+
+function PeriodEtapaDetails({
+  byEtapa,
+  getDelayInfo,
+}: {
+  byEtapa: Array<{
+    etapa: string;
+    acts: PeriodActivity[];
+    concluded: number;
+    total: number;
+  }>;
+  getDelayInfo: (a: PeriodActivity) => { reason: string; days: number } | null;
+}) {
+  const [filter, setFilter] = useState<StatusFilter>("all");
+
+  // Pré-calcula classificação por atividade e totais globais
+  const enriched = byEtapa.map((g) => {
+    const acts = g.acts.map((a) => {
+      const delay = getDelayInfo(a);
+      const status = classifyActivity(a, !!delay);
+      return { a, delay, status };
+    });
+    return {
+      etapa: g.etapa,
+      total: g.total,
+      concluded: acts.filter((x) => x.status === "concluded").length,
+      open: acts.filter((x) => x.status === "open").length,
+      overdue: acts.filter((x) => x.status === "overdue").length,
+      acts,
+    };
+  });
+
+  const totals = enriched.reduce(
+    (acc, g) => {
+      acc.total += g.total;
+      acc.concluded += g.concluded;
+      acc.open += g.open;
+      acc.overdue += g.overdue;
+      return acc;
+    },
+    { total: 0, concluded: 0, open: 0, overdue: 0 },
+  );
+
+  const visible = enriched
+    .map((g) => ({
+      ...g,
+      acts:
+        filter === "all"
+          ? g.acts
+          : g.acts.filter((x) => x.status === filter),
+    }))
+    .filter((g) => g.acts.length > 0);
+
+  const chips: Array<{
+    key: StatusFilter;
+    label: string;
+    count: number;
+    cls: string;
+  }> = [
+    {
+      key: "all",
+      label: "Todas",
+      count: totals.total,
+      cls: "border-border-subtle bg-muted/40 text-foreground",
+    },
+    {
+      key: "concluded",
+      label: "Concluídas no período",
+      count: totals.concluded,
+      cls: "border-success/25 bg-success/10 text-success",
+    },
+    {
+      key: "open",
+      label: "Em aberto",
+      count: totals.open,
+      cls: "border-info/25 bg-info/10 text-info",
+    },
+    {
+      key: "overdue",
+      label: "Em atraso",
+      count: totals.overdue,
+      cls: "border-destructive/25 bg-destructive/10 text-destructive",
+    },
+  ];
+
+  return (
+    <details className="group border-b border-border-subtle">
+      <summary className="flex items-center justify-between gap-2 px-3 py-2 text-xs cursor-pointer select-none hover:bg-muted/40 list-none [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
+          Detalhamento por etapa
+        </span>
+        <span className="text-[11px] text-muted-foreground tabular-nums">
+          {byEtapa.length} {byEtapa.length === 1 ? "etapa" : "etapas"}
+        </span>
+      </summary>
+
+      <div className="px-3 pb-3 pt-1 space-y-2">
+        {/* Filtros de status */}
+        <div
+          className="flex flex-wrap gap-1.5"
+          role="tablist"
+          aria-label="Filtrar atividades por status"
+        >
+          {chips.map((c) => {
+            const active = filter === c.key;
+            const disabled = c.key !== "all" && c.count === 0;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                disabled={disabled}
+                onClick={() => setFilter(c.key)}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-medium transition-all",
+                  c.cls,
+                  active
+                    ? "ring-2 ring-ring ring-offset-1 ring-offset-background"
+                    : "opacity-80 hover:opacity-100",
+                  disabled && "opacity-40 cursor-not-allowed",
+                )}
+              >
+                <span>{c.label}</span>
+                <span className="tabular-nums">({c.count})</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {visible.length === 0 ? (
+          <div className="rounded-md border border-border-subtle bg-background px-3 py-4 text-center text-[11px] text-muted-foreground">
+            Nenhuma atividade neste status no período.
+          </div>
+        ) : (
+          visible.map((g) => {
+            const pct =
+              g.total > 0 ? Math.round((g.concluded / g.total) * 100) : 0;
             return (
               <div
-                key={etapa}
+                key={g.etapa}
                 className="rounded-md border border-border-subtle bg-background"
               >
                 <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 border-b border-border-subtle">
                   <span className="text-[11px] font-medium text-foreground uppercase tracking-wide truncate">
-                    {etapa}
+                    {g.etapa}
                   </span>
-                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
-                    {concluded}/{total} concluídas · {pct}%
+                  <span className="flex items-center gap-1.5 shrink-0">
+                    {g.overdue > 0 && (
+                      <span className="inline-flex items-center gap-0.5 rounded border border-destructive/25 bg-destructive/10 px-1 py-0.5 text-[9px] font-medium text-destructive">
+                        <AlertTriangle className="h-2.5 w-2.5" />
+                        {g.overdue} atraso{g.overdue === 1 ? "" : "s"}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {g.concluded}/{g.total} · {pct}%
+                    </span>
                   </span>
                 </div>
                 <ul className="divide-y divide-border-subtle">
-                  {acts.map((a) => {
-                    const delay = getDelayInfo(a);
-                    return (
-                      <li
-                        key={a.id}
-                        className="px-2.5 py-1.5 text-[11px] space-y-0.5"
-                      >
-                        <div className="flex items-start gap-2">
-                          <span className="flex-1 truncate text-foreground">
-                            {a.description}
-                          </span>
-                          <span
-                            className={cn(
-                              "shrink-0 rounded px-1 py-0.5 text-[10px] font-medium border",
-                              a.actual_end
-                                ? "bg-success/10 text-success border-success/25"
-                                : a.actual_start
-                                  ? "bg-info/10 text-info border-info/25"
-                                  : "bg-muted/50 text-muted-foreground border-border-subtle",
-                            )}
-                          >
-                            {a.actual_end
-                              ? "concluída"
+                  {g.acts.map(({ a, delay }) => (
+                    <li
+                      key={a.id}
+                      className="px-2.5 py-1.5 text-[11px] space-y-0.5"
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="flex-1 truncate text-foreground">
+                          {a.description}
+                        </span>
+                        <span
+                          className={cn(
+                            "shrink-0 rounded px-1 py-0.5 text-[10px] font-medium border",
+                            a.actual_end
+                              ? "bg-success/10 text-success border-success/25"
                               : a.actual_start
-                                ? "em execução"
-                                : "não iniciada"}
+                                ? "bg-info/10 text-info border-info/25"
+                                : "bg-muted/50 text-muted-foreground border-border-subtle",
+                          )}
+                        >
+                          {a.actual_end
+                            ? "concluída"
+                            : a.actual_start
+                              ? "em execução"
+                              : "não iniciada"}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground tabular-nums">
+                        <span>
+                          Previsto:{" "}
+                          <span className="text-foreground/80">
+                            {format(parseISO(a.planned_start), "dd/MM", { locale: ptBR })}
+                            {" – "}
+                            {format(parseISO(a.planned_end), "dd/MM", { locale: ptBR })}
                           </span>
+                        </span>
+                        <span>
+                          Realizado:{" "}
+                          <span className="text-foreground/80">
+                            {a.actual_start
+                              ? format(parseISO(a.actual_start), "dd/MM", { locale: ptBR })
+                              : "—"}
+                            {" – "}
+                            {a.actual_end
+                              ? format(parseISO(a.actual_end), "dd/MM", { locale: ptBR })
+                              : "—"}
+                          </span>
+                        </span>
+                      </div>
+                      {delay && (
+                        <div className="flex items-start gap-1 text-[10px] text-destructive">
+                          <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                          <span>{delay.reason}</span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground tabular-nums">
-                          <span>
-                            Previsto:{" "}
-                            <span className="text-foreground/80">
-                              {format(parseISO(a.planned_start), "dd/MM", { locale: ptBR })}
-                              {" – "}
-                              {format(parseISO(a.planned_end), "dd/MM", { locale: ptBR })}
-                            </span>
-                          </span>
-                          <span>
-                            Realizado:{" "}
-                            <span className="text-foreground/80">
-                              {a.actual_start
-                                ? format(parseISO(a.actual_start), "dd/MM", { locale: ptBR })
-                                : "—"}
-                              {" – "}
-                              {a.actual_end
-                                ? format(parseISO(a.actual_end), "dd/MM", { locale: ptBR })
-                                : "—"}
-                            </span>
-                          </span>
-                        </div>
-                        {delay && (
-                          <div className="flex items-start gap-1 text-[10px] text-destructive">
-                            <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-                            <span>{delay.reason}</span>
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
+                      )}
+                    </li>
+                  ))}
                 </ul>
               </div>
             );
-          })}
-        </div>
-      </details>
-
-      <ul className="divide-y divide-border-subtle">
-        {items.map(({ a, badge }) => (
-          <li
-            key={a.id}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs"
-          >
-            <span className="truncate flex-1 text-foreground">
-              {a.description}
-            </span>
-            {a.etapa && (
-              <span className="hidden sm:inline text-[10px] text-muted-foreground uppercase tracking-wide truncate max-w-[120px]">
-                {a.etapa}
-              </span>
-            )}
-            <span className="tabular-nums text-muted-foreground shrink-0">
-              {format(parseISO(a.planned_start), "dd/MM", { locale: ptBR })}
-              {" – "}
-              {format(parseISO(a.planned_end), "dd/MM", { locale: ptBR })}
-            </span>
-            <span
-              className={cn(
-                "shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium border",
-                badge.tone === "ok" &&
-                  "bg-success/10 text-success border-success/25",
-                badge.tone === "warn" &&
-                  "bg-warning/10 text-warning border-warning/30",
-                badge.tone === "info" &&
-                  "bg-info/10 text-info border-info/25",
-              )}
-            >
-              {badge.text}
-            </span>
-          </li>
-        ))}
-        {bucket.scheduled.length > items.length && (
-          <li className="px-3 py-1.5 text-[11px] text-muted-foreground">
-            + {bucket.scheduled.length - items.length} outra(s) atividade(s)
-            no período
-          </li>
+          })
         )}
-      </ul>
-    </div>
+      </div>
+    </details>
   );
 }
+
