@@ -4628,6 +4628,9 @@ function PeriodEtapaDetails({
   byEtapa,
   getDelayInfo,
   overduePrior,
+  projectName,
+  periodFrom,
+  periodTo,
 }: {
   byEtapa: Array<{
     etapa: string;
@@ -4637,8 +4640,12 @@ function PeriodEtapaDetails({
   }>;
   getDelayInfo: (a: PeriodActivity) => { reason: string; days: number } | null;
   overduePrior: PeriodActivity[];
+  projectName?: string;
+  periodFrom: string;
+  periodTo: string;
 }) {
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [exporting, setExporting] = useState(false);
 
   // Para cada atividade não concluída, identifica até 2 prováveis causas
   // vindas da etapa anterior (overduePrior). Critérios:
