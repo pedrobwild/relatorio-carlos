@@ -5118,7 +5118,8 @@ function PeriodEtapaDetails({
                         </div>
                       )}
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             );
