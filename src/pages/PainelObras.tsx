@@ -4802,7 +4802,7 @@ function PeriodEtapaDetails({
                   </span>
                 </div>
                 <ul className="divide-y divide-border-subtle">
-                  {g.acts.map(({ a, delay }) => (
+                  {g.acts.map(({ a, delay, causes }) => (
                     <li
                       key={a.id}
                       className="px-2.5 py-1.5 text-[11px] space-y-0.5"
@@ -4854,6 +4854,47 @@ function PeriodEtapaDetails({
                         <div className="flex items-start gap-1 text-[10px] text-destructive">
                           <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
                           <span>{delay.reason}</span>
+                        </div>
+                      )}
+                      {!a.actual_end && causes.length > 0 && (
+                        <div className="rounded-sm border border-warning/30 bg-warning/10 px-1.5 py-1 text-[10px] text-warning-foreground space-y-0.5">
+                          <div className="font-medium">
+                            Possível origem do atraso — etapa anterior em aberto:
+                          </div>
+                          <ul className="space-y-0.5">
+                            {causes.map((c) => {
+                              const lateDays = Math.max(
+                                1,
+                                Math.round(
+                                  (parseISO(todayIso).getTime() -
+                                    parseISO(c.planned_end).getTime()) /
+                                    86400000,
+                                ),
+                              );
+                              return (
+                                <li
+                                  key={c.id}
+                                  className="flex flex-wrap items-center gap-x-1.5 text-foreground/80"
+                                >
+                                  <span className="truncate">
+                                    {c.description}
+                                  </span>
+                                  {c.etapa && (
+                                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
+                                      ({c.etapa})
+                                    </span>
+                                  )}
+                                  <span className="text-muted-foreground tabular-nums">
+                                    — prevista até{" "}
+                                    {format(parseISO(c.planned_end), "dd/MM", {
+                                      locale: ptBR,
+                                    })}
+                                    , atrasada {lateDays}d
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
                         </div>
                       )}
                     </li>
