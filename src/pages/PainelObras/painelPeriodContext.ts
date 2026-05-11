@@ -11,6 +11,8 @@ export interface PainelPeriodContextValue {
   to: string | null;
   byProject: Map<string, PeriodProjectBucket>;
   isLoading: boolean;
+  /** Atualiza o intervalo do filtro de período. Datas em formato YYYY-MM-DD. */
+  setRange?: (from: string | null, to: string | null) => void;
 }
 
 const Ctx = createContext<PainelPeriodContextValue>({

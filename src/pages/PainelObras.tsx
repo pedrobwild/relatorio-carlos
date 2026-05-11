@@ -829,6 +829,10 @@ export default function PainelObras() {
         to: periodActive ? periodTo : null,
         byProject: periodByProject,
         isLoading: periodLoading,
+        setRange: (f, t) => {
+          setPeriodFrom(f);
+          setPeriodTo(t);
+        },
       }}
     >
     <TooltipProvider delayDuration={200}>
@@ -4494,15 +4498,11 @@ function PeriodScheduleBanner({ projectId, projectName }: { projectId: string; p
 
   return (
     <div className="rounded-md border border-border-subtle bg-surface">
-      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <CalendarIcon className="h-3.5 w-3.5" />
-          <span>
-            Cronograma de{" "}
-            <span className="font-medium text-foreground tabular-nums">
-              {periodLabel}
-            </span>
-          </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+          <CalendarIcon className="h-3.5 w-3.5 shrink-0" />
+          <span className="shrink-0">Cronograma de</span>
+          <PeriodInlineEditor from={from} to={to} />
         </div>
         <span className="text-[11px] text-muted-foreground tabular-nums">
           {bucket.scheduled.length}{" "}
@@ -5112,6 +5112,119 @@ function PeriodEtapaDetails({
         )}
       </div>
     </details>
+  );
+}
+
+// ----- Editor inline do período (usado no header do banner) -----
+function PeriodInlineEditor({
+  from,
+  to,
+}: {
+  from: string;
+  to: string;
+}) {
+  const { setRange } = usePainelPeriodContext();
+  const [open, setOpen] = useState(false);
+
+  const fromDate = parseISO(from);
+  const toDate = parseISO(to);
+  const sameYear = fromDate.getFullYear() === toDate.getFullYear();
+  const label = `${format(fromDate, sameYear ? "dd/MM" : "dd/MM/yy", { locale: ptBR })} – ${format(toDate, "dd/MM/yy", { locale: ptBR })}`;
+  const days = Math.max(
+    1,
+    Math.round((toDate.getTime() - fromDate.getTime()) / 86400000) + 1,
+  );
+
+  const apply = (f: Date, t: Date) => {
+    setRange?.(format(f, "yyyy-MM-dd"), format(t, "yyyy-MM-dd"));
+    setOpen(false);
+  };
+
+  const today = new Date();
+  const presets = [
+    {
+      key: "this-week",
+      label: "Esta semana",
+      run: () =>
+        apply(
+          startOfWeek(today, { weekStartsOn: 1 }),
+          endOfWeek(today, { weekStartsOn: 1 }),
+        ),
+    },
+    {
+      key: "next-7",
+      label: "Próximos 7 dias",
+      run: () => apply(today, addDays(today, 6)),
+    },
+    {
+      key: "last-7",
+      label: "Últimos 7 dias",
+      run: () => apply(addDays(today, -6), today),
+    },
+    {
+      key: "this-month",
+      label: "Este mês",
+      run: () => {
+        const f = new Date(today.getFullYear(), today.getMonth(), 1);
+        const t = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        apply(f, t);
+      },
+    },
+  ];
+
+  if (!setRange) {
+    return (
+      <span className="font-medium text-foreground tabular-nums truncate">
+        {label}
+      </span>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded-md border border-border-subtle bg-background px-1.5 py-0.5 text-[11px] font-medium text-foreground tabular-nums hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={`Alterar período do banner. Atual: ${label} (${days} dia${days === 1 ? "" : "s"})`}
+        >
+          <CalendarIcon className="h-3 w-3 text-muted-foreground" />
+          <span>{label}</span>
+          <span className="text-[10px] text-muted-foreground font-normal">
+            · {days}d
+          </span>
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <div className="flex flex-wrap gap-1 p-2 border-b border-border-subtle">
+          {presets.map((p) => (
+            <Button
+              key={p.key}
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-[11px]"
+              onClick={p.run}
+            >
+              {p.label}
+            </Button>
+          ))}
+        </div>
+        <Calendar
+          mode="range"
+          defaultMonth={fromDate}
+          selected={{ from: fromDate, to: toDate }}
+          onSelect={(range) => {
+            if (range?.from && range?.to) apply(range.from, range.to);
+          }}
+          numberOfMonths={2}
+          locale={ptBR}
+          className={cn("p-3 pointer-events-auto")}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
 
