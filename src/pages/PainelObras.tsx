@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import {
   usePainelPeriodActivities,
   type PeriodProjectBucket,
+  type PeriodActivity,
 } from "@/hooks/usePainelPeriodActivities";
 import {
   PainelPeriodProvider,
