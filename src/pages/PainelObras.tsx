@@ -4425,6 +4425,49 @@ function PeriodScheduleBanner({ projectId }: { projectId: string }) {
 
   const overduePrior = bucket.overduePrior;
 
+  // Agrupa por etapa para a seção expandível "Por etapa".
+  const byEtapa = (() => {
+    const map = new Map<string, typeof bucket.scheduled>();
+    for (const a of bucket.scheduled) {
+      const key = a.etapa?.trim() || "Sem etapa";
+      const arr = map.get(key) ?? [];
+      arr.push(a);
+      map.set(key, arr);
+    }
+    return Array.from(map.entries()).map(([etapa, acts]) => {
+      let concluded = 0;
+      for (const a of acts) if (a.actual_end) concluded += 1;
+      return { etapa, acts, concluded, total: acts.length };
+    });
+  })();
+
+  // Deriva o motivo do atraso a partir das datas (não há campo dedicado).
+  const getDelayInfo = (a: PeriodActivity): { reason: string; days: number } | null => {
+    if (a.actual_end) {
+      if (a.actual_end > a.planned_end) {
+        const days = Math.round(
+          (parseISO(a.actual_end).getTime() - parseISO(a.planned_end).getTime()) /
+            86400000,
+        );
+        return { reason: `Concluída ${days}d após o previsto`, days };
+      }
+      return null;
+    }
+    if (a.actual_start && a.planned_end < todayIso) {
+      const days = Math.round(
+        (parseISO(todayIso).getTime() - parseISO(a.planned_end).getTime()) / 86400000,
+      );
+      return { reason: `Entrega vencida há ${days}d, ainda em execução`, days };
+    }
+    if (!a.actual_start && a.planned_start < todayIso) {
+      const days = Math.round(
+        (parseISO(todayIso).getTime() - parseISO(a.planned_start).getTime()) / 86400000,
+      );
+      return { reason: `Não iniciada — devia ter começado há ${days}d`, days };
+    }
+    return null;
+  };
+
   // Resumo Previsto x Realizado para o período. Atrasadas = planejadas para
   // terminar dentro do período, ainda sem actual_end e cuja entrega prevista
   // já passou.
