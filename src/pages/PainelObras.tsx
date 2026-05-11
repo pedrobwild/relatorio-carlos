@@ -5008,15 +5008,29 @@ function PeriodEtapaDetails({
                   </span>
                 </div>
                 <ul className="divide-y divide-border-subtle">
-                  {g.acts.map(({ a, delay, causes }) => (
+                  {g.acts.map(({ a, delay, status, causes }) => {
+                    const blocked = !a.actual_end && causes.length > 0 && (status === "overdue" || status === "open");
+                    return (
                     <li
                       key={a.id}
-                      className="px-2.5 py-1.5 text-[11px] space-y-0.5"
+                      className={cn(
+                        "px-2.5 py-1.5 text-[11px] space-y-0.5",
+                        blocked && "border-l-2 border-l-warning bg-warning/5",
+                      )}
                     >
                       <div className="flex items-start gap-2">
                         <span className="flex-1 truncate text-foreground">
                           {a.description}
                         </span>
+                        {blocked && (
+                          <span
+                            className="shrink-0 inline-flex items-center gap-0.5 rounded border border-warning/40 bg-warning/15 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-warning-foreground"
+                            title="Etapa anterior não foi concluída e esta atividade está fora do previsto"
+                          >
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            bloqueada
+                          </span>
+                        )}
                         <span
                           className={cn(
                             "shrink-0 rounded px-1 py-0.5 text-[10px] font-medium border",
