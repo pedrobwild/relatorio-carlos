@@ -4498,15 +4498,11 @@ function PeriodScheduleBanner({ projectId, projectName }: { projectId: string; p
 
   return (
     <div className="rounded-md border border-border-subtle bg-surface">
-      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <CalendarIcon className="h-3.5 w-3.5" />
-          <span>
-            Cronograma de{" "}
-            <span className="font-medium text-foreground tabular-nums">
-              {periodLabel}
-            </span>
-          </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-b border-border-subtle">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+          <CalendarIcon className="h-3.5 w-3.5 shrink-0" />
+          <span className="shrink-0">Cronograma de</span>
+          <PeriodInlineEditor from={from} to={to} />
         </div>
         <span className="text-[11px] text-muted-foreground tabular-nums">
           {bucket.scheduled.length}{" "}
