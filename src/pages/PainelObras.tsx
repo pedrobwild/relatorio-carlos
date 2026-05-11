@@ -829,6 +829,10 @@ export default function PainelObras() {
         to: periodActive ? periodTo : null,
         byProject: periodByProject,
         isLoading: periodLoading,
+        setRange: (f, t) => {
+          setPeriodFrom(f);
+          setPeriodTo(t);
+        },
       }}
     >
     <TooltipProvider delayDuration={200}>
