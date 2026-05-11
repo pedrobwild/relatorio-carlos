@@ -45,6 +45,7 @@ import {
   Check,
   Maximize2,
   Minimize2,
+  Download,
 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, MetricCard, MetricRail, SectionCard } from "@/components/ui-premium";
