@@ -4600,7 +4600,11 @@ function PeriodScheduleBanner({ projectId }: { projectId: string }) {
       )}
 
       {/* Detalhamento por etapa: previsto x realizado, com motivo de atraso */}
-      <PeriodEtapaDetails byEtapa={byEtapa} getDelayInfo={getDelayInfo} />
+      <PeriodEtapaDetails
+        byEtapa={byEtapa}
+        getDelayInfo={getDelayInfo}
+        overduePrior={overduePrior}
+      />
     </div>
   );
 }
@@ -4619,6 +4623,7 @@ function classifyActivity(
 function PeriodEtapaDetails({
   byEtapa,
   getDelayInfo,
+  overduePrior,
 }: {
   byEtapa: Array<{
     etapa: string;
@@ -4627,15 +4632,36 @@ function PeriodEtapaDetails({
     total: number;
   }>;
   getDelayInfo: (a: PeriodActivity) => { reason: string; days: number } | null;
+  overduePrior: PeriodActivity[];
 }) {
   const [filter, setFilter] = useState<StatusFilter>("all");
+
+  // Para cada atividade não concluída, identifica até 2 prováveis causas
+  // vindas da etapa anterior (overduePrior). Critérios:
+  //  1) atividades anteriores cujo término planejado é < planned_start desta;
+  //  2) prioriza mesma `etapa`; depois ordena pelo planned_end mais recente.
+  const todayIso = format(new Date(), "yyyy-MM-dd");
+  const getCauses = (target: PeriodActivity): PeriodActivity[] => {
+    if (target.actual_end) return [];
+    const sameEtapa = (target.etapa ?? "").trim();
+    const candidates = overduePrior
+      .filter((p) => p.id !== target.id && p.planned_end < target.planned_start)
+      .sort((x, y) => {
+        const xSame = (x.etapa ?? "").trim() === sameEtapa ? 0 : 1;
+        const ySame = (y.etapa ?? "").trim() === sameEtapa ? 0 : 1;
+        if (xSame !== ySame) return xSame - ySame;
+        return y.planned_end.localeCompare(x.planned_end);
+      });
+    return candidates.slice(0, 2);
+  };
 
   // Pré-calcula classificação por atividade e totais globais
   const enriched = byEtapa.map((g) => {
     const acts = g.acts.map((a) => {
       const delay = getDelayInfo(a);
       const status = classifyActivity(a, !!delay);
-      return { a, delay, status };
+      const causes = getCauses(a);
+      return { a, delay, status, causes };
     });
     return {
       etapa: g.etapa,
@@ -4776,7 +4802,7 @@ function PeriodEtapaDetails({
                   </span>
                 </div>
                 <ul className="divide-y divide-border-subtle">
-                  {g.acts.map(({ a, delay }) => (
+                  {g.acts.map(({ a, delay, causes }) => (
                     <li
                       key={a.id}
                       className="px-2.5 py-1.5 text-[11px] space-y-0.5"
@@ -4828,6 +4854,47 @@ function PeriodEtapaDetails({
                         <div className="flex items-start gap-1 text-[10px] text-destructive">
                           <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
                           <span>{delay.reason}</span>
+                        </div>
+                      )}
+                      {!a.actual_end && causes.length > 0 && (
+                        <div className="rounded-sm border border-warning/30 bg-warning/10 px-1.5 py-1 text-[10px] text-warning-foreground space-y-0.5">
+                          <div className="font-medium">
+                            Possível origem do atraso — etapa anterior em aberto:
+                          </div>
+                          <ul className="space-y-0.5">
+                            {causes.map((c) => {
+                              const lateDays = Math.max(
+                                1,
+                                Math.round(
+                                  (parseISO(todayIso).getTime() -
+                                    parseISO(c.planned_end).getTime()) /
+                                    86400000,
+                                ),
+                              );
+                              return (
+                                <li
+                                  key={c.id}
+                                  className="flex flex-wrap items-center gap-x-1.5 text-foreground/80"
+                                >
+                                  <span className="truncate">
+                                    {c.description}
+                                  </span>
+                                  {c.etapa && (
+                                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
+                                      ({c.etapa})
+                                    </span>
+                                  )}
+                                  <span className="text-muted-foreground tabular-nums">
+                                    — prevista até{" "}
+                                    {format(parseISO(c.planned_end), "dd/MM", {
+                                      locale: ptBR,
+                                    })}
+                                    , atrasada {lateDays}d
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
                         </div>
                       )}
                     </li>
