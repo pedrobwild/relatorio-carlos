@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import {
   usePainelPeriodActivities,
   type PeriodProjectBucket,
+  type PeriodActivity,
 } from "@/hooks/usePainelPeriodActivities";
 import {
   PainelPeriodProvider,
@@ -4425,6 +4426,49 @@ function PeriodScheduleBanner({ projectId }: { projectId: string }) {
 
   const overduePrior = bucket.overduePrior;
 
+  // Agrupa por etapa para a seção expandível "Por etapa".
+  const byEtapa = (() => {
+    const map = new Map<string, typeof bucket.scheduled>();
+    for (const a of bucket.scheduled) {
+      const key = a.etapa?.trim() || "Sem etapa";
+      const arr = map.get(key) ?? [];
+      arr.push(a);
+      map.set(key, arr);
+    }
+    return Array.from(map.entries()).map(([etapa, acts]) => {
+      let concluded = 0;
+      for (const a of acts) if (a.actual_end) concluded += 1;
+      return { etapa, acts, concluded, total: acts.length };
+    });
+  })();
+
+  // Deriva o motivo do atraso a partir das datas (não há campo dedicado).
+  const getDelayInfo = (a: PeriodActivity): { reason: string; days: number } | null => {
+    if (a.actual_end) {
+      if (a.actual_end > a.planned_end) {
+        const days = Math.round(
+          (parseISO(a.actual_end).getTime() - parseISO(a.planned_end).getTime()) /
+            86400000,
+        );
+        return { reason: `Concluída ${days}d após o previsto`, days };
+      }
+      return null;
+    }
+    if (a.actual_start && a.planned_end < todayIso) {
+      const days = Math.round(
+        (parseISO(todayIso).getTime() - parseISO(a.planned_end).getTime()) / 86400000,
+      );
+      return { reason: `Entrega vencida há ${days}d, ainda em execução`, days };
+    }
+    if (!a.actual_start && a.planned_start < todayIso) {
+      const days = Math.round(
+        (parseISO(todayIso).getTime() - parseISO(a.planned_start).getTime()) / 86400000,
+      );
+      return { reason: `Não iniciada — devia ter começado há ${days}d`, days };
+    }
+    return null;
+  };
+
   // Resumo Previsto x Realizado para o período. Atrasadas = planejadas para
   // terminar dentro do período, ainda sem actual_end e cuja entrega prevista
   // já passou.
@@ -4554,6 +4598,100 @@ function PeriodScheduleBanner({ projectId }: { projectId: string }) {
           </div>
         </div>
       )}
+
+      {/* Detalhamento por etapa: previsto x realizado, com motivo de atraso */}
+      <details className="group border-b border-border-subtle">
+        <summary className="flex items-center justify-between gap-2 px-3 py-2 text-xs cursor-pointer select-none hover:bg-muted/40 list-none [&::-webkit-details-marker]:hidden">
+          <span className="flex items-center gap-1.5 text-muted-foreground">
+            <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
+            Detalhamento por etapa
+          </span>
+          <span className="text-[11px] text-muted-foreground tabular-nums">
+            {byEtapa.length} {byEtapa.length === 1 ? "etapa" : "etapas"}
+          </span>
+        </summary>
+        <div className="px-3 pb-3 pt-1 space-y-2">
+          {byEtapa.map(({ etapa, acts, concluded, total }) => {
+            const pct = total > 0 ? Math.round((concluded / total) * 100) : 0;
+            return (
+              <div
+                key={etapa}
+                className="rounded-md border border-border-subtle bg-background"
+              >
+                <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 border-b border-border-subtle">
+                  <span className="text-[11px] font-medium text-foreground uppercase tracking-wide truncate">
+                    {etapa}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+                    {concluded}/{total} concluídas · {pct}%
+                  </span>
+                </div>
+                <ul className="divide-y divide-border-subtle">
+                  {acts.map((a) => {
+                    const delay = getDelayInfo(a);
+                    return (
+                      <li
+                        key={a.id}
+                        className="px-2.5 py-1.5 text-[11px] space-y-0.5"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="flex-1 truncate text-foreground">
+                            {a.description}
+                          </span>
+                          <span
+                            className={cn(
+                              "shrink-0 rounded px-1 py-0.5 text-[10px] font-medium border",
+                              a.actual_end
+                                ? "bg-success/10 text-success border-success/25"
+                                : a.actual_start
+                                  ? "bg-info/10 text-info border-info/25"
+                                  : "bg-muted/50 text-muted-foreground border-border-subtle",
+                            )}
+                          >
+                            {a.actual_end
+                              ? "concluída"
+                              : a.actual_start
+                                ? "em execução"
+                                : "não iniciada"}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground tabular-nums">
+                          <span>
+                            Previsto:{" "}
+                            <span className="text-foreground/80">
+                              {format(parseISO(a.planned_start), "dd/MM", { locale: ptBR })}
+                              {" – "}
+                              {format(parseISO(a.planned_end), "dd/MM", { locale: ptBR })}
+                            </span>
+                          </span>
+                          <span>
+                            Realizado:{" "}
+                            <span className="text-foreground/80">
+                              {a.actual_start
+                                ? format(parseISO(a.actual_start), "dd/MM", { locale: ptBR })
+                                : "—"}
+                              {" – "}
+                              {a.actual_end
+                                ? format(parseISO(a.actual_end), "dd/MM", { locale: ptBR })
+                                : "—"}
+                            </span>
+                          </span>
+                        </div>
+                        {delay && (
+                          <div className="flex items-start gap-1 text-[10px] text-destructive">
+                            <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                            <span>{delay.reason}</span>
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </details>
 
       <ul className="divide-y divide-border-subtle">
         {items.map(({ a, badge }) => (
