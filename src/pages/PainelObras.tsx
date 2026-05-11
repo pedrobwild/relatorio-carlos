@@ -2437,7 +2437,7 @@ function ExpandedRowContent({ projectId, projectName }: { projectId: string; pro
       style={width ? { width: `${width}px` } : undefined}
     >
       <div className="min-w-0 w-full px-3 sm:px-4 py-3 sm:py-4 space-y-3">
-        <PeriodScheduleBanner projectId={projectId} />
+        <PeriodScheduleBanner projectId={projectId} projectName={projectName} />
         <DailyLogInline projectId={projectId} />
       </div>
     </div>
