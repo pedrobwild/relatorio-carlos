@@ -4737,16 +4737,211 @@ function PeriodEtapaDetails({
     },
   ];
 
+  // ----- Export helpers (CSV + PDF) -----
+  const safeName = (projectName ?? "obra").replace(/[^\w\-\s.]/g, "").trim() || "obra";
+  const periodLabel = `${format(parseISO(periodFrom), "dd/MM/yyyy", { locale: ptBR })} a ${format(parseISO(periodTo), "dd/MM/yyyy", { locale: ptBR })}`;
+  const periodSlug = `${periodFrom}_${periodTo}`;
+  const baseFilename = `previsto-realizado_${safeName.replace(/\s+/g, "-")}_${periodSlug}`;
+
+  const exportRows = enriched.flatMap((g) =>
+    g.acts.map(({ a, delay, status, causes }) => ({
+      etapa: g.etapa,
+      atividade: a.description,
+      status:
+        status === "concluded" ? "Concluída" : status === "overdue" ? "Em atraso" : "Em aberto",
+      previsto_inicio: a.planned_start,
+      previsto_fim: a.planned_end,
+      realizado_inicio: a.actual_start ?? "",
+      realizado_fim: a.actual_end ?? "",
+      atraso_dias: delay?.days ?? "",
+      motivo: delay?.reason ?? "",
+      origem_atraso: causes
+        .map(
+          (c) =>
+            `${c.description}${c.etapa ? ` (${c.etapa})` : ""} — prevista até ${format(parseISO(c.planned_end), "dd/MM", { locale: ptBR })}`,
+        )
+        .join(" | "),
+    })),
+  );
+
+  const handleExportCsv = () => {
+    const headers = [
+      "Etapa",
+      "Atividade",
+      "Status",
+      "Previsto início",
+      "Previsto fim",
+      "Realizado início",
+      "Realizado fim",
+      "Atraso (dias)",
+      "Motivo",
+      "Origem do atraso (etapa anterior)",
+    ];
+    const escape = (v: unknown) => {
+      const s = String(v ?? "");
+      return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [
+      `Obra:;${escape(projectName ?? "")}`,
+      `Período:;${escape(periodLabel)}`,
+      `Resumo:;Total ${totals.total};Concluídas ${totals.concluded};Em aberto ${totals.open};Em atraso ${totals.overdue}`,
+      "",
+      headers.join(";"),
+      ...exportRows.map((r) =>
+        [
+          r.etapa,
+          r.atividade,
+          r.status,
+          r.previsto_inicio,
+          r.previsto_fim,
+          r.realizado_inicio,
+          r.realizado_fim,
+          r.atraso_dias,
+          r.motivo,
+          r.origem_atraso,
+        ]
+          .map(escape)
+          .join(";"),
+      ),
+    ];
+    const blob = new Blob(["\uFEFF" + lines.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${baseFilename}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPdf = async () => {
+    try {
+      setExporting(true);
+      const [{ default: jsPDF }, autoTableMod] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+      const autoTable = (autoTableMod as { default: typeof import("jspdf-autotable").default }).default;
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      doc.setFontSize(14);
+      doc.text("Previsto x realizado por etapa", 40, 40);
+      doc.setFontSize(10);
+      doc.setTextColor(90);
+      doc.text(`Obra: ${projectName ?? "—"}`, 40, 58);
+      doc.text(`Período: ${periodLabel}`, 40, 72);
+      doc.text(
+        `Resumo:  Total ${totals.total}  ·  Concluídas ${totals.concluded}  ·  Em aberto ${totals.open}  ·  Em atraso ${totals.overdue}`,
+        40,
+        86,
+      );
+
+      autoTable(doc, {
+        startY: 100,
+        styles: { fontSize: 8, cellPadding: 4, overflow: "linebreak" },
+        headStyles: { fillColor: [30, 41, 59], textColor: 255 },
+        columnStyles: {
+          0: { cellWidth: 90 },
+          1: { cellWidth: 150 },
+          2: { cellWidth: 55 },
+          3: { cellWidth: 55 },
+          4: { cellWidth: 55 },
+          5: { cellWidth: 55 },
+          6: { cellWidth: 55 },
+          7: { cellWidth: 40, halign: "right" },
+          8: { cellWidth: "auto" },
+        },
+        head: [[
+          "Etapa",
+          "Atividade",
+          "Status",
+          "Prev. início",
+          "Prev. fim",
+          "Real. início",
+          "Real. fim",
+          "Atraso (d)",
+          "Motivo / origem",
+        ]],
+        body: exportRows.map((r) => [
+          r.etapa,
+          r.atividade,
+          r.status,
+          r.previsto_inicio
+            ? format(parseISO(r.previsto_inicio), "dd/MM/yy", { locale: ptBR })
+            : "",
+          r.previsto_fim
+            ? format(parseISO(r.previsto_fim), "dd/MM/yy", { locale: ptBR })
+            : "",
+          r.realizado_inicio
+            ? format(parseISO(r.realizado_inicio), "dd/MM/yy", { locale: ptBR })
+            : "—",
+          r.realizado_fim
+            ? format(parseISO(r.realizado_fim), "dd/MM/yy", { locale: ptBR })
+            : "—",
+          String(r.atraso_dias ?? ""),
+          [r.motivo, r.origem_atraso].filter(Boolean).join(" — "),
+        ]),
+        didParseCell: (data) => {
+          if (data.section === "body" && data.column.index === 2) {
+            const v = String(data.cell.raw ?? "");
+            if (v === "Concluída") data.cell.styles.textColor = [22, 101, 52];
+            else if (v === "Em atraso") data.cell.styles.textColor = [153, 27, 27];
+          }
+        },
+        margin: { left: 40, right: 40 },
+        tableWidth: pageWidth - 80,
+      });
+
+      doc.save(`${baseFilename}.pdf`);
+    } catch (err) {
+      console.error("[export-pdf]", err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <details className="group border-b border-border-subtle">
-      <summary className="flex items-center justify-between gap-2 px-3 py-2 text-xs cursor-pointer select-none hover:bg-muted/40 list-none [&::-webkit-details-marker]:hidden">
+      <summary className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs cursor-pointer select-none hover:bg-muted/40 list-none [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-1.5 text-muted-foreground">
           <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
           Detalhamento por etapa
         </span>
-        <span className="text-[11px] text-muted-foreground tabular-nums">
-          {byEtapa.length} {byEtapa.length === 1 ? "etapa" : "etapas"}
-        </span>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <span className="text-[11px] text-muted-foreground tabular-nums">
+            {byEtapa.length} {byEtapa.length === 1 ? "etapa" : "etapas"}
+          </span>
+          <span className="h-3 w-px bg-border-subtle" aria-hidden />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleExportCsv();
+            }}
+            className="inline-flex items-center gap-1 rounded border border-border-subtle bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground hover:bg-muted/60"
+            title="Exportar resumo em CSV"
+            aria-label="Exportar resumo em CSV"
+          >
+            <Download className="h-3 w-3" /> CSV
+          </button>
+          <button
+            type="button"
+            disabled={exporting}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void handleExportPdf();
+            }}
+            className="inline-flex items-center gap-1 rounded border border-border-subtle bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground hover:bg-muted/60 disabled:opacity-50"
+            title="Exportar resumo em PDF"
+            aria-label="Exportar resumo em PDF"
+          >
+            <Download className="h-3 w-3" /> {exporting ? "Gerando…" : "PDF"}
+          </button>
+        </div>
       </summary>
 
       <div className="px-3 pb-3 pt-1 space-y-2">
