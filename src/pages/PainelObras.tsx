@@ -4600,7 +4600,11 @@ function PeriodScheduleBanner({ projectId }: { projectId: string }) {
       )}
 
       {/* Detalhamento por etapa: previsto x realizado, com motivo de atraso */}
-      <PeriodEtapaDetails byEtapa={byEtapa} getDelayInfo={getDelayInfo} />
+      <PeriodEtapaDetails
+        byEtapa={byEtapa}
+        getDelayInfo={getDelayInfo}
+        overduePrior={overduePrior}
+      />
     </div>
   );
 }
