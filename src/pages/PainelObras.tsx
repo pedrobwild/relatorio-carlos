@@ -4623,6 +4623,7 @@ function classifyActivity(
 function PeriodEtapaDetails({
   byEtapa,
   getDelayInfo,
+  overduePrior,
 }: {
   byEtapa: Array<{
     etapa: string;
@@ -4631,15 +4632,36 @@ function PeriodEtapaDetails({
     total: number;
   }>;
   getDelayInfo: (a: PeriodActivity) => { reason: string; days: number } | null;
+  overduePrior: PeriodActivity[];
 }) {
   const [filter, setFilter] = useState<StatusFilter>("all");
+
+  // Para cada atividade não concluída, identifica até 2 prováveis causas
+  // vindas da etapa anterior (overduePrior). Critérios:
+  //  1) atividades anteriores cujo término planejado é < planned_start desta;
+  //  2) prioriza mesma `etapa`; depois ordena pelo planned_end mais recente.
+  const todayIso = format(new Date(), "yyyy-MM-dd");
+  const getCauses = (target: PeriodActivity): PeriodActivity[] => {
+    if (target.actual_end) return [];
+    const sameEtapa = (target.etapa ?? "").trim();
+    const candidates = overduePrior
+      .filter((p) => p.id !== target.id && p.planned_end < target.planned_start)
+      .sort((x, y) => {
+        const xSame = (x.etapa ?? "").trim() === sameEtapa ? 0 : 1;
+        const ySame = (y.etapa ?? "").trim() === sameEtapa ? 0 : 1;
+        if (xSame !== ySame) return xSame - ySame;
+        return y.planned_end.localeCompare(x.planned_end);
+      });
+    return candidates.slice(0, 2);
+  };
 
   // Pré-calcula classificação por atividade e totais globais
   const enriched = byEtapa.map((g) => {
     const acts = g.acts.map((a) => {
       const delay = getDelayInfo(a);
       const status = classifyActivity(a, !!delay);
-      return { a, delay, status };
+      const causes = getCauses(a);
+      return { a, delay, status, causes };
     });
     return {
       etapa: g.etapa,
