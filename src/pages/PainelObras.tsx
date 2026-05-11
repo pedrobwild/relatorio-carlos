@@ -4384,7 +4384,7 @@ function PeriodFilterChip({
 }
 
 // ----- Banner de cronograma do período (dentro do colapsável) -----
-function PeriodScheduleBanner({ projectId }: { projectId: string }) {
+function PeriodScheduleBanner({ projectId, projectName }: { projectId: string; projectName?: string }) {
   const { from, to, byProject, isLoading } = usePainelPeriodContext();
   if (!from || !to) return null;
 
