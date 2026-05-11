@@ -4604,6 +4604,9 @@ function PeriodScheduleBanner({ projectId, projectName }: { projectId: string; p
         byEtapa={byEtapa}
         getDelayInfo={getDelayInfo}
         overduePrior={overduePrior}
+        projectName={projectName}
+        periodFrom={from}
+        periodTo={to}
       />
     </div>
   );
