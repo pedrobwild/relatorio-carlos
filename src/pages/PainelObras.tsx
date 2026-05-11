@@ -2383,7 +2383,7 @@ function ObraRow({
             colSpan={PAINEL_COLUMN_COUNT}
             className="p-0 border-t border-b-2 border-primary/20 align-top"
           >
-            <ExpandedRowContent projectId={obra.id} />
+            <ExpandedRowContent projectId={obra.id} projectName={obra.nome ?? undefined} />
           </TableCell>
         </TableRow>
       )}
