@@ -182,6 +182,9 @@ function Wrapper({ children, route }: { children: ReactNode; route: string }) {
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.setSystemTime(TODAY);
+  // Garante que cada teste comece com a fixture base; testes que precisarem
+  // de dados específicos chamam `setObras([...])` localmente.
+  setObras(obrasFixture);
 });
 
 describe("PainelObras — ordenação por etapa e semana S{N}", () => {
