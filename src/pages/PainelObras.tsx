@@ -664,6 +664,21 @@ export default function PainelObras() {
           const bv = computeOverdueDays(b);
           return sortDir === "asc" ? av - bv : bv - av;
         }
+        if (sortKey === "entrega_proxima") {
+          // Entrega mais próxima: ordena por `entrega_oficial` asc, jogando
+          // para o final obras já entregues (com `entrega_real`) e sem data.
+          // Quando não há atrasos, equivale ao critério de desempate da
+          // ordenação padrão, mantendo consistência visual.
+          const aDone = !!a.entrega_real;
+          const bDone = !!b.entrega_real;
+          if (aDone !== bDone) return aDone ? 1 : -1;
+          const av = a.entrega_oficial ?? "";
+          const bv = b.entrega_oficial ?? "";
+          if (!av && !bv) return 0;
+          if (!av) return 1;
+          if (!bv) return -1;
+          return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+        }
         const av = a[sortKey] ?? "";
         const bv = b[sortKey] ?? "";
         if (!av && !bv) return 0;
