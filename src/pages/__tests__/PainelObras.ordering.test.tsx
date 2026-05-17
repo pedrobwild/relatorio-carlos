@@ -94,6 +94,15 @@ const obrasFixture: PainelObra[] = [
 ];
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
+// Cada teste pode fornecer sua própria fixture via `setObras(...)` em vez de
+// mutar `obrasFixture` diretamente. Isso evita efeitos colaterais entre testes
+// — antes a mutação do array compartilhado podia vazar caso uma asserção
+// lançasse antes do bloco `finally`.
+let currentObras: PainelObra[] = obrasFixture;
+function setObras(obras: PainelObra[]): void {
+  currentObras = obras;
+}
+
 vi.mock("@/hooks/usePainelObras", async () => {
   const actual = await vi.importActual<typeof import("@/hooks/usePainelObras")>(
     "@/hooks/usePainelObras",
@@ -101,7 +110,7 @@ vi.mock("@/hooks/usePainelObras", async () => {
   return {
     ...actual,
     usePainelObras: () => ({
-      obras: obrasFixture,
+      obras: currentObras,
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -136,8 +145,8 @@ vi.mock("@/components/admin/obras/DailyLogInline", () => ({
 // O Painel aplica, por padrão, um filtro de período (semana corrente) que
 // depende de `usePainelPeriodActivities`. Sem mock, a lista é esvaziada e a
 // tabela/board nem chega a renderizar — quebrando as asserções abaixo.
-// Aqui devolvemos um bucket "ocupado" para cada obra da fixture, simulando
-// que todas têm atividade planejada na semana atual.
+// Aqui devolvemos um bucket "ocupado" para cada obra da fixture corrente,
+// simulando que todas têm atividade planejada na semana atual.
 vi.mock("@/hooks/usePainelPeriodActivities", async () => {
   const actual = await vi.importActual<
     typeof import("@/hooks/usePainelPeriodActivities")
@@ -146,7 +155,7 @@ vi.mock("@/hooks/usePainelPeriodActivities", async () => {
     ...actual,
     usePainelPeriodActivities: () => ({
       byProject: new Map(
-        obrasFixture.map((o) => [
+        currentObras.map((o) => [
           o.id,
           { scheduled: [], overduePrior: [] },
         ]),
@@ -173,6 +182,9 @@ function Wrapper({ children, route }: { children: ReactNode; route: string }) {
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.setSystemTime(TODAY);
+  // Garante que cada teste comece com a fixture base; testes que precisarem
+  // de dados específicos chamam `setObras([...])` localmente.
+  setObras(obrasFixture);
 });
 
 describe("PainelObras — ordenação por etapa e semana S{N}", () => {
@@ -305,44 +317,36 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
       }),
     ];
 
-    // Reaproveita o mock do hook trocando temporariamente a lista.
-    const original = obrasFixture.slice();
-    obrasFixture.length = 0;
-    obrasFixture.push(...obrasAtraso);
+    setObras(obrasAtraso);
 
-    try {
-      const { container } = render(
-        <Wrapper route="/gestao/painel-obras">
-          <PainelObras />
-        </Wrapper>,
-      );
-      const desktopTh = container.querySelector(
-        '[data-testid="painel-obras-th-cliente"]',
-      );
-      expect(desktopTh).not.toBeNull();
-      const desktopTable = desktopTh!.closest("table")!;
-      const rows = within(desktopTable).getAllByTestId("painel-obras-row");
-      const order = rows.map(
-        (r) =>
-          within(r)
-            .getByTestId("painel-obras-cell-cliente")
-            .textContent?.trim() ?? "",
-      );
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras">
+        <PainelObras />
+      </Wrapper>,
+    );
+    const desktopTh = container.querySelector(
+      '[data-testid="painel-obras-th-cliente"]',
+    );
+    expect(desktopTh).not.toBeNull();
+    const desktopTable = desktopTh!.closest("table")!;
+    const rows = within(desktopTable).getAllByTestId("painel-obras-row");
+    const order = rows.map(
+      (r) =>
+        within(r)
+          .getByTestId("painel-obras-cell-cliente")
+          .textContent?.trim() ?? "",
+    );
 
-      const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
-      const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
-      const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
+    const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
+    const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
+    const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
 
-      // Atrasadas vêm primeiro; entre elas, mais atrasada antes da menos.
-      expect(idxMedio).toBeGreaterThanOrEqual(0);
-      expect(idxPequeno).toBeGreaterThanOrEqual(0);
-      expect(idxMedio).toBeLessThan(idxPequeno);
-      // Saudável (sem atraso) vem depois das atrasadas.
-      expect(idxPequeno).toBeLessThan(idxSaudavel);
-    } finally {
-      obrasFixture.length = 0;
-      obrasFixture.push(...original);
-    }
+    // Atrasadas vêm primeiro; entre elas, mais atrasada antes da menos.
+    expect(idxMedio).toBeGreaterThanOrEqual(0);
+    expect(idxPequeno).toBeGreaterThanOrEqual(0);
+    expect(idxMedio).toBeLessThan(idxPequeno);
+    // Saudável (sem atraso) vem depois das atrasadas.
+    expect(idxPequeno).toBeLessThan(idxSaudavel);
   });
 
   it("board: prioriza obras atrasadas no topo do grupo, com mais atrasada antes da menos", () => {
@@ -372,47 +376,40 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
       }),
     ];
 
-    const original = obrasFixture.slice();
-    obrasFixture.length = 0;
-    obrasFixture.push(...obrasBoard);
+    setObras(obrasBoard);
 
-    try {
-      const { container } = render(
-        <Wrapper route="/gestao/painel-obras?view=board">
-          <PainelObras />
-        </Wrapper>,
-      );
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras?view=board">
+        <PainelObras />
+      </Wrapper>,
+    );
 
-      // O board agrupa por etapa canônica + semana. Como nenhum item tem
-      // `inicio_etapa`, todos caem no grupo "Execução" (chave Execução::S?).
-      const groupContainer = container.querySelector<HTMLElement>(
-        '[id^="board-group-Execução"]',
-      );
-      expect(groupContainer, "grupo Execução não renderizado").not.toBeNull();
+    // O board agrupa por etapa canônica + semana. Como nenhum item tem
+    // `inicio_etapa`, todos caem no grupo "Execução" (chave Execução::S?).
+    const groupContainer = container.querySelector<HTMLElement>(
+      '[id^="board-group-Execução"]',
+    );
+    expect(groupContainer, "grupo Execução não renderizado").not.toBeNull();
 
-      const rows = within(groupContainer!).getAllByTestId("painel-obras-row");
-      const order = rows.map(
-        (r) =>
-          within(r)
-            .getByTestId("painel-obras-cell-cliente")
-            .textContent?.trim() ?? "",
-      );
+    const rows = within(groupContainer!).getAllByTestId("painel-obras-row");
+    const order = rows.map(
+      (r) =>
+        within(r)
+          .getByTestId("painel-obras-cell-cliente")
+          .textContent?.trim() ?? "",
+    );
 
-      const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
-      const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
-      const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
+    const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
+    const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
+    const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
 
-      expect(idxMedio).toBeGreaterThanOrEqual(0);
-      expect(idxPequeno).toBeGreaterThanOrEqual(0);
-      expect(idxSaudavel).toBeGreaterThanOrEqual(0);
+    expect(idxMedio).toBeGreaterThanOrEqual(0);
+    expect(idxPequeno).toBeGreaterThanOrEqual(0);
+    expect(idxSaudavel).toBeGreaterThanOrEqual(0);
 
-      // Atrasadas no topo do grupo, mais atrasada primeiro; saudável ao final.
-      expect(idxMedio).toBe(0);
-      expect(idxMedio).toBeLessThan(idxPequeno);
-      expect(idxPequeno).toBeLessThan(idxSaudavel);
-    } finally {
-      obrasFixture.length = 0;
-      obrasFixture.push(...original);
-    }
+    // Atrasadas no topo do grupo, mais atrasada primeiro; saudável ao final.
+    expect(idxMedio).toBe(0);
+    expect(idxMedio).toBeLessThan(idxPequeno);
+    expect(idxPequeno).toBeLessThan(idxSaudavel);
   });
 });
