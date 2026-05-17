@@ -46,11 +46,15 @@ export default function OrcamentoProjeto() {
       if (!projectId) return null;
       const { data, error } = await supabase
         .from("projects")
-        .select("name, client_name")
+        .select("name, project_customers(customer_name)")
         .eq("id", projectId)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      const customerName = Array.isArray(data.project_customers)
+        ? data.project_customers[0]?.customer_name ?? ""
+        : "";
+      return { name: data.name, client_name: customerName };
     },
     enabled: !!projectId,
   });

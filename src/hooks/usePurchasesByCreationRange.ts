@@ -53,7 +53,6 @@ async function fetchPurchasesByCreation(
       created_at,
       projects:project_id (
         name,
-        client_name,
         project_customers!project_customers_project_id_fkey (
           customer_name
         )
@@ -78,9 +77,7 @@ async function fetchPurchasesByCreation(
       project_id: row.project_id,
       project_name: row.projects?.name ?? "Obra sem nome",
       client_name:
-        row.projects?.project_customers?.[0]?.customer_name ??
-        row.projects?.client_name ??
-        null,
+        row.projects?.project_customers?.[0]?.customer_name ?? null,
       item_name: row.item_name,
       category: row.category,
       purchase_type: row.purchase_type,
