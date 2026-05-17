@@ -538,8 +538,49 @@ export default function PainelObras() {
     }
   };
 
-  const [sortKey, setSortKey] = useState<SortKey>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  // Persistência do modo de ordenação no localStorage — preserva a
+  // preferência do usuário entre recargas. Valor "default" representa a
+  // ordenação automática (atrasadas primeiro → etapa canônica).
+  const SORT_STORAGE_KEY = "painel-obras:sort:v1";
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem(SORT_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as {
+        key: SortKey;
+        dir: "asc" | "desc";
+      };
+      return parsed.key ?? null;
+    } catch {
+      return null;
+    }
+  });
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(() => {
+    if (typeof window === "undefined") return "asc";
+    try {
+      const raw = window.localStorage.getItem(SORT_STORAGE_KEY);
+      if (!raw) return "asc";
+      const parsed = JSON.parse(raw) as {
+        key: SortKey;
+        dir: "asc" | "desc";
+      };
+      return parsed.dir === "desc" ? "desc" : "asc";
+    } catch {
+      return "asc";
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        SORT_STORAGE_KEY,
+        JSON.stringify({ key: sortKey, dir: sortDir }),
+      );
+    } catch {
+      /* storage indisponível — sem persistência */
+    }
+  }, [sortKey, sortDir]);
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const toggleExpanded = (id: string) => {
