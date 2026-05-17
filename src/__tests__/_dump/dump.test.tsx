@@ -10,7 +10,7 @@ function makeObra(o: Partial<PainelObra>): PainelObra {
 }
 vi.mock("@/hooks/usePainelObras", async () => {
   const a = await vi.importActual<typeof import("@/hooks/usePainelObras")>("@/hooks/usePainelObras");
-  return { ...a, usePainelObras: () => ({ obras: [makeObra({ id: "a", etapa: "Medição" })], isLoading: false, error: null, refetch: vi.fn(), updateObra: vi.fn(async () => {}), isUpdating: false }) };
+  return { ...a, usePainelObras: () => ({ obras: [makeObra({ id: "a", etapa: "Medição", customer_name: "Cliente Med" })], isLoading: false, error: null, refetch: vi.fn(), updateObra: vi.fn(async () => {}), isUpdating: false }) };
 });
 vi.mock("@/hooks/useStaffUsers", () => ({ useStaffUsers: () => ({ data: [], isLoading: false }) }));
 vi.mock("@/hooks/useUserRole", () => ({ useUserRole: () => ({ role: "admin", roles: ["admin"], loading: false, isStaff: true, isCustomer: false }) }));
@@ -24,8 +24,12 @@ describe("dump", () => {
   it("dump html", () => {
     const c = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { container } = render(<QueryClientProvider client={c}><MemoryRouter initialEntries={["/gestao/painel-obras"]}><PainelObras /></MemoryRouter></QueryClientProvider>);
+    const hasTh = container.querySelector('[data-testid="painel-obras-th-cliente"]');
+    const hasRow = container.querySelectorAll('[data-testid="painel-obras-row"]').length;
+    const allTestids = Array.from(container.querySelectorAll('[data-testid]')).map(e => e.getAttribute('data-testid'));
+    const tableCount = container.querySelectorAll('table').length;
     // eslint-disable-next-line no-console
-    console.error("HTML LEN", container.innerHTML.length);
-    console.error("HEAD:", container.innerHTML.slice(0, 3000));
+    console.error("hasTh", !!hasTh, "rows", hasRow, "tables", tableCount);
+    console.error("testids:", JSON.stringify(Array.from(new Set(allTestids))));
   });
 });
