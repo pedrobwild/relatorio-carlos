@@ -1425,7 +1425,7 @@ export default function PainelObras() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="default">
-                                Entrega + próxima (padrão)
+                                Atrasadas primeiro (padrão)
                               </SelectItem>
                               <SelectItem value="entrega_oficial">
                                 Entrega oficial
