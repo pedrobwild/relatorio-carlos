@@ -543,31 +543,19 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     // (b) a ordenação padrão (atrasadas primeiro) continua valendo entre
     // as obras filtradas, junto da presença de `overduePrior` no bucket.
     const obrasPeriodo: PainelObra[] = [
-      makeObra({
-        id: "fora-do-periodo",
-        customer_name: "Cliente Fora do Período",
-        nome: "Obra Fora do Período",
+      obra("Fora do Período", {
         etapa: "Execução",
         entrega_oficial: "2026-03-15", // atrasada, mas sem atividade na semana
       }),
-      makeObra({
-        id: "saudavel-no-periodo",
-        customer_name: "Cliente Saudável Período",
-        nome: "Obra Saudável Período",
+      obra("Saudável Período", {
         etapa: "Medição",
         entrega_oficial: "2026-07-10",
       }),
-      makeObra({
-        id: "atraso-pequeno-periodo",
-        customer_name: "Cliente Atraso Pequeno Período",
-        nome: "Obra Atraso Pequeno Período",
+      obra("Atraso Pequeno Período", {
         etapa: "Execução",
         entrega_oficial: "2026-04-27",
       }),
-      makeObra({
-        id: "atraso-medio-periodo",
-        customer_name: "Cliente Atraso Médio Período",
-        nome: "Obra Atraso Médio Período",
+      obra("Atraso Médio Período", {
         etapa: "Execução",
         entrega_oficial: "2026-04-01",
       }),
