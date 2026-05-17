@@ -2869,11 +2869,6 @@ function KanbanView({
     withVal.sort((a, b) => {
       const va = aggregateByCol.get(a);
       const vb = aggregateByCol.get(b);
-      if (sortKey === "atraso") {
-        const an = va?.num ?? -Infinity;
-        const bn = vb?.num ?? -Infinity;
-        return sortDir === "asc" ? an - bn : bn - an;
-      }
       const sa = va?.str ?? "";
       const sb = vb?.str ?? "";
       if (!sa && !sb) return 0;
