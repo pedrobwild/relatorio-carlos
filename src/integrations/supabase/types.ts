@@ -5311,9 +5311,6 @@ export type Database = {
           budget_value: number | null
           cep: string | null
           city: string | null
-          client_email: string | null
-          client_name: string | null
-          client_phone: string | null
           condominium: string | null
           consultora_comercial: string | null
           contract_signing_date: string | null
@@ -5367,9 +5364,6 @@ export type Database = {
           budget_value?: number | null
           cep?: string | null
           city?: string | null
-          client_email?: string | null
-          client_name?: string | null
-          client_phone?: string | null
           condominium?: string | null
           consultora_comercial?: string | null
           contract_signing_date?: string | null
@@ -5423,9 +5417,6 @@ export type Database = {
           budget_value?: number | null
           cep?: string | null
           city?: string | null
-          client_email?: string | null
-          client_name?: string | null
-          client_phone?: string | null
           condominium?: string | null
           consultora_comercial?: string | null
           contract_signing_date?: string | null
