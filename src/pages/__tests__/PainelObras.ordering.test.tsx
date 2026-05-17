@@ -133,6 +133,30 @@ vi.mock("@/components/admin/obras/DailyLogInline", () => ({
   DailyLogInline: () => null,
 }));
 
+// O Painel aplica, por padrão, um filtro de período (semana corrente) que
+// depende de `usePainelPeriodActivities`. Sem mock, a lista é esvaziada e a
+// tabela/board nem chega a renderizar — quebrando as asserções abaixo.
+// Aqui devolvemos um bucket "ocupado" para cada obra da fixture, simulando
+// que todas têm atividade planejada na semana atual.
+vi.mock("@/hooks/usePainelPeriodActivities", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/hooks/usePainelPeriodActivities")
+  >("@/hooks/usePainelPeriodActivities");
+  return {
+    ...actual,
+    usePainelPeriodActivities: () => ({
+      byProject: new Map(
+        obrasFixture.map((o) => [
+          o.id,
+          { scheduled: [], overduePrior: [] },
+        ]),
+      ),
+      isLoading: false,
+      error: null,
+    }),
+  };
+});
+
 import PainelObras from "../PainelObras";
 
 function Wrapper({ children, route }: { children: ReactNode; route: string }) {
@@ -245,5 +269,79 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     expect(idxS2).toBeLessThan(idxS3);
     expect(idxS3).toBeLessThan(idxS5);
     expect(idxS5).toBeLessThan(idxFinal);
+  });
+
+  it("tabela: prioriza obras atrasadas no topo (mais atrasada primeiro), independente da etapa canônica", () => {
+    // Cria uma fixture específica com obras atrasadas + uma "saudável".
+    // `entrega_oficial` < hoje (29/abr/2026) e sem `entrega_real` ⇒ atraso > 0.
+    const obrasAtraso: PainelObra[] = [
+      makeObra({
+        id: "saudavel",
+        customer_name: "Cliente Saudável",
+        nome: "Obra Saudável",
+        etapa: "Medição", // etapa canônica precoce — viria primeiro na regra antiga
+      }),
+      makeObra({
+        id: "atraso-pequeno",
+        customer_name: "Cliente Atraso Pequeno",
+        nome: "Obra Atraso Pequeno",
+        etapa: "Execução",
+        entrega_oficial: "2026-04-27", // 2 dias úteis de atraso
+      }),
+      makeObra({
+        id: "atraso-grande",
+        customer_name: "Cliente Atraso Grande",
+        nome: "Obra Atraso Grande",
+        etapa: "Finalizada" as never, // finalizada não conta como atraso → vai para o fim
+        entrega_oficial: "2026-01-05",
+        entrega_real: null,
+      }),
+      makeObra({
+        id: "atraso-medio",
+        customer_name: "Cliente Atraso Médio",
+        nome: "Obra Atraso Médio",
+        etapa: "Execução",
+        entrega_oficial: "2026-04-01", // ~20 dias úteis de atraso
+      }),
+    ];
+
+    // Reaproveita o mock do hook trocando temporariamente a lista.
+    const original = obrasFixture.slice();
+    obrasFixture.length = 0;
+    obrasFixture.push(...obrasAtraso);
+
+    try {
+      const { container } = render(
+        <Wrapper route="/gestao/painel-obras">
+          <PainelObras />
+        </Wrapper>,
+      );
+      const desktopTh = container.querySelector(
+        '[data-testid="painel-obras-th-cliente"]',
+      );
+      expect(desktopTh).not.toBeNull();
+      const desktopTable = desktopTh!.closest("table")!;
+      const rows = within(desktopTable).getAllByTestId("painel-obras-row");
+      const order = rows.map(
+        (r) =>
+          within(r)
+            .getByTestId("painel-obras-cell-cliente")
+            .textContent?.trim() ?? "",
+      );
+
+      const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
+      const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
+      const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
+
+      // Atrasadas vêm primeiro; entre elas, mais atrasada antes da menos.
+      expect(idxMedio).toBeGreaterThanOrEqual(0);
+      expect(idxPequeno).toBeGreaterThanOrEqual(0);
+      expect(idxMedio).toBeLessThan(idxPequeno);
+      // Saudável (sem atraso) vem depois das atrasadas.
+      expect(idxPequeno).toBeLessThan(idxSaudavel);
+    } finally {
+      obrasFixture.length = 0;
+      obrasFixture.push(...original);
+    }
   });
 });
