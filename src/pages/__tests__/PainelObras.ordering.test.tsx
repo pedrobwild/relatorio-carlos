@@ -450,31 +450,16 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     // antes da regra de urgência a saudável apareceria primeiro só por ter
     // sido inserida antes.
     const obrasBoard: PainelObra[] = [
-      makeObra({
-        id: "med-saudavel",
-        customer_name: "Cliente Med Saudável",
-        nome: "Obra Med Saudável",
-        etapa: "Medição",
-        entrega_oficial: "2026-07-15",
-      }),
-      makeObra({
-        id: "med-atrasada",
-        customer_name: "Cliente Med Atrasada",
-        nome: "Obra Med Atrasada",
+      obra("Med Saudável", { etapa: "Medição", entrega_oficial: "2026-07-15" }),
+      obra("Med Atrasada", {
         etapa: "Medição",
         entrega_oficial: "2026-04-10", // ~13 dias úteis de atraso
       }),
-      makeObra({
-        id: "exec-saudavel",
-        customer_name: "Cliente Exec Saudável",
-        nome: "Obra Exec Saudável",
+      obra("Exec Saudável", {
         etapa: "Execução",
         entrega_oficial: "2026-07-30",
       }),
-      makeObra({
-        id: "exec-atrasada",
-        customer_name: "Cliente Exec Atrasada",
-        nome: "Obra Exec Atrasada",
+      obra("Exec Atrasada", {
         etapa: "Execução",
         entrega_oficial: "2026-04-20", // ~7 dias úteis de atraso
       }),
