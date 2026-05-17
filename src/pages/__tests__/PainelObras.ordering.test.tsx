@@ -149,24 +149,76 @@ vi.mock("@/components/admin/obras/DailyLogInline", () => ({
 // O Painel aplica, por padrão, um filtro de período (semana corrente) que
 // depende de `usePainelPeriodActivities`. Sem mock, a lista é esvaziada e a
 // tabela/board nem chega a renderizar — quebrando as asserções abaixo.
-// Aqui devolvemos um bucket "ocupado" para cada obra da fixture corrente,
-// simulando que todas têm atividade planejada na semana atual.
+//
+// O hook real devolve `byProject: Map<projectId, { scheduled, overduePrior }>`
+// onde cada item é uma `PeriodActivity` completa e o projeto SÓ aparece no
+// map quando tem ao menos uma atividade `scheduled` na janela. Replicamos
+// essa forma fielmente para que o filtro de período seja exercitado de
+// verdade junto com a ordenação.
+//
+// Por padrão, cada obra recebe uma `scheduled` na semana de `TODAY` para
+// passar pelo filtro. Testes podem:
+//   • `setPeriodExcluded(ids)` — não emitir entrada no map (obra some);
+//   • `setPeriodOverduePrior(map)` — anexar `overduePrior` por projeto.
+const PERIOD_TODAY_ISO = "2026-04-29";
+const PERIOD_PRIOR_ISO = "2026-04-20";
+let periodExcluded: Set<string> = new Set();
+let periodOverduePrior: Map<string, PeriodActivity[]> = new Map();
+
+function setPeriodExcluded(ids: string[]): void {
+  periodExcluded = new Set(ids);
+}
+function setPeriodOverduePrior(map: Record<string, PeriodActivity[]>): void {
+  periodOverduePrior = new Map(Object.entries(map));
+}
+function makePeriodActivity(
+  overrides: Partial<PeriodActivity> & Pick<PeriodActivity, "project_id">,
+): PeriodActivity {
+  return {
+    id: overrides.id ?? crypto.randomUUID(),
+    project_id: overrides.project_id,
+    description: overrides.description ?? "Atividade planejada",
+    etapa: overrides.etapa ?? null,
+    planned_start: overrides.planned_start ?? PERIOD_TODAY_ISO,
+    planned_end: overrides.planned_end ?? PERIOD_TODAY_ISO,
+    actual_start: overrides.actual_start ?? null,
+    actual_end: overrides.actual_end ?? null,
+    parent_activity_id: overrides.parent_activity_id ?? null,
+    responsible_name: overrides.responsible_name ?? null,
+  };
+}
+
 vi.mock("@/hooks/usePainelPeriodActivities", async () => {
   const actual = await vi.importActual<
     typeof import("@/hooks/usePainelPeriodActivities")
   >("@/hooks/usePainelPeriodActivities");
   return {
     ...actual,
-    usePainelPeriodActivities: () => ({
-      byProject: new Map(
-        currentObras.map((o) => [
-          o.id,
-          { scheduled: [], overduePrior: [] },
-        ]),
-      ),
-      isLoading: false,
-      error: null,
-    }),
+    usePainelPeriodActivities: () => {
+      const map = new Map<string, PeriodProjectBucket>();
+      for (const o of currentObras) {
+        if (periodExcluded.has(o.id)) continue;
+        const bucket: PeriodProjectBucket = {
+          scheduled: [
+            makePeriodActivity({
+              project_id: o.id,
+              etapa: o.etapa ?? null,
+              description: `Atividade ${o.nome}`,
+            }),
+          ],
+          overduePrior: (periodOverduePrior.get(o.id) ?? []).map((a) => ({
+            ...a,
+            project_id: o.id,
+          })),
+        };
+        map.set(o.id, bucket);
+      }
+      return {
+        byProject: map,
+        isLoading: false,
+        error: null,
+      };
+    },
   };
 });
 
