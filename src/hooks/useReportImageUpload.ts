@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GalleryPhoto } from "@/types/weeklyReport";
+import { isHeic } from "@/lib/mediaTypes";
 import { toast } from "sonner";
 
 interface UploadResult {
@@ -72,7 +73,8 @@ export function useReportImageUpload() {
           // Validate file size against bucket limit
           if (blob.size > MAX_FILE_SIZE) {
             toast.error(
-              `Arquivo muito grande: ${(blob.size / 1024 / 1024).toFixed(1)}MB. Máximo: 200MB.`,
+              `"${photo.caption || "Arquivo"}" tem ${(blob.size / 1024 / 1024).toFixed(0)}MB (máx. 200MB) e não foi enviado. Envie um vídeo mais curto ou de menor resolução. O relatório não será salvo até resolver.`,
+              { duration: 8000 },
             );
             failedCount++;
             continue;
@@ -80,6 +82,18 @@ export function useReportImageUpload() {
 
           // Determine file extension from MIME type
           const mimeType = blob.type || "application/octet-stream";
+
+          // Reject HEIC/HEIF: iPhones capture in this format but it does not
+          // render on Android/Windows/Chrome, so the customer would see a
+          // broken image. Fail loudly here instead of silently later.
+          if (isHeic(mimeType, photo.caption)) {
+            toast.error(
+              "Formato HEIC não é suportado. Converta a foto para JPG ou PNG antes de enviar (no iPhone: Ajustes → Câmera → Formatos → Mais Compatível).",
+            );
+            failedCount++;
+            continue;
+          }
+
           const extension = getExtensionFromMimeType(mimeType);
 
           // Create unique filename with projectId as first segment (required by RLS)
@@ -118,7 +132,7 @@ export function useReportImageUpload() {
               msg.includes("invalid_mime_type")
             ) {
               toast.error(
-                `Formato não suportado: ${mimeType || "desconhecido"}. Use JPG, PNG, HEIC ou MP4.`,
+                `Formato não suportado: ${mimeType || "desconhecido"}. Use JPG, PNG ou MP4.`,
               );
             } else {
               toast.error(`Falha ao enviar foto: ${msg}`);
@@ -139,9 +153,12 @@ export function useReportImageUpload() {
             continue;
           }
 
-          // Update the gallery entry with the permanent URL
+          // Persist the storage path (source of truth) alongside a fresh
+          // signed URL for immediate display. The saved signed URL will
+          // expire — refreshGalleryUrls re-signs from `path` on every load.
           updatedGallery[index] = {
             ...updatedGallery[index],
+            path: data.path,
             url: urlData.signedUrl,
           };
 
@@ -199,8 +216,6 @@ function getExtensionFromMimeType(mimeType: string): string {
     "image/jpg": ".jpg",
     "image/png": ".png",
     "image/webp": ".webp",
-    "image/heic": ".heic",
-    "image/heif": ".heif",
     "image/gif": ".gif",
     "video/mp4": ".mp4",
     "video/quicktime": ".mov",

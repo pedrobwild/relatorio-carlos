@@ -86,6 +86,7 @@ const Index = () => {
     setSelectedActivityId,
     reportsChronological,
     reportDataByWeek,
+    availableAtByWeek,
     isSavingReport,
     savingWeek,
     updateActivity,
@@ -547,6 +548,7 @@ const Index = () => {
                             activities={reportData.activities}
                             onReportClick={handleReportClick}
                             isStaff={isStaff}
+                            availableAtByWeek={availableAtByWeek}
                           />
                         )}
                       </TabsContent>

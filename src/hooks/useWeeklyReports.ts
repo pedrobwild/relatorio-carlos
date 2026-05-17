@@ -37,6 +37,26 @@ function extractWeeklyReportPath(url: string | undefined): string | null {
 }
 
 /**
+ * Resolves the storage path for a gallery photo. Prefers the explicit `path`
+ * field (written on upload since the Bug #1 fix); falls back to parsing it out
+ * of a saved URL for legacy rows that predate the `path` field. When neither
+ * works the photo is unrecoverable — log it (with id) so we can spot legacy
+ * data that needs a backfill instead of failing silently.
+ */
+function resolveWeeklyReportPath(photo: GalleryPhoto): string | null {
+  if (photo.path) return photo.path;
+  const fromUrl = extractWeeklyReportPath(photo.url);
+  if (fromUrl) return fromUrl;
+  if (photo.url && !photo.url.startsWith("blob:")) {
+    reportLogger.warn("weekly-report photo has no resolvable storage path", {
+      photoId: photo.id,
+      url: photo.url,
+    });
+  }
+  return null;
+}
+
+/**
  * Regenerates signed URLs for every gallery photo across all reports in a
  * single batched request. Saved URLs go stale (7-day signed-URL TTL or legacy
  * public-bucket URLs that no longer resolve since the bucket went private),
@@ -54,7 +74,7 @@ async function refreshGalleryUrls(
     const gallery = data?.gallery;
     if (!gallery || gallery.length === 0) continue;
     for (const photo of gallery) {
-      const path = extractWeeklyReportPath(photo.url);
+      const path = resolveWeeklyReportPath(photo);
       if (path) allPaths.add(path);
     }
   }
@@ -81,9 +101,11 @@ async function refreshGalleryUrls(
     const gallery = data?.gallery;
     if (!gallery || gallery.length === 0) return row;
     const refreshed = gallery.map((photo) => {
-      const path = extractWeeklyReportPath(photo.url);
+      const path = resolveWeeklyReportPath(photo);
       const fresh = path ? pathToUrl.get(path) : undefined;
-      return fresh ? { ...photo, url: fresh } : photo;
+      // Keep `path` persisted so future loads don't depend on URL parsing.
+      if (fresh) return { ...photo, path: path ?? photo.path, url: fresh };
+      return path && !photo.path ? { ...photo, path } : photo;
     });
     return {
       ...row,
@@ -144,11 +166,16 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
 
   // Map week_number -> stored WeeklyReportData
   const reportDataByWeek = new Map<number, WeeklyReportData>();
+  // Map week_number -> server-controlled availability timestamp (or null).
+  // When set, this is the source of truth for whether a customer may view the
+  // report — the frontend date heuristic is only a fallback.
+  const availableAtByWeek = new Map<number, string | null>();
   for (const row of reports) {
     reportDataByWeek.set(
       row.week_number,
       row.data as unknown as WeeklyReportData,
     );
+    availableAtByWeek.set(row.week_number, row.available_at);
   }
 
   const upsertMutation = useMutation({
@@ -298,6 +325,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
 
   return {
     reportDataByWeek,
+    availableAtByWeek,
     isLoading,
     error,
     saveReport,

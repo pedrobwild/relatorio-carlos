@@ -161,6 +161,7 @@ export function useProjectPortal() {
   } = useProjectActivities(projectId);
   const {
     reportDataByWeek,
+    availableAtByWeek,
     saveReport: saveWeeklyReport,
     isSaving: isSavingReport,
     savingWeek,
@@ -344,8 +345,9 @@ export function useProjectPortal() {
       reportData.reportDate,
       reportData.activities,
       reportData.endDate ?? undefined,
+      availableAtByWeek,
     );
-  }, [reportData]);
+  }, [reportData, availableAtByWeek]);
 
   const reportsChronological = useMemo(
     () => [...allWeeklyReports].reverse(),
@@ -547,6 +549,7 @@ export function useProjectPortal() {
     setSelectedActivityId,
     reportsChronological,
     reportDataByWeek,
+    availableAtByWeek,
     isSavingReport,
     savingWeek,
     updateActivity,

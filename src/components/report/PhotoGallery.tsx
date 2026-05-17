@@ -2,19 +2,9 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { GalleryPhoto } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { X, ChevronLeft, ChevronRight, Play } from "lucide-react";
-
-const isVideoUrl = (url: string) => {
-  if (!url) return false;
-  const lower = url.toLowerCase().split("?")[0];
-  return (
-    lower.endsWith(".mp4") ||
-    lower.endsWith(".mov") ||
-    lower.endsWith(".webm") ||
-    lower.endsWith(".quicktime") ||
-    lower.includes("video/")
-  );
-};
+import { X, ChevronLeft, ChevronRight, Play, ImageOff } from "lucide-react";
+import { isVideoUrl } from "@/lib/mediaTypes";
+import { logWarn } from "@/lib/errorLogger";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -26,8 +16,33 @@ interface PhotoGalleryProps {
 
 const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [brokenIds, setBrokenIds] = useState<Set<string>>(new Set());
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
+
+  const markBroken = useCallback((photo: GalleryPhoto, kind: string) => {
+    logWarn("Gallery media failed to load", {
+      component: "PhotoGallery",
+      photoId: photo.id,
+      kind,
+      url: photo.url,
+    });
+    setBrokenIds((prev) => {
+      if (prev.has(photo.id)) return prev;
+      const next = new Set(prev);
+      next.add(photo.id);
+      return next;
+    });
+  }, []);
+
+  const MediaUnavailable = ({ compact = false }: { compact?: boolean }) => (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-muted text-muted-foreground p-2 text-center">
+      <ImageOff className={compact ? "w-4 h-4" : "w-6 h-6"} />
+      {!compact && (
+        <span className="text-tiny">Mídia indisponível — recarregue</span>
+      )}
+    </div>
+  );
 
   const handlePrevious = useCallback(() => {
     if (selectedIndex !== null && selectedIndex > 0) {
@@ -95,7 +110,9 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
         opacity: animationDelay > 0 ? 0 : 1,
       }}
     >
-      {isVideoUrl(photo.url) ? (
+      {brokenIds.has(photo.id) ? (
+        <MediaUnavailable />
+      ) : isVideoUrl(photo.url) ? (
         <>
           <video
             src={`${photo.url}#t=0.5`}
@@ -103,6 +120,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
             muted
             playsInline
             disablePictureInPicture
+            onError={() => markBroken(photo, "video-thumb")}
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
           />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -116,6 +134,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
           src={photo.url}
           alt={photo.caption}
           loading="lazy"
+          onError={() => markBroken(photo, "image-thumb")}
           className="w-full h-full object-cover transition-transform group-hover:scale-105"
         />
       )}
@@ -138,13 +157,16 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
             onClick={() => setSelectedIndex(index)}
             className="relative w-28 h-20 rounded-lg overflow-hidden bg-muted shrink-0"
           >
-            {isVideoUrl(photo.url) ? (
+            {brokenIds.has(photo.id) ? (
+              <MediaUnavailable compact />
+            ) : isVideoUrl(photo.url) ? (
               <>
                 <video
                   src={`${photo.url}#t=0.5`}
                   preload="metadata"
                   muted
                   playsInline
+                  onError={() => markBroken(photo, "video-thumb")}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -158,6 +180,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                 src={photo.url}
                 alt={photo.caption}
                 loading="lazy"
+                onError={() => markBroken(photo, "image-thumb")}
                 className="w-full h-full object-cover"
               />
             )}
@@ -255,18 +278,38 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
 
               {/* Image / Video */}
               <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
-                {isVideoUrl(photos[selectedIndex].url) ? (
+                {brokenIds.has(photos[selectedIndex].id) ? (
+                  <div className="flex flex-col items-center gap-3 text-white/80 text-center">
+                    <ImageOff className="w-10 h-10" />
+                    <p className="text-caption">
+                      Não foi possível carregar esta mídia.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => window.location.reload()}
+                      className="bg-white/10 text-white border-white/30 hover:bg-white/20"
+                    >
+                      Recarregar página
+                    </Button>
+                  </div>
+                ) : isVideoUrl(photos[selectedIndex].url) ? (
                   <video
                     src={photos[selectedIndex].url}
                     controls
                     autoPlay
                     playsInline
+                    onError={() =>
+                      markBroken(photos[selectedIndex], "video-full")
+                    }
                     className="max-w-full max-h-[70dvh] sm:max-h-[70vh] rounded"
                   />
                 ) : (
                   <img
                     src={photos[selectedIndex].url}
                     alt={photos[selectedIndex].caption}
+                    onError={() =>
+                      markBroken(photos[selectedIndex], "image-full")
+                    }
                     className="max-w-full max-h-[70dvh] sm:max-h-[70vh] object-contain rounded"
                   />
                 )}
@@ -311,18 +354,22 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                           : "border-transparent opacity-50",
                       )}
                     >
-                      {isVideoUrl(photo.url) ? (
+                      {brokenIds.has(photo.id) ? (
+                        <MediaUnavailable compact />
+                      ) : isVideoUrl(photo.url) ? (
                         <video
                           src={`${photo.url}#t=0.5`}
                           preload="metadata"
                           muted
                           playsInline
+                          onError={() => markBroken(photo, "video-strip")}
                           className="w-full h-full object-cover"
                         />
                       ) : (
                         <img
                           src={photo.url}
                           alt=""
+                          onError={() => markBroken(photo, "image-strip")}
                           className="w-full h-full object-cover"
                         />
                       )}
