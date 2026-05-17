@@ -100,9 +100,11 @@ serve(async (req) => {
       name: newProjectName,
       unit_name: newUnitName,
       created_by: user.id,
-      client_name: DEMO_NAME,
-      client_email: DEMO_EMAIL,
     };
+    // PII do cliente é gravada em project_customers mais abaixo
+    delete insertProject.client_name;
+    delete insertProject.client_email;
+    delete insertProject.client_phone;
     delete insertProject.id;
     delete insertProject.created_at;
     delete insertProject.updated_at;

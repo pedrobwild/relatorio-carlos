@@ -78,7 +78,7 @@ export const DATA_CATALOG: CatalogTable[] = [
         description: "Quando preenchida, registro foi soft-deleted.",
       },
       { name: "city", type: "text", nullable: true },
-      { name: "client_name", type: "text", nullable: true },
+      
       { name: "created_at", type: "date" },
     ],
     relationships: [],

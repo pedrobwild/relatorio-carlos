@@ -39,7 +39,7 @@ export const CATALOG: CatalogTable[] = [
       { name: "is_project_phase", type: "boolean" },
       { name: "deleted_at", type: "timestamptz" },
       { name: "city", type: "text" },
-      { name: "client_name", type: "text" },
+      
       { name: "created_at", type: "timestamptz" },
     ],
     forbidden: ["progress", "progress_pct", "status_obra"],

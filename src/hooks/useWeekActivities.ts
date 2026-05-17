@@ -100,7 +100,6 @@ async function fetchWeekActivities({
       fornecedor_id,
       projects:project_id (
         name,
-        client_name,
         status,
         project_customers!project_customers_project_id_fkey (
           customer_name
@@ -128,12 +127,9 @@ async function fetchWeekActivities({
     id: row.id,
     project_id: row.project_id,
     project_name: row.projects?.name ?? "Obra sem nome",
-    // Preferimos o nome real do contratante (project_customers.customer_name)
-    // pois projects.client_name geralmente vem vazio no banco atual.
+    // Nome do contratante vem de project_customers (fonte única).
     client_name:
-      row.projects?.project_customers?.[0]?.customer_name ??
-      row.projects?.client_name ??
-      null,
+      row.projects?.project_customers?.[0]?.customer_name ?? null,
     project_status: row.projects?.status ?? null,
     description: row.description,
     detailed_description: row.detailed_description ?? null,

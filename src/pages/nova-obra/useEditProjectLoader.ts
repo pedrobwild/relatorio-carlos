@@ -91,9 +91,9 @@ export function useEditProjectLoader(
           budget_file_name: "",
 
           // Contratante
-          customer_name: customer?.customer_name || p.client_name || "",
-          customer_email: customer?.customer_email || p.client_email || "",
-          customer_phone: customer?.customer_phone || p.client_phone || "",
+          customer_name: customer?.customer_name || "",
+          customer_email: customer?.customer_email || "",
+          customer_phone: customer?.customer_phone || "",
           nacionalidade: customer?.nacionalidade || "",
           estado_civil: customer?.estado_civil || "",
           profissao: customer?.profissao || "",

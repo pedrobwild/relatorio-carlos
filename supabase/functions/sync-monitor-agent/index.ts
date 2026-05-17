@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
 
     const schemaInfo = entity_type === "supplier"
       ? `nome (text, NOT NULL), razao_social (text), cnpj_cpf (text), categoria (supplier_category enum: materiais|mao_de_obra|servicos|equipamentos|outros), supplier_type (text), supplier_subcategory (text), endereco (text), cidade (text), estado (text), cep (text), email (text), telefone (text), site (text), condicoes_pagamento (text), prazo_entrega_dias (integer), produtos_servicos (text), nota_avaliacao (numeric), observacoes (text), status (text: ativo/inativo), external_id (text), external_system (text)`
-      : `name (text, NOT NULL), client_name (text), client_phone (text), client_email (text), address (text), condominium (text), neighborhood (text), city (text), unit_name (text), property_type (text), total_area (numeric), estimated_duration_weeks (integer), budget_value (numeric), budget_code (text), status (text), notes (text), consultora_comercial (text), external_id (text), external_system (text)`;
+      : `name (text, NOT NULL), address (text), condominium (text), neighborhood (text), city (text), unit_name (text), property_type (text), total_area (numeric), estimated_duration_weeks (integer), budget_value (numeric), budget_code (text), status (text), notes (text), consultora_comercial (text), external_id (text), external_system (text). NOTA: contatos do cliente (nome/email/telefone) vivem em project_customers, não em projects.`;
 
     // --- Call AI to diagnose and fix ---
     const systemPrompt = `You are a database integration expert for Portal BWild (construction management platform).

@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     if (!source_id) errors.push("source_id é obrigatório");
     if (!project) errors.push("project é obrigatório");
     if (project && !project.name?.trim()) errors.push("project.name é obrigatório");
-    if (project && !project.client_name?.trim()) errors.push("project.client_name é obrigatório");
+    if (project && !project.client_name?.trim() && !client?.name?.trim()) errors.push("project.client_name (ou client.name) é obrigatório");
 
     if (errors.length > 0) {
       return jsonResponse({ error: "Validation failed", details: errors }, 400);
@@ -63,9 +63,7 @@ Deno.serve(async (req) => {
 
     const projectPayload: Record<string, unknown> = {
       name: project.name.trim(),
-      client_name: project.client_name.trim(),
-      client_phone: project.client_phone ?? null,
-      client_email: project.client_email ?? null,
+      // PII (client_name/email/phone) é gravada em project_customers (ver bloco abaixo).
       address: project.address ?? null,
       condominium: project.condominium ?? null,
       neighborhood: project.neighborhood ?? project.bairro ?? null,
@@ -439,9 +437,7 @@ async function enrichProjectWithAI(
   // 2. Build the prompt with existing data context
   const existingContext = JSON.stringify({
     name: existingData.name,
-    client_name: existingData.client_name,
-    client_email: existingData.client_email,
-    client_phone: existingData.client_phone,
+    // PII removida de projects; contatos do cliente vivem em project_customers
     address: existingData.address,
     condominium: existingData.condominium,
     neighborhood: existingData.neighborhood,
@@ -523,9 +519,7 @@ async function enrichProjectWithAI(
   const updatePayload: Record<string, unknown> = {};
 
   const fieldMap: Record<string, string> = {
-    client_name: "client_name",
-    client_email: "client_email",
-    client_phone: "client_phone",
+    // client_name/email/phone são gravados em project_customers, não em projects
     address: "address",
     condominium: "condominium",
     neighborhood: "neighborhood",
@@ -664,7 +658,7 @@ async function processBudget(
         project_id: projectId,
         sequential_code: project.budget_code ?? null,
         project_name: project.name?.trim() ?? "",
-        client_name: project.client_name?.trim() ?? "",
+        client_name: (client?.name ?? project.client_name)?.trim() ?? "",
         property_type: project.property_type ?? null,
         city: project.city ?? null,
         bairro: project.neighborhood ?? null,
