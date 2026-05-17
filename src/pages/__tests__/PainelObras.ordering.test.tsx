@@ -11,6 +11,10 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { PainelObra } from "@/hooks/usePainelObras";
+import type {
+  PeriodActivity,
+  PeriodProjectBucket,
+} from "@/hooks/usePainelPeriodActivities";
 
 // ── Fixture: hoje fixo para a semana S{N} ser determinística ──────────────
 // Hoje = 29/abr/2026 → quem começou em 01/04/2026 está em S5.
