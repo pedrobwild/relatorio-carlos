@@ -412,4 +412,114 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     expect(idxMedio).toBeLessThan(idxPequeno);
     expect(idxPequeno).toBeLessThan(idxSaudavel);
   });
+
+  it("board: cada obra cai na coluna da própria etapa e atrasadas têm precedência sobre a ordem canônica dentro do grupo", () => {
+    // Fixture cobre 2 etapas (Medição e Execução), com obra atrasada e
+    // saudável em cada uma. O board agrupa por etapa, então a regra
+    // "atrasadas primeiro" não muda a ORDEM DAS COLUNAS (que segue a ordem
+    // canônica de `ETAPA_OPTIONS`), mas precisa valer para os CARDS dentro
+    // de cada coluna — inclusive em etapas precoces como Medição, onde
+    // antes da regra de urgência a saudável apareceria primeiro só por ter
+    // sido inserida antes.
+    const obrasBoard: PainelObra[] = [
+      makeObra({
+        id: "med-saudavel",
+        customer_name: "Cliente Med Saudável",
+        nome: "Obra Med Saudável",
+        etapa: "Medição",
+        entrega_oficial: "2026-07-15",
+      }),
+      makeObra({
+        id: "med-atrasada",
+        customer_name: "Cliente Med Atrasada",
+        nome: "Obra Med Atrasada",
+        etapa: "Medição",
+        entrega_oficial: "2026-04-10", // ~13 dias úteis de atraso
+      }),
+      makeObra({
+        id: "exec-saudavel",
+        customer_name: "Cliente Exec Saudável",
+        nome: "Obra Exec Saudável",
+        etapa: "Execução",
+        entrega_oficial: "2026-07-30",
+      }),
+      makeObra({
+        id: "exec-atrasada",
+        customer_name: "Cliente Exec Atrasada",
+        nome: "Obra Exec Atrasada",
+        etapa: "Execução",
+        entrega_oficial: "2026-04-20", // ~7 dias úteis de atraso
+      }),
+    ];
+
+    setObras(obrasBoard);
+
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras?view=board">
+        <PainelObras />
+      </Wrapper>,
+    );
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+    const readGroupClientes = (idPrefix: string): string[] => {
+      const group = container.querySelector<HTMLElement>(
+        `[id^="board-group-${idPrefix}"]`,
+      );
+      expect(group, `grupo "${idPrefix}" não renderizado`).not.toBeNull();
+      return within(group!)
+        .getAllByTestId("painel-obras-row")
+        .map(
+          (r) =>
+            within(r)
+              .getByTestId("painel-obras-cell-cliente")
+              .textContent?.trim() ?? "",
+        );
+    };
+
+    // ── Membership: cada obra está na coluna esperada ────────────────────
+    const medGroup = readGroupClientes("Medição");
+    const execGroup = readGroupClientes("Execução");
+
+    expect(medGroup.some((t) => t.includes("Med Saudável"))).toBe(true);
+    expect(medGroup.some((t) => t.includes("Med Atrasada"))).toBe(true);
+    expect(medGroup.some((t) => t.includes("Exec"))).toBe(false);
+
+    expect(execGroup.some((t) => t.includes("Exec Saudável"))).toBe(true);
+    expect(execGroup.some((t) => t.includes("Exec Atrasada"))).toBe(true);
+    expect(execGroup.some((t) => t.includes("Med"))).toBe(false);
+
+    // ── Precedência: atrasada > saudável dentro de cada coluna ───────────
+    const medAtrasadaIdx = medGroup.findIndex((t) =>
+      t.includes("Med Atrasada"),
+    );
+    const medSaudavelIdx = medGroup.findIndex((t) =>
+      t.includes("Med Saudável"),
+    );
+    expect(medAtrasadaIdx).toBe(0);
+    expect(medAtrasadaIdx).toBeLessThan(medSaudavelIdx);
+
+    const execAtrasadaIdx = execGroup.findIndex((t) =>
+      t.includes("Exec Atrasada"),
+    );
+    const execSaudavelIdx = execGroup.findIndex((t) =>
+      t.includes("Exec Saudável"),
+    );
+    expect(execAtrasadaIdx).toBe(0);
+    expect(execAtrasadaIdx).toBeLessThan(execSaudavelIdx);
+
+    // ── Ordem das colunas: continua canônica (Medição antes de Execução) ─
+    // A regra "atrasadas primeiro" age dentro do grupo, não promove a
+    // coluna inteira para o topo do board.
+    const groupButtons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(
+        '[aria-controls^="board-group-"]',
+      ),
+    );
+    const labels = groupButtons.map((b) => b.textContent?.trim() ?? "");
+    const idxMedCol = labels.findIndex((l) => l.startsWith("Medição"));
+    const idxExecCol = labels.findIndex((l) => l.startsWith("Execução"));
+    expect(idxMedCol).toBeGreaterThanOrEqual(0);
+    expect(idxExecCol).toBeGreaterThanOrEqual(0);
+    expect(idxMedCol).toBeLessThan(idxExecCol);
+  });
 });
