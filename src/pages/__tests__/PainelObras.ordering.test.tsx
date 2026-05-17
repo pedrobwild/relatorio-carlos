@@ -344,4 +344,75 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
       obrasFixture.push(...original);
     }
   });
+
+  it("board: prioriza obras atrasadas no topo do grupo, com mais atrasada antes da menos", () => {
+    // Todas em "Execução" sem `inicio_etapa` ⇒ caem no mesmo grupo
+    // "Execução" (S? – sem semana), permitindo comparar a ordem interna.
+    const obrasBoard: PainelObra[] = [
+      makeObra({
+        id: "board-saudavel",
+        customer_name: "Cliente Saudável Board",
+        nome: "Obra Saudável Board",
+        etapa: "Execução",
+        entrega_oficial: "2026-06-30", // futura ⇒ sem atraso
+      }),
+      makeObra({
+        id: "board-atraso-pequeno",
+        customer_name: "Cliente Atraso Pequeno Board",
+        nome: "Obra Atraso Pequeno Board",
+        etapa: "Execução",
+        entrega_oficial: "2026-04-27", // 2 dias úteis de atraso
+      }),
+      makeObra({
+        id: "board-atraso-medio",
+        customer_name: "Cliente Atraso Médio Board",
+        nome: "Obra Atraso Médio Board",
+        etapa: "Execução",
+        entrega_oficial: "2026-04-01", // ~20 dias úteis de atraso
+      }),
+    ];
+
+    const original = obrasFixture.slice();
+    obrasFixture.length = 0;
+    obrasFixture.push(...obrasBoard);
+
+    try {
+      const { container } = render(
+        <Wrapper route="/gestao/painel-obras?view=board">
+          <PainelObras />
+        </Wrapper>,
+      );
+
+      // O board agrupa por etapa canônica + semana. Como nenhum item tem
+      // `inicio_etapa`, todos caem no grupo "Execução" (chave Execução::S?).
+      const groupContainer = container.querySelector<HTMLElement>(
+        '[id^="board-group-Execução"]',
+      );
+      expect(groupContainer, "grupo Execução não renderizado").not.toBeNull();
+
+      const rows = within(groupContainer!).getAllByTestId("painel-obras-row");
+      const order = rows.map(
+        (r) =>
+          within(r)
+            .getByTestId("painel-obras-cell-cliente")
+            .textContent?.trim() ?? "",
+      );
+
+      const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
+      const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
+      const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
+
+      expect(idxMedio).toBeGreaterThanOrEqual(0);
+      expect(idxPequeno).toBeGreaterThanOrEqual(0);
+      expect(idxSaudavel).toBeGreaterThanOrEqual(0);
+
+      // Atrasadas no topo do grupo, mais atrasada primeiro; saudável ao final.
+      expect(idxMedio).toBe(0);
+      expect(idxMedio).toBeLessThan(idxPequeno);
+      expect(idxPequeno).toBeLessThan(idxSaudavel);
+    } finally {
+      obrasFixture.length = 0;
+      obrasFixture.push(...original);
+    }
+  });
 });
