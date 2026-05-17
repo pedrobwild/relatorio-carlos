@@ -390,24 +390,15 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     // Todas em "Execução" sem `inicio_etapa` ⇒ caem no mesmo grupo
     // "Execução" (S? – sem semana), permitindo comparar a ordem interna.
     const obrasBoard: PainelObra[] = [
-      makeObra({
-        id: "board-saudavel",
-        customer_name: "Cliente Saudável Board",
-        nome: "Obra Saudável Board",
+      obra("Saudável Board", {
         etapa: "Execução",
         entrega_oficial: "2026-06-30", // futura ⇒ sem atraso
       }),
-      makeObra({
-        id: "board-atraso-pequeno",
-        customer_name: "Cliente Atraso Pequeno Board",
-        nome: "Obra Atraso Pequeno Board",
+      obra("Atraso Pequeno Board", {
         etapa: "Execução",
         entrega_oficial: "2026-04-27", // 2 dias úteis de atraso
       }),
-      makeObra({
-        id: "board-atraso-medio",
-        customer_name: "Cliente Atraso Médio Board",
-        nome: "Obra Atraso Médio Board",
+      obra("Atraso Médio Board", {
         etapa: "Execução",
         entrega_oficial: "2026-04-01", // ~20 dias úteis de atraso
       }),
