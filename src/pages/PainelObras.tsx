@@ -2838,10 +2838,7 @@ function KanbanView({
         agg.set(key, { num: null, str: null });
         continue;
       }
-      if (sortKey === "atraso") {
-        const max = Math.max(...items.map((o) => computeOverdueDays(o)));
-        agg.set(key, { num: max, str: null });
-      } else if (sortKey === "responsavel_nome") {
+      if (sortKey === "responsavel_nome") {
         const names = items
           .map((o) => o.responsavel_nome ?? "")
           .filter(Boolean)
