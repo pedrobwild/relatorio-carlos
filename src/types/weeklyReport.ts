@@ -106,7 +106,13 @@ export interface DeliverableItem {
 
 export interface GalleryPhoto {
   id: string;
+  // Signed URL for display only. NEVER rely on this being valid long-term:
+  // signed URLs expire. `path` is the source of truth and is used to
+  // regenerate fresh signed URLs on every load.
   url: string;
+  // Storage object path inside the weekly-reports bucket
+  // ({projectId}/{userId}/week-N/...). Persisted so we can re-sign on display.
+  path?: string;
   caption: string;
   area: string;
   date: string;

@@ -23,6 +23,7 @@ interface WeeklyReportsHistoryProps {
   onReportClick?: (report: WeeklyReport, index: number) => void;
   isStaff?: boolean; // Staff can see all reports immediately
   projectEndDate?: string; // Caps weekly report generation at the project end
+  availableAtByWeek?: Map<number, string | null>; // Server-controlled release
 }
 
 const BRASILIA_TZ = "America/Sao_Paulo";
@@ -129,6 +130,10 @@ export const generateWeeklyReports = (
   reportDate: string,
   activities: Activity[],
   projectEndDate?: string,
+  // week_number -> server `available_at` (ISO) or null. When a row has a
+  // non-null value it is authoritative: the report is visible to customers
+  // once that instant has passed, regardless of the date heuristic.
+  availableAtByWeek?: Map<number, string | null>,
 ): ExtendedWeeklyReport[] => {
   const startDate = parseLocalDate(projectStartDate);
   // Cap report generation at the project end date so the timeline does not
@@ -213,6 +218,20 @@ export const generateWeeklyReports = (
     // Check availability for customers
     const { isAvailable, availableAt } = isReportAvailableForCustomer(weekEnd);
 
+    // Server-controlled availability wins when present. A non-null
+    // `available_at` means staff/the backend explicitly scheduled (or already
+    // released) this report; respect it instead of recomputing from dates.
+    const serverAvailableAtRaw = availableAtByWeek?.get(weekNumber);
+    let serverAvailable: boolean | null = null;
+    let effectiveAvailableAt = availableAt;
+    if (serverAvailableAtRaw != null) {
+      const parsed = new Date(serverAvailableAtRaw);
+      if (!isNaN(parsed.getTime())) {
+        effectiveAvailableAt = parsed;
+        serverAvailable = new Date() >= parsed;
+      }
+    }
+
     // Also unlock if all overlapping activities for this week are completed
     // (actualEnd filled with a date <= weekEndDate means the stage finished early)
     const allOverlappingCompleted =
@@ -235,8 +254,11 @@ export const generateWeeklyReports = (
       status,
       variance,
       currentActivityName: currentActivity?.description || null,
-      isAvailableForCustomer: isAvailable || allOverlappingCompleted,
-      availableAt,
+      isAvailableForCustomer:
+        serverAvailable !== null
+          ? serverAvailable
+          : isAvailable || allOverlappingCompleted,
+      availableAt: effectiveAvailableAt,
     });
 
     // Move to next week (next Monday after the current Friday)
@@ -289,12 +311,14 @@ const WeeklyReportsHistory = ({
   onReportClick,
   isStaff = false,
   projectEndDate,
+  availableAtByWeek,
 }: WeeklyReportsHistoryProps) => {
   const weeklyReportsAsc = generateWeeklyReports(
     projectStartDate,
     reportDate,
     activities,
     projectEndDate,
+    availableAtByWeek,
   );
   // Display in descending order (most recent first)
   const weeklyReports = [...weeklyReportsAsc].reverse();

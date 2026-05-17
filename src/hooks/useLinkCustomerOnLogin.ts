@@ -139,9 +139,20 @@ export function useLinkCustomerOnLogin(user: User | null) {
     // A link operation for this user is already in flight in another component.
     if (inFlight.has(user.id)) return;
 
-    const promise = linkCustomerToProjects(user).finally(() => {
-      inFlight.delete(user.id);
-    });
+    // Register the in-flight entry SYNCHRONOUSLY, before invoking the async
+    // function. linkCustomerToProjects starts running the moment it's called,
+    // so if we set the map only after the call, two effects mounting in the
+    // same tick (StrictMode / Concurrent) would both pass the inFlight.has
+    // check above and fire duplicate requests. The lazy promise wrapper keeps
+    // the set + assignment a single synchronous step.
+    const promise: Promise<void> = Promise.resolve().then(() =>
+      linkCustomerToProjects(user).finally(() => {
+        // Only clear if it's still our promise (guards against a newer run).
+        if (inFlight.get(user.id) === promise) {
+          inFlight.delete(user.id);
+        }
+      }),
+    );
     inFlight.set(user.id, promise);
   }, [user?.id, user?.email]);
 }

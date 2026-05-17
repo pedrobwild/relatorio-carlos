@@ -6,8 +6,10 @@ import {
   Minimize,
   Volume2,
   VolumeX,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logWarn } from "@/lib/errorLogger";
 
 // Vendor-prefixed fullscreen APIs (Safari, older IE/Edge)
 interface VendorDocument {
@@ -45,6 +47,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
   const [currentTime, setCurrentTime] = useState("0:00");
   const [duration, setDuration] = useState("0:00");
   const [showControls, setShowControls] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const hideControlsTimeout = useRef<NodeJS.Timeout>();
 
   const formatTime = (seconds: number) => {
@@ -241,10 +244,29 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
         poster={poster}
         playsInline
         onClick={togglePlay}
+        onError={() => {
+          logWarn("VideoPlayer failed to load source", {
+            component: "VideoPlayer",
+            src,
+            title,
+          });
+          setHasError(true);
+        }}
       />
 
+      {/* Error overlay */}
+      {hasError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/80 text-white/80 p-4 text-center">
+          <AlertTriangle className="w-8 h-8" />
+          <p className="text-sm">
+            Não foi possível carregar o vídeo. Recarregue a página e tente
+            novamente.
+          </p>
+        </div>
+      )}
+
       {/* Play button overlay when paused */}
-      {!isPlaying && (
+      {!hasError && !isPlaying && (
         <button
           onClick={togglePlay}
           aria-label="Reproduzir vídeo"
