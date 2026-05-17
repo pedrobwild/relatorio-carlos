@@ -20,6 +20,16 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
+  // photo.id is only unique within a single report (ids like "g1"/"photo-…"
+  // are reused across weeks). The component instance is reused when
+  // navigating between reports, so reset broken state whenever the gallery
+  // identity changes — and when URLs are re-signed, so refreshed media gets
+  // a fresh attempt instead of staying marked broken.
+  const photosKey = photos.map((p) => `${p.id}::${p.url}`).join("|");
+  useEffect(() => {
+    setBrokenIds(new Set());
+  }, [photosKey]);
+
   const markBroken = useCallback((photo: GalleryPhoto, kind: string) => {
     logWarn("Gallery media failed to load", {
       component: "PhotoGallery",

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GalleryPhoto } from "@/types/weeklyReport";
-import { isHeic } from "@/lib/mediaTypes";
+import { isHeicMimeOrName, isHeicBlob } from "@/lib/mediaTypes";
 import { toast } from "sonner";
 
 interface UploadResult {
@@ -85,8 +85,12 @@ export function useReportImageUpload() {
 
           // Reject HEIC/HEIF: iPhones capture in this format but it does not
           // render on Android/Windows/Chrome, so the customer would see a
-          // broken image. Fail loudly here instead of silently later.
-          if (isHeic(mimeType, photo.caption)) {
+          // broken image. Fail loudly here instead of silently later. Blob
+          // uploads often lose the MIME type/filename, so also sniff the
+          // file header (ISO-BMFF brand) as a fallback.
+          if (
+            isHeicMimeOrName(mimeType) || (await isHeicBlob(blob))
+          ) {
             toast.error(
               "Formato HEIC não é suportado. Converta a foto para JPG ou PNG antes de enviar (no iPhone: Ajustes → Câmera → Formatos → Mais Compatível).",
             );
