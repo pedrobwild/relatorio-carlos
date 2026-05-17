@@ -616,4 +616,75 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     expect(idxMedio).toBeLessThan(idxPequeno);
     expect(idxPequeno).toBeLessThan(idxSaudavel);
   });
+
+  it("tabela: ordenação padrão coloca TODAS as atrasadas (de qualquer etapa) acima das saudáveis, mais atrasada primeiro", () => {
+    // Espelha o teste de board "cada obra cai na coluna da própria etapa e
+    // atrasadas têm precedência". Na tabela não há agrupamento por coluna,
+    // então a regra "atrasadas primeiro" se aplica de forma GLOBAL: uma
+    // obra atrasada de Execução deve vir antes de uma saudável de Medição
+    // (que, pela ordem canônica, viria primeiro).
+    const obrasTabela: PainelObra[] = [
+      obra("Med Saudável", { etapa: "Medição", entrega_oficial: "2026-07-15" }),
+      obra("Med Atrasada", {
+        etapa: "Medição",
+        entrega_oficial: "2026-04-10", // ~13 dias úteis de atraso
+      }),
+      obra("Exec Saudável", {
+        etapa: "Execução",
+        entrega_oficial: "2026-07-30",
+      }),
+      obra("Exec Atrasada", {
+        etapa: "Execução",
+        entrega_oficial: "2026-03-20", // ~28 dias úteis ⇒ mais atrasada
+      }),
+    ];
+
+    setObras(obrasTabela);
+
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras">
+        <PainelObras />
+      </Wrapper>,
+    );
+
+    const desktopTh = container.querySelector(
+      '[data-testid="painel-obras-th-cliente"]',
+    );
+    expect(desktopTh).not.toBeNull();
+    const desktopTable = desktopTh!.closest("table")!;
+    const rows = within(desktopTable).getAllByTestId("painel-obras-row");
+    const order = rows.map(
+      (r) =>
+        within(r)
+          .getByTestId("painel-obras-cell-cliente")
+          .textContent?.trim() ?? "",
+    );
+
+    const idxExecAtrasada = order.findIndex((t) => t.includes("Exec Atrasada"));
+    const idxMedAtrasada = order.findIndex((t) => t.includes("Med Atrasada"));
+    const idxMedSaudavel = order.findIndex((t) => t.includes("Med Saudável"));
+    const idxExecSaudavel = order.findIndex((t) =>
+      t.includes("Exec Saudável"),
+    );
+
+    // Todas presentes
+    for (const [name, idx] of Object.entries({
+      "Exec Atrasada": idxExecAtrasada,
+      "Med Atrasada": idxMedAtrasada,
+      "Med Saudável": idxMedSaudavel,
+      "Exec Saudável": idxExecSaudavel,
+    })) {
+      expect(idx, `linha "${name}" ausente`).toBeGreaterThanOrEqual(0);
+    }
+
+    // Mais atrasada primeiro (Exec ~28d > Med ~13d), independente da etapa
+    expect(idxExecAtrasada).toBe(0);
+    expect(idxExecAtrasada).toBeLessThan(idxMedAtrasada);
+
+    // Toda atrasada vem antes de qualquer saudável — inclusive saudável
+    // de etapa canonicamente precoce (Medição) fica atrás da atrasada de
+    // Execução, comprovando a precedência da urgência sobre a etapa.
+    expect(idxMedAtrasada).toBeLessThan(idxMedSaudavel);
+    expect(idxMedAtrasada).toBeLessThan(idxExecSaudavel);
+  });
 });
