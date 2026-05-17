@@ -11,6 +11,10 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { PainelObra } from "@/hooks/usePainelObras";
+import type {
+  PeriodActivity,
+  PeriodProjectBucket,
+} from "@/hooks/usePainelPeriodActivities";
 
 // ── Fixture: hoje fixo para a semana S{N} ser determinística ──────────────
 // Hoje = 29/abr/2026 → quem começou em 01/04/2026 está em S5.
@@ -145,24 +149,76 @@ vi.mock("@/components/admin/obras/DailyLogInline", () => ({
 // O Painel aplica, por padrão, um filtro de período (semana corrente) que
 // depende de `usePainelPeriodActivities`. Sem mock, a lista é esvaziada e a
 // tabela/board nem chega a renderizar — quebrando as asserções abaixo.
-// Aqui devolvemos um bucket "ocupado" para cada obra da fixture corrente,
-// simulando que todas têm atividade planejada na semana atual.
+//
+// O hook real devolve `byProject: Map<projectId, { scheduled, overduePrior }>`
+// onde cada item é uma `PeriodActivity` completa e o projeto SÓ aparece no
+// map quando tem ao menos uma atividade `scheduled` na janela. Replicamos
+// essa forma fielmente para que o filtro de período seja exercitado de
+// verdade junto com a ordenação.
+//
+// Por padrão, cada obra recebe uma `scheduled` na semana de `TODAY` para
+// passar pelo filtro. Testes podem:
+//   • `setPeriodExcluded(ids)` — não emitir entrada no map (obra some);
+//   • `setPeriodOverduePrior(map)` — anexar `overduePrior` por projeto.
+const PERIOD_TODAY_ISO = "2026-04-29";
+const PERIOD_PRIOR_ISO = "2026-04-20";
+let periodExcluded: Set<string> = new Set();
+let periodOverduePrior: Map<string, PeriodActivity[]> = new Map();
+
+function setPeriodExcluded(ids: string[]): void {
+  periodExcluded = new Set(ids);
+}
+function setPeriodOverduePrior(map: Record<string, PeriodActivity[]>): void {
+  periodOverduePrior = new Map(Object.entries(map));
+}
+function makePeriodActivity(
+  overrides: Partial<PeriodActivity> & Pick<PeriodActivity, "project_id">,
+): PeriodActivity {
+  return {
+    id: overrides.id ?? crypto.randomUUID(),
+    project_id: overrides.project_id,
+    description: overrides.description ?? "Atividade planejada",
+    etapa: overrides.etapa ?? null,
+    planned_start: overrides.planned_start ?? PERIOD_TODAY_ISO,
+    planned_end: overrides.planned_end ?? PERIOD_TODAY_ISO,
+    actual_start: overrides.actual_start ?? null,
+    actual_end: overrides.actual_end ?? null,
+    parent_activity_id: overrides.parent_activity_id ?? null,
+    responsible_name: overrides.responsible_name ?? null,
+  };
+}
+
 vi.mock("@/hooks/usePainelPeriodActivities", async () => {
   const actual = await vi.importActual<
     typeof import("@/hooks/usePainelPeriodActivities")
   >("@/hooks/usePainelPeriodActivities");
   return {
     ...actual,
-    usePainelPeriodActivities: () => ({
-      byProject: new Map(
-        currentObras.map((o) => [
-          o.id,
-          { scheduled: [], overduePrior: [] },
-        ]),
-      ),
-      isLoading: false,
-      error: null,
-    }),
+    usePainelPeriodActivities: () => {
+      const map = new Map<string, PeriodProjectBucket>();
+      for (const o of currentObras) {
+        if (periodExcluded.has(o.id)) continue;
+        const bucket: PeriodProjectBucket = {
+          scheduled: [
+            makePeriodActivity({
+              project_id: o.id,
+              etapa: o.etapa ?? null,
+              description: `Atividade ${o.nome}`,
+            }),
+          ],
+          overduePrior: (periodOverduePrior.get(o.id) ?? []).map((a) => ({
+            ...a,
+            project_id: o.id,
+          })),
+        };
+        map.set(o.id, bucket);
+      }
+      return {
+        byProject: map,
+        isLoading: false,
+        error: null,
+      };
+    },
   };
 });
 
@@ -185,6 +241,8 @@ beforeEach(() => {
   // Garante que cada teste comece com a fixture base; testes que precisarem
   // de dados específicos chamam `setObras([...])` localmente.
   setObras(obrasFixture);
+  setPeriodExcluded([]);
+  setPeriodOverduePrior({});
 });
 
 describe("PainelObras — ordenação por etapa e semana S{N}", () => {
@@ -521,5 +579,98 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     expect(idxMedCol).toBeGreaterThanOrEqual(0);
     expect(idxExecCol).toBeGreaterThanOrEqual(0);
     expect(idxMedCol).toBeLessThan(idxExecCol);
+  });
+
+  it("tabela: filtro de período exclui obras sem `scheduled` e mantém a ordenação por atraso entre as remanescentes", () => {
+    // Cenário: 4 obras, sendo uma SEM atividade na semana (some) e três
+    // visíveis — uma atrasada média, uma atrasada pequena e uma saudável.
+    // Validamos que: (a) a obra fora do período não renderiza e
+    // (b) a ordenação padrão (atrasadas primeiro) continua valendo entre
+    // as obras filtradas, junto da presença de `overduePrior` no bucket.
+    const obrasPeriodo: PainelObra[] = [
+      makeObra({
+        id: "fora-do-periodo",
+        customer_name: "Cliente Fora do Período",
+        nome: "Obra Fora do Período",
+        etapa: "Execução",
+        entrega_oficial: "2026-03-15", // atrasada, mas sem atividade na semana
+      }),
+      makeObra({
+        id: "saudavel-no-periodo",
+        customer_name: "Cliente Saudável Período",
+        nome: "Obra Saudável Período",
+        etapa: "Medição",
+        entrega_oficial: "2026-07-10",
+      }),
+      makeObra({
+        id: "atraso-pequeno-periodo",
+        customer_name: "Cliente Atraso Pequeno Período",
+        nome: "Obra Atraso Pequeno Período",
+        etapa: "Execução",
+        entrega_oficial: "2026-04-27",
+      }),
+      makeObra({
+        id: "atraso-medio-periodo",
+        customer_name: "Cliente Atraso Médio Período",
+        nome: "Obra Atraso Médio Período",
+        etapa: "Execução",
+        entrega_oficial: "2026-04-01",
+      }),
+    ];
+
+    setObras(obrasPeriodo);
+    setPeriodExcluded(["fora-do-periodo"]);
+    // Anexa um overduePrior à obra com atraso médio para garantir que o
+    // mock honra o segundo bucket sem afetar o filtro (`scheduled` é o que
+    // controla a visibilidade).
+    setPeriodOverduePrior({
+      "atraso-medio-periodo": [
+        {
+          id: "prior-1",
+          project_id: "atraso-medio-periodo",
+          description: "Atividade anterior em aberto",
+          etapa: "Medição",
+          planned_start: PERIOD_PRIOR_ISO,
+          planned_end: PERIOD_PRIOR_ISO,
+          actual_start: null,
+          actual_end: null,
+          parent_activity_id: null,
+          responsible_name: null,
+        },
+      ],
+    });
+
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras">
+        <PainelObras />
+      </Wrapper>,
+    );
+
+    const desktopTh = container.querySelector(
+      '[data-testid="painel-obras-th-cliente"]',
+    );
+    expect(desktopTh).not.toBeNull();
+    const desktopTable = desktopTh!.closest("table")!;
+    const rows = within(desktopTable).getAllByTestId("painel-obras-row");
+    const order = rows.map(
+      (r) =>
+        within(r)
+          .getByTestId("painel-obras-cell-cliente")
+          .textContent?.trim() ?? "",
+    );
+
+    // (a) Obra sem `scheduled` foi filtrada
+    expect(order.some((t) => t.includes("Fora do Período"))).toBe(false);
+    // As três remanescentes aparecem
+    expect(order).toHaveLength(3);
+
+    // (b) Ordenação padrão preservada: atrasada média antes da pequena;
+    // saudável por último.
+    const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
+    const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
+    const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
+    expect(idxMedio).toBe(0);
+    expect(idxMedio).toBeLessThan(idxPequeno);
+    expect(idxPequeno).toBeLessThan(idxSaudavel);
   });
 });
