@@ -337,31 +337,18 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     // Cria uma fixture específica com obras atrasadas + uma "saudável".
     // `entrega_oficial` < hoje (29/abr/2026) e sem `entrega_real` ⇒ atraso > 0.
     const obrasAtraso: PainelObra[] = [
-      makeObra({
-        id: "saudavel",
-        customer_name: "Cliente Saudável",
-        nome: "Obra Saudável",
-        etapa: "Medição", // etapa canônica precoce — viria primeiro na regra antiga
-      }),
-      makeObra({
-        id: "atraso-pequeno",
-        customer_name: "Cliente Atraso Pequeno",
-        nome: "Obra Atraso Pequeno",
+      // Etapa canônica precoce: pela regra antiga viria primeiro.
+      obra("Saudável", { etapa: "Medição" }),
+      obra("Atraso Pequeno", {
         etapa: "Execução",
         entrega_oficial: "2026-04-27", // 2 dias úteis de atraso
       }),
-      makeObra({
-        id: "atraso-grande",
-        customer_name: "Cliente Atraso Grande",
-        nome: "Obra Atraso Grande",
-        etapa: "Finalizada" as never, // finalizada não conta como atraso → vai para o fim
+      // Finalizada não é contabilizada como atraso → vai para o fim.
+      obra("Atraso Grande", {
+        etapa: "Finalizada" as never,
         entrega_oficial: "2026-01-05",
-        entrega_real: null,
       }),
-      makeObra({
-        id: "atraso-medio",
-        customer_name: "Cliente Atraso Médio",
-        nome: "Obra Atraso Médio",
+      obra("Atraso Médio", {
         etapa: "Execução",
         entrega_oficial: "2026-04-01", // ~20 dias úteis de atraso
       }),
