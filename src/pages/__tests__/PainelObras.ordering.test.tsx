@@ -241,6 +241,8 @@ beforeEach(() => {
   // Garante que cada teste comece com a fixture base; testes que precisarem
   // de dados específicos chamam `setObras([...])` localmente.
   setObras(obrasFixture);
+  setPeriodExcluded([]);
+  setPeriodOverduePrior({});
 });
 
 describe("PainelObras — ordenação por etapa e semana S{N}", () => {
