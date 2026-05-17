@@ -130,6 +130,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const ALL = "__all__";
 type SortKey =
   | "atraso"
+  | "entrega_proxima"
   | "inicio_oficial"
   | "entrega_oficial"
   | "inicio_real"
@@ -662,6 +663,21 @@ export default function PainelObras() {
           const av = computeOverdueDays(a);
           const bv = computeOverdueDays(b);
           return sortDir === "asc" ? av - bv : bv - av;
+        }
+        if (sortKey === "entrega_proxima") {
+          // Entrega mais próxima: ordena por `entrega_oficial` asc, jogando
+          // para o final obras já entregues (com `entrega_real`) e sem data.
+          // Quando não há atrasos, equivale ao critério de desempate da
+          // ordenação padrão, mantendo consistência visual.
+          const aDone = !!a.entrega_real;
+          const bDone = !!b.entrega_real;
+          if (aDone !== bDone) return aDone ? 1 : -1;
+          const av = a.entrega_oficial ?? "";
+          const bv = b.entrega_oficial ?? "";
+          if (!av && !bv) return 0;
+          if (!av) return 1;
+          if (!bv) return -1;
+          return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
         }
         const av = a[sortKey] ?? "";
         const bv = b[sortKey] ?? "";
@@ -1453,6 +1469,7 @@ export default function PainelObras() {
                                 {sortKey
                                   ? ((
                                       {
+                                        entrega_proxima: "entrega + próxima",
                                         entrega_oficial: "entrega oficial",
                                         inicio_oficial: "início oficial",
                                         entrega_real: "entrega real",
@@ -1467,6 +1484,9 @@ export default function PainelObras() {
                             <SelectContent>
                               <SelectItem value="default">
                                 Atrasadas primeiro (padrão)
+                              </SelectItem>
+                              <SelectItem value="entrega_proxima">
+                                Entrega mais próxima
                               </SelectItem>
                               <SelectItem value="entrega_oficial">
                                 Entrega oficial
@@ -2862,8 +2882,9 @@ function KanbanView({
           .sort();
         agg.set(key, { num: null, str: names[0] ?? null });
       } else if (sortKey) {
+        const field = sortKey === "entrega_proxima" ? "entrega_oficial" : sortKey;
         const dates = items
-          .map((o) => o[sortKey] ?? "")
+          .map((o) => o[field] ?? "")
           .filter(Boolean)
           .sort();
         agg.set(key, { num: null, str: dates[0] ?? null });
