@@ -658,11 +658,6 @@ export default function PainelObras() {
     }
     if (sortKey) {
       rows = [...rows].sort((a, b) => {
-        if (sortKey === "atraso") {
-          const av = computeOverdueDays(a);
-          const bv = computeOverdueDays(b);
-          return sortDir === "asc" ? av - bv : bv - av;
-        }
         if (sortKey === "entrega_proxima") {
           // Entrega mais próxima: ordena por `entrega_oficial` asc, jogando
           // para o final obras já entregues (com `entrega_real`) e sem data.
