@@ -47,55 +47,47 @@ function makeObra(overrides: Partial<PainelObra>): PainelObra {
   };
 }
 
+/**
+ * Helper de fixture. Reduz duplicação derivando `id`, `nome` e
+ * `customer_name` de um único `label`. Qualquer campo pode ser sobrescrito
+ * via `overrides` — incluindo o próprio `id` quando o slug derivado for
+ * inconveniente (ex.: acentos).
+ *
+ * Uso típico:
+ *   obra("S5", { etapa: "Execução", inicio_etapa: "2026-04-01" })
+ *   obra("Atraso Médio", { etapa: "Execução", entrega_oficial: "2026-04-01" })
+ */
+function slugifyLabel(label: string): string {
+  return label
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove diacríticos
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+function obra(
+  label: string,
+  overrides: Partial<PainelObra> = {},
+): PainelObra {
+  return makeObra({
+    id: overrides.id ?? slugifyLabel(label),
+    nome: overrides.nome ?? `Obra ${label}`,
+    customer_name: overrides.customer_name ?? `Cliente ${label}`,
+    ...overrides,
+  });
+}
+
 const obrasFixture: PainelObra[] = [
   // Embaralhadas a propósito (ordem de chegada ≠ ordem esperada)
-  makeObra({
-    id: "exec-s5",
-    customer_name: "Cliente S5",
-    nome: "Obra S5",
-    etapa: "Execução",
-    inicio_etapa: "2026-04-01",
-  }), // S5
-  makeObra({
-    id: "final",
-    customer_name: "Cliente Final",
-    nome: "Obra Final",
-    etapa: "Finalizada",
-  }),
-  makeObra({
-    id: "exec-s1",
-    customer_name: "Cliente S1",
-    nome: "Obra S1",
-    etapa: "Execução",
-    inicio_etapa: "2026-04-25",
-  }), // S1 (4 dias)
-  makeObra({
-    id: "plan",
-    customer_name: "Cliente Plan",
-    nome: "Obra Plan",
-    etapa: "Planejamento",
-  }),
-  makeObra({
-    id: "exec-s3",
-    customer_name: "Cliente S3",
-    nome: "Obra S3",
-    etapa: "Execução",
-    inicio_etapa: "2026-04-15",
-  }), // S3 (14 dias)
-  makeObra({
-    id: "exec-s2",
-    customer_name: "Cliente S2",
-    nome: "Obra S2",
-    etapa: "Execução",
-    inicio_etapa: "2026-04-22",
-  }), // S2 (7 dias)
-  makeObra({
-    id: "medic",
-    customer_name: "Cliente Med",
-    nome: "Obra Med",
-    etapa: "Medição",
-  }),
+  obra("S5", { etapa: "Execução", inicio_etapa: "2026-04-01" }),
+  obra("Final", { etapa: "Finalizada" }),
+  obra("S1", { etapa: "Execução", inicio_etapa: "2026-04-25" }), // 4 dias
+  obra("Plan", { etapa: "Planejamento" }),
+  obra("S3", { etapa: "Execução", inicio_etapa: "2026-04-15" }), // 14 dias
+  obra("S2", { etapa: "Execução", inicio_etapa: "2026-04-22" }), // 7 dias
+  obra("Med", { etapa: "Medição" }),
 ];
+
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 // Cada teste pode fornecer sua própria fixture via `setObras(...)` em vez de
