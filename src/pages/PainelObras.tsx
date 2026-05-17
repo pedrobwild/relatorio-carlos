@@ -2882,8 +2882,9 @@ function KanbanView({
           .sort();
         agg.set(key, { num: null, str: names[0] ?? null });
       } else if (sortKey) {
+        const field = sortKey === "entrega_proxima" ? "entrega_oficial" : sortKey;
         const dates = items
-          .map((o) => o[sortKey] ?? "")
+          .map((o) => o[field] ?? "")
           .filter(Boolean)
           .sort();
         agg.set(key, { num: null, str: dates[0] ?? null });
