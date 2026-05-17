@@ -24,12 +24,16 @@ describe("dump", () => {
   it("dump html", () => {
     const c = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { container } = render(<QueryClientProvider client={c}><MemoryRouter initialEntries={["/gestao/painel-obras"]}><PainelObras /></MemoryRouter></QueryClientProvider>);
-    const hasTh = container.querySelector('[data-testid="painel-obras-th-cliente"]');
-    const hasRow = container.querySelectorAll('[data-testid="painel-obras-row"]').length;
-    const allTestids = Array.from(container.querySelectorAll('[data-testid]')).map(e => e.getAttribute('data-testid'));
-    const tableCount = container.querySelectorAll('table').length;
+    const html = container.innerHTML;
     // eslint-disable-next-line no-console
-    console.error("hasTh", !!hasTh, "rows", hasRow, "tables", tableCount);
-    console.error("testids:", JSON.stringify(Array.from(new Set(allTestids))));
+    console.error("contains th-cliente:", html.includes("painel-obras-th-cliente"));
+    console.error("contains painel-obras-row:", html.includes("painel-obras-row"));
+    console.error("contains Cliente Med:", html.includes("Cliente Med"));
+    console.error("contains EmptyState text:", html.includes("Nenhuma obra"));
+    console.error("contains Skeleton-ish:", html.includes("skeleton") || html.includes("Skeleton"));
+    console.error("contains BoardView:", html.includes("board-group-"));
+    console.error("contains mobile card:", html.includes("md:hidden"));
+    const slice = html.indexOf("mt-2");
+    console.error("after mt-2 snippet:", html.slice(slice, slice + 1500));
   });
 });
