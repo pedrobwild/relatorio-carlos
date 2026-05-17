@@ -376,47 +376,40 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
       }),
     ];
 
-    const original = obrasFixture.slice();
-    obrasFixture.length = 0;
-    obrasFixture.push(...obrasBoard);
+    setObras(obrasBoard);
 
-    try {
-      const { container } = render(
-        <Wrapper route="/gestao/painel-obras?view=board">
-          <PainelObras />
-        </Wrapper>,
-      );
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras?view=board">
+        <PainelObras />
+      </Wrapper>,
+    );
 
-      // O board agrupa por etapa canônica + semana. Como nenhum item tem
-      // `inicio_etapa`, todos caem no grupo "Execução" (chave Execução::S?).
-      const groupContainer = container.querySelector<HTMLElement>(
-        '[id^="board-group-Execução"]',
-      );
-      expect(groupContainer, "grupo Execução não renderizado").not.toBeNull();
+    // O board agrupa por etapa canônica + semana. Como nenhum item tem
+    // `inicio_etapa`, todos caem no grupo "Execução" (chave Execução::S?).
+    const groupContainer = container.querySelector<HTMLElement>(
+      '[id^="board-group-Execução"]',
+    );
+    expect(groupContainer, "grupo Execução não renderizado").not.toBeNull();
 
-      const rows = within(groupContainer!).getAllByTestId("painel-obras-row");
-      const order = rows.map(
-        (r) =>
-          within(r)
-            .getByTestId("painel-obras-cell-cliente")
-            .textContent?.trim() ?? "",
-      );
+    const rows = within(groupContainer!).getAllByTestId("painel-obras-row");
+    const order = rows.map(
+      (r) =>
+        within(r)
+          .getByTestId("painel-obras-cell-cliente")
+          .textContent?.trim() ?? "",
+    );
 
-      const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
-      const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
-      const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
+    const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
+    const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
+    const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
 
-      expect(idxMedio).toBeGreaterThanOrEqual(0);
-      expect(idxPequeno).toBeGreaterThanOrEqual(0);
-      expect(idxSaudavel).toBeGreaterThanOrEqual(0);
+    expect(idxMedio).toBeGreaterThanOrEqual(0);
+    expect(idxPequeno).toBeGreaterThanOrEqual(0);
+    expect(idxSaudavel).toBeGreaterThanOrEqual(0);
 
-      // Atrasadas no topo do grupo, mais atrasada primeiro; saudável ao final.
-      expect(idxMedio).toBe(0);
-      expect(idxMedio).toBeLessThan(idxPequeno);
-      expect(idxPequeno).toBeLessThan(idxSaudavel);
-    } finally {
-      obrasFixture.length = 0;
-      obrasFixture.push(...original);
-    }
+    // Atrasadas no topo do grupo, mais atrasada primeiro; saudável ao final.
+    expect(idxMedio).toBe(0);
+    expect(idxMedio).toBeLessThan(idxPequeno);
+    expect(idxPequeno).toBeLessThan(idxSaudavel);
   });
 });
