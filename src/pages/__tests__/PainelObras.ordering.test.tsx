@@ -237,17 +237,33 @@ beforeEach(() => {
   setPeriodOverduePrior({});
 });
 
-describe("PainelObras — ordenação por etapa e semana S{N}", () => {
-  it("tabela: ordena Medição → Planejamento → Execução S1→S5 → Finalizada", () => {
+describe("PainelObras — ordenação por data de entrega oficial", () => {
+  it("tabela: ordena por entrega oficial ascendente (mais próxima primeiro, sem data por último)", () => {
+    // Fixture embaralhada: a ordem esperada é estritamente pela
+    // `entrega_oficial`, ignorando a etapa canônica.
+    const obrasEntrega: PainelObra[] = [
+      obra("Entrega Tardia", {
+        etapa: "Medição",
+        entrega_oficial: "2026-12-20",
+      }),
+      obra("Entrega Próxima", {
+        etapa: "Finalizada",
+        entrega_oficial: "2026-05-10",
+      }),
+      obra("Sem Entrega", { etapa: "Execução", entrega_oficial: null }),
+      obra("Entrega Média", {
+        etapa: "Planejamento",
+        entrega_oficial: "2026-08-15",
+      }),
+    ];
+    setObras(obrasEntrega);
+
     const { container } = render(
       <Wrapper route="/gestao/painel-obras">
         <PainelObras />
       </Wrapper>,
     );
 
-    // Pega apenas as linhas dentro da tabela desktop (mobile usa cards).
-    // Há duas <table>: a desktop (com headers `painel-obras-th-cliente`) e
-    // possíveis variações; usamos o th como âncora.
     const desktopTh = container.querySelector(
       '[data-testid="painel-obras-th-cliente"]',
     );
@@ -261,28 +277,22 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
           .textContent?.trim() ?? "",
     );
 
-    // Validação: cada item deve aparecer na ordem esperada.
     const expectedSequence = [
-      "Cliente Med", // Medição
-      "Cliente Plan", // Planejamento
-      "Cliente S1", // Execução S1
-      "Cliente S2", // Execução S2
-      "Cliente S3", // Execução S3
-      "Cliente S5", // Execução S5
-      "Cliente Final", // Finalizada
+      "Entrega Próxima", // 2026-05-10
+      "Entrega Média", // 2026-08-15
+      "Entrega Tardia", // 2026-12-20
+      "Sem Entrega", // null → final
     ];
-
-    for (const expected of expectedSequence) {
-      const idx = order.findIndex((t) => t.includes(expected));
-      expect(idx, `linha "${expected}" não encontrada`).toBeGreaterThanOrEqual(
-        0,
-      );
-    }
     const indices = expectedSequence.map((e) =>
       order.findIndex((t) => t.includes(e)),
     );
-    const sorted = [...indices].sort((a, b) => a - b);
-    expect(indices).toEqual(sorted);
+    for (const [i, idx] of indices.entries()) {
+      expect(
+        idx,
+        `linha "${expectedSequence[i]}" não encontrada`,
+      ).toBeGreaterThanOrEqual(0);
+    }
+    expect(indices).toEqual([...indices].sort((a, b) => a - b));
   });
 
   it("board: cria grupos Execução - S1, S2, S3, S5 na ordem crescente, entre Planejamento e Finalizada", () => {
