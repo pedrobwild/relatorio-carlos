@@ -1484,6 +1484,9 @@ export default function PainelObras() {
                               <SelectItem value="default">
                                 Atrasadas primeiro (padrão)
                               </SelectItem>
+                              <SelectItem value="entrega_proxima">
+                                Entrega mais próxima
+                              </SelectItem>
                               <SelectItem value="entrega_oficial">
                                 Entrega oficial
                               </SelectItem>
