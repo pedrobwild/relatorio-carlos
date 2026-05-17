@@ -317,44 +317,36 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
       }),
     ];
 
-    // Reaproveita o mock do hook trocando temporariamente a lista.
-    const original = obrasFixture.slice();
-    obrasFixture.length = 0;
-    obrasFixture.push(...obrasAtraso);
+    setObras(obrasAtraso);
 
-    try {
-      const { container } = render(
-        <Wrapper route="/gestao/painel-obras">
-          <PainelObras />
-        </Wrapper>,
-      );
-      const desktopTh = container.querySelector(
-        '[data-testid="painel-obras-th-cliente"]',
-      );
-      expect(desktopTh).not.toBeNull();
-      const desktopTable = desktopTh!.closest("table")!;
-      const rows = within(desktopTable).getAllByTestId("painel-obras-row");
-      const order = rows.map(
-        (r) =>
-          within(r)
-            .getByTestId("painel-obras-cell-cliente")
-            .textContent?.trim() ?? "",
-      );
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras">
+        <PainelObras />
+      </Wrapper>,
+    );
+    const desktopTh = container.querySelector(
+      '[data-testid="painel-obras-th-cliente"]',
+    );
+    expect(desktopTh).not.toBeNull();
+    const desktopTable = desktopTh!.closest("table")!;
+    const rows = within(desktopTable).getAllByTestId("painel-obras-row");
+    const order = rows.map(
+      (r) =>
+        within(r)
+          .getByTestId("painel-obras-cell-cliente")
+          .textContent?.trim() ?? "",
+    );
 
-      const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
-      const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
-      const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
+    const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
+    const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
+    const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
 
-      // Atrasadas vêm primeiro; entre elas, mais atrasada antes da menos.
-      expect(idxMedio).toBeGreaterThanOrEqual(0);
-      expect(idxPequeno).toBeGreaterThanOrEqual(0);
-      expect(idxMedio).toBeLessThan(idxPequeno);
-      // Saudável (sem atraso) vem depois das atrasadas.
-      expect(idxPequeno).toBeLessThan(idxSaudavel);
-    } finally {
-      obrasFixture.length = 0;
-      obrasFixture.push(...original);
-    }
+    // Atrasadas vêm primeiro; entre elas, mais atrasada antes da menos.
+    expect(idxMedio).toBeGreaterThanOrEqual(0);
+    expect(idxPequeno).toBeGreaterThanOrEqual(0);
+    expect(idxMedio).toBeLessThan(idxPequeno);
+    // Saudável (sem atraso) vem depois das atrasadas.
+    expect(idxPequeno).toBeLessThan(idxSaudavel);
   });
 
   it("board: prioriza obras atrasadas no topo do grupo, com mais atrasada antes da menos", () => {
