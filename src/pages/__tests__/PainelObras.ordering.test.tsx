@@ -94,6 +94,15 @@ const obrasFixture: PainelObra[] = [
 ];
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
+// Cada teste pode fornecer sua própria fixture via `setObras(...)` em vez de
+// mutar `obrasFixture` diretamente. Isso evita efeitos colaterais entre testes
+// — antes a mutação do array compartilhado podia vazar caso uma asserção
+// lançasse antes do bloco `finally`.
+let currentObras: PainelObra[] = obrasFixture;
+function setObras(obras: PainelObra[]): void {
+  currentObras = obras;
+}
+
 vi.mock("@/hooks/usePainelObras", async () => {
   const actual = await vi.importActual<typeof import("@/hooks/usePainelObras")>(
     "@/hooks/usePainelObras",
@@ -101,7 +110,7 @@ vi.mock("@/hooks/usePainelObras", async () => {
   return {
     ...actual,
     usePainelObras: () => ({
-      obras: obrasFixture,
+      obras: currentObras,
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -136,8 +145,8 @@ vi.mock("@/components/admin/obras/DailyLogInline", () => ({
 // O Painel aplica, por padrão, um filtro de período (semana corrente) que
 // depende de `usePainelPeriodActivities`. Sem mock, a lista é esvaziada e a
 // tabela/board nem chega a renderizar — quebrando as asserções abaixo.
-// Aqui devolvemos um bucket "ocupado" para cada obra da fixture, simulando
-// que todas têm atividade planejada na semana atual.
+// Aqui devolvemos um bucket "ocupado" para cada obra da fixture corrente,
+// simulando que todas têm atividade planejada na semana atual.
 vi.mock("@/hooks/usePainelPeriodActivities", async () => {
   const actual = await vi.importActual<
     typeof import("@/hooks/usePainelPeriodActivities")
@@ -146,7 +155,7 @@ vi.mock("@/hooks/usePainelPeriodActivities", async () => {
     ...actual,
     usePainelPeriodActivities: () => ({
       byProject: new Map(
-        obrasFixture.map((o) => [
+        currentObras.map((o) => [
           o.id,
           { scheduled: [], overduePrior: [] },
         ]),
