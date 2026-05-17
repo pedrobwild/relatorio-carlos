@@ -1469,6 +1469,7 @@ export default function PainelObras() {
                                 {sortKey
                                   ? ((
                                       {
+                                        entrega_proxima: "entrega + próxima",
                                         entrega_oficial: "entrega oficial",
                                         inicio_oficial: "início oficial",
                                         entrega_real: "entrega real",
