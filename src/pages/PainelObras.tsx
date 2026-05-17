@@ -130,6 +130,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const ALL = "__all__";
 type SortKey =
   | "atraso"
+  | "entrega_proxima"
   | "inicio_oficial"
   | "entrega_oficial"
   | "inicio_real"
