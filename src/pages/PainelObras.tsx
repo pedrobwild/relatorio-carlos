@@ -3738,9 +3738,6 @@ function BoardView({
                           "responsavel_nome",
                         )}
                       </TableHead>
-                      <TableHead className="min-w-[110px] text-right">
-                        {renderSortableHeader("Atraso", "atraso")}
-                      </TableHead>
                       <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                     </TableRow>
                   </TableHeader>
