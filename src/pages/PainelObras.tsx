@@ -687,35 +687,10 @@ export default function PainelObras() {
         return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
       });
     } else {
-      // Ordenação padrão (urgência → etapa):
-      // 1) Obras atrasadas primeiro, da mais atrasada para a menos.
-      // 2) Entre as não atrasadas, mantém a ordem canônica de etapa e, dentro
-      //    de Execução, pela semana S{N}.
-      // 3) Desempate final: entrega oficial mais próxima.
-      const etapaIndex = new Map<PainelEtapa, number>(
-        ETAPA_OPTIONS.map((e, i) => [e, i] as const),
-      );
+      // Ordenação padrão: por data de entrega oficial (ascendente).
+      // Datas passadas (obras atrasadas) ficam naturalmente no topo;
+      // obras sem data de entrega vão para o final.
       rows = [...rows].sort((a, b) => {
-        const ad = computeOverdueDays(a);
-        const bd = computeOverdueDays(b);
-        const aOver = ad > 0 ? 1 : 0;
-        const bOver = bd > 0 ? 1 : 0;
-        if (aOver !== bOver) return bOver - aOver; // atrasadas no topo
-        if (aOver === 1 && ad !== bd) return bd - ad; // mais atrasadas primeiro
-        const ai = a.etapa
-          ? (etapaIndex.get(a.etapa) ?? ETAPA_OPTIONS.length)
-          : ETAPA_OPTIONS.length + 1;
-        const bi = b.etapa
-          ? (etapaIndex.get(b.etapa) ?? ETAPA_OPTIONS.length)
-          : ETAPA_OPTIONS.length + 1;
-        if (ai !== bi) return ai - bi;
-        const aw = getEtapaWeek(a);
-        const bw = getEtapaWeek(b);
-        if (aw != null || bw != null) {
-          if (aw == null) return 1;
-          if (bw == null) return -1;
-          if (aw !== bw) return aw - bw;
-        }
         const av = a.entrega_oficial ?? "";
         const bv = b.entrega_oficial ?? "";
         if (!av && !bv) return 0;
