@@ -47,55 +47,47 @@ function makeObra(overrides: Partial<PainelObra>): PainelObra {
   };
 }
 
+/**
+ * Helper de fixture. Reduz duplicação derivando `id`, `nome` e
+ * `customer_name` de um único `label`. Qualquer campo pode ser sobrescrito
+ * via `overrides` — incluindo o próprio `id` quando o slug derivado for
+ * inconveniente (ex.: acentos).
+ *
+ * Uso típico:
+ *   obra("S5", { etapa: "Execução", inicio_etapa: "2026-04-01" })
+ *   obra("Atraso Médio", { etapa: "Execução", entrega_oficial: "2026-04-01" })
+ */
+function slugifyLabel(label: string): string {
+  return label
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove diacríticos
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+function obra(
+  label: string,
+  overrides: Partial<PainelObra> = {},
+): PainelObra {
+  return makeObra({
+    id: overrides.id ?? slugifyLabel(label),
+    nome: overrides.nome ?? `Obra ${label}`,
+    customer_name: overrides.customer_name ?? `Cliente ${label}`,
+    ...overrides,
+  });
+}
+
 const obrasFixture: PainelObra[] = [
   // Embaralhadas a propósito (ordem de chegada ≠ ordem esperada)
-  makeObra({
-    id: "exec-s5",
-    customer_name: "Cliente S5",
-    nome: "Obra S5",
-    etapa: "Execução",
-    inicio_etapa: "2026-04-01",
-  }), // S5
-  makeObra({
-    id: "final",
-    customer_name: "Cliente Final",
-    nome: "Obra Final",
-    etapa: "Finalizada",
-  }),
-  makeObra({
-    id: "exec-s1",
-    customer_name: "Cliente S1",
-    nome: "Obra S1",
-    etapa: "Execução",
-    inicio_etapa: "2026-04-25",
-  }), // S1 (4 dias)
-  makeObra({
-    id: "plan",
-    customer_name: "Cliente Plan",
-    nome: "Obra Plan",
-    etapa: "Planejamento",
-  }),
-  makeObra({
-    id: "exec-s3",
-    customer_name: "Cliente S3",
-    nome: "Obra S3",
-    etapa: "Execução",
-    inicio_etapa: "2026-04-15",
-  }), // S3 (14 dias)
-  makeObra({
-    id: "exec-s2",
-    customer_name: "Cliente S2",
-    nome: "Obra S2",
-    etapa: "Execução",
-    inicio_etapa: "2026-04-22",
-  }), // S2 (7 dias)
-  makeObra({
-    id: "medic",
-    customer_name: "Cliente Med",
-    nome: "Obra Med",
-    etapa: "Medição",
-  }),
+  obra("S5", { etapa: "Execução", inicio_etapa: "2026-04-01" }),
+  obra("Final", { etapa: "Finalizada" }),
+  obra("S1", { etapa: "Execução", inicio_etapa: "2026-04-25" }), // 4 dias
+  obra("Plan", { etapa: "Planejamento" }),
+  obra("S3", { etapa: "Execução", inicio_etapa: "2026-04-15" }), // 14 dias
+  obra("S2", { etapa: "Execução", inicio_etapa: "2026-04-22" }), // 7 dias
+  obra("Med", { etapa: "Medição" }),
 ];
+
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 // Cada teste pode fornecer sua própria fixture via `setObras(...)` em vez de
@@ -345,31 +337,18 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     // Cria uma fixture específica com obras atrasadas + uma "saudável".
     // `entrega_oficial` < hoje (29/abr/2026) e sem `entrega_real` ⇒ atraso > 0.
     const obrasAtraso: PainelObra[] = [
-      makeObra({
-        id: "saudavel",
-        customer_name: "Cliente Saudável",
-        nome: "Obra Saudável",
-        etapa: "Medição", // etapa canônica precoce — viria primeiro na regra antiga
-      }),
-      makeObra({
-        id: "atraso-pequeno",
-        customer_name: "Cliente Atraso Pequeno",
-        nome: "Obra Atraso Pequeno",
+      // Etapa canônica precoce: pela regra antiga viria primeiro.
+      obra("Saudável", { etapa: "Medição" }),
+      obra("Atraso Pequeno", {
         etapa: "Execução",
         entrega_oficial: "2026-04-27", // 2 dias úteis de atraso
       }),
-      makeObra({
-        id: "atraso-grande",
-        customer_name: "Cliente Atraso Grande",
-        nome: "Obra Atraso Grande",
-        etapa: "Finalizada" as never, // finalizada não conta como atraso → vai para o fim
+      // Finalizada não é contabilizada como atraso → vai para o fim.
+      obra("Atraso Grande", {
+        etapa: "Finalizada" as never,
         entrega_oficial: "2026-01-05",
-        entrega_real: null,
       }),
-      makeObra({
-        id: "atraso-medio",
-        customer_name: "Cliente Atraso Médio",
-        nome: "Obra Atraso Médio",
+      obra("Atraso Médio", {
         etapa: "Execução",
         entrega_oficial: "2026-04-01", // ~20 dias úteis de atraso
       }),
@@ -411,24 +390,15 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     // Todas em "Execução" sem `inicio_etapa` ⇒ caem no mesmo grupo
     // "Execução" (S? – sem semana), permitindo comparar a ordem interna.
     const obrasBoard: PainelObra[] = [
-      makeObra({
-        id: "board-saudavel",
-        customer_name: "Cliente Saudável Board",
-        nome: "Obra Saudável Board",
+      obra("Saudável Board", {
         etapa: "Execução",
         entrega_oficial: "2026-06-30", // futura ⇒ sem atraso
       }),
-      makeObra({
-        id: "board-atraso-pequeno",
-        customer_name: "Cliente Atraso Pequeno Board",
-        nome: "Obra Atraso Pequeno Board",
+      obra("Atraso Pequeno Board", {
         etapa: "Execução",
         entrega_oficial: "2026-04-27", // 2 dias úteis de atraso
       }),
-      makeObra({
-        id: "board-atraso-medio",
-        customer_name: "Cliente Atraso Médio Board",
-        nome: "Obra Atraso Médio Board",
+      obra("Atraso Médio Board", {
         etapa: "Execução",
         entrega_oficial: "2026-04-01", // ~20 dias úteis de atraso
       }),
@@ -480,31 +450,16 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     // antes da regra de urgência a saudável apareceria primeiro só por ter
     // sido inserida antes.
     const obrasBoard: PainelObra[] = [
-      makeObra({
-        id: "med-saudavel",
-        customer_name: "Cliente Med Saudável",
-        nome: "Obra Med Saudável",
-        etapa: "Medição",
-        entrega_oficial: "2026-07-15",
-      }),
-      makeObra({
-        id: "med-atrasada",
-        customer_name: "Cliente Med Atrasada",
-        nome: "Obra Med Atrasada",
+      obra("Med Saudável", { etapa: "Medição", entrega_oficial: "2026-07-15" }),
+      obra("Med Atrasada", {
         etapa: "Medição",
         entrega_oficial: "2026-04-10", // ~13 dias úteis de atraso
       }),
-      makeObra({
-        id: "exec-saudavel",
-        customer_name: "Cliente Exec Saudável",
-        nome: "Obra Exec Saudável",
+      obra("Exec Saudável", {
         etapa: "Execução",
         entrega_oficial: "2026-07-30",
       }),
-      makeObra({
-        id: "exec-atrasada",
-        customer_name: "Cliente Exec Atrasada",
-        nome: "Obra Exec Atrasada",
+      obra("Exec Atrasada", {
         etapa: "Execução",
         entrega_oficial: "2026-04-20", // ~7 dias úteis de atraso
       }),
@@ -588,31 +543,19 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     // (b) a ordenação padrão (atrasadas primeiro) continua valendo entre
     // as obras filtradas, junto da presença de `overduePrior` no bucket.
     const obrasPeriodo: PainelObra[] = [
-      makeObra({
-        id: "fora-do-periodo",
-        customer_name: "Cliente Fora do Período",
-        nome: "Obra Fora do Período",
+      obra("Fora do Período", {
         etapa: "Execução",
         entrega_oficial: "2026-03-15", // atrasada, mas sem atividade na semana
       }),
-      makeObra({
-        id: "saudavel-no-periodo",
-        customer_name: "Cliente Saudável Período",
-        nome: "Obra Saudável Período",
+      obra("Saudável Período", {
         etapa: "Medição",
         entrega_oficial: "2026-07-10",
       }),
-      makeObra({
-        id: "atraso-pequeno-periodo",
-        customer_name: "Cliente Atraso Pequeno Período",
-        nome: "Obra Atraso Pequeno Período",
+      obra("Atraso Pequeno Período", {
         etapa: "Execução",
         entrega_oficial: "2026-04-27",
       }),
-      makeObra({
-        id: "atraso-medio-periodo",
-        customer_name: "Cliente Atraso Médio Período",
-        nome: "Obra Atraso Médio Período",
+      obra("Atraso Médio Período", {
         etapa: "Execução",
         entrega_oficial: "2026-04-01",
       }),
