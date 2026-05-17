@@ -1740,9 +1740,6 @@ export default function PainelObras() {
                               sortKey="responsavel_nome"
                             />
                           </TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px] text-right">
-                            <SortableHeader label="Atraso" sortKey="atraso" />
-                          </TableHead>
                           <TableHead className="w-12 sm:w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
