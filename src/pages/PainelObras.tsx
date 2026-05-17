@@ -630,12 +630,21 @@ export default function PainelObras() {
         return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
       });
     } else {
-      // Ordenação padrão: pela etapa canônica e, dentro de Execução, pela
-      // semana S{N} (S1 → S2 → ...). Empata por entrega oficial mais próxima.
+      // Ordenação padrão (urgência → etapa):
+      // 1) Obras atrasadas primeiro, da mais atrasada para a menos.
+      // 2) Entre as não atrasadas, mantém a ordem canônica de etapa e, dentro
+      //    de Execução, pela semana S{N}.
+      // 3) Desempate final: entrega oficial mais próxima.
       const etapaIndex = new Map<PainelEtapa, number>(
         ETAPA_OPTIONS.map((e, i) => [e, i] as const),
       );
       rows = [...rows].sort((a, b) => {
+        const ad = computeOverdueDays(a);
+        const bd = computeOverdueDays(b);
+        const aOver = ad > 0 ? 1 : 0;
+        const bOver = bd > 0 ? 1 : 0;
+        if (aOver !== bOver) return bOver - aOver; // atrasadas no topo
+        if (aOver === 1 && ad !== bd) return bd - ad; // mais atrasadas primeiro
         const ai = a.etapa
           ? (etapaIndex.get(a.etapa) ?? ETAPA_OPTIONS.length)
           : ETAPA_OPTIONS.length + 1;
@@ -1416,7 +1425,7 @@ export default function PainelObras() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="default">
-                                Entrega + próxima (padrão)
+                                Atrasadas primeiro (padrão)
                               </SelectItem>
                               <SelectItem value="entrega_oficial">
                                 Entrega oficial
