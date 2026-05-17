@@ -580,4 +580,97 @@ describe("PainelObras — ordenação por etapa e semana S{N}", () => {
     expect(idxExecCol).toBeGreaterThanOrEqual(0);
     expect(idxMedCol).toBeLessThan(idxExecCol);
   });
+
+  it("tabela: filtro de período exclui obras sem `scheduled` e mantém a ordenação por atraso entre as remanescentes", () => {
+    // Cenário: 4 obras, sendo uma SEM atividade na semana (some) e três
+    // visíveis — uma atrasada média, uma atrasada pequena e uma saudável.
+    // Validamos que: (a) a obra fora do período não renderiza e
+    // (b) a ordenação padrão (atrasadas primeiro) continua valendo entre
+    // as obras filtradas, junto da presença de `overduePrior` no bucket.
+    const obrasPeriodo: PainelObra[] = [
+      makeObra({
+        id: "fora-do-periodo",
+        customer_name: "Cliente Fora do Período",
+        nome: "Obra Fora do Período",
+        etapa: "Execução",
+        entrega_oficial: "2026-03-15", // atrasada, mas sem atividade na semana
+      }),
+      makeObra({
+        id: "saudavel-no-periodo",
+        customer_name: "Cliente Saudável Período",
+        nome: "Obra Saudável Período",
+        etapa: "Medição",
+        entrega_oficial: "2026-07-10",
+      }),
+      makeObra({
+        id: "atraso-pequeno-periodo",
+        customer_name: "Cliente Atraso Pequeno Período",
+        nome: "Obra Atraso Pequeno Período",
+        etapa: "Execução",
+        entrega_oficial: "2026-04-27",
+      }),
+      makeObra({
+        id: "atraso-medio-periodo",
+        customer_name: "Cliente Atraso Médio Período",
+        nome: "Obra Atraso Médio Período",
+        etapa: "Execução",
+        entrega_oficial: "2026-04-01",
+      }),
+    ];
+
+    setObras(obrasPeriodo);
+    setPeriodExcluded(["fora-do-periodo"]);
+    // Anexa um overduePrior à obra com atraso médio para garantir que o
+    // mock honra o segundo bucket sem afetar o filtro (`scheduled` é o que
+    // controla a visibilidade).
+    setPeriodOverduePrior({
+      "atraso-medio-periodo": [
+        {
+          id: "prior-1",
+          project_id: "atraso-medio-periodo",
+          description: "Atividade anterior em aberto",
+          etapa: "Medição",
+          planned_start: PERIOD_PRIOR_ISO,
+          planned_end: PERIOD_PRIOR_ISO,
+          actual_start: null,
+          actual_end: null,
+          parent_activity_id: null,
+          responsible_name: null,
+        },
+      ],
+    });
+
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras">
+        <PainelObras />
+      </Wrapper>,
+    );
+
+    const desktopTh = container.querySelector(
+      '[data-testid="painel-obras-th-cliente"]',
+    );
+    expect(desktopTh).not.toBeNull();
+    const desktopTable = desktopTh!.closest("table")!;
+    const rows = within(desktopTable).getAllByTestId("painel-obras-row");
+    const order = rows.map(
+      (r) =>
+        within(r)
+          .getByTestId("painel-obras-cell-cliente")
+          .textContent?.trim() ?? "",
+    );
+
+    // (a) Obra sem `scheduled` foi filtrada
+    expect(order.some((t) => t.includes("Fora do Período"))).toBe(false);
+    // As três remanescentes aparecem
+    expect(order).toHaveLength(3);
+
+    // (b) Ordenação padrão preservada: atrasada média antes da pequena;
+    // saudável por último.
+    const idxMedio = order.findIndex((t) => t.includes("Atraso Médio"));
+    const idxPequeno = order.findIndex((t) => t.includes("Atraso Pequeno"));
+    const idxSaudavel = order.findIndex((t) => t.includes("Saudável"));
+    expect(idxMedio).toBe(0);
+    expect(idxMedio).toBeLessThan(idxPequeno);
+    expect(idxPequeno).toBeLessThan(idxSaudavel);
+  });
 });
