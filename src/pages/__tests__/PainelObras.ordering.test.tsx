@@ -133,6 +133,30 @@ vi.mock("@/components/admin/obras/DailyLogInline", () => ({
   DailyLogInline: () => null,
 }));
 
+// O Painel aplica, por padrão, um filtro de período (semana corrente) que
+// depende de `usePainelPeriodActivities`. Sem mock, a lista é esvaziada e a
+// tabela/board nem chega a renderizar — quebrando as asserções abaixo.
+// Aqui devolvemos um bucket "ocupado" para cada obra da fixture, simulando
+// que todas têm atividade planejada na semana atual.
+vi.mock("@/hooks/usePainelPeriodActivities", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/hooks/usePainelPeriodActivities")
+  >("@/hooks/usePainelPeriodActivities");
+  return {
+    ...actual,
+    usePainelPeriodActivities: () => ({
+      byProject: new Map(
+        obrasFixture.map((o) => [
+          o.id,
+          { scheduled: [], overduePrior: [] },
+        ]),
+      ),
+      isLoading: false,
+      error: null,
+    }),
+  };
+});
+
 import PainelObras from "../PainelObras";
 
 function Wrapper({ children, route }: { children: ReactNode; route: string }) {
