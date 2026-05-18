@@ -123,7 +123,7 @@ export function ProjectRouteTransition({
   // Continuously snapshot the current route's scroll positions so we have
   // an up-to-date value the moment the user navigates away.
   useEffect(() => {
-    let lastSave = 0;
+    let lastSave = Number.NEGATIVE_INFINITY;
     const save = () => {
       const now = Date.now();
       if (now - lastSave < SAVE_THROTTLE_MS) return;
