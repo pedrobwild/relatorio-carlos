@@ -88,10 +88,14 @@ function NotificationRow({
   notification,
   onRead,
   onNavigate,
+  isSelected,
+  onSelect,
 }: {
   notification: Notification;
   onRead: (id: string) => void;
   onNavigate: (url: string) => void;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
 }) {
   const config = typeConfig[notification.type] ?? typeConfig.general;
   const Icon = config.icon;
@@ -100,7 +104,9 @@ function NotificationRow({
 
   return (
     <button
+      aria-pressed={isSelected}
       onClick={() => {
+        onSelect(notification.id);
         if (isUnread) onRead(notification.id);
         if (notification.action_url) onNavigate(notification.action_url);
       }}
@@ -110,6 +116,7 @@ function NotificationRow({
         isUnread &&
           isBlocking &&
           "bg-destructive/5 border-l-2 border-destructive",
+        isSelected && "ring-2 ring-primary/40 bg-primary/10",
       )}
     >
       <div className={cn("mt-0.5 shrink-0", config.className)}>
@@ -198,6 +205,35 @@ export function MobileNotificationsSheet({
   } = useNotificationsInfinite();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Drag-to-dismiss state. We translate the SheetContent imperatively
+  // (via ref) during the gesture to keep it 60fps and avoid React re-renders.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const dragStartYRef = useRef<number | null>(null);
+  const dragDeltaRef = useRef(0);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  const resetTransform = useCallback((withTransition: boolean) => {
+    const el = contentRef.current;
+    if (!el) return;
+    el.style.transition = withTransition
+      ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
+      : "none";
+    el.style.transform = "";
+  }, []);
+
+  // Garante que ao fechar o sheet (por qualquer caminho: swipe, overlay,
+  // ESC, botão fechar, navegação) o estado interno volte ao padrão.
+  useEffect(() => {
+    if (!open) {
+      setActiveTab("all");
+      setSelectedId(null);
+      dragStartYRef.current = null;
+      dragDeltaRef.current = 0;
+      resetTransform(false);
+    }
+  }, [open, resetTransform]);
 
   const actionNotifications = useMemo(
     () => notifications.filter((n) => getUrgencyCategory(n.type) === "action"),
@@ -219,30 +255,13 @@ export function MobileNotificationsSheet({
         : notifications;
 
   const handleNavigate = (url: string) => {
-    // Reset the urgency tab so the user returns to a clean state ("Todas"),
-    // close the sheet, then navigate. The notification was already marked as
-    // read in NotificationRow.onClick — when the user returns, the unread
-    // badge and ordering reflect that automatically via TanStack Query.
-    setActiveTab("all");
+    // Marca a notificação como "selecionada" só visualmente durante o
+    // fechamento, e dispara onOpenChange(false) — o useEffect acima limpa
+    // selectedId/activeTab quando `open` vira false, garantindo retorno
+    // ao estado padrão na próxima abertura.
     onOpenChange(false);
     navigate(url);
   };
-
-  // Drag-to-dismiss state. We translate the SheetContent imperatively
-  // (via ref) during the gesture to keep it 60fps and avoid React re-renders.
-  const contentRef = useRef<HTMLDivElement>(null);
-  const dragStartYRef = useRef<number | null>(null);
-  const dragDeltaRef = useRef(0);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-
-  const resetTransform = useCallback((withTransition: boolean) => {
-    const el = contentRef.current;
-    if (!el) return;
-    el.style.transition = withTransition
-      ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
-      : "none";
-    el.style.transform = "";
-  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
@@ -404,6 +423,8 @@ export function MobileNotificationsSheet({
                         notification={n}
                         onRead={markAsRead}
                         onNavigate={handleNavigate}
+                        isSelected={selectedId === n.id}
+                        onSelect={setSelectedId}
                       />
                     ))}
                     {/* Infinite-scroll sentinel — only meaningful in "all" tab
