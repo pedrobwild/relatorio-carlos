@@ -158,6 +158,20 @@ function NotificationRow({
   );
 }
 
+/** Linha "fantasma" usada enquanto o cache inicial carrega. */
+function NotificationRowSkeleton() {
+  return (
+    <div className="w-full px-4 py-3.5 flex items-start gap-3 min-h-[56px] rounded-xl">
+      <Skeleton className="w-5 h-5 rounded-md shrink-0 mt-0.5" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <Skeleton className="h-3.5 w-3/4" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-2.5 w-16" />
+      </div>
+    </div>
+  );
+}
+
 /**
  * Tiny IntersectionObserver-backed sentinel that fires `onIntersect`
  * once when scrolled into view. Re-arms when `hasNextPage` rerenders it.
