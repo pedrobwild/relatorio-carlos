@@ -2292,7 +2292,7 @@ function ObraRow({
         </TableCell>
 
         {/* Responsável */}
-        <TableCell className="min-w-[150px] relative z-table-body overflow-hidden">
+        <TableCell className="min-w-[150px] relative z-table-body overflow-hidden hidden xl:table-cell">
           <Select
             value={obra.responsavel_id ?? NONE}
             onValueChange={(v) =>
