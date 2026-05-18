@@ -13,6 +13,14 @@ import {
 } from "@/config/mobileNav";
 import { MobileProfileSheet } from "./MobileProfileSheet";
 import { rememberMobileNavSlot } from "@/lib/mobileBottomNavMemory";
+import { patchPortalViewState } from "@/lib/portalViewState";
+
+const ROUTE_TAB_SLOTS = new Set([
+  "financeiro",
+  "documentos",
+  "formalizacoes",
+  "pendencias",
+]);
 
 /**
  * Universal mobile bottom navigation — 4 tabs + Profile.
