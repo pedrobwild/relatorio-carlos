@@ -159,8 +159,15 @@ export function MobileNotificationsSheet({
   open,
   onOpenChange,
 }: MobileNotificationsSheetProps) {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useNotificationsInfinite();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
 
