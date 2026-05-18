@@ -43,6 +43,7 @@ import { useProjectPortal } from "@/hooks/useProjectPortal";
 import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LiveStatus } from "@/components/a11y/LiveStatus";
+import { trackAmplitude } from "@/lib/amplitude";
 
 // Lazy load heavy components
 const _GanttChart = lazy(() => import("@/components/GanttChart"));
