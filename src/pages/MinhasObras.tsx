@@ -75,27 +75,30 @@ export default function MinhasObras() {
     [navigate],
   );
 
-  // Sort: active first, then by progress desc
+  // Ordenação memoizada: ativos primeiro, depois por progresso desc.
+  // STATUS_ORDER vive fora do componente (módulo) para não realocar a cada
+  // render. A dependência única é `projects`; sem mudança de referência,
+  // mantemos a mesma instância e evitamos re-renders dos filhos memoizados.
   const sortedProjects = useMemo(() => {
-    const statusOrder: Record<string, number> = {
-      active: 0,
-      paused: 1,
-      completed: 2,
-      cancelled: 3,
-    };
     return [...projects].sort((a, b) => {
       const statusDiff =
-        (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
+        (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
       if (statusDiff !== 0) return statusDiff;
       return (b.progress_percentage || 0) - (a.progress_percentage || 0);
     });
   }, [projects]);
 
   const hasMultipleProjects = projects.length > 1;
-  // Em mobile, se há vencimento urgente, mostramos o card de pagamentos
+
+  // Em mobile, se há vencimento urgente, promovemos o card de pagamentos
   // ANTES da lista (info financeira acima da dobra — best practice mobile UX).
-  const promotePaymentsOnMobile =
-    upcomingPayments.length > 0 && hasUrgentPayment(upcomingPayments);
+  // Memoizamos para evitar recomputar `hasUrgentPayment` (parseISO + Date.now
+  // por item) a cada render e estabilizar a className condicional do bloco
+  // que depende disso — preservando a identidade do nó e evitando reflows.
+  const promotePaymentsOnMobile = useMemo(
+    () => upcomingPayments.length > 0 && hasUrgentPayment(upcomingPayments),
+    [upcomingPayments],
+  );
 
   return (
     <div className="min-h-screen min-h-[100dvh] overflow-x-hidden bg-gradient-to-b from-primary/5 via-background to-background pb-safe pl-safe pr-safe">
