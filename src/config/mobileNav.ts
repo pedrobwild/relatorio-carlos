@@ -4,6 +4,8 @@ import {
   DollarSign,
   AlertCircle,
   CheckSquare,
+  FolderOpen,
+  ClipboardSignature,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -18,7 +20,7 @@ export type MobileNavBadge =
 
 export type MobileNavSlot = {
   id: string;
-  /** Short label (≤10 chars), never abbreviated. */
+  /** Short label (≤12 chars), never abbreviated. */
   label: string;
   icon: LucideIcon;
   /** Resolves to the destination URL. Receives both project-scoped paths (when inside an obra) and a fallback flag. */
@@ -34,26 +36,27 @@ const STAFF_NCS = "/gestao/nao-conformidades";
 
 export const CLIENT_NAV: MobileNavSlot[] = [
   {
-    id: "inicio",
-    label: "Início",
-    icon: Home,
-    to: () => HOME_CLIENT,
-    badge: "none",
-  },
-  {
-    id: "obra",
-    label: "Obra",
-    icon: Building2,
-    // Hub-da-obra is not built yet (C2); falls back to the project's "relatório" landing.
-    to: ({ paths, hasProject }) => (hasProject ? paths.relatorio : HOME_CLIENT),
-    badge: "none",
-  },
-  {
     id: "financeiro",
     label: "Financeiro",
     icon: DollarSign,
     to: ({ paths, hasProject }) =>
       hasProject ? paths.financeiro : HOME_CLIENT,
+    badge: "none",
+  },
+  {
+    id: "documentos",
+    label: "Documentos",
+    icon: FolderOpen,
+    to: ({ paths, hasProject }) =>
+      hasProject ? paths.documentos : HOME_CLIENT,
+    badge: "none",
+  },
+  {
+    id: "formalizacoes",
+    label: "Formalizações",
+    icon: ClipboardSignature,
+    to: ({ paths, hasProject }) =>
+      hasProject ? paths.formalizacoes : HOME_CLIENT,
     badge: "none",
   },
   {
