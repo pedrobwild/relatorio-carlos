@@ -204,6 +204,12 @@ const Index = () => {
     if (urlTab) {
       if (!(VISIBLE_TABS as readonly string[]).includes(urlTab)) return;
       if (urlTab === activeTab) return;
+      trackAmplitude("mobile_tab_synced", {
+        projectId: projectId ?? null,
+        from: activeTab,
+        to: urlTab,
+        reason: "url_param",
+      });
       setActiveTab(urlTab);
       return;
     }
@@ -213,6 +219,12 @@ const Index = () => {
       if (!stored) return;
       if (!(VISIBLE_TABS as readonly string[]).includes(stored)) return;
       if (stored === activeTab) return;
+      trackAmplitude("mobile_tab_synced", {
+        projectId: projectId ?? null,
+        from: activeTab,
+        to: stored,
+        reason: "localstorage_restore",
+      });
       setActiveTab(stored);
     } catch {
       // ignore storage access errors (private mode, quota, etc.)
