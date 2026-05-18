@@ -23,7 +23,7 @@ const ReportFooter = ({ data }: ReportFooterProps) => {
         <div className="flex items-center gap-2">
           <Phone className="w-4 h-4 text-foreground/60 shrink-0" />
           <span className="text-sm font-medium text-foreground">
-            (11) 99999-9999
+            (11) 91190-6183
           </span>
         </div>
         <div className="flex items-center gap-2">

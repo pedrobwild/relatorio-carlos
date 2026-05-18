@@ -5,7 +5,7 @@
  */
 
 /** WhatsApp number in E.164 (no spaces, no `+`). */
-export const SUPPORT_WHATSAPP_NUMBER = "5511999999999";
+export const SUPPORT_WHATSAPP_NUMBER = "5511911906183";
 
 export const SUPPORT_WHATSAPP_DEFAULT_MESSAGE =
   "Olá, preciso de ajuda no Portal BWild.";
