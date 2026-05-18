@@ -3652,7 +3652,7 @@ function BoardView({
   };
 
   return (
-    <div className="space-y-2">
+    <StickyTableScroller className="space-y-2">
       <div className="flex items-center justify-between gap-2 px-1">
         <p className="text-xs text-muted-foreground">
           {groups.length} {groups.length === 1 ? "grupo" : "grupos"} ·{" "}
@@ -3686,7 +3686,7 @@ function BoardView({
               onClick={() => toggleGroup(g.key)}
               aria-expanded={!isCollapsed}
               aria-controls={`board-group-${g.key}`}
-              className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-accent/30 transition-colors rounded-t-xl"
+              className="sticky top-0 z-[11] flex w-full items-center gap-3 px-3 py-2 text-left bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border-subtle hover:bg-accent/30 transition-colors rounded-t-xl"
             >
               <span
                 aria-hidden="true"
@@ -3720,7 +3720,7 @@ function BoardView({
               >
                 <Table
                   className={cn(
-                    "w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
+                    "w-full text-sm [&_thead_th]:sticky [&_thead_th]:top-[38px] [&_thead_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
                     densityTableClass,
                   )}
                 >
@@ -3785,7 +3785,7 @@ function BoardView({
           </SectionCard>
         );
       })}
-    </div>
+    </StickyTableScroller>
   );
 }
 
