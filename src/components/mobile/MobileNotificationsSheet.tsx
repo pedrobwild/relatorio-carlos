@@ -501,6 +501,25 @@ export function MobileNotificationsSheet({
         ? updateNotifications
         : notifications;
 
+  // Quando a lista exibida muda de tamanho (nova notificação chegou via
+  // realtime, página seguinte carregada, item lido sai do filtro, etc.)
+  // e o usuário ainda não rolou manualmente, mantém o scroll ancorado
+  // no topo. Se ele já rolou, respeitamos a posição atual.
+  const lastLenRef = useRef(displayed.length);
+  useEffect(() => {
+    if (!open) {
+      lastLenRef.current = displayed.length;
+      return;
+    }
+    if (displayed.length !== lastLenRef.current) {
+      lastLenRef.current = displayed.length;
+      if (!userScrolledRef.current) {
+        const raf = requestAnimationFrame(resetScrollContainers);
+        return () => cancelAnimationFrame(raf);
+      }
+    }
+  }, [displayed.length, open, resetScrollContainers]);
+
   const handleNavigate = (url: string) => {
     // Feedback imediato: ativa estado de "navegando" para mostrar spinner
     // na linha tocada enquanto fecha o sheet e roteia. O useEffect de
