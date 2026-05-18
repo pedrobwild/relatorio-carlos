@@ -3736,14 +3736,14 @@ function BoardGroupCard({
 
   return (
     <SectionCard flush>
-      <div ref={cardRef}>
+      <div ref={cardRef} className="group/card" data-scrolled-y="false" data-scrolled-x="false">
         <button
           ref={titleRef}
           type="button"
           onClick={onToggle}
           aria-expanded={!isCollapsed}
           aria-controls={`board-group-${groupKey}`}
-          className="sticky top-0 z-[11] flex w-full items-center gap-3 px-3 py-2 text-left bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border-subtle hover:bg-accent/30 transition-colors rounded-t-xl"
+          className="sticky top-0 z-[11] flex w-full items-center gap-3 px-3 py-2 text-left bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border-subtle hover:bg-accent/30 transition-[box-shadow,background-color,border-color] duration-150 rounded-t-xl group-data-[scrolled-y=true]/card:border-border group-data-[scrolled-y=true]/card:shadow-[0_6px_10px_-8px_hsl(var(--foreground)/0.18)]"
         >
           <span
             aria-hidden="true"
