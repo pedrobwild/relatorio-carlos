@@ -154,7 +154,6 @@ export function ProjectRouteTransition({
   // Handle the actual route swap: save outgoing position, decide whether
   // to restore or reset on the incoming route.
   useEffect(() => {
-    console.warn("[DBG-EFF]", { tracked: trackedPathRef.current, path: location.pathname, type: navigationType });
     if (trackedPathRef.current === location.pathname) return;
 
     // Save the outgoing route's final scroll, in case the throttle skipped
@@ -169,7 +168,6 @@ export function ProjectRouteTransition({
       navigationType === "POP"
         ? (scrollPositions.get(location.pathname) ?? null)
         : null;
-    console.warn("[DBG-PRT]", { type: navigationType, path: location.pathname, saved, keys: [...scrollPositions.keys()] });
 
     setIsSwapping(true);
     const timer = window.setTimeout(() => {
