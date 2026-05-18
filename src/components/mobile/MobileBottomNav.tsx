@@ -26,7 +26,16 @@ export function MobileBottomNav() {
   const { stats } = usePendencias({ projectId });
   const { unreadCount } = useNotifications();
   const { isStaff } = useUserRole();
+  const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
+
+  // Persist the slot whenever the URL matches one — covers direct navigation,
+  // back/forward and deep links, not just taps on the nav itself.
+  useEffect(() => {
+    if (!projectId) return;
+    const segment = location.pathname.split("/")[3];
+    if (segment) rememberMobileNavSlot(projectId, segment);
+  }, [location.pathname, projectId]);
 
   const criticalPendencias = stats.overdueCount + stats.urgentCount;
   const hasProject = !!projectId;
