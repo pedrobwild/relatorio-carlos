@@ -87,9 +87,14 @@ export function ProtectedRoute({
     // Redirect based on highest priority role
     if (isStaff) {
       return <Navigate to="/gestao" replace />;
-    } else if (isCustomer) {
+    }
+    if (isCustomer) {
       return <Navigate to="/minhas-obras" replace />;
     }
+    // Autenticado mas sem nenhum papel permitido e sem perfil staff/customer:
+    // nega por padrão em vez de cair no `return children` (não vazar conteúdo
+    // protegido para usuários sem papel).
+    return <Navigate to={redirectTo} replace />;
   }
 
   debugNav("ProtectedRoute: access granted", {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import {
   ProtectedRoute,
   StaffRoute,
@@ -97,11 +97,23 @@ describe("ProtectedRoute", () => {
     });
     mockedUseUserRole.mockReturnValue(createMockRoleState([]));
 
+    // ProtectedRoute redireciona para "/auth" via <Navigate state={{from}}>.
+    // É preciso um <Routes> com rota de destino — como no app real — senão
+    // o redirect não "aterrissa" e o Navigate re-dispara a cada render
+    // (state é um objeto novo a cada vez), gerando loop infinito e OOM.
     const { queryByTestId } = render(
       <MemoryRouter initialEntries={["/protected"]}>
-        <ProtectedRoute>
-          <TestComponent />
-        </ProtectedRoute>
+        <Routes>
+          <Route
+            path="/protected"
+            element={
+              <ProtectedRoute>
+                <TestComponent />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/auth" element={<div>Auth</div>} />
+        </Routes>
       </MemoryRouter>,
     );
 
