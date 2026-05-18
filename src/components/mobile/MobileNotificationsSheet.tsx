@@ -88,10 +88,14 @@ function NotificationRow({
   notification,
   onRead,
   onNavigate,
+  isSelected,
+  onSelect,
 }: {
   notification: Notification;
   onRead: (id: string) => void;
   onNavigate: (url: string) => void;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
 }) {
   const config = typeConfig[notification.type] ?? typeConfig.general;
   const Icon = config.icon;
@@ -100,7 +104,9 @@ function NotificationRow({
 
   return (
     <button
+      aria-pressed={isSelected}
       onClick={() => {
+        onSelect(notification.id);
         if (isUnread) onRead(notification.id);
         if (notification.action_url) onNavigate(notification.action_url);
       }}
@@ -110,6 +116,7 @@ function NotificationRow({
         isUnread &&
           isBlocking &&
           "bg-destructive/5 border-l-2 border-destructive",
+        isSelected && "ring-2 ring-primary/40 bg-primary/10",
       )}
     >
       <div className={cn("mt-0.5 shrink-0", config.className)}>
