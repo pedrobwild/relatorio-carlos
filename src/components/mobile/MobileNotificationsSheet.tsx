@@ -300,10 +300,10 @@ export function MobileNotificationsSheet({
         : notifications;
 
   const handleNavigate = (url: string) => {
-    // Marca a notificação como "selecionada" só visualmente durante o
-    // fechamento, e dispara onOpenChange(false) — o useEffect acima limpa
-    // selectedId/activeTab quando `open` vira false, garantindo retorno
-    // ao estado padrão na próxima abertura.
+    // Feedback imediato: ativa estado de "navegando" para mostrar spinner
+    // na linha tocada enquanto fecha o sheet e roteia. O useEffect de
+    // `open` limpa tudo na próxima abertura.
+    setIsNavigating(true);
     onOpenChange(false);
     navigate(url);
   };
