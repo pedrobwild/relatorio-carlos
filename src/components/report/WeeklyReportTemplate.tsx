@@ -71,14 +71,16 @@ const WeeklyReportTemplate = ({
   // If editing, show the editor
   if (isEditing) {
     return (
-      <WeeklyReportEditor
-        data={safeData}
-        projectId={projectId}
-        onAutoSave={handleAutoSave}
-        onSaveAndClose={handleSaveAndClose}
-        onCancel={() => setIsEditing(false)}
-        isSaving={isSaving}
-      />
+      <div data-report-template-ready="true">
+        <WeeklyReportEditor
+          data={safeData}
+          projectId={projectId}
+          onAutoSave={handleAutoSave}
+          onSaveAndClose={handleSaveAndClose}
+          onCancel={() => setIsEditing(false)}
+          isSaving={isSaving}
+        />
+      </div>
     );
   }
 
