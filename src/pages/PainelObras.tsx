@@ -1853,22 +1853,32 @@ interface ObraRowProps {
 // reduzir layout shift quando os dados chegam. Usam tokens neutros (Skeleton
 // shadcn) e respeitam a densidade selecionada para alinhar com a tabela final.
 
-const TABLE_COLS: { width: string; align?: "right" | "center" }[] = [
+// Espelhamos exatamente o cabeçalho real (largura, breakpoints `hidden`,
+// alinhamento e células sticky de canto) para que, ao trocar do skeleton
+// para a tabela com dados, o thead não desloque nem pisque.
+const TABLE_COLS: {
+  width: string;
+  align?: "right" | "center";
+  hide?: string; // breakpoint em que a coluna fica oculta (espelha o thead real)
+  stickyLeft?: boolean;
+  stickyRight?: boolean;
+}[] = [
   {
     width:
       "w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px]",
+    stickyLeft: true,
   }, // Cliente / Obra (sticky)
-  { width: "w-[52px] sm:w-[60px]", align: "center" }, // Dados
+  { width: "w-[52px] sm:w-[60px]", align: "center", hide: "hidden lg:table-cell" }, // Dados
   { width: "min-w-[112px] sm:min-w-[140px]" }, // Status
   { width: "min-w-[128px] sm:min-w-[160px]" }, // Etapa
   { width: "min-w-[112px] sm:min-w-[140px]", align: "right" }, // Progresso
-  { width: "min-w-[96px] sm:min-w-[120px]" }, // Início Of.
+  { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden xl:table-cell" }, // Início Of.
   { width: "min-w-[96px] sm:min-w-[120px]" }, // Entrega Of.
-  { width: "min-w-[96px] sm:min-w-[120px]" }, // Início Real
-  { width: "min-w-[96px] sm:min-w-[120px]" }, // Entrega Real
-  { width: "min-w-[120px] sm:min-w-[150px]" }, // Relacionamento
-  { width: "min-w-[140px] sm:min-w-[180px]" }, // Responsável
-  { width: "w-12 sm:w-16" }, // Ações
+  { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden xl:table-cell" }, // Início Real
+  { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden 2xl:table-cell" }, // Entrega Real
+  { width: "min-w-[120px] sm:min-w-[150px]", hide: "hidden lg:table-cell" }, // Relacionamento
+  { width: "min-w-[140px] sm:min-w-[180px]", hide: "hidden xl:table-cell" }, // Responsável
+  { width: "w-12 sm:w-16", stickyRight: true }, // Ações
 ];
 
 function TableSkeleton({
@@ -1880,15 +1890,15 @@ function TableSkeleton({
 }) {
   return (
     <SectionCard flush>
-      <div
-        className="overflow-x-auto"
+      <StickyTableScroller
         aria-busy="true"
         aria-live="polite"
         aria-label="Carregando obras"
       >
         <Table
           className={cn(
-            "min-w-max text-sm [&_th]:px-2 sm:[&_th]:px-3 [&_td]:px-2 sm:[&_td]:px-3 [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
+            // Mesma classe usada na tabela real (thead sticky + tipografia)
+            "min-w-max text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-2 sm:[&_td]:px-3 [&_th]:px-2 sm:[&_th]:px-3 [&_td]:whitespace-nowrap [&_th]:text-[10px] sm:[&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
             densityTableClass,
           )}
         >
@@ -1899,12 +1909,24 @@ function TableSkeleton({
                   key={i}
                   className={cn(
                     c.width,
-                    "bg-surface-sunken text-[11px] uppercase tracking-[0.04em] text-muted-foreground",
-                    i === 0 &&
-                      "sticky left-0 z-table-header-corner-left border-r border-border-subtle",
+                    c.hide,
+                    c.align === "right" && "text-right",
+                    c.align === "center" && "text-center",
+                    c.stickyLeft &&
+                      "sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle",
+                    c.stickyRight &&
+                      "sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle",
                   )}
                 >
-                  <Skeleton className="h-3 w-16" />
+                  {!c.stickyRight && (
+                    <Skeleton
+                      className={cn(
+                        "h-3 w-16",
+                        c.align === "right" && "ml-auto",
+                        c.align === "center" && "mx-auto",
+                      )}
+                    />
+                  )}
                 </TableHead>
               ))}
             </TableRow>
@@ -1917,8 +1939,11 @@ function TableSkeleton({
                     key={cIdx}
                     className={cn(
                       c.width,
-                      cIdx === 0 &&
+                      c.hide,
+                      c.stickyLeft &&
                         "sticky left-0 bg-card border-r border-border",
+                      c.stickyRight &&
+                        "sticky right-0 bg-card border-l border-border",
                     )}
                   >
                     {cIdx === 0 ? (
@@ -1941,6 +1966,10 @@ function TableSkeleton({
                       <div className="flex justify-end">
                         <Skeleton className="h-3 w-10" />
                       </div>
+                    ) : c.stickyRight ? (
+                      <div className="flex justify-center">
+                        <Skeleton className="h-5 w-5 rounded" />
+                      </div>
                     ) : (
                       <Skeleton className="h-5 w-[70%] rounded-md" />
                     )}
@@ -1950,7 +1979,7 @@ function TableSkeleton({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </StickyTableScroller>
     </SectionCard>
   );
 }
