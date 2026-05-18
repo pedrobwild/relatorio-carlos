@@ -169,7 +169,7 @@ export function PageHeader({
       {/* ── Mobile: two-row layout ── */}
       <div
         className={cn(
-          "mx-auto px-4 py-2 sm:hidden space-y-1.5 pl-safe pr-safe",
+          "mx-auto px-safe-4 py-2 sm:hidden space-y-1.5",
           maxWidthMap[maxWidth],
         )}
       >

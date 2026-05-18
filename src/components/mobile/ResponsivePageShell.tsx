@@ -46,7 +46,8 @@ export function ResponsivePageShell({
         id="main-content"
         className={cn(
           "mx-auto w-full",
-          padded && "px-4 sm:px-6 md:px-8",
+          // Safe-area-aware horizontal padding (notch / rounded corners).
+          padded && "px-safe-4 sm:px-safe-6 md:px-8",
           "overflow-x-hidden min-w-0",
           maxWidthMap[maxWidth],
           !noPaddingY && "py-3 md:py-8",
@@ -63,7 +64,7 @@ export function ResponsivePageShell({
         <div
           className={cn(
             "fixed inset-x-0 z-shell bg-card/95 backdrop-blur-md border-t border-border",
-            "px-4 py-3 bottom-cta keyboard-aware pl-safe pr-safe",
+            "px-safe-4 py-3 bottom-cta keyboard-aware",
           )}
         >
           <div className={cn("mx-auto w-full", maxWidthMap[maxWidth])}>
