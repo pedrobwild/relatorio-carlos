@@ -77,7 +77,7 @@ export function MobileBottomNav() {
         )}
         aria-label="Navegação principal"
       >
-        <div className="flex items-stretch justify-around h-16 px-1">
+        <div className="flex items-stretch justify-between h-16 px-2 gap-1">
           {navItems.map((slot) => {
             const to = slot.to({ paths, hasProject, projectId });
             const badge = resolveBadge(slot);
