@@ -105,18 +105,7 @@ test.describe('Acessibilidade — rotas autenticadas (cliente)', () => {
   });
 });
 
-test.describe('Acessibilidade — dark mode (rotas públicas)', () => {
-  test('Auth em tema escuro sem violações serious/critical', async ({ page }) => {
-    await page.addInitScript(() => {
-      window.localStorage.setItem('theme', 'dark');
-    });
-    await page.goto('/auth');
-    await page.waitForLoadState('networkidle').catch(() => undefined);
-    // Confirma que `<html class="dark">` foi aplicado.
-    const isDark = await page.evaluate(() =>
-      document.documentElement.classList.contains('dark'),
-    );
-    expect(isDark).toBe(true);
-    await runAxe(page);
-  });
-});
+// Tema escuro foi removido intencionalmente do Portal BWild (ThemeProvider é
+// um no-op; `src/index.css` mantém apenas `:root`). O teste de a11y em dark
+// mode auditava um recurso inexistente e nunca poderia passar — removido,
+// em linha com a auditoria de contraste (que roda só para o tema claro).
