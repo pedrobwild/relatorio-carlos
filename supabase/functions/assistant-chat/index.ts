@@ -879,7 +879,9 @@ Deno.serve(async (req) => {
     },
   });
 
-  return new Response(stream, { headers: sseHeaders });
+  return new Response(stream, {
+    headers: { ...sseHeaders, 'X-Request-Id': requestId },
+  });
 });
 
 // ============================================================
