@@ -71,21 +71,23 @@ const WeeklyReportTemplate = ({
   // If editing, show the editor
   if (isEditing) {
     return (
-      <WeeklyReportEditor
-        data={safeData}
-        projectId={projectId}
-        onAutoSave={handleAutoSave}
-        onSaveAndClose={handleSaveAndClose}
-        onCancel={() => setIsEditing(false)}
-        isSaving={isSaving}
-      />
+      <div data-report-template-ready="true">
+        <WeeklyReportEditor
+          data={safeData}
+          projectId={projectId}
+          onAutoSave={handleAutoSave}
+          onSaveAndClose={handleSaveAndClose}
+          onCancel={() => setIsEditing(false)}
+          isSaving={isSaving}
+        />
+      </div>
     );
   }
 
   // If no content and user is staff, show empty template with edit button
   if (!hasContent) {
     return (
-      <div className="animate-fade-in">
+      <div className="animate-fade-in" data-report-template-ready="true">
         <div className="max-w-[840px] mx-auto">
           <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="px-4 py-2.5 bg-primary-dark">
@@ -119,7 +121,7 @@ const WeeklyReportTemplate = ({
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in" data-report-template-ready="true">
       <div className="max-w-[840px] mx-auto space-y-6">
         {isStaff && (
           <div className="flex justify-end">

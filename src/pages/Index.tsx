@@ -263,11 +263,14 @@ const Index = () => {
     if (!node) return;
 
     // ProjectShell mounts the content inside a sibling com `overflow-y-auto`,
-    // então `window.scrollTo` não funciona. `scrollIntoView` sozinho também
-    // é frágil aqui: quando o template carrega via lazy/Suspense o nó pode
-    // ter altura ~0 no primeiro frame, e o smooth-scroll fica no meio da
-    // lista anterior. Resolvemos achando o ancestral scrollável real e
-    // rolando-o diretamente, esperando dois rAF para o Suspense montar.
+    // então `window.scrollTo` não funciona. Também não basta rolar logo de
+    // cara: enquanto o lazy `WeeklyReportTemplate` está em Suspense, o nó só
+    // contém o cabeçalho (~150px) e o ContentSkeleton, e qualquer scroll
+    // disparado nesse momento para no meio da lista anterior. Estratégia:
+    //   1. esperar o template real montar — sinalizado pelo atributo
+    //      `data-report-template-ready` em qualquer um dos seus branches;
+    //   2. ler `getBoundingClientRect` no frame seguinte (após layout);
+    //   3. rolar diretamente o ancestral scrollável real.
     const findScrollableAncestor = (
       el: HTMLElement | null,
     ): HTMLElement | null => {
@@ -286,30 +289,59 @@ const Index = () => {
       return null;
     };
 
-    let raf2 = 0;
-    const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        const scroller = findScrollableAncestor(node);
-        if (scroller) {
-          const nodeRect = node.getBoundingClientRect();
-          const scrollerRect = scroller.getBoundingClientRect();
-          // pequena folga visual acima do cabeçalho do relatório
-          const delta = nodeRect.top - scrollerRect.top - 8;
-          scroller.scrollTo({
-            top: scroller.scrollTop + delta,
-            behavior: "smooth",
-          });
-        } else {
-          // Fallback: nenhuma container scrollável encontrada (ex.: layouts
-          // alternativos). scrollIntoView ainda é melhor que nada.
-          node.scrollIntoView({ behavior: "smooth", block: "start" });
+    const performScroll = () => {
+      const scroller = findScrollableAncestor(node);
+      if (scroller) {
+        const nodeRect = node.getBoundingClientRect();
+        const scrollerRect = scroller.getBoundingClientRect();
+        const delta = nodeRect.top - scrollerRect.top - 8;
+        scroller.scrollTo({
+          top: scroller.scrollTop + delta,
+          behavior: "smooth",
+        });
+      } else {
+        node.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+
+    let raf = 0;
+    let timeoutId = 0;
+    let observer: MutationObserver | null = null;
+    let done = false;
+
+    const scheduleScrollAfterLayout = () => {
+      if (done) return;
+      done = true;
+      observer?.disconnect();
+      if (timeoutId) window.clearTimeout(timeoutId);
+      // dois rAF: garante que o layout pós-mount foi aplicado antes da medição
+      raf = requestAnimationFrame(() => {
+        raf = requestAnimationFrame(performScroll);
+      });
+    };
+
+    // Caso 1: template já estava montado (cache do lazy, navegação prev/next
+    // dentro da mesma instância, ou re-render). Rola imediatamente.
+    if (node.querySelector("[data-report-template-ready]")) {
+      scheduleScrollAfterLayout();
+    } else {
+      // Caso 2: aguarda o marcador aparecer via MutationObserver. Limite
+      // máximo de 2s para não travar caso algo dê errado — nesse caso rola
+      // com o que estiver renderizado (ainda melhor que não rolar).
+      observer = new MutationObserver(() => {
+        if (node.querySelector("[data-report-template-ready]")) {
+          scheduleScrollAfterLayout();
         }
       });
-    });
+      observer.observe(node, { childList: true, subtree: true });
+      timeoutId = window.setTimeout(scheduleScrollAfterLayout, 2000);
+    }
 
     return () => {
-      cancelAnimationFrame(raf1);
-      if (raf2) cancelAnimationFrame(raf2);
+      done = true;
+      observer?.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+      if (timeoutId) window.clearTimeout(timeoutId);
     };
     // selectedWeeklyReport identity changes on every click/prev/next, so this
     // is intentionally tied to it (not just its presence).
