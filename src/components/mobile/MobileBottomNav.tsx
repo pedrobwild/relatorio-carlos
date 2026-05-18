@@ -87,7 +87,18 @@ export function MobileBottomNav() {
                 key={slot.id}
                 to={to}
                 end={slot.id === "inicio"}
-                onClick={() => rememberMobileNavSlot(projectId, slot.id)}
+                onClick={() => {
+                  rememberMobileNavSlot(projectId, slot.id);
+                  // When returning to the project home ("Obra"), reset the
+                  // remembered Index tab so the user always lands on the
+                  // overview (cronograma) instead of the last route-level tab
+                  // (financeiro/documentos/...) that was mirrored into state.
+                  if (slot.id === "obra" && projectId) {
+                    patchPortalViewState(`portal_${projectId}`, {
+                      activeTab: "cronograma",
+                    });
+                  }
+                }}
                 className={({ isActive }) =>
                   cn(
                     "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-1.5",
