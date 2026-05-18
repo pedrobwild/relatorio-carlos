@@ -1680,7 +1680,7 @@ export default function PainelObras() {
                 />
               ) : (
                 <SectionCard flush>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-auto max-h-[calc(100dvh-160px)]">
                     <Table
                       className={cn(
                         "min-w-max text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-2 sm:[&_td]:px-3 [&_th]:px-2 sm:[&_th]:px-3 [&_td]:whitespace-nowrap [&_th]:text-[10px] sm:[&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
