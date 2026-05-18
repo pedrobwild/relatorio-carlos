@@ -160,7 +160,7 @@ export function MobilePaymentCard({
   const daysLabel = getDaysLabel(payment);
 
   return (
-    <div className="px-4 py-4 hover:bg-muted/30 transition-colors">
+    <div className="py-4 -mx-2 px-2 rounded-md hover:bg-muted/30 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-body font-medium truncate mb-1">
