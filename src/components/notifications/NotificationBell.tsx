@@ -189,6 +189,8 @@ export function NotificationBell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const contextTypes = useMemo(
     () => getRouteContext(location.pathname),
@@ -207,6 +209,7 @@ export function NotificationBell() {
   ).length;
 
   const handleNavigate = (url: string) => {
+    setOpen(false);
     navigate(url);
   };
 
@@ -234,30 +237,43 @@ export function NotificationBell() {
           .length
       : 0;
 
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative h-11 w-11 sm:h-9 sm:w-9 rounded-full hover:bg-primary/10 shrink-0"
-          aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ""}`}
-        >
-          <Bell className="h-4 w-4" />
-          {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className={cn(
-                "absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 text-[10px] font-bold flex items-center justify-center",
-                unreadActionCount > 0 && "animate-pulse",
-              )}
-            >
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </Badge>
+  const triggerButton = (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="relative h-11 w-11 sm:h-9 sm:w-9 rounded-full hover:bg-primary/10 shrink-0"
+      aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ""}`}
+      onClick={isMobile ? () => setOpen(true) : undefined}
+    >
+      <Bell className="h-4 w-4" />
+      {unreadCount > 0 && (
+        <Badge
+          variant="destructive"
+          className={cn(
+            "absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 text-[10px] font-bold flex items-center justify-center",
+            unreadActionCount > 0 && "animate-pulse",
           )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 sm:w-96 p-0" sideOffset={8}>
+        >
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </Badge>
+      )}
+    </Button>
+  );
+
+  // Mobile: render a proper bottom sheet instead of a popover that overflows the viewport.
+  if (isMobile) {
+    return (
+      <>
+        {triggerButton}
+        <MobileNotificationsSheet open={open} onOpenChange={setOpen} />
+      </>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+      <PopoverContent align="end" className="w-96 p-0" sideOffset={8}>
         <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
           <h3 className="text-sm font-semibold text-foreground">
             Notificações
