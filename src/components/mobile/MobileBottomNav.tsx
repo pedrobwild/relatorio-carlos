@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useNotifications } from "@/hooks/useNotifications";
