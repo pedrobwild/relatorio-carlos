@@ -1776,8 +1776,8 @@ export default function PainelObras() {
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
 // 1) Cliente / Obra · 2) Dados · 3) Status · 4) Etapa · 5) Progresso ·
 // 6) Início Of. · 7) Entrega Of. · 8) Início Real · 9) Entrega Real ·
-// 10) Relacionamento · 11) Responsável · 12) Atraso · 13) Ações
-const PAINEL_COLUMN_COUNT = 13;
+// 10) Relacionamento · 11) Responsável · 12) Ações
+const PAINEL_COLUMN_COUNT = 12;
 
 interface ObraRowProps {
   obra: PainelObra;
