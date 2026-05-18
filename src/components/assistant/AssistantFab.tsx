@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { AssistantChat } from "./AssistantChat";
 import { useAuth } from "@/hooks/useAuth";
+import { isAssistantAllowed } from "@/lib/assistantAccess";
 
 /**
  * Floating button (FAB) available across all /gestao routes.
@@ -23,8 +24,9 @@ export function AssistantFab() {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Hide on auth screen
+  // Restrito a colaboradores BWild; oculto na tela de auth.
   if (!user || location.pathname === "/auth") return null;
+  if (!isAssistantAllowed(user.email)) return null;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

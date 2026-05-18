@@ -296,6 +296,18 @@ Deno.serve(async (req) => {
   if (userErr || !userData.user) {
     return jsonResponse({ error: 'Não autenticado' }, 401);
   }
+
+  // O Assistente de IA é restrito a colaboradores BWild (@bwild.com.br).
+  // Contas de cliente usam pseudo-e-mail `<cpf>@cpf.bwild.com.br`, que não
+  // termina em `@bwild.com.br` — logo ficam corretamente de fora.
+  const email = (userData.user.email ?? '').trim().toLowerCase();
+  if (!email.endsWith('@bwild.com.br')) {
+    return jsonResponse(
+      { error: 'Assistente disponível apenas para colaboradores BWild.' },
+      403,
+    );
+  }
+
   const userId = userData.user.id;
 
   if (!wantsStream) {
