@@ -104,7 +104,7 @@ export function MobileBottomNav() {
                 }}
                 className={({ isActive }) =>
                   cn(
-                    "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 px-1.5 py-1.5",
+                    "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 px-1 py-1",
                     "min-h-[56px] transition-all active:scale-[0.94]",
                     "focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary rounded-lg",
                     isActive ? "text-primary" : "text-foreground-muted",
@@ -164,7 +164,7 @@ export function MobileBottomNav() {
             type="button"
             onClick={() => setProfileOpen(true)}
             className={cn(
-              "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 px-1.5 py-1.5",
+              "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 px-1 py-1",
               "min-h-[56px] transition-all active:scale-[0.94]",
               "focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary rounded-lg",
               profileOpen ? "text-primary" : "text-foreground-muted",
