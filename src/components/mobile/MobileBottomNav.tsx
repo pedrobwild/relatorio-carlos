@@ -57,7 +57,9 @@ export function MobileBottomNav() {
     // the portal view state so activeTab stays in sync with the URL when
     // the user returns to the Index page.
     if (ROUTE_TAB_SLOTS.has(segment)) {
-      patchPortalViewState(`portal_${projectId}`, { activeTab: segment });
+      patchPortalViewState(getPortalViewStateKey(projectId), {
+        activeTab: segment,
+      });
     }
   }, [location.pathname, projectId]);
 
