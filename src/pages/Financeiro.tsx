@@ -155,7 +155,7 @@ const Financeiro = () => {
                     />
                   ))}
                 </div>
-                <div className="px-4 py-4 text-center">
+                <div className="py-4 text-center">
                   <p className="text-caption">
                     Última atualização:{" "}
                     {format(new Date(), "dd/MM/yyyy", { locale: ptBR })}
