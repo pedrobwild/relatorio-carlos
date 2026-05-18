@@ -30,7 +30,7 @@ export function FinancialSummary({
 
   if (variant === "mobile") {
     return (
-      <div className="py-6 border-b border-border">
+      <div className="pb-6 border-b border-border">
         <p className="text-caption mb-1">Valor total do contrato</p>
         <p className="text-2xl font-bold text-foreground tracking-tight mb-6">
           {formatCurrency(totalValue)}
