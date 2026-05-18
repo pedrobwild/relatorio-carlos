@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +6,7 @@ import { ProjectSidebar } from "@/components/layout/ProjectSidebar";
 import { ProjectSlimHeader } from "@/components/layout/ProjectSlimHeader";
 import { ProjectMobileHeader } from "@/components/layout/ProjectMobileHeader";
 import { ProjectLayoutProvider } from "@/components/layout/ProjectLayoutContext";
+import { ProjectRouteTransition } from "@/components/layout/ProjectRouteTransition";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { FloatingApprovalBanner } from "@/components/pendencias/FloatingApprovalBanner";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -40,6 +41,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
   const { isStaff, loading } = useUserRole();
   const { projectId } = useParams();
   const { loading: projectLoading, project } = useProject();
+  const mainRef = useRef<HTMLElement>(null);
 
   // Show transition overlay when switching projects (project cleared but loading new one)
   const isSwitching = projectLoading && !project && !!projectId;
@@ -61,7 +63,9 @@ export function ProjectShell({ children }: ProjectShellProps) {
         <div className="relative min-h-[100dvh]">
           <ProjectMobileHeader />
           {isSwitching && <ProjectSwitchOverlay />}
-          <div className="pb-bottom-nav">{children}</div>
+          <div className="pb-bottom-nav">
+            <ProjectRouteTransition>{children}</ProjectRouteTransition>
+          </div>
         </div>
         <MobileBottomNav />
         <FloatingApprovalBanner projectId={projectId} />
@@ -83,9 +87,12 @@ export function ProjectShell({ children }: ProjectShellProps) {
             {isSwitching && <ProjectSwitchOverlay />}
             <main
               id="main-content"
+              ref={mainRef}
               className="flex-1 overflow-y-auto pb-bottom-nav"
             >
-              {children}
+              <ProjectRouteTransition scrollTargetRef={mainRef}>
+                {children}
+              </ProjectRouteTransition>
             </main>
           </div>
         </div>
