@@ -879,7 +879,7 @@ export default function PainelObras() {
       }}
     >
     <TooltipProvider delayDuration={200}>
-      <PageContainer maxWidth="full">
+      <PageContainer maxWidth="screen">
         <PageHeader
           eyebrow="Operações"
           title={fase === "projetos" ? "Painel de Projetos" : "Painel de Obras"}
