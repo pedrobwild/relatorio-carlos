@@ -87,7 +87,7 @@ const WeeklyReportTemplate = ({
   // If no content and user is staff, show empty template with edit button
   if (!hasContent) {
     return (
-      <div className="animate-fade-in">
+      <div className="animate-fade-in" data-report-template-ready="true">
         <div className="max-w-[840px] mx-auto">
           <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="px-4 py-2.5 bg-primary-dark">
