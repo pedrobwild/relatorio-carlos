@@ -262,6 +262,7 @@ export function MobileNotificationsSheet({
     if (!open) {
       setActiveTab("all");
       setSelectedId(null);
+      setIsNavigating(false);
       dragStartYRef.current = null;
       dragDeltaRef.current = 0;
       resetTransform(false);
