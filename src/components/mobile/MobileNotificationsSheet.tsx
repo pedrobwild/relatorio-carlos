@@ -187,33 +187,7 @@ function NotificationRowSkeleton() {
   );
 }
 
-/**
- * Tiny IntersectionObserver-backed sentinel that fires `onIntersect`
- * once when scrolled into view. Re-arms when `hasNextPage` rerenders it.
- */
-function InfiniteScrollSentinel({
-  onIntersect,
-  active,
-}: {
-  onIntersect: () => void;
-  active: boolean;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!active) return;
-    const node = ref.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) onIntersect();
-      },
-      { root: null, rootMargin: "120px 0px", threshold: 0 },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [onIntersect, active]);
-  return <div ref={ref} aria-hidden="true" className="h-1 w-full" />;
-}
+
 
 /**
  * Virtualized notification list. Uses `@tanstack/react-virtual` over a
