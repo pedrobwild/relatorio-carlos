@@ -89,6 +89,8 @@ export function DailyLogInline({
 
   const { data, isLoading } = useProjectDailyLog(projectId, logDate);
   const saveMutation = useSaveProjectDailyLog();
+  const { actions: weekActions, completedCount: weekActionsDone } =
+    useDailyLogActions(data?.id ?? null);
 
   // ----- estado local editável -----
   const [notes, setNotes] = useState<string>("");
@@ -617,6 +619,29 @@ export function DailyLogInline({
               )}
             </section>
           </div>
+        </SectionCard>
+
+        {/* Ações da semana — múltiplas ações com responsável, prazo e status.
+              Visível só após salvar (precisa de daily_log_id). */}
+        <SectionCard
+          icon={<ListChecks className="h-4 w-4 text-primary" />}
+          title="Ações da semana"
+          count={data?.id ? weekActions.length : undefined}
+          defaultOpen={!isLoading && weekActions.length > 0}
+          isLoading={isLoading}
+          loadingSkeleton={
+            <div className="h-16 rounded-md bg-muted/40 animate-pulse" />
+          }
+          previewWhenClosed={(() => {
+            if (isLoading) return "Carregando ações…";
+            if (!data?.id)
+              return "Salve o registro para adicionar ações";
+            if (weekActions.length === 0)
+              return "Nenhuma ação — toque para adicionar";
+            return `${weekActionsDone}/${weekActions.length} concluída${weekActions.length === 1 ? "" : "s"}`;
+          })()}
+        >
+          <WeekActionsList dailyLogId={data?.id ?? null} />
         </SectionCard>
 
         {/* Planejamento da semana */}
