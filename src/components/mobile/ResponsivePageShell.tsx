@@ -64,7 +64,7 @@ export function ResponsivePageShell({
         <div
           className={cn(
             "fixed inset-x-0 z-shell bg-card/95 backdrop-blur-md border-t border-border",
-            "px-4 py-3 bottom-cta keyboard-aware pl-safe pr-safe",
+            "px-safe-4 py-3 bottom-cta keyboard-aware",
           )}
         >
           <div className={cn("mx-auto w-full", maxWidthMap[maxWidth])}>
