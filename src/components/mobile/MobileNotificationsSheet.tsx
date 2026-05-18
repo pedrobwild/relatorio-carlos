@@ -403,8 +403,9 @@ export function MobileNotificationsSheet({
   // abertura nem após ele rolar manualmente.
   useEffect(() => {
     if (!open) {
-      setActiveTab("all");
-      setSelectedId(null);
+      // Aba e seleção são preservadas propositalmente — restauradas na
+      // próxima abertura. Apenas estados efêmeros (gesture, navegação,
+      // transição) são limpos.
       setIsNavigating(false);
       dragStartYRef.current = null;
       dragDeltaRef.current = 0;
