@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +6,7 @@ import { ProjectSidebar } from "@/components/layout/ProjectSidebar";
 import { ProjectSlimHeader } from "@/components/layout/ProjectSlimHeader";
 import { ProjectMobileHeader } from "@/components/layout/ProjectMobileHeader";
 import { ProjectLayoutProvider } from "@/components/layout/ProjectLayoutContext";
+import { ProjectRouteTransition } from "@/components/layout/ProjectRouteTransition";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { FloatingApprovalBanner } from "@/components/pendencias/FloatingApprovalBanner";
 import { useUserRole } from "@/hooks/useUserRole";
