@@ -184,6 +184,11 @@ export function MobileNotificationsSheet({
         : notifications;
 
   const handleNavigate = (url: string) => {
+    // Reset the urgency tab so the user returns to a clean state ("Todas"),
+    // close the sheet, then navigate. The notification was already marked as
+    // read in NotificationRow.onClick — when the user returns, the unread
+    // badge and ordering reflect that automatically via TanStack Query.
+    setActiveTab("all");
     onOpenChange(false);
     navigate(url);
   };
