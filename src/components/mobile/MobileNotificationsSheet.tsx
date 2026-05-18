@@ -215,6 +215,125 @@ function InfiniteScrollSentinel({
   return <div ref={ref} aria-hidden="true" className="h-1 w-full" />;
 }
 
+/**
+ * Virtualized notification list. Uses `@tanstack/react-virtual` over a
+ * native scroll container (the only one that exposes a stable
+ * `clientHeight` to the virtualizer), so the list stays smooth com
+ * centenas de itens. Linhas têm altura variável e são medidas via
+ * `measureElement`. Infinite-scroll dispara quando a última linha
+ * virtual se aproxima do fim do dataset.
+ *
+ * O container carrega `data-notif-scroll` para os efeitos de reset de
+ * scroll do parent (na abertura e na troca de aba) alcançarem-no da
+ * mesma forma que alcançam o viewport do Radix ScrollArea.
+ */
+function VirtualNotificationList({
+  items,
+  markAsRead,
+  onNavigate,
+  selectedId,
+  onSelect,
+  isNavigating,
+  showLoadMore,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
+}: {
+  items: Notification[];
+  markAsRead: (id: string) => void;
+  onNavigate: (url: string) => void;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  isNavigating: boolean;
+  showLoadMore: boolean;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => void;
+}) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 92,
+    overscan: 8,
+    getItemKey: (i) => items[i]?.id ?? i,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const totalSize = virtualizer.getTotalSize();
+
+  useEffect(() => {
+    if (!showLoadMore || !hasNextPage || isFetchingNextPage) return;
+    const last = virtualItems[virtualItems.length - 1];
+    if (!last) return;
+    if (last.index >= items.length - 3) fetchNextPage();
+  }, [
+    virtualItems,
+    items.length,
+    showLoadMore,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  ]);
+
+  return (
+    <div
+      ref={parentRef}
+      data-notif-scroll
+      className="h-full max-h-[60dvh] overflow-y-auto overscroll-contain"
+    >
+      <div
+        style={{ height: `${totalSize}px`, position: "relative", width: "100%" }}
+        className="p-2"
+      >
+        {virtualItems.map((vi) => {
+          const n = items[vi.index];
+          if (!n) return null;
+          return (
+            <div
+              key={vi.key}
+              data-index={vi.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${vi.start}px)`,
+              }}
+              className="px-0 py-0.5"
+            >
+              <NotificationRow
+                notification={n}
+                onRead={markAsRead}
+                onNavigate={onNavigate}
+                isSelected={selectedId === n.id}
+                onSelect={onSelect}
+                isNavigating={isNavigating}
+              />
+            </div>
+          );
+        })}
+      </div>
+      {showLoadMore && isFetchingNextPage && (
+        <div className="py-4 flex justify-center">
+          <span
+            className="inline-block w-5 h-5 rounded-full border-2 border-primary/30 border-t-primary animate-spin"
+            aria-label="Carregando mais notificações"
+            role="status"
+          />
+        </div>
+      )}
+      {showLoadMore && !hasNextPage && items.length > 0 && (
+        <p className="py-4 text-center text-[11px] text-muted-foreground/60">
+          Você chegou ao fim.
+        </p>
+      )}
+    </div>
+  );
+}
+
 interface MobileNotificationsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
