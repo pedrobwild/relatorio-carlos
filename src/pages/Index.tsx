@@ -130,7 +130,14 @@ const Index = () => {
     if (location.pathname !== `/obra/${projectId}`) return;
     const slot = readMobileNavSlot(projectId);
     if (!slot) return;
-    navigate(pathForMobileNavSlot(projectId, slot), { replace: true });
+    const target = pathForMobileNavSlot(projectId, slot);
+    trackAmplitude("mobile_tab_route_redirect", {
+      projectId,
+      slot,
+      target,
+      reason: "persisted_slot_restore",
+    });
+    navigate(target, { replace: true });
   }, [isMobile, projectId, location.pathname, navigate]);
 
   // Mobile sync: route-only tabs (financeiro/documentos/formalizacoes/pendencias)
