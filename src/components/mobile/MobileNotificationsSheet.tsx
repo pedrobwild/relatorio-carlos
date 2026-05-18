@@ -274,7 +274,7 @@ export function MobileNotificationsSheet({
       const root = contentRef.current;
       if (!root) return;
       root
-        .querySelectorAll<HTMLElement>("[data-radix-scroll-area-viewport]")
+        .querySelectorAll<HTMLElement>("[data-radix-scroll-area-viewport],[data-notif-scroll]")
         .forEach((vp) => {
           vp.scrollTop = 0;
         });
@@ -291,7 +291,7 @@ export function MobileNotificationsSheet({
       const root = contentRef.current;
       if (!root) return;
       root
-        .querySelectorAll<HTMLElement>("[data-radix-scroll-area-viewport]")
+        .querySelectorAll<HTMLElement>("[data-radix-scroll-area-viewport],[data-notif-scroll]")
         .forEach((vp) => {
           vp.scrollTop = 0;
         });
