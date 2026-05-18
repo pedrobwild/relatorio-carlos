@@ -13,7 +13,7 @@ import {
 } from "@/config/mobileNav";
 import { MobileProfileSheet } from "./MobileProfileSheet";
 import { rememberMobileNavSlot, clearMobileNavSlot } from "@/lib/mobileBottomNavMemory";
-import { patchPortalViewState } from "@/lib/portalViewState";
+import { getPortalViewStateKey, patchPortalViewState } from "@/lib/portalViewState";
 import { rememberLastProjectId, getLastProjectId } from "@/lib/lastProjectMemory";
 
 const ROUTE_TAB_SLOTS = new Set([
