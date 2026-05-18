@@ -119,22 +119,26 @@ export function MobileBottomNav() {
                   <>
                     {isActive && (
                       <span
-                        className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-primary"
+                        className="absolute -top-px left-1/2 -translate-x-1/2 h-1 w-8 rounded-b-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.45)]"
                         aria-hidden="true"
                       />
                     )}
                     <span
                       className={cn(
-                        "relative flex items-center justify-center w-11 h-7 rounded-full transition-all duration-200",
-                        isActive ? "bg-primary/12" : "bg-transparent",
+                        "relative flex items-center justify-center w-12 h-7 rounded-full transition-all duration-200",
+                        isActive
+                          ? "bg-primary/15 ring-1 ring-primary/25"
+                          : "bg-transparent",
                       )}
                     >
                       <Icon
                         className={cn(
-                          "h-[22px] w-[22px] transition-colors",
-                          isActive ? "text-primary" : "text-foreground-muted",
+                          "h-[22px] w-[22px] transition-all",
+                          isActive
+                            ? "text-primary scale-110"
+                            : "text-foreground-muted",
                         )}
-                        strokeWidth={isActive ? 2.25 : 2}
+                        strokeWidth={isActive ? 2.5 : 2}
                       />
                       {badge > 0 && (
                         <span
@@ -180,22 +184,26 @@ export function MobileBottomNav() {
           >
             {profileOpen && (
               <span
-                className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-primary"
+                className="absolute -top-px left-1/2 -translate-x-1/2 h-1 w-8 rounded-b-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.45)]"
                 aria-hidden="true"
               />
             )}
             <span
               className={cn(
-                "relative flex items-center justify-center w-11 h-7 rounded-full transition-all duration-200",
-                profileOpen ? "bg-primary/12" : "bg-transparent",
+                "relative flex items-center justify-center w-12 h-7 rounded-full transition-all duration-200",
+                profileOpen
+                  ? "bg-primary/15 ring-1 ring-primary/25"
+                  : "bg-transparent",
               )}
             >
               <PROFILE_SLOT.icon
                 className={cn(
-                  "h-[22px] w-[22px] transition-colors",
-                  profileOpen ? "text-primary" : "text-foreground-muted",
+                  "h-[22px] w-[22px] transition-all",
+                  profileOpen
+                    ? "text-primary scale-110"
+                    : "text-foreground-muted",
                 )}
-                strokeWidth={profileOpen ? 2.25 : 2}
+                strokeWidth={profileOpen ? 2.5 : 2}
               />
               {unreadCount > 0 && (
                 <span
