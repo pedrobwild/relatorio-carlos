@@ -3643,6 +3643,56 @@ function BoardGroupCard({
   const titleRef = useRef<HTMLButtonElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
+  // Detecta scroll do ancestral scrollável (StickyTableScroller) e expõe
+  // `data-scrolled-y` / `data-scrolled-x` no card para que sombras do
+  // thead sticky e da coluna sticky "Cliente / Obra" sejam ativadas
+  // somente quando o conteúdo abaixo/à direita estiver realmente oculto —
+  // dando uma pista visual clara de borda flutuante durante o scroll,
+  // sem ruído visual quando a tabela está em repouso.
+  useEffect(() => {
+    const cardEl = cardRef.current;
+    if (!cardEl) return;
+    let scroller: HTMLElement | null = null;
+    let node: HTMLElement | null = cardEl.parentElement;
+    while (node) {
+      const style = window.getComputedStyle(node);
+      if (
+        (style.overflowY === "auto" || style.overflowY === "scroll") &&
+        node.scrollHeight > node.clientHeight + 1
+      ) {
+        scroller = node;
+        break;
+      }
+      node = node.parentElement;
+    }
+    if (!scroller)
+      scroller = (document.scrollingElement as HTMLElement) || document.documentElement;
+    let rafId = 0;
+    const apply = () => {
+      rafId = 0;
+      const sy = (scroller!.scrollTop || 0) > 0;
+      const sx = (scroller!.scrollLeft || 0) > 0;
+      if (cardEl.dataset.scrolledY !== String(sy)) {
+        cardEl.dataset.scrolledY = String(sy);
+      }
+      if (cardEl.dataset.scrolledX !== String(sx)) {
+        cardEl.dataset.scrolledX = String(sx);
+      }
+    };
+    const schedule = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(apply);
+    };
+    apply();
+    scroller.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+      scroller?.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [isCollapsed]);
+
   useEffect(() => {
     const titleEl = titleRef.current;
     const cardEl = cardRef.current;
