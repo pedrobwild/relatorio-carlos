@@ -12,6 +12,7 @@ import {
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { EmptyState } from "@/components/EmptyState";
 import { FinancialSummary } from "./financeiro/FinancialSummary";
 import {
@@ -86,7 +87,7 @@ const Financeiro = () => {
           ]}
         />
 
-        <div className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 md:px-0">
+        <PageContainer maxWidth="lg" className="flex-1 md:px-0">
           {payments.length === 0 ? (
             <EmptyState
               variant="payments"
@@ -154,7 +155,7 @@ const Financeiro = () => {
                     />
                   ))}
                 </div>
-                <div className="px-4 py-4 text-center">
+                <div className="py-4 text-center">
                   <p className="text-caption">
                     Última atualização:{" "}
                     {format(new Date(), "dd/MM/yyyy", { locale: ptBR })}
@@ -163,7 +164,7 @@ const Financeiro = () => {
               </div>
             </>
           )}
-        </div>
+        </PageContainer>
       </div>
     </TooltipProvider>
   );
