@@ -3720,7 +3720,7 @@ function BoardView({
               >
                 <Table
                   className={cn(
-                    "w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
+                    "w-full text-sm [&_thead_th]:sticky [&_thead_th]:top-[38px] [&_thead_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
                     densityTableClass,
                   )}
                 >
