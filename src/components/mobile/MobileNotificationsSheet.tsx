@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -188,36 +188,110 @@ export function MobileNotificationsSheet({
     navigate(url);
   };
 
+  // Drag-to-dismiss state. We translate the SheetContent imperatively
+  // (via ref) during the gesture to keep it 60fps and avoid React re-renders.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const dragStartYRef = useRef<number | null>(null);
+  const dragDeltaRef = useRef(0);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  const resetTransform = useCallback((withTransition: boolean) => {
+    const el = contentRef.current;
+    if (!el) return;
+    el.style.transition = withTransition
+      ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
+      : "none";
+    el.style.transform = "";
+  }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    dragStartYRef.current = e.touches[0].clientY;
+    dragDeltaRef.current = 0;
+    if (contentRef.current) contentRef.current.style.transition = "none";
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (dragStartYRef.current == null) return;
+    const delta = e.touches[0].clientY - dragStartYRef.current;
+    // Only react to downward drags; small rubber-band for upward attempts.
+    const visualDelta = delta > 0 ? delta : delta / 4;
+    dragDeltaRef.current = delta;
+    if (contentRef.current) {
+      contentRef.current.style.transform = `translateY(${visualDelta}px)`;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (dragStartYRef.current == null) return;
+    const delta = dragDeltaRef.current;
+    dragStartYRef.current = null;
+    dragDeltaRef.current = 0;
+    // Threshold: ~25% of sheet height or absolute 120px, whichever is smaller.
+    const sheetHeight = contentRef.current?.getBoundingClientRect().height ?? 0;
+    const threshold = Math.min(120, sheetHeight * 0.25);
+    if (delta > threshold) {
+      // Animate out before closing so Radix's exit anim picks up from current pos.
+      resetTransform(true);
+      onOpenChange(false);
+    } else {
+      resetTransform(true);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
+        ref={contentRef}
         side="bottom"
-        className="rounded-t-3xl pb-safe max-h-[88dvh] flex flex-col p-0"
+        className="rounded-t-3xl pb-safe max-h-[88dvh] flex flex-col p-0 will-change-transform"
+        onOpenAutoFocus={(e) => {
+          // Move focus to the sheet title instead of the close button so screen-
+          // readers announce context first and the header gets the focus ring.
+          e.preventDefault();
+          requestAnimationFrame(() => titleRef.current?.focus());
+        }}
       >
-        {/* Header (extra top padding leaves room for the drag-handle) */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-          <SheetHeader className="p-0 text-left">
-            <SheetTitle className="text-base font-bold flex items-center gap-2">
-              <Bell className="h-4 w-4" aria-hidden="true" />
-              Notificações
-              {unreadCount > 0 && (
-                <Badge variant="destructive" className="text-[10px] px-1.5 h-5">
-                  {unreadCount}
-                </Badge>
-              )}
-            </SheetTitle>
-          </SheetHeader>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={markAllAsRead}
-              className="text-xs text-primary h-9 py-1 px-2 -mr-1"
-            >
-              <CheckCheck className="w-3.5 h-3.5 mr-1" />
-              Marcar todas
-            </Button>
-          )}
+        {/* Drag zone — covers the top of the sheet (handle + header) and
+            captures touch gestures to swipe-to-dismiss. */}
+        <div
+          className="shrink-0 touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+        >
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <SheetHeader className="p-0 text-left">
+              <SheetTitle
+                ref={titleRef}
+                tabIndex={-1}
+                className="text-base font-bold flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+              >
+                <Bell className="h-4 w-4" aria-hidden="true" />
+                Notificações
+                {unreadCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="text-[10px] px-1.5 h-5"
+                  >
+                    {unreadCount}
+                  </Badge>
+                )}
+              </SheetTitle>
+            </SheetHeader>
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                className="text-xs text-primary h-9 py-1 px-2 -mr-1"
+              >
+                <CheckCheck className="w-3.5 h-3.5 mr-1" />
+                Marcar todas
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
