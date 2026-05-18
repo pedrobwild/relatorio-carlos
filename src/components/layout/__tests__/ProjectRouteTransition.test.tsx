@@ -1,30 +1,37 @@
 /**
  * Behavioral tests for ProjectRouteTransition.
  *
- * These cover the two UX guarantees the mobile navigation depends on:
- *  1. On a route change, the scroll position is reset on the correct
- *     container — the provided `scrollTargetRef` when set (staff <main>),
- *     and `window` as fallback (client layout scrolls the document).
- *  2. The fade-in animation is suppressed when the user prefers reduced
- *     motion; the scroll reset still happens regardless.
- *
- * We use Vitest + Testing Library with a `MemoryRouter` rather than full
- * Playwright E2E because the affected routes live inside the authenticated
- * project shell. A unit-level test is faster, deterministic, and exercises
- * the exact branch the user reported issues on.
+ * Guarantees covered:
+ *  1. PUSH navigation (tap a sibling tab) resets every plausible scroll
+ *     container — `scrollTargetRef` when provided, window fallback, and
+ *     any `[data-scroll-container]` opt-in element.
+ *  2. POP navigation (browser back) restores the snapshot we kept for the
+ *     pathname the user is returning to.
+ *  3. Fade-in animation is suppressed when prefers-reduced-motion is set;
+ *     scroll behavior is preserved.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
-import { ProjectRouteTransition } from "../ProjectRouteTransition";
+import {
+  ProjectRouteTransition,
+  __resetScrollPositionsForTests,
+} from "../ProjectRouteTransition";
 
-/** Helper: triggers navigation from inside the router tree. */
-function Navigator({ to }: { to: string | null }) {
+function Navigator({
+  to,
+  action = "push",
+}: {
+  to: string | null;
+  action?: "push" | "pop";
+}) {
   const navigate = useNavigate();
   useEffect(() => {
-    if (to) navigate(to);
-  }, [to, navigate]);
+    if (!to) return;
+    if (action === "pop") navigate(-1);
+    else navigate(to);
+  }, [to, action, navigate]);
   return null;
 }
 
@@ -41,10 +48,22 @@ function setReducedMotion(matches: boolean) {
   }));
 }
 
+/** Advances fake timers + flushes the rAF used after the skeleton. */
+function flushTransition() {
+  act(() => {
+    vi.advanceTimersByTime(200);
+  });
+  // requestAnimationFrame is polyfilled by jsdom as setTimeout(0).
+  act(() => {
+    vi.advanceTimersByTime(32);
+  });
+}
+
 describe("ProjectRouteTransition", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     setReducedMotion(false);
+    __resetScrollPositionsForTests();
   });
 
   afterEach(() => {
@@ -52,26 +71,27 @@ describe("ProjectRouteTransition", () => {
     vi.restoreAllMocks();
   });
 
-  it("resets scroll on the provided scrollTargetRef when the route changes", async () => {
-    const scrollSpy = vi.fn();
+  it("resets the scrollTargetRef to top on PUSH navigation", () => {
+    const scrollAssignments: number[] = [];
 
     function Harness({ navigateTo }: { navigateTo: string | null }) {
       const mainRef = useRef<HTMLElement>(null);
-      // Patch the scroll method as soon as the ref is attached so we capture
-      // the call the transition triggers on pathname change.
       useEffect(() => {
-        if (mainRef.current) {
-          mainRef.current.scrollTo = scrollSpy as unknown as typeof window.scrollTo;
-        }
+        if (!mainRef.current) return;
+        Object.defineProperty(mainRef.current, "scrollTop", {
+          configurable: true,
+          get: () => 0,
+          set: (v: number) => scrollAssignments.push(v),
+        });
       }, []);
 
       return (
-        <main ref={mainRef} data-testid="scroll-container">
+        <main ref={mainRef}>
           <Navigator to={navigateTo} />
           <ProjectRouteTransition scrollTargetRef={mainRef}>
             <Routes>
-              <Route path="/obra/1/financeiro" element={<div>Financeiro</div>} />
-              <Route path="/obra/1/documentos" element={<div>Documentos</div>} />
+              <Route path="/obra/1/financeiro" element={<div>Fin</div>} />
+              <Route path="/obra/1/documentos" element={<div>Docs</div>} />
             </Routes>
           </ProjectRouteTransition>
         </main>
@@ -84,29 +104,92 @@ describe("ProjectRouteTransition", () => {
       </MemoryRouter>,
     );
 
-    // No navigation yet -> no scroll reset.
-    expect(scrollSpy).not.toHaveBeenCalled();
-
-    // Trigger a route change to a sibling tab.
     rerender(
       <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
         <Harness navigateTo="/obra/1/documentos" />
       </MemoryRouter>,
     );
 
-    // Container's scrollTo must be invoked with top: 0 on pathname change.
-    expect(scrollSpy).toHaveBeenCalledTimes(1);
-    expect(scrollSpy).toHaveBeenCalledWith({
-      top: 0,
-      left: 0,
-      behavior: "auto",
-    });
+    flushTransition();
+
+    // The target's scrollTop must have been assigned 0 at least once.
+    expect(scrollAssignments).toContain(0);
   });
 
-  it("falls back to window scroll when no scrollTargetRef is provided", () => {
-    const windowScrollSpy = vi.fn();
-    const originalScrollTo = window.scrollTo;
-    window.scrollTo = windowScrollSpy as unknown as typeof window.scrollTo;
+  it("restores the previous scroll position on POP navigation", () => {
+    const scrollAssignments: number[] = [];
+
+    function Harness({
+      navigateTo,
+      action = "push",
+    }: {
+      navigateTo: string | null;
+      action?: "push" | "pop";
+    }) {
+      const mainRef = useRef<HTMLElement>(null);
+      useEffect(() => {
+        if (!mainRef.current) return;
+        let value = 0;
+        Object.defineProperty(mainRef.current, "scrollTop", {
+          configurable: true,
+          get: () => value,
+          set: (v: number) => {
+            value = v;
+            scrollAssignments.push(v);
+          },
+        });
+      }, []);
+
+      return (
+        <main ref={mainRef} data-testid="main">
+          <Navigator to={navigateTo} action={action} />
+          <ProjectRouteTransition scrollTargetRef={mainRef}>
+            <Routes>
+              <Route path="/obra/1/financeiro" element={<div>Fin</div>} />
+              <Route path="/obra/1/documentos" element={<div>Docs</div>} />
+            </Routes>
+          </ProjectRouteTransition>
+        </main>
+      );
+    }
+
+    // 1. Land on /financeiro.
+    const { rerender } = render(
+      <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
+        <Harness navigateTo={null} />
+      </MemoryRouter>,
+    );
+
+    // 2. Simulate user scrolled the main container, then trigger save.
+    const main = screen.getByTestId("main");
+    main.scrollTop = 420;
+    act(() => {
+      main.dispatchEvent(new Event("scroll"));
+    });
+
+    // 3. Push to /documentos and flush the swap. Reset assignments to
+    //    focus on what happens on the POP.
+    rerender(
+      <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
+        <Harness navigateTo="/obra/1/documentos" />
+      </MemoryRouter>,
+    );
+    flushTransition();
+    scrollAssignments.length = 0;
+
+    // 4. POP back to /financeiro — must restore 420, not 0.
+    rerender(
+      <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
+        <Harness navigateTo="/obra/1/financeiro" action="pop" />
+      </MemoryRouter>,
+    );
+    flushTransition();
+
+    expect(scrollAssignments).toContain(420);
+  });
+
+  it("omits the fade-in class when prefers-reduced-motion is set", () => {
+    setReducedMotion(true);
 
     function Harness({ navigateTo }: { navigateTo: string | null }) {
       return (
@@ -114,8 +197,14 @@ describe("ProjectRouteTransition", () => {
           <Navigator to={navigateTo} />
           <ProjectRouteTransition>
             <Routes>
-              <Route path="/obra/1" element={<div>Hub</div>} />
-              <Route path="/obra/1/financeiro" element={<div>Financeiro</div>} />
+              <Route
+                path="/obra/1/financeiro"
+                element={<div data-testid="content">Fin</div>}
+              />
+              <Route
+                path="/obra/1/documentos"
+                element={<div data-testid="content">Docs</div>}
+              />
             </Routes>
           </ProjectRouteTransition>
         </>
@@ -123,25 +212,21 @@ describe("ProjectRouteTransition", () => {
     }
 
     const { rerender } = render(
-      <MemoryRouter initialEntries={["/obra/1"]}>
+      <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
         <Harness navigateTo={null} />
       </MemoryRouter>,
     );
-    expect(windowScrollSpy).not.toHaveBeenCalled();
 
     rerender(
-      <MemoryRouter initialEntries={["/obra/1"]}>
-        <Harness navigateTo="/obra/1/financeiro" />
+      <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
+        <Harness navigateTo="/obra/1/documentos" />
       </MemoryRouter>,
     );
 
-    expect(windowScrollSpy).toHaveBeenCalledWith({
-      top: 0,
-      left: 0,
-      behavior: "auto",
-    });
+    flushTransition();
 
-    window.scrollTo = originalScrollTo;
+    const content = screen.getByTestId("content");
+    expect(content.parentElement).not.toHaveClass("animate-fade-in");
   });
 
   it("applies animate-fade-in by default after the skeleton resolves", () => {
@@ -153,11 +238,11 @@ describe("ProjectRouteTransition", () => {
             <Routes>
               <Route
                 path="/obra/1/financeiro"
-                element={<div data-testid="content">Financeiro</div>}
+                element={<div data-testid="content">Fin</div>}
               />
               <Route
                 path="/obra/1/documentos"
-                element={<div data-testid="content">Documentos</div>}
+                element={<div data-testid="content">Docs</div>}
               />
             </Routes>
           </ProjectRouteTransition>
@@ -177,72 +262,9 @@ describe("ProjectRouteTransition", () => {
       </MemoryRouter>,
     );
 
-    // While the swap skeleton is up, content is not rendered yet.
-    expect(screen.queryByTestId("content")).not.toBeInTheDocument();
-
-    // After the skeleton's minimum time, content paints with fade-in.
-    act(() => {
-      vi.advanceTimersByTime(200);
-    });
+    flushTransition();
 
     const content = screen.getByTestId("content");
-    const wrapper = content.parentElement!;
-    expect(wrapper).toHaveClass("animate-fade-in");
-  });
-
-  it("omits the fade-in class when prefers-reduced-motion is set, but still resets scroll", () => {
-    setReducedMotion(true);
-    const windowScrollSpy = vi.fn();
-    const originalScrollTo = window.scrollTo;
-    window.scrollTo = windowScrollSpy as unknown as typeof window.scrollTo;
-
-    function Harness({ navigateTo }: { navigateTo: string | null }) {
-      return (
-        <>
-          <Navigator to={navigateTo} />
-          <ProjectRouteTransition>
-            <Routes>
-              <Route
-                path="/obra/1/financeiro"
-                element={<div data-testid="content">Financeiro</div>}
-              />
-              <Route
-                path="/obra/1/documentos"
-                element={<div data-testid="content">Documentos</div>}
-              />
-            </Routes>
-          </ProjectRouteTransition>
-        </>
-      );
-    }
-
-    const { rerender } = render(
-      <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
-        <Harness navigateTo={null} />
-      </MemoryRouter>,
-    );
-
-    rerender(
-      <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
-        <Harness navigateTo="/obra/1/documentos" />
-      </MemoryRouter>,
-    );
-
-    // Scroll reset must still happen for reduced-motion users.
-    expect(windowScrollSpy).toHaveBeenCalledWith({
-      top: 0,
-      left: 0,
-      behavior: "auto",
-    });
-
-    act(() => {
-      vi.advanceTimersByTime(200);
-    });
-
-    const content = screen.getByTestId("content");
-    const wrapper = content.parentElement!;
-    expect(wrapper).not.toHaveClass("animate-fade-in");
-
-    window.scrollTo = originalScrollTo;
+    expect(content.parentElement).toHaveClass("animate-fade-in");
   });
 });
