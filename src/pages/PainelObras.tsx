@@ -582,6 +582,14 @@ export default function PainelObras() {
     }
   }, [sortKey, sortDir]);
 
+  // Fallback: limpa sortKey legado "atraso" do localStorage
+  useEffect(() => {
+    if ((sortKey as string) === "atraso") {
+      setSortKey(null);
+      setSortDir("asc");
+    }
+  }, [sortKey]);
+
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const toggleExpanded = (id: string) => {
     setExpandedIds((curr) => {
