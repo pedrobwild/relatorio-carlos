@@ -200,6 +200,22 @@ export function MobileNotificationsSheet({
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // Drag-to-dismiss state. We translate the SheetContent imperatively
+  // (via ref) during the gesture to keep it 60fps and avoid React re-renders.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const dragStartYRef = useRef<number | null>(null);
+  const dragDeltaRef = useRef(0);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  const resetTransform = useCallback((withTransition: boolean) => {
+    const el = contentRef.current;
+    if (!el) return;
+    el.style.transition = withTransition
+      ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
+      : "none";
+    el.style.transform = "";
+  }, []);
+
   // Garante que ao fechar o sheet (por qualquer caminho: swipe, overlay,
   // ESC, botão fechar, navegação) o estado interno volte ao padrão.
   useEffect(() => {
@@ -210,9 +226,7 @@ export function MobileNotificationsSheet({
       dragDeltaRef.current = 0;
       resetTransform(false);
     }
-  // resetTransform é estável (useCallback sem deps)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, resetTransform]);
 
   const actionNotifications = useMemo(
     () => notifications.filter((n) => getUrgencyCategory(n.type) === "action"),
@@ -234,30 +248,13 @@ export function MobileNotificationsSheet({
         : notifications;
 
   const handleNavigate = (url: string) => {
-    // Reset the urgency tab so the user returns to a clean state ("Todas"),
-    // close the sheet, then navigate. The notification was already marked as
-    // read in NotificationRow.onClick — when the user returns, the unread
-    // badge and ordering reflect that automatically via TanStack Query.
-    setActiveTab("all");
+    // Marca a notificação como "selecionada" só visualmente durante o
+    // fechamento, e dispara onOpenChange(false) — o useEffect acima limpa
+    // selectedId/activeTab quando `open` vira false, garantindo retorno
+    // ao estado padrão na próxima abertura.
     onOpenChange(false);
     navigate(url);
   };
-
-  // Drag-to-dismiss state. We translate the SheetContent imperatively
-  // (via ref) during the gesture to keep it 60fps and avoid React re-renders.
-  const contentRef = useRef<HTMLDivElement>(null);
-  const dragStartYRef = useRef<number | null>(null);
-  const dragDeltaRef = useRef(0);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-
-  const resetTransform = useCallback((withTransition: boolean) => {
-    const el = contentRef.current;
-    if (!el) return;
-    el.style.transition = withTransition
-      ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
-      : "none";
-    el.style.transform = "";
-  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
