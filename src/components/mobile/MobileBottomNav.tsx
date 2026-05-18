@@ -63,6 +63,7 @@ export function MobileBottomNav() {
                 key={slot.id}
                 to={to}
                 end={slot.id === "inicio"}
+                onClick={() => rememberMobileNavSlot(projectId, slot.id)}
                 className={({ isActive }) =>
                   cn(
                     "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-1.5",
