@@ -34,10 +34,16 @@ export default defineConfig({
     //   use: { ...devices['Desktop Firefox'] },
     // },
   ],
-  // Local dev server (optional - use if running locally)
-  // webServer: {
-  //   command: 'npm run dev',
-  //   url: 'http://localhost:8080',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  // When no external PLAYWRIGHT_BASE_URL is provided (e.g. the a11y job on
+  // PRs, which has no secrets), Playwright starts the app itself so the
+  // suite is self-contained. When a deployed URL is provided, tests run
+  // against it and no local server is started.
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: 'npm run dev -- --host 0.0.0.0',
+        url: 'http://localhost:8080',
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      },
 });
