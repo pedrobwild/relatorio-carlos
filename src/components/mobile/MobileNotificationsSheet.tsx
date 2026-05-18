@@ -378,6 +378,31 @@ export function MobileNotificationsSheet({
                         onNavigate={handleNavigate}
                       />
                     ))}
+                    {/* Infinite-scroll sentinel — only meaningful in "all" tab
+                        since pagination is global; the other tabs are derived
+                        filters of the same in-memory dataset. */}
+                    {tab === "all" && hasNextPage && (
+                      <InfiniteScrollSentinel
+                        onIntersect={fetchNextPage}
+                        active={open}
+                      />
+                    )}
+                    {tab === "all" && isFetchingNextPage && (
+                      <div className="py-4 flex justify-center">
+                        <span
+                          className="inline-block w-5 h-5 rounded-full border-2 border-primary/30 border-t-primary animate-spin"
+                          aria-label="Carregando mais notificações"
+                          role="status"
+                        />
+                      </div>
+                    )}
+                    {tab === "all" &&
+                      !hasNextPage &&
+                      displayed.length > 0 && (
+                        <p className="py-4 text-center text-[11px] text-muted-foreground/60">
+                          Você chegou ao fim.
+                        </p>
+                      )}
                   </div>
                 )}
               </ScrollArea>
