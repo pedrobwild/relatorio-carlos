@@ -77,7 +77,7 @@ export function MobileBottomNav() {
         )}
         aria-label="Navegação principal"
       >
-        <div className="flex items-stretch justify-around h-16 px-1">
+        <div className="flex items-stretch justify-between h-16 px-2 gap-1">
           {navItems.map((slot) => {
             const to = slot.to({ paths, hasProject, projectId });
             const badge = resolveBadge(slot);
@@ -104,7 +104,7 @@ export function MobileBottomNav() {
                 }}
                 className={({ isActive }) =>
                   cn(
-                    "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-1.5",
+                    "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 px-1.5 py-1.5",
                     "min-h-[56px] transition-all active:scale-[0.94]",
                     "focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary rounded-lg",
                     isActive ? "text-primary" : "text-foreground-muted",
@@ -163,7 +163,7 @@ export function MobileBottomNav() {
             type="button"
             onClick={() => setProfileOpen(true)}
             className={cn(
-              "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-1.5",
+              "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 px-1.5 py-1.5",
               "min-h-[56px] transition-all active:scale-[0.94]",
               "focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary rounded-lg",
               profileOpen ? "text-primary" : "text-foreground-muted",
