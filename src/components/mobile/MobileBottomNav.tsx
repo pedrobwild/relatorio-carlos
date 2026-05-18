@@ -89,11 +89,14 @@ export function MobileBottomNav() {
                 end={slot.id === "inicio"}
                 onClick={() => {
                   rememberMobileNavSlot(projectId, slot.id);
-                  // When returning to the project home ("Obra"), reset the
-                  // remembered Index tab so the user always lands on the
-                  // overview (cronograma) instead of the last route-level tab
-                  // (financeiro/documentos/...) that was mirrored into state.
+                  // Tapping "Obra" (the project hub) must take the user back
+                  // to the project root. The remembered slot is still the
+                  // previous route-only tab (financeiro, documentos…) because
+                  // "obra" itself is not a restorable slot, so the Index
+                  // restore effect would bounce the user right back. Clear
+                  // the memory and reset the Index tab to the overview.
                   if (slot.id === "obra" && projectId) {
+                    clearMobileNavSlot(projectId);
                     patchPortalViewState(`portal_${projectId}`, {
                       activeTab: "cronograma",
                     });
