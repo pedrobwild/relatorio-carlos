@@ -24,7 +24,10 @@ export type AmplitudeEvent =
   | "Supplier Updated"
   // Cockpit de decisão (Bloco 1 — JTBD)
   | "next_action_displayed"
-  | "next_action_clicked";
+  | "next_action_clicked"
+  // Mobile bottom-nav sync
+  | "mobile_tab_synced"
+  | "mobile_tab_route_redirect";
 
 export type AmplitudeProps = Record<
   string,
