@@ -60,6 +60,7 @@ const PendenciasContent = lazy(
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const reportRef = useRef<HTMLDivElement>(null);
   const { hasShell } = useProjectLayout();
 
