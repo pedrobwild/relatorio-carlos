@@ -256,18 +256,8 @@ const Index = () => {
       </LiveStatus>
       <div className="px-4 md:p-4 lg:p-6 xl:p-8">
         <div className="max-w-[1600px] mx-auto">
-          {/* Cockpit "Ação necessária" — visível só para cliente, antes do relatório */}
-          {!isStaff && projectId && (
-            <ErrorBoundary
-              name="NextActionsBlock-Project"
-              feature="general"
-              fallback={null}
-            >
-              <div className="mb-4">
-                <NextActionsBlock projectId={projectId} />
-              </div>
-            </ErrorBoundary>
-          )}
+          {/* Bloco "Ação necessária" removido do ambiente da obra do cliente
+              a pedido — segue disponível em /minhas-obras. */}
           <div ref={reportRef}>
             <div
               className="opacity-0 animate-fade-in-up"
