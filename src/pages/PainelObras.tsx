@@ -2074,8 +2074,60 @@ function ObraRow({
       <TableRow
         data-testid="painel-obras-row"
         data-expanded={expanded ? "true" : "false"}
+        tabIndex={0}
+        aria-label={`Obra ${obra.customer_name ?? "Sem cliente"} — ${obra.nome ?? ""}. Enter para abrir, seta para baixo ou para cima para navegar, espaço para expandir.`}
+        onKeyDown={(e) => {
+          // Só reagimos quando o foco está na própria linha (não em
+          // controles internos como botões / selects), preservando o
+          // comportamento padrão de Tab dentro da célula.
+          if (e.target !== e.currentTarget) return;
+          const row = e.currentTarget as HTMLTableRowElement;
+          if (e.key === "Enter") {
+            e.preventDefault();
+            onOpen();
+          } else if (e.key === " ") {
+            e.preventDefault();
+            onToggleExpanded();
+          } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            let next = row.nextElementSibling as HTMLElement | null;
+            while (
+              next &&
+              next.getAttribute("data-testid") !== "painel-obras-row"
+            ) {
+              next = next.nextElementSibling as HTMLElement | null;
+            }
+            next?.focus();
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            let prev = row.previousElementSibling as HTMLElement | null;
+            while (
+              prev &&
+              prev.getAttribute("data-testid") !== "painel-obras-row"
+            ) {
+              prev = prev.previousElementSibling as HTMLElement | null;
+            }
+            prev?.focus();
+          } else if (e.key === "Home") {
+            e.preventDefault();
+            const first = row.parentElement?.querySelector<HTMLElement>(
+              '[data-testid="painel-obras-row"]',
+            );
+            first?.focus();
+          } else if (e.key === "End") {
+            e.preventDefault();
+            const all = row.parentElement?.querySelectorAll<HTMLElement>(
+              '[data-testid="painel-obras-row"]',
+            );
+            all?.[all.length - 1]?.focus();
+          }
+        }}
         className={cn(
-          "group transition-colors hover:bg-accent/40",
+          "group transition-colors hover:bg-accent/40 outline-none",
+          // Foco visível na linha + scroll-margin para que a linha não
+          // fique escondida atrás do cabeçalho fixo ao navegar pelo
+          // teclado (Arrow Up/Down, Home/End).
+          "focus-visible:bg-accent/50 focus-visible:[box-shadow:inset_2px_0_0_0_hsl(var(--ring))] scroll-mt-12",
           expanded && "bg-accent/25 hover:bg-accent/30",
         )}
       >
