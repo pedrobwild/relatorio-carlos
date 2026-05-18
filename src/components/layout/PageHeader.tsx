@@ -230,7 +230,7 @@ export function PageHeader({
               ))}
             </nav>
           )}
-          <h1 className="text-[18px] font-bold text-foreground leading-tight truncate">
+          <h1 className="text-page-title truncate">
             {title}
           </h1>
         </div>
