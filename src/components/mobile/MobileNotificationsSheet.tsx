@@ -91,21 +91,26 @@ function NotificationRow({
   onNavigate,
   isSelected,
   onSelect,
+  isNavigating,
 }: {
   notification: Notification;
   onRead: (id: string) => void;
   onNavigate: (url: string) => void;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  isNavigating: boolean;
 }) {
   const config = typeConfig[notification.type] ?? typeConfig.general;
   const Icon = config.icon;
   const isUnread = !notification.read_at;
   const isBlocking = isBlockingNotification(notification.type);
+  const showSpinner = isSelected && isNavigating;
 
   return (
     <button
       aria-pressed={isSelected}
+      aria-busy={showSpinner}
+      disabled={showSpinner}
       onClick={() => {
         onSelect(notification.id);
         if (isUnread) onRead(notification.id);
@@ -118,6 +123,7 @@ function NotificationRow({
           isBlocking &&
           "bg-destructive/5 border-l-2 border-destructive",
         isSelected && "ring-2 ring-primary/40 bg-primary/10",
+        showSpinner && "opacity-80 cursor-progress",
       )}
     >
       <div className={cn("mt-0.5 shrink-0", config.className)}>
@@ -146,13 +152,21 @@ function NotificationRow({
           {formatTime(notification.created_at)}
         </p>
       </div>
-      {isUnread && (
+      {showSpinner ? (
         <span
-          className={cn(
-            "w-2.5 h-2.5 rounded-full shrink-0 mt-1.5",
-            isBlocking ? "bg-destructive animate-pulse" : "bg-primary",
-          )}
+          role="status"
+          aria-label="Abrindo"
+          className="w-3.5 h-3.5 rounded-full shrink-0 mt-1 border-2 border-primary/30 border-t-primary animate-spin"
         />
+      ) : (
+        isUnread && (
+          <span
+            className={cn(
+              "w-2.5 h-2.5 rounded-full shrink-0 mt-1.5",
+              isBlocking ? "bg-destructive animate-pulse" : "bg-primary",
+            )}
+          />
+        )
       )}
     </button>
   );
