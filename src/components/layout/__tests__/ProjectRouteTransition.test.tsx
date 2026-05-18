@@ -28,6 +28,7 @@ function Navigator({
 }) {
   const navigate = useNavigate();
   useEffect(() => {
+    console.warn("[DBG-NAV]", { to, action });
     if (!to) return;
     if (action === "pop") navigate(-1);
     else navigate(to);
