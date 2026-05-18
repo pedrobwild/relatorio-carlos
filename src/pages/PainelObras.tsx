@@ -3785,7 +3785,7 @@ function BoardView({
           </SectionCard>
         );
       })}
-    </div>
+    </StickyTableScroller>
   );
 }
 
