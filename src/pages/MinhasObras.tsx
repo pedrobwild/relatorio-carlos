@@ -158,9 +158,11 @@ export default function MinhasObras() {
                   label: "Falar no WhatsApp",
                   onClick: () =>
                     window.open(
-                      buildSupportWhatsappUrl(
-                        "Olá! Não consigo ver minha obra no Portal BWild.",
-                      ),
+                      buildSupportWhatsappUrl({
+                        reason: "Ainda não consigo ver minha obra no portal.",
+                        userName: displayName || null,
+                        userEmail: user?.email ?? null,
+                      }),
                       "_blank",
                       "noopener,noreferrer",
                     ),

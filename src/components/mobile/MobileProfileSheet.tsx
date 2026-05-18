@@ -31,6 +31,7 @@ import { useUserRole, type AppRole } from "@/hooks/useUserRole";
 import { useNotifications } from "@/hooks/useNotifications";
 import { MobileNotificationsSheet } from "@/components/mobile/MobileNotificationsSheet";
 import { buildSupportWhatsappUrl } from "@/config/contact";
+import { useProjectOptional } from "@/contexts/ProjectContext";
 import { cn } from "@/lib/utils";
 
 const ROLE_LABELS: Record<AppRole, string> = {
