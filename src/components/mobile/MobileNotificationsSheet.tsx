@@ -281,6 +281,23 @@ export function MobileNotificationsSheet({
     return () => cancelAnimationFrame(raf);
   }, [open, resetTransform]);
 
+  // Ao alternar entre abas (Todas / Ação / Atualizações), reposiciona o
+  // scroll para o topo — evita que o usuário comece a leitura no meio da
+  // lista herdando a posição da aba anterior.
+  useEffect(() => {
+    if (!open) return;
+    const raf = requestAnimationFrame(() => {
+      const root = contentRef.current;
+      if (!root) return;
+      root
+        .querySelectorAll<HTMLElement>("[data-radix-scroll-area-viewport]")
+        .forEach((vp) => {
+          vp.scrollTop = 0;
+        });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [activeTab, open]);
+
   const actionNotifications = useMemo(
     () => notifications.filter((n) => getUrgencyCategory(n.type) === "action"),
     [notifications],
