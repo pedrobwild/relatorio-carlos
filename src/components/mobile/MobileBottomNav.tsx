@@ -12,6 +12,7 @@ import {
   type MobileNavSlot,
 } from "@/config/mobileNav";
 import { MobileProfileSheet } from "./MobileProfileSheet";
+import { rememberMobileNavSlot } from "@/lib/mobileBottomNavMemory";
 
 /**
  * Universal mobile bottom navigation — 4 tabs + Profile.
