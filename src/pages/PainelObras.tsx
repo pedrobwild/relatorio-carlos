@@ -2155,7 +2155,13 @@ function ObraRow({
         <TableCell
           data-testid="painel-obras-cell-cliente"
           className={cn(
-            "sticky left-0 z-sticky-left border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]",
+            // Largura RESPONSIVA idêntica ao thead (main + grouped) para
+            // garantir que a borda direita da coluna sticky caia no mesmo
+            // X em qualquer breakpoint — crucial durante scroll horizontal,
+            // quando o desalinhamento de 40px entre head (200) e body (240)
+            // expunha colunas de baixo aparecendo "por dentro" do sticky.
+            "sticky left-0 z-sticky-left border-r border-border shadow-[1px_0_0_0_hsl(var(--border))]",
+            "w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px]",
             // overflow-hidden na própria célula impede que halo/ring de
             // foco interno (botões, links) vaze para fora da coluna sticky.
             "overflow-hidden",
