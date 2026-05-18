@@ -18,6 +18,7 @@ import {
 import authBg from "@/assets/auth-bg.png";
 import workflowLogo from "@/assets/bwild-workflow-manager.png";
 import { z } from "zod";
+import { buildSupportWhatsappUrl } from "@/config/contact";
 import { logError, logInfo, logWarn } from "@/lib/errorLogger";
 
 const loginSchema = z.object({
