@@ -13,7 +13,7 @@ import {
 } from "@/config/mobileNav";
 import { MobileProfileSheet } from "./MobileProfileSheet";
 import { rememberMobileNavSlot, clearMobileNavSlot } from "@/lib/mobileBottomNavMemory";
-import { patchPortalViewState } from "@/lib/portalViewState";
+import { getPortalViewStateKey, patchPortalViewState } from "@/lib/portalViewState";
 import { rememberLastProjectId, getLastProjectId } from "@/lib/lastProjectMemory";
 
 const ROUTE_TAB_SLOTS = new Set([
@@ -57,7 +57,9 @@ export function MobileBottomNav() {
     // the portal view state so activeTab stays in sync with the URL when
     // the user returns to the Index page.
     if (ROUTE_TAB_SLOTS.has(segment)) {
-      patchPortalViewState(`portal_${projectId}`, { activeTab: segment });
+      patchPortalViewState(getPortalViewStateKey(projectId), {
+        activeTab: segment,
+      });
     }
   }, [location.pathname, projectId]);
 
@@ -68,6 +70,15 @@ export function MobileBottomNav() {
     () => (isStaff ? STAFF_NAV : CLIENT_NAV),
     [isStaff],
   );
+
+  const resetProjectHubState = (targetProjectId?: string) => {
+    if (!targetProjectId) return;
+    clearMobileNavSlot(targetProjectId);
+    patchPortalViewState(getPortalViewStateKey(targetProjectId), {
+      activeTab: "cronograma",
+      weeklyReport: { open: false },
+    });
+  };
 
   const resolveBadge = (slot: MobileNavSlot): number => {
     if (slot.badge === "criticalPendencias") return criticalPendencias;
@@ -104,11 +115,8 @@ export function MobileBottomNav() {
                   // "obra" itself is not a restorable slot, so the Index
                   // restore effect would bounce the user right back. Clear
                   // the memory and reset the Index tab to the overview.
-                  if (slot.id === "obra" && projectId) {
-                    clearMobileNavSlot(projectId);
-                    patchPortalViewState(`portal_${projectId}`, {
-                      activeTab: "cronograma",
-                    });
+                  if (slot.id === "obra" || slot.id === "obras") {
+                    resetProjectHubState(projectId ?? lastProjectId);
                   }
                 }}
                 className={({ isActive }) =>

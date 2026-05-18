@@ -14,6 +14,7 @@ import { useCan } from "@/hooks/useCan";
 import { isDemoMode } from "@/config/flags";
 import {
   getPortalViewState,
+  getPortalViewStateKey,
   patchPortalViewState,
 } from "@/lib/portalViewState";
 import { useWeeklyReports } from "@/hooks/useWeeklyReports";
@@ -171,7 +172,7 @@ export function useProjectPortal() {
 
   // --- View state persistence ---
   const viewStateKey = useMemo(
-    () => `portal:view:${projectId ?? "sem-projeto"}`,
+    () => getPortalViewStateKey(projectId),
     [projectId],
   );
 

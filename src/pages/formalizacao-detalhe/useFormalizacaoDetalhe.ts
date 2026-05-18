@@ -11,7 +11,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
-import { patchPortalViewState } from "@/lib/portalViewState";
+import { getPortalViewStateKey, patchPortalViewState } from "@/lib/portalViewState";
 import { invokeFunction } from "@/infra/edgeFunctions";
 import { isSeedData, type PartyRow, type AckRow } from "./types";
 
@@ -70,7 +70,7 @@ export function useFormalizacaoDetalhe() {
 
   const goBackToList = useCallback(() => {
     if (projectId) {
-      patchPortalViewState(`portal_${projectId}`, {
+      patchPortalViewState(getPortalViewStateKey(projectId), {
         activeTab: "formalizacoes",
       });
       navigate(`/obra/${projectId}`);
