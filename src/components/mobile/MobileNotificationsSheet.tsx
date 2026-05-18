@@ -327,9 +327,37 @@ export function MobileNotificationsSheet({
     isFetchingNextPage,
   } = useNotificationsInfinite();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Aba e seleção são persistidas em localStorage para sobreviverem ao
+  // fechamento do sheet (e a reloads da página). Ao reabrir, o usuário
+  // retorna ao mesmo contexto de leitura.
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window === "undefined") return "all";
+    return localStorage.getItem("mobileNotifSheet:activeTab") ?? "all";
+  });
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("mobileNotifSheet:selectedId");
+  });
   const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("mobileNotifSheet:activeTab", activeTab);
+    } catch {
+      /* storage indisponível: ignorar */
+    }
+  }, [activeTab]);
+  useEffect(() => {
+    try {
+      if (selectedId) {
+        localStorage.setItem("mobileNotifSheet:selectedId", selectedId);
+      } else {
+        localStorage.removeItem("mobileNotifSheet:selectedId");
+      }
+    } catch {
+      /* storage indisponível: ignorar */
+    }
+  }, [selectedId]);
 
   // Drag-to-dismiss state. We translate the SheetContent imperatively
   // (via ref) during the gesture to keep it 60fps and avoid React re-renders.
@@ -375,8 +403,9 @@ export function MobileNotificationsSheet({
   // abertura nem após ele rolar manualmente.
   useEffect(() => {
     if (!open) {
-      setActiveTab("all");
-      setSelectedId(null);
+      // Aba e seleção são preservadas propositalmente — restauradas na
+      // próxima abertura. Apenas estados efêmeros (gesture, navegação,
+      // transição) são limpos.
       setIsNavigating(false);
       dragStartYRef.current = null;
       dragDeltaRef.current = 0;
@@ -471,6 +500,25 @@ export function MobileNotificationsSheet({
       : activeTab === "updates"
         ? updateNotifications
         : notifications;
+
+  // Quando a lista exibida muda de tamanho (nova notificação chegou via
+  // realtime, página seguinte carregada, item lido sai do filtro, etc.)
+  // e o usuário ainda não rolou manualmente, mantém o scroll ancorado
+  // no topo. Se ele já rolou, respeitamos a posição atual.
+  const lastLenRef = useRef(displayed.length);
+  useEffect(() => {
+    if (!open) {
+      lastLenRef.current = displayed.length;
+      return;
+    }
+    if (displayed.length !== lastLenRef.current) {
+      lastLenRef.current = displayed.length;
+      if (!userScrolledRef.current) {
+        const raf = requestAnimationFrame(resetScrollContainers);
+        return () => cancelAnimationFrame(raf);
+      }
+    }
+  }, [displayed.length, open, resetScrollContainers]);
 
   const handleNavigate = (url: string) => {
     // Feedback imediato: ativa estado de "navegando" para mostrar spinner
