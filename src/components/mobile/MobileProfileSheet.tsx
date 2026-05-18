@@ -31,6 +31,7 @@ import { useUserRole, type AppRole } from "@/hooks/useUserRole";
 import { useNotifications } from "@/hooks/useNotifications";
 import { MobileNotificationsSheet } from "@/components/mobile/MobileNotificationsSheet";
 import { buildSupportWhatsappUrl } from "@/config/contact";
+import { useProjectOptional } from "@/contexts/ProjectContext";
 import { cn } from "@/lib/utils";
 
 const ROLE_LABELS: Record<AppRole, string> = {
@@ -58,12 +59,17 @@ export function MobileProfileSheet({
   const { user, signOut } = useAuth();
   const { roles, isStaff, isAdmin } = useUserRole();
   const { unreadCount } = useNotifications();
+  const projectCtx = useProjectOptional();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
 
   const primaryRoleLabel =
     roles.length > 0 ? (ROLE_LABELS[roles[0]] ?? roles[0]) : null;
-  const displayName = user?.email?.split("@")[0] ?? "Usuário";
+  const displayName =
+    (user?.user_metadata?.display_name as string | undefined) ||
+    (user?.user_metadata?.full_name as string | undefined) ||
+    user?.email?.split("@")[0] ||
+    "Usuário";
 
   const close = () => onOpenChange(false);
 
@@ -118,7 +124,16 @@ export function MobileProfileSheet({
       icon: LifeBuoy,
       onClick: () => {
         close();
-        window.open(buildSupportWhatsappUrl(), "_blank", "noopener,noreferrer");
+        window.open(
+          buildSupportWhatsappUrl({
+            userName: displayName,
+            userEmail: user?.email ?? null,
+            projectName: projectCtx?.project?.name ?? null,
+            projectId: projectCtx?.project?.id ?? null,
+          }),
+          "_blank",
+          "noopener,noreferrer",
+        );
       },
       rightSlot: (
         <ExternalLink
