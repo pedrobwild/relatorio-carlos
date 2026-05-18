@@ -675,7 +675,7 @@ const Index = () => {
                                 </Suspense>
                               );
                             })()}
-                          </>
+                          </div>
                         ) : (
                           <WeeklyReportsHistory
                             projectStartDate={reportData.startDate ?? ""}
