@@ -14,6 +14,7 @@ import {
 import { MobileProfileSheet } from "./MobileProfileSheet";
 import { rememberMobileNavSlot, clearMobileNavSlot } from "@/lib/mobileBottomNavMemory";
 import { patchPortalViewState } from "@/lib/portalViewState";
+import { rememberLastProjectId, getLastProjectId } from "@/lib/lastProjectMemory";
 
 const ROUTE_TAB_SLOTS = new Set([
   "financeiro",
@@ -37,10 +38,18 @@ export function MobileBottomNav() {
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
 
+  // Lê o último projectId visitado (memória) — usado como fallback quando o
+  // usuário está em uma rota global e quer voltar para a obra anterior.
+  const [lastProjectId, setLastProjectId] = useState<string | undefined>(() =>
+    getLastProjectId(),
+  );
+
   // Persist the slot whenever the URL matches one — covers direct navigation,
   // back/forward and deep links, not just taps on the nav itself.
   useEffect(() => {
     if (!projectId) return;
+    rememberLastProjectId(projectId);
+    setLastProjectId(projectId);
     const segment = location.pathname.split("/")[3];
     if (!segment) return;
     rememberMobileNavSlot(projectId, segment);
@@ -79,7 +88,7 @@ export function MobileBottomNav() {
       >
         <div className="flex items-stretch justify-between h-16 px-1">
           {navItems.map((slot) => {
-            const to = slot.to({ paths, hasProject, projectId });
+            const to = slot.to({ paths, hasProject, projectId, lastProjectId });
             const badge = resolveBadge(slot);
             const Icon = slot.icon;
             return (
