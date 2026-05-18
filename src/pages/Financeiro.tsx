@@ -164,7 +164,7 @@ const Financeiro = () => {
               </div>
             </>
           )}
-        </div>
+        </PageContainer>
       </div>
     </TooltipProvider>
   );
