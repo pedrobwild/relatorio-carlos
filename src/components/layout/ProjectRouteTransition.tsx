@@ -172,14 +172,12 @@ export function ProjectRouteTransition({
     setIsSwapping(true);
     const timer = window.setTimeout(() => {
       setIsSwapping(false);
-      // Wait for the next paint so the new route has measured layout
-      // before we apply scroll, otherwise the target may be too short.
-      const apply = () => applyScroll(saved, scrollTargetRef?.current);
-      if (typeof requestAnimationFrame !== "undefined") {
-        requestAnimationFrame(apply);
-      } else {
-        apply();
-      }
+      // Defer one tick so React commits the new content before we set
+      // scroll, otherwise the target may be too short to hold the value.
+      window.setTimeout(
+        () => applyScroll(saved, scrollTargetRef?.current),
+        0,
+      );
     }, SKELETON_MIN_MS);
 
     return () => window.clearTimeout(timer);
