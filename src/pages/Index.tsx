@@ -261,13 +261,56 @@ const Index = () => {
     if (!selectedWeeklyReport) return;
     const node = reportDetailRef.current;
     if (!node) return;
-    // Defer to next frame so the lazy WeeklyReportTemplate has time to mount
-    // its Suspense fallback (otherwise the node may have zero height and
-    // scrollIntoView lands in the middle of the previous list scroll).
-    const raf = requestAnimationFrame(() => {
-      node.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // ProjectShell mounts the content inside a sibling com `overflow-y-auto`,
+    // então `window.scrollTo` não funciona. `scrollIntoView` sozinho também
+    // é frágil aqui: quando o template carrega via lazy/Suspense o nó pode
+    // ter altura ~0 no primeiro frame, e o smooth-scroll fica no meio da
+    // lista anterior. Resolvemos achando o ancestral scrollável real e
+    // rolando-o diretamente, esperando dois rAF para o Suspense montar.
+    const findScrollableAncestor = (
+      el: HTMLElement | null,
+    ): HTMLElement | null => {
+      let cur = el?.parentElement ?? null;
+      while (cur) {
+        const style = window.getComputedStyle(cur);
+        const oy = style.overflowY;
+        if (
+          (oy === "auto" || oy === "scroll") &&
+          cur.scrollHeight > cur.clientHeight
+        ) {
+          return cur;
+        }
+        cur = cur.parentElement;
+      }
+      return null;
+    };
+
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        const scroller = findScrollableAncestor(node);
+        if (scroller) {
+          const nodeRect = node.getBoundingClientRect();
+          const scrollerRect = scroller.getBoundingClientRect();
+          // pequena folga visual acima do cabeçalho do relatório
+          const delta = nodeRect.top - scrollerRect.top - 8;
+          scroller.scrollTo({
+            top: scroller.scrollTop + delta,
+            behavior: "smooth",
+          });
+        } else {
+          // Fallback: nenhuma container scrollável encontrada (ex.: layouts
+          // alternativos). scrollIntoView ainda é melhor que nada.
+          node.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
     });
-    return () => cancelAnimationFrame(raf);
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
     // selectedWeeklyReport identity changes on every click/prev/next, so this
     // is intentionally tied to it (not just its presence).
   }, [selectedWeeklyReport]);
