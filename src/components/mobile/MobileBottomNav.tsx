@@ -146,7 +146,7 @@ export function MobileBottomNav() {
                     </span>
                     <span
                       className={cn(
-                        "text-[11px] leading-none truncate max-w-full",
+                        "text-[10px] min-[360px]:text-[11px] leading-[1.05] text-center max-w-full break-words hyphens-auto line-clamp-2",
                         isActive ? "font-semibold text-primary" : "font-medium",
                       )}
                     >
@@ -206,7 +206,7 @@ export function MobileBottomNav() {
             </span>
             <span
               className={cn(
-                "text-[11px] leading-none truncate max-w-full",
+                "text-[10px] min-[360px]:text-[11px] leading-[1.05] text-center max-w-full break-words hyphens-auto line-clamp-2",
                 profileOpen ? "font-semibold text-primary" : "font-medium",
               )}
             >
