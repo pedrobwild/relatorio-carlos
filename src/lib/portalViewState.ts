@@ -6,6 +6,10 @@ export type PortalViewState = {
   };
 };
 
+export function getPortalViewStateKey(projectId?: string | null): string {
+  return `portal:view:${projectId ?? "sem-projeto"}`;
+}
+
 export function getPortalViewState(key: string): PortalViewState {
   if (typeof window === "undefined") return {};
   try {
