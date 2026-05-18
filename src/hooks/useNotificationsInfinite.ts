@@ -90,17 +90,99 @@ export function useNotificationsInfinite() {
 
   const markReadMutation = useMutation({
     mutationFn: markAsRead,
-    onSuccess: () => {
+    // Atualização otimista: aplica read_at = now() no cache imediatamente,
+    // assim o badge e a ordenação refletem antes do navigate, sem flicker.
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: [KEY, userId] });
+      await qc.cancelQueries({ queryKey: [UNREAD_COUNT_KEY, userId] });
+
+      const prevPages = qc.getQueryData<{
+        pages: Notification[][];
+        pageParams: unknown[];
+      }>([KEY, userId]);
+      const prevUnread = qc.getQueryData<number>([UNREAD_COUNT_KEY, userId]);
+      const nowIso = new Date().toISOString();
+
+      let decremented = false;
+      if (prevPages) {
+        qc.setQueryData([KEY, userId], {
+          ...prevPages,
+          pages: prevPages.pages.map((page) =>
+            page.map((n) => {
+              if (n.id !== id) return n;
+              if (!n.read_at) decremented = true;
+              return { ...n, read_at: n.read_at ?? nowIso };
+            }),
+          ),
+        });
+      }
+      if (decremented && typeof prevUnread === "number") {
+        qc.setQueryData(
+          [UNREAD_COUNT_KEY, userId],
+          Math.max(0, prevUnread - 1),
+        );
+      }
+      // Mantém o feed simples em sincronia se estiver montado.
+      qc.setQueriesData<Notification[] | undefined>(
+        { queryKey: ["notifications", userId] },
+        (old) =>
+          old?.map((n) =>
+            n.id === id ? { ...n, read_at: n.read_at ?? nowIso } : n,
+          ),
+      );
+
+      return { prevPages, prevUnread };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prevPages) qc.setQueryData([KEY, userId], ctx.prevPages);
+      if (typeof ctx?.prevUnread === "number") {
+        qc.setQueryData([UNREAD_COUNT_KEY, userId], ctx.prevUnread);
+      }
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: [KEY, userId] });
       qc.invalidateQueries({ queryKey: [UNREAD_COUNT_KEY, userId] });
-      // Also keep the simple feed in sync if it's mounted elsewhere.
       qc.invalidateQueries({ queryKey: ["notifications", userId] });
     },
   });
 
   const markAllReadMutation = useMutation({
     mutationFn: () => markAllAsRead(userId!),
-    onSuccess: () => {
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: [KEY, userId] });
+      await qc.cancelQueries({ queryKey: [UNREAD_COUNT_KEY, userId] });
+
+      const prevPages = qc.getQueryData<{
+        pages: Notification[][];
+        pageParams: unknown[];
+      }>([KEY, userId]);
+      const prevUnread = qc.getQueryData<number>([UNREAD_COUNT_KEY, userId]);
+      const nowIso = new Date().toISOString();
+
+      if (prevPages) {
+        qc.setQueryData([KEY, userId], {
+          ...prevPages,
+          pages: prevPages.pages.map((page) =>
+            page.map((n) => ({ ...n, read_at: n.read_at ?? nowIso })),
+          ),
+        });
+      }
+      qc.setQueryData([UNREAD_COUNT_KEY, userId], 0);
+      qc.setQueriesData<Notification[] | undefined>(
+        { queryKey: ["notifications", userId] },
+        (old) =>
+          old?.map((n) => ({ ...n, read_at: n.read_at ?? nowIso })),
+      );
+
+      return { prevPages, prevUnread };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prevPages) qc.setQueryData([KEY, userId], ctx.prevPages);
+      if (typeof ctx?.prevUnread === "number") {
+        qc.setQueryData([UNREAD_COUNT_KEY, userId], ctx.prevUnread);
+      }
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: [KEY, userId] });
       qc.invalidateQueries({ queryKey: [UNREAD_COUNT_KEY, userId] });
       qc.invalidateQueries({ queryKey: ["notifications", userId] });
