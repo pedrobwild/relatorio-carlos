@@ -266,7 +266,7 @@ const Documentos = () => {
       <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
         {/* Header skeleton */}
         <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
-          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <PageContainer className="py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
               <div className="flex items-center gap-2.5">
@@ -275,13 +275,13 @@ const Documentos = () => {
                 <div className="h-6 w-24 bg-muted rounded animate-pulse" />
               </div>
             </div>
-          </div>
+          </PageContainer>
         </div>
         {/* Content skeleton */}
-        <div className="flex-1 p-4 md:p-6">
-          <div className="max-w-5xl mx-auto">
+        <div className="flex-1 py-6">
+          <PageContainer>
             <ContentSkeleton variant="cards" rows={6} />
-          </div>
+          </PageContainer>
         </div>
       </div>
     );
