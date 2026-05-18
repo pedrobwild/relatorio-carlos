@@ -11,6 +11,7 @@ import {
   useInitializeJourney,
 } from "@/hooks/useProjectJourney";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectLayout } from "@/components/layout/ProjectLayoutContext";
 import { useTabKeyboardNav } from "@/hooks/useKeyboardShortcuts";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
