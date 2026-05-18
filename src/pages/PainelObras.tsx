@@ -3641,19 +3641,40 @@ function BoardGroupCard({
     const titleEl = titleRef.current;
     const cardEl = cardRef.current;
     if (!titleEl || !cardEl) return;
+    let rafId = 0;
+    let lastH = -1;
     const apply = () => {
-      // Math.round evita subpixel — o thead encostando *abaixo* do título
-      // garante que não sobre faixa transparente nem haja overlap.
-      const h = Math.round(titleEl.getBoundingClientRect().height);
+      // Math.ceil garante que o thead encoste *no* limite inferior do
+      // título (sem faixa transparente de 0.5px durante scroll rápido).
+      const h = Math.ceil(titleEl.getBoundingClientRect().height);
+      if (h === lastH) return;
+      lastH = h;
       cardEl.style.setProperty("--group-title-h", `${h}px`);
     };
+    // rAF coalesce: scroll/resize rápido => uma única medição por frame,
+    // evitando que o thead "trema" enquanto o título reflowa.
+    const schedule = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        apply();
+      });
+    };
     apply();
-    const ro = new ResizeObserver(apply);
+    const ro = new ResizeObserver(schedule);
     ro.observe(titleEl);
-    window.addEventListener("resize", apply);
+    window.addEventListener("resize", schedule);
+    window.addEventListener("orientationchange", schedule);
+    // Reaplica após o carregamento de fontes — métricas mudam quando a
+    // fonte real substitui o fallback, alterando a altura do título.
+    const fonts = (document as Document & { fonts?: { ready: Promise<unknown> } })
+      .fonts;
+    fonts?.ready?.then(schedule).catch(() => {});
     return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
       ro.disconnect();
-      window.removeEventListener("resize", apply);
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("orientationchange", schedule);
     };
   }, [isCollapsed, label]);
 
