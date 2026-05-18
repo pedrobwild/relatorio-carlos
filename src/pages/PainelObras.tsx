@@ -3686,7 +3686,7 @@ function BoardView({
               onClick={() => toggleGroup(g.key)}
               aria-expanded={!isCollapsed}
               aria-controls={`board-group-${g.key}`}
-              className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-accent/30 transition-colors rounded-t-xl"
+              className="sticky top-0 z-[11] flex w-full items-center gap-3 px-3 py-2 text-left bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border-subtle hover:bg-accent/30 transition-colors rounded-t-xl"
             >
               <span
                 aria-hidden="true"
