@@ -68,7 +68,7 @@ export function MobileFullscreenSheet({
               "border-b border-border-subtle pt-safe",
             )}
           >
-            <div className="flex items-center gap-2 px-3 py-2 min-h-[56px] pl-safe pr-safe">
+            <div className="flex items-center gap-2 px-safe-4 py-2 min-h-[56px]">
               <DialogPrimitive.Close
                 aria-label={closeAriaLabel}
                 className={cn(
