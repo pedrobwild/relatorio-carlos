@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { getAccessToken } from "@/infra/edgeFunctions";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 const AREAS = [
   {
@@ -336,7 +337,7 @@ export default function AdminUxInsights() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-4xl mx-auto px-4 py-3">
+        <PageContainer maxWidth="md" className="py-3">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -358,10 +359,10 @@ export default function AdminUxInsights() {
               </p>
             </div>
           </div>
-        </div>
+        </PageContainer>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <PageContainer as="main" maxWidth="md" className="py-6 space-y-6">
         {/* Input Section */}
         <Card>
           <CardHeader>
@@ -479,7 +480,7 @@ export default function AdminUxInsights() {
             </CardContent>
           </Card>
         )}
-      </main>
+      </PageContainer>
     </div>
   );
 }

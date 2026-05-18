@@ -24,6 +24,7 @@ import { StickySummary } from "./nova-obra/StickySummary";
 import { MobileSummarySheet } from "./nova-obra/MobileSummarySheet";
 import { cn } from "@/lib/utils";
 import { safeParseInt, trackBlock1CUsage } from "@/lib/block1cMonitor";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 const STEPS: Step[] = [
   { label: "Cadastro Base", description: "Obra, imóvel e contratante" },
@@ -297,7 +298,7 @@ export default function EditarObraWizard() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b">
-        <div className="max-w-3xl mx-auto px-4 py-3">
+        <PageContainer maxWidth="md" className="py-3">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -316,7 +317,7 @@ export default function EditarObraWizard() {
               </p>
             </div>
           </div>
-        </div>
+        </PageContainer>
 
         {/* Mobile progress bar */}
         <div className="sm:hidden px-4 pb-3 space-y-2">
@@ -354,7 +355,7 @@ export default function EditarObraWizard() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-4 sm:py-6 pb-[88px] sm:pb-6">
+      <PageContainer as="main" maxWidth="lg" className="py-4 sm:py-6 pb-[88px] sm:pb-6">
         {/* Desktop Stepper */}
         <div className="mb-8 lg:max-w-3xl hidden sm:block">
           <FormStepper
@@ -534,7 +535,7 @@ export default function EditarObraWizard() {
           completedSteps={completedSteps}
           totalSteps={STEPS.length}
         />
-      </main>
+      </PageContainer>
 
       {/* Mobile sticky bottom */}
       <div className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur-md border-t border-border sm:hidden keyboard-aware">

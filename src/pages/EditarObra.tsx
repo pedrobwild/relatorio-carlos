@@ -41,6 +41,7 @@ import { TabEquipe } from "./editar-obra/TabEquipe";
 import { TabFichaTecnica } from "./editar-obra/TabFichaTecnica";
 import { EditarObraSidebar } from "./editar-obra/EditarObraSidebar";
 import { ShiftModeDialog } from "./editar-obra/ShiftModeDialog";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -85,7 +86,7 @@ export default function EditarObra() {
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-          <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3">
+          <PageContainer maxWidth="lg" className="py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Button
@@ -194,10 +195,10 @@ export default function EditarObra() {
                 )}
               </div>
             </div>
-          </div>
+          </PageContainer>
         </header>
 
-        <main className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <PageContainer as="main" maxWidth="xl" className="py-4 sm:py-6">
           <div className="flex gap-6">
             {/* Main content */}
             <div className="flex-1 min-w-0">
@@ -326,7 +327,7 @@ export default function EditarObra() {
               />
             </aside>
           </div>
-        </main>
+        </PageContainer>
       </div>
       <ShiftModeDialog
         open={data.shiftDialogState.open}

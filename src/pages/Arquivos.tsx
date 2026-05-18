@@ -36,6 +36,7 @@ import { matchesSearch } from "@/lib/searchNormalize";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
+import { PageContainer } from "@/components/layout/PageContainer";
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -245,7 +246,7 @@ export default function Arquivos() {
         </div>
       </AppHeader>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      <PageContainer as="main" maxWidth="xl" className="py-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card className="p-4">
@@ -472,7 +473,7 @@ export default function Arquivos() {
             ))}
           </div>
         )}
-      </main>
+      </PageContainer>
 
       {/* Preview Modal */}
       <FilePreviewModal

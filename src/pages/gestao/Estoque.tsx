@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -513,7 +514,7 @@ export default function Estoque() {
   };
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <PageContainer as="main" maxWidth="xl" className="py-6 space-y-6">
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-h2 font-bold flex items-center gap-2">
@@ -588,7 +589,7 @@ export default function Estoque() {
         onSubmit={(v) => createMovement.mutate(v)}
         loading={createMovement.isPending}
       />
-    </main>
+    </PageContainer>
   );
 }
 

@@ -35,6 +35,7 @@ import { ReportData, WeeklyReport } from "@/types/report";
 import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { format } from "date-fns";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 // Demo data - Hub Brooklyn 502
 const demoReportData: ReportData = {
@@ -215,7 +216,7 @@ export default function Demo() {
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background">
       {/* Demo Header */}
       <div className="sticky top-0 z-50 bg-gradient-to-r from-accent/30 via-background to-accent/30 border-b border-accent">
-        <div className="max-w-6xl mx-auto px-4 py-3">
+        <PageContainer maxWidth="xl" className="py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
@@ -241,7 +242,7 @@ export default function Demo() {
               Dados fictícios para apresentação
             </p>
           </div>
-        </div>
+        </PageContainer>
       </div>
 
       <div className="p-3 md:p-4 lg:p-6 xl:p-8">

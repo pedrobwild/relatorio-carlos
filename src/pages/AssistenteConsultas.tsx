@@ -35,6 +35,7 @@ import type {
 } from "@/lib/assistant";
 import { AssistantAnalysisPanel } from "@/components/assistant/AssistantAnalysisPanel";
 import { ConfidenceBadge } from "@/components/assistant/ConfidenceBadge";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 interface SuggestionCategory {
   label: string;
@@ -289,7 +290,7 @@ export default function AssistenteConsultas() {
   const isError = result && result.status !== "success";
 
   return (
-    <div className="container max-w-5xl mx-auto px-4 py-6 md:py-8 space-y-6">
+    <PageContainer maxWidth="lg" className="container py-6 md:py-8 space-y-6">
       {/* Header */}
       <header className="space-y-2">
         <div className="flex items-center gap-2">
@@ -521,6 +522,6 @@ export default function AssistenteConsultas() {
           })}
         </div>
       </section>
-    </div>
+    </PageContainer>
   );
 }

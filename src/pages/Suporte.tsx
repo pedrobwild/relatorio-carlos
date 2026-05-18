@@ -23,6 +23,7 @@ import {
   FORMALIZATION_STATUS_LABELS,
 } from "@/types/formalization";
 import {
+import { PageContainer } from "@/components/layout/PageContainer";
   getStatusIcon,
   getStatusBadgeVariant,
   getTypeIcon,
@@ -81,7 +82,7 @@ const Suporte = () => {
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <PageContainer maxWidth="lg" className="py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/relatorio">
               <Button
@@ -102,7 +103,7 @@ const Suporte = () => {
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Nova Formalização</span>
           </Button>
-        </div>
+        </PageContainer>
       </div>
 
       {/* Content */}
