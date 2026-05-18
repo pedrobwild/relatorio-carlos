@@ -49,19 +49,19 @@ const Financeiro = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <div className="sticky top-0 z-50 bg-background border-b border-border">
-          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+          <PageContainer className="py-3 flex items-center gap-3">
             <Skeleton className="h-9 w-9 rounded-full" />
             <Skeleton className="h-6 w-32" />
-          </div>
+          </PageContainer>
         </div>
-        <div className="flex-1 max-w-5xl mx-auto w-full p-6">
+        <PageContainer className="flex-1 py-6">
           <div className="space-y-4">
             <Skeleton className="h-12 w-48" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
           </div>
-        </div>
+        </PageContainer>
       </div>
     );
   }
