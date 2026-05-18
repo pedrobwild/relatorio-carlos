@@ -113,6 +113,7 @@ export function MobileBottomNav() {
                 aria-label={
                   badge > 0 ? `${slot.label} — ${badge} críticas` : slot.label
                 }
+                title={slot.label}
               >
                 {({ isActive }) => (
                   <>
@@ -173,6 +174,7 @@ export function MobileBottomNav() {
                 ? `${PROFILE_SLOT.label} — ${unreadCount} avisos não lidos`
                 : PROFILE_SLOT.label
             }
+            title={PROFILE_SLOT.label}
             aria-haspopup="dialog"
             aria-expanded={profileOpen}
           >
