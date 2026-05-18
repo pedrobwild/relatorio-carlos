@@ -129,7 +129,6 @@ import { useQueryClient } from "@tanstack/react-query";
 // ----- helpers -----
 const ALL = "__all__";
 type SortKey =
-  | "atraso"
   | "entrega_proxima"
   | "inicio_oficial"
   | "entrega_oficial"
@@ -583,6 +582,14 @@ export default function PainelObras() {
     }
   }, [sortKey, sortDir]);
 
+  // Fallback: limpa sortKey legado "atraso" do localStorage
+  useEffect(() => {
+    if ((sortKey as string) === "atraso") {
+      setSortKey(null);
+      setSortDir("asc");
+    }
+  }, [sortKey]);
+
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const toggleExpanded = (id: string) => {
     setExpandedIds((curr) => {
@@ -659,11 +666,6 @@ export default function PainelObras() {
     }
     if (sortKey) {
       rows = [...rows].sort((a, b) => {
-        if (sortKey === "atraso") {
-          const av = computeOverdueDays(a);
-          const bv = computeOverdueDays(b);
-          return sortDir === "asc" ? av - bv : bv - av;
-        }
         if (sortKey === "entrega_proxima") {
           // Entrega mais próxima: ordena por `entrega_oficial` asc, jogando
           // para o final obras já entregues (com `entrega_real`) e sem data.
@@ -1450,7 +1452,6 @@ export default function PainelObras() {
                                         entrega_real: "entrega real",
                                         inicio_real: "início real",
                                         responsavel_nome: "responsável",
-                                        atraso: "atraso",
                                       } as Record<string, string>
                                     )[sortKey] ?? "custom")
                                   : "padrão"}
@@ -1478,7 +1479,6 @@ export default function PainelObras() {
                               <SelectItem value="responsavel_nome">
                                 Responsável
                               </SelectItem>
-                              <SelectItem value="atraso">Atraso</SelectItem>
                             </SelectContent>
                           </Select>
                           <Button
@@ -1746,9 +1746,6 @@ export default function PainelObras() {
                               sortKey="responsavel_nome"
                             />
                           </TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px] text-right">
-                            <SortableHeader label="Atraso" sortKey="atraso" />
-                          </TableHead>
                           <TableHead className="w-12 sm:w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
@@ -1785,8 +1782,8 @@ export default function PainelObras() {
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
 // 1) Cliente / Obra · 2) Dados · 3) Status · 4) Etapa · 5) Progresso ·
 // 6) Início Of. · 7) Entrega Of. · 8) Início Real · 9) Entrega Real ·
-// 10) Relacionamento · 11) Responsável · 12) Atraso · 13) Ações
-const PAINEL_COLUMN_COUNT = 13;
+// 10) Relacionamento · 11) Responsável · 12) Ações
+const PAINEL_COLUMN_COUNT = 12;
 
 interface ObraRowProps {
   obra: PainelObra;
@@ -1820,7 +1817,6 @@ const TABLE_COLS: { width: string; align?: "right" | "center" }[] = [
   { width: "min-w-[96px] sm:min-w-[120px]" }, // Entrega Real
   { width: "min-w-[120px] sm:min-w-[150px]" }, // Relacionamento
   { width: "min-w-[140px] sm:min-w-[180px]" }, // Responsável
-  { width: "min-w-[96px] sm:min-w-[120px]", align: "right" }, // Atraso
   { width: "w-12 sm:w-16" }, // Ações
 ];
 
@@ -2328,39 +2324,6 @@ function ObraRow({
           </Select>
         </TableCell>
 
-        {/* Atraso (dias úteis vs. cronograma planejado) */}
-        <TableCell className="text-right tabular-nums">
-          {(() => {
-            const dias = computeOverdueDays(obra);
-            if (dias <= 0) {
-              return <span className="text-xs text-muted-foreground">—</span>;
-            }
-            return (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold",
-                      dias > 10
-                        ? "bg-destructive/10 text-destructive"
-                        : "bg-warning/15 text-warning-foreground",
-                    )}
-                    aria-label={`${dias} dias úteis de atraso`}
-                  >
-                    <AlertTriangle className="h-3 w-3" />
-                    {dias}d
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {dias} dia{dias === 1 ? "" : "s"} útil
-                  {dias === 1 ? "" : "eis"} de atraso vs. entrega oficial.
-                  Ajuste o cronograma para zerar.
-                </TooltipContent>
-              </Tooltip>
-            );
-          })()}
-        </TableCell>
-
         <TableCell
           className={cn(
             "sticky right-0 z-sticky-right border-l border-border",
@@ -2847,10 +2810,7 @@ function KanbanView({
         agg.set(key, { num: null, str: null });
         continue;
       }
-      if (sortKey === "atraso") {
-        const max = Math.max(...items.map((o) => computeOverdueDays(o)));
-        agg.set(key, { num: max, str: null });
-      } else if (sortKey === "responsavel_nome") {
+      if (sortKey === "responsavel_nome") {
         const names = items
           .map((o) => o.responsavel_nome ?? "")
           .filter(Boolean)
@@ -2881,11 +2841,6 @@ function KanbanView({
     withVal.sort((a, b) => {
       const va = aggregateByCol.get(a);
       const vb = aggregateByCol.get(b);
-      if (sortKey === "atraso") {
-        const an = va?.num ?? -Infinity;
-        const bn = vb?.num ?? -Infinity;
-        return sortDir === "asc" ? an - bn : bn - an;
-      }
       const sa = va?.str ?? "";
       const sb = vb?.str ?? "";
       if (!sa && !sb) return 0;
@@ -3754,9 +3709,6 @@ function BoardView({
                           "Responsável",
                           "responsavel_nome",
                         )}
-                      </TableHead>
-                      <TableHead className="min-w-[110px] text-right">
-                        {renderSortableHeader("Atraso", "atraso")}
                       </TableHead>
                       <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                     </TableRow>
