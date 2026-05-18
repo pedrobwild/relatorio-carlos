@@ -54,12 +54,39 @@ export function ProjectRouteTransition({
     if (prevPathRef.current === location.pathname) return;
     prevPathRef.current = location.pathname;
 
-    // Reset scroll on the actual scroll container.
-    const target = scrollTargetRef?.current;
-    if (target) {
-      target.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    } else if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    // Reset every plausible scroll container so we never leave the user
+    // looking at the previous tab's scroll position. Mobile (client) scrolls
+    // the document; staff scrolls <main>; some pages own a nested scroll
+    // container (e.g. Gantt, embedded budget) and can opt in via
+    // [data-scroll-container].
+    const resetScroll = (el: Element | Window | null | undefined) => {
+      if (!el) return;
+      try {
+        (el as { scrollTo: typeof window.scrollTo }).scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "auto",
+        });
+      } catch {
+        // Some elements expose scrollTop but not scrollTo.
+        if ("scrollTop" in (el as HTMLElement)) {
+          (el as HTMLElement).scrollTop = 0;
+          (el as HTMLElement).scrollLeft = 0;
+        }
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      resetScroll(window);
+      resetScroll(document.scrollingElement);
+      resetScroll(document.documentElement);
+      resetScroll(document.body);
+    }
+    resetScroll(scrollTargetRef?.current);
+    if (typeof document !== "undefined") {
+      document
+        .querySelectorAll<HTMLElement>("[data-scroll-container]")
+        .forEach(resetScroll);
     }
 
     // Show a short skeleton so the next route paints over a stable placeholder
