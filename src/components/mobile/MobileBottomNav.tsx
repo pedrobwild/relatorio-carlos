@@ -38,10 +38,18 @@ export function MobileBottomNav() {
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
 
+  // Lê o último projectId visitado (memória) — usado como fallback quando o
+  // usuário está em uma rota global e quer voltar para a obra anterior.
+  const [lastProjectId, setLastProjectId] = useState<string | undefined>(() =>
+    getLastProjectId(),
+  );
+
   // Persist the slot whenever the URL matches one — covers direct navigation,
   // back/forward and deep links, not just taps on the nav itself.
   useEffect(() => {
     if (!projectId) return;
+    rememberLastProjectId(projectId);
+    setLastProjectId(projectId);
     const segment = location.pathname.split("/")[3];
     if (!segment) return;
     rememberMobileNavSlot(projectId, segment);
