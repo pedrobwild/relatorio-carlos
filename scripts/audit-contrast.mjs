@@ -76,11 +76,16 @@ function contrastRatio(a, b) {
  *
  * @param {string} css
  * @param {string} selector
+ * @param {{ optional?: boolean }} [opts] quando `optional`, retorna `null`
+ *   em vez de lançar se o bloco não existir (ex.: projeto sem tema escuro).
  */
-function extractBlock(css, selector) {
+function extractBlock(css, selector, opts = {}) {
   const re = new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`);
   const match = css.match(re);
-  if (!match) throw new Error(`Bloco "${selector}" não encontrado em ${CSS_PATH}`);
+  if (!match) {
+    if (opts.optional) return null;
+    throw new Error(`Bloco "${selector}" não encontrado em ${CSS_PATH}`);
+  }
   return match[1];
 }
 
@@ -148,7 +153,10 @@ function thresholdFor(kind) {
 
 const css = readFileSync(CSS_PATH, 'utf8');
 const lightTokens = parseTokens(extractBlock(css, ':root'));
-const darkTokens = parseTokens(extractBlock(css, '\\.dark'));
+// O projeto pode não declarar tema escuro (`.dark`). Nesse caso a auditoria
+// de contraste roda só para o tema claro em vez de quebrar o CI.
+const darkBlock = extractBlock(css, '\\.dark', { optional: true });
+const darkTokens = darkBlock ? parseTokens(darkBlock) : null;
 
 /**
  * @param {Record<string, {h:number,s:number,l:number}>} tokens
@@ -183,8 +191,9 @@ function audit(tokens, fallback) {
 }
 
 const lightRows = audit(lightTokens, lightTokens);
-// dark herda do :root quando o token não é redefinido
-const darkRows = audit(darkTokens, lightTokens);
+// dark herda do :root quando o token não é redefinido; ausente quando o
+// projeto não declara tema escuro.
+const darkRows = darkTokens ? audit(darkTokens, lightTokens) : null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Render markdown
@@ -222,13 +231,19 @@ Critérios:
 ## Tema claro (\`:root\`)
 
 ${renderTable(lightRows)}
-
-## Tema escuro (\`.dark\`)
+${
+  darkRows
+    ? `## Tema escuro (\`.dark\`)
 
 Tokens não redefinidos em \`.dark\` herdam de \`:root\`.
 
-${renderTable(darkRows)}
+${renderTable(darkRows)}`
+    : `## Tema escuro (\`.dark\`)
 
+O projeto não declara um bloco \`.dark\` — auditoria de contraste rodada
+apenas para o tema claro.
+`
+}
 ## Como ler
 
 - **PASS / FAIL** considera o limiar do tipo do par.
@@ -262,7 +277,7 @@ function summarize(label, rows) {
 }
 
 const failedLight = summarize('light', lightRows);
-const failedDark = summarize('dark', darkRows);
+const failedDark = darkRows ? summarize('dark', darkRows) : 0;
 const total = failedLight + failedDark;
 
 console.log(`\nRelatório atualizado em ${DOC_PATH}`);
