@@ -168,6 +168,7 @@ export function ProjectRouteTransition({
       navigationType === "POP"
         ? (scrollPositions.get(location.pathname) ?? null)
         : null;
+    console.warn("[DBG-PRT]", { type: navigationType, path: location.pathname, saved, keys: [...scrollPositions.keys()] });
 
     setIsSwapping(true);
     const timer = window.setTimeout(() => {
