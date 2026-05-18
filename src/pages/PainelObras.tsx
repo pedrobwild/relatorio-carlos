@@ -1471,7 +1471,6 @@ export default function PainelObras() {
                               <SelectItem value="responsavel_nome">
                                 Responsável
                               </SelectItem>
-                              <SelectItem value="atraso">Atraso</SelectItem>
                             </SelectContent>
                           </Select>
                           <Button
