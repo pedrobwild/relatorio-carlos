@@ -1764,7 +1764,7 @@ export default function PainelObras() {
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead
                             data-testid="painel-obras-th-cliente"
-                            className="w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle"
+                            className="w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle shadow-[1px_0_0_0_hsl(var(--border))]"
                           >
                             Cliente / Obra
                           </TableHead>
