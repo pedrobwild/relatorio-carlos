@@ -145,11 +145,19 @@ const Index = () => {
       formalizacoes: `/obra/${projectId}/formalizacoes`,
       pendencias: `/obra/${projectId}/pendencias`,
     };
+    const visible = ["cronograma", "evolucao", "relatorios"];
     const target = routeMap[activeTab];
-    if (!target) return;
-    if (location.pathname === target) return;
-    setActiveTab("cronograma");
-    navigate(target, { replace: true });
+    if (target) {
+      if (location.pathname === target) return;
+      setActiveTab("cronograma");
+      navigate(target, { replace: true });
+      return;
+    }
+    // Fallback: activeTab is stale (not a visible tab and not in routeMap).
+    // Reset to the default visible tab so the UI stays consistent.
+    if (!visible.includes(activeTab)) {
+      setActiveTab("cronograma");
+    }
   }, [
     isMobile,
     activeTab,
