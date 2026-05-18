@@ -1,4 +1,4 @@
-import { useRef, useCallback, lazy, Suspense, useEffect } from "react";
+import { useRef, useCallback, lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
