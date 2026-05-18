@@ -263,8 +263,8 @@ const CategorySection = ({
 }) => {
   if (documents.length === 0) return null;
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 pb-1">
         <div className="p-1.5 bg-primary/10 rounded">
           {categoryIcons[category]}
         </div>
