@@ -35,7 +35,9 @@ export function PageContainer({
       className={cn(
         "mx-auto w-full overflow-x-hidden",
         maxWidthMap[maxWidth],
-        !noPadding && "px-4 sm:px-6 md:px-8",
+        // Safe-area-aware: 16px gutter on mobile, never less than the device
+        // safe-area inset (notch / rounded corners in landscape).
+        !noPadding && "px-safe-4 sm:px-safe-6 md:px-8",
         className,
       )}
     >
