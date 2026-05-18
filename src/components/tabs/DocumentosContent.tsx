@@ -409,7 +409,7 @@ const DocumentosContent = () => {
             ))}
           </TabsList>
 
-          <TabsContent value="all" className="space-y-8 mt-6">
+          <TabsContent value="all" className="space-y-10 mt-8">
             {categoriesWithDocs.map((cat) => (
               <CategorySection
                 key={cat}
