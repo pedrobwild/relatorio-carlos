@@ -13,6 +13,14 @@ import {
 } from "@/config/mobileNav";
 import { MobileProfileSheet } from "./MobileProfileSheet";
 import { rememberMobileNavSlot } from "@/lib/mobileBottomNavMemory";
+import { patchPortalViewState } from "@/lib/portalViewState";
+
+const ROUTE_TAB_SLOTS = new Set([
+  "financeiro",
+  "documentos",
+  "formalizacoes",
+  "pendencias",
+]);
 
 /**
  * Universal mobile bottom navigation — 4 tabs + Profile.
@@ -34,7 +42,14 @@ export function MobileBottomNav() {
   useEffect(() => {
     if (!projectId) return;
     const segment = location.pathname.split("/")[3];
-    if (segment) rememberMobileNavSlot(projectId, segment);
+    if (!segment) return;
+    rememberMobileNavSlot(projectId, segment);
+    // Mirror direct route navigation (incl. back/forward, deep links) into
+    // the portal view state so activeTab stays in sync with the URL when
+    // the user returns to the Index page.
+    if (ROUTE_TAB_SLOTS.has(segment)) {
+      patchPortalViewState(`portal_${projectId}`, { activeTab: segment });
+    }
   }, [location.pathname, projectId]);
 
   const criticalPendencias = stats.overdueCount + stats.urgentCount;
