@@ -67,6 +67,7 @@ const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const reportRef = useRef<HTMLDivElement>(null);
+  const reportDetailRef = useRef<HTMLDivElement>(null);
   const { hasShell } = useProjectLayout();
 
   const {
