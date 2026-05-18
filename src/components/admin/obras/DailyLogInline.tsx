@@ -21,6 +21,7 @@ import {
   ClipboardList,
   HardHat,
   Info,
+  ListChecks,
   Loader2,
   type LucideIcon,
   MessageSquareText,
@@ -58,6 +59,8 @@ import {
   type DailyLogWorker,
 } from "@/hooks/useProjectDailyLog";
 import { ServiceTasksList } from "./ServiceTasksList";
+import { WeekActionsList } from "./WeekActionsList";
+import { useDailyLogActions } from "@/hooks/useDailyLogActions";
 
 // ----- props -----
 
