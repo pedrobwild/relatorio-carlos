@@ -128,6 +128,57 @@ import { useQueryClient } from "@tanstack/react-query";
 
 // ----- helpers -----
 const ALL = "__all__";
+
+/**
+ * StickyTableScroller — wrapper que mede o próprio top em relação ao viewport
+ * e ajusta `max-height` para preencher exatamente o espaço até o final da
+ * janela. Isso garante que o scroll vertical aconteça dentro do wrapper (e
+ * não na janela), mantendo o `thead sticky top-0` realmente fixo até o fim
+ * da lista — mesmo quando há toolbar/KPIs acima da tabela.
+ */
+function StickyTableScroller({
+  children,
+  className,
+  bottomGap = 16,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  bottomGap?: number;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [maxH, setMaxH] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      const next = Math.max(240, window.innerHeight - rect.top - bottomGap);
+      setMaxH(next);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, { passive: true });
+    const ro = new ResizeObserver(measure);
+    ro.observe(document.body);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure);
+      ro.disconnect();
+    };
+  }, [bottomGap]);
+
+  return (
+    <div
+      ref={ref}
+      className={cn("overflow-auto overscroll-contain", className)}
+      style={maxH ? { maxHeight: `${maxH}px` } : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
 type SortKey =
   | "entrega_proxima"
   | "inicio_oficial"
@@ -1680,7 +1731,7 @@ export default function PainelObras() {
                 />
               ) : (
                 <SectionCard flush>
-                  <div className="overflow-auto max-h-[calc(100dvh-160px)]">
+                  <StickyTableScroller>
                     <Table
                       className={cn(
                         "min-w-max text-sm [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:px-2 sm:[&_td]:px-3 [&_th]:px-2 sm:[&_th]:px-3 [&_td]:whitespace-nowrap [&_th]:text-[10px] sm:[&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
@@ -1765,7 +1816,7 @@ export default function PainelObras() {
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
+                  </StickyTableScroller>
                 </SectionCard>
               )}
             </div>
