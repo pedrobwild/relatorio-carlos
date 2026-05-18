@@ -198,6 +198,21 @@ export function MobileNotificationsSheet({
   } = useNotificationsInfinite();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Garante que ao fechar o sheet (por qualquer caminho: swipe, overlay,
+  // ESC, botão fechar, navegação) o estado interno volte ao padrão.
+  useEffect(() => {
+    if (!open) {
+      setActiveTab("all");
+      setSelectedId(null);
+      dragStartYRef.current = null;
+      dragDeltaRef.current = 0;
+      resetTransform(false);
+    }
+  // resetTransform é estável (useCallback sem deps)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const actionNotifications = useMemo(
     () => notifications.filter((n) => getUrgencyCategory(n.type) === "action"),
