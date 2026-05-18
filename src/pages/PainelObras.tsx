@@ -3643,6 +3643,56 @@ function BoardGroupCard({
   const titleRef = useRef<HTMLButtonElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
+  // Detecta scroll do ancestral scrollável (StickyTableScroller) e expõe
+  // `data-scrolled-y` / `data-scrolled-x` no card para que sombras do
+  // thead sticky e da coluna sticky "Cliente / Obra" sejam ativadas
+  // somente quando o conteúdo abaixo/à direita estiver realmente oculto —
+  // dando uma pista visual clara de borda flutuante durante o scroll,
+  // sem ruído visual quando a tabela está em repouso.
+  useEffect(() => {
+    const cardEl = cardRef.current;
+    if (!cardEl) return;
+    let scroller: HTMLElement | null = null;
+    let node: HTMLElement | null = cardEl.parentElement;
+    while (node) {
+      const style = window.getComputedStyle(node);
+      if (
+        (style.overflowY === "auto" || style.overflowY === "scroll") &&
+        node.scrollHeight > node.clientHeight + 1
+      ) {
+        scroller = node;
+        break;
+      }
+      node = node.parentElement;
+    }
+    if (!scroller)
+      scroller = (document.scrollingElement as HTMLElement) || document.documentElement;
+    let rafId = 0;
+    const apply = () => {
+      rafId = 0;
+      const sy = (scroller!.scrollTop || 0) > 0;
+      const sx = (scroller!.scrollLeft || 0) > 0;
+      if (cardEl.dataset.scrolledY !== String(sy)) {
+        cardEl.dataset.scrolledY = String(sy);
+      }
+      if (cardEl.dataset.scrolledX !== String(sx)) {
+        cardEl.dataset.scrolledX = String(sx);
+      }
+    };
+    const schedule = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(apply);
+    };
+    apply();
+    scroller.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+      scroller?.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [isCollapsed]);
+
   useEffect(() => {
     const titleEl = titleRef.current;
     const cardEl = cardRef.current;
@@ -3686,14 +3736,14 @@ function BoardGroupCard({
 
   return (
     <SectionCard flush>
-      <div ref={cardRef}>
+      <div ref={cardRef} className="group/card" data-scrolled-y="false" data-scrolled-x="false">
         <button
           ref={titleRef}
           type="button"
           onClick={onToggle}
           aria-expanded={!isCollapsed}
           aria-controls={`board-group-${groupKey}`}
-          className="sticky top-0 z-[11] flex w-full items-center gap-3 px-3 py-2 text-left bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border-subtle hover:bg-accent/30 transition-colors rounded-t-xl"
+          className="sticky top-0 z-[11] flex w-full items-center gap-3 px-3 py-2 text-left bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border-subtle hover:bg-accent/30 transition-[box-shadow,background-color,border-color] duration-150 rounded-t-xl group-data-[scrolled-y=true]/card:border-border group-data-[scrolled-y=true]/card:shadow-[0_6px_10px_-8px_hsl(var(--foreground)/0.18)]"
         >
           <span
             aria-hidden="true"
@@ -3732,7 +3782,7 @@ function BoardGroupCard({
                 // (caso a medição ainda não tenha rodado) — assim o
                 // thead acompanha alturas diferentes do título em
                 // telas menores, densidade compacta ou labels longos.
-                "w-full text-sm [&_thead_th]:sticky [&_thead_th]:top-[var(--group-title-h,38px)] [&_thead_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
+                "w-full text-sm [&_thead_th]:sticky [&_thead_th]:top-[var(--group-title-h,38px)] [&_thead_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle [&_thead_th]:transition-shadow [&_thead_th]:duration-150 [&_tbody_tr_td:first-child]:transition-shadow [&_tbody_tr_td:first-child]:duration-150 group-data-[scrolled-y=true]/card:[&_thead_th]:shadow-[inset_0_-1px_0_0_hsl(var(--border)),0_6px_8px_-6px_hsl(var(--foreground)/0.20)] group-data-[scrolled-x=true]/card:[&_thead_th:first-child]:shadow-[6px_0_8px_-6px_hsl(var(--foreground)/0.22),inset_-1px_0_0_0_hsl(var(--border))] group-data-[scrolled-x=true]/card:[&_tbody_tr_td:first-child]:shadow-[6px_0_8px_-6px_hsl(var(--foreground)/0.18),inset_-1px_0_0_0_hsl(var(--border))]",
                 densityTableClass,
               )}
             >
