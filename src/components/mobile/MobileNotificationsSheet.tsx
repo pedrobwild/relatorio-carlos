@@ -581,75 +581,47 @@ export function MobileNotificationsSheet({
 
           {["all", "actions", "updates"].map((tab) => (
             <TabsContent key={tab} value={tab} className="mt-0 flex-1 min-h-0">
-              <ScrollArea className="h-full max-h-[60dvh]">
-                {isLoading && displayed.length === 0 ? (
-                  <div
-                    className="p-2 space-y-0.5"
-                    role="status"
-                    aria-busy="true"
-                    aria-label="Carregando notificações"
-                  >
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <NotificationRowSkeleton key={i} />
-                    ))}
-                  </div>
-                ) : displayed.length === 0 ? (
-                  <div className="py-16 text-center">
-                    <Bell className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">
-                      {tab === "actions"
-                        ? "Nenhuma ação pendente"
-                        : tab === "updates"
-                          ? "Nenhuma atualização"
-                          : "Nenhuma notificação"}
-                    </p>
-                    <p className="text-xs text-muted-foreground/60 mt-1">
-                      {tab === "actions"
-                        ? "Tudo certo! Nenhuma decisão bloqueando sua obra."
-                        : "Notificações aparecerão aqui."}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-2 space-y-0.5">
-                    {displayed.map((n) => (
-                      <NotificationRow
-                        key={n.id}
-                        notification={n}
-                        onRead={markAsRead}
-                        onNavigate={handleNavigate}
-                        isSelected={selectedId === n.id}
-                        onSelect={setSelectedId}
-                        isNavigating={isNavigating}
-                      />
-                    ))}
-                    {/* Infinite-scroll sentinel — only meaningful in "all" tab
-                        since pagination is global; the other tabs are derived
-                        filters of the same in-memory dataset. */}
-                    {tab === "all" && hasNextPage && (
-                      <InfiniteScrollSentinel
-                        onIntersect={fetchNextPage}
-                        active={open}
-                      />
-                    )}
-                    {tab === "all" && isFetchingNextPage && (
-                      <div className="py-4 flex justify-center">
-                        <span
-                          className="inline-block w-5 h-5 rounded-full border-2 border-primary/30 border-t-primary animate-spin"
-                          aria-label="Carregando mais notificações"
-                          role="status"
-                        />
-                      </div>
-                    )}
-                    {tab === "all" &&
-                      !hasNextPage &&
-                      displayed.length > 0 && (
-                        <p className="py-4 text-center text-[11px] text-muted-foreground/60">
-                          Você chegou ao fim.
-                        </p>
-                      )}
-                  </div>
-                )}
-              </ScrollArea>
+              {isLoading && displayed.length === 0 ? (
+                <div
+                  className="p-2 space-y-0.5 h-full max-h-[60dvh] overflow-hidden"
+                  role="status"
+                  aria-busy="true"
+                  aria-label="Carregando notificações"
+                >
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <NotificationRowSkeleton key={i} />
+                  ))}
+                </div>
+              ) : displayed.length === 0 ? (
+                <div className="py-16 text-center">
+                  <Bell className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    {tab === "actions"
+                      ? "Nenhuma ação pendente"
+                      : tab === "updates"
+                        ? "Nenhuma atualização"
+                        : "Nenhuma notificação"}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">
+                    {tab === "actions"
+                      ? "Tudo certo! Nenhuma decisão bloqueando sua obra."
+                      : "Notificações aparecerão aqui."}
+                  </p>
+                </div>
+              ) : (
+                <VirtualNotificationList
+                  items={displayed}
+                  markAsRead={markAsRead}
+                  onNavigate={handleNavigate}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  isNavigating={isNavigating}
+                  showLoadMore={tab === "all"}
+                  hasNextPage={hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                  fetchNextPage={fetchNextPage}
+                />
+              )}
             </TabsContent>
           ))}
         </Tabs>
