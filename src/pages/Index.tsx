@@ -1,5 +1,5 @@
 import { useRef, useCallback, lazy, Suspense, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -102,6 +102,7 @@ const Index = () => {
   } = useProjectPortal();
 
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Redirect to Jornada when project is in project phase
   useEffect(() => {
@@ -136,6 +137,31 @@ const Index = () => {
     setActiveTab,
     location.pathname,
   ]);
+
+  // URL <-> activeTab sync for the visible Index tabs.
+  // Keeps the address bar (and browser back/forward history) authoritative,
+  // so the bottom-nav highlight + the top TabsList always reflect the URL.
+  const VISIBLE_TABS = ["cronograma", "evolucao", "relatorios"] as const;
+  const urlTab = searchParams.get("tab");
+
+  // URL -> state: when the user lands or hits back/forward, adopt the tab
+  // from the query string if it is a valid Index tab.
+  useEffect(() => {
+    if (!urlTab) return;
+    if (!(VISIBLE_TABS as readonly string[]).includes(urlTab)) return;
+    if (urlTab === activeTab) return;
+    setActiveTab(urlTab);
+  }, [urlTab, activeTab, setActiveTab]);
+
+  // state -> URL: when the user toggles a tab on Index, mirror it to ?tab=
+  // (replace, no extra history entries) so refresh and deep-links keep state.
+  useEffect(() => {
+    if (!(VISIBLE_TABS as readonly string[]).includes(activeTab)) return;
+    if (searchParams.get("tab") === activeTab) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", activeTab);
+    setSearchParams(next, { replace: true });
+  }, [activeTab, searchParams, setSearchParams]);
 
 
   const handleExportPDF = useCallback(async () => {
