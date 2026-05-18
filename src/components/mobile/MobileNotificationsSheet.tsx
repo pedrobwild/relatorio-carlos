@@ -197,6 +197,7 @@ export function MobileNotificationsSheet({
   const {
     notifications,
     unreadCount,
+    isLoading,
     markAsRead,
     markAllAsRead,
     fetchNextPage,
