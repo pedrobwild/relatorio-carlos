@@ -2054,7 +2054,7 @@ function ObraRow({
         </TableCell>
 
         {/* Dados do cliente — abre popup com a feature completa (Contratante / Imóvel / Info). */}
-        <TableCell className="w-[60px] text-center align-middle">
+        <TableCell className="w-[60px] text-center align-middle hidden lg:table-cell">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
