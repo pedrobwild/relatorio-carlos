@@ -326,7 +326,7 @@ const Documentos = () => {
       </PageHeader>
 
       {/* Content */}
-      <div className="flex-1 py-6">
+      <div className="flex-1 py-4 sm:py-6">
         <PageContainer>
           {documents.length === 0 ? (
             <EmptyState
