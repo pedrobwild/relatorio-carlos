@@ -170,7 +170,6 @@ export default function MinhasObras() {
                   label: "Enviar e-mail",
                   onClick: () =>
                     window.open("mailto:contato@bwild.com.br", "_blank"),
-                  icon: Mail,
                 }}
               />
             ) : (
