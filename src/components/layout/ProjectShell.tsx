@@ -41,6 +41,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
   const { isStaff, loading } = useUserRole();
   const { projectId } = useParams();
   const { loading: projectLoading, project } = useProject();
+  const mainRef = useRef<HTMLElement>(null);
 
   // Show transition overlay when switching projects (project cleared but loading new one)
   const isSwitching = projectLoading && !project && !!projectId;
@@ -62,7 +63,9 @@ export function ProjectShell({ children }: ProjectShellProps) {
         <div className="relative min-h-[100dvh]">
           <ProjectMobileHeader />
           {isSwitching && <ProjectSwitchOverlay />}
-          <div className="pb-bottom-nav">{children}</div>
+          <div className="pb-bottom-nav">
+            <ProjectRouteTransition>{children}</ProjectRouteTransition>
+          </div>
         </div>
         <MobileBottomNav />
         <FloatingApprovalBanner projectId={projectId} />
@@ -84,9 +87,12 @@ export function ProjectShell({ children }: ProjectShellProps) {
             {isSwitching && <ProjectSwitchOverlay />}
             <main
               id="main-content"
+              ref={mainRef}
               className="flex-1 overflow-y-auto pb-bottom-nav"
             >
-              {children}
+              <ProjectRouteTransition scrollTargetRef={mainRef}>
+                {children}
+              </ProjectRouteTransition>
             </main>
           </div>
         </div>
