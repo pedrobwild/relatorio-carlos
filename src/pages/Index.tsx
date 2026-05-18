@@ -367,7 +367,7 @@ const Index = () => {
                           </TabsTrigger>
                           <TabsTrigger
                             value="financeiro"
-                            className="portal-tab-trigger"
+                            className="portal-tab-trigger hidden md:inline-flex"
                             onMouseEnter={() =>
                               prefetchForTab("financeiro", projectId)
                             }
@@ -380,7 +380,7 @@ const Index = () => {
                           </TabsTrigger>
                           <TabsTrigger
                             value="documentos"
-                            className="portal-tab-trigger"
+                            className="portal-tab-trigger hidden md:inline-flex"
                             onMouseEnter={() =>
                               prefetchForTab("documentos", projectId)
                             }
@@ -393,7 +393,7 @@ const Index = () => {
                           </TabsTrigger>
                           <TabsTrigger
                             value="formalizacoes"
-                            className="portal-tab-trigger"
+                            className="portal-tab-trigger hidden md:inline-flex"
                             onMouseEnter={() =>
                               prefetchForTab("formalizacoes", projectId)
                             }
@@ -406,7 +406,7 @@ const Index = () => {
                           </TabsTrigger>
                           <TabsTrigger
                             value="pendencias"
-                            className="portal-tab-trigger"
+                            className="portal-tab-trigger hidden md:inline-flex"
                             onMouseEnter={() =>
                               prefetchForTab("pendencias", projectId)
                             }
