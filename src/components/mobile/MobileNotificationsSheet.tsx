@@ -327,9 +327,37 @@ export function MobileNotificationsSheet({
     isFetchingNextPage,
   } = useNotificationsInfinite();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Aba e seleção são persistidas em localStorage para sobreviverem ao
+  // fechamento do sheet (e a reloads da página). Ao reabrir, o usuário
+  // retorna ao mesmo contexto de leitura.
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window === "undefined") return "all";
+    return localStorage.getItem("mobileNotifSheet:activeTab") ?? "all";
+  });
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("mobileNotifSheet:selectedId");
+  });
   const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("mobileNotifSheet:activeTab", activeTab);
+    } catch {
+      /* storage indisponível: ignorar */
+    }
+  }, [activeTab]);
+  useEffect(() => {
+    try {
+      if (selectedId) {
+        localStorage.setItem("mobileNotifSheet:selectedId", selectedId);
+      } else {
+        localStorage.removeItem("mobileNotifSheet:selectedId");
+      }
+    } catch {
+      /* storage indisponível: ignorar */
+    }
+  }, [selectedId]);
 
   // Drag-to-dismiss state. We translate the SheetContent imperatively
   // (via ref) during the gesture to keep it 60fps and avoid React re-renders.
