@@ -67,6 +67,7 @@ const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const reportRef = useRef<HTMLDivElement>(null);
+  const reportDetailRef = useRef<HTMLDivElement>(null);
   const { hasShell } = useProjectLayout();
 
   const {
@@ -250,6 +251,26 @@ const Index = () => {
     next.set("tab", activeTab);
     setSearchParams(next, { replace: true });
   }, [activeTab, searchParams, setSearchParams, activeTabStorageKey]);
+
+  // When the user opens a weekly report (click on the list, or prev/next),
+  // ensure the report header is brought into view. The project shell scrolls
+  // inside its own overflow container, so window.scrollTo won't help — use
+  // scrollIntoView on the report node itself. Runs on every selection change
+  // (including week navigation) but skips when the detail view is closed.
+  useEffect(() => {
+    if (!selectedWeeklyReport) return;
+    const node = reportDetailRef.current;
+    if (!node) return;
+    // Defer to next frame so the lazy WeeklyReportTemplate has time to mount
+    // its Suspense fallback (otherwise the node may have zero height and
+    // scrollIntoView lands in the middle of the previous list scroll).
+    const raf = requestAnimationFrame(() => {
+      node.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(raf);
+    // selectedWeeklyReport identity changes on every click/prev/next, so this
+    // is intentionally tied to it (not just its presence).
+  }, [selectedWeeklyReport]);
 
 
   const handleExportPDF = useCallback(async () => {
@@ -611,7 +632,7 @@ const Index = () => {
                         className="mt-0 focus-visible:outline-none"
                       >
                         {selectedWeeklyReport ? (
-                          <>
+                          <div ref={reportDetailRef} className="scroll-mt-4">
                             <WeeklyReportHeader
                               weeklyReport={selectedWeeklyReport}
                               activities={reportData.activities}
@@ -675,7 +696,7 @@ const Index = () => {
                                 </Suspense>
                               );
                             })()}
-                          </>
+                          </div>
                         ) : (
                           <WeeklyReportsHistory
                             projectStartDate={reportData.startDate ?? ""}
