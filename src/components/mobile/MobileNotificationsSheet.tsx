@@ -423,6 +423,8 @@ export function MobileNotificationsSheet({
                         notification={n}
                         onRead={markAsRead}
                         onNavigate={handleNavigate}
+                        isSelected={selectedId === n.id}
+                        onSelect={setSelectedId}
                       />
                     ))}
                     {/* Infinite-scroll sentinel — only meaningful in "all" tab
