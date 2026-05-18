@@ -3799,7 +3799,16 @@ function BoardView({
                 id={`board-group-${g.key}`}
                 ref={(node) => registerScroller(g.key, node)}
                 onScroll={(e) => handleScrollerScroll(e.currentTarget)}
-                className="overflow-x-auto border-t border-border-subtle"
+                // IMPORTANTE: NÃO usar `overflow-x-auto` aqui.
+                // Criar um scroll container interno (mesmo só no eixo X)
+                // promove `overflow-y` para `auto` e prende o
+                // `thead sticky` neste div — que não rola — fazendo o
+                // cabeçalho sumir junto com o corpo ao rolar a página.
+                // Deixamos a rolagem horizontal e vertical aconteceram no
+                // `StickyTableScroller` externo, garantindo que tanto o
+                // título quanto o `thead` permaneçam fixos pelo mesmo
+                // contexto de scroll até o fim da lista.
+                className="border-t border-border-subtle"
               >
                 <Table
                   className={cn(
