@@ -87,7 +87,7 @@ const Financeiro = () => {
           ]}
         />
 
-        <PageContainer maxWidth="lg" className="flex-1 md:px-0">
+        <PageContainer maxWidth="lg" className="flex-1 py-4 sm:py-6 md:py-6 md:px-0">
           {payments.length === 0 ? (
             <EmptyState
               variant="payments"

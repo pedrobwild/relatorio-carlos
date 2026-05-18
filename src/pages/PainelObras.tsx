@@ -1023,7 +1023,7 @@ export default function PainelObras() {
         />
 
         {/* Mobile: toggle Obras/Projetos compacto acima da listagem */}
-        <div className="md:hidden mt-2 px-3">
+        <div className="md:hidden mt-2">
           <div
             role="tablist"
             aria-label="Alternar entre obras e projetos"
