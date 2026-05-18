@@ -152,19 +152,39 @@ function StickyTableScroller({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    let rafId = 0;
+    let lastValue = -1;
     const measure = () => {
       const rect = el.getBoundingClientRect();
-      const next = Math.max(240, window.innerHeight - rect.top - bottomGap);
+      // Math.floor evita subpixel que cause overflow vertical do body.
+      const next = Math.max(
+        240,
+        Math.floor(window.innerHeight - rect.top - bottomGap),
+      );
+      if (next === lastValue) return;
+      lastValue = next;
       setMaxH(next);
     };
+    // rAF coalesce: durante scroll/resize rápidos, várias chamadas viram uma
+    // única medição por frame, eliminando jank e leituras intermediárias.
+    const schedule = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        measure();
+      });
+    };
     measure();
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, { passive: true });
-    const ro = new ResizeObserver(measure);
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("orientationchange", schedule);
+    const ro = new ResizeObserver(schedule);
     ro.observe(document.body);
     return () => {
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure);
+      if (rafId) window.cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("orientationchange", schedule);
       ro.disconnect();
     };
   }, [bottomGap]);
