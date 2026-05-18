@@ -86,7 +86,7 @@ const Financeiro = () => {
           ]}
         />
 
-        <div className="flex-1 max-w-5xl mx-auto w-full">
+        <div className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 md:px-0">
           {payments.length === 0 ? (
             <EmptyState
               variant="payments"
