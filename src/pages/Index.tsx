@@ -1,6 +1,10 @@
 import { useRef, useCallback, lazy, Suspense, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  readMobileNavSlot,
+  pathForMobileNavSlot,
+} from "@/lib/mobileBottomNavMemory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertCircle,
