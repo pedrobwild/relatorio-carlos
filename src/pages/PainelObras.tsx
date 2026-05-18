@@ -1696,7 +1696,7 @@ export default function PainelObras() {
                             Cliente / Obra
                           </TableHead>
                           <TableHead
-                            className="w-[52px] sm:w-[60px] text-center"
+                            className="w-[52px] sm:w-[60px] text-center hidden lg:table-cell"
                             aria-label="Dados do cliente"
                           >
                             Dados
@@ -1713,7 +1713,7 @@ export default function PainelObras() {
                           <TableHead className="min-w-[112px] sm:min-w-[140px] text-right">
                             Progresso
                           </TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px]">
+                          <TableHead className="min-w-[96px] sm:min-w-[120px] hidden xl:table-cell">
                             <SortableHeader
                               label="Início Of."
                               sortKey="inicio_oficial"
@@ -1725,22 +1725,22 @@ export default function PainelObras() {
                               sortKey="entrega_oficial"
                             />
                           </TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px]">
+                          <TableHead className="min-w-[96px] sm:min-w-[120px] hidden xl:table-cell">
                             <SortableHeader
                               label="Início Real"
                               sortKey="inicio_real"
                             />
                           </TableHead>
-                          <TableHead className="min-w-[96px] sm:min-w-[120px]">
+                          <TableHead className="min-w-[96px] sm:min-w-[120px] hidden 2xl:table-cell">
                             <SortableHeader
                               label="Entrega Real"
                               sortKey="entrega_real"
                             />
                           </TableHead>
-                          <TableHead className="min-w-[120px] sm:min-w-[150px]">
+                          <TableHead className="min-w-[120px] sm:min-w-[150px] hidden lg:table-cell">
                             Relacionamento
                           </TableHead>
-                          <TableHead className="min-w-[140px] sm:min-w-[180px]">
+                          <TableHead className="min-w-[140px] sm:min-w-[180px] hidden xl:table-cell">
                             <SortableHeader
                               label="Responsável"
                               sortKey="responsavel_nome"
