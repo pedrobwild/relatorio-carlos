@@ -115,11 +115,8 @@ export function MobileBottomNav() {
                   // "obra" itself is not a restorable slot, so the Index
                   // restore effect would bounce the user right back. Clear
                   // the memory and reset the Index tab to the overview.
-                  if (slot.id === "obra" && projectId) {
-                    clearMobileNavSlot(projectId);
-                    patchPortalViewState(`portal_${projectId}`, {
-                      activeTab: "cronograma",
-                    });
+                  if (slot.id === "obra" || slot.id === "obras") {
+                    resetProjectHubState(projectId ?? lastProjectId);
                   }
                 }}
                 className={({ isActive }) =>
