@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Mail, MessageCircle } from "lucide-react";
+import { Building2, MessageCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { AppHeader } from "@/components/AppHeader";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
