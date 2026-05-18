@@ -1,12 +1,15 @@
 import { cn } from "@/lib/utils";
+import { ElementType, ReactNode } from "react";
 
 interface PageContainerProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   /** Max width variant */
   maxWidth?: "sm" | "md" | "lg" | "xl" | "full" | "screen";
   /** Remove default padding */
   noPadding?: boolean;
+  /** Render as a different element (e.g. `main`, `section`). Defaults to `div`. */
+  as?: ElementType;
 }
 
 const maxWidthMap = {
@@ -19,30 +22,34 @@ const maxWidthMap = {
 };
 
 /**
- * PageContainer — standard wrapper for all pages.
- * Provides consistent max-width, centering, and responsive padding (8pt grid).
+ * PageContainer — wrapper único de páginas (mobile + desktop).
  *
- * Gutters: 16px mobile / 24px tablet / 32px desktop
+ * Centraliza gutters horizontais com `px-safe-4 sm:px-safe-6 md:px-8`
+ * (16px mobile / 24px tablet / 32px desktop, sempre respeitando safe-area).
+ * Todas as páginas devem usar este wrapper em vez de `max-w-* mx-auto px-4`
+ * para garantir consistência visual e evitar texto colado nas bordas.
  */
 export function PageContainer({
   children,
   className,
   maxWidth = "lg",
   noPadding = false,
-}: PageContainerProps) {
+  as,
+  ...rest
+}: PageContainerProps & React.HTMLAttributes<HTMLElement>) {
+  const Tag: ElementType = as ?? "div";
   return (
-    <div
+    <Tag
       className={cn(
         "mx-auto w-full overflow-x-hidden",
         maxWidthMap[maxWidth],
-        // Safe-area-aware: 16px gutter on mobile, never less than the device
-        // safe-area inset (notch / rounded corners in landscape).
         !noPadding && "px-safe-4 sm:px-safe-6 md:px-8",
         className,
       )}
+      {...rest}
     >
       {children}
-    </div>
+    </Tag>
   );
 }
 

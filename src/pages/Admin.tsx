@@ -23,6 +23,7 @@ import { IntegrationMonitorCard } from "@/components/admin/IntegrationMonitorCar
 import { PiiMigrationCard } from "@/components/admin/PiiMigrationCard";
 import { InspectionTemplatesTab } from "@/components/admin/InspectionTemplatesTab";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function Admin() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-6xl mx-auto px-4 py-3">
+        <PageContainer maxWidth="xl" className="py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
@@ -56,10 +57,10 @@ export default function Admin() {
               </div>
             </div>
           </div>
-        </div>
+        </PageContainer>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <PageContainer as="main" maxWidth="xl" className="py-6">
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
@@ -202,7 +203,7 @@ export default function Admin() {
             </div>
           </TabsContent>
         </Tabs>
-      </main>
+      </PageContainer>
     </div>
   );
 }

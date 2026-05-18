@@ -26,6 +26,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 const SUGGESTED_QUERIES = [
   "Quais funcionalidades de acompanhamento de obra os melhores softwares do mercado oferecem para o cliente final?",
@@ -107,7 +108,7 @@ export default function AdminResearch() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+        <PageContainer maxWidth="xl" className="py-3 flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -122,10 +123,10 @@ export default function AdminResearch() {
           <Badge variant="secondary" className="ml-auto text-xs">
             Powered by Perplexity
           </Badge>
-        </div>
+        </PageContainer>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      <PageContainer maxWidth="xl" className="py-6 space-y-6">
         {/* Search Card */}
         <Card>
           <CardHeader className="pb-3">
@@ -294,7 +295,7 @@ export default function AdminResearch() {
             </div>
           </div>
         )}
-      </div>
+      </PageContainer>
     </div>
   );
 }

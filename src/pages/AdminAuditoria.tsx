@@ -16,6 +16,7 @@ import {
 import { AuditFiltersCard } from "@/components/audit/AuditFiltersCard";
 import { AuditTable } from "@/components/audit/AuditTable";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 const PAGE_SIZE = 20;
 
@@ -74,7 +75,7 @@ export default function AdminAuditoria() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+        <PageContainer maxWidth="full" className="py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
@@ -106,10 +107,10 @@ export default function AdminAuditoria() {
               Exportar CSV
             </Button>
           </div>
-        </div>
+        </PageContainer>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <PageContainer as="main" maxWidth="full" className="py-6 space-y-6">
         <AuditFiltersCard
           search={search}
           setSearch={setSearch}
@@ -138,7 +139,7 @@ export default function AdminAuditoria() {
           hasActiveFilters={hasActiveFilters}
           onResetFilters={handleResetFilters}
         />
-      </main>
+      </PageContainer>
     </div>
   );
 }

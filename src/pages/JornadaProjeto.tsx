@@ -11,6 +11,7 @@ import {
   useInitializeJourney,
 } from "@/hooks/useProjectJourney";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectLayout } from "@/components/layout/ProjectLayoutContext";
 import { useTabKeyboardNav } from "@/hooks/useKeyboardShortcuts";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -194,11 +195,10 @@ export default function JornadaProjeto() {
         />
       )}
 
-      <main
-        className={cn(
-          "max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-4 md:py-8 w-full overflow-x-hidden",
-          "pb-safe",
-        )}
+      <PageContainer
+        as="main"
+        maxWidth="lg"
+        className={cn("py-4 md:py-8 pb-safe")}
         role="region"
         aria-label={`Conteúdo da aba ${activeTab === "jornada" ? "Jornada" : activeTab === "financeiro" ? "Financeiro" : activeTab === "documentos" ? "Documentos" : activeTab === "formalizacoes" ? "Formalizações" : "Pendências"}`}
       >
@@ -227,7 +227,7 @@ export default function JornadaProjeto() {
           pullDistance={pullDistance}
           threshold={threshold}
         />
-      </main>
+      </PageContainer>
     </div>
   );
 }
