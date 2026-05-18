@@ -4,7 +4,7 @@ interface PageContainerProps {
   children: React.ReactNode;
   className?: string;
   /** Max width variant */
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "full";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "full" | "screen";
   /** Remove default padding */
   noPadding?: boolean;
 }
@@ -15,6 +15,7 @@ const maxWidthMap = {
   lg: "max-w-5xl", // 1024px - standard pages
   xl: "max-w-6xl", // 1152px - wide pages (Pendencias, Formalizacoes)
   full: "max-w-7xl", // 1280px - full-width (Compras)
+  screen: "max-w-none", // sem cap — usa toda a largura disponível (cockpits/tabelas densas)
 };
 
 /**
