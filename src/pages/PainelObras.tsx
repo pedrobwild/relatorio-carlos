@@ -3652,7 +3652,7 @@ function BoardView({
   };
 
   return (
-    <div className="space-y-2">
+    <StickyTableScroller className="space-y-2">
       <div className="flex items-center justify-between gap-2 px-1">
         <p className="text-xs text-muted-foreground">
           {groups.length} {groups.length === 1 ? "grupo" : "grupos"} ·{" "}
