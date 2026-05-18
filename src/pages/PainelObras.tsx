@@ -2260,7 +2260,7 @@ function ObraRow({
         </TableCell>
 
         {/* Relacionamento */}
-        <TableCell className="min-w-[110px] relative z-table-body overflow-hidden">
+        <TableCell className="min-w-[110px] relative z-table-body overflow-hidden hidden lg:table-cell">
           <Select
             value={obra.relacionamento ?? NONE}
             onValueChange={(v) =>
