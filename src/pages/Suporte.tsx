@@ -23,12 +23,12 @@ import {
   FORMALIZATION_STATUS_LABELS,
 } from "@/types/formalization";
 import {
-import { PageContainer } from "@/components/layout/PageContainer";
   getStatusIcon,
   getStatusBadgeVariant,
   getTypeIcon,
   formatFormalizationDate as formatDate,
 } from "@/lib/formalizationHelpers";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 // Mock data for demonstration
 const mockFormalizations = [
