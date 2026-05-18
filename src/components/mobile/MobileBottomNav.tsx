@@ -12,7 +12,7 @@ import {
   type MobileNavSlot,
 } from "@/config/mobileNav";
 import { MobileProfileSheet } from "./MobileProfileSheet";
-import { rememberMobileNavSlot } from "@/lib/mobileBottomNavMemory";
+import { rememberMobileNavSlot, clearMobileNavSlot } from "@/lib/mobileBottomNavMemory";
 import { patchPortalViewState } from "@/lib/portalViewState";
 
 const ROUTE_TAB_SLOTS = new Set([
@@ -87,7 +87,21 @@ export function MobileBottomNav() {
                 key={slot.id}
                 to={to}
                 end={slot.id === "inicio"}
-                onClick={() => rememberMobileNavSlot(projectId, slot.id)}
+                onClick={() => {
+                  rememberMobileNavSlot(projectId, slot.id);
+                  // Tapping "Obra" (the project hub) must take the user back
+                  // to the project root. The remembered slot is still the
+                  // previous route-only tab (financeiro, documentos…) because
+                  // "obra" itself is not a restorable slot, so the Index
+                  // restore effect would bounce the user right back. Clear
+                  // the memory and reset the Index tab to the overview.
+                  if (slot.id === "obra" && projectId) {
+                    clearMobileNavSlot(projectId);
+                    patchPortalViewState(`portal_${projectId}`, {
+                      activeTab: "cronograma",
+                    });
+                  }
+                }}
                 className={({ isActive }) =>
                   cn(
                     "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-1.5",
