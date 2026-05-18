@@ -445,7 +445,18 @@ export function MobileNotificationsSheet({
           {["all", "actions", "updates"].map((tab) => (
             <TabsContent key={tab} value={tab} className="mt-0 flex-1 min-h-0">
               <ScrollArea className="h-full max-h-[60dvh]">
-                {displayed.length === 0 ? (
+                {isLoading && displayed.length === 0 ? (
+                  <div
+                    className="p-2 space-y-0.5"
+                    role="status"
+                    aria-busy="true"
+                    aria-label="Carregando notificações"
+                  >
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <NotificationRowSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : displayed.length === 0 ? (
                   <div className="py-16 text-center">
                     <Bell className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground">
@@ -471,6 +482,7 @@ export function MobileNotificationsSheet({
                         onNavigate={handleNavigate}
                         isSelected={selectedId === n.id}
                         onSelect={setSelectedId}
+                        isNavigating={isNavigating}
                       />
                     ))}
                     {/* Infinite-scroll sentinel — only meaningful in "all" tab
