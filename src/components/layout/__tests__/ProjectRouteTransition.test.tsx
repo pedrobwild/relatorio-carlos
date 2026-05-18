@@ -120,14 +120,14 @@ describe("ProjectRouteTransition", () => {
 
   it("restores the previous scroll position on POP navigation", () => {
     const scrollAssignments: number[] = [];
+    let navRef!: ReturnType<typeof useNavigate>;
 
-    function Harness({
-      navigateTo,
-      action = "push",
-    }: {
-      navigateTo: string | null;
-      action?: "push" | "pop";
-    }) {
+    function ExposeNav() {
+      navRef = useNavigate();
+      return null;
+    }
+
+    function Harness() {
       const mainRef = useRef<HTMLElement>(null);
       useEffect(() => {
         if (!mainRef.current) return;
@@ -144,7 +144,7 @@ describe("ProjectRouteTransition", () => {
 
       return (
         <main ref={mainRef} data-testid="main">
-          <Navigator to={navigateTo} action={action} />
+          <ExposeNav />
           <ProjectRouteTransition scrollTargetRef={mainRef}>
             <Routes>
               <Route path="/obra/1/financeiro" element={<div>Fin</div>} />
@@ -155,36 +155,31 @@ describe("ProjectRouteTransition", () => {
       );
     }
 
-    // 1. Land on /financeiro.
-    const { rerender } = render(
+    render(
       <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
-        <Harness navigateTo={null} />
+        <Harness />
       </MemoryRouter>,
     );
 
-    // 2. Simulate user scrolled the main container, then trigger save.
+    // Simulate user scrolling the main container, then dispatch scroll
+    // so the listener saves the snapshot for /financeiro.
     const main = screen.getByTestId("main");
     main.scrollTop = 420;
     act(() => {
       main.dispatchEvent(new Event("scroll"));
     });
 
-    // 3. Push to /documentos and flush the swap. Reset assignments to
-    //    focus on what happens on the POP.
-    rerender(
-      <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
-        <Harness navigateTo="/obra/1/documentos" />
-      </MemoryRouter>,
-    );
+    // Forward to /documentos and flush the swap (resets target to 0).
+    act(() => {
+      navRef("/obra/1/documentos");
+    });
     flushTransition();
     scrollAssignments.length = 0;
 
-    // 4. POP back to /financeiro — must restore 420, not 0.
-    rerender(
-      <MemoryRouter initialEntries={["/obra/1/financeiro"]}>
-        <Harness navigateTo="/obra/1/financeiro" action="pop" />
-      </MemoryRouter>,
-    );
+    // Pop back — should restore 420 on the target.
+    act(() => {
+      navRef(-1);
+    });
     flushTransition();
 
     expect(scrollAssignments).toContain(420);
