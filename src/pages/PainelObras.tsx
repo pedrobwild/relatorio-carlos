@@ -3583,6 +3583,121 @@ interface BoardViewProps {
   densityTableClass: string;
 }
 
+/**
+ * BoardGroupCard — encapsula um grupo do Board. Mede dinamicamente a
+ * altura real do título (que varia conforme breakpoint, wrap do label,
+ * densidade do tema e badges em duas linhas) e expõe via CSS var
+ * `--group-title-h` para que o `thead sticky` da tabela interna fique
+ * sempre encostado embaixo do título — sem depender de offset fixo
+ * (`top-[38px]`) que quebra em telas menores.
+ */
+function BoardGroupCard({
+  groupKey,
+  isCollapsed,
+  onToggle,
+  label,
+  count,
+  etapaAccentClass,
+  registerScroller,
+  handleScrollerScroll,
+  densityTableClass,
+  children,
+}: {
+  groupKey: string;
+  isCollapsed: boolean;
+  onToggle: () => void;
+  label: string;
+  count: number;
+  etapaAccentClass: string;
+  registerScroller: (key: string, node: HTMLDivElement | null) => void;
+  handleScrollerScroll: (source: HTMLDivElement) => void;
+  densityTableClass: string;
+  children: React.ReactNode;
+}) {
+  const titleRef = useRef<HTMLButtonElement | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const titleEl = titleRef.current;
+    const cardEl = cardRef.current;
+    if (!titleEl || !cardEl) return;
+    const apply = () => {
+      // Math.round evita subpixel — o thead encostando *abaixo* do título
+      // garante que não sobre faixa transparente nem haja overlap.
+      const h = Math.round(titleEl.getBoundingClientRect().height);
+      cardEl.style.setProperty("--group-title-h", `${h}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(titleEl);
+    window.addEventListener("resize", apply);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", apply);
+    };
+  }, [isCollapsed, label]);
+
+  return (
+    <SectionCard flush>
+      <div ref={cardRef}>
+        <button
+          ref={titleRef}
+          type="button"
+          onClick={onToggle}
+          aria-expanded={!isCollapsed}
+          aria-controls={`board-group-${groupKey}`}
+          className="sticky top-0 z-[11] flex w-full items-center gap-3 px-3 py-2 text-left bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border-subtle hover:bg-accent/30 transition-colors rounded-t-xl"
+        >
+          <span
+            aria-hidden="true"
+            className={cn("h-5 w-1 rounded-full shrink-0", etapaAccentClass)}
+          />
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+          )}
+          <span
+            data-testid="board-group-label"
+            className="font-semibold text-sm"
+          >
+            {label}
+          </span>
+          <span className="inline-flex items-center justify-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground min-w-[24px]">
+            {count}
+          </span>
+        </button>
+
+        {!isCollapsed && (
+          <div
+            id={`board-group-${groupKey}`}
+            ref={(node) => registerScroller(groupKey, node)}
+            onScroll={(e) => handleScrollerScroll(e.currentTarget)}
+            // Sem `overflow-x-auto` aqui — ver comentário no
+            // StickyTableScroller: scroll horizontal e vertical ficam no
+            // wrapper externo para que título + thead compartilhem o
+            // mesmo contexto de sticky.
+            className="border-t border-border-subtle"
+          >
+            <Table
+              className={cn(
+                // `top-[var(--group-title-h)]` com fallback de 38px
+                // (caso a medição ainda não tenha rodado) — assim o
+                // thead acompanha alturas diferentes do título em
+                // telas menores, densidade compacta ou labels longos.
+                "w-full text-sm [&_thead_th]:sticky [&_thead_th]:top-[var(--group-title-h,38px)] [&_thead_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
+                densityTableClass,
+              )}
+            >
+              {children}
+            </Table>
+          </div>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
 function BoardView({
   obras,
   staffUsers,
