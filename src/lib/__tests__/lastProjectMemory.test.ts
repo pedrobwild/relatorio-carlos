@@ -29,4 +29,16 @@ describe("lastProjectMemory", () => {
     clearLastProjectId();
     expect(getLastProjectId()).toBeUndefined();
   });
+
+  it("sobrevive a um refresh: leitura inicial pega o valor persistido", () => {
+    // Simula sessão anterior gravando o id.
+    rememberLastProjectId("project-persisted");
+
+    // Simula refresh — neste módulo o estado vive 100% no localStorage,
+    // então a nova leitura logo após "reabrir o app" deve retornar o id.
+    // (Se isso quebrar, o fallback do bottom nav deixa de funcionar
+    // imediatamente após F5 em /obra/:id e antes do useEffect rodar.)
+    const afterRefresh = getLastProjectId();
+    expect(afterRefresh).toBe("project-persisted");
+  });
 });

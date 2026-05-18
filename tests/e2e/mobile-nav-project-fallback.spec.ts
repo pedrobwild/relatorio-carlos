@@ -74,4 +74,89 @@ test.describe('Mobile bottom nav — fallback de projectId entre tabs', () => {
       { timeout: 10000 },
     );
   });
+
+  test('refresh em /obra/:id mantém fallback: Início → Obras volta para a obra', async ({
+    staffPage,
+    testProjectId,
+  }) => {
+    if (!testProjectId) {
+      test.skip();
+      return;
+    }
+
+    await staffPage.setViewportSize(MOBILE);
+
+    // 1) Entra na obra (popula a memória via efeito do bottom nav).
+    await staffPage.goto(`/obra/${testProjectId}`);
+    const nav = staffPage.getByRole('navigation', { name: /navegação principal/i });
+    await expect(nav).toBeVisible({ timeout: 15000 });
+
+    // Garante que o efeito gravou a memória antes do refresh.
+    await expect
+      .poll(
+        async () =>
+          await staffPage.evaluate(() => localStorage.getItem('bwild:lastProjectId')),
+        { timeout: 5000 },
+      )
+      .toBe(testProjectId);
+
+    // 2) F5 — reinicia o app na mesma URL.
+    await staffPage.reload();
+    await expect(staffPage).toHaveURL(new RegExp(`/obra/${testProjectId}(/|$)`));
+    await expect(nav).toBeVisible({ timeout: 15000 });
+
+    // 3) Memória deve continuar disponível logo após o refresh.
+    const afterReload = await staffPage.evaluate(() =>
+      localStorage.getItem('bwild:lastProjectId'),
+    );
+    expect(afterReload).toBe(testProjectId);
+
+    // 4) Mesmo fluxo do bug: Início → Obras → volta para /obra/:id.
+    await nav.getByRole('link', { name: /^Início/i }).click();
+    await expect(staffPage).toHaveURL(/\/gestao\/painel-obras/);
+
+    await nav.getByRole('link', { name: /^Obras/i }).click();
+    await expect(staffPage).toHaveURL(
+      new RegExp(`/obra/${testProjectId}(/|$)`),
+      { timeout: 10000 },
+    );
+  });
+
+  test('refresh em rota global após visitar obra: Obras ainda restaura a obra', async ({
+    staffPage,
+    testProjectId,
+  }) => {
+    if (!testProjectId) {
+      test.skip();
+      return;
+    }
+
+    await staffPage.setViewportSize(MOBILE);
+
+    // 1) Visita a obra para popular a memória.
+    await staffPage.goto(`/obra/${testProjectId}`);
+    const nav = staffPage.getByRole('navigation', { name: /navegação principal/i });
+    await expect(nav).toBeVisible({ timeout: 15000 });
+    await expect
+      .poll(
+        async () =>
+          await staffPage.evaluate(() => localStorage.getItem('bwild:lastProjectId')),
+        { timeout: 5000 },
+      )
+      .toBe(testProjectId);
+
+    // 2) Vai para uma rota global e dá F5 lá — agora projectId da URL
+    //    é definitivamente undefined desde o primeiro render.
+    await staffPage.goto('/gestao/painel-obras');
+    await staffPage.reload();
+    await expect(nav).toBeVisible({ timeout: 15000 });
+
+    // 3) Clicar em Obras deve voltar para a obra via memória, não ficar
+    //    parado no painel global (que era o sintoma do bug).
+    await nav.getByRole('link', { name: /^Obras/i }).click();
+    await expect(staffPage).toHaveURL(
+      new RegExp(`/obra/${testProjectId}(/|$)`),
+      { timeout: 10000 },
+    );
+  });
 });
