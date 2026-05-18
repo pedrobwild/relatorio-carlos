@@ -24,7 +24,7 @@ export type MobileNavSlot = {
   label: string;
   icon: LucideIcon;
   /** Resolves to the destination URL. Receives both project-scoped paths (when inside an obra) and a fallback flag. */
-  to: (ctx: { paths: ProjectPaths; hasProject: boolean }) => string;
+  to: (ctx: { paths: ProjectPaths; hasProject: boolean; projectId?: string }) => string;
   badge?: MobileNavBadge;
 };
 
@@ -35,6 +35,14 @@ const STAFF_ATIVIDADES = "/gestao/atividades";
 const STAFF_NCS = "/gestao/nao-conformidades";
 
 export const CLIENT_NAV: MobileNavSlot[] = [
+  {
+    id: "obra",
+    label: "Obra",
+    icon: Building2,
+    to: ({ projectId }) =>
+      projectId ? `/obra/${projectId}` : HOME_CLIENT,
+    badge: "none",
+  },
   {
     id: "financeiro",
     label: "Financeiro",
@@ -58,14 +66,6 @@ export const CLIENT_NAV: MobileNavSlot[] = [
     to: ({ paths, hasProject }) =>
       hasProject ? paths.formalizacoes : HOME_CLIENT,
     badge: "none",
-  },
-  {
-    id: "pendencias",
-    label: "Pendências",
-    icon: AlertCircle,
-    to: ({ paths, hasProject }) =>
-      hasProject ? paths.pendencias : HOME_CLIENT,
-    badge: "criticalPendencias",
   },
 ];
 
