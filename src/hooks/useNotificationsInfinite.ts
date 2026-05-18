@@ -1,6 +1,7 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
@@ -13,7 +14,6 @@ import {
   markAllAsRead,
   type Notification,
 } from "@/infra/repositories/notifications.repository";
-import { useQuery } from "@tanstack/react-query";
 
 const KEY = "notifications-infinite";
 const UNREAD_COUNT_KEY = "notifications-unread-count";

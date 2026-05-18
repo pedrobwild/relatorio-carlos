@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
+import { isAssistantAllowed } from "@/lib/assistantAccess";
 import { useScheduleAlertsSummary } from "@/hooks/useScheduleAlerts";
 import { useScheduleAlertPrefs } from "@/hooks/useScheduleAlertPrefs";
 import { cn } from "@/lib/utils";
@@ -44,6 +46,7 @@ interface NavItem {
   path: string;
   matchPaths?: string[];
   adminOnly?: boolean;
+  assistantOnly?: boolean;
 }
 
 interface NavGroup {
@@ -57,6 +60,8 @@ export function GestaoSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+  const { user } = useAuth();
+  const canUseAssistant = isAssistantAllowed(user?.email);
   const { total: alertsTotal } = useScheduleAlertsSummary();
   const { prefs: alertPrefs } = useScheduleAlertPrefs();
   const showAlertsBadge = alertPrefs.showBadge && alertsTotal > 0;
@@ -113,11 +118,13 @@ export function GestaoSidebar() {
           label: "Assistente IA",
           icon: Sparkles,
           path: "/gestao/assistente",
+          assistantOnly: true,
         },
         {
           label: "Consultas do Assistente",
           icon: Search,
           path: "/gestao/assistente/consultas",
+          assistantOnly: true,
         },
         {
           label: "Atividades",
@@ -179,6 +186,7 @@ export function GestaoSidebar() {
           icon: BarChart3,
           path: "/gestao/assistente/logs",
           adminOnly: true,
+          assistantOnly: true,
         },
         {
           label: "Config. Fornecedores",
@@ -302,7 +310,9 @@ export function GestaoSidebar() {
 
         {groups.map((group) => {
           const visibleItems = group.items.filter(
-            (item) => !item.adminOnly || isAdmin,
+            (item) =>
+              (!item.adminOnly || isAdmin) &&
+              (!item.assistantOnly || canUseAssistant),
           );
           if (visibleItems.length === 0) return null;
 

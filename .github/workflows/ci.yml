@@ -30,11 +30,12 @@ jobs:
         run: npx tsc -b
 
       - name: Run unit tests
-        # Bump Node heap: vitest workers OOM with Node 20's default ~4 GB limit
-        # on this suite. ubuntu-latest has 7 GB RAM; 5 GB leaves headroom.
+        # Headroom over Node's default ~4 GB heap for this large jsdom/React
+        # suite (defense-in-depth; the prior OOM was a runaway redirect loop
+        # in ProtectedRoute.test.tsx, fixed at the test level).
         run: npx vitest run
         env:
-          NODE_OPTIONS: --max-old-space-size=5120
+          NODE_OPTIONS: --max-old-space-size=6144
 
       - name: Audit contrast (WCAG AA tokens)
         run: npm run audit:contrast

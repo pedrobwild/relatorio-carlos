@@ -419,17 +419,25 @@ export function AssistantChat({
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro inesperado";
+      const isNetworkError =
+        e instanceof TypeError && /failed to fetch|network/i.test(msg);
+      const userMsg = isNetworkError
+        ? "Não foi possível conectar ao assistente (rede/CORS). Tente novamente em alguns segundos."
+        : msg;
       console.error(
         `[AssistantChat] [req=${requestId}${serverRequestId ? ` srv=${serverRequestId}` : ""}] erro no stream:`,
         msg,
         lastError ?? "",
       );
-      toast.error(msg);
+      toast.error(userMsg);
       updateLastAssistant((m) => ({
         ...m,
         pending: false,
-        content: accumulated || `⚠️ ${msg}`,
-        result_data: { ...(m.result_data ?? {}), status: "other" },
+        content: accumulated || `⚠️ ${userMsg}`,
+        result_data: {
+          ...(m.result_data ?? {}),
+          status: isNetworkError ? "network_error" : "other",
+        },
       }));
     } finally {
       setIsLoading(false);

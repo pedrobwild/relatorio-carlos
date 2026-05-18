@@ -11,6 +11,7 @@ import {
   CustomerRoute,
   AdminRoute,
 } from "@/components/ProtectedRoute";
+import { AssistantAccessGuard } from "@/components/assistant/AssistantAccessGuard";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/queryClient";
@@ -346,7 +347,9 @@ const App = () => (
                 path="/gestao/assistente"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<Assistente />)}</AppShell>
+                    <AssistantAccessGuard>
+                      <AppShell variant="portfolio">{withSuspense(<Assistente />)}</AppShell>
+                    </AssistantAccessGuard>
                   </StaffRoute>
                 }
               />
@@ -354,9 +357,11 @@ const App = () => (
                 path="/gestao/assistente/consultas"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">
-                      {withSuspense(<AssistenteConsultas />)}
-                    </AppShell>
+                    <AssistantAccessGuard>
+                      <AppShell variant="portfolio">
+                        {withSuspense(<AssistenteConsultas />)}
+                      </AppShell>
+                    </AssistantAccessGuard>
                   </StaffRoute>
                 }
               />
@@ -364,9 +369,11 @@ const App = () => (
                 path="/gestao/assistente/logs"
                 element={
                   <AdminRoute>
-                    <AppShell variant="portfolio">
-                      {withSuspense(<AssistenteLogs />)}
-                    </AppShell>
+                    <AssistantAccessGuard>
+                      <AppShell variant="portfolio">
+                        {withSuspense(<AssistenteLogs />)}
+                      </AppShell>
+                    </AssistantAccessGuard>
                   </AdminRoute>
                 }
               />
