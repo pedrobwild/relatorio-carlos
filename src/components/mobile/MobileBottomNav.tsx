@@ -69,6 +69,15 @@ export function MobileBottomNav() {
     [isStaff],
   );
 
+  const resetProjectHubState = (targetProjectId?: string) => {
+    if (!targetProjectId) return;
+    clearMobileNavSlot(targetProjectId);
+    patchPortalViewState(getPortalViewStateKey(targetProjectId), {
+      activeTab: "cronograma",
+      weeklyReport: { open: false },
+    });
+  };
+
   const resolveBadge = (slot: MobileNavSlot): number => {
     if (slot.badge === "criticalPendencias") return criticalPendencias;
     if (slot.badge === "unreadNotifications") return unreadCount;
