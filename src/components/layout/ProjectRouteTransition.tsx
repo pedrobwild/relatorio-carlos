@@ -154,6 +154,7 @@ export function ProjectRouteTransition({
   // Handle the actual route swap: save outgoing position, decide whether
   // to restore or reset on the incoming route.
   useEffect(() => {
+    console.warn("[DBG-EFF]", { tracked: trackedPathRef.current, path: location.pathname, type: navigationType });
     if (trackedPathRef.current === location.pathname) return;
 
     // Save the outgoing route's final scroll, in case the throttle skipped
