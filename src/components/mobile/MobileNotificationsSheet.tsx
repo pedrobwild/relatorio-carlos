@@ -338,6 +338,14 @@ export function MobileNotificationsSheet({
   const dragDeltaRef = useRef(0);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
+  // Marcador de transição de abertura. Enquanto `true`, qualquer reset
+  // de scroll programático é permitido (estamos animando o sheet para
+  // dentro); assim que o usuário rolar manualmente OU a animação
+  // terminar, paramos de sobrescrever o scroll para não “puxar” o
+  // conteúdo de volta no meio de uma interação.
+  const isOpeningRef = useRef(false);
+  const userScrolledRef = useRef(false);
+
   const resetTransform = useCallback((withTransition: boolean) => {
     const el = contentRef.current;
     if (!el) return;
@@ -347,10 +355,24 @@ export function MobileNotificationsSheet({
     el.style.transform = "";
   }, []);
 
+  /** Zera o scroll de todos os containers roláveis internos. */
+  const resetScrollContainers = useCallback(() => {
+    const root = contentRef.current;
+    if (!root) return;
+    root
+      .querySelectorAll<HTMLElement>(
+        "[data-radix-scroll-area-viewport],[data-notif-scroll]",
+      )
+      .forEach((vp) => {
+        if (vp.scrollTop !== 0) vp.scrollTop = 0;
+      });
+  }, []);
+
   // Garante que ao fechar o sheet (por qualquer caminho: swipe, overlay,
   // ESC, botão fechar, navegação) o estado interno volte ao padrão.
   // Ao reabrir, reposiciona o scroll de todas as ScrollAreas internas para
-  // o topo — evita que o usuário volte para a posição anterior.
+  // o topo — sem sobrescrever scroll do usuário no meio da animação de
+  // abertura nem após ele rolar manualmente.
   useEffect(() => {
     if (!open) {
       setActiveTab("all");
@@ -358,38 +380,78 @@ export function MobileNotificationsSheet({
       setIsNavigating(false);
       dragStartYRef.current = null;
       dragDeltaRef.current = 0;
+      isOpeningRef.current = false;
+      userScrolledRef.current = false;
       resetTransform(false);
       return;
     }
-    // Aguarda o conteúdo montar/animar antes de reposicionar o scroll.
-    const raf = requestAnimationFrame(() => {
-      const root = contentRef.current;
-      if (!root) return;
-      root
-        .querySelectorAll<HTMLElement>("[data-radix-scroll-area-viewport],[data-notif-scroll]")
-        .forEach((vp) => {
-          vp.scrollTop = 0;
-        });
+
+    // Inicia janela de transição: enquanto durar, reaplica scrollTop=0
+    // a cada frame para cobrir conteúdo que monta tardiamente (ex.:
+    // virtualizer que só calcula size após primeira medição). Para
+    // assim que (a) o usuário rolar, (b) a animação terminar, ou
+    // (c) o timeout máximo expirar — o que vier primeiro.
+    isOpeningRef.current = true;
+    userScrolledRef.current = false;
+
+    let rafId = 0;
+    const tick = () => {
+      if (!isOpeningRef.current || userScrolledRef.current) return;
+      resetScrollContainers();
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+
+    // Fallback caso animationend não dispare (jsdom, prefers-reduced-motion,
+    // ou animação ausente): encerra a janela após 400ms.
+    const timeoutId = window.setTimeout(() => {
+      isOpeningRef.current = false;
+    }, 400);
+
+    const onAnimEnd = (e: AnimationEvent) => {
+      // Só interessa a animação do próprio SheetContent, não de filhos.
+      if (e.target !== contentRef.current) return;
+      isOpeningRef.current = false;
+    };
+    const node = contentRef.current;
+    node?.addEventListener("animationend", onAnimEnd);
+
+    // Detecta interação manual do usuário em qualquer container rolável.
+    const onUserScroll = () => {
+      userScrolledRef.current = true;
+    };
+    const scrollers = node?.querySelectorAll<HTMLElement>(
+      "[data-radix-scroll-area-viewport],[data-notif-scroll]",
+    );
+    scrollers?.forEach((s) => {
+      s.addEventListener("wheel", onUserScroll, { passive: true });
+      s.addEventListener("touchmove", onUserScroll, { passive: true });
     });
-    return () => cancelAnimationFrame(raf);
-  }, [open, resetTransform]);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.clearTimeout(timeoutId);
+      node?.removeEventListener("animationend", onAnimEnd);
+      scrollers?.forEach((s) => {
+        s.removeEventListener("wheel", onUserScroll);
+        s.removeEventListener("touchmove", onUserScroll);
+      });
+      isOpeningRef.current = false;
+    };
+  }, [open, resetTransform, resetScrollContainers]);
 
   // Ao alternar entre abas (Todas / Ação / Atualizações), reposiciona o
   // scroll para o topo — evita que o usuário comece a leitura no meio da
-  // lista herdando a posição da aba anterior.
+  // lista herdando a posição da aba anterior. Skipped durante a abertura,
+  // pois o loop de transição já garante topo=0.
   useEffect(() => {
-    if (!open) return;
-    const raf = requestAnimationFrame(() => {
-      const root = contentRef.current;
-      if (!root) return;
-      root
-        .querySelectorAll<HTMLElement>("[data-radix-scroll-area-viewport],[data-notif-scroll]")
-        .forEach((vp) => {
-          vp.scrollTop = 0;
-        });
-    });
+    if (!open || isOpeningRef.current) return;
+    // Troca de aba é interação intencional do usuário, então sempre
+    // forçamos topo e zeramos o marcador para que continue valendo.
+    userScrolledRef.current = false;
+    const raf = requestAnimationFrame(resetScrollContainers);
     return () => cancelAnimationFrame(raf);
-  }, [activeTab, open]);
+  }, [activeTab, open, resetScrollContainers]);
 
   const actionNotifications = useMemo(
     () => notifications.filter((n) => getUrgencyCategory(n.type) === "action"),
