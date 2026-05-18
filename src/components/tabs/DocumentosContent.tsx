@@ -263,8 +263,8 @@ const CategorySection = ({
 }) => {
   if (documents.length === 0) return null;
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 pb-1">
         <div className="p-1.5 bg-primary/10 rounded">
           {categoryIcons[category]}
         </div>
@@ -409,7 +409,7 @@ const DocumentosContent = () => {
             ))}
           </TabsList>
 
-          <TabsContent value="all" className="space-y-8 mt-6">
+          <TabsContent value="all" className="space-y-10 mt-8">
             {categoriesWithDocs.map((cat) => (
               <CategorySection
                 key={cat}
@@ -425,7 +425,7 @@ const DocumentosContent = () => {
           </TabsContent>
 
           {categoriesWithDocs.map((cat) => (
-            <TabsContent key={cat} value={cat} className="mt-6">
+            <TabsContent key={cat} value={cat} className="mt-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {getLatestByCategoryMerged(cat).map((doc) => (
                   <DocumentCard
