@@ -227,7 +227,7 @@ export default function JornadaProjeto() {
           pullDistance={pullDistance}
           threshold={threshold}
         />
-      </main>
+      </PageContainer>
     </div>
   );
 }
