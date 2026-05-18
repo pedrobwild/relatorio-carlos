@@ -22,7 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotificationsInfinite } from "@/hooks/useNotificationsInfinite";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
