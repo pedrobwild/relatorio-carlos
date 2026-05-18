@@ -528,6 +528,23 @@
     padding-right: env(safe-area-inset-right, 0px);
   }
 
+  /* Safe-area-aware horizontal padding — combines a base gutter with the
+     device's safe-area inset so content never sits under the notch / rounded
+     corners on iPhones in landscape. Use INSTEAD of `px-4 pl-safe pr-safe`
+     (the latter combination would override `px-4` and remove the gutter). */
+  .px-safe-4 {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+  .px-safe-6 {
+    padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
+  }
+  .px-safe-8 {
+    padding-left: max(2rem, env(safe-area-inset-left, 0px));
+    padding-right: max(2rem, env(safe-area-inset-right, 0px));
+  }
+
   /* Bottom nav spacing — use on page content containers on mobile */
   .pb-bottom-nav {
     padding-bottom: var(--bottom-nav-offset);
