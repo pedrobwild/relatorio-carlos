@@ -419,10 +419,12 @@ export function useProjectPortal() {
     );
   }, [project, reportData, formattedActivities, allWeeklyReports.length]);
 
-  // Restore weekly report state
-  const hasRestoredWeeklyRef = useRef(false);
+  // Restore weekly report state. The ref is keyed by viewStateKey so it
+  // re-runs ao trocar de projeto (ou ao re-entrar em /obra/:projectId após
+  // navegar para outra área do app — o portal remonta e o ref também).
+  const restoredWeeklyForKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (hasRestoredWeeklyRef.current) return;
+    if (restoredWeeklyForKeyRef.current === viewStateKey) return;
     if (reportsChronological.length === 0) return;
     const saved = getPortalViewState(viewStateKey);
     if (
@@ -433,8 +435,12 @@ export function useProjectPortal() {
       setActiveTab("relatorios");
       setSelectedWeekIndex(saved.weeklyReport.index);
       setSelectedWeeklyReport(reportsChronological[saved.weeklyReport.index]);
+    } else {
+      // Garante que ao voltar sem estado salvo o detalhe não fique órfão
+      // exibindo Suspense vazio de uma seleção antiga.
+      setSelectedWeeklyReport(null);
     }
-    hasRestoredWeeklyRef.current = true;
+    restoredWeeklyForKeyRef.current = viewStateKey;
   }, [reportsChronological, viewStateKey]);
 
   // --- Handlers ---
