@@ -30,6 +30,8 @@ import {
   isBlockingNotification,
 } from "@/constants/notificationUrgency";
 import type { Notification } from "@/infra/repositories/notifications.repository";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileNotificationsSheet } from "@/components/mobile/MobileNotificationsSheet";
 
 const typeConfig: Record<
   string,
