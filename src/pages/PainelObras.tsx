@@ -3782,7 +3782,7 @@ function BoardGroupCard({
                 // (caso a medição ainda não tenha rodado) — assim o
                 // thead acompanha alturas diferentes do título em
                 // telas menores, densidade compacta ou labels longos.
-                "w-full text-sm [&_thead_th]:sticky [&_thead_th]:top-[var(--group-title-h,38px)] [&_thead_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle",
+                "w-full text-sm [&_thead_th]:sticky [&_thead_th]:top-[var(--group-title-h,38px)] [&_thead_th]:z-table-header [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:whitespace-nowrap [&_tr]:border-border-subtle [&_thead_th]:transition-shadow [&_thead_th]:duration-150 [&_tbody_tr_td:first-child]:transition-shadow [&_tbody_tr_td:first-child]:duration-150 group-data-[scrolled-y=true]/card:[&_thead_th]:shadow-[inset_0_-1px_0_0_hsl(var(--border)),0_6px_8px_-6px_hsl(var(--foreground)/0.20)] group-data-[scrolled-x=true]/card:[&_thead_th:first-child]:shadow-[6px_0_8px_-6px_hsl(var(--foreground)/0.22),inset_-1px_0_0_0_hsl(var(--border))] group-data-[scrolled-x=true]/card:[&_tbody_tr_td:first-child]:shadow-[6px_0_8px_-6px_hsl(var(--foreground)/0.18),inset_-1px_0_0_0_hsl(var(--border))]",
                 densityTableClass,
               )}
             >
