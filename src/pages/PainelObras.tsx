@@ -1811,7 +1811,6 @@ const TABLE_COLS: { width: string; align?: "right" | "center" }[] = [
   { width: "min-w-[96px] sm:min-w-[120px]" }, // Entrega Real
   { width: "min-w-[120px] sm:min-w-[150px]" }, // Relacionamento
   { width: "min-w-[140px] sm:min-w-[180px]" }, // Responsável
-  { width: "min-w-[96px] sm:min-w-[120px]", align: "right" }, // Atraso
   { width: "w-12 sm:w-16" }, // Ações
 ];
 
