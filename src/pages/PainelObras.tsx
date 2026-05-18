@@ -1444,7 +1444,6 @@ export default function PainelObras() {
                                         entrega_real: "entrega real",
                                         inicio_real: "início real",
                                         responsavel_nome: "responsável",
-                                        atraso: "atraso",
                                       } as Record<string, string>
                                     )[sortKey] ?? "custom")
                                   : "padrão"}
