@@ -1816,7 +1816,7 @@ export default function PainelObras() {
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
+                  </StickyTableScroller>
                 </SectionCard>
               )}
             </div>
