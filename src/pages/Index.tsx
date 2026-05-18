@@ -43,6 +43,7 @@ import { useProjectPortal } from "@/hooks/useProjectPortal";
 import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LiveStatus } from "@/components/a11y/LiveStatus";
+import { trackAmplitude } from "@/lib/amplitude";
 
 // Lazy load heavy components
 const _GanttChart = lazy(() => import("@/components/GanttChart"));
@@ -129,7 +130,14 @@ const Index = () => {
     if (location.pathname !== `/obra/${projectId}`) return;
     const slot = readMobileNavSlot(projectId);
     if (!slot) return;
-    navigate(pathForMobileNavSlot(projectId, slot), { replace: true });
+    const target = pathForMobileNavSlot(projectId, slot);
+    trackAmplitude("mobile_tab_route_redirect", {
+      projectId,
+      slot,
+      target,
+      reason: "persisted_slot_restore",
+    });
+    navigate(target, { replace: true });
   }, [isMobile, projectId, location.pathname, navigate]);
 
   // Mobile sync: route-only tabs (financeiro/documentos/formalizacoes/pendencias)
@@ -149,6 +157,12 @@ const Index = () => {
     const target = routeMap[activeTab];
     if (target) {
       if (location.pathname === target) return;
+      trackAmplitude("mobile_tab_route_redirect", {
+        projectId,
+        slot: activeTab,
+        target,
+        reason: "stale_active_tab",
+      });
       setActiveTab("cronograma");
       navigate(target, { replace: true });
       return;
@@ -156,6 +170,12 @@ const Index = () => {
     // Fallback: activeTab is stale (not a visible tab and not in routeMap).
     // Reset to the default visible tab so the UI stays consistent.
     if (!visible.includes(activeTab)) {
+      trackAmplitude("mobile_tab_synced", {
+        projectId,
+        from: activeTab,
+        to: "cronograma",
+        reason: "fallback_invalid_tab",
+      });
       setActiveTab("cronograma");
     }
   }, [
@@ -184,6 +204,12 @@ const Index = () => {
     if (urlTab) {
       if (!(VISIBLE_TABS as readonly string[]).includes(urlTab)) return;
       if (urlTab === activeTab) return;
+      trackAmplitude("mobile_tab_synced", {
+        projectId: projectId ?? null,
+        from: activeTab,
+        to: urlTab,
+        reason: "url_param",
+      });
       setActiveTab(urlTab);
       return;
     }
@@ -193,6 +219,12 @@ const Index = () => {
       if (!stored) return;
       if (!(VISIBLE_TABS as readonly string[]).includes(stored)) return;
       if (stored === activeTab) return;
+      trackAmplitude("mobile_tab_synced", {
+        projectId: projectId ?? null,
+        from: activeTab,
+        to: stored,
+        reason: "localstorage_restore",
+      });
       setActiveTab(stored);
     } catch {
       // ignore storage access errors (private mode, quota, etc.)
