@@ -121,7 +121,7 @@ const WeeklyReportTemplate = ({
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in" data-report-template-ready="true">
       <div className="max-w-[840px] mx-auto space-y-6">
         {isStaff && (
           <div className="flex justify-end">
