@@ -225,6 +225,8 @@ export function MobileNotificationsSheet({
 
   // Garante que ao fechar o sheet (por qualquer caminho: swipe, overlay,
   // ESC, botão fechar, navegação) o estado interno volte ao padrão.
+  // Ao reabrir, reposiciona o scroll de todas as ScrollAreas internas para
+  // o topo — evita que o usuário volte para a posição anterior.
   useEffect(() => {
     if (!open) {
       setActiveTab("all");
@@ -232,7 +234,19 @@ export function MobileNotificationsSheet({
       dragStartYRef.current = null;
       dragDeltaRef.current = 0;
       resetTransform(false);
+      return;
     }
+    // Aguarda o conteúdo montar/animar antes de reposicionar o scroll.
+    const raf = requestAnimationFrame(() => {
+      const root = contentRef.current;
+      if (!root) return;
+      root
+        .querySelectorAll<HTMLElement>("[data-radix-scroll-area-viewport]")
+        .forEach((vp) => {
+          vp.scrollTop = 0;
+        });
+    });
+    return () => cancelAnimationFrame(raf);
   }, [open, resetTransform]);
 
   const actionNotifications = useMemo(
