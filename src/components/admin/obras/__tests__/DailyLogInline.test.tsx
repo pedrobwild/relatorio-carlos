@@ -17,6 +17,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactElement } from "react";
 import type { ProjectDailyLog } from "@/hooks/useProjectDailyLog";
 
 // ---- Mocks de dependências ----------------------------------------------
@@ -69,6 +71,18 @@ function makeLog(partial: Partial<ProjectDailyLog> = {}): ProjectDailyLog {
 
 const baseProps = { projectId: "proj-1", initialDate: "2026-04-27" };
 
+// DailyLogInline usa `useDailyLogActions`, que depende de TanStack Query
+// (useQuery/useMutation/useQueryClient). Envolve a árvore num
+// QueryClientProvider isolado por render.
+function renderWithClient(ui: ReactElement) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={client}>{ui}</QueryClientProvider>,
+  );
+}
+
 // ---- Importação tardia (após os mocks) ----------------------------------
 // Importamos o componente APÓS o vi.mock para garantir que ele use os
 // mocks definidos acima.
@@ -116,7 +130,7 @@ describe("DailyLogInline — seção unificada Serviços e prestadores", () => {
       isLoading: false,
     });
 
-    render(<DailyLogInline {...baseProps} />);
+    renderWithClient(<DailyLogInline {...baseProps} />);
 
     // O card unificado existe (um único trigger para "Serviços e prestadores").
     const trigger = await screen.findByRole("button", {
@@ -181,7 +195,7 @@ describe("DailyLogInline — seção unificada Serviços e prestadores", () => {
       isLoading: false,
     });
 
-    render(<DailyLogInline {...baseProps} />);
+    renderWithClient(<DailyLogInline {...baseProps} />);
 
     const trigger = await screen.findByRole("button", {
       name: /(Recolher|Expandir) Serviços e prestadores/i,
@@ -251,7 +265,7 @@ describe("DailyLogInline — seção unificada Serviços e prestadores", () => {
       isLoading: false,
     });
 
-    render(<DailyLogInline {...baseProps} />);
+    renderWithClient(<DailyLogInline {...baseProps} />);
 
     // Como o defaultOpen é calculado no estado inicial (antes do useEffect
     // de sincronização), o card já começa fechado — o preview com totais
@@ -268,7 +282,7 @@ describe("DailyLogInline — seção unificada Serviços e prestadores", () => {
       isLoading: false,
     });
 
-    render(<DailyLogInline {...baseProps} />);
+    renderWithClient(<DailyLogInline {...baseProps} />);
 
     // Sem conteúdo, o card começa fechado e exibe a microcopy de vazio
     // diretamente no preview.

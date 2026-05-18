@@ -101,6 +101,23 @@ vi.mock("@/hooks/useStaffUsers", () => ({
   useStaffUsers: () => ({ data: [], isLoading: false }),
 }));
 
+// O Painel agora ativa o filtro de período (semana corrente) por padrão,
+// restringindo a lista às obras com atividades no período. Sem mockar este
+// hook, `periodByProject` vem vazio e todas as obras são filtradas, deixando
+// a tabela/board vazios. Mockamos para que o filtro de período aceite todas.
+vi.mock("@/hooks/usePainelPeriodActivities", async (orig) => {
+  const actual =
+    await orig<typeof import("@/hooks/usePainelPeriodActivities")>();
+  return {
+    ...actual,
+    usePainelPeriodActivities: () => ({
+      byProject: { has: () => true, get: () => undefined, size: 0 },
+      isLoading: false,
+      error: null,
+    }),
+  };
+});
+
 vi.mock("@/hooks/useUserRole", () => ({
   useUserRole: () => ({
     role: "admin",
