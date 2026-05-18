@@ -61,7 +61,10 @@ export const CLIENT_NAV: MobileNavSlot[] = [
   },
   {
     id: "formalizacoes",
-    label: "Formalizações",
+    // Mobile bottom nav: "Formalizações" (13 chars) trunca em viewports
+    // estreitos colando no rótulo vizinho. "Acordos" é o sinônimo curto já
+    // usado no projeto (ver mem://features/formalizacoes/...).
+    label: "Acordos",
     icon: ClipboardSignature,
     to: ({ paths, hasProject }) =>
       hasProject ? paths.formalizacoes : HOME_CLIENT,
