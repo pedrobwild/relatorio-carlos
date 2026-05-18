@@ -18,6 +18,7 @@ import {
 import authBg from "@/assets/auth-bg.png";
 import workflowLogo from "@/assets/bwild-workflow-manager.png";
 import { z } from "zod";
+import { buildSupportWhatsappUrl } from "@/config/contact";
 import { logError, logInfo, logWarn } from "@/lib/errorLogger";
 
 const loginSchema = z.object({
@@ -459,7 +460,9 @@ export default function Auth() {
           <HelpCircle className="h-4 w-4 shrink-0" />
           <span>Problemas?</span>
           <a
-            href="https://web.whatsapp.com/send?phone=5521989362122&text=Ol%C3%A1%2C%20tive%20uma%20dificuldade%20com%20meu%20acesso%20ao%20portal%20de%20jornada%20de%20obra%20da%20bwild%20e%20preciso%20de%20ajuda."
+            href={buildSupportWhatsappUrl(
+              "Olá, tive uma dificuldade com meu acesso ao portal de jornada de obra da bwild e preciso de ajuda."
+            )}
             target="_blank"
             rel="noopener noreferrer"
             className="text-white/90 hover:text-white hover:underline font-medium"
