@@ -24,7 +24,7 @@ export type MobileNavSlot = {
   label: string;
   icon: LucideIcon;
   /** Resolves to the destination URL. Receives both project-scoped paths (when inside an obra) and a fallback flag. */
-  to: (ctx: { paths: ProjectPaths; hasProject: boolean }) => string;
+  to: (ctx: { paths: ProjectPaths; hasProject: boolean; projectId?: string }) => string;
   badge?: MobileNavBadge;
 };
 
