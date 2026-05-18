@@ -61,7 +61,9 @@ function flushTransition() {
 
 describe("ProjectRouteTransition", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({
+      toFake: ["setTimeout", "clearTimeout", "requestAnimationFrame", "Date"],
+    });
     setReducedMotion(false);
     __resetScrollPositionsForTests();
   });
