@@ -1,5 +1,5 @@
 import { useRef, useCallback, lazy, Suspense, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -60,6 +60,7 @@ const PendenciasContent = lazy(
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const reportRef = useRef<HTMLDivElement>(null);
   const { hasShell } = useProjectLayout();
 
@@ -112,6 +113,8 @@ const Index = () => {
   // Mobile sync: route-only tabs (financeiro/documentos/formalizacoes/pendencias)
   // live in the bottom nav as standalone pages. If a stale activeTab still
   // points there, redirect so the bottom nav highlight matches the view.
+  // Guard against navigation loops: only redirect when the current pathname
+  // does not already match the resolved target.
   useEffect(() => {
     if (!isMobile || !projectId) return;
     const routeMap: Record<string, string> = {
@@ -121,11 +124,18 @@ const Index = () => {
       pendencias: `/obra/${projectId}/pendencias`,
     };
     const target = routeMap[activeTab];
-    if (target) {
-      setActiveTab("cronograma");
-      navigate(target, { replace: true });
-    }
-  }, [isMobile, activeTab, projectId, navigate, setActiveTab]);
+    if (!target) return;
+    if (location.pathname === target) return;
+    setActiveTab("cronograma");
+    navigate(target, { replace: true });
+  }, [
+    isMobile,
+    activeTab,
+    projectId,
+    navigate,
+    setActiveTab,
+    location.pathname,
+  ]);
 
 
   const handleExportPDF = useCallback(async () => {
