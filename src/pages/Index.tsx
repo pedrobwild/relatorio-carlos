@@ -100,12 +100,33 @@ const Index = () => {
     saveWeeklyReport,
   } = useProjectPortal();
 
+  const isMobile = useIsMobile();
+
   // Redirect to Jornada when project is in project phase
   useEffect(() => {
     if (!projectLoading && project?.is_project_phase && projectId) {
       navigate(`/obra/${projectId}/jornada`, { replace: true });
     }
   }, [projectLoading, project?.is_project_phase, projectId, navigate]);
+
+  // Mobile sync: route-only tabs (financeiro/documentos/formalizacoes/pendencias)
+  // live in the bottom nav as standalone pages. If a stale activeTab still
+  // points there, redirect so the bottom nav highlight matches the view.
+  useEffect(() => {
+    if (!isMobile || !projectId) return;
+    const routeMap: Record<string, string> = {
+      financeiro: `/obra/${projectId}/financeiro`,
+      documentos: `/obra/${projectId}/documentos`,
+      formalizacoes: `/obra/${projectId}/formalizacoes`,
+      pendencias: `/obra/${projectId}/pendencias`,
+    };
+    const target = routeMap[activeTab];
+    if (target) {
+      setActiveTab("cronograma");
+      navigate(target, { replace: true });
+    }
+  }, [isMobile, activeTab, projectId, navigate, setActiveTab]);
+
 
   const handleExportPDF = useCallback(async () => {
     if (!reportRef.current) return;
