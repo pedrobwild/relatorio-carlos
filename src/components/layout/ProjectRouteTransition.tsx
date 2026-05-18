@@ -1,18 +1,35 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigationType } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProjectRouteTransitionProps {
   children: ReactNode;
   /**
-   * Optional scroll target. When provided, the transition resets that
-   * element's scrollTop on route change. Falls back to window scroll.
+   * Optional scroll target. When provided, the transition manages that
+   * element's scroll. Falls back to window scroll.
    */
   scrollTargetRef?: React.RefObject<HTMLElement>;
 }
 
 /** Minimum time the skeleton stays visible — avoids a flicker on fast swaps. */
 const SKELETON_MIN_MS = 160;
+
+/** Throttle for scroll-save so we don't thrash on momentum scrolls. */
+const SAVE_THROTTLE_MS = 80;
+
+/** Per-route scroll snapshot. Top values for every plausible container. */
+type ScrollSnapshot = {
+  win: number;
+  target: number;
+  containers: Record<string, number>;
+};
+
+/**
+ * Shared in-memory store. Lives at module scope so it survives unmounts of
+ * the transition wrapper (e.g. when ProjectShell remounts on project switch).
+ * Keyed by full pathname so each tab inside an obra has its own slot.
+ */
+const scrollPositions = new Map<string, ScrollSnapshot>();
 
 function RouteSkeleton() {
   return (
@@ -31,73 +48,140 @@ function RouteSkeleton() {
   );
 }
 
+function getContainerKey(el: HTMLElement, index: number): string {
+  return el.dataset.scrollContainer || `container-${index}`;
+}
+
+function captureScroll(target: HTMLElement | null | undefined): ScrollSnapshot {
+  const containers: Record<string, number> = {};
+  if (typeof document !== "undefined") {
+    document
+      .querySelectorAll<HTMLElement>("[data-scroll-container]")
+      .forEach((el, i) => {
+        containers[getContainerKey(el, i)] = el.scrollTop;
+      });
+  }
+  return {
+    win: typeof window !== "undefined" ? window.scrollY : 0,
+    target: target?.scrollTop ?? 0,
+    containers,
+  };
+}
+
+function applyScroll(
+  snapshot: ScrollSnapshot | null,
+  target: HTMLElement | null | undefined,
+) {
+  // null snapshot means "reset to top".
+  const top = snapshot?.win ?? 0;
+  const targetTop = snapshot?.target ?? 0;
+  const containers = snapshot?.containers ?? {};
+
+  try {
+    window.scrollTo({ top, left: 0, behavior: "auto" });
+  } catch {
+    if (document.scrollingElement) {
+      (document.scrollingElement as HTMLElement).scrollTop = top;
+    }
+  }
+  if (target) target.scrollTop = targetTop;
+  if (typeof document !== "undefined") {
+    document
+      .querySelectorAll<HTMLElement>("[data-scroll-container]")
+      .forEach((el, i) => {
+        const key = getContainerKey(el, i);
+        el.scrollTop = containers[key] ?? 0;
+      });
+  }
+}
+
 /**
- * Lightweight per-route transition + scroll restoration for project pages.
+ * Per-route scroll restoration + lightweight transition for project pages.
  *
- * Goals (mobile-first):
- * - Keep the user "in the obra": never leave a tab scrolled where the
- *   previous tab was, which makes the next tab feel broken/empty.
- * - Show a short skeleton during the swap so the user never sees the old
- *   page suddenly replaced by half-mounted content "jumping" into place.
- * - Respect `prefers-reduced-motion`: skip the fade, keep the scroll reset
- *   and the skeleton (the skeleton is structural, not motion).
+ * Behavior:
+ * - PUSH/REPLACE navigation (user taps a tab, opens a link): reset every
+ *   plausible scroll container to top. Forward navigation should never land
+ *   mid-scroll on the previous tab's position.
+ * - POP navigation (browser/system back): restore the snapshot we saved
+ *   the last time the user left this exact pathname. Mirrors the native
+ *   browser experience users already expect.
+ * - During the swap, render a short skeleton so the user never sees content
+ *   "jump" into place; the scroll position is applied after the new route
+ *   paints (next rAF) so React has measured the layout first.
+ * - Respects `prefers-reduced-motion`: skips the fade, keeps the skeleton
+ *   and the scroll behavior (structural, not motion).
  */
 export function ProjectRouteTransition({
   children,
   scrollTargetRef,
 }: ProjectRouteTransitionProps) {
   const location = useLocation();
-  const prevPathRef = useRef<string>(location.pathname);
+  const navigationType = useNavigationType();
+  const trackedPathRef = useRef<string>(location.pathname);
   const [isSwapping, setIsSwapping] = useState(false);
 
+  // Continuously snapshot the current route's scroll positions so we have
+  // an up-to-date value the moment the user navigates away.
   useEffect(() => {
-    if (prevPathRef.current === location.pathname) return;
-    prevPathRef.current = location.pathname;
-
-    // Reset every plausible scroll container so we never leave the user
-    // looking at the previous tab's scroll position. Mobile (client) scrolls
-    // the document; staff scrolls <main>; some pages own a nested scroll
-    // container (e.g. Gantt, embedded budget) and can opt in via
-    // [data-scroll-container].
-    const resetScroll = (el: Element | Window | null | undefined) => {
-      if (!el) return;
-      try {
-        (el as { scrollTo: typeof window.scrollTo }).scrollTo({
-          top: 0,
-          left: 0,
-          behavior: "auto",
-        });
-      } catch {
-        // Some elements expose scrollTop but not scrollTo.
-        if ("scrollTop" in (el as HTMLElement)) {
-          (el as HTMLElement).scrollTop = 0;
-          (el as HTMLElement).scrollLeft = 0;
-        }
-      }
+    let lastSave = Number.NEGATIVE_INFINITY;
+    const save = () => {
+      const now = Date.now();
+      if (now - lastSave < SAVE_THROTTLE_MS) return;
+      lastSave = now;
+      scrollPositions.set(
+        trackedPathRef.current,
+        captureScroll(scrollTargetRef?.current),
+      );
     };
 
-    if (typeof window !== "undefined") {
-      resetScroll(window);
-      resetScroll(document.scrollingElement);
-      resetScroll(document.documentElement);
-      resetScroll(document.body);
-    }
-    resetScroll(scrollTargetRef?.current);
-    if (typeof document !== "undefined") {
-      document
-        .querySelectorAll<HTMLElement>("[data-scroll-container]")
-        .forEach(resetScroll);
-    }
-
-    // Show a short skeleton so the next route paints over a stable placeholder
-    // instead of letting partial content shift into view.
-    setIsSwapping(true);
-    const timer = window.setTimeout(
-      () => setIsSwapping(false),
-      SKELETON_MIN_MS,
+    window.addEventListener("scroll", save, { passive: true });
+    const target = scrollTargetRef?.current;
+    target?.addEventListener("scroll", save, { passive: true });
+    const containerEls = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-scroll-container]"),
     );
+    containerEls.forEach((el) =>
+      el.addEventListener("scroll", save, { passive: true }),
+    );
+
+    return () => {
+      window.removeEventListener("scroll", save);
+      target?.removeEventListener("scroll", save);
+      containerEls.forEach((el) => el.removeEventListener("scroll", save));
+    };
+  }, [scrollTargetRef, location.pathname]);
+
+  // Handle the actual route swap: save outgoing position, decide whether
+  // to restore or reset on the incoming route.
+  useEffect(() => {
+    if (trackedPathRef.current === location.pathname) return;
+
+    // Save the outgoing route's final scroll, in case the throttle skipped
+    // the very last user scroll event.
+    scrollPositions.set(
+      trackedPathRef.current,
+      captureScroll(scrollTargetRef?.current),
+    );
+    trackedPathRef.current = location.pathname;
+
+    const saved =
+      navigationType === "POP"
+        ? (scrollPositions.get(location.pathname) ?? null)
+        : null;
+
+    setIsSwapping(true);
+    const timer = window.setTimeout(() => {
+      setIsSwapping(false);
+      // Defer one tick so React commits the new content before we set
+      // scroll, otherwise the target may be too short to hold the value.
+      window.setTimeout(
+        () => applyScroll(saved, scrollTargetRef?.current),
+        0,
+      );
+    }, SKELETON_MIN_MS);
+
     return () => window.clearTimeout(timer);
-  }, [location.pathname, scrollTargetRef]);
+  }, [location.pathname, navigationType, scrollTargetRef]);
 
   const reduceMotion =
     typeof window !== "undefined" &&
@@ -115,4 +199,9 @@ export function ProjectRouteTransition({
       {children}
     </div>
   );
+}
+
+/** Test-only helper to reset the module-level store between specs. */
+export function __resetScrollPositionsForTests() {
+  scrollPositions.clear();
 }
