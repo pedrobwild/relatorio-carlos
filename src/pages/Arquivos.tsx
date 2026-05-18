@@ -36,7 +36,6 @@ import { matchesSearch } from "@/lib/searchNormalize";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-import { PageContainer } from "@/components/layout/PageContainer";
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -46,6 +45,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 // ---- helpers ----
 
