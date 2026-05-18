@@ -236,6 +236,7 @@ export function MobileNotificationsSheet({
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Drag-to-dismiss state. We translate the SheetContent imperatively
   // (via ref) during the gesture to keep it 60fps and avoid React re-renders.
