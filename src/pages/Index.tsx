@@ -611,7 +611,7 @@ const Index = () => {
                         className="mt-0 focus-visible:outline-none"
                       >
                         {selectedWeeklyReport ? (
-                          <>
+                          <div ref={reportDetailRef} className="scroll-mt-4">
                             <WeeklyReportHeader
                               weeklyReport={selectedWeeklyReport}
                               activities={reportData.activities}
