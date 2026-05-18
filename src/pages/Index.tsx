@@ -157,6 +157,12 @@ const Index = () => {
     const target = routeMap[activeTab];
     if (target) {
       if (location.pathname === target) return;
+      trackAmplitude("mobile_tab_route_redirect", {
+        projectId,
+        slot: activeTab,
+        target,
+        reason: "stale_active_tab",
+      });
       setActiveTab("cronograma");
       navigate(target, { replace: true });
       return;
@@ -164,6 +170,12 @@ const Index = () => {
     // Fallback: activeTab is stale (not a visible tab and not in routeMap).
     // Reset to the default visible tab so the UI stays consistent.
     if (!visible.includes(activeTab)) {
+      trackAmplitude("mobile_tab_synced", {
+        projectId,
+        from: activeTab,
+        to: "cronograma",
+        reason: "fallback_invalid_tab",
+      });
       setActiveTab("cronograma");
     }
   }, [
