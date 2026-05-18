@@ -216,7 +216,7 @@ export function MobileBottomNav() {
             </span>
             <span
               className={cn(
-                "text-[10px] min-[360px]:text-[11px] leading-[1.05] text-center max-w-full truncate whitespace-nowrap",
+                "text-[clamp(8px,2.2vw,11px)] leading-[1.05] text-center whitespace-nowrap overflow-visible",
                 profileOpen ? "font-semibold text-primary" : "font-medium",
               )}
             >
