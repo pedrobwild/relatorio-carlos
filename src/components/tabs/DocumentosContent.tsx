@@ -425,7 +425,7 @@ const DocumentosContent = () => {
           </TabsContent>
 
           {categoriesWithDocs.map((cat) => (
-            <TabsContent key={cat} value={cat} className="mt-6">
+            <TabsContent key={cat} value={cat} className="mt-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {getLatestByCategoryMerged(cat).map((doc) => (
                   <DocumentCard
