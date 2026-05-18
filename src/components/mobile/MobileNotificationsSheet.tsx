@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Sheet,
@@ -90,21 +91,26 @@ function NotificationRow({
   onNavigate,
   isSelected,
   onSelect,
+  isNavigating,
 }: {
   notification: Notification;
   onRead: (id: string) => void;
   onNavigate: (url: string) => void;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  isNavigating: boolean;
 }) {
   const config = typeConfig[notification.type] ?? typeConfig.general;
   const Icon = config.icon;
   const isUnread = !notification.read_at;
   const isBlocking = isBlockingNotification(notification.type);
+  const showSpinner = isSelected && isNavigating;
 
   return (
     <button
       aria-pressed={isSelected}
+      aria-busy={showSpinner}
+      disabled={showSpinner}
       onClick={() => {
         onSelect(notification.id);
         if (isUnread) onRead(notification.id);
@@ -117,6 +123,7 @@ function NotificationRow({
           isBlocking &&
           "bg-destructive/5 border-l-2 border-destructive",
         isSelected && "ring-2 ring-primary/40 bg-primary/10",
+        showSpinner && "opacity-80 cursor-progress",
       )}
     >
       <div className={cn("mt-0.5 shrink-0", config.className)}>
@@ -145,15 +152,37 @@ function NotificationRow({
           {formatTime(notification.created_at)}
         </p>
       </div>
-      {isUnread && (
+      {showSpinner ? (
         <span
-          className={cn(
-            "w-2.5 h-2.5 rounded-full shrink-0 mt-1.5",
-            isBlocking ? "bg-destructive animate-pulse" : "bg-primary",
-          )}
+          role="status"
+          aria-label="Abrindo"
+          className="w-3.5 h-3.5 rounded-full shrink-0 mt-1 border-2 border-primary/30 border-t-primary animate-spin"
         />
+      ) : (
+        isUnread && (
+          <span
+            className={cn(
+              "w-2.5 h-2.5 rounded-full shrink-0 mt-1.5",
+              isBlocking ? "bg-destructive animate-pulse" : "bg-primary",
+            )}
+          />
+        )
       )}
     </button>
+  );
+}
+
+/** Linha "fantasma" usada enquanto o cache inicial carrega. */
+function NotificationRowSkeleton() {
+  return (
+    <div className="w-full px-4 py-3.5 flex items-start gap-3 min-h-[56px] rounded-xl">
+      <Skeleton className="w-5 h-5 rounded-md shrink-0 mt-0.5" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <Skeleton className="h-3.5 w-3/4" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-2.5 w-16" />
+      </div>
+    </div>
   );
 }
 
@@ -197,6 +226,7 @@ export function MobileNotificationsSheet({
   const {
     notifications,
     unreadCount,
+    isLoading,
     markAsRead,
     markAllAsRead,
     fetchNextPage,
@@ -206,6 +236,7 @@ export function MobileNotificationsSheet({
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Drag-to-dismiss state. We translate the SheetContent imperatively
   // (via ref) during the gesture to keep it 60fps and avoid React re-renders.
@@ -231,6 +262,7 @@ export function MobileNotificationsSheet({
     if (!open) {
       setActiveTab("all");
       setSelectedId(null);
+      setIsNavigating(false);
       dragStartYRef.current = null;
       dragDeltaRef.current = 0;
       resetTransform(false);
@@ -269,10 +301,10 @@ export function MobileNotificationsSheet({
         : notifications;
 
   const handleNavigate = (url: string) => {
-    // Marca a notificação como "selecionada" só visualmente durante o
-    // fechamento, e dispara onOpenChange(false) — o useEffect acima limpa
-    // selectedId/activeTab quando `open` vira false, garantindo retorno
-    // ao estado padrão na próxima abertura.
+    // Feedback imediato: ativa estado de "navegando" para mostrar spinner
+    // na linha tocada enquanto fecha o sheet e roteia. O useEffect de
+    // `open` limpa tudo na próxima abertura.
+    setIsNavigating(true);
     onOpenChange(false);
     navigate(url);
   };
@@ -413,7 +445,18 @@ export function MobileNotificationsSheet({
           {["all", "actions", "updates"].map((tab) => (
             <TabsContent key={tab} value={tab} className="mt-0 flex-1 min-h-0">
               <ScrollArea className="h-full max-h-[60dvh]">
-                {displayed.length === 0 ? (
+                {isLoading && displayed.length === 0 ? (
+                  <div
+                    className="p-2 space-y-0.5"
+                    role="status"
+                    aria-busy="true"
+                    aria-label="Carregando notificações"
+                  >
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <NotificationRowSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : displayed.length === 0 ? (
                   <div className="py-16 text-center">
                     <Bell className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground">
@@ -439,6 +482,7 @@ export function MobileNotificationsSheet({
                         onNavigate={handleNavigate}
                         isSelected={selectedId === n.id}
                         onSelect={setSelectedId}
+                        isNavigating={isNavigating}
                       />
                     ))}
                     {/* Infinite-scroll sentinel — only meaningful in "all" tab
