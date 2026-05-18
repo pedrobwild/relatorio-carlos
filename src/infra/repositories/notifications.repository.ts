@@ -27,6 +27,29 @@ export async function fetchNotifications(
   return (data ?? []) as Notification[];
 }
 
+/**
+ * Keyset-paginated fetch for infinite scroll. Use `before` (an ISO timestamp)
+ * as the cursor: returns notifications strictly older than that timestamp,
+ * ordered desc by created_at. Stable even when new rows arrive at the top.
+ */
+export async function fetchNotificationsPage(
+  userId: string,
+  { before, limit = 20 }: { before?: string; limit?: number } = {},
+): Promise<Notification[]> {
+  let query = supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (before) query = query.lt("created_at", before);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as Notification[];
+}
+
 export async function fetchUnreadCount(userId: string): Promise<number> {
   const { count, error } = await supabase
     .from("notifications")

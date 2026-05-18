@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -22,7 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotificationsInfinite } from "@/hooks/useNotificationsInfinite";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -150,6 +150,34 @@ function NotificationRow({
   );
 }
 
+/**
+ * Tiny IntersectionObserver-backed sentinel that fires `onIntersect`
+ * once when scrolled into view. Re-arms when `hasNextPage` rerenders it.
+ */
+function InfiniteScrollSentinel({
+  onIntersect,
+  active,
+}: {
+  onIntersect: () => void;
+  active: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!active) return;
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) onIntersect();
+      },
+      { root: null, rootMargin: "120px 0px", threshold: 0 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [onIntersect, active]);
+  return <div ref={ref} aria-hidden="true" className="h-1 w-full" />;
+}
+
 interface MobileNotificationsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -159,8 +187,15 @@ export function MobileNotificationsSheet({
   open,
   onOpenChange,
 }: MobileNotificationsSheetProps) {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useNotificationsInfinite();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
 
@@ -371,6 +406,31 @@ export function MobileNotificationsSheet({
                         onNavigate={handleNavigate}
                       />
                     ))}
+                    {/* Infinite-scroll sentinel — only meaningful in "all" tab
+                        since pagination is global; the other tabs are derived
+                        filters of the same in-memory dataset. */}
+                    {tab === "all" && hasNextPage && (
+                      <InfiniteScrollSentinel
+                        onIntersect={fetchNextPage}
+                        active={open}
+                      />
+                    )}
+                    {tab === "all" && isFetchingNextPage && (
+                      <div className="py-4 flex justify-center">
+                        <span
+                          className="inline-block w-5 h-5 rounded-full border-2 border-primary/30 border-t-primary animate-spin"
+                          aria-label="Carregando mais notificações"
+                          role="status"
+                        />
+                      </div>
+                    )}
+                    {tab === "all" &&
+                      !hasNextPage &&
+                      displayed.length > 0 && (
+                        <p className="py-4 text-center text-[11px] text-muted-foreground/60">
+                          Você chegou ao fim.
+                        </p>
+                      )}
                   </div>
                 )}
               </ScrollArea>
