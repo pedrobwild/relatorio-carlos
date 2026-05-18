@@ -195,11 +195,10 @@ export default function JornadaProjeto() {
         />
       )}
 
-      <main
-        className={cn(
-          "max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-4 md:py-8 w-full overflow-x-hidden",
-          "pb-safe",
-        )}
+      <PageContainer
+        as="main"
+        maxWidth="lg"
+        className={cn("py-4 md:py-8 pb-safe")}
         role="region"
         aria-label={`Conteúdo da aba ${activeTab === "jornada" ? "Jornada" : activeTab === "financeiro" ? "Financeiro" : activeTab === "documentos" ? "Documentos" : activeTab === "formalizacoes" ? "Formalizações" : "Pendências"}`}
       >
