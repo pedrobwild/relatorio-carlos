@@ -2227,7 +2227,7 @@ function ObraRow({
         </TableCell>
 
         {/* Datas */}
-        <TableCell>
+        <TableCell className="hidden xl:table-cell">
           <DateCell
             value={obra.inicio_oficial}
             onChange={(v) => onUpdate({ inicio_oficial: v })}
@@ -2246,13 +2246,13 @@ function ObraRow({
             confirmTitle="Alterar entrega oficial?"
           />
         </TableCell>
-        <TableCell>
+        <TableCell className="hidden xl:table-cell">
           <DateCell
             value={obra.inicio_real}
             onChange={(v) => onUpdate({ inicio_real: v })}
           />
         </TableCell>
-        <TableCell>
+        <TableCell className="hidden 2xl:table-cell">
           <DateCell
             value={obra.entrega_real}
             onChange={(v) => onUpdate({ entrega_real: v })}
