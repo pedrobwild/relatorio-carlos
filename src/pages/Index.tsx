@@ -748,11 +748,13 @@ const Index = () => {
                                 );
                               return (
                                 <Suspense
+                                  key={`weekly-report-${projectId ?? "none"}-${weekNum}`}
                                   fallback={
                                     <ContentSkeleton variant="report" />
                                   }
                                 >
                                   <WeeklyReportTemplate
+                                    key={`weekly-report-tpl-${projectId ?? "none"}-${weekNum}`}
                                     data={templateData}
                                     isStaff={isStaff}
                                     projectId={projectId}
