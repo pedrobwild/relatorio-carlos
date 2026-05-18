@@ -1,6 +1,10 @@
 import { useRef, useCallback, lazy, Suspense, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  readMobileNavSlot,
+  pathForMobileNavSlot,
+} from "@/lib/mobileBottomNavMemory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertCircle,
@@ -103,6 +107,7 @@ const Index = () => {
 
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
+  const restoreCheckedRef = useRef(false);
 
   // Redirect to Jornada when project is in project phase
   useEffect(() => {
@@ -110,6 +115,22 @@ const Index = () => {
       navigate(`/obra/${projectId}/jornada`, { replace: true });
     }
   }, [projectLoading, project?.is_project_phase, projectId, navigate]);
+
+  // Restore the last bottom-nav slot the user picked for this project.
+  // Runs once per mount: if we landed at /obra/:projectId on mobile and there
+  // is a remembered slot, jump straight to that route so the bottom-nav
+  // selection is preserved across sessions.
+  useEffect(() => {
+    if (!isMobile || !projectId) return;
+    if (restoreCheckedRef.current) return;
+    restoreCheckedRef.current = true;
+    // Only restore when the user landed on the project root — not on a
+    // deep-linked schedule/relatório/etc. or already on a bottom-nav route.
+    if (location.pathname !== `/obra/${projectId}`) return;
+    const slot = readMobileNavSlot(projectId);
+    if (!slot) return;
+    navigate(pathForMobileNavSlot(projectId, slot), { replace: true });
+  }, [isMobile, projectId, location.pathname, navigate]);
 
   // Mobile sync: route-only tabs (financeiro/documentos/formalizacoes/pendencias)
   // live in the bottom nav as standalone pages. If a stale activeTab still
