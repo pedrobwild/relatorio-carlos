@@ -88,7 +88,7 @@ export function MobileBottomNav() {
       >
         <div className="flex items-stretch justify-between h-16 px-1">
           {navItems.map((slot) => {
-            const to = slot.to({ paths, hasProject, projectId });
+            const to = slot.to({ paths, hasProject, projectId, lastProjectId });
             const badge = resolveBadge(slot);
             const Icon = slot.icon;
             return (
