@@ -12,6 +12,7 @@ import {
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { EmptyState } from "@/components/EmptyState";
 import { FinancialSummary } from "./financeiro/FinancialSummary";
 import {
