@@ -37,6 +37,18 @@ function hasUrgentPayment(payments: Array<{ due_date: string }>): boolean {
   });
 }
 
+/**
+ * Ordem de prioridade dos status — definida em escopo de módulo para que
+ * a referência seja estável entre renders e o `useMemo` do `sortedProjects`
+ * não pague o custo de realocar este objeto a cada execução.
+ */
+const STATUS_ORDER: Record<string, number> = {
+  active: 0,
+  paused: 1,
+  completed: 2,
+  cancelled: 3,
+};
+
 export default function MinhasObras() {
   const navigate = useNavigate();
   const { user } = useAuth();
