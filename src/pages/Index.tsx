@@ -164,25 +164,52 @@ const Index = () => {
   // so the bottom-nav highlight + the top TabsList always reflect the URL.
   const VISIBLE_TABS = ["cronograma", "evolucao", "relatorios"] as const;
   const urlTab = searchParams.get("tab");
+  const activeTabStorageKey = projectId
+    ? `mobileActiveTab:${projectId}`
+    : null;
 
   // URL -> state: when the user lands or hits back/forward, adopt the tab
-  // from the query string if it is a valid Index tab.
+  // from the query string if it is a valid Index tab. On mobile, if no ?tab
+  // is present, fall back to the value persisted in localStorage so a refresh
+  // restores the last selected tab.
   useEffect(() => {
-    if (!urlTab) return;
-    if (!(VISIBLE_TABS as readonly string[]).includes(urlTab)) return;
-    if (urlTab === activeTab) return;
-    setActiveTab(urlTab);
-  }, [urlTab, activeTab, setActiveTab]);
+    if (urlTab) {
+      if (!(VISIBLE_TABS as readonly string[]).includes(urlTab)) return;
+      if (urlTab === activeTab) return;
+      setActiveTab(urlTab);
+      return;
+    }
+    if (!isMobile || !activeTabStorageKey) return;
+    try {
+      const stored = localStorage.getItem(activeTabStorageKey);
+      if (!stored) return;
+      if (!(VISIBLE_TABS as readonly string[]).includes(stored)) return;
+      if (stored === activeTab) return;
+      setActiveTab(stored);
+    } catch {
+      // ignore storage access errors (private mode, quota, etc.)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlTab, isMobile, activeTabStorageKey]);
 
   // state -> URL: when the user toggles a tab on Index, mirror it to ?tab=
   // (replace, no extra history entries) so refresh and deep-links keep state.
+  // Also persist the selection in localStorage per project so it survives
+  // a hard reload on mobile.
   useEffect(() => {
     if (!(VISIBLE_TABS as readonly string[]).includes(activeTab)) return;
+    if (activeTabStorageKey) {
+      try {
+        localStorage.setItem(activeTabStorageKey, activeTab);
+      } catch {
+        // ignore storage access errors
+      }
+    }
     if (searchParams.get("tab") === activeTab) return;
     const next = new URLSearchParams(searchParams);
     next.set("tab", activeTab);
     setSearchParams(next, { replace: true });
-  }, [activeTab, searchParams, setSearchParams]);
+  }, [activeTab, searchParams, setSearchParams, activeTabStorageKey]);
 
 
   const handleExportPDF = useCallback(async () => {
