@@ -140,11 +140,12 @@ function StickyTableScroller({
   children,
   className,
   bottomGap = 16,
+  ...rest
 }: {
   children: React.ReactNode;
   className?: string;
   bottomGap?: number;
-}) {
+} & Omit<React.HTMLAttributes<HTMLDivElement>, "className" | "children" | "style">) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [maxH, setMaxH] = useState<number | null>(null);
 
@@ -173,6 +174,7 @@ function StickyTableScroller({
       ref={ref}
       className={cn("overflow-auto overscroll-contain", className)}
       style={maxH ? { maxHeight: `${maxH}px` } : undefined}
+      {...rest}
     >
       {children}
     </div>
