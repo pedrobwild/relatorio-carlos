@@ -176,18 +176,12 @@ export function useReportImageUpload() {
         }
       }
 
-      // Revoke old blob URLs to free memory (only for successfully uploaded)
-      photosToUpload.forEach((photo) => {
-        const updated = updatedGallery.find((p) => p.id === photo.id);
-        // Only revoke if URL changed (upload succeeded)
-        if (
-          updated &&
-          updated.url !== photo.url &&
-          photo.url.startsWith("blob:")
-        ) {
-          URL.revokeObjectURL(photo.url);
-        }
-      });
+      // Note: blob URLs are intentionally NOT revoked here. The editor still
+      // holds them in its local `formData` state — revoking before the editor
+      // syncs to the persisted URLs would (1) blank the preview and (2) make
+      // any subsequent re-upload attempt fail with `fetch(blob:...)` on a
+      // dead URL. The caller is responsible for revoking after replacing the
+      // blob URL in its local state with the persisted `path` + signed URL.
 
       if (failedCount > 0) {
         toast.error(

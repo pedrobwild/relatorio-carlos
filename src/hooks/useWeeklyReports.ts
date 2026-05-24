@@ -280,10 +280,10 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       weekStart: string,
       weekEnd: string,
       data: WeeklyReportData,
-    ) => {
+    ): Promise<WeeklyReportData | null> => {
       if (!projectId) {
         toast.error("Projeto não selecionado");
-        return;
+        return null;
       }
 
       setSavingWeek(weekNumber);
@@ -307,7 +307,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
 
           if (!success) {
             setSavingWeek(null);
-            return; // Upload failed, don't save with broken URLs
+            return null; // Upload failed, don't save with broken URLs
           }
           dataToSave = { ...data, gallery: photos };
         }
@@ -319,6 +319,10 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
         weekEnd,
         data: dataToSave,
       });
+
+      // Return the persisted shape so the editor can replace its in-memory
+      // blob URLs with the permanent signed URLs (and revoke the blobs).
+      return dataToSave;
     },
     [projectId, uploadGalleryPhotos, upsertMutation],
   );
