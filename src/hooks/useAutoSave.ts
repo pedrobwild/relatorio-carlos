@@ -3,7 +3,14 @@ import { toast } from "sonner";
 
 interface UseAutoSaveOptions<T> {
   data: T;
-  onSave: (data: T) => void | Promise<void>;
+  // `onSave` may optionally return the data shape that was actually
+  // persisted (e.g. when the save pipeline rewrites blob: URLs to
+  // permanent ones after upload). When a value is returned, it becomes
+  // the new "last saved" baseline — so the next change-detection cycle
+  // doesn't fire another save just because the local data was patched
+  // to match what the server stored. Return nothing (or void) when the
+  // saved shape equals the input.
+  onSave: (data: T) => void | T | Promise<void | T>;
   debounceMs?: number;
   enabled?: boolean;
 }
@@ -66,10 +73,16 @@ export function useAutoSave<T>({
     isSavingRef.current = true;
     try {
       setIsSaving(true);
-      await onSaveRef.current(currentData);
+      const result = await onSaveRef.current(currentData);
       setLastSaved(new Date());
-      // Update the "saved" reference so we don't trigger re-saves
-      previousSavedDataRef.current = currentSerialized;
+      // If onSave returned the persisted shape, use it as the new
+      // baseline so post-save reshaping (e.g. blob: → signed URL) doesn't
+      // trigger a phantom diff that re-fires the debounce or shows a
+      // bogus "unsaved changes" warning on beforeunload.
+      previousSavedDataRef.current =
+        result !== undefined && result !== null
+          ? JSON.stringify(result)
+          : currentSerialized;
     } catch (error) {
       console.error("Auto-save failed:", error);
       // IMPORTANT: Do NOT update previousSavedDataRef on error

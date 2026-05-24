@@ -111,6 +111,9 @@ export function useEditorState({
     onSave: async (payload) => {
       const result = await onAutoSave?.(payload);
       syncGalleryFromPersisted(result);
+      // Hand the persisted shape back to useAutoSave so it doesn't think
+      // the post-sync formData (blob: → signed URL) is an unsaved change.
+      return result ?? undefined;
     },
     debounceMs: 3000,
     enabled: !!onAutoSave,
@@ -317,6 +320,12 @@ export function useEditorState({
   ) => {
     const file = event.target.files?.[0];
     if (!file || !validateFile(file)) return;
+    // Revoke a previously-picked blob in the same slot (user replacing
+    // their selection before save) so it doesn't leak until tab close.
+    const previousUrl = formData.gallery[index]?.url;
+    if (previousUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previousUrl);
+    }
     const localUrl = URL.createObjectURL(file);
     updateGalleryPhoto(index, "url", localUrl);
     toast.success(
