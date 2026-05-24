@@ -15,8 +15,14 @@ import { AIReportGenerator } from "./AIReportGenerator";
 interface WeeklyReportEditorProps {
   data: WeeklyReportData;
   projectId?: string;
-  onAutoSave?: (updatedData: WeeklyReportData) => void | Promise<void>;
-  onSaveAndClose?: (updatedData: WeeklyReportData) => void;
+  // Handlers may return the persisted data so the editor can replace blob:
+  // URLs in its local state with the permanent signed URLs.
+  onAutoSave?: (
+    updatedData: WeeklyReportData,
+  ) => void | Promise<WeeklyReportData | null | undefined | void>;
+  onSaveAndClose?: (
+    updatedData: WeeklyReportData,
+  ) => void | Promise<WeeklyReportData | null | undefined | void>;
   onCancel?: () => void;
   isSaving?: boolean;
 }

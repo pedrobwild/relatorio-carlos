@@ -16,7 +16,11 @@ interface WeeklyReportTemplateProps {
   data: WeeklyReportData;
   isStaff?: boolean;
   projectId?: string;
-  onSaveReport?: (updatedData: WeeklyReportData) => void;
+  // May return the persisted data (with permanent media URLs) so the editor
+  // can sync blob: URLs to their uploaded counterparts.
+  onSaveReport?: (
+    updatedData: WeeklyReportData,
+  ) => void | Promise<WeeklyReportData | null | void>;
   isSaving?: boolean;
 }
 
@@ -54,16 +58,18 @@ const WeeklyReportTemplate = ({
     safeData.deliverablesCompleted.length > 0;
 
   const handleAutoSave = useCallback(
-    (updatedData: WeeklyReportData) => {
-      onSaveReport?.(updatedData);
+    async (updatedData: WeeklyReportData) => {
+      const result = await onSaveReport?.(updatedData);
+      return result ?? undefined;
     },
     [onSaveReport],
   );
 
   const handleSaveAndClose = useCallback(
-    (updatedData: WeeklyReportData) => {
+    async (updatedData: WeeklyReportData) => {
+      const result = await onSaveReport?.(updatedData);
       setIsEditing(false);
-      onSaveReport?.(updatedData);
+      return result ?? undefined;
     },
     [onSaveReport],
   );

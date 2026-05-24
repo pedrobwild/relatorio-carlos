@@ -12,8 +12,16 @@ import { toast } from "sonner";
 
 interface UseEditorStateOptions {
   data: WeeklyReportData;
-  onAutoSave?: (updatedData: WeeklyReportData) => void | Promise<void>;
-  onSaveAndClose?: (updatedData: WeeklyReportData) => void;
+  // When a handler returns the persisted WeeklyReportData (i.e. the upload
+  // pipeline replaced blob: URLs with permanent ones), the editor patches its
+  // local formData.gallery so previews stay valid and subsequent saves don't
+  // try to re-upload the same blobs.
+  onAutoSave?: (
+    updatedData: WeeklyReportData,
+  ) => void | Promise<WeeklyReportData | null | undefined | void>;
+  onSaveAndClose?: (
+    updatedData: WeeklyReportData,
+  ) => void | Promise<WeeklyReportData | null | undefined | void>;
   externalIsSaving?: boolean;
 }
 
@@ -71,10 +79,38 @@ export function useEditorState({
     [],
   );
 
+  // Replace blob: URLs in formData.gallery with the persisted url/path that
+  // came back from the save pipeline, matching by photo id. Revoke any blob
+  // URLs we just replaced so they don't leak memory.
+  const syncGalleryFromPersisted = useCallback(
+    (persisted: WeeklyReportData | null | undefined | void) => {
+      if (!persisted || !persisted.gallery) return;
+      const persistedById = new Map<string, GalleryPhoto>();
+      for (const p of persisted.gallery) persistedById.set(p.id, p);
+      setFormData((prev) => {
+        let mutated = false;
+        const toRevoke: string[] = [];
+        const nextGallery = prev.gallery.map((photo) => {
+          if (!photo.url?.startsWith("blob:")) return photo;
+          const saved = persistedById.get(photo.id);
+          if (!saved?.url || saved.url.startsWith("blob:")) return photo;
+          mutated = true;
+          toRevoke.push(photo.url);
+          return { ...photo, url: saved.url, path: saved.path ?? photo.path };
+        });
+        if (!mutated) return prev;
+        for (const url of toRevoke) URL.revokeObjectURL(url);
+        return { ...prev, gallery: nextGallery };
+      });
+    },
+    [],
+  );
+
   const { isSaving: autoSaving, lastSaved } = useAutoSave({
     data: formData,
     onSave: async (payload) => {
-      await onAutoSave?.(payload);
+      const result = await onAutoSave?.(payload);
+      syncGalleryFromPersisted(result);
     },
     debounceMs: 3000,
     enabled: !!onAutoSave,
@@ -82,7 +118,10 @@ export function useEditorState({
 
   const isSaving = externalIsSaving || autoSaving;
 
-  const handleSave = () => onSaveAndClose?.(formData);
+  const handleSave = async () => {
+    const result = await onSaveAndClose?.(formData);
+    syncGalleryFromPersisted(result);
+  };
 
   const updateExecutiveSummary = (value: string) => {
     setFormDataWithTracking((prev) => ({ ...prev, executiveSummary: value }));
