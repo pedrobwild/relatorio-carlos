@@ -335,7 +335,6 @@ function buildNotStartedTable(
   const head = [
     [
       "#",
-      "Etapa",
       "Atividade",
       "Início Previsto",
       "Término Previsto",
@@ -354,7 +353,6 @@ function buildNotStartedTable(
       counter++;
       body.push([
         counter,
-        group.etapa ?? "—",
         act.description,
         formatDate(act.planned_start),
         formatDate(act.planned_end),
@@ -385,12 +383,11 @@ function buildNotStartedTable(
     alternateRowStyles: { fillColor: ZEBRA_FILL },
     columnStyles: {
       0: { halign: "center", cellWidth: 10 },
-      1: { cellWidth: 45 },
-      2: { cellWidth: "auto" },
-      3: { halign: "center", cellWidth: 32 },
-      4: { halign: "center", cellWidth: 32 },
-      5: { halign: "center", cellWidth: 32 },
-      6: { halign: "right", cellWidth: 20 },
+      1: { cellWidth: "auto" },
+      2: { halign: "center", cellWidth: 35 },
+      3: { halign: "center", cellWidth: 35 },
+      4: { halign: "center", cellWidth: 35 },
+      5: { halign: "right", cellWidth: 22 },
     },
     rowPageBreak: "avoid",
     pageBreak: "auto",
