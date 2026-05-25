@@ -3,6 +3,13 @@ export type PortalViewState = {
   weeklyReport?: {
     open?: boolean;
     index?: number;
+    /**
+     * weekNumber é o identificador semântico do relatório semanal e
+     * sobrevive a mudanças de ordenação/quantidade de reports. Quando
+     * presente, a restauração tenta casar por weekNumber primeiro e cai
+     * pra index só como fallback (compat com estados antigos salvos).
+     */
+    weekNumber?: number;
   };
 };
 
