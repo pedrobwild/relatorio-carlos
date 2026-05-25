@@ -34,6 +34,22 @@ const WeeklyReportTemplate = ({
 }: WeeklyReportTemplateProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
+  useEffect(() => {
+    const mountedAt = performance.now();
+    reportLogger.log("template:mount", {
+      projectId,
+      weekNumber: data.weekNumber,
+      reportDate: data.reportDate,
+    });
+    return () => {
+      reportLogger.log("template:unmount", {
+        projectId,
+        weekNumber: data.weekNumber,
+        lifetimeMs: Math.round(performance.now() - mountedAt),
+      });
+    };
+  }, [projectId, data.weekNumber, data.reportDate]);
+
   // Defensive normalization: backend rows may omit some array fields
   const safeData: WeeklyReportData = {
     ...data,
