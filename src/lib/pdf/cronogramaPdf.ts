@@ -405,7 +405,6 @@ function buildInProgressTable(
   const head = [
     [
       "#",
-      "Etapa",
       "Atividade",
       "Início Prev.",
       "Término Prev.",
@@ -452,7 +451,6 @@ function buildInProgressTable(
 
       body.push([
         counter,
-        group.etapa ?? "—",
         act.description,
         formatDate(act.planned_start),
         formatDate(act.planned_end),
@@ -486,14 +484,13 @@ function buildInProgressTable(
     alternateRowStyles: { fillColor: ZEBRA_FILL },
     columnStyles: {
       0: { halign: "center", cellWidth: 10 },
-      1: { cellWidth: 32 },
-      2: { cellWidth: "auto" },
-      3: { halign: "center", cellWidth: 26 },
-      4: { halign: "center", cellWidth: 26 },
-      5: { halign: "center", cellWidth: 26 },
-      6: { halign: "center", cellWidth: 26 },
-      7: { halign: "right", cellWidth: 22 },
-      8: { halign: "center", cellWidth: 26 },
+      1: { cellWidth: "auto" },
+      2: { halign: "center", cellWidth: 28 },
+      3: { halign: "center", cellWidth: 28 },
+      4: { halign: "center", cellWidth: 28 },
+      5: { halign: "center", cellWidth: 28 },
+      6: { halign: "right", cellWidth: 22 },
+      7: { halign: "center", cellWidth: 26 },
     },
     didParseCell: (data) => {
       if (data.section !== "body") return;
