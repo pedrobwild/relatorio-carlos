@@ -750,7 +750,21 @@ const Index = () => {
                                 <Suspense
                                   key={`weekly-report-${projectId ?? "none"}-${weekNum}`}
                                   fallback={
-                                    <ContentSkeleton variant="report" />
+                                    <div
+                                      role="status"
+                                      aria-busy="true"
+                                      aria-label="Carregando relatório semanal"
+                                      className="space-y-6 animate-pulse"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+                                        <p className="text-sm font-medium text-muted-foreground">
+                                          Carregando relatório da semana{" "}
+                                          {weekNum}…
+                                        </p>
+                                      </div>
+                                      <ContentSkeleton variant="report" />
+                                    </div>
                                   }
                                 >
                                   <WeeklyReportTemplate
