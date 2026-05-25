@@ -19,6 +19,7 @@ import {
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
+import { CronogramaPdfButton } from "@/components/cronograma/CronogramaPdfButton";
 import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
 import {
   Sheet,
