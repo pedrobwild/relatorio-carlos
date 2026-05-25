@@ -425,18 +425,42 @@ export function useProjectPortal() {
   // navegar para outra área do app — o portal remonta e o ref também).
   const restoredWeeklyForKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (restoredWeeklyForKeyRef.current === viewStateKey) return;
-    if (reportsChronological.length === 0) return;
+    if (restoredWeeklyForKeyRef.current === viewStateKey) {
+      reportLogger.log("restore:skip (já restaurado para esta key)", {
+        viewStateKey,
+        reportsCount: reportsChronological.length,
+      });
+      return;
+    }
+    if (reportsChronological.length === 0) {
+      reportLogger.log("restore:wait (relatórios ainda não carregados)", {
+        viewStateKey,
+      });
+      return;
+    }
     const saved = getPortalViewState(viewStateKey);
-    if (
+    const savedIndex = saved.weeklyReport?.index;
+    const hasMatch =
       saved.weeklyReport?.open &&
-      typeof saved.weeklyReport?.index === "number" &&
-      reportsChronological[saved.weeklyReport.index]
-    ) {
+      typeof savedIndex === "number" &&
+      !!reportsChronological[savedIndex];
+
+    if (hasMatch) {
+      reportLogger.log("restore:apply (reabrindo weeklyReport salvo)", {
+        viewStateKey,
+        savedIndex,
+        reportsCount: reportsChronological.length,
+      });
       setActiveTab("relatorios");
-      setSelectedWeekIndex(saved.weeklyReport.index);
-      setSelectedWeeklyReport(reportsChronological[saved.weeklyReport.index]);
+      setSelectedWeekIndex(savedIndex as number);
+      setSelectedWeeklyReport(reportsChronological[savedIndex as number]);
     } else {
+      reportLogger.log("restore:clear (sem estado salvo válido)", {
+        viewStateKey,
+        savedOpen: saved.weeklyReport?.open,
+        savedIndex,
+        reportsCount: reportsChronological.length,
+      });
       // Garante que ao voltar sem estado salvo o detalhe não fique órfão
       // exibindo Suspense vazio de uma seleção antiga.
       setSelectedWeeklyReport(null);
