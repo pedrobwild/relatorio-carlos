@@ -27,7 +27,9 @@ export type AmplitudeEvent =
   | "next_action_clicked"
   // Mobile bottom-nav sync
   | "mobile_tab_synced"
-  | "mobile_tab_route_redirect";
+  | "mobile_tab_route_redirect"
+  // Cronograma export
+  | "cronograma_pdf_exported";
 
 export type AmplitudeProps = Record<
   string,

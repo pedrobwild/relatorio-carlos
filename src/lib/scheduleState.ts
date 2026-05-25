@@ -83,3 +83,17 @@ export function getActivityState(
 
 export const ACTIVITY_STATE_LABEL = LABEL;
 export const ACTIVITY_STATE_TONE = TONE;
+
+/**
+ * Considera a obra como "não iniciada" quando NENHUMA atividade tem
+ * `actual_start` preenchido. Aceita tanto o shape do banco (`actual_start`)
+ * quanto a forma camelCase (`actualStart`) usada em algumas camadas.
+ */
+export function isProjectNotStarted(
+  activities: Array<{ actual_start?: string | null; actualStart?: string | null }>,
+): boolean {
+  if (!activities || activities.length === 0) return true;
+  return activities.every(
+    (a) => !(a.actual_start ?? a.actualStart),
+  );
+}

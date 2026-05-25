@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getActivityState } from "../scheduleState";
+import { getActivityState, isProjectNotStarted } from "../scheduleState";
 
 describe("getActivityState", () => {
   // Reference date: 2025-07-20
@@ -68,6 +68,33 @@ describe("getActivityState", () => {
     expect(r.state).toBe("delayed");
     expect(r.tone).toBe("danger");
     expect(r.delayDays).toBe(10);
+  });
+
+  it("isProjectNotStarted returns true for empty list", () => {
+    expect(isProjectNotStarted([])).toBe(true);
+  });
+
+  it("isProjectNotStarted returns true when no activity has actual_start", () => {
+    expect(
+      isProjectNotStarted([
+        { actual_start: null },
+        { actual_start: null },
+      ]),
+    ).toBe(true);
+  });
+
+  it("isProjectNotStarted returns false when any activity has actual_start", () => {
+    expect(
+      isProjectNotStarted([
+        { actual_start: null },
+        { actual_start: "2025-07-15" },
+      ]),
+    ).toBe(false);
+  });
+
+  it("isProjectNotStarted accepts camelCase shape too", () => {
+    expect(isProjectNotStarted([{ actualStart: "2025-07-15" }])).toBe(false);
+    expect(isProjectNotStarted([{ actualStart: null }])).toBe(true);
   });
 
   it("reports delayDays for late completion but keeps state as completed", () => {

@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { ImportScheduleModal } from "@/components/ImportScheduleModal";
 import { CronogramaMobileView } from "@/components/cronograma/CronogramaMobileView";
+import { CronogramaPdfButton } from "@/components/cronograma/CronogramaPdfButton";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AssessorSheet } from "@/components/agent";
 import { cn } from "@/lib/utils";
@@ -615,7 +616,12 @@ const Cronograma = () => {
             { label: project?.name || "Obra", href: `/obra/${projectId}` },
             { label: "Cronograma" },
           ]}
-        />
+        >
+          <CronogramaPdfButton
+            project={project}
+            activities={existingActivities}
+          />
+        </PageHeader>
         <div className="max-w-lg mx-auto p-4">
           <CronogramaMobileView
             activities={existingActivities}
@@ -742,6 +748,10 @@ const Cronograma = () => {
             <Upload className="w-4 h-4 mr-1.5" />
             <span className="hidden sm:inline">Importar</span>
           </Button>
+          <CronogramaPdfButton
+            project={project}
+            activities={existingActivities}
+          />
           <AssessorSheet
             defaultEventType="schedule_request"
             placeholder="Ex: A demolição encontrou parede de tijolo maciço — qual o impacto no caminho crítico?"
