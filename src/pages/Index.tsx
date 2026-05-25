@@ -678,6 +678,12 @@ const Index = () => {
                         value="cronograma"
                         className="mt-0 focus-visible:outline-none"
                       >
+                        <div className="flex justify-end px-3 md:px-5 pt-3">
+                          <CronogramaPdfButton
+                            project={project}
+                            activities={projectActivities}
+                          />
+                        </div>
                         <ScheduleTable
                           activities={reportData.activities}
                           reportDate={reportData.reportDate}
