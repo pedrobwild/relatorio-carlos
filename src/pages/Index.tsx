@@ -76,6 +76,7 @@ const Index = () => {
     projectLoading,
     projectError,
     activitiesLoading,
+    projectActivities,
     isStaff,
     isAdmin: _isAdmin,
     canEditSchedule,
