@@ -600,6 +600,7 @@ export function useProjectPortal() {
     projectLoading,
     projectError,
     activitiesLoading,
+    projectActivities: dbActivities,
     isStaff,
     isCustomer,
     isAdmin,
