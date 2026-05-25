@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { reportLogger } from "@/lib/devLogger";
 import { WeeklyReportData } from "@/types/weeklyReport";
 import ExecutiveSummary from "./ExecutiveSummary";
 import LookaheadSection from "./LookaheadSection";
@@ -32,6 +33,21 @@ const WeeklyReportTemplate = ({
   isSaving = false,
 }: WeeklyReportTemplateProps) => {
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    const mountedAt = performance.now();
+    reportLogger.log("template:mount", {
+      projectId,
+      weekNumber: data.weekNumber,
+    });
+    return () => {
+      reportLogger.log("template:unmount", {
+        projectId,
+        weekNumber: data.weekNumber,
+        lifetimeMs: Math.round(performance.now() - mountedAt),
+      });
+    };
+  }, [projectId, data.weekNumber]);
 
   // Defensive normalization: backend rows may omit some array fields
   const safeData: WeeklyReportData = {
