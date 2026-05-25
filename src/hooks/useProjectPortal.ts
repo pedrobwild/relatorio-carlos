@@ -20,6 +20,7 @@ import {
 import { useWeeklyReports } from "@/hooks/useWeeklyReports";
 import { generateWeeklyReports } from "@/components/WeeklyReportsHistory";
 import type { MilestoneKey } from "@/components/ReportHeader";
+import { reportLogger } from "@/lib/devLogger";
 
 // Demo data for projects without real data yet
 const demoReportData: ReportData = {
