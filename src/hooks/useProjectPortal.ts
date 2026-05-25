@@ -539,7 +539,11 @@ export function useProjectPortal() {
       setActiveTab("relatorios");
       patchPortalViewState(viewStateKey, {
         activeTab: "relatorios",
-        weeklyReport: { open: true, index },
+        weeklyReport: {
+          open: true,
+          index,
+          weekNumber: report.weekNumber,
+        },
       });
     },
     [viewStateKey],
@@ -553,10 +557,15 @@ export function useProjectPortal() {
   const handlePreviousWeek = useCallback(() => {
     if (selectedWeekIndex > 0) {
       const newIndex = selectedWeekIndex - 1;
+      const nextReport = reportsChronological[newIndex];
       setSelectedWeekIndex(newIndex);
-      setSelectedWeeklyReport(reportsChronological[newIndex]);
+      setSelectedWeeklyReport(nextReport);
       patchPortalViewState(viewStateKey, {
-        weeklyReport: { open: true, index: newIndex },
+        weeklyReport: {
+          open: true,
+          index: newIndex,
+          weekNumber: nextReport?.weekNumber,
+        },
       });
     }
   }, [selectedWeekIndex, reportsChronological, viewStateKey]);
@@ -564,10 +573,15 @@ export function useProjectPortal() {
   const handleNextWeek = useCallback(() => {
     if (selectedWeekIndex < reportsChronological.length - 1) {
       const newIndex = selectedWeekIndex + 1;
+      const nextReport = reportsChronological[newIndex];
       setSelectedWeekIndex(newIndex);
-      setSelectedWeeklyReport(reportsChronological[newIndex]);
+      setSelectedWeeklyReport(nextReport);
       patchPortalViewState(viewStateKey, {
-        weeklyReport: { open: true, index: newIndex },
+        weeklyReport: {
+          open: true,
+          index: newIndex,
+          weekNumber: nextReport?.weekNumber,
+        },
       });
     }
   }, [selectedWeekIndex, reportsChronological, viewStateKey]);
