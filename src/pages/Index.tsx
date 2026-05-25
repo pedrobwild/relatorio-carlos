@@ -19,6 +19,7 @@ import {
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
+import { CronogramaPdfButton } from "@/components/cronograma/CronogramaPdfButton";
 import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
 import {
   Sheet,
@@ -76,6 +77,7 @@ const Index = () => {
     projectLoading,
     projectError,
     activitiesLoading,
+    projectActivities,
     isStaff,
     isAdmin: _isAdmin,
     canEditSchedule,
@@ -676,6 +678,12 @@ const Index = () => {
                         value="cronograma"
                         className="mt-0 focus-visible:outline-none"
                       >
+                        <div className="flex justify-end px-3 md:px-5 pt-3">
+                          <CronogramaPdfButton
+                            project={project}
+                            activities={projectActivities}
+                          />
+                        </div>
                         <ScheduleTable
                           activities={reportData.activities}
                           reportDate={reportData.reportDate}
