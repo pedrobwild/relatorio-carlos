@@ -444,25 +444,45 @@ export function useProjectPortal() {
     }
     const saved = getPortalViewState(viewStateKey);
     const savedIndex = saved.weeklyReport?.index;
-    const hasMatch =
+    const savedWeekNumber = saved.weeklyReport?.weekNumber;
+
+    // 1) Match preferencial por weekNumber (sobrevive a reordenações ou
+    //    inclusão de novos relatórios entre a navegação e o retorno).
+    let matchedIndex: number | null = null;
+    if (saved.weeklyReport?.open && typeof savedWeekNumber === "number") {
+      const idx = reportsChronological.findIndex(
+        (r) => r.weekNumber === savedWeekNumber,
+      );
+      if (idx >= 0) matchedIndex = idx;
+    }
+    // 2) Fallback por index (compat com estados antigos sem weekNumber).
+    if (
+      matchedIndex === null &&
       saved.weeklyReport?.open &&
       typeof savedIndex === "number" &&
-      !!reportsChronological[savedIndex];
+      reportsChronological[savedIndex]
+    ) {
+      matchedIndex = savedIndex;
+    }
 
-    if (hasMatch) {
+    if (matchedIndex !== null) {
       reportLogger.log("restore:apply (reabrindo weeklyReport salvo)", {
         viewStateKey,
         savedIndex,
+        savedWeekNumber,
+        matchedIndex,
+        matchedWeekNumber: reportsChronological[matchedIndex].weekNumber,
         reportsCount: reportsChronological.length,
       });
       setActiveTab("relatorios");
-      setSelectedWeekIndex(savedIndex as number);
-      setSelectedWeeklyReport(reportsChronological[savedIndex as number]);
+      setSelectedWeekIndex(matchedIndex);
+      setSelectedWeeklyReport(reportsChronological[matchedIndex]);
     } else {
       reportLogger.log("restore:clear (sem estado salvo válido)", {
         viewStateKey,
         savedOpen: saved.weeklyReport?.open,
         savedIndex,
+        savedWeekNumber,
         reportsCount: reportsChronological.length,
       });
       // Garante que ao voltar sem estado salvo o detalhe não fique órfão
