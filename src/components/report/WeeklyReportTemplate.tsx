@@ -39,7 +39,6 @@ const WeeklyReportTemplate = ({
     reportLogger.log("template:mount", {
       projectId,
       weekNumber: data.weekNumber,
-      reportDate: data.reportDate,
     });
     return () => {
       reportLogger.log("template:unmount", {
@@ -48,7 +47,7 @@ const WeeklyReportTemplate = ({
         lifetimeMs: Math.round(performance.now() - mountedAt),
       });
     };
-  }, [projectId, data.weekNumber, data.reportDate]);
+  }, [projectId, data.weekNumber]);
 
   // Defensive normalization: backend rows may omit some array fields
   const safeData: WeeklyReportData = {
