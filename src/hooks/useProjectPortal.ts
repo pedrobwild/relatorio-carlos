@@ -207,7 +207,11 @@ export function useProjectPortal() {
 
   useEffect(() => {
     patchPortalViewState(viewStateKey, {
-      weeklyReport: { open: !!selectedWeeklyReport, index: selectedWeekIndex },
+      weeklyReport: {
+        open: !!selectedWeeklyReport,
+        index: selectedWeekIndex,
+        weekNumber: selectedWeeklyReport?.weekNumber,
+      },
     });
   }, [viewStateKey, selectedWeeklyReport, selectedWeekIndex]);
 
