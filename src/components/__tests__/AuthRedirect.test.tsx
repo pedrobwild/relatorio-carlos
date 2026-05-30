@@ -29,14 +29,16 @@ vi.mock("@/lib/debugAuth", () => ({
 // AuthRedirect calls useProjectsQuery which would need a real QueryClient.
 // Stub it so the redirect logic runs without TanStack wiring.
 vi.mock("@/hooks/useProjectsQuery", () => ({
-  useProjectsQuery: () => ({ data: [], isLoading: false, error: null }),
+  useProjectsQuery: vi.fn(() => ({ data: [], isLoading: false, error: null })),
 }));
 
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, type AppRole } from "@/hooks/useUserRole";
+import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 
 const mockedUseAuth = vi.mocked(useAuth);
 const mockedUseUserRole = vi.mocked(useUserRole);
+const mockedUseProjectsQuery = vi.mocked(useProjectsQuery);
 
 // Helper to create mock role state
 const createMockRoleState = (roles: AppRole[], loading = false) => ({
@@ -55,6 +57,11 @@ const createMockRoleState = (roles: AppRole[], loading = false) => ({
 describe("AuthRedirect", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedUseProjectsQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as any);
   });
 
   it("should show loading spinner while checking auth", () => {
@@ -100,7 +107,7 @@ describe("AuthRedirect", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/gestao", { replace: true });
   });
 
-  it("should redirect customers to /minhas-obras", async () => {
+  it("should redirect customers with 0 projects to /minhas-obras", async () => {
     mockedUseAuth.mockReturnValue({
       isAuthenticated: true,
       loading: false,
@@ -109,6 +116,11 @@ describe("AuthRedirect", () => {
       signOut: vi.fn(),
     });
     mockedUseUserRole.mockReturnValue(createMockRoleState(["customer"]));
+    mockedUseProjectsQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as any);
 
     render(
       <MemoryRouter>
@@ -121,6 +133,69 @@ describe("AuthRedirect", () => {
     });
 
     expect(mockNavigate).toHaveBeenCalledWith("/minhas-obras", {
+      replace: true,
+    });
+  });
+
+  it("should redirect customers with multiple projects to /minhas-obras", async () => {
+    mockedUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      loading: false,
+      user: { id: "user-123", email: "customer@example.com" } as any,
+      session: {} as any,
+      signOut: vi.fn(),
+    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(["customer"]));
+    mockedUseProjectsQuery.mockReturnValue({
+      data: [
+        { id: "proj-1", status: "active" },
+        { id: "proj-2", status: "active" },
+      ],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(
+      <MemoryRouter>
+        <AuthRedirect />
+      </MemoryRouter>,
+    );
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith("/minhas-obras", {
+      replace: true,
+    });
+  });
+
+  it("should redirect customers with exactly 1 project directly to /obra/:id", async () => {
+    mockedUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      loading: false,
+      user: { id: "user-123", email: "customer@example.com" } as any,
+      session: {} as any,
+      signOut: vi.fn(),
+    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(["customer"]));
+    mockedUseProjectsQuery.mockReturnValue({
+      data: [{ id: "proj-abc", status: "active" }],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(
+      <MemoryRouter>
+        <AuthRedirect />
+      </MemoryRouter>,
+    );
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith("/obra/proj-abc", {
       replace: true,
     });
   });
