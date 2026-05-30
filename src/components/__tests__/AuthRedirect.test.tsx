@@ -34,9 +34,11 @@ vi.mock("@/hooks/useProjectsQuery", () => ({
 
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, type AppRole } from "@/hooks/useUserRole";
+import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 
 const mockedUseAuth = vi.mocked(useAuth);
 const mockedUseUserRole = vi.mocked(useUserRole);
+const mockedUseProjectsQuery = vi.mocked(useProjectsQuery);
 
 // Helper to create mock role state
 const createMockRoleState = (roles: AppRole[], loading = false) => ({
