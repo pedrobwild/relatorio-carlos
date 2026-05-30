@@ -57,6 +57,11 @@ const createMockRoleState = (roles: AppRole[], loading = false) => ({
 describe("AuthRedirect", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedUseProjectsQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as any);
   });
 
   it("should show loading spinner while checking auth", () => {
