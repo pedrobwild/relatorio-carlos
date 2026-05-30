@@ -12,7 +12,7 @@ import { useDashboardActivities } from "@/hooks/useDashboardActivities";
 import { DashboardStatsCards } from "@/pages/minhas-obras/DashboardStatsCards";
 import { UpcomingPaymentsCard } from "@/pages/minhas-obras/UpcomingPaymentsCard";
 import { ProjectDashboardCard } from "@/pages/minhas-obras/ProjectDashboardCard";
-import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
+
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { buildSupportWhatsappUrl } from "@/config/contact";
 import { differenceInDays, parseISO } from "date-fns";
@@ -191,14 +191,7 @@ export default function MinhasObras() {
               />
             ) : (
               <div className="space-y-5 sm:space-y-6">
-                {/* Cockpit "Ação necessária" — sempre acima dos stats/projetos */}
-                <ErrorBoundary
-                  name="NextActionsBlock"
-                  feature="general"
-                  fallback={null}
-                >
-                  <NextActionsBlock />
-                </ErrorBoundary>
+
 
                 {/* Pagamento urgente → promovido no mobile (acima da dobra) */}
                 {promotePaymentsOnMobile && (
