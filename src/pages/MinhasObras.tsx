@@ -12,7 +12,7 @@ import { useDashboardActivities } from "@/hooks/useDashboardActivities";
 import { DashboardStatsCards } from "@/pages/minhas-obras/DashboardStatsCards";
 import { UpcomingPaymentsCard } from "@/pages/minhas-obras/UpcomingPaymentsCard";
 import { ProjectDashboardCard } from "@/pages/minhas-obras/ProjectDashboardCard";
-import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
+
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { buildSupportWhatsappUrl } from "@/config/contact";
 import { differenceInDays, parseISO } from "date-fns";
