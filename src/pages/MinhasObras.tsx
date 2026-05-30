@@ -191,14 +191,7 @@ export default function MinhasObras() {
               />
             ) : (
               <div className="space-y-5 sm:space-y-6">
-                {/* Cockpit "Ação necessária" — sempre acima dos stats/projetos */}
-                <ErrorBoundary
-                  name="NextActionsBlock"
-                  feature="general"
-                  fallback={null}
-                >
-                  <NextActionsBlock />
-                </ErrorBoundary>
+
 
                 {/* Pagamento urgente → promovido no mobile (acima da dobra) */}
                 {promotePaymentsOnMobile && (
