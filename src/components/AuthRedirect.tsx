@@ -88,7 +88,16 @@ export function AuthRedirect() {
           navigate("/gestao", { replace: true });
         }
       } else if (isCustomer) {
-        navigate("/minhas-obras", { replace: true });
+        // Customer with exactly 1 project → go directly to that project
+        if (projects.length === 1) {
+          debugNav(
+            "AuthRedirect: customer with single project, redirecting directly",
+            { projectId: projects[0].id },
+          );
+          navigate(`/obra/${projects[0].id}`, { replace: true });
+        } else {
+          navigate("/minhas-obras", { replace: true });
+        }
       }
     }
   }, [
