@@ -213,7 +213,13 @@ export default function MinhasObras() {
                 {hasMultipleProjects && <DashboardStatsCards stats={stats} />}
 
                 {/* Main layout: projects list + sidebar */}
-                <div className="grid gap-5 sm:gap-6 lg:grid-cols-[1fr_280px]">
+                <div
+                  className={
+                    upcomingPayments.length > 0
+                      ? "grid gap-5 sm:gap-6 lg:grid-cols-[1fr_280px]"
+                      : "grid gap-5 sm:gap-6"
+                  }
+                >
                   {/* Projects List */}
                   <div className="space-y-3">
                     <h3 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
