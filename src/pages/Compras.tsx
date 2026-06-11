@@ -29,6 +29,7 @@ import {
   PurchaseFormDialog,
   DeletePurchaseDialog,
 } from "./compras/PurchaseFormDialog";
+import { BulkPurchaseRequestDialog } from "./compras/BulkPurchaseRequestDialog";
 import { PrestadorCalendar } from "./compras/PrestadorCalendar";
 import { getSubcategoriesByType } from "@/constants/supplierCategories";
 import type { PurchaseType } from "@/hooks/useProjectPurchases";
