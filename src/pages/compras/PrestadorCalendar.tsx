@@ -44,7 +44,10 @@ const PROJECT_COLORS = [
   "bg-orange-500/70 border-orange-500",
 ];
 
-export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
+export function PrestadorCalendar({
+  onNew,
+  onBulkNew,
+}: { onNew?: () => void; onBulkNew?: () => void } = {}) {
   const [weekOffset, setWeekOffset] = useState(0);
   const baseDate = useMemo(() => {
     const now = new Date();
@@ -139,12 +142,20 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
           Nenhum prestador com período de execução definido nesta faixa de
           datas.
         </p>
-        {onNew && (
-          <Button size="sm" onClick={onNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Prestador
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {onNew && (
+            <Button size="sm" onClick={onNew}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Prestador
+            </Button>
+          )}
+          {onBulkNew && (
+            <Button size="sm" variant="outline" onClick={onBulkNew}>
+              <Plus className="h-4 w-4 mr-2" />
+              Solicitar vários
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
@@ -186,8 +197,19 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
+            {onBulkNew && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs ml-2"
+                onClick={onBulkNew}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Solicitar vários
+              </Button>
+            )}
             {onNew && (
-              <Button size="sm" className="h-7 text-xs ml-2" onClick={onNew}>
+              <Button size="sm" className="h-7 text-xs ml-1" onClick={onNew}>
                 <Plus className="h-3.5 w-3.5 mr-1" />
                 Novo Prestador
               </Button>
