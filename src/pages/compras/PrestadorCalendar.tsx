@@ -142,12 +142,20 @@ export function PrestadorCalendar({
           Nenhum prestador com período de execução definido nesta faixa de
           datas.
         </p>
-        {onNew && (
-          <Button size="sm" onClick={onNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Prestador
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {onNew && (
+            <Button size="sm" onClick={onNew}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Prestador
+            </Button>
+          )}
+          {onBulkNew && (
+            <Button size="sm" variant="outline" onClick={onBulkNew}>
+              <Plus className="h-4 w-4 mr-2" />
+              Solicitar vários
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
