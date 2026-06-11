@@ -273,6 +273,10 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
               Importar do Orçamento
             </Button>
           )}
+          <Button variant="outline" onClick={() => setBulkOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Solicitar vários
+          </Button>
           <Button onClick={() => state.handleOpenDialog()}>
             <Plus className="h-4 w-4 mr-2" />
             Novo {label}
