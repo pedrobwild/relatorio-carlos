@@ -197,8 +197,19 @@ export function PrestadorCalendar({
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
+            {onBulkNew && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs ml-2"
+                onClick={onBulkNew}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Solicitar vários
+              </Button>
+            )}
             {onNew && (
-              <Button size="sm" className="h-7 text-xs ml-2" onClick={onNew}>
+              <Button size="sm" className="h-7 text-xs ml-1" onClick={onNew}>
                 <Plus className="h-3.5 w-3.5 mr-1" />
                 Novo Prestador
               </Button>
