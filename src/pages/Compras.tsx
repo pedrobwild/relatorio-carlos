@@ -321,6 +321,13 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         onOpenChange={() => state.setDeleteId(null)}
         onDelete={state.handleDelete}
       />
+
+      <BulkPurchaseRequestDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        defaultProjectId={state.projectId}
+        purchaseType={purchaseType}
+      />
     </div>
   );
 }
