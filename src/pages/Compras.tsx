@@ -35,6 +35,7 @@ import type { PurchaseType } from "@/hooks/useProjectPurchases";
 
 function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
   const state = useComprasState(purchaseType);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [syncing, setSyncing] = useState(false);
   const queryClient = useQueryClient();
