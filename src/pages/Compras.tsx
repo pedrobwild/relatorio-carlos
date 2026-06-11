@@ -29,12 +29,14 @@ import {
   PurchaseFormDialog,
   DeletePurchaseDialog,
 } from "./compras/PurchaseFormDialog";
+import { BulkPurchaseRequestDialog } from "./compras/BulkPurchaseRequestDialog";
 import { PrestadorCalendar } from "./compras/PrestadorCalendar";
 import { getSubcategoriesByType } from "@/constants/supplierCategories";
 import type { PurchaseType } from "@/hooks/useProjectPurchases";
 
 function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
   const state = useComprasState(purchaseType);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [syncing, setSyncing] = useState(false);
   const queryClient = useQueryClient();
@@ -271,6 +273,10 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
               Importar do Orçamento
             </Button>
           )}
+          <Button variant="outline" onClick={() => setBulkOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Solicitar vários
+          </Button>
           <Button onClick={() => state.handleOpenDialog()}>
             <Plus className="h-4 w-4 mr-2" />
             Novo {label}
@@ -314,6 +320,13 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         open={!!state.deleteId}
         onOpenChange={() => state.setDeleteId(null)}
         onDelete={state.handleDelete}
+      />
+
+      <BulkPurchaseRequestDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        defaultProjectId={state.projectId}
+        purchaseType={purchaseType}
       />
     </div>
   );
