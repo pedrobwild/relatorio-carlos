@@ -44,7 +44,10 @@ const PROJECT_COLORS = [
   "bg-orange-500/70 border-orange-500",
 ];
 
-export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
+export function PrestadorCalendar({
+  onNew,
+  onBulkNew,
+}: { onNew?: () => void; onBulkNew?: () => void } = {}) {
   const [weekOffset, setWeekOffset] = useState(0);
   const baseDate = useMemo(() => {
     const now = new Date();
