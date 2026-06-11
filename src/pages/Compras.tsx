@@ -149,7 +149,10 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
     <div className="space-y-5 py-4">
       {/* Calendar view for prestadores */}
       {purchaseType === "prestador" && (
-        <PrestadorCalendar onNew={() => state.handleOpenDialog()} />
+        <PrestadorCalendar
+          onNew={() => state.handleOpenDialog()}
+          onBulkNew={() => setBulkOpen(true)}
+        />
       )}
 
       <PurchaseAlertsPanel
