@@ -48,10 +48,11 @@ const newItem = (): BulkItem => ({
   required_by_date: "",
 });
 
-interface DraftState {
+type DraftState = {
   projectId: string;
   items: BulkItem[];
-}
+  [key: string]: unknown;
+};
 
 interface Props {
   open: boolean;
