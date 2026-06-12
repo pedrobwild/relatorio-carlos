@@ -283,7 +283,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
     ): Promise<WeeklyReportData | null> => {
       if (!projectId) {
         toast.error("Projeto não selecionado");
-        return null;
+        throw new Error("Projeto não selecionado");
       }
 
       setSavingWeek(weekNumber);
@@ -307,13 +307,19 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
 
           if (!success) {
             setSavingWeek(null);
-            return null; // Upload failed, don't save with broken URLs
+            // Throw so useAutoSave keeps the previous baseline and the
+            // user's edits are not silently marked as saved.
+            throw new Error("Falha ao enviar fotos/vídeos");
           }
           dataToSave = { ...data, gallery: photos };
         }
       }
 
-      upsertMutation.mutate({
+      // IMPORTANT: await the upsert (mutateAsync) so failures propagate
+      // back to useAutoSave. Using fire-and-forget mutate() caused silent
+      // data loss — the editor marked the data as persisted before the DB
+      // write actually completed (or failed via RLS / network).
+      await upsertMutation.mutateAsync({
         weekNumber,
         weekStart,
         weekEnd,
