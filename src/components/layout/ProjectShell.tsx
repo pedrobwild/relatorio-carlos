@@ -64,12 +64,14 @@ export function ProjectShell({ children }: ProjectShellProps) {
           <ProjectMobileHeader />
           {isSwitching && <ProjectSwitchOverlay />}
           <div className="pb-bottom-nav">
-            {/* Hold page content until the project resolves. Rendering a page
-                against a null project mid-switch is the main source of crashes
-                when trocando de obra; the overlay above covers the gap. */}
-            {!isSwitching && (
-              <ProjectRouteTransition>{children}</ProjectRouteTransition>
-            )}
+            {/* Keep ProjectRouteTransition mounted across the switch so its
+                scroll-reset effect still runs; only gate the page content so
+                we never render a page against a null project mid-switch (the
+                main source of crashes when trocando de obra). The overlay
+                above covers the gap. */}
+            <ProjectRouteTransition>
+              {isSwitching ? null : children}
+            </ProjectRouteTransition>
           </div>
         </div>
         <MobileBottomNav />
@@ -95,14 +97,12 @@ export function ProjectShell({ children }: ProjectShellProps) {
               ref={mainRef}
               className="flex-1 overflow-y-auto pb-bottom-nav"
             >
-              {/* See client branch: don't render the page while the project is
-                  still loading on a switch — the overlay covers the gap and we
-                  avoid rendering a page against a null project. */}
-              {!isSwitching && (
-                <ProjectRouteTransition scrollTargetRef={mainRef}>
-                  {children}
-                </ProjectRouteTransition>
-              )}
+              {/* See client branch: keep the transition mounted so the scroll
+                  reset still fires when switching obras; only gate the page
+                  content to avoid rendering against a null project. */}
+              <ProjectRouteTransition scrollTargetRef={mainRef}>
+                {isSwitching ? null : children}
+              </ProjectRouteTransition>
             </main>
           </div>
         </div>
