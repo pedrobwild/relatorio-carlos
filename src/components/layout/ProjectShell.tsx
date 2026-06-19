@@ -64,7 +64,12 @@ export function ProjectShell({ children }: ProjectShellProps) {
           <ProjectMobileHeader />
           {isSwitching && <ProjectSwitchOverlay />}
           <div className="pb-bottom-nav">
-            <ProjectRouteTransition>{children}</ProjectRouteTransition>
+            {/* Hold page content until the project resolves. Rendering a page
+                against a null project mid-switch is the main source of crashes
+                when trocando de obra; the overlay above covers the gap. */}
+            {!isSwitching && (
+              <ProjectRouteTransition>{children}</ProjectRouteTransition>
+            )}
           </div>
         </div>
         <MobileBottomNav />
@@ -90,9 +95,14 @@ export function ProjectShell({ children }: ProjectShellProps) {
               ref={mainRef}
               className="flex-1 overflow-y-auto pb-bottom-nav"
             >
-              <ProjectRouteTransition scrollTargetRef={mainRef}>
-                {children}
-              </ProjectRouteTransition>
+              {/* See client branch: don't render the page while the project is
+                  still loading on a switch — the overlay covers the gap and we
+                  avoid rendering a page against a null project. */}
+              {!isSwitching && (
+                <ProjectRouteTransition scrollTargetRef={mainRef}>
+                  {children}
+                </ProjectRouteTransition>
+              )}
             </main>
           </div>
         </div>

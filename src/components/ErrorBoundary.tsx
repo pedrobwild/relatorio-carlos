@@ -11,6 +11,13 @@ interface Props {
   fallback?: ReactNode;
   /** Optional name for this boundary (for logging) */
   name?: string;
+  /**
+   * When any value in this array changes (shallow compare), a boundary that is
+   * currently showing the error UI automatically recovers and re-renders its
+   * children. Pass the current route here so a transient render crash during
+   * navigation doesn't wedge the whole screen until a manual reload.
+   */
+  resetKeys?: unknown[];
   /** Feature context for error tracking */
   feature?:
     | "auth"
@@ -81,6 +88,26 @@ export class ErrorBoundary extends Component<Props, State> {
       console.error("Correlation ID:", this.state.errorId);
       console.groupEnd();
       /* eslint-enable no-console */
+    }
+  }
+
+  public componentDidUpdate(prevProps: Props) {
+    // Auto-recover when a reset key changes (e.g. the user navigated). Without
+    // this, once a boundary catches an error it stays on the fallback screen
+    // forever — so a single transient crash makes every later page look broken
+    // until the user manually reloads.
+    if (!this.state.hasError) return;
+
+    const { resetKeys } = this.props;
+    if (!resetKeys) return;
+
+    const prevKeys = prevProps.resetKeys ?? [];
+    const changed =
+      resetKeys.length !== prevKeys.length ||
+      resetKeys.some((key, i) => !Object.is(key, prevKeys[i]));
+
+    if (changed) {
+      this.setState({ hasError: false, error: undefined, errorId: undefined });
     }
   }
 
