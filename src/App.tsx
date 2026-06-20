@@ -4,7 +4,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import {
   ProtectedRoute,
   StaffRoute,
@@ -112,14 +118,24 @@ const persister = createQueryPersister();
 // Cache max age: 24 hours
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
-// Wrapper component to provide project context + staff sidebar shell
-const ProjectPage = ({ children }: { children: React.ReactNode }) => (
-  <ErrorBoundary name="ProjectPage" feature="general">
-    <ProjectProvider>
-      <AppShell variant="project">{children}</AppShell>
-    </ProjectProvider>
-  </ErrorBoundary>
-);
+// Wrapper component to provide project context + staff sidebar shell.
+// `resetKeys={[pathname]}` lets the boundary auto-recover on navigation: a
+// transient render crash while switching obras/abas clears itself on the next
+// route change instead of pinning the user to the full-screen error.
+const ProjectPage = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  return (
+    <ErrorBoundary
+      name="ProjectPage"
+      feature="general"
+      resetKeys={[location.pathname]}
+    >
+      <ProjectProvider>
+        <AppShell variant="project">{children}</AppShell>
+      </ProjectProvider>
+    </ErrorBoundary>
+  );
+};
 
 const RouteFallback = () => (
   <div className="min-h-screen flex items-center justify-center">

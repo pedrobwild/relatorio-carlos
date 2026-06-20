@@ -96,6 +96,45 @@ describe("ErrorBoundary", () => {
     const detailsElement = getByText("Detalhes técnicos (apenas dev)");
     expect(detailsElement).toBeInTheDocument();
   });
+
+  it("auto-recovers when resetKeys change (e.g. navigation)", () => {
+    const { getByText, queryByText, rerender } = render(
+      <ErrorBoundary resetKeys={["/obra/a/cronograma"]}>
+        <ThrowingComponent shouldThrow />
+      </ErrorBoundary>,
+    );
+
+    expect(getByText("Algo deu errado")).toBeInTheDocument();
+
+    // Simulate navigating to another route where the child no longer throws.
+    rerender(
+      <ErrorBoundary resetKeys={["/obra/b/cronograma"]}>
+        <ThrowingComponent shouldThrow={false} />
+      </ErrorBoundary>,
+    );
+
+    expect(queryByText("Algo deu errado")).not.toBeInTheDocument();
+    expect(getByText("No error")).toBeInTheDocument();
+  });
+
+  it("stays in error state when resetKeys are unchanged", () => {
+    const { getByText, rerender } = render(
+      <ErrorBoundary resetKeys={["/obra/a/cronograma"]}>
+        <ThrowingComponent shouldThrow />
+      </ErrorBoundary>,
+    );
+
+    expect(getByText("Algo deu errado")).toBeInTheDocument();
+
+    // Same key → no navigation happened → boundary must not silently recover.
+    rerender(
+      <ErrorBoundary resetKeys={["/obra/a/cronograma"]}>
+        <ThrowingComponent shouldThrow={false} />
+      </ErrorBoundary>,
+    );
+
+    expect(getByText("Algo deu errado")).toBeInTheDocument();
+  });
 });
 
 describe("ErrorFallback", () => {
