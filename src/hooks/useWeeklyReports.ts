@@ -290,6 +290,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
 
       // Upload any blob URLs to permanent storage before saving
       let dataToSave = data;
+      let uploadFailed = false;
       if (data.gallery && data.gallery.length > 0) {
         const hasBlobUrls = data.gallery.some((p) =>
           p.url?.startsWith("blob:"),
@@ -305,13 +306,13 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
           );
           toast.dismiss("uploading-photos");
 
-          if (!success) {
-            setSavingWeek(null);
-            // Throw so useAutoSave keeps the previous baseline and the
-            // user's edits are not silently marked as saved.
-            throw new Error("Falha ao enviar fotos/vídeos");
-          }
+          // Always persist whatever uploaded successfully — photos that
+          // got permanent URLs are removed from the blob: set so the next
+          // retry only re-uploads what still failed. Previously we aborted
+          // the entire save on any failure, which caused successful uploads
+          // to "live" in storage but never reach the DB row (n_photos=0).
           dataToSave = { ...data, gallery: photos };
+          uploadFailed = !success;
         }
       }
 
@@ -319,12 +320,25 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       // back to useAutoSave. Using fire-and-forget mutate() caused silent
       // data loss — the editor marked the data as persisted before the DB
       // write actually completed (or failed via RLS / network).
-      await upsertMutation.mutateAsync({
-        weekNumber,
-        weekStart,
-        weekEnd,
-        data: dataToSave,
-      });
+      try {
+        await upsertMutation.mutateAsync({
+          weekNumber,
+          weekStart,
+          weekEnd,
+          data: dataToSave,
+        });
+      } catch (err) {
+        setSavingWeek(null);
+        throw err;
+      }
+
+      // If any upload failed, throw AFTER persisting the partial success
+      // so useAutoSave keeps the still-blob photos as "unsaved" and
+      // retries on the next change/visibility event.
+      if (uploadFailed) {
+        setSavingWeek(null);
+        throw new Error("Algumas fotos não foram enviadas. Tente novamente.");
+      }
 
       // Return the persisted shape so the editor can replace its in-memory
       // blob URLs with the permanent signed URLs (and revoke the blobs).
