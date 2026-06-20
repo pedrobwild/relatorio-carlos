@@ -122,8 +122,14 @@ export function useEditorState({
   const isSaving = externalIsSaving || autoSaving;
 
   const handleSave = async () => {
-    const result = await onSaveAndClose?.(formData);
-    syncGalleryFromPersisted(result);
+    try {
+      const result = await onSaveAndClose?.(formData);
+      syncGalleryFromPersisted(result);
+    } catch (err) {
+      // Toast is already shown by the save pipeline; swallow to avoid
+      // unhandled promise rejections in React event handlers.
+      console.error("Manual save failed:", err);
+    }
   };
 
   const updateExecutiveSummary = (value: string) => {
