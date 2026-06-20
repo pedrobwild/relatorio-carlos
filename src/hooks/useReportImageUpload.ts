@@ -100,16 +100,19 @@ export function useReportImageUpload() {
 
           const extension = getExtensionFromMimeType(mimeType);
 
-          // Create unique filename with projectId as first segment (required by RLS)
-          const timestamp = Date.now();
-          const filename = `${projectId}/${user.id}/week-${weekNumber}/${photo.id}-${timestamp}${extension}`;
+          // Deterministic filename per photo id (no timestamp). Allows
+          // idempotent retries via upsert: true. On mobile networks the
+          // upload frequently completes server-side but the response never
+          // reaches the client, causing the client to retry and create
+          // duplicates while the DB row never advances.
+          const filename = `${projectId}/${user.id}/week-${weekNumber}/${photo.id}${extension}`;
 
-          // Upload to storage
+          // Upload to storage (upsert so retries don't duplicate)
           const { data, error } = await supabase.storage
             .from("weekly-reports")
             .upload(filename, blob, {
               contentType: mimeType,
-              upsert: false,
+              upsert: true,
             });
 
           if (error) {
