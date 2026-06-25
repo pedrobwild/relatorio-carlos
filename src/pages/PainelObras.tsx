@@ -542,6 +542,13 @@ export default function PainelObras() {
   // Filtro de período (atividades do cronograma) — restringe a lista a obras
   // que possuem atividades planejadas com janela sobrepondo [from, to].
   // Default: desligado (null em ambos), mostrando todas as obras independente de cronograma.
+  const defaultPeriod = useMemo(() => {
+    const now = new Date();
+    return {
+      from: format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+      to: format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+    };
+  }, []);
   const [periodFrom, setPeriodFrom] = useState<string | null>(null);
   const [periodTo, setPeriodTo] = useState<string | null>(null);
   const periodActive = !!periodFrom && !!periodTo;
