@@ -171,8 +171,12 @@ export function useCreateCsTicketAction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: CsTicketActionInput) => {
-      const { data: auth } = await supabase.auth.getUser();
-      const uid = auth.user?.id;
+      // Sessão local (sem round-trip de rede) — evita travar a criação caso a
+      // chamada /auth/v1/user demore. Ver nota em useCreateCsTicket.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
       if (!uid) throw new Error("Usuário não autenticado.");
 
       // posiciona ao final

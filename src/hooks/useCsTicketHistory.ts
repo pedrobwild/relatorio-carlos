@@ -91,6 +91,14 @@ export function useAddCsTicketComment() {
       ticketId: string;
       notes: string;
     }) => {
+      // Mantemos getUser() (verificado no servidor) DE PROPÓSITO aqui: a
+      // policy de INSERT em cs_ticket_history exige apenas is_staff(auth.uid())
+      // e NÃO força actor_id = auth.uid(). Como actor_id é a trilha de
+      // auditoria (autor do comentário), precisamos do uid verificado —
+      // getSession() leria do armazenamento local, que poderia ser adulterado
+      // para atribuir o comentário a outro usuário. (Em useCreateCsTicket /
+      // useCreateCsTicketAction usamos getSession porque ali a policy exige
+      // created_by = auth.uid(), então o servidor já garante a identidade.)
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth.user?.id;
       if (!uid) throw new Error("Usuário não autenticado.");

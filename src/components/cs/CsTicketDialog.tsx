@@ -144,6 +144,10 @@ export function CsTicketDialog({
         },
       });
     } else {
+      const responsibleName =
+        responsibleId != null
+          ? (staff.find((s) => s.id === responsibleId)?.nome ?? null)
+          : null;
       const payload: CsTicketInput = {
         project_id: projectId,
         situation: situation.trim(),
@@ -152,6 +156,11 @@ export function CsTicketDialog({
         status,
         action_plan: actionPlan.trim() || null,
         responsible_user_id: responsibleId,
+        // Campos somente de exibição: permitem a atualização otimista da
+        // lista refletir nome da obra/cliente/responsável de imediato.
+        project_name: selectedProject?.name ?? null,
+        customer_name: selectedProject?.customer_name ?? null,
+        responsible_name: responsibleName,
       };
       await create.mutateAsync(payload);
     }
