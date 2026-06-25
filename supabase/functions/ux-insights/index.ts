@@ -92,7 +92,7 @@ Gere entre 5 e 10 sugestões organizadas nas 3 categorias. TODAS as sugestões d
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-6",
           max_tokens: 4096,
           system: SYSTEM_PROMPT,
           messages: [
