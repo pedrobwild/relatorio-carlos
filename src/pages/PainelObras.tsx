@@ -460,17 +460,20 @@ export default function PainelObras() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Fase exibida: obras em execução (default) ou em fase de projeto.
-  // Persistida em URL via ?fase=projetos para compartilhar/voltar na visão.
+  // Fase exibida: obras em execução, fase de projeto, ou ambas (default).
+  // Persistida em URL via ?fase=obras ou ?fase=projetos para compartilhar/voltar na visão.
   const faseParam = searchParams.get("fase");
-  const fase: "obras" | "projetos" =
-    faseParam === "projetos" ? "projetos" : "obras";
-  const handleFaseChange = (next: "obras" | "projetos") => {
+  const fase: "todas" | "obras" | "projetos" =
+    faseParam === "obras" ? "obras" : faseParam === "projetos" ? "projetos" : "todas";
+  const handleFaseChange = (next: "todas" | "obras" | "projetos") => {
     const params = new URLSearchParams(searchParams);
-    if (next === "obras") params.delete("fase");
+    if (next === "todas") params.delete("fase");
     else params.set("fase", next);
     setSearchParams(params, { replace: true });
   };
+
+  const matchesFase = (o: PainelObra) =>
+    fase === "todas" ? true : fase === "projetos" ? o.is_project_phase : !o.is_project_phase;
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
@@ -536,12 +539,9 @@ export default function PainelObras() {
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
   const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
 
-  /**
-   * Filtro de período (atividades do cronograma) — restringe a lista a obras
-   * que possuem atividades planejadas com janela sobrepondo [from, to].
-   * Default: semana corrente (segunda a domingo). `null` em ambos = filtro
-   * desligado (mostra todas as obras independente de cronograma).
-   */
+  // Filtro de período (atividades do cronograma) — restringe a lista a obras
+  // que possuem atividades planejadas com janela sobrepondo [from, to].
+  // Default: desligado (null em ambos), mostrando todas as obras independente de cronograma.
   const defaultPeriod = useMemo(() => {
     const now = new Date();
     return {
@@ -549,10 +549,8 @@ export default function PainelObras() {
       to: format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
     };
   }, []);
-  const [periodFrom, setPeriodFrom] = useState<string | null>(
-    defaultPeriod.from,
-  );
-  const [periodTo, setPeriodTo] = useState<string | null>(defaultPeriod.to);
+  const [periodFrom, setPeriodFrom] = useState<string | null>(null);
+  const [periodTo, setPeriodTo] = useState<string | null>(null);
   const periodActive = !!periodFrom && !!periodTo;
   const { byProject: periodByProject, isLoading: periodLoading } =
     usePainelPeriodActivities(periodFrom, periodTo);
@@ -701,10 +699,8 @@ export default function PainelObras() {
   };
 
   const filtered = useMemo(() => {
-    // Separa obras (execução) de projetos (fase de projeto). Default: obras.
-    let rows = obras.filter((o) =>
-      fase === "projetos" ? o.is_project_phase : !o.is_project_phase,
-    );
+    // Separa obras (execução) de projetos (fase de projeto). Default: todas.
+    let rows = obras.filter(matchesFase);
     if (search.trim()) {
       rows = rows.filter((o) =>
         matchesSearch(search, [o.nome, o.customer_name, o.responsavel_nome]),
@@ -834,9 +830,7 @@ export default function PainelObras() {
    * obras já carregadas (sem nova query) e respeitando a fase atual.
    */
   const cockpitMetrics = useMemo(() => {
-    const inFase = obras.filter((o) =>
-      fase === "projetos" ? o.is_project_phase : !o.is_project_phase,
-    );
+    const inFase = obras.filter(matchesFase);
     const todayIso = format(new Date(), "yyyy-MM-dd");
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
@@ -955,20 +949,42 @@ export default function PainelObras() {
       <PageContainer maxWidth="screen">
         <PageHeader
           eyebrow="Operações"
-          title={fase === "projetos" ? "Painel de Projetos" : "Painel de Obras"}
+          title={
+            fase === "projetos"
+              ? "Painel de Projetos"
+              : fase === "obras"
+                ? "Painel de Obras"
+                : "Painel de Obras e Projetos"
+          }
           description={
             fase === "projetos"
               ? "Empreendimentos em fase de projeto — anteprojeto, executivo e aprovações antes da execução em campo."
-              : "Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
+              : fase === "obras"
+                ? "Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
+                : "Visão unificada de obras em execução e empreendimentos em fase de projeto."
           }
           actions={
             <div className="hidden md:flex items-center gap-2">
-              {/* Toggle de fase: Obras (execução) | Projetos (fase de projeto) */}
+              {/* Toggle de fase: Todas | Obras (execução) | Projetos (fase de projeto) */}
               <div
                 role="tablist"
                 aria-label="Alternar entre obras e projetos"
                 className="inline-flex h-8 rounded-md border border-border-subtle bg-surface p-0.5"
               >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={fase === "todas"}
+                  onClick={() => handleFaseChange("todas")}
+                  className={cn(
+                    "h-7 px-3 rounded-[5px] text-xs font-medium transition-colors",
+                    fase === "todas"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  Todas
+                </button>
                 <button
                   type="button"
                   role="tab"
@@ -1022,13 +1038,27 @@ export default function PainelObras() {
           className="!pt-4 !pb-3 md:!pt-5 md:!pb-3 [&_h1]:!text-lg [&_h1]:md:!text-xl"
         />
 
-        {/* Mobile: toggle Obras/Projetos compacto acima da listagem */}
+        {/* Mobile: toggle Todas/Obras/Projetos compacto acima da listagem */}
         <div className="md:hidden mt-2">
           <div
             role="tablist"
             aria-label="Alternar entre obras e projetos"
             className="inline-flex h-9 rounded-md border border-border-subtle bg-surface p-0.5 w-full"
           >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={fase === "todas"}
+              onClick={() => handleFaseChange("todas")}
+              className={cn(
+                "flex-1 h-8 rounded-[5px] text-sm font-medium transition-colors",
+                fase === "todas"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground",
+              )}
+            >
+              Todas
+            </button>
             <button
               type="button"
               role="tab"

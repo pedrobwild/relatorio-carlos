@@ -6,7 +6,7 @@
  * ordem canônica das etapas vinda de `ETAPA_OPTIONS`.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, within } from "@testing-library/react";
+import { render, within, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -598,6 +598,18 @@ describe("PainelObras — ordenação por data de entrega oficial", () => {
         <PainelObras />
       </Wrapper>,
     );
+
+    // Ativa o filtro de período (default agora é desligado; usamos preset "Esta semana").
+    const periodButton = container.querySelector(
+      '[aria-label="Filtrar por período de atividades"]',
+    );
+    expect(periodButton).not.toBeNull();
+    fireEvent.click(periodButton!);
+    const estaSemanaBtn = Array.from(document.querySelectorAll("button")).find(
+      (b) => b.textContent?.trim() === "Esta semana",
+    );
+    expect(estaSemanaBtn).toBeDefined();
+    fireEvent.click(estaSemanaBtn!);
 
     const desktopTh = container.querySelector(
       '[data-testid="painel-obras-th-cliente"]',
