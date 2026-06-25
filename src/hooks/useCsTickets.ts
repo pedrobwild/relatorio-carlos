@@ -72,6 +72,10 @@ export function useCsTickets() {
   return useQuery({
     queryKey: csTicketKeys.list(),
     queryFn: async (): Promise<CsTicket[]> => {
+      // NOTA: cs_tickets.responsible_user_id e cs_tickets.created_by
+      // referenciam auth.users, não public.users_profile. Por isso não
+      // podemos usar embed PostgREST aqui (PGRST200). Buscamos os perfis
+      // separadamente e fazemos o merge em memória.
       const { data, error } = await supabase
         .from("cs_tickets")
         .select(
@@ -79,15 +83,31 @@ export function useCsTickets() {
           id, project_id, situation, description, severity, status,
           action_plan, responsible_user_id, created_by, resolved_at,
           created_at, updated_at,
-          project:projects ( id, name, customer_name ),
-          responsible:users_profile!cs_tickets_responsible_user_id_fkey ( id, nome )
+          project:projects ( id, name, customer_name )
           `,
         )
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      return (data ?? []).map((row: any) => ({
+      const rows = (data ?? []) as any[];
+      const responsibleIds = Array.from(
+        new Set(
+          rows.map((r) => r.responsible_user_id).filter(Boolean) as string[],
+        ),
+      );
+      let nameMap: Record<string, string> = {};
+      if (responsibleIds.length) {
+        const { data: profiles } = await supabase
+          .from("users_profile")
+          .select("id, nome")
+          .in("id", responsibleIds);
+        nameMap = Object.fromEntries(
+          (profiles ?? []).map((p: any) => [p.id, p.nome]),
+        );
+      }
+
+      return rows.map((row) => ({
         id: row.id,
         project_id: row.project_id,
         project_name: row.project?.name ?? null,
@@ -98,7 +118,9 @@ export function useCsTickets() {
         status: row.status,
         action_plan: row.action_plan,
         responsible_user_id: row.responsible_user_id,
-        responsible_name: row.responsible?.nome ?? null,
+        responsible_name: row.responsible_user_id
+          ? (nameMap[row.responsible_user_id] ?? null)
+          : null,
         created_by: row.created_by,
         resolved_at: row.resolved_at,
         created_at: row.created_at,
