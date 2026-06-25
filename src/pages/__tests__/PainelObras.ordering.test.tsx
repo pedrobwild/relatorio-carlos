@@ -6,7 +6,7 @@
  * ordem canônica das etapas vinda de `ETAPA_OPTIONS`.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, within } from "@testing-library/react";
+import { render, within, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
