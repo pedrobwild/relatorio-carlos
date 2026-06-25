@@ -599,6 +599,26 @@ describe("PainelObras — ordenação por data de entrega oficial", () => {
       </Wrapper>,
     );
 
+    // Ativa o filtro de período (default agora é desligado; usamos preset "Esta semana").
+    const periodButton = container.querySelector(
+      '[aria-label="Filtrar por período de atividades"]',
+    );
+    expect(periodButton).not.toBeNull();
+    fireEvent.click(periodButton!);
+    const thisWeekButton = container.querySelector(
+      '[aria-label="Filtrar por período de atividades"]',
+    )?.closest("body")?.querySelector("button:has(> *:contains('Esta semana'))") ??
+      null;
+    // Fallback: procura botão com texto exato "Esta semana" no documento.
+    const estaSemanaBtn =
+      thisWeekButton ??
+      document.querySelector("button")?.closest("body")?.querySelector("button");
+    const targetBtn = Array.from(document.querySelectorAll("button")).find(
+      (b) => b.textContent?.trim() === "Esta semana",
+    );
+    expect(targetBtn).toBeDefined();
+    fireEvent.click(targetBtn!);
+
     const desktopTh = container.querySelector(
       '[data-testid="painel-obras-th-cliente"]',
     );
