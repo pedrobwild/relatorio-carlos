@@ -460,17 +460,20 @@ export default function PainelObras() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Fase exibida: obras em execução (default) ou em fase de projeto.
-  // Persistida em URL via ?fase=projetos para compartilhar/voltar na visão.
+  // Fase exibida: obras em execução, fase de projeto, ou ambas (default).
+  // Persistida em URL via ?fase=obras ou ?fase=projetos para compartilhar/voltar na visão.
   const faseParam = searchParams.get("fase");
-  const fase: "obras" | "projetos" =
-    faseParam === "projetos" ? "projetos" : "obras";
-  const handleFaseChange = (next: "obras" | "projetos") => {
+  const fase: "todas" | "obras" | "projetos" =
+    faseParam === "obras" ? "obras" : faseParam === "projetos" ? "projetos" : "todas";
+  const handleFaseChange = (next: "todas" | "obras" | "projetos") => {
     const params = new URLSearchParams(searchParams);
-    if (next === "obras") params.delete("fase");
+    if (next === "todas") params.delete("fase");
     else params.set("fase", next);
     setSearchParams(params, { replace: true });
   };
+
+  const matchesFase = (o: PainelObra) =>
+    fase === "todas" ? true : fase === "projetos" ? o.is_project_phase : !o.is_project_phase;
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
