@@ -42,56 +42,34 @@ export function useCsTicketHistory(ticketId: string | undefined) {
     queryKey: csTicketHistoryKeys.list(ticketId ?? ""),
     enabled: !!ticketId,
     queryFn: async (): Promise<CsTicketHistoryEntry[]> => {
-      const { data, error } = await (supabase as any)
+      // NOTA: cs_ticket_history.actor_id referencia auth.users, não
+      // public.users_profile — não é possível usar embed PostgREST.
+      // Resolvemos os nomes manualmente em uma segunda consulta.
+      const { data: rawData, error: rawError } = await (supabase as any)
         .from("cs_ticket_history")
-        .select(
-          `id, ticket_id, actor_id, event_type, old_value, new_value, notes, created_at,
-           actor:users_profile!cs_ticket_history_actor_id_fkey ( id, nome )`,
-        )
+        .select("*")
         .eq("ticket_id", ticketId!)
         .order("created_at", { ascending: false });
+      if (rawError) throw rawError;
 
-      if (error) {
-        // Fallback: caso o join falhe (FK ainda não disponível), busca sem o autor.
-        const { data: rawData, error: rawError } = await (supabase as any)
-          .from("cs_ticket_history")
-          .select("*")
-          .eq("ticket_id", ticketId!)
-          .order("created_at", { ascending: false });
-        if (rawError) throw rawError;
-
-        // Resolve nomes manualmente
-        const actorIds = Array.from(
-          new Set((rawData ?? []).map((r: any) => r.actor_id).filter(Boolean)),
+      const actorIds = Array.from(
+        new Set((rawData ?? []).map((r: any) => r.actor_id).filter(Boolean)),
+      );
+      let nameMap: Record<string, string> = {};
+      if (actorIds.length) {
+        const { data: profiles } = await supabase
+          .from("users_profile")
+          .select("id, nome")
+          .in("id", actorIds as string[]);
+        nameMap = Object.fromEntries(
+          (profiles ?? []).map((p: any) => [p.id, p.nome]),
         );
-        let nameMap: Record<string, string> = {};
-        if (actorIds.length) {
-          const { data: profiles } = await supabase
-            .from("users_profile")
-            .select("id, nome")
-            .in("id", actorIds as string[]);
-          nameMap = Object.fromEntries(
-            (profiles ?? []).map((p: any) => [p.id, p.nome]),
-          );
-        }
-        return (rawData ?? []).map((r: any) => ({
-          id: r.id,
-          ticket_id: r.ticket_id,
-          actor_id: r.actor_id,
-          actor_name: r.actor_id ? (nameMap[r.actor_id] ?? null) : null,
-          event_type: r.event_type,
-          old_value: r.old_value,
-          new_value: r.new_value,
-          notes: r.notes,
-          created_at: r.created_at,
-        }));
       }
-
-      return (data ?? []).map((r: any) => ({
+      return (rawData ?? []).map((r: any) => ({
         id: r.id,
         ticket_id: r.ticket_id,
         actor_id: r.actor_id,
-        actor_name: r.actor?.nome ?? null,
+        actor_name: r.actor_id ? (nameMap[r.actor_id] ?? null) : null,
         event_type: r.event_type,
         old_value: r.old_value,
         new_value: r.new_value,
