@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Camera, Plus, Trash2, X, Loader2, ImageIcon, Box } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useProject3DPhotos, Project3DPhoto } from "@/hooks/useProject3DPhotos";
 import { cn } from "@/lib/utils";
+import { MediaUnavailable } from "@/components/MediaUnavailable";
+import { logWarn } from "@/lib/errorLogger";
 
 const Projeto3D = () => {
   const { projectId } = useParams();
@@ -27,6 +29,27 @@ const Projeto3D = () => {
   const [lightbox, setLightbox] = useState<Project3DPhoto | null>(null);
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [captionValue, setCaptionValue] = useState("");
+
+  // Broken-media tracking: show a clear placeholder instead of the browser's
+  // broken-image icon when a signed URL expires / RLS blocks / path is bad.
+  const [brokenIds, setBrokenIds] = useState<Set<string>>(new Set());
+  const photosKey = photos.map((p) => `${p.id}::${p.url}`).join("|");
+  useEffect(() => {
+    setBrokenIds(new Set());
+  }, [photosKey]);
+  const markBroken = useCallback((photo: Project3DPhoto) => {
+    logWarn("3D gallery media failed to load", {
+      component: "Projeto3D",
+      photoId: photo.id,
+      url: photo.url,
+    });
+    setBrokenIds((prev) => {
+      if (prev.has(photo.id)) return prev;
+      const next = new Set(prev);
+      next.add(photo.id);
+      return next;
+    });
+  }, []);
 
   const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -168,12 +191,17 @@ const Projeto3D = () => {
                       className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted cursor-pointer"
                       onClick={() => setLightbox(photo)}
                     >
-                      <img
-                        src={photo.url}
-                        alt={photo.caption || "Foto do Projeto 3D"}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                        loading="lazy"
-                      />
+                      {brokenIds.has(photo.id) ? (
+                        <MediaUnavailable compact />
+                      ) : (
+                        <img
+                          src={photo.url}
+                          alt={photo.caption || "Foto do Projeto 3D"}
+                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                          loading="lazy"
+                          onError={() => markBroken(photo)}
+                        />
+                      )}
                       {isStaff && (
                         <button
                           className="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur-sm rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -213,11 +241,18 @@ const Projeto3D = () => {
           </DialogTitle>
           {lightbox && (
             <div className="flex flex-col">
-              <img
-                src={lightbox.url}
-                alt={lightbox.caption || "Foto"}
-                className="w-full max-h-[75vh] object-contain bg-black"
-              />
+              <div className="relative w-full min-h-[200px] bg-black">
+                {brokenIds.has(lightbox.id) ? (
+                  <MediaUnavailable />
+                ) : (
+                  <img
+                    src={lightbox.url}
+                    alt={lightbox.caption || "Foto"}
+                    className="w-full max-h-[75vh] object-contain bg-black"
+                    onError={() => markBroken(lightbox)}
+                  />
+                )}
+              </div>
               <div className="p-4 space-y-2">
                 {isStaff && editingCaption === lightbox.id ? (
                   <div className="flex gap-2">

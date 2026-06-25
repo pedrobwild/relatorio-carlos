@@ -239,6 +239,8 @@ export function use3DImages(versionId: string | undefined) {
     },
     enabled: !!versionId,
     staleTime: 5 * 60 * 1000,
+    // Re-assina as signed URLs (TTL 1h) antes de expirarem com a aba aberta.
+    refetchInterval: 45 * 60 * 1000, // 45 min
   });
 }
 

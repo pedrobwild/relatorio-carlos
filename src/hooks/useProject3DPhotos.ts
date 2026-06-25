@@ -50,6 +50,9 @@ export function useProject3DPhotos(projectId: string | undefined) {
     },
     enabled: !!projectId,
     staleTime: 60_000,
+    // Re-assina as signed URLs (TTL 1h) antes de expirarem, mesmo com a aba
+    // aberta e ociosa por mais de uma hora.
+    refetchInterval: 45 * 60 * 1000, // 45 min
   });
 
   const uploadMutation = useMutation({

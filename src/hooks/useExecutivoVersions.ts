@@ -191,6 +191,8 @@ export function useExecutivoFile(versionId: string | undefined) {
     },
     enabled: !!versionId,
     staleTime: 50 * 60 * 1000,
+    // Re-assina a signed URL (TTL 1h) antes de expirar com a aba aberta.
+    refetchInterval: 45 * 60 * 1000, // 45 min
   });
 }
 
