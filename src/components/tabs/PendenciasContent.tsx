@@ -144,6 +144,14 @@ const PendenciasContent = () => {
         return paths.projeto3D;
       case "approval_exec":
         return paths.executivo;
+      case "decision":
+        // Decisões do cliente são exibidas e tomadas na aba de Relatórios
+        // (ClientDecisionsSection). Quando o item não tem actionUrl específico
+        // (tratado acima), abrimos diretamente a aba de relatórios — o ?tab
+        // garante que a aba correta abra em qualquer entrada (inclusive mobile).
+        return projectId
+          ? `/obra/${projectId}?tab=relatorios`
+          : paths.relatorio;
       default:
         return paths.relatorio;
     }
