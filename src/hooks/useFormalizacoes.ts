@@ -354,6 +354,11 @@ export function useAcknowledge() {
       partyId: string;
       signatureText?: string;
     }) => {
+      // Inicia a busca do IP em paralelo às leituras abaixo para que o roundtrip
+      // da edge function não adicione latência sequencial no momento crítico da
+      // assinatura. O IP continua entrando no hash exatamente como antes.
+      const clientIpPromise = getClientIp();
+
       const user = (await supabase.auth.getUser()).data.user;
 
       // Get formalization data for domain event
@@ -370,7 +375,7 @@ export function useAcknowledge() {
         .eq("id", partyId)
         .single();
 
-      const clientIp = await getClientIp();
+      const clientIp = await clientIpPromise;
       const timestamp = new Date().toISOString();
 
       // Create signature hash

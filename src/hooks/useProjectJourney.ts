@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { JourneyCSM } from "@/components/journey/JourneyCSMSection";
+import { signProjectDocumentUrl } from "@/lib/projectDocumentUrl";
 
 export type JourneyStageStatus =
   | "pending"
@@ -114,10 +115,16 @@ async function fetchProjectJourney(
     todos: todosByStage.get(stage.id) || [],
   }));
 
+  const csm = csmResult.data as JourneyCSM | null;
+  if (csm?.photo_url) {
+    // photo_url guarda o PATH no bucket privado — assina sob demanda p/ exibir.
+    csm.photo_url = (await signProjectDocumentUrl(csm.photo_url)) ?? csm.photo_url;
+  }
+
   return {
     hero: heroResult.data as JourneyHero | null,
     footer: footerResult.data as JourneyFooter | null,
-    csm: csmResult.data as JourneyCSM | null,
+    csm,
     stages,
   };
 }

@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  resolveProjectDocumentPath,
+  signProjectDocumentUrls,
+} from "@/lib/projectDocumentUrl";
 
 export interface TeamContact {
   id: string;
@@ -74,7 +78,13 @@ export function useTeamContacts(projectId: string | undefined) {
         .order("role_type");
 
       if (error) throw error;
-      return (data || []) as TeamContact[];
+      const rows = (data || []) as TeamContact[];
+      // photo_url guarda o PATH no bucket privado — assina sob demanda p/ exibir.
+      const signed = await signProjectDocumentUrls(rows.map((c) => c.photo_url));
+      return rows.map((c) => ({
+        ...c,
+        photo_url: c.photo_url ? (signed.get(c.photo_url) ?? c.photo_url) : null,
+      }));
     },
     enabled: !!projectId,
   });
@@ -109,7 +119,11 @@ export function useTeamContacts(projectId: string | undefined) {
             phone: contact.phone,
             email: contact.email,
             crea: contact.crea,
-            photo_url: contact.photo_url,
+            // Persiste o PATH de storage, nunca uma URL (assinada/pública).
+            photo_url: contact.photo_url
+              ? (resolveProjectDocumentPath(contact.photo_url) ??
+                contact.photo_url)
+              : contact.photo_url,
           },
           { onConflict: "project_id,role_type" },
         )
@@ -148,11 +162,13 @@ export function useTeamContacts(projectId: string | undefined) {
 
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("project-documents").getPublicUrl(filePath);
+      // Bucket privado: signed URL para preview imediato. O path é persistido
+      // (normalizado no upsert) e re-assinado na leitura.
+      const { data: signed } = await supabase.storage
+        .from("project-documents")
+        .createSignedUrl(filePath, 60 * 60);
 
-      return publicUrl;
+      return signed?.signedUrl ?? filePath;
     },
     onError: (error) => {
       console.error("Error uploading photo:", error);

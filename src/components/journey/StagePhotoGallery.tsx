@@ -1,10 +1,12 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Camera, Plus, Trash2, X, Loader2, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStagePhotos, StagePhoto } from "@/hooks/useStagePhotos";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { MediaUnavailable } from "@/components/MediaUnavailable";
+import { logWarn } from "@/lib/errorLogger";
 
 interface StagePhotoGalleryProps {
   stageId: string;
@@ -30,6 +32,27 @@ export function StagePhotoGallery({
   const [lightbox, setLightbox] = useState<StagePhoto | null>(null);
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [captionValue, setCaptionValue] = useState("");
+
+  // Track media that failed to load so we can show a clear placeholder instead
+  // of the browser's broken-image icon (signed URL expired / RLS / bad path).
+  const [brokenIds, setBrokenIds] = useState<Set<string>>(new Set());
+  const photosKey = photos.map((p) => `${p.id}::${p.url}`).join("|");
+  useEffect(() => {
+    setBrokenIds(new Set());
+  }, [photosKey]);
+  const markBroken = useCallback((photo: StagePhoto) => {
+    logWarn("Stage gallery media failed to load", {
+      component: "StagePhotoGallery",
+      photoId: photo.id,
+      url: photo.url,
+    });
+    setBrokenIds((prev) => {
+      if (prev.has(photo.id)) return prev;
+      const next = new Set(prev);
+      next.add(photo.id);
+      return next;
+    });
+  }, []);
 
   const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -96,12 +119,17 @@ export function StagePhotoGallery({
               className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted cursor-pointer"
               onClick={() => setLightbox(photo)}
             >
-              <img
-                src={photo.url}
-                alt={photo.caption || "Foto da etapa"}
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                loading="lazy"
-              />
+              {brokenIds.has(photo.id) ? (
+                <MediaUnavailable compact />
+              ) : (
+                <img
+                  src={photo.url}
+                  alt={photo.caption || "Foto da etapa"}
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  loading="lazy"
+                  onError={() => markBroken(photo)}
+                />
+              )}
               {isAdmin && (
                 <button
                   className="absolute top-1 right-1 bg-background/80 backdrop-blur-sm rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -134,11 +162,18 @@ export function StagePhotoGallery({
           <DialogTitle className="sr-only">Visualizar foto</DialogTitle>
           {lightbox && (
             <div className="flex flex-col">
-              <img
-                src={lightbox.url}
-                alt={lightbox.caption || "Foto"}
-                className="w-full max-h-[70vh] object-contain bg-black"
-              />
+              <div className="relative w-full min-h-[200px] bg-black">
+                {brokenIds.has(lightbox.id) ? (
+                  <MediaUnavailable />
+                ) : (
+                  <img
+                    src={lightbox.url}
+                    alt={lightbox.caption || "Foto"}
+                    className="w-full max-h-[70vh] object-contain bg-black"
+                    onError={() => markBroken(lightbox)}
+                  />
+                )}
+              </div>
               <div className="p-4 space-y-2">
                 {editingCaption === lightbox.id ? (
                   <div className="flex gap-2">

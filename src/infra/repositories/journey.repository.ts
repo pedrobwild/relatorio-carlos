@@ -11,6 +11,7 @@ import {
   type RepositoryResult,
   type RepositoryListResult,
 } from "./base.repository";
+import { resolveProjectDocumentPath } from "@/lib/projectDocumentUrl";
 
 // ============================================================================
 // Types
@@ -150,9 +151,11 @@ export async function updateCSMPhoto(
   photoUrl: string,
 ): Promise<RepositoryResult<null>> {
   return executeQuery(async () => {
+    // Persiste o PATH de storage, nunca uma URL (assinada/pública).
+    const stored = resolveProjectDocumentPath(photoUrl) ?? photoUrl;
     const { error } = await supabase
       .from("journey_csm")
-      .update({ photo_url: photoUrl })
+      .update({ photo_url: stored })
       .eq("id", csmId);
     return { data: null, error };
   });
@@ -177,11 +180,13 @@ export async function uploadCSMPhoto(
     return null;
   }
 
-  const { data } = supabase.storage
+  // Bucket privado: devolve uma signed URL para preview imediato. updateCSMPhoto
+  // normaliza para o PATH ao persistir, e a leitura re-assina sob demanda.
+  const { data } = await supabase.storage
     .from("project-documents")
-    .getPublicUrl(path);
+    .createSignedUrl(path, 60 * 60);
 
-  return data.publicUrl;
+  return data?.signedUrl ?? path;
 }
 
 /**

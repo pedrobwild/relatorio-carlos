@@ -131,6 +131,10 @@ const Index = () => {
     // Only restore when the user landed on the project root — not on a
     // deep-linked schedule/relatório/etc. or already on a bottom-nav route.
     if (location.pathname !== `/obra/${projectId}`) return;
+    // A deep-link carrying an explicit ?tab= (e.g. the report-published
+    // notification → ?tab=relatorios) must win over the persisted bottom-nav
+    // slot — otherwise the restore would immediately navigate away from it.
+    if (searchParams.get("tab")) return;
     const slot = readMobileNavSlot(projectId);
     if (!slot) return;
     const target = pathForMobileNavSlot(projectId, slot);
@@ -141,7 +145,7 @@ const Index = () => {
       reason: "persisted_slot_restore",
     });
     navigate(target, { replace: true });
-  }, [isMobile, projectId, location.pathname, navigate]);
+  }, [isMobile, projectId, location.pathname, navigate, searchParams]);
 
   // Mobile sync: route-only tabs (financeiro/documentos/formalizacoes/pendencias)
   // live in the bottom nav as standalone pages. If a stale activeTab still
