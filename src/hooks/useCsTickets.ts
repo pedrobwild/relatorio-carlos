@@ -83,7 +83,7 @@ export function useCsTickets() {
           id, project_id, situation, description, severity, status,
           action_plan, responsible_user_id, created_by, resolved_at,
           created_at, updated_at,
-          project:projects ( id, name, customer_name )
+          project:projects ( id, name )
           `,
         )
         .order("created_at", { ascending: false });
@@ -107,11 +107,29 @@ export function useCsTickets() {
         );
       }
 
+      // customer_name vive em project_customers (não em projects).
+      const projectIds = Array.from(
+        new Set(rows.map((r) => r.project_id).filter(Boolean) as string[]),
+      );
+      let customerMap: Record<string, string> = {};
+      if (projectIds.length) {
+        const { data: customers } = await supabase
+          .from("project_customers")
+          .select("project_id, customer_name, created_at")
+          .in("project_id", projectIds)
+          .order("created_at", { ascending: true });
+        (customers ?? []).forEach((c: any) => {
+          if (c.customer_name && !customerMap[c.project_id]) {
+            customerMap[c.project_id] = c.customer_name;
+          }
+        });
+      }
+
       return rows.map((row) => ({
         id: row.id,
         project_id: row.project_id,
         project_name: row.project?.name ?? null,
-        customer_name: row.project?.customer_name ?? null,
+        customer_name: customerMap[row.project_id] ?? null,
         situation: row.situation,
         description: row.description,
         severity: row.severity,
@@ -128,6 +146,7 @@ export function useCsTickets() {
       })) as CsTicket[];
     },
     staleTime: 30 * 1000,
+
   });
 }
 
