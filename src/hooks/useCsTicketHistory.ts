@@ -91,8 +91,12 @@ export function useAddCsTicketComment() {
       ticketId: string;
       notes: string;
     }) => {
-      const { data: auth } = await supabase.auth.getUser();
-      const uid = auth.user?.id;
+      // Sessão local (sem round-trip de rede) — evita travar a ação caso a
+      // chamada /auth/v1/user demore. Ver nota em useCreateCsTicket.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
       if (!uid) throw new Error("Usuário não autenticado.");
 
       const { error } = await (supabase as any)

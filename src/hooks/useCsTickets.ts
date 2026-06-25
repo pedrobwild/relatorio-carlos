@@ -57,6 +57,14 @@ export interface CsTicketInput {
   status?: CsTicketStatus;
   action_plan?: string | null;
   responsible_user_id?: string | null;
+  // ---- Campos somente de exibição (NÃO são enviados ao banco) ----
+  // Usados para refletir o ticket na lista imediatamente após a criação,
+  // sem depender do refetch — que pode demorar/travar em redes instáveis.
+  // O `insert` abaixo lista as colunas explicitamente, então estes campos
+  // são naturalmente ignorados na escrita.
+  project_name?: string | null;
+  customer_name?: string | null;
+  responsible_name?: string | null;
 }
 
 export type CsTicketPatch = Partial<Omit<CsTicketInput, "project_id">>;
@@ -111,7 +119,7 @@ export function useCsTickets() {
       const projectIds = Array.from(
         new Set(rows.map((r) => r.project_id).filter(Boolean) as string[]),
       );
-      let customerMap: Record<string, string> = {};
+      const customerMap: Record<string, string> = {};
       if (projectIds.length) {
         const { data: customers } = await supabase
           .from("project_customers")
@@ -155,10 +163,19 @@ export function useCreateCsTicket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: CsTicketInput) => {
-      const { data: auth } = await supabase.auth.getUser();
-      const uid = auth.user?.id;
+      // Lê o usuário da SESSÃO LOCAL (sem round-trip de rede). Antes usávamos
+      // `auth.getUser()`, que faz uma chamada a /auth/v1/user a cada criação;
+      // se essa chamada demora/trava (token expirando, contenção de lock do
+      // SDK), a mutação ficava pendente "para sempre" — exatamente o sintoma
+      // de "carregando eternamente". `getSession()` resolve a partir do
+      // armazenamento local e não bloqueia a criação.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
       if (!uid) throw new Error("Usuário não autenticado.");
 
+      const status = input.status ?? "aberto";
       const { data, error } = await supabase
         .from("cs_tickets")
         .insert({
@@ -166,18 +183,55 @@ export function useCreateCsTicket() {
           situation: input.situation,
           description: input.description ?? null,
           severity: input.severity,
-          status: input.status ?? "aberto",
+          status,
           action_plan: input.action_plan ?? null,
           responsible_user_id: input.responsible_user_id ?? null,
           created_by: uid,
         })
-        .select("id")
+        // Apenas colunas próprias da linha (sem embed) para não introduzir
+        // nenhum ponto de falha extra no caminho crítico da criação.
+        .select(
+          `id, project_id, situation, description, severity, status,
+           action_plan, responsible_user_id, created_by, resolved_at,
+           created_at, updated_at`,
+        )
         .single();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (row: any, input) => {
+      // 1) Reflete o ticket na lista IMEDIATAMENTE (otimista). Mesmo que o
+      //    refetch em segundo plano demore ou falhe, o usuário já vê o ticket
+      //    recém-criado no topo da lista — eliminando a sensação de que "nada
+      //    aconteceu / o ticket não foi criado".
+      if (row?.id) {
+        qc.setQueryData<CsTicket[]>(csTicketKeys.list(), (old) => {
+          const optimistic: CsTicket = {
+            id: row.id,
+            project_id: row.project_id,
+            project_name: input.project_name ?? null,
+            customer_name: input.customer_name ?? null,
+            situation: row.situation,
+            description: row.description ?? null,
+            severity: row.severity,
+            status: row.status,
+            action_plan: row.action_plan ?? null,
+            responsible_user_id: row.responsible_user_id ?? null,
+            responsible_name: input.responsible_name ?? null,
+            created_by: row.created_by,
+            resolved_at: row.resolved_at ?? null,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+          };
+          if (!old) return [optimistic];
+          if (old.some((t) => t.id === optimistic.id)) return old;
+          return [optimistic, ...old];
+        });
+      }
+      // 2) Reconcilia em segundo plano (nomes de cliente/responsável, ordem).
+      //    NÃO é aguardado de propósito: a mutação conclui na hora e o diálogo
+      //    fecha sem ficar preso a uma requisição de listagem.
       qc.invalidateQueries({ queryKey: csTicketKeys.all });
       toast.success("Ticket criado com sucesso.");
     },
