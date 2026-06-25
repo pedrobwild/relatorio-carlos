@@ -80,7 +80,7 @@ Seja preciso e técnico. Use linguagem de engenharia civil. Se não conseguir de
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-6",
         max_tokens: 4096,
         system: systemPrompt,
         messages: [
