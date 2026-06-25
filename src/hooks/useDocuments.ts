@@ -65,48 +65,34 @@ async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
   const results = await Promise.allSettled(
     (data || []).map(async (doc) => {
       try {
-        // Try signed URL first
+        // project-documents é um bucket PRIVADO — só a signed URL funciona.
+        // getPublicUrl devolve uma URL 400/403 para bucket privado, então não
+        // há fallback útil: em caso de falha, registra o erro e devolve o doc
+        // sem URL (a UI já trata `!url` com "pré-visualização indisponível").
         const { data: urlData, error: urlError } = await supabase.storage
           .from(doc.storage_bucket)
           .createSignedUrl(doc.storage_path, 3600); // 1 hour
 
-        let url = urlData?.signedUrl;
-
-        // Fallback to public URL if signed URL fails (bucket is public)
-        if (!url || urlError) {
-          console.warn(
-            `[Documents] Signed URL failed for ${doc.name}, trying public URL:`,
+        if (urlError || !urlData?.signedUrl) {
+          console.error(
+            `[Documents] Failed to sign ${doc.name} (bucket: ${doc.storage_bucket}, path: ${doc.storage_path}):`,
             urlError?.message,
           );
-          const { data: publicData } = supabase.storage
-            .from(doc.storage_bucket)
-            .getPublicUrl(doc.storage_path);
-          url = publicData?.publicUrl || undefined;
-        }
-
-        if (!url) {
-          console.error(
-            `[Documents] No URL generated for ${doc.name} (bucket: ${doc.storage_bucket}, path: ${doc.storage_path})`,
-          );
         }
 
         return {
           ...doc,
           document_type: doc.document_type as DocumentCategory,
           status: doc.status as DocumentStatus,
-          url,
+          url: urlData?.signedUrl,
         } as ProjectDocument;
       } catch (err) {
-        console.warn(`[Documents] Error fetching URL for ${doc.name}:`, err);
-        // Final fallback to public URL
-        const { data: publicData } = supabase.storage
-          .from(doc.storage_bucket)
-          .getPublicUrl(doc.storage_path);
+        console.error(`[Documents] Error signing URL for ${doc.name}:`, err);
         return {
           ...doc,
           document_type: doc.document_type as DocumentCategory,
           status: doc.status as DocumentStatus,
-          url: publicData?.publicUrl || undefined,
+          url: undefined,
         } as ProjectDocument;
       }
     }),
@@ -148,6 +134,9 @@ export function useDocuments(projectId: string | undefined) {
     staleTime: 2 * 60 * 1000, // 2 minutes — keep fresh so new uploads appear quickly
     gcTime: 30 * 60 * 1000, // 30 minutes (signed URLs valid for 1 hour)
     refetchOnWindowFocus: true, // Ensure documents refresh when user switches tabs
+    // Re-sign URLs before the 1h TTL expires even if the tab stays open (focused)
+    // on a long document — without this the viewer's URL would 403 after 1h.
+    refetchInterval: 45 * 60 * 1000, // 45 minutes
     placeholderData: (previousData) => previousData, // Keep previous data while refetching
     // Signed URLs expire in 1h. Persisting them to localStorage would restore
     // expired URLs after a reload, breaking previews. Always refetch fresh.
@@ -314,28 +303,29 @@ export function useDocument(documentId: string | undefined) {
       if (error) throw error;
       if (!data) return null;
 
-      // Get signed URL, fallback to public URL
+      // project-documents é privado — só a signed URL funciona (sem fallback público).
       const { data: urlData, error: urlError } = await supabase.storage
         .from(data.storage_bucket)
         .createSignedUrl(data.storage_path, 3600);
 
-      let url = urlData?.signedUrl;
-      if (!url || urlError) {
-        const { data: publicData } = supabase.storage
-          .from(data.storage_bucket)
-          .getPublicUrl(data.storage_path);
-        url = publicData?.publicUrl || undefined;
+      if (urlError || !urlData?.signedUrl) {
+        console.error(
+          `[Documents] Failed to sign ${data.name} (bucket: ${data.storage_bucket}):`,
+          urlError?.message,
+        );
       }
 
       return {
         ...data,
         document_type: data.document_type as DocumentCategory,
         status: data.status as DocumentStatus,
-        url,
+        url: urlData?.signedUrl,
       } as ProjectDocument;
     },
     enabled: !!documentId,
     staleTime: 2 * 60 * 1000, // 2 minutes (match list query)
+    // Re-sign before the 1h TTL expires while the viewer stays open.
+    refetchInterval: 45 * 60 * 1000, // 45 minutes
     // Signed URL expires in 1h — never restore from localStorage.
     meta: { persist: false },
   });

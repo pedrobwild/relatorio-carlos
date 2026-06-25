@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  resolveProjectDocumentPath,
+  signProjectDocumentUrls,
+} from "@/lib/projectDocumentUrl";
 
 export interface JourneyTeamMember {
   id: string;
@@ -45,7 +49,15 @@ export function useJourneyTeamMembers(
         .eq("stage_context", stageContext)
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data || []) as JourneyTeamMember[];
+      const members = (data || []) as JourneyTeamMember[];
+      // photo_url guarda o PATH no bucket privado — assina sob demanda p/ exibir.
+      const signed = await signProjectDocumentUrls(
+        members.map((m) => m.photo_url),
+      );
+      return members.map((m) => ({
+        ...m,
+        photo_url: m.photo_url ? (signed.get(m.photo_url) ?? m.photo_url) : null,
+      }));
     },
     enabled: !!projectId,
   });
@@ -67,6 +79,10 @@ export function useJourneyTeamMembers(
         .from("journey_team_members")
         .insert({
           ...input,
+          // Persiste o PATH de storage, nunca uma URL (assinada/pública).
+          photo_url: input.photo_url
+            ? (resolveProjectDocumentPath(input.photo_url) ?? input.photo_url)
+            : input.photo_url,
           sort_order: sortOrder,
           stage_context: input.stage_context || stageContext,
         })
@@ -87,6 +103,12 @@ export function useJourneyTeamMembers(
       id,
       ...updates
     }: Partial<JourneyTeamMember> & { id: string }) => {
+      // Nunca persiste uma URL em photo_url — normaliza para o PATH de storage.
+      if ("photo_url" in updates) {
+        updates.photo_url = updates.photo_url
+          ? (resolveProjectDocumentPath(updates.photo_url) ?? updates.photo_url)
+          : updates.photo_url;
+      }
       const { data, error } = await supabase
         .from("journey_team_members")
         .update(updates)
@@ -135,11 +157,13 @@ export function useJourneyTeamMembers(
         .upload(filePath, file, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("project-documents").getPublicUrl(filePath);
+      // Bucket privado: devolve uma signed URL para preview imediato. O path é
+      // persistido (normalizado no insert/update) e re-assinado na leitura.
+      const { data: signed } = await supabase.storage
+        .from("project-documents")
+        .createSignedUrl(filePath, 60 * 60);
 
-      return publicUrl;
+      return signed?.signedUrl ?? filePath;
     },
     onError: () => toast.error("Erro ao enviar foto"),
   });
