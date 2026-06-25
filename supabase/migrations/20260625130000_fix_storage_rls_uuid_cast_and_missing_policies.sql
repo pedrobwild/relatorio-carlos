@@ -11,8 +11,10 @@
 --
 -- Correção:
 --   1) Helper genérico `storage_path_has_project_access` (modelo project_*),
---      que engole o cast inválido e ainda aceita project_id no segmento 1 ou 2
---      (layouts legados), espelhando `weekly_reports_path_has_access`.
+--      que engole o cast inválido. Checa o project_id APENAS no 1º segmento —
+--      buckets compartilhados (ex.: project-documents, que também hospeda
+--      purchases/{project_id}/... staff-only) usam helper DEDICADO para não
+--      super-expor prefixos. Ver project_documents_path_has_access abaixo.
 --   2) Helpers `anexos_path_has_access` / `anexos_path_can_write` (modelo
 --      has_obra_access + get_effective_role) para o bucket `anexos`.
 --   3) Reescrever as policies bugadas dos buckets stage-photos,
@@ -23,7 +25,7 @@
 --      o próprio boleto quando vinculado só por project_customers).
 
 -- =========================================================================
--- 1. Helper genérico (modelo project_*): swallow invalid uuid + 2 layouts
+-- 1. Helper genérico (modelo project_*): swallow invalid uuid, project_id no 1º segmento
 -- =========================================================================
 CREATE OR REPLACE FUNCTION public.storage_path_has_project_access(_user_id uuid, _name text)
 RETURNS boolean
@@ -42,7 +44,56 @@ BEGIN
 
   segs := storage.foldername(_name);
 
-  -- Layout atual: {project_id}/...
+  -- project_id no PRIMEIRO segmento: {project_id}/...
+  -- (stage-photos, project-3d-photos, payment-boletos). NÃO checamos o 2º
+  -- segmento de propósito: em buckets compartilhados isso exporia prefixos
+  -- staff-only (ex.: project-documents → purchases/{project_id}/...).
+  IF array_length(segs, 1) >= 1 AND segs[1] IS NOT NULL THEN
+    BEGIN
+      pid := segs[1]::uuid;
+      RETURN public.has_project_access(_user_id, pid);
+    EXCEPTION WHEN invalid_text_representation THEN
+      RETURN false; -- segmento 1 não é uuid
+    END;
+  END IF;
+
+  RETURN false;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.storage_path_has_project_access(uuid, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.storage_path_has_project_access(uuid, text) TO authenticated;
+
+-- Helper dedicado do bucket COMPARTILHADO `project-documents`. Esse bucket
+-- hospeda conteúdo do cliente E conteúdo staff-only no MESMO bucket, separados
+-- por prefixo:
+--   * {project_id}/...                 -> documentos/contratos/plantas/orçamento
+--                                          e fotos de contato ({pid}/team/...)  [cliente]
+--   * team-photos/{project_id}/...     -> fotos de membros de equipe            [cliente]
+--   * csm-photos/{project_id}/...      -> foto do CSM                           [cliente]
+--   * purchases/{project_id}/...       -> compras/NF/boletos                    [STAFF]
+-- O helper genérico (1º segmento) cobre o layout {project_id}/..., mas as fotos
+-- de equipe/CSM têm o project_id no 2º segmento. Liberamos o 2º segmento APENAS
+-- para esses prefixos voltados ao cliente (allowlist) — purchases continua
+-- negado para clientes (staff acessa pelo is_staff na policy).
+CREATE OR REPLACE FUNCTION public.project_documents_path_has_access(_user_id uuid, _name text)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  segs text[];
+  pid uuid;
+BEGIN
+  IF _name IS NULL THEN
+    RETURN false;
+  END IF;
+
+  segs := storage.foldername(_name);
+
+  -- Root: {project_id}/... (documentos, contratos, fotos de contato)
   IF array_length(segs, 1) >= 1 AND segs[1] IS NOT NULL THEN
     BEGIN
       pid := segs[1]::uuid;
@@ -50,12 +101,14 @@ BEGIN
         RETURN true;
       END IF;
     EXCEPTION WHEN invalid_text_representation THEN
-      NULL; -- segmento 1 não é uuid: cai pro próximo
+      NULL; -- não é uuid (ex.: 'purchases', 'team-photos'): avalia abaixo
     END;
   END IF;
 
-  -- Layout legado: {algo}/{project_id}/...
-  IF array_length(segs, 1) >= 2 AND segs[2] IS NOT NULL THEN
+  -- Prefixos de FOTO voltados ao cliente: team-photos/{pid}/..., csm-photos/{pid}/...
+  IF array_length(segs, 1) >= 2
+     AND segs[1] IN ('team-photos', 'csm-photos')
+     AND segs[2] IS NOT NULL THEN
     BEGIN
       pid := segs[2]::uuid;
       IF public.has_project_access(_user_id, pid) THEN
@@ -70,8 +123,8 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.storage_path_has_project_access(uuid, text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.storage_path_has_project_access(uuid, text) TO authenticated;
+REVOKE ALL ON FUNCTION public.project_documents_path_has_access(uuid, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.project_documents_path_has_access(uuid, text) TO authenticated;
 
 -- =========================================================================
 -- 2. Helpers do bucket `anexos` (modelo has_obra_access / get_effective_role)
@@ -180,14 +233,16 @@ USING (
 );
 
 -- =========================================================================
--- 4. project-documents — SELECT (staff bypass mantido)
+-- 4. project-documents — SELECT (staff bypass + helper dedicado por prefixo)
+--    Cliente vê documentos/contratos do projeto e fotos de equipe/CSM, mas NÃO
+--    os arquivos staff-only de purchases/{project_id}/...
 -- =========================================================================
 DROP POLICY IF EXISTS "Project members can view project documents" ON storage.objects;
 CREATE POLICY "Project members can view project documents"
 ON storage.objects FOR SELECT
 USING (
   bucket_id = 'project-documents'
-  AND (is_staff(auth.uid()) OR public.storage_path_has_project_access(auth.uid(), name))
+  AND (is_staff(auth.uid()) OR public.project_documents_path_has_access(auth.uid(), name))
 );
 
 -- =========================================================================
