@@ -949,20 +949,42 @@ export default function PainelObras() {
       <PageContainer maxWidth="screen">
         <PageHeader
           eyebrow="Operações"
-          title={fase === "projetos" ? "Painel de Projetos" : "Painel de Obras"}
+          title={
+            fase === "projetos"
+              ? "Painel de Projetos"
+              : fase === "obras"
+                ? "Painel de Obras"
+                : "Painel de Obras e Projetos"
+          }
           description={
             fase === "projetos"
               ? "Empreendimentos em fase de projeto — anteprojeto, executivo e aprovações antes da execução em campo."
-              : "Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
+              : fase === "obras"
+                ? "Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
+                : "Visão unificada de obras em execução e empreendimentos em fase de projeto."
           }
           actions={
             <div className="hidden md:flex items-center gap-2">
-              {/* Toggle de fase: Obras (execução) | Projetos (fase de projeto) */}
+              {/* Toggle de fase: Todas | Obras (execução) | Projetos (fase de projeto) */}
               <div
                 role="tablist"
                 aria-label="Alternar entre obras e projetos"
                 className="inline-flex h-8 rounded-md border border-border-subtle bg-surface p-0.5"
               >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={fase === "todas"}
+                  onClick={() => handleFaseChange("todas")}
+                  className={cn(
+                    "h-7 px-3 rounded-[5px] text-xs font-medium transition-colors",
+                    fase === "todas"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  Todas
+                </button>
                 <button
                   type="button"
                   role="tab"
@@ -1016,13 +1038,27 @@ export default function PainelObras() {
           className="!pt-4 !pb-3 md:!pt-5 md:!pb-3 [&_h1]:!text-lg [&_h1]:md:!text-xl"
         />
 
-        {/* Mobile: toggle Obras/Projetos compacto acima da listagem */}
+        {/* Mobile: toggle Todas/Obras/Projetos compacto acima da listagem */}
         <div className="md:hidden mt-2">
           <div
             role="tablist"
             aria-label="Alternar entre obras e projetos"
             className="inline-flex h-9 rounded-md border border-border-subtle bg-surface p-0.5 w-full"
           >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={fase === "todas"}
+              onClick={() => handleFaseChange("todas")}
+              className={cn(
+                "flex-1 h-8 rounded-[5px] text-sm font-medium transition-colors",
+                fase === "todas"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground",
+              )}
+            >
+              Todas
+            </button>
             <button
               type="button"
               role="tab"
