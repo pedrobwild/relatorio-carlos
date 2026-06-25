@@ -830,9 +830,7 @@ export default function PainelObras() {
    * obras já carregadas (sem nova query) e respeitando a fase atual.
    */
   const cockpitMetrics = useMemo(() => {
-    const inFase = obras.filter((o) =>
-      fase === "projetos" ? o.is_project_phase : !o.is_project_phase,
-    );
+    const inFase = obras.filter(matchesFase);
     const todayIso = format(new Date(), "yyyy-MM-dd");
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
