@@ -106,7 +106,7 @@ export function MobileBottomNav() {
               <NavLink
                 key={slot.id}
                 to={to}
-                end={slot.id === "inicio"}
+                end={slot.end ?? false}
                 onClick={() => {
                   rememberMobileNavSlot(projectId, slot.id);
                   // Tapping "Obra" (the project hub) must take the user back

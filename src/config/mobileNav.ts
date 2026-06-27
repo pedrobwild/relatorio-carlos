@@ -31,6 +31,13 @@ export type MobileNavSlot = {
     lastProjectId?: string;
   }) => string;
   badge?: MobileNavBadge;
+  /**
+   * Exact-match the active state (NavLink `end`). Required for slots whose
+   * destination is a prefix of other slots' routes — e.g. the obra hub
+   * (`/obra/:id`) is a prefix of `/obra/:id/financeiro`, so without `end`
+   * the hub tab stays highlighted alongside the real tab on every sub-route.
+   */
+  end?: boolean;
 };
 
 const HOME_CLIENT = "/minhas-obras";
@@ -54,6 +61,9 @@ export const CLIENT_NAV: MobileNavSlot[] = [
       const id = effectiveProjectId(ctx);
       return id ? `/obra/${id}` : HOME_CLIENT;
     },
+    // Project hub root — exact match so it doesn't stay active on sub-routes
+    // (financeiro, documentos…), which would double-highlight the bar.
+    end: true,
     badge: "none",
   },
   {
@@ -97,6 +107,7 @@ export const STAFF_NAV: MobileNavSlot[] = [
     label: "Início",
     icon: Home,
     to: () => HOME_STAFF,
+    end: true,
     badge: "none",
   },
   {
@@ -110,6 +121,9 @@ export const STAFF_NAV: MobileNavSlot[] = [
       const id = effectiveProjectId(ctx);
       return id ? `/obra/${id}` : STAFF_OBRAS_INDEX;
     },
+    // Obra hub root — exact match so it doesn't stay active on sub-routes
+    // (pendências, etc.), which would double-highlight the bar.
+    end: true,
     badge: "none",
   },
   {
