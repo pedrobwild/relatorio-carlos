@@ -85,4 +85,20 @@ describe("MobileBottomNav — active state on sub-routes", () => {
     const obra = screen.getByRole("link", { name: /^Obra$/i });
     expect(obra).toHaveAttribute("aria-current", "page");
   });
+
+  it('cliente no hub de relatório /obra/:id/relatorio: "Obra" continua ativo', () => {
+    // /obra/:id/relatorio renderiza a mesma página Index do hub da obra, então
+    // a aba "Obra" deve permanecer ativa (alias do hub), e nenhuma outra aba.
+    render(
+      <MemoryRouter initialEntries={["/obra/proj-1/relatorio"]}>
+        <MobileBottomNav />
+      </MemoryRouter>,
+    );
+
+    const obra = screen.getByRole("link", { name: /^Obra$/i });
+    const financeiro = screen.getByRole("link", { name: /^Financeiro$/i });
+
+    expect(obra).toHaveAttribute("aria-current", "page");
+    expect(financeiro).not.toHaveAttribute("aria-current");
+  });
 });

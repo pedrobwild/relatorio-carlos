@@ -32,12 +32,19 @@ export type MobileNavSlot = {
   }) => string;
   badge?: MobileNavBadge;
   /**
-   * Exact-match the active state (NavLink `end`). Required for slots whose
-   * destination is a prefix of other slots' routes — e.g. the obra hub
-   * (`/obra/:id`) is a prefix of `/obra/:id/financeiro`, so without `end`
-   * the hub tab stays highlighted alongside the real tab on every sub-route.
+   * Exact-match the active state. Required for slots whose destination is a
+   * prefix of other slots' routes — e.g. the obra hub (`/obra/:id`) is a
+   * prefix of `/obra/:id/financeiro`, so a plain prefix match would keep the
+   * hub tab highlighted alongside the real tab on every sub-route.
    */
   end?: boolean;
+  /**
+   * Also treat the report-hub route (`/obra/:id/relatorio`) as active. That
+   * route renders the same `Index` hub page as `/obra/:id` (see App.tsx), so
+   * the Obra tab must stay lit there even though `end` otherwise demands an
+   * exact match. Only meaningful together with `end` on the obra hub slots.
+   */
+  matchReportHub?: boolean;
 };
 
 const HOME_CLIENT = "/minhas-obras";
@@ -62,8 +69,11 @@ export const CLIENT_NAV: MobileNavSlot[] = [
       return id ? `/obra/${id}` : HOME_CLIENT;
     },
     // Project hub root — exact match so it doesn't stay active on sub-routes
-    // (financeiro, documentos…), which would double-highlight the bar.
+    // (financeiro, documentos…), which would double-highlight the bar. The
+    // report-hub alias (`/obra/:id/relatorio`) renders the same hub page, so
+    // keep the tab lit there too.
     end: true,
+    matchReportHub: true,
     badge: "none",
   },
   {
@@ -122,8 +132,11 @@ export const STAFF_NAV: MobileNavSlot[] = [
       return id ? `/obra/${id}` : STAFF_OBRAS_INDEX;
     },
     // Obra hub root — exact match so it doesn't stay active on sub-routes
-    // (pendências, etc.), which would double-highlight the bar.
+    // (pendências, etc.), which would double-highlight the bar. The report-hub
+    // alias (`/obra/:id/relatorio`) renders the same hub page, so keep the tab
+    // lit there too.
     end: true,
+    matchReportHub: true,
     badge: "none",
   },
   {
