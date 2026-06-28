@@ -193,13 +193,13 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => (
   <ErrorBoundary name="AppRoot">
-    <ThemeProvider>
-      <QueryProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <TabDiscardDetector />
-          <BrowserRouter>
+    <BrowserRouter>
+      <ThemeProvider>
+        <QueryProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <TabDiscardDetector />
             <NetworkStatusBanner />
             <ConsentBanner />
             <a href="#main-content" className="skip-to-content">
@@ -231,7 +231,9 @@ const App = () => (
                 path="/gestao/nova-obra"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<NovaObra />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<NovaObra />)}
+                    </AppShell>
                   </StaffRoute>
                 }
               />
@@ -239,7 +241,9 @@ const App = () => (
                 path="/gestao/obra/:projectId"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<EditarObra />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<EditarObra />)}
+                    </AppShell>
                   </StaffRoute>
                 }
               />
@@ -257,7 +261,9 @@ const App = () => (
                 path="/gestao/arquivos"
                 element={
                   <ProtectedRoute>
-                    <AppShell variant="portfolio">{withSuspense(<Arquivos />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Arquivos />)}
+                    </AppShell>
                   </ProtectedRoute>
                 }
               />
@@ -275,7 +281,9 @@ const App = () => (
                 path="/gestao/estoque"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<Estoque />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Estoque />)}
+                    </AppShell>
                   </StaffRoute>
                 }
               />
@@ -297,7 +305,9 @@ const App = () => (
                 path="/gestao/fornecedores"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<Fornecedores />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Fornecedores />)}
+                    </AppShell>
                   </StaffRoute>
                 }
               />
@@ -325,7 +335,9 @@ const App = () => (
                 path="/gestao/orcamentos"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<Orcamentos />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Orcamentos />)}
+                    </AppShell>
                   </StaffRoute>
                 }
               />
@@ -364,7 +376,9 @@ const App = () => (
                 element={
                   <StaffRoute>
                     <AssistantAccessGuard>
-                      <AppShell variant="portfolio">{withSuspense(<Assistente />)}</AppShell>
+                      <AppShell variant="portfolio">
+                        {withSuspense(<Assistente />)}
+                      </AppShell>
                     </AssistantAccessGuard>
                   </StaffRoute>
                 }
@@ -397,7 +411,9 @@ const App = () => (
                 path="/gestao/painel-obras"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<PainelObras />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<PainelObras />)}
+                    </AppShell>
                   </StaffRoute>
                 }
               />
@@ -415,7 +431,9 @@ const App = () => (
                 path="/gestao/lixeira"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<Lixeira />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Lixeira />)}
+                    </AppShell>
                   </StaffRoute>
                 }
               />
@@ -427,7 +445,9 @@ const App = () => (
                 path="/gestao/cs/operacional"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<CsOperacional />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<CsOperacional />)}
+                    </AppShell>
                   </StaffRoute>
                 }
               />
@@ -435,7 +455,9 @@ const App = () => (
                 path="/gestao/cs/analytics"
                 element={
                   <StaffRoute>
-                    <AppShell variant="portfolio">{withSuspense(<CsAnalytics />)}</AppShell>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<CsAnalytics />)}
+                    </AppShell>
                   </StaffRoute>
                 }
               />
@@ -731,10 +753,10 @@ const App = () => (
               {/* Catch-all */}
               <Route path="*" element={withSuspense(<NotFound />)} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryProvider>
-    </ThemeProvider>
+          </TooltipProvider>
+        </QueryProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   </ErrorBoundary>
 );
 
