@@ -9,6 +9,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isUuid } from "@/lib/utils";
 
 export type CsTicketHistoryEventType =
   | "created"
@@ -40,7 +41,10 @@ export const csTicketHistoryKeys = {
 export function useCsTicketHistory(ticketId: string | undefined) {
   return useQuery({
     queryKey: csTicketHistoryKeys.list(ticketId ?? ""),
-    enabled: !!ticketId,
+    // Só consulta com um UUID válido: impede queries ao Supabase quando o
+    // parâmetro de rota `:ticketId` captura um segmento estático (ex.:
+    // `operacional`, `analytics`), evitando erros silenciosos de query.
+    enabled: isUuid(ticketId),
     queryFn: async (): Promise<CsTicketHistoryEntry[]> => {
       // NOTA: cs_ticket_history.actor_id referencia auth.users, não
       // public.users_profile — não é possível usar embed PostgREST.

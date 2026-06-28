@@ -13,6 +13,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isUuid } from "@/lib/utils";
 
 // ----- types -----
 export type CsActionStatus =
@@ -74,7 +75,10 @@ export function useCsTicketActions(ticketId: string | undefined | null) {
     queryKey: ticketId
       ? csActionKeys.byTicket(ticketId)
       : ["cs-ticket-actions", "idle"],
-    enabled: !!ticketId,
+    // Só consulta com um UUID válido: impede queries ao Supabase quando o
+    // parâmetro de rota `:ticketId` captura um segmento estático (ex.:
+    // `operacional`, `analytics`), evitando erros silenciosos de query.
+    enabled: isUuid(ticketId),
     queryFn: async (): Promise<CsTicketAction[]> => {
       const { data, error } = await supabase
         .from("cs_ticket_actions")
