@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -86,6 +86,26 @@ export function MobileBottomNav() {
     return 0;
   };
 
+  /**
+   * Active-tab matching. Computed here (rather than via NavLink's built-in
+   * `end`) because the obra hub needs exact-match *plus* one alias: it must
+   * stay active on `/obra/:id/relatorio`, which renders the same Index page as
+   * `/obra/:id`, while NOT lighting up on the dedicated sub-route tabs.
+   */
+  const isSlotActive = (slot: MobileNavSlot, to: string): boolean => {
+    const path = location.pathname;
+    if (slot.end) {
+      if (path === to) return true;
+      if (slot.matchReportHub) {
+        const id = projectId ?? lastProjectId;
+        if (id && path === `/obra/${id}/relatorio`) return true;
+      }
+      return false;
+    }
+    // Default: active on the route and its descendants (e.g. formalizacoes/nova).
+    return path === to || path.startsWith(to + "/");
+  };
+
   return (
     <>
       <nav
@@ -102,11 +122,12 @@ export function MobileBottomNav() {
             const to = slot.to({ paths, hasProject, projectId, lastProjectId });
             const badge = resolveBadge(slot);
             const Icon = slot.icon;
+            const isActive = isSlotActive(slot, to);
             return (
-              <NavLink
+              <Link
                 key={slot.id}
                 to={to}
-                end={slot.id === "inicio"}
+                aria-current={isActive ? "page" : undefined}
                 onClick={() => {
                   rememberMobileNavSlot(projectId, slot.id);
                   // Tapping "Obra" (the project hub) must take the user back
@@ -119,64 +140,58 @@ export function MobileBottomNav() {
                     resetProjectHubState(projectId ?? lastProjectId);
                   }
                 }}
-                className={({ isActive }) =>
-                  cn(
-                    "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 px-1 py-1",
-                    "min-h-[56px] transition-all active:scale-[0.94]",
-                    "focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary rounded-lg",
-                    isActive ? "text-primary" : "text-foreground-muted",
-                  )
-                }
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 px-1 py-1",
+                  "min-h-[56px] transition-all active:scale-[0.94]",
+                  "focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary rounded-lg",
+                  isActive ? "text-primary" : "text-foreground-muted",
+                )}
                 aria-label={
                   badge > 0 ? `${slot.label} — ${badge} críticas` : slot.label
                 }
                 title={slot.label}
               >
-                {({ isActive }) => (
-                  <>
-                    {isActive && (
-                      <span
-                        className="absolute -top-px left-1/2 -translate-x-1/2 h-1 w-8 rounded-b-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.45)]"
-                        aria-hidden="true"
-                      />
-                    )}
-                    <span
-                      className={cn(
-                        "relative flex items-center justify-center w-12 h-7 rounded-full transition-all duration-200",
-                        isActive
-                          ? "bg-primary/15 ring-1 ring-primary/25"
-                          : "bg-transparent",
-                      )}
-                    >
-                      <Icon
-                        className={cn(
-                          "h-[22px] w-[22px] transition-all",
-                          isActive
-                            ? "text-primary scale-110"
-                            : "text-foreground-muted",
-                        )}
-                        strokeWidth={isActive ? 2.5 : 2}
-                      />
-                      {badge > 0 && (
-                        <span
-                          className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-card"
-                          aria-hidden="true"
-                        >
-                          {badge > 99 ? "99+" : badge}
-                        </span>
-                      )}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-[clamp(8px,2.2vw,11px)] leading-[1.05] text-center whitespace-nowrap overflow-visible",
-                        isActive ? "font-semibold text-primary" : "font-medium",
-                      )}
-                    >
-                      {slot.label}
-                    </span>
-                  </>
+                {isActive && (
+                  <span
+                    className="absolute -top-px left-1/2 -translate-x-1/2 h-1 w-8 rounded-b-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.45)]"
+                    aria-hidden="true"
+                  />
                 )}
-              </NavLink>
+                <span
+                  className={cn(
+                    "relative flex items-center justify-center w-12 h-7 rounded-full transition-all duration-200",
+                    isActive
+                      ? "bg-primary/15 ring-1 ring-primary/25"
+                      : "bg-transparent",
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      "h-[22px] w-[22px] transition-all",
+                      isActive
+                        ? "text-primary scale-110"
+                        : "text-foreground-muted",
+                    )}
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                  {badge > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-card"
+                      aria-hidden="true"
+                    >
+                      {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "text-[clamp(8px,2.2vw,11px)] leading-[1.05] text-center whitespace-nowrap overflow-visible",
+                    isActive ? "font-semibold text-primary" : "font-medium",
+                  )}
+                >
+                  {slot.label}
+                </span>
+              </Link>
             );
           })}
 
