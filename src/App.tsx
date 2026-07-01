@@ -29,6 +29,7 @@ import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 import { AuthRedirect } from "@/components/AuthRedirect";
 import { AppShell } from "@/components/layout/AppShell";
+import { VitrineCta } from "@/components/VitrineCta";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
@@ -48,6 +49,7 @@ const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
 const VerificarAssinatura = lazy(() => import("./pages/VerificarAssinatura"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const VitrineEntry = lazy(() => import("./pages/VitrineEntry"));
 
 // GestaoObras (Portfólio antigo) foi descontinuado — /gestao redireciona para /gestao/painel-obras
 const NovaObra = lazy(() => import("./pages/NovaObra"));
@@ -132,6 +134,7 @@ const ProjectPage = ({ children }: { children: React.ReactNode }) => {
     >
       <ProjectProvider>
         <AppShell variant="project">{children}</AppShell>
+        <VitrineCta />
       </ProjectProvider>
     </ErrorBoundary>
   );
@@ -208,6 +211,7 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route path="/auth" element={withSuspense(<Auth />)} />
+              <Route path="/vitrine/:projectId" element={withSuspense(<VitrineEntry />)} />
               <Route
                 path="/recuperar-senha"
                 element={withSuspense(<RecuperarSenha />)}
