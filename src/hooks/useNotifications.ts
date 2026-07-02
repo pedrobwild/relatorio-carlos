@@ -39,7 +39,7 @@ export function useNotifications() {
     if (!userId) return;
 
     const channel = supabase
-      .channel(`notifications-${userId}`)
+      .channel(`notifications-${userId}-${instanceId}`)
       .on(
         "postgres_changes",
         {
@@ -58,7 +58,7 @@ export function useNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, qc]);
+  }, [userId, qc, instanceId]);
 
   const markReadMutation = useMutation({
     mutationFn: markAsRead,
