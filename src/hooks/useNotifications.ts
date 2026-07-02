@@ -11,6 +11,14 @@ export function useNotifications() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const userId = user?.id;
+  // Unique per hook instance — multiple components (NotificationBell,
+  // MobileBottomNav, MobileProfileSheet) mount useNotifications concurrently.
+  // Supabase Realtime does NOT dedupe channels by topic: reusing the same
+  // topic string across instances (or across StrictMode's double-mount) leads
+  // to `.on()` being called on an already-subscribed channel, which throws
+  // "cannot add postgres_changes callbacks ... after subscribe()" — the exact
+  // error that was crashing the ErrorBoundary in production.
+  const instanceId = useId();
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: [NOTIFICATIONS_KEY, userId],
