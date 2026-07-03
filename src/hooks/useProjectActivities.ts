@@ -64,6 +64,7 @@ async function fetchProjectActivities(
 export function useProjectActivities(projectId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const instanceId = useId();
 
   // Main query for activities
   const {
