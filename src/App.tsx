@@ -194,9 +194,11 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const App = () => (
-  <ErrorBoundary name="AppRoot">
-    <BrowserRouter>
+const AppContent = () => {
+  const location = useLocation();
+
+  return (
+    <ErrorBoundary name="AppRoot" resetKeys={[location.pathname]}>
       <ThemeProvider>
         <QueryProvider>
           <TooltipProvider>
@@ -760,8 +762,14 @@ const App = () => (
           </TooltipProvider>
         </QueryProvider>
       </ThemeProvider>
-    </BrowserRouter>
-  </ErrorBoundary>
+    </ErrorBoundary>
+  );
+};
+
+const App = () => (
+  <BrowserRouter>
+    <AppContent />
+  </BrowserRouter>
 );
 
 export default App;
