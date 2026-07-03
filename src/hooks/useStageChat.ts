@@ -36,7 +36,7 @@ export function useStageChat(stageId: string, projectId: string) {
     if (!stageId) return;
     const key = ["stage-chat", stageId];
     const channel = supabase
-      .channel(`stage-chat-${stageId}`)
+      .channel(`stage-chat-${stageId}-${instanceId}`)
       .on(
         "postgres_changes",
         {
