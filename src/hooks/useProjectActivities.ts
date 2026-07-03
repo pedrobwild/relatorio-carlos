@@ -85,7 +85,7 @@ export function useProjectActivities(projectId: string | undefined) {
   useEffect(() => {
     if (!projectId) return;
     const channel = supabase
-      .channel(`project_activities:${projectId}`)
+      .channel(`project_activities:${projectId}:${instanceId}`)
       .on(
         "postgres_changes",
         {
@@ -102,7 +102,7 @@ export function useProjectActivities(projectId: string | undefined) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId]);
+  }, [projectId, instanceId]);
 
   // Save all activities (bulk replace)
   const saveActivitiesMutation = useMutation({
