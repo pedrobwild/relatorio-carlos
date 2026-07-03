@@ -4,6 +4,11 @@ import "./index.css";
 import { initErrorMonitoring } from "./lib/errorMonitoring";
 import { registerOfflineCacheSW } from "./lib/registerSW";
 import { bootstrapAmplitudeConsent } from "./lib/amplitude";
+import { installChunkReloadHandler } from "./lib/chunkReload";
+
+// Install stale-chunk auto-recovery BEFORE anything else so we catch early
+// dynamic-import failures (post-deploy). Guarded internally against loops.
+installChunkReloadHandler();
 
 // Initialize error monitoring before rendering
 initErrorMonitoring();
