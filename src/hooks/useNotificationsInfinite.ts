@@ -32,6 +32,11 @@ export function useNotificationsInfinite() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const userId = user?.id;
+  // Unique per hook instance — see useNotifications for rationale. Multiple
+  // components can mount this hook concurrently (mobile bottom sheet + bell);
+  // Supabase Realtime does NOT dedupe channels by topic, so a shared topic
+  // triggers "cannot add postgres_changes callbacks ... after subscribe()".
+  const instanceId = useId();
 
   const query = useInfiniteQuery({
     queryKey: [KEY, userId],
