@@ -59,7 +59,7 @@ export function useStageChat(stageId: string, projectId: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [stageId, qc]);
+  }, [stageId, qc, instanceId]);
 
   const sendMessage = useMutation({
     mutationFn: async ({
