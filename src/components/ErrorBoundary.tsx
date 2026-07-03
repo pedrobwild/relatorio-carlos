@@ -1,10 +1,12 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { AlertTriangle, RefreshCw, Home, Trash2 } from "lucide-react";
 import { logError, generateCorrelationId } from "@/lib/errorLogger";
 import { captureError } from "@/lib/errorMonitoring";
 import { mapError } from "@/lib/errorMapping";
 import { ErrorView } from "@/components/ui-premium/ErrorView";
+import { hardReset } from "@/lib/hardReset";
+import { isChunkLoadError, tryReloadForStaleChunk } from "@/lib/chunkReload";
 
 interface Props {
   children: ReactNode;
