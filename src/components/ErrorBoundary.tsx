@@ -65,6 +65,15 @@ export class ErrorBoundary extends Component<Props, State> {
       }
     }
 
+    // Auto-recover from a stale dynamic-import chunk (post-deploy). Guarded
+    // internally against reload loops (60s window in sessionStorage).
+    if (isChunkLoadError(error)) {
+      const reloading = tryReloadForStaleChunk();
+      if (reloading) return;
+      // If suppressed by guard, fall through and show the error UI so the
+      // user can hit "Limpar e recarregar" manually.
+    }
+
     // Log to structured logger
     logError("ErrorBoundary caught an error", error, {
       component: `ErrorBoundary[${name}]`,
@@ -118,7 +127,12 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleReload = () => {
-    window.location.reload();
+    // Full hard reset: unregister SW, clear caches + query cache, cache-bust reload.
+    void hardReset();
+  };
+
+  private handleHardReset = () => {
+    void hardReset();
   };
 
   private handleGoHome = () => {
@@ -160,6 +174,10 @@ export class ErrorBoundary extends Component<Props, State> {
               <Button onClick={this.handleReload} variant="outline">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Recarregar página
+              </Button>
+              <Button onClick={this.handleHardReset} variant="default">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Limpar e recarregar
               </Button>
             </div>
           </div>
