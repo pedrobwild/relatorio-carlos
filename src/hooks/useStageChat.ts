@@ -15,6 +15,7 @@ export interface StageMessage {
 
 export function useStageChat(stageId: string, projectId: string) {
   const qc = useQueryClient();
+  const instanceId = useId();
 
   const query = useQuery({
     queryKey: ["stage-chat", stageId],
