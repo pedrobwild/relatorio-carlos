@@ -5,7 +5,7 @@
  * with optimistic updates for Gantt chart interactions.
  */
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useId, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -64,6 +64,7 @@ async function fetchProjectActivities(
 export function useProjectActivities(projectId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const instanceId = useId();
 
   // Main query for activities
   const {
@@ -84,7 +85,7 @@ export function useProjectActivities(projectId: string | undefined) {
   useEffect(() => {
     if (!projectId) return;
     const channel = supabase
-      .channel(`project_activities:${projectId}`)
+      .channel(`project_activities:${projectId}:${instanceId}`)
       .on(
         "postgres_changes",
         {
@@ -101,7 +102,7 @@ export function useProjectActivities(projectId: string | undefined) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId]);
+  }, [projectId, instanceId]);
 
   // Save all activities (bulk replace)
   const saveActivitiesMutation = useMutation({

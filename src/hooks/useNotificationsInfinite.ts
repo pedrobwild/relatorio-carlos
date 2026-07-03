@@ -4,7 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useId, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import {
@@ -32,6 +32,11 @@ export function useNotificationsInfinite() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const userId = user?.id;
+  // Unique per hook instance — see useNotifications for rationale. Multiple
+  // components can mount this hook concurrently (mobile bottom sheet + bell);
+  // Supabase Realtime does NOT dedupe channels by topic, so a shared topic
+  // triggers "cannot add postgres_changes callbacks ... after subscribe()".
+  const instanceId = useId();
 
   const query = useInfiniteQuery({
     queryKey: [KEY, userId],
@@ -66,7 +71,7 @@ export function useNotificationsInfinite() {
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel(`notifications-infinite-${userId}`)
+      .channel(`notifications-infinite-${userId}-${instanceId}`)
       .on(
         "postgres_changes",
         {
@@ -86,7 +91,7 @@ export function useNotificationsInfinite() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, qc]);
+  }, [userId, qc, instanceId]);
 
   const markReadMutation = useMutation({
     mutationFn: markAsRead,

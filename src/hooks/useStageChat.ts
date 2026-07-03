@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface StageMessage {
@@ -15,6 +15,7 @@ export interface StageMessage {
 
 export function useStageChat(stageId: string, projectId: string) {
   const qc = useQueryClient();
+  const instanceId = useId();
 
   const query = useQuery({
     queryKey: ["stage-chat", stageId],
@@ -35,7 +36,7 @@ export function useStageChat(stageId: string, projectId: string) {
     if (!stageId) return;
     const key = ["stage-chat", stageId];
     const channel = supabase
-      .channel(`stage-chat-${stageId}`)
+      .channel(`stage-chat-${stageId}-${instanceId}`)
       .on(
         "postgres_changes",
         {
@@ -58,7 +59,7 @@ export function useStageChat(stageId: string, projectId: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [stageId, qc]);
+  }, [stageId, qc, instanceId]);
 
   const sendMessage = useMutation({
     mutationFn: async ({
