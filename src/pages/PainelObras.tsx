@@ -211,8 +211,16 @@ type SortKey =
   | null;
 const NONE = "__none__";
 
-const fmtDate = (iso: string | null) =>
-  iso ? format(parseISO(iso), "dd/MM/yy", { locale: ptBR }) : "—";
+const parseValidIsoDate = (iso: string | null | undefined): Date | null => {
+  if (!iso) return null;
+  const parsed = parseISO(iso);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const fmtDate = (iso: string | null) => {
+  const parsed = parseValidIsoDate(iso);
+  return parsed ? format(parsed, "dd/MM/yy", { locale: ptBR }) : "—";
+};
 
 /**
  * Normaliza nomes recebidos em CAPS LOCK (ex: "FELIPE ABRANTES DALMAGRO") para
@@ -275,7 +283,8 @@ const computeOverdueDays = (obra: {
   if (obra.etapa === "Finalizada") return 0;
   const hojeIso = format(new Date(), "yyyy-MM-dd");
   if (obra.entrega_oficial >= hojeIso) return 0;
-  const planned = parseISO(obra.entrega_oficial);
+  const planned = parseValidIsoDate(obra.entrega_oficial);
+  if (!planned) return 0;
   const today = new Date();
   // Dias úteis entre o dia seguinte à entrega oficial e hoje (inclusivo).
   const start = new Date(planned);
@@ -391,7 +400,7 @@ function DateCell({
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode="single"
-            selected={value ? parseISO(value) : undefined}
+            selected={parseValidIsoDate(value) ?? undefined}
             onSelect={handleSelect}
             initialFocus
             className="p-3 pointer-events-auto"

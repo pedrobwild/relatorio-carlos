@@ -159,6 +159,28 @@ function patchToDbColumns(patch: PainelObraPatch): Record<string, unknown> {
   return out;
 }
 
+function asNullableString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function asDateString(value: unknown): string | null {
+  const text = asNullableString(value);
+  if (!text) return null;
+  // Banco usa DATE (YYYY-MM-DD), mas cache antigo pode ter timestamp completo.
+  const match = text.match(/^\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : null;
+}
+
+function asFiniteNumber(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function asCount(value: unknown): number {
+  const n = asFiniteNumber(value);
+  return n == null ? 0 : Math.max(0, Math.trunc(n));
+}
+
 export function usePainelObras() {
   const qc = useQueryClient();
   const {
@@ -189,35 +211,37 @@ export function usePainelObras() {
         painel_responsavel_id?: string | null;
         painel_ultima_atualizacao?: string;
       };
-      const responsavelId = raw.painel_responsavel_id ?? null;
+      const responsavelId = asNullableString(raw.painel_responsavel_id);
+      const progress = asFiniteNumber(s?.progress_percentage);
       return {
         id: p.id,
-        nome: p.name,
-        customer_name: p.customer_name ?? null,
-        engineer_name: p.engineer_name ?? null,
-        inicio_oficial: p.planned_start_date,
-        entrega_oficial: p.planned_end_date,
-        inicio_real: p.actual_start_date,
-        entrega_real: p.actual_end_date,
-        prazo: raw.painel_prazo ?? null,
+        nome: asNullableString(p.name) ?? "Obra sem nome",
+        customer_name: asNullableString(p.customer_name),
+        engineer_name: asNullableString(p.engineer_name),
+        inicio_oficial: asDateString(p.planned_start_date),
+        entrega_oficial: asDateString(p.planned_end_date),
+        inicio_real: asDateString(p.actual_start_date),
+        entrega_real: asDateString(p.actual_end_date),
+        prazo: asNullableString(raw.painel_prazo),
         etapa: raw.painel_etapa ?? null,
-        inicio_etapa: raw.painel_inicio_etapa ?? null,
-        previsao_avanco: raw.painel_previsao_avanco ?? null,
+        inicio_etapa: asDateString(raw.painel_inicio_etapa),
+        previsao_avanco: asDateString(raw.painel_previsao_avanco),
         status: raw.painel_status ?? null,
         relacionamento: raw.painel_relacionamento ?? null,
-        external_budget_id: raw.painel_external_budget_id ?? null,
+        external_budget_id: asNullableString(raw.painel_external_budget_id),
         responsavel_id: responsavelId,
         responsavel_nome: responsavelId
           ? (staffMap.get(responsavelId) ?? null)
           : null,
-        ultima_atualizacao: raw.painel_ultima_atualizacao ?? p.updated_at,
+        ultima_atualizacao:
+          asNullableString(raw.painel_ultima_atualizacao) ??
+          asNullableString(p.updated_at) ??
+          new Date(0).toISOString(),
         is_project_phase: !!p.is_project_phase,
         progress_percentage:
-          s?.progress_percentage != null
-            ? Math.round(Math.min(100, Number(s.progress_percentage)))
-            : null,
-        pending_count: s?.pending_count ?? 0,
-        overdue_count: s?.overdue_count ?? 0,
+          progress != null ? Math.round(Math.max(0, Math.min(100, progress))) : null,
+        pending_count: asCount(s?.pending_count),
+        overdue_count: asCount(s?.overdue_count),
       };
     });
   }, [projects, summaries, staffUsers]);
