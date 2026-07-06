@@ -80,7 +80,9 @@ import { cn } from "@/lib/utils";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { ProjectPurchase } from "@/hooks/useProjectPurchases";
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+
+type PurchaseUpdate = TablesUpdate<"project_purchases">;
 import { useAuth } from "@/hooks/useAuth";
 import { PaymentSection } from "@/pages/compras/PaymentSection";
 import { parseFlexibleBRDate, parseLocalDate } from "@/lib/dates";
