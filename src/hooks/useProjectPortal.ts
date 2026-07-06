@@ -500,7 +500,7 @@ export function useProjectPortal() {
       const { supabase } = await import("@/integrations/supabase/client");
       const { error } = await supabase
         .from("projects")
-        .update({ [column]: date })
+        .update({ [column]: date } as never)
         .eq("id", projectId);
       if (error) {
         toast.error("Erro ao salvar data do marco");

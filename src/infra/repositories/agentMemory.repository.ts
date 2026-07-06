@@ -139,9 +139,8 @@ const STATE_TABLE = "project_state_memory";
 const EVENTS_TABLE = "bwild_agent_events";
 
 // Cast para contornar tipos não regenerados. Substituir ao regenerar Database types.
-const db = supabase as unknown as {
-  from: (table: string) => ReturnType<typeof supabase.from>;
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 
 /**
  * Busca a memória do projeto. Retorna null se ainda não existir.

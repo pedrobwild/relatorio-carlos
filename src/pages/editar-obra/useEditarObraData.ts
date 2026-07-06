@@ -930,7 +930,7 @@ export function useEditarObraData(projectId: string | undefined) {
       try {
         const { error } = await supabase
           .from("project_activities")
-          .update({ [field]: value })
+          .update({ [field]: value } as never)
           .eq("id", id);
         if (error) throw error;
         setActivities((prev) =>
@@ -1109,7 +1109,7 @@ export function useEditarObraData(projectId: string | undefined) {
     try {
       const { error } = await supabase
         .from("project_payments")
-        .update({ [field]: value })
+        .update({ [field]: value } as never)
         .eq("id", id);
       if (error) throw error;
       setPayments(

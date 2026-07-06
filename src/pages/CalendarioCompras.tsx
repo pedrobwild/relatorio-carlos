@@ -1884,7 +1884,7 @@ export default function CalendarioCompras() {
       }
       const { error } = await supabase
         .from("project_purchases")
-        .update(updates)
+        .update(updates as never)
         .eq("id", id);
       if (error) throw error;
     },
@@ -1943,7 +1943,7 @@ export default function CalendarioCompras() {
 
       const { error } = await supabase
         .from("project_purchases")
-        .update(updates)
+        .update(updates as never)
         .eq("id", id);
       if (error) throw error;
     },
@@ -2015,7 +2015,7 @@ export default function CalendarioCompras() {
 
       const { error } = await supabase
         .from("project_purchases")
-        .update({ [field]: updateValue })
+        .update({ [field]: updateValue } as never)
         .eq("id", id);
       if (error) throw error;
     },
