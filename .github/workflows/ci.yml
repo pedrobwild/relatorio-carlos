@@ -6,13 +6,25 @@ on:
   pull_request:
     branches: [main]
 
+# Bump this salt when you want to bust every cache in this workflow at once
+# (e.g. after a corrupt cache incident or an unrelated toolchain change).
+env:
+  CACHE_VERSION: v2
+  NODE_VERSION: '20'
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -21,15 +33,12 @@ jobs:
           path: |
             node_modules
             ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          # Include OS, arch, node major and a manual salt so caches are only
+          # ever reused when the full toolchain matches. `hashFiles` on the
+          # lockfile keeps it bound to the exact resolved dependency tree.
+          key: ${{ runner.os }}-${{ runner.arch }}-node${{ env.NODE_VERSION }}-modules-${{ env.CACHE_VERSION }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+            ${{ runner.os }}-${{ runner.arch }}-node${{ env.NODE_VERSION }}-modules-${{ env.CACHE_VERSION }}-
 
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
@@ -42,9 +51,6 @@ jobs:
         run: npx tsc -b
 
       - name: Run unit tests
-        # Headroom over Node's default ~4 GB heap for this large jsdom/React
-        # suite (defense-in-depth; the prior OOM was a runaway redirect loop
-        # in ProtectedRoute.test.tsx, fixed at the test level).
         run: npx vitest run
         env:
           NODE_OPTIONS: --max-old-space-size=6144
@@ -63,15 +69,25 @@ jobs:
           VITE_GIT_BRANCH: ${{ github.ref_name }}
           VITE_BUILD_DATE: ${{ github.run_started_at }}
 
-
   e2e:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+    strategy:
+      # Don't cancel siblings — we want per-shard traces from every failure.
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -80,24 +96,20 @@ jobs:
           path: |
             node_modules
             ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node${{ env.NODE_VERSION }}-modules-${{ env.CACHE_VERSION }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-${{ runner.arch }}-node${{ env.NODE_VERSION }}-modules-${{ env.CACHE_VERSION }}-
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          # Playwright ships browser binaries per version; hashing the lockfile
+          # ensures the cache is invalidated whenever @playwright/test changes.
+          key: ${{ runner.os }}-${{ runner.arch }}-playwright-${{ env.CACHE_VERSION }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-playwright-
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+            ${{ runner.os }}-${{ runner.arch }}-playwright-${{ env.CACHE_VERSION }}-
 
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
@@ -107,8 +119,12 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
-      - name: Run E2E smoke tests
-        run: npx playwright test smoke.spec.ts
+      - name: Install Playwright OS deps (when browsers were cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run Playwright E2E (shard ${{ matrix.shard }}/2)
+        run: npx playwright test smoke.spec.ts painel-cronograma-entrega-sync.spec.ts --shard=${{ matrix.shard }}/2 --reporter=list,blob
         env:
           PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -123,24 +139,21 @@ jobs:
           TEST_STAFF_PASSWORD: ${{ secrets.TEST_STAFF_PASSWORD }}
           TEST_PROJECT_ID: ${{ secrets.TEST_PROJECT_ID }}
 
-      - name: Run Painel ↔ Cronograma sync regression (desktop + mobile)
-        run: npx playwright test painel-cronograma-entrega-sync.spec.ts --reporter=list
-        env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-          TEST_STAFF_EMAIL: ${{ secrets.TEST_STAFF_EMAIL }}
-          TEST_STAFF_PASSWORD: ${{ secrets.TEST_STAFF_PASSWORD }}
-          TEST_PROJECT_ID: ${{ secrets.TEST_PROJECT_ID }}
-
-      - name: Upload test artifacts
+      - name: Upload Playwright HTML report (shard ${{ matrix.shard }})
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-e2e-shard-${{ matrix.shard }}
           path: playwright-report/
-          retention-days: 7
+          retention-days: 14
+
+      - name: Upload Playwright traces & screenshots (shard ${{ matrix.shard }})
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts-e2e-shard-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 14
 
   painel-obras-regression:
     runs-on: ubuntu-latest
@@ -151,6 +164,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
       - name: Cache node_modules
         uses: actions/cache@v4
         id: node-modules-cache
@@ -158,24 +177,18 @@ jobs:
           path: |
             node_modules
             ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node${{ env.NODE_VERSION }}-modules-${{ env.CACHE_VERSION }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-${{ runner.arch }}-node${{ env.NODE_VERSION }}-modules-${{ env.CACHE_VERSION }}-
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-playwright-${{ env.CACHE_VERSION }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-playwright-
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+            ${{ runner.os }}-${{ runner.arch }}-playwright-${{ env.CACHE_VERSION }}-
 
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
@@ -184,6 +197,10 @@ jobs:
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright OS deps (when browsers were cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Run /gestao/painel-obras admin regression (desktop + mobile)
         run: npx playwright test painel-obras-admin-regression.spec.ts --reporter=list
@@ -197,13 +214,21 @@ jobs:
           TEST_STAFF_EMAIL: ${{ secrets.TEST_STAFF_EMAIL }}
           TEST_STAFF_PASSWORD: ${{ secrets.TEST_STAFF_PASSWORD }}
 
-      - name: Upload painel-obras artifacts
+      - name: Upload painel-obras HTML report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-painel-obras-report
           path: playwright-report/
-          retention-days: 7
+          retention-days: 14
+
+      - name: Upload painel-obras traces & screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-painel-obras-artifacts
+          path: test-results/
+          retention-days: 14
 
   a11y:
     runs-on: ubuntu-latest
@@ -214,6 +239,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
       - name: Cache node_modules
         uses: actions/cache@v4
         id: node-modules-cache
@@ -221,24 +252,18 @@ jobs:
           path: |
             node_modules
             ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-node${{ env.NODE_VERSION }}-modules-${{ env.CACHE_VERSION }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-${{ runner.arch }}-node${{ env.NODE_VERSION }}-modules-${{ env.CACHE_VERSION }}-
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-playwright-${{ env.CACHE_VERSION }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-playwright-
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+            ${{ runner.os }}-${{ runner.arch }}-playwright-${{ env.CACHE_VERSION }}-
 
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
@@ -247,6 +272,10 @@ jobs:
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright OS deps (when browsers were cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Run axe-core a11y suite
         run: npm run test:a11y -- --reporter=list
@@ -261,10 +290,18 @@ jobs:
           TEST_STAFF_PASSWORD: ${{ secrets.TEST_STAFF_PASSWORD }}
           TEST_PROJECT_ID: ${{ secrets.TEST_PROJECT_ID }}
 
-      - name: Upload a11y artifacts
+      - name: Upload a11y HTML report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-a11y-report
           path: playwright-report/
-          retention-days: 7
+          retention-days: 14
+
+      - name: Upload a11y traces & screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-a11y-artifacts
+          path: test-results/
+          retention-days: 14
