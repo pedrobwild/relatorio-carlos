@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Json } from "@/integrations/supabase/types";
+import type { Json, TablesUpdate } from "@/integrations/supabase/types";
+
+type ProjectTemplatesUpdate = TablesUpdate<"project_templates">;
 
 export interface TemplateActivity {
   description: string;
@@ -162,7 +164,7 @@ export function useUpdateProjectTemplate() {
       id,
       ...input
     }: Partial<CreateTemplateInput> & { id: string }) => {
-      const updateData: Record<string, unknown> = {};
+      const updateData: ProjectTemplatesUpdate = {};
       if (input.name !== undefined) updateData.name = input.name;
       if (input.description !== undefined)
         updateData.description = input.description;
@@ -179,7 +181,7 @@ export function useUpdateProjectTemplate() {
 
       const { data, error } = await supabase
         .from("project_templates")
-        .update(updateData as never)
+        .update(updateData)
         .eq("id", id)
         .select()
         .single();
