@@ -113,9 +113,12 @@ jobs:
         id: compute
         run: |
           set -euo pipefail
+          mkdir -p shard-plan
           # --list does not launch browsers, so no Playwright browser cache needed.
-          COUNT=$(npx playwright test $E2E_SPECS --list 2>&1 \
-            | grep -oE 'Total:? *[0-9]+ *tests?' \
+          # Capture the full listing so we can also record which specs feed the matrix.
+          LIST_RAW=shard-plan/playwright-list.txt
+          npx playwright test $E2E_SPECS --list > "$LIST_RAW" 2>&1 || true
+          COUNT=$(grep -oE 'Total:? *[0-9]+ *tests?' "$LIST_RAW" \
             | grep -oE '[0-9]+' \
             | tail -1)
           COUNT=${COUNT:-1}
@@ -126,6 +129,51 @@ jobs:
           echo "Detected $COUNT e2e tests → $TOTAL shard(s)"
           echo "shards=[$SHARDS]" >> "$GITHUB_OUTPUT"
           echo "total=$TOTAL"    >> "$GITHUB_OUTPUT"
+
+          # Persist an audit-friendly JSON alongside the raw listing so reviewers
+          # can see exactly which specs/tests were partitioned and how.
+          SPECS_JSON=$(printf '%s\n' $E2E_SPECS | jq -R . | jq -s .)
+          # Extract test titles from Playwright's `--list` output (lines that
+          # start with whitespace + a chromium/browser project marker).
+          TESTS_JSON=$(grep -E '^\s+\[' "$LIST_RAW" \
+            | sed -E 's/^\s+//' \
+            | jq -R . | jq -s .)
+          jq -n \
+            --arg commit "$GITHUB_SHA" \
+            --arg ref "$GITHUB_REF" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            --argjson specs "$SPECS_JSON" \
+            --argjson tests "$TESTS_JSON" \
+            --argjson count "$COUNT" \
+            --argjson total "$TOTAL" \
+            --argjson per_shard "$TESTS_PER_SHARD" \
+            --argjson max_shards "$MAX_SHARDS" \
+            '{
+              commit: $commit,
+              ref: $ref,
+              run_id: $run_id,
+              tests_per_shard: $per_shard,
+              max_shards: $max_shards,
+              test_count: $count,
+              shard_total: $total,
+              shards: [range(1; $total + 1) | { shard: ., of: $total }],
+              specs: $specs,
+              tests: $tests
+            }' > shard-plan/e2e-shards.json
+
+          echo "── e2e-shards.json ──"
+          cat shard-plan/e2e-shards.json
+
+      - name: Upload e2e shard plan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-shard-plan
+          path: |
+            shard-plan/e2e-shards.json
+            shard-plan/playwright-list.txt
+          retention-days: 14
+          if-no-files-found: warn
 
   e2e:
     runs-on: ubuntu-latest
