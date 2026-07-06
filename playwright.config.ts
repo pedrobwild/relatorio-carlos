@@ -11,17 +11,22 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
+  // Retry twice on CI to absorb intermittent network/UI hiccups without
+  // masking real regressions (a real bug still fails all 3 attempts).
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: [
-    ['list'],
-    ['html', { open: 'never' }],
-  ],
+  // Allow limited intra-shard parallelism on CI runners (2 vCPU); sharding
+  // across jobs provides the primary speed-up.
+  workers: process.env.CI ? 2 : undefined,
+  reporter: process.env.CI
+    ? [['github'], ['list'], ['html', { open: 'never' }], ['blob']]
+    : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8080',
-    trace: 'on-first-retry',
+    // Keep trace + video for any failure (not only retries) so CI artifacts
+    // always contain enough context to debug the failed run.
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: 'on-first-retry',
+    video: 'retain-on-failure',
   },
   projects: [
     {
