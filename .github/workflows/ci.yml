@@ -186,7 +186,6 @@ jobs:
         shard: ${{ fromJson(needs.plan-e2e.outputs.shards) }}
     env:
       SHARD_TOTAL: ${{ needs.plan-e2e.outputs.total }}
-      E2E_SPECS: smoke.spec.ts painel-cronograma-entrega-sync.spec.ts
 
     steps:
       - name: Checkout repository
@@ -230,8 +229,32 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
 
+      # Single source of truth: the specs + partitioning come from the
+      # e2e-shard-plan artifact produced by plan-e2e. This job never
+      # recomputes the list, so an audit of e2e-shards.json fully explains
+      # what ran and how it was sharded.
+      - name: Download e2e shard plan
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-shard-plan
+          path: shard-plan
+
+      - name: Resolve specs and shard total from plan
+        id: plan
+        run: |
+          set -euo pipefail
+          PLAN=shard-plan/e2e-shards.json
+          test -f "$PLAN" || { echo "::error::missing $PLAN"; exit 1; }
+          SPECS=$(jq -r '.specs | join(" ")' "$PLAN")
+          TOTAL=$(jq -r '.shard_total' "$PLAN")
+          if [ "$TOTAL" != "$SHARD_TOTAL" ]; then
+            echo "::error::shard_total mismatch: plan=$TOTAL matrix=$SHARD_TOTAL"; exit 1;
+          fi
+          echo "Specs from plan: $SPECS"
+          echo "specs=$SPECS" >> "$GITHUB_OUTPUT"
+
       - name: Run Playwright E2E (shard ${{ matrix.shard }}/${{ env.SHARD_TOTAL }})
-        run: npx playwright test $E2E_SPECS --shard=${{ matrix.shard }}/${{ env.SHARD_TOTAL }}
+        run: npx playwright test ${{ steps.plan.outputs.specs }} --shard=${{ matrix.shard }}/${{ env.SHARD_TOTAL }}
         env:
           PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
