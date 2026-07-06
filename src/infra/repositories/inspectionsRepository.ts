@@ -8,6 +8,8 @@ export type Inspection = InspectionRow & {
 };
 export type InspectionItem =
   Database["public"]["Tables"]["inspection_items"]["Row"];
+type InspectionItemUpdate =
+  Database["public"]["Tables"]["inspection_items"]["Update"];
 export type InspectionStatus = Database["public"]["Enums"]["inspection_status"];
 export type InspectionItemResult =
   Database["public"]["Enums"]["inspection_item_result"];
@@ -113,7 +115,7 @@ export async function updateInspectionItem(params: {
   notes?: string | null;
   photo_paths?: string[];
 }): Promise<void> {
-  const update: Record<string, unknown> = {
+  const update: InspectionItemUpdate = {
     updated_at: new Date().toISOString(),
   };
   if (params.result !== undefined) update.result = params.result;
@@ -122,7 +124,7 @@ export async function updateInspectionItem(params: {
 
   const { error } = await supabase
     .from("inspection_items")
-    .update(update as never)
+    .update(update)
     .eq("id", params.id);
   if (error) throw error;
 }

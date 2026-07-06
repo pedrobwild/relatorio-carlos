@@ -138,9 +138,73 @@ export interface CreateAgentEventInput {
 const STATE_TABLE = "project_state_memory";
 const EVENTS_TABLE = "bwild_agent_events";
 
-// Cast para contornar tipos não regenerados. Substituir ao regenerar Database types.
+// As tabelas `project_state_memory` e `bwild_agent_events` ainda não estão no
+// Database type gerado. Como não temos schema tipado para elas, criamos wrappers
+// que expõem funções com assinaturas totalmente tipadas (Insert/Update/Row),
+// confinando o cast dinâmico numa única linha por operação. Ao regenerar o
+// Database type, basta substituir `unsafeFrom(...)` por `supabase.from(...)`.
+import type { PostgrestError } from "@supabase/supabase-js";
+
+type StateInsert = { project_id: string; state: Json };
+type EventInsert = CreateAgentEventInput;
+
+type SingleResult<T> = { data: T | null; error: PostgrestError | null };
+type ListResult<T> = { data: T[] | null; error: PostgrestError | null };
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
+type UnsafeBuilder = any;
+function unsafeFrom(table: string): UnsafeBuilder {
+  return (supabase.from as unknown as (t: string) => UnsafeBuilder)(table);
+}
+
+async function selectStateByProject(
+  projectId: string,
+): Promise<SingleResult<ProjectStateMemory>> {
+  const result = (await unsafeFrom(STATE_TABLE)
+    .select("*")
+    .eq("project_id", projectId)
+    .maybeSingle()) as SingleResult<ProjectStateMemory>;
+  return { data: result.data ?? null, error: result.error };
+}
+
+async function insertState(
+  values: StateInsert,
+): Promise<SingleResult<ProjectStateMemory>> {
+  return (await unsafeFrom(STATE_TABLE)
+    .insert(values)
+    .select("*")
+    .single()) as SingleResult<ProjectStateMemory>;
+}
+
+async function upsertState(
+  values: StateInsert,
+): Promise<SingleResult<ProjectStateMemory>> {
+  return (await unsafeFrom(STATE_TABLE)
+    .upsert(values, { onConflict: "project_id" })
+    .select("*")
+    .single()) as SingleResult<ProjectStateMemory>;
+}
+
+async function selectEventsByProject(
+  projectId: string,
+  limit: number,
+): Promise<ListResult<BwildAgentEvent>> {
+  const result = (await unsafeFrom(EVENTS_TABLE)
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .limit(limit)) as ListResult<BwildAgentEvent>;
+  return { data: result.data ?? null, error: result.error };
+}
+
+async function insertEvent(
+  values: EventInsert,
+): Promise<SingleResult<BwildAgentEvent>> {
+  return (await unsafeFrom(EVENTS_TABLE)
+    .insert(values)
+    .select("*")
+    .single()) as SingleResult<BwildAgentEvent>;
+}
 
 /**
  * Busca a memória do projeto. Retorna null se ainda não existir.
@@ -149,16 +213,7 @@ export async function getProjectState(
   projectId: string,
 ): Promise<RepositoryResult<ProjectStateMemory | null>> {
   return executeQuery(async () => {
-    const { data, error } = await db
-      .from(STATE_TABLE)
-      .select("*")
-      .eq("project_id", projectId)
-      .maybeSingle();
-
-    return {
-      data: (data as unknown as ProjectStateMemory | null) ?? null,
-      error,
-    };
+    return await selectStateByProject(projectId);
   });
 }
 
@@ -178,12 +233,7 @@ export async function ensureProjectState(
   }
 
   return executeQuery(async () => {
-    const { data, error } = await db
-      .from(STATE_TABLE)
-      .insert({ project_id: projectId, state: {} })
-      .select("*")
-      .single();
-    return { data: data as unknown as ProjectStateMemory, error };
+    return await insertState({ project_id: projectId, state: {} });
   });
 }
 
@@ -196,15 +246,10 @@ export async function replaceProjectState(
   state: ProjectState,
 ): Promise<RepositoryResult<ProjectStateMemory>> {
   return executeQuery(async () => {
-    const { data, error } = await db
-      .from(STATE_TABLE)
-      .upsert(
-        { project_id: projectId, state: state as unknown as Json },
-        { onConflict: "project_id" },
-      )
-      .select("*")
-      .single();
-    return { data: data as unknown as ProjectStateMemory, error };
+    return await upsertState({
+      project_id: projectId,
+      state: state as unknown as Json,
+    });
   });
 }
 
@@ -217,16 +262,7 @@ export async function listAgentEvents(
 ): Promise<RepositoryListResult<BwildAgentEvent>> {
   const limit = options.limit ?? 50;
   return executeListQuery(async () => {
-    const { data, error } = await db
-      .from(EVENTS_TABLE)
-      .select("*")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    return {
-      data: (data as unknown as BwildAgentEvent[] | null) ?? null,
-      error,
-    };
+    return await selectEventsByProject(projectId, limit);
   });
 }
 
@@ -238,11 +274,6 @@ export async function recordAgentEvent(
   input: CreateAgentEventInput,
 ): Promise<RepositoryResult<BwildAgentEvent>> {
   return executeQuery(async () => {
-    const { data, error } = await db
-      .from(EVENTS_TABLE)
-      .insert(input)
-      .select("*")
-      .single();
-    return { data: data as unknown as BwildAgentEvent, error };
+    return await insertEvent(input);
   });
 }

@@ -80,7 +80,9 @@ import { cn } from "@/lib/utils";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { ProjectPurchase } from "@/hooks/useProjectPurchases";
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+
+type PurchaseUpdate = TablesUpdate<"project_purchases">;
 import { useAuth } from "@/hooks/useAuth";
 import { PaymentSection } from "@/pages/compras/PaymentSection";
 import { parseFlexibleBRDate, parseLocalDate } from "@/lib/dates";
@@ -1851,7 +1853,7 @@ export default function CalendarioCompras() {
     }) => {
       //"Pago" e"Pago Parcial" são estados derivados de paid_at + paid_amount.
       // Ao mover para outro status logístico: limpamos paid_at/paid_amount.
-      const updates: Record<string, unknown> = {};
+      const updates: PurchaseUpdate = {};
       if (value === "paid" || value === "partial") {
         //`paidDate` chega como'YYYY-MM-DD' (data local escolhida no picker).
         // Convertemos para ISO no fuso local — meio-dia evita drift de UTC.
@@ -1884,7 +1886,7 @@ export default function CalendarioCompras() {
       }
       const { error } = await supabase
         .from("project_purchases")
-        .update(updates as never)
+        .update(updates)
         .eq("id", id);
       if (error) throw error;
     },
@@ -1921,7 +1923,7 @@ export default function CalendarioCompras() {
         if (!iso) throw new Error("INVALID_DATE");
         normalized = iso;
       }
-      const updates: Record<string, unknown> = { [field]: normalized };
+      const updates: PurchaseUpdate = { [field]: normalized };
 
       // Quando o usuário ajusta a data prevista de pagamento e a compra
       // ainda não foi paga (paid_at vazio), recalculamos a data prevista
@@ -1943,7 +1945,7 @@ export default function CalendarioCompras() {
 
       const { error } = await supabase
         .from("project_purchases")
-        .update(updates as never)
+        .update(updates)
         .eq("id", id);
       if (error) throw error;
     },
@@ -2013,9 +2015,10 @@ export default function CalendarioCompras() {
         updateValue = null;
       }
 
+      const patch: PurchaseUpdate = { [field]: updateValue };
       const { error } = await supabase
         .from("project_purchases")
-        .update({ [field]: updateValue } as never)
+        .update(patch)
         .eq("id", id);
       if (error) throw error;
     },

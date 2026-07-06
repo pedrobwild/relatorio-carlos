@@ -5,6 +5,7 @@ export type NcSeverity = Database["public"]["Enums"]["nc_severity"];
 export type NcStatus = Database["public"]["Enums"]["nc_status"];
 
 type NcRow = Database["public"]["Tables"]["non_conformities"]["Row"];
+type NcUpdate = Database["public"]["Tables"]["non_conformities"]["Update"];
 export type NonConformity = NcRow & {
   responsible_user_name?: string | null;
 };
@@ -110,7 +111,7 @@ export async function updateNonConformity(params: {
   estimated_cost?: number | null;
   actual_cost?: number | null;
 }): Promise<void> {
-  const update: Record<string, unknown> = {
+  const update: NcUpdate = {
     updated_at: new Date().toISOString(),
   };
   if (params.title !== undefined) update.title = params.title;
@@ -127,7 +128,7 @@ export async function updateNonConformity(params: {
 
   const { error } = await supabase
     .from("non_conformities")
-    .update(update as never)
+    .update(update)
     .eq("id", params.id);
   if (error) throw error;
 }
@@ -137,7 +138,7 @@ export async function updateNcEvidencePhotos(params: {
   evidence_photos_before?: string[];
   evidence_photos_after?: string[];
 }): Promise<void> {
-  const update: Record<string, unknown> = {
+  const update: NcUpdate = {
     updated_at: new Date().toISOString(),
   };
   if (params.evidence_photos_before !== undefined)
@@ -147,7 +148,7 @@ export async function updateNcEvidencePhotos(params: {
 
   const { error } = await supabase
     .from("non_conformities")
-    .update(update as never)
+    .update(update)
     .eq("id", params.id);
   if (error) throw error;
 }
