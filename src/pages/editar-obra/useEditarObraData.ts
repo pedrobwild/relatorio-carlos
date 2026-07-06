@@ -1114,9 +1114,12 @@ export function useEditarObraData(projectId: string | undefined) {
     value: string | number | null,
   ) => {
     try {
+      const patch: PaymentUpdate = {
+        [field as keyof PaymentUpdate]: value,
+      } as PaymentUpdate;
       const { error } = await supabase
         .from("project_payments")
-        .update({ [field]: value } as never)
+        .update(patch)
         .eq("id", id);
       if (error) throw error;
       setPayments(
