@@ -252,6 +252,17 @@ export default function Auth() {
     }
   };
 
+  // Auto-submit when landing with prefilled credentials (magic-link style)
+  useEffect(() => {
+    if (checkingSession) return;
+    if (!isDemoPrefill) return;
+    if (autoSubmittedRef.current) return;
+    if (loading) return;
+    autoSubmittedRef.current = true;
+    void handleLogin({ preventDefault: () => {} } as React.FormEvent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkingSession, isDemoPrefill]);
+
   const handlePasswordKeyEvent = (e: React.KeyboardEvent) => {
     if (typeof e.getModifierState === "function") {
       setCapsLockOn(e.getModifierState("CapsLock"));
