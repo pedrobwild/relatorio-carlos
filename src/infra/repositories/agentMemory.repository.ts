@@ -139,46 +139,68 @@ const STATE_TABLE = "project_state_memory";
 const EVENTS_TABLE = "bwild_agent_events";
 
 // As tabelas `project_state_memory` e `bwild_agent_events` ainda não estão no
-// Database type gerado. Definimos aqui as shapes de Insert/Update esperadas,
-// e usamos um helper `fromTable` que confina o cast em UM único ponto, mantendo
-// as chamadas (insert/upsert/update/select) totalmente tipadas.
+// Database type gerado. Como não temos schema tipado para elas, criamos wrappers
+// que expõem funções com assinaturas totalmente tipadas (Insert/Update/Row),
+// confinando o cast dinâmico numa única linha por operação. Ao regenerar o
+// Database type, basta substituir `unsafeFrom(...)` por `supabase.from(...)`.
 type StateInsert = { project_id: string; state: Json };
-type StateUpsert = StateInsert;
 type EventInsert = CreateAgentEventInput;
 
-type TypedTable<Row, Insert, Update = Partial<Insert>> = {
-  select: (columns: string) => TypedTable<Row, Insert, Update>;
-  insert: (values: Insert) => TypedTable<Row, Insert, Update>;
-  upsert: (
-    values: Insert,
-    options?: { onConflict?: string },
-  ) => TypedTable<Row, Insert, Update>;
-  update: (values: Update) => TypedTable<Row, Insert, Update>;
-  eq: (
-    column: keyof Row & string,
-    value: Row[keyof Row],
-  ) => TypedTable<Row, Insert, Update>;
-  order: (
-    column: keyof Row & string,
-    options?: { ascending?: boolean },
-  ) => TypedTable<Row, Insert, Update>;
-  limit: (n: number) => TypedTable<Row, Insert, Update>;
-  maybeSingle: () => Promise<{ data: Row | null; error: unknown }>;
-  single: () => Promise<{ data: Row; error: unknown }>;
-  then: Promise<{ data: Row[] | null; error: unknown }>["then"];
-};
-
-function fromTable<Row, Insert, Update = Partial<Insert>>(
-  table: string,
-): TypedTable<Row, Insert, Update> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UnsafeBuilder = any;
+function unsafeFrom(table: string): UnsafeBuilder {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (supabase.from as any)(table) as TypedTable<Row, Insert, Update>;
+  return (supabase.from as unknown as (t: string) => UnsafeBuilder)(table);
 }
 
-const stateTable = () =>
-  fromTable<ProjectStateMemory, StateInsert, StateUpsert>(STATE_TABLE);
-const eventsTable = () =>
-  fromTable<BwildAgentEvent, EventInsert>(EVENTS_TABLE);
+async function selectStateByProject(
+  projectId: string,
+): Promise<{ data: ProjectStateMemory | null; error: unknown }> {
+  const result = await unsafeFrom(STATE_TABLE)
+    .select("*")
+    .eq("project_id", projectId)
+    .maybeSingle();
+  return { data: result.data ?? null, error: result.error };
+}
+
+async function insertState(
+  values: StateInsert,
+): Promise<{ data: ProjectStateMemory | null; error: unknown }> {
+  return await unsafeFrom(STATE_TABLE)
+    .insert(values)
+    .select("*")
+    .single();
+}
+
+async function upsertState(
+  values: StateInsert,
+): Promise<{ data: ProjectStateMemory | null; error: unknown }> {
+  return await unsafeFrom(STATE_TABLE)
+    .upsert(values, { onConflict: "project_id" })
+    .select("*")
+    .single();
+}
+
+async function selectEventsByProject(
+  projectId: string,
+  limit: number,
+): Promise<{ data: BwildAgentEvent[] | null; error: unknown }> {
+  const result = await unsafeFrom(EVENTS_TABLE)
+    .select("*")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return { data: result.data ?? null, error: result.error };
+}
+
+async function insertEvent(
+  values: EventInsert,
+): Promise<{ data: BwildAgentEvent | null; error: unknown }> {
+  return await unsafeFrom(EVENTS_TABLE)
+    .insert(values)
+    .select("*")
+    .single();
+}
 
 /**
  * Busca a memória do projeto. Retorna null se ainda não existir.
@@ -187,16 +209,7 @@ export async function getProjectState(
   projectId: string,
 ): Promise<RepositoryResult<ProjectStateMemory | null>> {
   return executeQuery(async () => {
-    const { data, error } = await db
-      .from(STATE_TABLE)
-      .select("*")
-      .eq("project_id", projectId)
-      .maybeSingle();
-
-    return {
-      data: (data as unknown as ProjectStateMemory | null) ?? null,
-      error,
-    };
+    return await selectStateByProject(projectId);
   });
 }
 
@@ -216,12 +229,7 @@ export async function ensureProjectState(
   }
 
   return executeQuery(async () => {
-    const { data, error } = await db
-      .from(STATE_TABLE)
-      .insert({ project_id: projectId, state: {} })
-      .select("*")
-      .single();
-    return { data: data as unknown as ProjectStateMemory, error };
+    return await insertState({ project_id: projectId, state: {} });
   });
 }
 
@@ -234,15 +242,10 @@ export async function replaceProjectState(
   state: ProjectState,
 ): Promise<RepositoryResult<ProjectStateMemory>> {
   return executeQuery(async () => {
-    const { data, error } = await db
-      .from(STATE_TABLE)
-      .upsert(
-        { project_id: projectId, state: state as unknown as Json },
-        { onConflict: "project_id" },
-      )
-      .select("*")
-      .single();
-    return { data: data as unknown as ProjectStateMemory, error };
+    return await upsertState({
+      project_id: projectId,
+      state: state as unknown as Json,
+    });
   });
 }
 
@@ -255,16 +258,7 @@ export async function listAgentEvents(
 ): Promise<RepositoryListResult<BwildAgentEvent>> {
   const limit = options.limit ?? 50;
   return executeListQuery(async () => {
-    const { data, error } = await db
-      .from(EVENTS_TABLE)
-      .select("*")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    return {
-      data: (data as unknown as BwildAgentEvent[] | null) ?? null,
-      error,
-    };
+    return await selectEventsByProject(projectId, limit);
   });
 }
 
@@ -276,11 +270,6 @@ export async function recordAgentEvent(
   input: CreateAgentEventInput,
 ): Promise<RepositoryResult<BwildAgentEvent>> {
   return executeQuery(async () => {
-    const { data, error } = await db
-      .from(EVENTS_TABLE)
-      .insert(input)
-      .select("*")
-      .single();
-    return { data: data as unknown as BwildAgentEvent, error };
+    return await insertEvent(input);
   });
 }
