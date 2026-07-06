@@ -11,6 +11,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 // ----- types -----
@@ -248,7 +249,7 @@ export function useUpdateCsTicket() {
     mutationFn: async ({ id, patch }: { id: string; patch: CsTicketPatch }) => {
       const { error } = await supabase
         .from("cs_tickets")
-        .update(patch as never)
+        .update(patch as TablesUpdate<"cs_tickets">)
         .eq("id", id);
       if (error) throw error;
     },

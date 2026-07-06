@@ -498,9 +498,15 @@ export function useProjectPortal() {
       if (!projectId) return;
       const column = milestoneKeyToColumn[key];
       const { supabase } = await import("@/integrations/supabase/client");
+      const { TablesUpdate: _typeMarker } = {} as {
+        TablesUpdate: import("@/integrations/supabase/types").TablesUpdate<"projects">;
+      };
+      void _typeMarker;
+      const patch: import("@/integrations/supabase/types").TablesUpdate<"projects"> =
+        { [column]: date };
       const { error } = await supabase
         .from("projects")
-        .update({ [column]: date } as never)
+        .update(patch)
         .eq("id", projectId);
       if (error) {
         toast.error("Erro ao salvar data do marco");
