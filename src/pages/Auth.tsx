@@ -34,6 +34,12 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const prefillEmail = searchParams.get("email") ?? "";
   const prefillPassword = searchParams.get("password") ?? "";
+  const redirectParamRaw = searchParams.get("redirect") ?? "";
+  // Only allow same-origin, absolute internal paths (starts with "/", not "//")
+  const redirectPath =
+    redirectParamRaw.startsWith("/") && !redirectParamRaw.startsWith("//")
+      ? redirectParamRaw
+      : "";
   const isDemoPrefill = !!prefillEmail && !!prefillPassword;
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState(prefillPassword);
@@ -47,10 +53,16 @@ export default function Auth() {
     password?: string;
   }>({});
   const hasRedirectedRef = useRef(false);
+  const autoSubmittedRef = useRef(false);
   const navigate = useNavigate();
   const { toast: _toast } = useToast();
 
   const redirectBasedOnRole = async (userId: string) => {
+    // Explicit redirect param wins over role-based routing
+    if (redirectPath) {
+      navigate(redirectPath, { replace: true });
+      return;
+    }
     try {
       const { data: roleRows } = await supabase
         .from("user_roles")
@@ -239,6 +251,17 @@ export default function Auth() {
       );
     }
   };
+
+  // Auto-submit when landing with prefilled credentials (magic-link style)
+  useEffect(() => {
+    if (checkingSession) return;
+    if (!isDemoPrefill) return;
+    if (autoSubmittedRef.current) return;
+    if (loading) return;
+    autoSubmittedRef.current = true;
+    void handleLogin({ preventDefault: () => {} } as React.FormEvent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkingSession, isDemoPrefill]);
 
   const handlePasswordKeyEvent = (e: React.KeyboardEvent) => {
     if (typeof e.getModifierState === "function") {
