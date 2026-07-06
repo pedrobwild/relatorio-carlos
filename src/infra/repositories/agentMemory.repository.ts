@@ -143,63 +143,67 @@ const EVENTS_TABLE = "bwild_agent_events";
 // que expõem funções com assinaturas totalmente tipadas (Insert/Update/Row),
 // confinando o cast dinâmico numa única linha por operação. Ao regenerar o
 // Database type, basta substituir `unsafeFrom(...)` por `supabase.from(...)`.
+import type { PostgrestError } from "@supabase/supabase-js";
+
 type StateInsert = { project_id: string; state: Json };
 type EventInsert = CreateAgentEventInput;
+
+type SingleResult<T> = { data: T | null; error: PostgrestError | null };
+type ListResult<T> = { data: T[] | null; error: PostgrestError | null };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UnsafeBuilder = any;
 function unsafeFrom(table: string): UnsafeBuilder {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (supabase.from as unknown as (t: string) => UnsafeBuilder)(table);
 }
 
 async function selectStateByProject(
   projectId: string,
-): Promise<{ data: ProjectStateMemory | null; error: unknown }> {
-  const result = await unsafeFrom(STATE_TABLE)
+): Promise<SingleResult<ProjectStateMemory>> {
+  const result = (await unsafeFrom(STATE_TABLE)
     .select("*")
     .eq("project_id", projectId)
-    .maybeSingle();
+    .maybeSingle()) as SingleResult<ProjectStateMemory>;
   return { data: result.data ?? null, error: result.error };
 }
 
 async function insertState(
   values: StateInsert,
-): Promise<{ data: ProjectStateMemory | null; error: unknown }> {
-  return await unsafeFrom(STATE_TABLE)
+): Promise<SingleResult<ProjectStateMemory>> {
+  return (await unsafeFrom(STATE_TABLE)
     .insert(values)
     .select("*")
-    .single();
+    .single()) as SingleResult<ProjectStateMemory>;
 }
 
 async function upsertState(
   values: StateInsert,
-): Promise<{ data: ProjectStateMemory | null; error: unknown }> {
-  return await unsafeFrom(STATE_TABLE)
+): Promise<SingleResult<ProjectStateMemory>> {
+  return (await unsafeFrom(STATE_TABLE)
     .upsert(values, { onConflict: "project_id" })
     .select("*")
-    .single();
+    .single()) as SingleResult<ProjectStateMemory>;
 }
 
 async function selectEventsByProject(
   projectId: string,
   limit: number,
-): Promise<{ data: BwildAgentEvent[] | null; error: unknown }> {
-  const result = await unsafeFrom(EVENTS_TABLE)
+): Promise<ListResult<BwildAgentEvent>> {
+  const result = (await unsafeFrom(EVENTS_TABLE)
     .select("*")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .limit(limit)) as ListResult<BwildAgentEvent>;
   return { data: result.data ?? null, error: result.error };
 }
 
 async function insertEvent(
   values: EventInsert,
-): Promise<{ data: BwildAgentEvent | null; error: unknown }> {
-  return await unsafeFrom(EVENTS_TABLE)
+): Promise<SingleResult<BwildAgentEvent>> {
+  return (await unsafeFrom(EVENTS_TABLE)
     .insert(values)
     .select("*")
-    .single();
+    .single()) as SingleResult<BwildAgentEvent>;
 }
 
 /**
