@@ -138,9 +138,47 @@ export interface CreateAgentEventInput {
 const STATE_TABLE = "project_state_memory";
 const EVENTS_TABLE = "bwild_agent_events";
 
-// Cast para contornar tipos não regenerados. Substituir ao regenerar Database types.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
+// As tabelas `project_state_memory` e `bwild_agent_events` ainda não estão no
+// Database type gerado. Definimos aqui as shapes de Insert/Update esperadas,
+// e usamos um helper `fromTable` que confina o cast em UM único ponto, mantendo
+// as chamadas (insert/upsert/update/select) totalmente tipadas.
+type StateInsert = { project_id: string; state: Json };
+type StateUpsert = StateInsert;
+type EventInsert = CreateAgentEventInput;
+
+type TypedTable<Row, Insert, Update = Partial<Insert>> = {
+  select: (columns: string) => TypedTable<Row, Insert, Update>;
+  insert: (values: Insert) => TypedTable<Row, Insert, Update>;
+  upsert: (
+    values: Insert,
+    options?: { onConflict?: string },
+  ) => TypedTable<Row, Insert, Update>;
+  update: (values: Update) => TypedTable<Row, Insert, Update>;
+  eq: (
+    column: keyof Row & string,
+    value: Row[keyof Row],
+  ) => TypedTable<Row, Insert, Update>;
+  order: (
+    column: keyof Row & string,
+    options?: { ascending?: boolean },
+  ) => TypedTable<Row, Insert, Update>;
+  limit: (n: number) => TypedTable<Row, Insert, Update>;
+  maybeSingle: () => Promise<{ data: Row | null; error: unknown }>;
+  single: () => Promise<{ data: Row; error: unknown }>;
+  then: Promise<{ data: Row[] | null; error: unknown }>["then"];
+};
+
+function fromTable<Row, Insert, Update = Partial<Insert>>(
+  table: string,
+): TypedTable<Row, Insert, Update> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (supabase.from as any)(table) as TypedTable<Row, Insert, Update>;
+}
+
+const stateTable = () =>
+  fromTable<ProjectStateMemory, StateInsert, StateUpsert>(STATE_TABLE);
+const eventsTable = () =>
+  fromTable<BwildAgentEvent, EventInsert>(EVENTS_TABLE);
 
 /**
  * Busca a memória do projeto. Retorna null se ainda não existir.
