@@ -127,7 +127,7 @@ export async function updateNonConformity(params: {
 
   const { error } = await supabase
     .from("non_conformities")
-    .update(update)
+    .update(update as never)
     .eq("id", params.id);
   if (error) throw error;
 }
@@ -147,7 +147,7 @@ export async function updateNcEvidencePhotos(params: {
 
   const { error } = await supabase
     .from("non_conformities")
-    .update(update)
+    .update(update as never)
     .eq("id", params.id);
   if (error) throw error;
 }

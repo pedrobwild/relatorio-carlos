@@ -179,7 +179,7 @@ export function useUpdateProjectTemplate() {
 
       const { data, error } = await supabase
         .from("project_templates")
-        .update(updateData)
+        .update(updateData as never)
         .eq("id", id)
         .select()
         .single();

@@ -122,7 +122,7 @@ export async function updateInspectionItem(params: {
 
   const { error } = await supabase
     .from("inspection_items")
-    .update(update)
+    .update(update as never)
     .eq("id", params.id);
   if (error) throw error;
 }

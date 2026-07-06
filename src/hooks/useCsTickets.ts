@@ -248,7 +248,7 @@ export function useUpdateCsTicket() {
     mutationFn: async ({ id, patch }: { id: string; patch: CsTicketPatch }) => {
       const { error } = await supabase
         .from("cs_tickets")
-        .update(patch)
+        .update(patch as never)
         .eq("id", id);
       if (error) throw error;
     },
