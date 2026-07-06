@@ -34,6 +34,12 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const prefillEmail = searchParams.get("email") ?? "";
   const prefillPassword = searchParams.get("password") ?? "";
+  const redirectParamRaw = searchParams.get("redirect") ?? "";
+  // Only allow same-origin, absolute internal paths (starts with "/", not "//")
+  const redirectPath =
+    redirectParamRaw.startsWith("/") && !redirectParamRaw.startsWith("//")
+      ? redirectParamRaw
+      : "";
   const isDemoPrefill = !!prefillEmail && !!prefillPassword;
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState(prefillPassword);
@@ -47,10 +53,16 @@ export default function Auth() {
     password?: string;
   }>({});
   const hasRedirectedRef = useRef(false);
+  const autoSubmittedRef = useRef(false);
   const navigate = useNavigate();
   const { toast: _toast } = useToast();
 
   const redirectBasedOnRole = async (userId: string) => {
+    // Explicit redirect param wins over role-based routing
+    if (redirectPath) {
+      navigate(redirectPath, { replace: true });
+      return;
+    }
     try {
       const { data: roleRows } = await supabase
         .from("user_roles")
