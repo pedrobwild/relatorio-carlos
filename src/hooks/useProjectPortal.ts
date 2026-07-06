@@ -21,6 +21,9 @@ import { useWeeklyReports } from "@/hooks/useWeeklyReports";
 import { generateWeeklyReports } from "@/components/WeeklyReportsHistory";
 import type { MilestoneKey } from "@/components/ReportHeader";
 import { reportLogger } from "@/lib/devLogger";
+import type { TablesUpdate } from "@/integrations/supabase/types";
+
+type ProjectsUpdate = TablesUpdate<"projects">;
 
 // Demo data for projects without real data yet
 const demoReportData: ReportData = {
@@ -498,12 +501,7 @@ export function useProjectPortal() {
       if (!projectId) return;
       const column = milestoneKeyToColumn[key];
       const { supabase } = await import("@/integrations/supabase/client");
-      const { TablesUpdate: _typeMarker } = {} as {
-        TablesUpdate: import("@/integrations/supabase/types").TablesUpdate<"projects">;
-      };
-      void _typeMarker;
-      const patch: import("@/integrations/supabase/types").TablesUpdate<"projects"> =
-        { [column]: date };
+      const patch: ProjectsUpdate = { [column]: date };
       const { error } = await supabase
         .from("projects")
         .update(patch)
