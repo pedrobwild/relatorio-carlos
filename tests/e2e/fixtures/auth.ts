@@ -18,10 +18,27 @@ export interface TestFixtures {
  */
 async function loginAs(page: Page, email: string, password: string) {
   await page.goto('/auth');
-  
-  // Wait for login form
-  await page.waitForSelector('[data-testid="login-form"]', { timeout: 10000 });
-  
+
+  // Wait for the login form. If it never appears, surface the current URL and a
+  // snippet of the page so CI failures are self-diagnosing — e.g. an app crash /
+  // ErrorBoundary caused by missing VITE_SUPABASE_* config renders no form at all.
+  try {
+    await page.waitForSelector('[data-testid="login-form"]', { timeout: 10000 });
+  } catch (e) {
+    const bodyText = await page
+      .locator('body')
+      .innerText()
+      .catch(() => '<unavailable>');
+    const original = e instanceof Error ? e.message : String(e);
+    throw new Error(
+      `Login form not found at /auth.\n` +
+        `Current URL: ${page.url()}\n` +
+        `Email used: ${email}\n` +
+        `Page text (first 300 chars): ${bodyText.slice(0, 300)}\n` +
+        `Original error: ${original}`,
+    );
+  }
+
   // Fill credentials
   await page.fill('[data-testid="login-identifier"]', email);
   await page.fill('[data-testid="login-password"]', password);
@@ -36,7 +53,7 @@ async function loginAs(page: Page, email: string, password: string) {
 /**
  * Extended test fixture with authenticated pages
  */
-/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable react-hooks/rules-of-hooks, no-empty-pattern */
 export const test = base.extend<TestFixtures>({
   customerPage: async ({ browser }, use) => {
     const context = await browser.newContext();
@@ -54,11 +71,13 @@ export const test = base.extend<TestFixtures>({
     await context.close();
   },
 
-  testProjectId: async (_params, use) => {
+  // Playwright requires the first fixture arg to be an object destructuring
+  // pattern; this fixture has no dependencies, so it's an empty pattern.
+  testProjectId: async ({}, use) => {
     await use(TEST_PROJECT_ID);
   },
 });
-/* eslint-enable react-hooks/rules-of-hooks */
+/* eslint-enable react-hooks/rules-of-hooks, no-empty-pattern */
 
 export { expect };
 export { loginAs };

@@ -24,6 +24,9 @@ export function configureFlakyRetries(options: {
 }): void {
   const retries = options.retries ?? (process.env.CI ? 2 : 0);
   test.describe.configure({ retries });
+  // Playwright requires the first hook arg to be an object destructuring
+  // pattern; we only need testInfo, so the fixtures pattern is empty.
+  // eslint-disable-next-line no-empty-pattern
   test.beforeEach(({}, testInfo) => {
     testInfo.annotations.push({ type: 'flaky', description: options.reason });
   });

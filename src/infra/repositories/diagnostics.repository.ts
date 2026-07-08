@@ -36,6 +36,27 @@ export interface RlsCheckResult extends DiagnosticResult {
 }
 
 /**
+ * Derive the aggregate RLS status from the individual checks.
+ *
+ * - all checks passed  → "ok"
+ * - all checks failed  → "fail"
+ * - mixed (or empty)   → "warn"
+ *
+ * Extracted as a pure helper so the severity mapping is unit-testable and to
+ * avoid the previous bug where the `"fail"` branch was unreachable (a plain
+ * `some(!passed)` is always true whenever `every(passed)` is false, so a fully
+ * failing RLS state was reported as the softer "warn").
+ */
+export function deriveRlsStatus(
+  checks: RlsCheckResult["checks"],
+): DiagnosticResult["status"] {
+  if (checks.length === 0) return "warn";
+  if (checks.every((c) => c.passed)) return "ok";
+  if (checks.every((c) => !c.passed)) return "fail";
+  return "warn";
+}
+
+/**
  * Measure execution time of an async function
  */
 export async function measureLatency<T>(
@@ -257,14 +278,16 @@ export async function checkRlsBasics(userId: string): Promise<RlsCheckResult> {
           : "Perfil não encontrado",
     });
 
-    const allPassed = checks.every((c) => c.passed);
-    const someFailed = checks.some((c) => !c.passed);
+    const status = deriveRlsStatus(checks);
 
     return {
-      status: allPassed ? "ok" : someFailed ? "warn" : "fail",
-      message: allPassed
-        ? "Todos os checks de RLS passaram"
-        : "Alguns checks de RLS falharam",
+      status,
+      message:
+        status === "ok"
+          ? "Todos os checks de RLS passaram"
+          : status === "fail"
+            ? "Todos os checks de RLS falharam"
+            : "Alguns checks de RLS falharam",
       checks,
     };
   } catch (err) {

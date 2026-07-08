@@ -19,11 +19,20 @@ export const BuildInfoCard = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              navigator.clipboard.writeText(
-                `${buildInfo.commit} | ${buildInfo.environment} | ${buildInfo.version}`,
-              );
-              toast({ title: "Copiado!" });
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(
+                  `${buildInfo.commit} | ${buildInfo.environment} | ${buildInfo.version}`,
+                );
+                toast({ title: "Copiado!" });
+              } catch (error) {
+                toast({
+                  title: "Falha ao copiar",
+                  description:
+                    error instanceof Error ? error.message : "Erro desconhecido",
+                  variant: "destructive",
+                });
+              }
             }}
           >
             <Copy className="w-4 h-4" />
