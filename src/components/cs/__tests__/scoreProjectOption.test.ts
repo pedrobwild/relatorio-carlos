@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { scoreProjectOption } from "../projectSearch";
+import {
+  buildProjectOptionValue,
+  scoreProjectOption,
+} from "../projectSearch";
 
 /**
  * Regressão do bug "obras que não aparecem na lista de seleção de tickets".
@@ -52,10 +55,26 @@ describe("scoreProjectOption", () => {
     expect(scoreProjectOption(OBRA, "xyz", "substring")).toBe(0);
   });
 
-  it("ignora o id anexado ao value sem quebrar o casamento pelo rótulo", () => {
+  it("casa pelo rótulo mesmo com o id de unicidade anexado ao value", () => {
     // O value real do CommandItem inclui o id da obra para garantir unicidade.
-    const valueComId = `${OBRA} 550e8400-e29b-41d4-a716-446655440000`;
+    const valueComId = buildProjectOptionValue(
+      OBRA,
+      "550e8400-e29b-41d4-a716-446655440000",
+    );
     expect(scoreProjectOption(valueComId, "ricardo", "tokens")).toBe(1);
     expect(scoreProjectOption(valueComId, "casa ric", "substring")).toBe(1);
+  });
+
+  it("NÃO torna fragmentos do UUID pesquisáveis (regressão do review Codex)", () => {
+    // UUID cheio de hex; buscas por caracteres/fragmentos do id não podem
+    // manter a obra na lista se não casarem com o rótulo visível.
+    const uuid = "4a04f00e-29b4-41d4-a716-446655440000";
+    const valueComId = buildProjectOptionValue("Casa Silva", uuid);
+
+    // 'a' e '4' aparecem no UUID mas não são termos úteis do rótulo → 0.
+    expect(scoreProjectOption(valueComId, "446655", "substring")).toBe(0);
+    expect(scoreProjectOption(valueComId, "e29b", "tokens")).toBe(0);
+    // Sanidade: o rótulo em si continua casando.
+    expect(scoreProjectOption(valueComId, "silva", "tokens")).toBe(1);
   });
 });

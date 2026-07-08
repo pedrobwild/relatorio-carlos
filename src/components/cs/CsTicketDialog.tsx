@@ -56,6 +56,7 @@ import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileFullscreenSheet } from "@/components/mobile";
 import {
+  buildProjectOptionValue,
   scoreProjectOption,
   type ProjectSearchMode,
 } from "@/components/cs/projectSearch";
@@ -262,12 +263,13 @@ export function CsTicketDialog({
                     return (
                       <CommandItem
                         key={p.id}
-                        // Inclui o id no value para garantir unicidade: o cmdk
-                        // usa o value como identidade para seleção/teclado, e
-                        // obras com nome+cliente idênticos colidiriam. O id não
-                        // atrapalha a busca (só acrescenta ao texto casado) e
-                        // não é exibido (o label visível é o <span> abaixo).
-                        value={`${label} ${p.id}`}
+                        // O value precisa ser único (o cmdk o usa como
+                        // identidade para seleção/teclado; obras com nome+cliente
+                        // idênticos colidiriam). O id anexado fica após um
+                        // separador invisível e é descartado por
+                        // scoreProjectOption antes da busca, então não vira
+                        // texto pesquisável nem é exibido.
+                        value={buildProjectOptionValue(label, p.id)}
                         onSelect={() => {
                           setProjectId(p.id);
                           setProjectPickerOpen(false);
