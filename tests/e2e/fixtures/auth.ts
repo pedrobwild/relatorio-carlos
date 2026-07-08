@@ -18,10 +18,27 @@ export interface TestFixtures {
  */
 async function loginAs(page: Page, email: string, password: string) {
   await page.goto('/auth');
-  
-  // Wait for login form
-  await page.waitForSelector('[data-testid="login-form"]', { timeout: 10000 });
-  
+
+  // Wait for the login form. If it never appears, surface the current URL and a
+  // snippet of the page so CI failures are self-diagnosing — e.g. an app crash /
+  // ErrorBoundary caused by missing VITE_SUPABASE_* config renders no form at all.
+  try {
+    await page.waitForSelector('[data-testid="login-form"]', { timeout: 10000 });
+  } catch (e) {
+    const bodyText = await page
+      .locator('body')
+      .innerText()
+      .catch(() => '<unavailable>');
+    const original = e instanceof Error ? e.message : String(e);
+    throw new Error(
+      `Login form not found at /auth.\n` +
+        `Current URL: ${page.url()}\n` +
+        `Email used: ${email}\n` +
+        `Page text (first 300 chars): ${bodyText.slice(0, 300)}\n` +
+        `Original error: ${original}`,
+    );
+  }
+
   // Fill credentials
   await page.fill('[data-testid="login-identifier"]', email);
   await page.fill('[data-testid="login-password"]', password);
