@@ -18,6 +18,9 @@ export const PerformanceCard = ({
       )
     : 0;
 
+  // Guard against a 0ms max (division by zero → NaN% height / invalid CSS).
+  const maxLatency = Math.max(...latencyHistory, 1);
+
   return (
     <Card>
       <CardHeader>
@@ -54,7 +57,7 @@ export const PerformanceCard = ({
                 key={idx}
                 className="bg-primary rounded-t flex-1"
                 style={{
-                  height: `${Math.min(100, (latency / Math.max(...latencyHistory)) * 100)}%`,
+                  height: `${Math.min(100, (latency / maxLatency) * 100)}%`,
                   minHeight: "4px",
                 }}
                 title={`${latency}ms`}

@@ -76,7 +76,7 @@ export const AdminToolsCard = ({
     }
   }, []);
 
-  const copyDiagnosticReport = useCallback(() => {
+  const copyDiagnosticReport = useCallback(async () => {
     const report = {
       timestamp: new Date().toISOString(),
       build: {
@@ -134,11 +134,20 @@ export const AdminToolsCard = ({
       },
     };
 
-    navigator.clipboard.writeText(JSON.stringify(report, null, 2));
-    toast({
-      title: "Relatório copiado",
-      description: "JSON do diagnóstico copiado para a área de transferência",
-    });
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+      toast({
+        title: "Relatório copiado",
+        description: "JSON do diagnóstico copiado para a área de transferência",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao copiar relatório",
+        description:
+          error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }
   }, [buildInfo, state, roles, isAdmin]);
 
   const emitTestError = useCallback(() => {
