@@ -24,7 +24,7 @@ export function configureFlakyRetries(options: {
 }): void {
   const retries = options.retries ?? (process.env.CI ? 2 : 0);
   test.describe.configure({ retries });
-  test.beforeEach(({}, testInfo) => {
+  test.beforeEach((_, testInfo) => {
     testInfo.annotations.push({ type: 'flaky', description: options.reason });
   });
 }
