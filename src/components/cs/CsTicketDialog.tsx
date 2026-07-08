@@ -55,6 +55,10 @@ import { useStaffUsers } from "@/hooks/useStaffUsers";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileFullscreenSheet } from "@/components/mobile";
+import {
+  scoreProjectOption,
+  type ProjectSearchMode,
+} from "@/components/cs/projectSearch";
 
 interface CsTicketDialogProps {
   open: boolean;
@@ -90,9 +94,8 @@ export function CsTicketDialog({
   const [responsible, setResponsible] = useState<string>(NONE);
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
   // Modo de busca: 'tokens' (todas as palavras, em qualquer ordem) ou 'substring' (qualquer parte contígua)
-  const [projectSearchMode, setProjectSearchMode] = useState<
-    "tokens" | "substring"
-  >("tokens");
+  const [projectSearchMode, setProjectSearchMode] =
+    useState<ProjectSearchMode>("tokens");
 
   const selectedProject = useMemo(
     () => (projects as any[]).find((p) => p.id === projectId) ?? null,
@@ -220,21 +223,9 @@ export function CsTicketDialog({
             <Command
               // Recria o filtro quando o modo muda para reavaliar a lista
               key={projectSearchMode}
-              filter={(value, search) => {
-                const normalize = (s: string) =>
-                  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                const haystack = normalize(value);
-                const needle = normalize(search.toLowerCase()).trim();
-                if (!needle) return 1;
-
-                if (projectSearchMode === "substring") {
-                  // Qualquer parte contígua do texto digitado
-                  return haystack.includes(needle) ? 1 : 0;
-                }
-                // tokens: todas as palavras precisam aparecer (qualquer ordem)
-                const tokens = needle.split(/\s+/).filter(Boolean);
-                return tokens.every((t) => haystack.includes(t)) ? 1 : 0;
-              }}
+              filter={(value, search) =>
+                scoreProjectOption(value, search, projectSearchMode)
+              }
             >
               <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
                 <div className="flex flex-col">
@@ -271,7 +262,12 @@ export function CsTicketDialog({
                     return (
                       <CommandItem
                         key={p.id}
-                        value={label}
+                        // Inclui o id no value para garantir unicidade: o cmdk
+                        // usa o value como identidade para seleção/teclado, e
+                        // obras com nome+cliente idênticos colidiriam. O id não
+                        // atrapalha a busca (só acrescenta ao texto casado) e
+                        // não é exibido (o label visível é o <span> abaixo).
+                        value={`${label} ${p.id}`}
                         onSelect={() => {
                           setProjectId(p.id);
                           setProjectPickerOpen(false);
