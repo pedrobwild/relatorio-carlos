@@ -36,7 +36,7 @@ async function loginAs(page: Page, email: string, password: string) {
 /**
  * Extended test fixture with authenticated pages
  */
-/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable react-hooks/rules-of-hooks, no-empty-pattern */
 export const test = base.extend<TestFixtures>({
   customerPage: async ({ browser }, use) => {
     const context = await browser.newContext();
@@ -54,11 +54,13 @@ export const test = base.extend<TestFixtures>({
     await context.close();
   },
 
-  testProjectId: async (_params, use) => {
+  // Playwright requires the first fixture arg to be an object destructuring
+  // pattern; this fixture has no dependencies, so it's an empty pattern.
+  testProjectId: async ({}, use) => {
     await use(TEST_PROJECT_ID);
   },
 });
-/* eslint-enable react-hooks/rules-of-hooks */
+/* eslint-enable react-hooks/rules-of-hooks, no-empty-pattern */
 
 export { expect };
 export { loginAs };
