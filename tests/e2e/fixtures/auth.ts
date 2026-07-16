@@ -17,6 +17,25 @@ export interface TestFixtures {
  * Helper to login as a user
  */
 async function loginAs(page: Page, email: string, password: string) {
+  // Dispensa o banner LGPD antes de qualquer navegação para evitar que ele
+  // sobreponha o botão "Entrar" em viewports mobile (390x844) e intercepte o
+  // clique. O shape aqui precisa espelhar `ConsentState` em src/lib/consent.ts.
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.setItem(
+        'bwild:consent',
+        JSON.stringify({
+          analytics: false,
+          sessionReplay: false,
+          decidedAt: new Date().toISOString(),
+          version: 1,
+        }),
+      );
+    } catch {
+      // localStorage indisponível (modo privado) — segue sem consent pré-gravado.
+    }
+  });
+
   await page.goto('/auth');
 
   // Wait for the login form. If it never appears, surface the current URL and a
