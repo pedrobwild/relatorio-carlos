@@ -75,8 +75,11 @@ const Index = () => {
     project,
     projectId,
     projectLoading,
+    projectLinking,
     projectError,
+    projectErrorKind,
     refetchProject,
+
     activitiesLoading,
     projectActivities,
     isStaff,
@@ -392,6 +395,15 @@ const Index = () => {
       <div className="min-h-screen min-h-[100dvh] pb-safe">
         <div className="px-4 md:p-4 lg:p-6 xl:p-8">
           <div className="max-w-[1600px] mx-auto space-y-6">
+            {projectLinking && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground"
+              >
+                Vinculando seu acesso a esta obra…
+              </div>
+            )}
             <ContentSkeleton variant="cards" rows={3} />
             <div className="bg-card rounded-xl shadow-card overflow-hidden p-4 space-y-4">
               <ContentSkeleton variant="chart" />
@@ -404,10 +416,20 @@ const Index = () => {
   }
 
   if (projectError) {
+    const title =
+      projectErrorKind === "not-found"
+        ? "Obra não encontrada"
+        : projectErrorKind === "link-failed"
+          ? "Acesso à obra não confirmado"
+          : projectErrorKind === "network"
+            ? "Sem conexão com o servidor"
+            : "Não foi possível carregar esta obra";
+
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-destructive mb-4">{projectError}</p>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-lg font-semibold mb-2">{title}</h1>
+          <p className="text-sm text-muted-foreground mb-6">{projectError}</p>
           <div className="flex items-center justify-center gap-6">
             <button
               onClick={() => refetchProject()}
@@ -428,6 +450,7 @@ const Index = () => {
               Voltar
             </button>
           </div>
+
         </div>
       </div>
     );

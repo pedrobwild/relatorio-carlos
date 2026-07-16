@@ -153,10 +153,14 @@ export function useProjectPortal() {
   const {
     project,
     loading: projectLoading,
+    linking: projectLinking,
+    status: projectStatus,
     error: projectError,
+    errorKind: projectErrorKind,
     setProject,
     refetch: refetchProject,
   } = useProject();
+
   const { projectId, paths } = useProjectNavigation();
   const { isStaff, isCustomer, isAdmin } = useUserRole();
   const { can } = useCan();
@@ -603,10 +607,14 @@ export function useProjectPortal() {
     project,
     projectId,
     projectLoading,
+    projectLinking,
+    projectStatus,
     projectError,
+    projectErrorKind,
     refetchProject,
     activitiesLoading,
     projectActivities: dbActivities,
+
     isStaff,
     isCustomer,
     isAdmin,
