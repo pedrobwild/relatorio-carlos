@@ -76,6 +76,7 @@ const Index = () => {
     projectId,
     projectLoading,
     projectError,
+    refetchProject,
     activitiesLoading,
     projectActivities,
     isStaff,
