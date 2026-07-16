@@ -604,6 +604,7 @@ export function useProjectPortal() {
     projectId,
     projectLoading,
     projectError,
+    refetchProject,
     activitiesLoading,
     projectActivities: dbActivities,
     isStaff,
