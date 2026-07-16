@@ -11,6 +11,7 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { projectsRepo, type ProjectWithCustomer } from "@/infra/repositories";
 import { ensureCustomerProjectLink } from "@/hooks/useLinkCustomerOnLogin";
+import { invalidateProjectQueries } from "@/lib/queryKeys";
 import { trackAmplitude } from "@/lib/amplitude";
 
 // Re-export for backwards compatibility
@@ -158,6 +159,16 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           );
           setStatus("error");
           return;
+        }
+
+        // O acesso acabou de ser estabelecido pelo re-link. Queries de escopo
+        // do projeto disparadas por filhos já montados (atividades, relatórios
+        // semanais, documentos…) podem ter recebido listas vazias do RLS
+        // durante a janela sem vínculo — e ficariam cacheadas até o staleTime
+        // expirar, deixando o cronograma "não cadastrado". Invalida para que
+        // refaçam a busca já com acesso.
+        if (data) {
+          invalidateProjectQueries(projectId);
         }
       }
 
