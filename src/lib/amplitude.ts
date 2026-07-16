@@ -29,7 +29,10 @@ export type AmplitudeEvent =
   | "mobile_tab_synced"
   | "mobile_tab_route_redirect"
   // Cronograma export
-  | "cronograma_pdf_exported";
+  | "cronograma_pdf_exported"
+  // Instrumentação do link customer ↔ project por e-mail
+  | "Customer Link Ensure";
+
 
 export type AmplitudeProps = Record<
   string,
