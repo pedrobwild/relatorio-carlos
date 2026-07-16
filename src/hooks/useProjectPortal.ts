@@ -155,6 +155,7 @@ export function useProjectPortal() {
     loading: projectLoading,
     error: projectError,
     setProject,
+    refetch: refetchProject,
   } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const { isStaff, isCustomer, isAdmin } = useUserRole();
@@ -603,6 +604,7 @@ export function useProjectPortal() {
     projectId,
     projectLoading,
     projectError,
+    refetchProject,
     activitiesLoading,
     projectActivities: dbActivities,
     isStaff,
