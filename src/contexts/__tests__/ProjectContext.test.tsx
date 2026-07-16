@@ -16,6 +16,7 @@ import { ProjectProvider, useProject } from "../ProjectContext";
 
 const getProjectWithCustomerMock = vi.fn();
 const ensureCustomerProjectLinkMock = vi.fn();
+const invalidateProjectQueriesMock = vi.fn();
 
 const STABLE_USER = { id: "user-1", email: "cliente@exemplo.com" };
 
@@ -39,6 +40,11 @@ vi.mock("@/hooks/useLinkCustomerOnLogin", () => ({
 
 vi.mock("@/lib/amplitude", () => ({
   trackAmplitude: vi.fn(),
+}));
+
+vi.mock("@/lib/queryKeys", () => ({
+  invalidateProjectQueries: (projectId?: string) =>
+    invalidateProjectQueriesMock(projectId),
 }));
 
 const PROJECT = {
@@ -82,6 +88,7 @@ describe("ProjectContext", () => {
     expect(result.current.error).toBeNull();
     expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(1);
     expect(ensureCustomerProjectLinkMock).not.toHaveBeenCalled();
+    expect(invalidateProjectQueriesMock).not.toHaveBeenCalled();
   });
 
   it("recupera obra invisível por vínculo pendente: força re-link e refaz a busca", async () => {
@@ -102,6 +109,9 @@ describe("ProjectContext", () => {
     expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(2);
     expect(result.current.project).toMatchObject({ id: "p-1" });
     expect(result.current.error).toBeNull();
+    // Acesso recém-estabelecido: queries de escopo do projeto que cachearam
+    // listas vazias durante a janela sem vínculo precisam ser invalidadas.
+    expect(invalidateProjectQueriesMock).toHaveBeenCalledWith("p-1");
   });
 
   it('mostra "Projeto não encontrado" só depois do retry pós re-link falhar', async () => {
@@ -117,6 +127,8 @@ describe("ProjectContext", () => {
     expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(2);
     expect(result.current.project).toBeNull();
     expect(result.current.error).toBe("Projeto não encontrado");
+    // Sem acesso estabelecido, não há cache a invalidar.
+    expect(invalidateProjectQueriesMock).not.toHaveBeenCalled();
   });
 
   it("refetch refaz a busca e limpa o erro quando o projeto passa a existir", async () => {
