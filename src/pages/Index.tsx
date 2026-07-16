@@ -75,8 +75,11 @@ const Index = () => {
     project,
     projectId,
     projectLoading,
+    projectLinking,
     projectError,
+    projectErrorKind,
     refetchProject,
+
     activitiesLoading,
     projectActivities,
     isStaff,
