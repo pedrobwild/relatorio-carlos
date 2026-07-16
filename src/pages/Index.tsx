@@ -408,18 +408,26 @@ const Index = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">{projectError}</p>
-          <button
-            onClick={() => {
-              if (window.history.length > 1) navigate(-1);
-              else
-                navigate(isStaff ? "/gestao" : "/minhas-obras", {
-                  replace: true,
-                });
-            }}
-            className="text-primary underline"
-          >
-            Voltar
-          </button>
+          <div className="flex items-center justify-center gap-6">
+            <button
+              onClick={() => refetchProject()}
+              className="text-primary underline"
+            >
+              Tentar novamente
+            </button>
+            <button
+              onClick={() => {
+                if (window.history.length > 1) navigate(-1);
+                else
+                  navigate(isStaff ? "/gestao" : "/minhas-obras", {
+                    replace: true,
+                  });
+              }}
+              className="text-primary underline"
+            >
+              Voltar
+            </button>
+          </div>
         </div>
       </div>
     );
