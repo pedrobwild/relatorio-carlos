@@ -42,8 +42,6 @@ function setSessionFlag(userId: string): void {
 async function linkCustomerToProjects(user: User): Promise<void> {
   if (!user.email) return;
 
-  // Skip staff users — they are never linked customers, so the lookup is wasted.
-  // Staff is detected via the JWT user_metadata.role written by our auth flow.
   const role = (user.user_metadata as { role?: string } | null)?.role;
   const STAFF_ROLES = new Set([
     "admin",
@@ -60,9 +58,6 @@ async function linkCustomerToProjects(user: User): Promise<void> {
     return;
   }
 
-  // Normalize so the match is case-insensitive — both columns and the auth.jwt()
-  // email are now compared in lowercase by the RLS policies and the server-side
-  // trigger. The column has a BEFORE INSERT/UPDATE trigger that lowercases it.
   const normalizedEmail = user.email.trim().toLowerCase();
 
   try {
@@ -100,15 +95,10 @@ async function linkCustomerToProjects(user: User): Promise<void> {
       return;
     }
 
-    // Ensure project_members entries exist (needed for RLS and queries)
-    for (const proj of unlinkedProjects) {
-      await supabase
-        .from("project_members")
-        .upsert(
-          { project_id: proj.project_id, user_id: user.id, role: "viewer" },
-          { onConflict: "project_id,user_id" },
-        );
-    }
+    // As linhas de project_members são criadas no banco pelo trigger
+    // trg_ensure_project_member_for_customer (migration 20260716120000) quando
+    // customer_user_id é preenchido acima — o cliente não tem permissão de
+    // INSERT em project_members, então não tentamos criar aqui.
 
     const projectNames = unlinkedProjects
       .map((p) => p.customer_name || p.project_id)
@@ -129,30 +119,38 @@ async function linkCustomerToProjects(user: User): Promise<void> {
   }
 }
 
+/**
+ * Garante que o usuário logado está vinculado aos seus projetos por e-mail.
+ *
+ * Com `force: true` ignora a flag de sessionStorage — necessário quando um
+ * projeto foi criado DEPOIS de a flag ter sido gravada nesta aba (ex.: cliente
+ * antigo recebendo uma obra nova) e o deep link cai em "Projeto não
+ * encontrado". Invocações paralelas são dedupadas pelo mapa in-flight.
+ */
+export function ensureCustomerProjectLink(
+  user: User | null,
+  opts: { force?: boolean } = {},
+): Promise<void> {
+  if (!user?.email || !user?.id) return Promise.resolve();
+
+  if (!opts.force && getSessionFlag(user.id)) return Promise.resolve();
+
+  const existing = inFlight.get(user.id);
+  if (existing) return existing;
+
+  const promise: Promise<void> = Promise.resolve().then(() =>
+    linkCustomerToProjects(user).finally(() => {
+      if (inFlight.get(user.id) === promise) {
+        inFlight.delete(user.id);
+      }
+    }),
+  );
+  inFlight.set(user.id, promise);
+  return promise;
+}
+
 export function useLinkCustomerOnLogin(user: User | null) {
   useEffect(() => {
-    if (!user?.email || !user?.id) return;
-
-    // Already linked in this tab session — skip entirely.
-    if (getSessionFlag(user.id)) return;
-
-    // A link operation for this user is already in flight in another component.
-    if (inFlight.has(user.id)) return;
-
-    // Register the in-flight entry SYNCHRONOUSLY, before invoking the async
-    // function. linkCustomerToProjects starts running the moment it's called,
-    // so if we set the map only after the call, two effects mounting in the
-    // same tick (StrictMode / Concurrent) would both pass the inFlight.has
-    // check above and fire duplicate requests. The lazy promise wrapper keeps
-    // the set + assignment a single synchronous step.
-    const promise: Promise<void> = Promise.resolve().then(() =>
-      linkCustomerToProjects(user).finally(() => {
-        // Only clear if it's still our promise (guards against a newer run).
-        if (inFlight.get(user.id) === promise) {
-          inFlight.delete(user.id);
-        }
-      }),
-    );
-    inFlight.set(user.id, promise);
-  }, [user?.id, user?.email]);
+    void ensureCustomerProjectLink(user);
+  }, [user]);
 }
