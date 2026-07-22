@@ -82,7 +82,9 @@ describe("ProjectContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     ensureCustomerProjectLinkMock.mockResolvedValue(undefined);
+    getCustomerProjectsMock.mockResolvedValue({ data: [], error: null });
   });
+
 
   it("carrega o projeto na primeira tentativa sem forçar re-link", async () => {
     getProjectWithCustomerMock.mockResolvedValue({
