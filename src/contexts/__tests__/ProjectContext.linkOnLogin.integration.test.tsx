@@ -46,11 +46,16 @@ const PROJECT_ROW = {
 // ---------------------------------------------------------------------------
 
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: USER }) }));
+vi.mock("@/hooks/useUserRole", () => ({
+  useUserRole: () => ({ isCustomer: true, isStaff: false }),
+}));
+vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }));
 vi.mock("@/lib/amplitude", () => ({ trackAmplitude: vi.fn() }));
 vi.mock("@/lib/errorLogger", () => ({
   logInfo: vi.fn(),
   logError: vi.fn(),
 }));
+
 
 /**
  * Estado compartilhado que simula o banco:
