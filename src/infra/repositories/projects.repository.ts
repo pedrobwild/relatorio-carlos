@@ -420,18 +420,20 @@ export async function createProjectWithCustomer(input: {
       );
     }
 
-    // Add customer
+    // Add customer (email normalized: trigger also enforces this in DB)
+    const normalizedEmail = input.customer_email.trim().toLowerCase();
     const { data: customerInsert } = await supabase
       .from("project_customers")
       .insert({
         project_id: project.id,
         customer_name: input.customer_name,
-        customer_email: input.customer_email,
+        customer_email: normalizedEmail,
         customer_phone: input.customer_phone ?? null,
         invitation_sent_at: input.invitation_sent_at ?? null,
       })
       .select("customer_user_id")
       .maybeSingle();
+
 
     // If customer already has a user account, also add to project_members
     if (customerInsert?.customer_user_id) {
