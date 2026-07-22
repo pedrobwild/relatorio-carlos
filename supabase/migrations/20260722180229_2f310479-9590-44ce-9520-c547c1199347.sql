@@ -1,0 +1,1 @@
+UPDATE public.projects SET deleted_at = NULL WHERE id = '6ce52c39-da67-40bd-b0df-b16167c73dcd';
