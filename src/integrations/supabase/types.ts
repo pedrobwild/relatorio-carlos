@@ -6829,10 +6829,12 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: undefined
       }
-      soft_delete_project: {
-        Args: { p_project_id: string }
-        Returns: undefined
-      }
+      soft_delete_project:
+        | { Args: { p_project_id: string }; Returns: undefined }
+        | {
+            Args: { p_force?: boolean; p_project_id: string }
+            Returns: undefined
+          }
       sync_budget_items_to_purchases: {
         Args: { p_project_id: string }
         Returns: number
