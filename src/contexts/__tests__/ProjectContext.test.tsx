@@ -15,6 +15,7 @@ import type { ReactNode } from "react";
 import { ProjectProvider, useProject } from "../ProjectContext";
 
 const getProjectWithCustomerMock = vi.fn();
+const getCustomerProjectsMock = vi.fn();
 const ensureCustomerProjectLinkMock = vi.fn();
 const invalidateProjectQueriesMock = vi.fn();
 
@@ -24,11 +25,21 @@ vi.mock("@/infra/repositories", () => ({
   projectsRepo: {
     getProjectWithCustomer: (projectId: string) =>
       getProjectWithCustomerMock(projectId),
+    getCustomerProjects: (userId: string) =>
+      getCustomerProjectsMock(userId),
   },
 }));
 
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ user: STABLE_USER }),
+}));
+
+vi.mock("@/hooks/useUserRole", () => ({
+  useUserRole: () => ({ isCustomer: false, isStaff: true }),
+}));
+
+vi.mock("@/hooks/use-toast", () => ({
+  toast: vi.fn(),
 }));
 
 vi.mock("@/hooks/useLinkCustomerOnLogin", () => ({
@@ -46,6 +57,7 @@ vi.mock("@/lib/queryKeys", () => ({
   invalidateProjectQueries: (projectId?: string) =>
     invalidateProjectQueriesMock(projectId),
 }));
+
 
 const PROJECT = {
   id: "p-1",
@@ -70,7 +82,9 @@ describe("ProjectContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     ensureCustomerProjectLinkMock.mockResolvedValue(undefined);
+    getCustomerProjectsMock.mockResolvedValue({ data: [], error: null });
   });
+
 
   it("carrega o projeto na primeira tentativa sem forçar re-link", async () => {
     getProjectWithCustomerMock.mockResolvedValue({
@@ -177,3 +191,79 @@ describe("ProjectContext", () => {
     consoleSpy.mockRestore();
   });
 });
+
+// Fallback de customer: quando a obra do link some (soft-delete de duplicata
+// ou orphan) o cliente não pode ficar preso em "Projeto não encontrado" se
+// tiver outras obras acessíveis — deve ser redirecionado.
+describe("ProjectContext customer fallback", () => {
+  const navigateMock = vi.fn();
+  const toastMock = vi.fn();
+
+  vi.doMock("react-router-dom", async () => {
+    const actual = await vi.importActual<typeof import("react-router-dom")>(
+      "react-router-dom",
+    );
+    return { ...actual, useNavigate: () => navigateMock };
+  });
+
+  it("redireciona cliente para outra obra ativa quando a atual não existe", async () => {
+    // Reset via dynamic import in isolated module scope
+    vi.resetModules();
+    vi.doMock("@/hooks/useUserRole", () => ({
+      useUserRole: () => ({ isCustomer: true, isStaff: false }),
+    }));
+    vi.doMock("@/hooks/useAuth", () => ({
+      useAuth: () => ({ user: STABLE_USER }),
+    }));
+    vi.doMock("@/hooks/use-toast", () => ({ toast: toastMock }));
+    vi.doMock("@/hooks/useLinkCustomerOnLogin", () => ({
+      ensureCustomerProjectLink: () => Promise.resolve(),
+    }));
+    vi.doMock("@/lib/amplitude", () => ({ trackAmplitude: vi.fn() }));
+    vi.doMock("@/lib/queryKeys", () => ({
+      invalidateProjectQueries: vi.fn(),
+    }));
+    vi.doMock("@/infra/repositories", () => ({
+      projectsRepo: {
+        getProjectWithCustomer: () =>
+          Promise.resolve({ data: null, error: null }),
+        getCustomerProjects: () =>
+          Promise.resolve({
+            data: [{ id: "p-outra", name: "Outra", status: "active" }],
+            error: null,
+          }),
+      },
+    }));
+    vi.doMock("react-router-dom", async () => {
+      const actual = await vi.importActual<typeof import("react-router-dom")>(
+        "react-router-dom",
+      );
+      return { ...actual, useNavigate: () => navigateMock };
+    });
+
+    const { ProjectProvider: FreshProvider, useProject: freshUseProject } =
+      await import("../ProjectContext");
+    const { MemoryRouter, Route, Routes } = await import("react-router-dom");
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <MemoryRouter initialEntries={["/obra/p-1"]}>
+        <Routes>
+          <Route
+            path="/obra/:projectId"
+            element={<FreshProvider>{children}</FreshProvider>}
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const { result } = renderHook(() => freshUseProject(), { wrapper });
+    await waitFor(() =>
+      expect(navigateMock).toHaveBeenCalledWith("/obra/p-outra", {
+        replace: true,
+      }),
+    );
+    expect(toastMock).toHaveBeenCalled();
+    expect(result.current.error).not.toBe("Projeto não encontrado");
+  });
+});
+

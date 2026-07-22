@@ -7,12 +7,15 @@ import React, {
   useRef,
   ReactNode,
 } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { projectsRepo, type ProjectWithCustomer } from "@/infra/repositories";
 import { ensureCustomerProjectLink } from "@/hooks/useLinkCustomerOnLogin";
 import { invalidateProjectQueries } from "@/lib/queryKeys";
 import { trackAmplitude } from "@/lib/amplitude";
+import { toast } from "@/hooks/use-toast";
+
 
 // Re-export for backwards compatibility
 export type Project = ProjectWithCustomer;
@@ -85,7 +88,9 @@ function classifyError(err: unknown): {
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { isCustomer, isStaff } = useUserRole();
   const [project, setProject] = useState<
     (Project & { is_project_phase?: boolean }) | null
   >(null);
@@ -96,6 +101,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   // Guarda a última chamada para o refetch manual, e para invalidar respostas
   // antigas quando o projectId muda no meio do voo.
   const requestIdRef = useRef(0);
+  // Evita loop de redirect quando o fallback já disparou para o mesmo projectId.
+  const fallbackTriedRef = useRef<string | null>(null);
 
   const fetchProject = useCallback(async () => {
     if (!projectId || !user) {
@@ -161,18 +168,47 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // O acesso acabou de ser estabelecido pelo re-link. Queries de escopo
-        // do projeto disparadas por filhos já montados (atividades, relatórios
-        // semanais, documentos…) podem ter recebido listas vazias do RLS
-        // durante a janela sem vínculo — e ficariam cacheadas até o staleTime
-        // expirar, deixando o cronograma "não cadastrado". Invalida para que
-        // refaçam a busca já com acesso.
         if (data) {
           invalidateProjectQueries(projectId);
         }
       }
 
       if (!data) {
+        // Fallback para cliente: se a obra do link não existe/foi deletada,
+        // mas o cliente tem OUTRAS obras acessíveis, redireciona em vez de
+        // travar num beco sem saída "Projeto não encontrado".
+        if (
+          isCustomer &&
+          !isStaff &&
+          fallbackTriedRef.current !== projectId
+        ) {
+          fallbackTriedRef.current = projectId;
+          try {
+            const other = await projectsRepo.getCustomerProjects(user.id);
+            if (requestId !== requestIdRef.current) return;
+            const list = (other.data ?? []).filter((p) => p.id !== projectId);
+            if (list.length === 1) {
+              toast({
+                title: "Você foi redirecionado para sua obra ativa",
+              });
+              navigate(`/obra/${list[0].id}`, { replace: true });
+              return;
+            }
+            if (list.length > 1) {
+              toast({
+                title: "Você foi redirecionado para sua obra ativa",
+              });
+              navigate("/minhas-obras", { replace: true });
+              return;
+            }
+          } catch (fallbackErr) {
+            console.warn(
+              "Customer fallback lookup failed:",
+              fallbackErr,
+            );
+          }
+        }
+
         setErrorKind("not-found");
         setError("Projeto não encontrado");
         setProject(null);
@@ -194,7 +230,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setError(message);
       setStatus("error");
     }
-  }, [projectId, user]);
+  }, [projectId, user, isCustomer, isStaff, navigate]);
+
 
   useEffect(() => {
     void fetchProject();

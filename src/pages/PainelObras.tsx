@@ -461,7 +461,7 @@ function DateCell({
 // ----- main page -----
 export default function PainelObras() {
   const navigate = useNavigate();
-  const { isStaff, loading: roleLoading } = useUserRole();
+  const { isStaff, isAdmin, loading: roleLoading } = useUserRole();
   const { obras, isLoading, updateObra } = usePainelObras();
   const { data: staffUsers = [] } = useStaffUsers();
   const queryClient = useQueryClient();
@@ -683,29 +683,46 @@ export default function PainelObras() {
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<PainelObra | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [canForceDelete, setCanForceDelete] = useState(false);
 
   // Popup "Dados do cliente" — abre a feature completa em dialog,
   // disparado pelo ícone de documento na coluna após Cliente/Obra.
   const [dadosTarget, setDadosTarget] = useState<PainelObra | null>(null);
 
-  const handleDeleteConfirm = async () => {
+  const runDelete = async (force: boolean) => {
     if (!deleteTarget) return;
     setDeleting(true);
+    setDeleteError(null);
     try {
       const { error } = await supabase.rpc("soft_delete_project", {
         p_project_id: deleteTarget.id,
-      });
+        p_force: force,
+      } as never);
       if (error) throw error;
       toast.success(`Obra "${deleteTarget.nome}" movida para a lixeira.`);
       queryClient.invalidateQueries({ queryKey: ["painel-obras"] });
       setDeleteTarget(null);
-    } catch (e) {
+      setCanForceDelete(false);
+    } catch (e: unknown) {
       console.error(e);
-      toast.error("Erro ao excluir obra. Tente novamente.");
+      const message =
+        e instanceof Error ? e.message : "Erro ao excluir obra.";
+      // Guard-rail do banco: bloqueia quando é a única obra ativa do cliente.
+      if (message.includes("única obra ativa do cliente")) {
+        setDeleteError(message);
+        setCanForceDelete(isAdmin);
+      } else {
+        toast.error("Erro ao excluir obra. Tente novamente.");
+      }
     } finally {
       setDeleting(false);
     }
   };
+
+  const handleDeleteConfirm = () => runDelete(false);
+  const handleForceDelete = () => runDelete(true);
+
 
   const filtered = useMemo(() => {
     // Separa obras (execução) de projetos (fase de projeto). Default: todas.
@@ -1103,7 +1120,11 @@ export default function PainelObras() {
         <AlertDialog
           open={!!deleteTarget}
           onOpenChange={(o) => {
-            if (!o && !deleting) setDeleteTarget(null);
+            if (!o && !deleting) {
+              setDeleteTarget(null);
+              setDeleteError(null);
+              setCanForceDelete(false);
+            }
           }}
         >
           <AlertDialogContent>
@@ -1126,22 +1147,39 @@ export default function PainelObras() {
                   Esta ação não pode ser desfeita. Todos os dados vinculados
                   (compras, pagamentos, registros diários) serão excluídos.
                 </span>
+                {deleteError && (
+                  <span className="mt-2 block rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                    {deleteError}
+                  </span>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={deleting}>
                 Cancelar
               </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {deleting ? "Excluindo…" : "Sim, excluir obra"}
-              </AlertDialogAction>
+              {!deleteError && (
+                <AlertDialogAction
+                  onClick={handleDeleteConfirm}
+                  disabled={deleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleting ? "Excluindo…" : "Sim, excluir obra"}
+                </AlertDialogAction>
+              )}
+              {deleteError && canForceDelete && (
+                <AlertDialogAction
+                  onClick={handleForceDelete}
+                  disabled={deleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleting ? "Excluindo…" : "Forçar exclusão (admin)"}
+                </AlertDialogAction>
+              )}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
 
         {/* Popup "Dados do cliente" — feature completa em dialog (Contratante / Imóvel / Info). */}
         <DadosClienteDialog

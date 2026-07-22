@@ -27,7 +27,9 @@ import { PerformanceCard } from "@/components/admin/health/PerformanceCard";
 import { AdminToolsCard } from "@/components/admin/health/AdminToolsCard";
 import { RlsChecksCard } from "@/components/admin/health/RlsChecksCard";
 import { AssistantTruncationCard } from "@/components/admin/health/AssistantTruncationCard";
+import { CustomersWithoutProjectCard } from "@/components/admin/health/CustomersWithoutProjectCard";
 import type { DiagnosticsState } from "@/components/admin/health/types";
+
 
 export default function AdminHealth() {
   const navigate = useNavigate();
@@ -165,6 +167,9 @@ export default function AdminHealth() {
         />
 
         <AssistantTruncationCard />
+
+        <CustomersWithoutProjectCard />
+
 
         <AdminToolsCard state={state} roles={roles} isAdmin={isAdmin} />
 
