@@ -168,6 +168,9 @@ export default function AdminHealth() {
 
         <AssistantTruncationCard />
 
+        <CustomersWithoutProjectCard />
+
+
         <AdminToolsCard state={state} roles={roles} isAdmin={isAdmin} />
 
         {/* Footer with instructions */}
