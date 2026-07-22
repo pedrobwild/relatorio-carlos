@@ -15,6 +15,7 @@ import type { ReactNode } from "react";
 import { ProjectProvider, useProject } from "../ProjectContext";
 
 const getProjectWithCustomerMock = vi.fn();
+const getCustomerProjectsMock = vi.fn();
 const ensureCustomerProjectLinkMock = vi.fn();
 const invalidateProjectQueriesMock = vi.fn();
 
@@ -24,11 +25,21 @@ vi.mock("@/infra/repositories", () => ({
   projectsRepo: {
     getProjectWithCustomer: (projectId: string) =>
       getProjectWithCustomerMock(projectId),
+    getCustomerProjects: (userId: string) =>
+      getCustomerProjectsMock(userId),
   },
 }));
 
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ user: STABLE_USER }),
+}));
+
+vi.mock("@/hooks/useUserRole", () => ({
+  useUserRole: () => ({ isCustomer: false, isStaff: true }),
+}));
+
+vi.mock("@/hooks/use-toast", () => ({
+  toast: vi.fn(),
 }));
 
 vi.mock("@/hooks/useLinkCustomerOnLogin", () => ({
@@ -46,6 +57,7 @@ vi.mock("@/lib/queryKeys", () => ({
   invalidateProjectQueries: (projectId?: string) =>
     invalidateProjectQueriesMock(projectId),
 }));
+
 
 const PROJECT = {
   id: "p-1",
