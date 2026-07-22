@@ -300,14 +300,17 @@ export async function checkProjectAccess(
  */
 export async function deleteProject(
   projectId: string,
+  options?: { force?: boolean },
 ): Promise<RepositoryResult<null>> {
   return executeQuery(async () => {
     const { error } = await supabase.rpc("soft_delete_project", {
       p_project_id: projectId,
-    });
+      p_force: options?.force ?? false,
+    } as never);
     return { data: null, error };
   });
 }
+
 
 /**
  * Restore a soft-deleted project
