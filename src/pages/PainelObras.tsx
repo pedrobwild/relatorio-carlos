@@ -461,7 +461,7 @@ function DateCell({
 // ----- main page -----
 export default function PainelObras() {
   const navigate = useNavigate();
-  const { isStaff, loading: roleLoading } = useUserRole();
+  const { isStaff, isAdmin, loading: roleLoading } = useUserRole();
   const { obras, isLoading, updateObra } = usePainelObras();
   const { data: staffUsers = [] } = useStaffUsers();
   const queryClient = useQueryClient();
