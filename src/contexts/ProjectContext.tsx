@@ -7,12 +7,15 @@ import React, {
   useRef,
   ReactNode,
 } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { projectsRepo, type ProjectWithCustomer } from "@/infra/repositories";
 import { ensureCustomerProjectLink } from "@/hooks/useLinkCustomerOnLogin";
 import { invalidateProjectQueries } from "@/lib/queryKeys";
 import { trackAmplitude } from "@/lib/amplitude";
+import { toast } from "@/hooks/use-toast";
+
 
 // Re-export for backwards compatibility
 export type Project = ProjectWithCustomer;
