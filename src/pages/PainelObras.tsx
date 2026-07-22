@@ -1120,7 +1120,11 @@ export default function PainelObras() {
         <AlertDialog
           open={!!deleteTarget}
           onOpenChange={(o) => {
-            if (!o && !deleting) setDeleteTarget(null);
+            if (!o && !deleting) {
+              setDeleteTarget(null);
+              setDeleteError(null);
+              setCanForceDelete(false);
+            }
           }}
         >
           <AlertDialogContent>
@@ -1143,22 +1147,39 @@ export default function PainelObras() {
                   Esta ação não pode ser desfeita. Todos os dados vinculados
                   (compras, pagamentos, registros diários) serão excluídos.
                 </span>
+                {deleteError && (
+                  <span className="mt-2 block rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                    {deleteError}
+                  </span>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={deleting}>
                 Cancelar
               </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {deleting ? "Excluindo…" : "Sim, excluir obra"}
-              </AlertDialogAction>
+              {!deleteError && (
+                <AlertDialogAction
+                  onClick={handleDeleteConfirm}
+                  disabled={deleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleting ? "Excluindo…" : "Sim, excluir obra"}
+                </AlertDialogAction>
+              )}
+              {deleteError && canForceDelete && (
+                <AlertDialogAction
+                  onClick={handleForceDelete}
+                  disabled={deleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleting ? "Excluindo…" : "Forçar exclusão (admin)"}
+                </AlertDialogAction>
+              )}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
 
         {/* Popup "Dados do cliente" — feature completa em dialog (Contratante / Imóvel / Info). */}
         <DadosClienteDialog
