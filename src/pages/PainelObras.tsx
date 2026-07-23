@@ -2284,6 +2284,7 @@ const TABLE_COLS: {
       "w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px]",
     stickyLeft: true,
   }, // Cliente / Obra (sticky)
+  { width: "w-[92px] sm:w-[104px]" }, // Criticidade
   { width: "w-[52px] sm:w-[60px]", align: "center", hide: "hidden lg:table-cell" }, // Dados
   { width: "min-w-[112px] sm:min-w-[140px]" }, // Status
   { width: "min-w-[128px] sm:min-w-[160px]" }, // Etapa
