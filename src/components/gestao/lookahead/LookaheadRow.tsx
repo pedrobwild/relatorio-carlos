@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Loader2,
   Play,
+  TrendingUp,
   UserPlus,
   UserX,
 } from "lucide-react";
@@ -36,6 +37,8 @@ import { queryKeys } from "@/lib/queryKeys";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 import type { LookaheadActivity } from "@/hooks/useLookahead";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
+import { useActivityMeasurements } from "@/hooks/useActivityProgress";
+import { RegistrarAvancoDialog } from "@/components/gestao/avanco/RegistrarAvancoDialog";
 
 const UNASSIGNED = "__unassigned__";
 
@@ -54,6 +57,11 @@ export function LookaheadRow({ activity, windowDays }: Props) {
   const queryClient = useQueryClient();
   const { data: staff = [] } = useStaffUsers();
   const [assignOpen, setAssignOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(false);
+  const { data: measurements = [] } = useActivityMeasurements(
+    progressOpen ? activity.id : undefined,
+  );
+  const latestPct = measurements[0]?.progress_pct ?? null;
 
   // Reusa mutation existente para actual_start/actual_end.
   const { updateActivity, isUpdating } = useProjectActivities(
@@ -244,6 +252,18 @@ export function LookaheadRow({ activity, windowDays }: Props) {
           </Button>
         )}
 
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setProgressOpen(true)}
+          className="h-11 gap-1.5"
+          aria-label="Registrar avanço físico"
+        >
+          <TrendingUp className="h-4 w-4" aria-hidden />
+          <span className="hidden sm:inline">Avanço</span>
+        </Button>
+
         <Link
           to={`/obra/${activity.project_id}/cronograma`}
           aria-label="Abrir cronograma da obra"
@@ -252,6 +272,15 @@ export function LookaheadRow({ activity, windowDays }: Props) {
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>
+
+      <RegistrarAvancoDialog
+        open={progressOpen}
+        onOpenChange={setProgressOpen}
+        activityId={activity.id}
+        projectId={activity.project_id}
+        activityDescription={activity.description}
+        currentProgress={latestPct}
+      />
     </div>
   );
 }

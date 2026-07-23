@@ -297,6 +297,25 @@ export const queryKeys = {
     list: (windowDays: number) =>
       [...queryKeys.lookahead.all, "list", windowDays] as const,
   },
+
+  // ============================================================================
+  // Avanço físico (medições + baselines) — Onda A1, staff-only
+  // ============================================================================
+  avancoFisico: {
+    all: ["avanco-fisico"] as const,
+    byActivity: (activityId: string | undefined) =>
+      [...queryKeys.avancoFisico.all, "measurements", "activity", activityId] as const,
+    byProject: (projectId: string | undefined) =>
+      [...queryKeys.avancoFisico.all, "measurements", "project", projectId] as const,
+    latest: (projectId: string | undefined) =>
+      [...queryKeys.avancoFisico.all, "measurements", "latest", projectId] as const,
+    baselines: (projectId: string | undefined) =>
+      [...queryKeys.avancoFisico.all, "baselines", projectId] as const,
+    baselineCurrent: (projectId: string | undefined) =>
+      [...queryKeys.avancoFisico.all, "baseline-current", projectId] as const,
+    baselineActivities: (baselineId: string | undefined) =>
+      [...queryKeys.avancoFisico.all, "baseline-activities", baselineId] as const,
+  },
 } as const;
 
 // ============================================================================
