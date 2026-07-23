@@ -29,6 +29,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { PaymentInstallment } from "./PaymentScheduleSection";
+import { RecebimentosSection } from "@/components/compras/RecebimentosSection";
+
 
 interface PurchaseFormDialogProps {
   open: boolean;
@@ -69,9 +71,11 @@ export function PurchaseFormDialog({
   onSubmit,
   isSubmitting,
   draftLastSavedAt,
+  editingPurchaseId,
 }: PurchaseFormDialogProps) {
   const purchaseType = formData.purchase_type || "produto";
   const isPrestador = purchaseType === "prestador";
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -183,6 +187,16 @@ export function PurchaseFormDialog({
             />
           </div>
         </div>
+
+        {isEditing && editingPurchaseId && (
+          <RecebimentosSection
+            purchaseId={editingPurchaseId}
+            expectedQuantity={!isPrestador ? (formData.quantity ?? null) : null}
+            expectedTotal={formData.estimated_cost ?? null}
+          />
+        )}
+
+
 
         <DialogFooter className="gap-2 sm:justify-between">
           {!isEditing ? (
