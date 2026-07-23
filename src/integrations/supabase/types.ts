@@ -6856,6 +6856,32 @@ export type Database = {
           payload: Json
         }[]
       }
+      get_project_cost_summary: {
+        Args: { p_project_id: string }
+        Returns: {
+          category: string
+          comprometido: number
+          consumido_pct: number
+          orcado: number
+          purchases_count: number
+          realizado: number
+          saldo: number
+        }[]
+      }
+      get_project_cost_totals: {
+        Args: { p_project_id: string }
+        Returns: {
+          categories_count: number
+          categories_over_budget: number
+          comprometido: number
+          eac: number
+          orcado: number
+          realizado: number
+          saldo: number
+          variacao: number
+          variacao_pct: number
+        }[]
+      }
       get_project_s_curve_weekly: {
         Args: { p_baseline_id?: string; p_project_id: string }
         Returns: {
