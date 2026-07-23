@@ -901,6 +901,43 @@ export default function PainelObras() {
     return m;
   }, [obras, snapshotById]);
 
+  // ── Onda P2 · Matriz de saúde do portfólio ────────────────────────────────
+  // Aberta/fechada persistida em localStorage por usuário. Fechada por padrão
+  // para não pesar a tela única.
+  const { user } = useAuth();
+  const [matrixOpen, setMatrixOpen] = useHealthMatrixOpen(user?.id ?? null);
+
+  const matrixPoints = useMemo<HealthMatrixPoint[]>(() => {
+    return obras
+      .filter((o) => matchesFase(o) && !isObraConcluida(o))
+      .map<HealthMatrixPoint>((o) => {
+        const snap = snapshotById.get(o.id);
+        const severity = severityById.get(o.id);
+        return {
+          id: o.id,
+          nome: o.nome ?? "Sem nome",
+          cliente: o.customer_name ?? null,
+          responsavel: o.responsavel_nome ?? null,
+          overdueDays: computeOverdueDays(o),
+          variacaoPct: snap?.variacao_pct ?? null,
+          orcado: snap?.orcado ?? null,
+          severity: severity ?? {
+            score: 0,
+            level: "saudavel",
+            triggeredCritical: false,
+            criticalReasons: [],
+            components: {
+              prazo: 0,
+              financeiro: 0,
+              pendencias: 0,
+              compras: 0,
+              desatualizacao: 0,
+            },
+          },
+        };
+      });
+  }, [obras, snapshotById, severityById]);
+
   const { managementTiles, tileFilterSet } = useMemo(() => {
     // Tiles só contam obras ATIVAS (excluem concluídas), independente da
     // aba corrente — os cartões representam trabalho vivo em andamento.
