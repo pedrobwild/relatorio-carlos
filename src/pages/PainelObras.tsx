@@ -1283,53 +1283,17 @@ export default function PainelObras() {
             <SavedViewsBar />
             <ExceptionsBar counts={excecaoCounts} isLoading={excecoesLoading} />
             {!isLoading && obras.length > 0 && (
-              <div className="mb-3">
-                <MetricRail>
-                  <MetricCard
-                    label="Atrasadas"
-                    value={cockpitMetrics.atrasadas}
-                    hint="Status atrasado"
-                    accent={
-                      cockpitMetrics.atrasadas > 0 ? "destructive" : "muted"
-                    }
-                    onClick={() => applyStatusFilter("Atrasado")}
-                  />
-                  <MetricCard
-                    label="Risco semana"
-                    value={cockpitMetrics.riscoSemana}
-                    hint="Entrega em ≤ 7 dias"
-                    accent={
-                      cockpitMetrics.riscoSemana > 0 ? "warning" : "muted"
-                    }
-                  />
-                  <MetricCard
-                    label="Aprovação pendente"
-                    value={cockpitMetrics.aguardandoAprovacao}
-                    hint="Executivo / Vistoria"
-                    accent={
-                      cockpitMetrics.aguardandoAprovacao > 0 ? "info" : "muted"
-                    }
-                  />
-                  <MetricCard
-                    label="Pendências"
-                    value={cockpitMetrics.pendenciasAbertas}
-                    hint="Total de itens abertos"
-                    accent={
-                      cockpitMetrics.pendenciasAbertas > 0 ? "warning" : "muted"
-                    }
-                  />
-                  <MetricCard
-                    label="Paralisadas"
-                    value={cockpitMetrics.paralisadas}
-                    hint="Sem progresso"
-                    accent={
-                      cockpitMetrics.paralisadas > 0 ? "destructive" : "muted"
-                    }
-                    onClick={() => applyStatusFilter("Paralisada")}
-                  />
-                </MetricRail>
-              </div>
-            )}
+            {/* Faixa gerencial ÚNICA — 6 tiles clicáveis que substituíram
+                MetricRail + ExceptionsBar. Cada tile aplica um filtro
+                cross-domain na tabela abaixo (via ?tile=). */}
+            <SavedViewsBar />
+            <ManagementBand
+              tiles={managementTiles}
+              activeTile={activeTile}
+              onSelect={toggleManagementTile}
+              isLoading={isLoading || snapshotLoading || excecoesLoading}
+            />
+
             {/*
             Toolbar redesenhada — referência híbrida (Linear + Notion):
             - linha única densa (h-9), divisores verticais entre grupos
