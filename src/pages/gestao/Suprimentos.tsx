@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, ExternalLink, Search } from "lucide-react";
+import { Plus, ExternalLink, Search, PackageSearch } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
