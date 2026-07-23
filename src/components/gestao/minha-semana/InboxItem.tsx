@@ -12,9 +12,11 @@ import {
   FileSignature,
   Bell,
   ListTodo,
+  KeySquare,
   ArrowRight,
   type LucideIcon,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import type { InboxItem as InboxItemType, InboxKind } from "@/hooks/useMinhaSemana";
 
@@ -52,7 +54,13 @@ const KIND_META: Record<
     icon: ListTodo,
     tone: "bg-muted text-muted-foreground border-border",
   },
+  entrega: {
+    label: "Pendência de entrega",
+    icon: KeySquare,
+    tone: "bg-accent/40 text-foreground border-border",
+  },
 };
+
 
 function formatDeadline(item: InboxItemType): string {
   if (item.daysOverdue > 0) {

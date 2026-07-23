@@ -185,3 +185,25 @@ export async function transitionNcStatus(params: {
   });
   if (error) throw error;
 }
+
+/**
+ * Verificação pós-fechamento (Onda D2 — opt-in, aditiva).
+ * NÃO altera status/triggers existentes. Apenas grava carimbo em
+ * post_close_verified_at/by na NC já encerrada.
+ */
+export async function markNcVerifiedPostClose(params: {
+  nc_id: string;
+  user_id: string;
+}): Promise<void> {
+  const update: NcUpdate = {
+    post_close_verified_at: new Date().toISOString(),
+    post_close_verified_by: params.user_id,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabase
+    .from("non_conformities")
+    .update(update)
+    .eq("id", params.nc_id);
+  if (error) throw error;
+}
+

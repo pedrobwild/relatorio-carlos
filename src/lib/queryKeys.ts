@@ -272,7 +272,10 @@ export const queryKeys = {
       [...queryKeys.minhaSemana.all, "alerts", userId] as const,
     pendencias: (userId: string) =>
       [...queryKeys.minhaSemana.all, "pendencias", userId] as const,
+    punch: (userId: string) =>
+      [...queryKeys.minhaSemana.all, "punch", userId] as const,
   },
+
 
   // ============================================================================
   // Painel de Obras — exceções cross-domain (faixa clicável no topo)
@@ -376,7 +379,13 @@ export const queryKeys = {
       [...queryKeys.qualidade.all, "template-items", templateId] as const,
     inspecoes: (filters?: { status?: string; projectId?: string }) =>
       [...queryKeys.qualidade.all, "inspecoes", filters ?? null] as const,
+    punchItems: (filters?: {
+      projectId?: string;
+      responsibleUserId?: string;
+      status?: string;
+    }) => [...queryKeys.qualidade.all, "punch-items", filters ?? null] as const,
   },
+
 } as const;
 
 // ============================================================================

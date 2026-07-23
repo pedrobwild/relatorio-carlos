@@ -9,7 +9,9 @@ import {
   updateNcEvidencePhotos,
   transitionNcStatus,
   deleteNonConformity,
+  markNcVerifiedPostClose,
 } from "@/infra/repositories/ncsRepository";
+
 
 // eslint-disable-next-line no-duplicate-imports
 import type {
@@ -190,3 +192,36 @@ export function useUpdateNcEvidence() {
     },
   });
 }
+
+/**
+ * Onda D2 — verificação técnica opcional pós-encerramento.
+ * Não altera status; só grava carimbo (post_close_verified_at/by).
+ */
+export function useVerifyNcPostClose() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (params: { nc: NonConformity }) => {
+      if (!user) throw new Error("Não autenticado");
+      await markNcVerifiedPostClose({
+        nc_id: params.nc.id,
+        user_id: user.id,
+      });
+      return params;
+    },
+    onSuccess: (params) => {
+      queryClient.invalidateQueries({
+        queryKey: ["non-conformities", params.nc.project_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["non-conformities", "global"],
+      });
+      toast.success("NC marcada como verificada em campo");
+    },
+    onError: (err: Error) => {
+      toast.error("Erro: " + err.message);
+    },
+  });
+}
+

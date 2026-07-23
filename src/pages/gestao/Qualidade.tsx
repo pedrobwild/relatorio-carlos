@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Plus,
@@ -10,7 +10,13 @@ import {
   ClipboardCheck,
   ListChecks,
   ExternalLink,
+  KeySquare,
+  CheckCircle2,
+  RotateCcw,
+  ShieldCheck,
 } from "lucide-react";
+
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -39,6 +45,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
 
 import { queryKeys } from "@/lib/queryKeys";
@@ -47,6 +61,21 @@ import {
   inspectionChecklistTemplatesRepo,
   type ChecklistTemplate,
 } from "@/infra/repositories/inspectionChecklistTemplates.repository";
+import { useProjectsQuery } from "@/hooks/useProjectsQuery";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import {
+  usePunchItems,
+  useCreatePunchItem,
+  useResolvePunchItem,
+  useVerifyPunchItem,
+  useReopenPunchItem,
+  useDeletePunchItem,
+  type PunchItem,
+} from "@/hooks/usePunchItems";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+
 
 /* ============================================================================
  * Página /gestao/qualidade  (StaffRoute)
@@ -74,6 +103,10 @@ export default function Qualidade() {
             <ClipboardCheck className="h-4 w-4" />
             Inspeções
           </TabsTrigger>
+          <TabsTrigger value="entrega" className="gap-2">
+            <KeySquare className="h-4 w-4" />
+            Entrega
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="templates" className="space-y-4">
@@ -83,7 +116,12 @@ export default function Qualidade() {
         <TabsContent value="inspecoes" className="space-y-4">
           <InspecoesTab />
         </TabsContent>
+
+        <TabsContent value="entrega" className="space-y-4">
+          <PunchListTab />
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }
@@ -680,5 +718,470 @@ function InspecoesTab() {
         </ul>
       </CardContent>
     </Card>
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * Punch List Tab (Onda D2) — pendências de entrega por ambiente
+ * ------------------------------------------------------------------------*/
+
+type PunchStatusFilter = "abertas" | "resolvido" | "verificado" | "todas";
+
+function PunchListTab() {
+  const initialParams = new URLSearchParams(
+    typeof window !== "undefined" ? window.location.search : "",
+  );
+  const [projectId, setProjectId] = useState<string>(
+    initialParams.get("projectId") ?? "all",
+  );
+  const [responsibleUserId, setResponsibleUserId] = useState<string>("all");
+  const [statusFilter, setStatusFilter] =
+    useState<PunchStatusFilter>("abertas");
+
+  const projectsQuery = useProjectsQuery();
+  const staffQuery = useStaffUsers();
+
+  const projects = projectsQuery.data ?? [];
+  const staff = staffQuery.data ?? [];
+  const staffMap = useMemo(
+    () => new Map(staff.map((u) => [u.id, u.nome])),
+    [staff],
+  );
+
+  const punchQuery = usePunchItems({
+    projectId: projectId === "all" ? undefined : projectId,
+    responsibleUserId:
+      responsibleUserId === "all" ? undefined : responsibleUserId,
+    status:
+      statusFilter === "abertas"
+        ? "aberto"
+        : statusFilter === "resolvido"
+          ? "resolvido"
+          : statusFilter === "verificado"
+            ? "verificado"
+            : undefined,
+  });
+
+  const items = punchQuery.data ?? [];
+
+  const projectName = (id: string) =>
+    projects.find((p) => p.id === id)?.name ?? "Sem obra";
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, PunchItem[]>();
+    for (const it of items) {
+      const key = `${it.project_id}::${it.ambiente}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(it);
+    }
+    return Array.from(map.entries()).map(([key, list]) => {
+      const [pId, ambiente] = key.split("::");
+      const total = list.length;
+      const done = list.filter((l) => l.status === "verificado").length;
+      const resolved = list.filter((l) => l.status !== "aberto").length;
+      return {
+        key,
+        projectId: pId,
+        projectName: projectName(pId),
+        ambiente,
+        items: list,
+        total,
+        done,
+        resolved,
+        pct: total === 0 ? 0 : Math.round((done / total) * 100),
+        resolvedPct: total === 0 ? 0 : Math.round((resolved / total) * 100),
+      };
+    });
+  }, [items, projects]);
+
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const isLoading = punchQuery.isLoading || projectsQuery.isLoading;
+
+  return (
+    <div className="space-y-4">
+      {/* Filtros + criação */}
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[200px]">
+          <Label className="text-xs">Obra</Label>
+          <Select value={projectId} onValueChange={setProjectId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todas as obras" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as obras</SelectItem>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <Label className="text-xs">Responsável</Label>
+          <Select
+            value={responsibleUserId}
+            onValueChange={setResponsibleUserId}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {staff.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-[180px]">
+          <Label className="text-xs">Status</Label>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v as PunchStatusFilter)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="abertas">Abertas</SelectItem>
+              <SelectItem value="resolvido">Aguardando verificação</SelectItem>
+              <SelectItem value="verificado">Verificadas</SelectItem>
+              <SelectItem value="todas">Todas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button
+          onClick={() => setCreateOpen(true)}
+          className="min-h-[44px]"
+          disabled={projects.length === 0}
+        >
+          <Plus className="h-4 w-4 mr-1.5" />
+          Nova pendência
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <PageSkeleton />
+      ) : grouped.length === 0 ? (
+        <EmptyState
+          icon={ClipboardCheck}
+          title="Sem pendências de entrega"
+          description="Nenhuma pendência registrada com os filtros atuais."
+        />
+      ) : (
+        <div className="space-y-4">
+          {grouped.map((g) => (
+            <Card key={g.key}>
+              <CardHeader className="pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-base">{g.ambiente}</CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {g.projectName} · {g.done}/{g.total} verificadas ·{" "}
+                      {g.resolved}/{g.total} resolvidas
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {g.pct}%
+                  </span>
+                </div>
+                <Progress value={g.pct} className="h-2" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {g.items.map((it) => (
+                  <PunchItemRow
+                    key={it.id}
+                    item={it}
+                    staffMap={staffMap}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <CreatePunchDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        defaultProjectId={projectId !== "all" ? projectId : undefined}
+        projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+        staff={staff}
+      />
+    </div>
+  );
+}
+
+function PunchItemRow({
+  item,
+  staffMap,
+}: {
+  item: PunchItem;
+  staffMap: Map<string, string>;
+}) {
+  const resolve = useResolvePunchItem();
+  const verify = useVerifyPunchItem();
+  const reopen = useReopenPunchItem();
+  const del = useDeletePunchItem();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const overdue =
+    item.status === "aberto" &&
+    item.due_date &&
+    item.due_date < new Date().toISOString().slice(0, 10);
+
+  return (
+    <div className="flex flex-wrap items-start gap-3 rounded-md border border-border/60 bg-card p-3">
+      <div className="flex-1 min-w-[200px]">
+        <p className="text-sm font-medium">{item.descricao}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          {item.responsible_user_id && (
+            <span>
+              Resp.: {staffMap.get(item.responsible_user_id) ?? "—"}
+            </span>
+          )}
+          {item.due_date && (
+            <span className={overdue ? "text-destructive font-medium" : ""}>
+              Prazo:{" "}
+              {format(new Date(`${item.due_date}T00:00:00`), "dd/MM/yyyy", {
+                locale: ptBR,
+              })}
+            </span>
+          )}
+          <Badge
+            variant={
+              item.status === "verificado"
+                ? "default"
+                : item.status === "resolvido"
+                  ? "secondary"
+                  : "outline"
+            }
+            className="text-[10px]"
+          >
+            {item.status === "aberto"
+              ? "Aberta"
+              : item.status === "resolvido"
+                ? "Aguardando verificação"
+                : "Verificada"}
+          </Badge>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {item.status === "aberto" && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => resolve.mutate(item.id)}
+            disabled={resolve.isPending}
+            className="min-h-[36px]"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+            Resolver
+          </Button>
+        )}
+        {item.status === "resolvido" && (
+          <>
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => verify.mutate(item.id)}
+              disabled={verify.isPending}
+              className="min-h-[36px]"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+              Verificar
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => reopen.mutate(item.id)}
+              disabled={reopen.isPending}
+              className="min-h-[36px]"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />
+              Reabrir
+            </Button>
+          </>
+        )}
+        {item.status === "verificado" && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => reopen.mutate(item.id)}
+            disabled={reopen.isPending}
+            className="min-h-[36px]"
+          >
+            <RotateCcw className="h-3.5 w-3.5 mr-1" />
+            Reabrir
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setConfirmDelete(true)}
+          className="min-h-[36px] text-destructive hover:text-destructive"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover pendência?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação irá arquivar a pendência. Você pode restaurá-la
+              diretamente no banco caso necessário.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                del.mutate(item.id);
+                setConfirmDelete(false);
+              }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function CreatePunchDialog({
+  open,
+  onOpenChange,
+  defaultProjectId,
+  projects,
+  staff,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  defaultProjectId?: string;
+  projects: { id: string; name: string }[];
+  staff: { id: string; nome: string }[];
+}) {
+  const [projectId, setProjectId] = useState(defaultProjectId ?? "");
+  const [ambiente, setAmbiente] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [responsibleUserId, setResponsibleUserId] = useState<string>("none");
+  const [dueDate, setDueDate] = useState<string>("");
+
+  const create = useCreatePunchItem();
+
+  useEffect(() => {
+    if (open) {
+      setProjectId(defaultProjectId ?? "");
+      setAmbiente("");
+      setDescricao("");
+      setResponsibleUserId("none");
+      setDueDate("");
+    }
+  }, [open, defaultProjectId]);
+
+  const submit = async () => {
+    if (!projectId || !ambiente.trim() || !descricao.trim()) {
+      toast.error("Obra, ambiente e descrição são obrigatórios");
+      return;
+    }
+    await create.mutateAsync({
+      project_id: projectId,
+      ambiente,
+      descricao,
+      responsible_user_id:
+        responsibleUserId === "none" ? null : responsibleUserId,
+      due_date: dueDate || null,
+    });
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nova pendência de entrega</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Obra *</Label>
+            <Select value={projectId} onValueChange={setProjectId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a obra" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Ambiente *</Label>
+            <Input
+              value={ambiente}
+              onChange={(e) => setAmbiente(e.target.value)}
+              placeholder="Sala, Cozinha, Suíte 1…"
+              className="min-h-[44px]"
+            />
+          </div>
+          <div>
+            <Label>Descrição *</Label>
+            <Textarea
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              placeholder="Ex.: Retocar pintura no rodapé"
+              rows={3}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label>Responsável</Label>
+              <Select
+                value={responsibleUserId}
+                onValueChange={setResponsibleUserId}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem responsável</SelectItem>
+                  {staff.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Prazo</Label>
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="min-h-[44px]"
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={submit} disabled={create.isPending}>
+            Criar pendência
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

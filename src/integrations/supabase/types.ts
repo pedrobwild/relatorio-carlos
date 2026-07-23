@@ -2672,6 +2672,8 @@ export type Database = {
           id: string
           inspection_id: string | null
           inspection_item_id: string | null
+          post_close_verified_at: string | null
+          post_close_verified_by: string | null
           project_id: string
           rejection_reason: string | null
           reopen_count: number
@@ -2704,6 +2706,8 @@ export type Database = {
           id?: string
           inspection_id?: string | null
           inspection_item_id?: string | null
+          post_close_verified_at?: string | null
+          post_close_verified_by?: string | null
           project_id: string
           rejection_reason?: string | null
           reopen_count?: number
@@ -2736,6 +2740,8 @@ export type Database = {
           id?: string
           inspection_id?: string | null
           inspection_item_id?: string | null
+          post_close_verified_at?: string | null
+          post_close_verified_by?: string | null
           project_id?: string
           rejection_reason?: string | null
           reopen_count?: number
@@ -5724,6 +5730,78 @@ export type Database = {
             columns: ["painel_responsavel_id"]
             isOneToOne: false
             referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      punch_items: {
+        Row: {
+          ambiente: string
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          descricao: string
+          due_date: string | null
+          id: string
+          photo_path: string | null
+          project_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          responsible_user_id: string | null
+          status: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          ambiente: string
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          descricao: string
+          due_date?: string | null
+          id?: string
+          photo_path?: string | null
+          project_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responsible_user_id?: string | null
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          ambiente?: string
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          descricao?: string
+          due_date?: string | null
+          id?: string
+          photo_path?: string | null
+          project_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responsible_user_id?: string | null
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "punch_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "punch_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
