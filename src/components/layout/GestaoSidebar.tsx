@@ -209,10 +209,16 @@ export function GestaoSidebar() {
           path: "/gestao/calendario-compras",
         },
         {
+          label: "Suprimentos",
+          icon: Package,
+          path: "/gestao/suprimentos",
+        },
+        {
           label: "Estoque",
           icon: Package,
           path: "/gestao/estoque",
         },
+
         {
           label: "Arquivos",
           icon: FolderOpen,
