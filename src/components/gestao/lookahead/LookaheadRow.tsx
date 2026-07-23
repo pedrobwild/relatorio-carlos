@@ -252,6 +252,18 @@ export function LookaheadRow({ activity, windowDays }: Props) {
           </Button>
         )}
 
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setProgressOpen(true)}
+          className="h-11 gap-1.5"
+          aria-label="Registrar avanço físico"
+        >
+          <TrendingUp className="h-4 w-4" aria-hidden />
+          <span className="hidden sm:inline">Avanço</span>
+        </Button>
+
         <Link
           to={`/obra/${activity.project_id}/cronograma`}
           aria-label="Abrir cronograma da obra"
@@ -260,6 +272,15 @@ export function LookaheadRow({ activity, windowDays }: Props) {
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>
+
+      <RegistrarAvancoDialog
+        open={progressOpen}
+        onOpenChange={setProgressOpen}
+        activityId={activity.id}
+        projectId={activity.project_id}
+        activityDescription={activity.description}
+        currentProgress={latestPct}
+      />
     </div>
   );
 }
