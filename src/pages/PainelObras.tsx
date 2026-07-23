@@ -2203,6 +2203,7 @@ export default function PainelObras() {
                             key={o.id}
                             obra={o}
                             snapshot={snapshotById.get(o.id)}
+                            severity={severityById.get(o.id)}
                             staffUsers={staffUsers}
                             expanded={expandedIds.has(o.id)}
                             onToggleExpanded={() => toggleExpanded(o.id)}
