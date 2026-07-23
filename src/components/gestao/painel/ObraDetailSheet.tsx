@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+
 /**
  * ObraDetailSheet — drawer lateral (Sheet) com resumo gerencial de uma obra.
  *
