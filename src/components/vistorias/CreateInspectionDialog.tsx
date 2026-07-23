@@ -28,6 +28,7 @@ import {
   TYPE_TO_TEMPLATE_CATEGORY,
   type InspectionType,
 } from "./inspectionConstants";
+import { SavedTemplatePicker } from "./SavedTemplatePicker";
 
 interface Props {
   projectId: string;
@@ -290,6 +291,23 @@ export function CreateInspectionDialog({
           {/* Checklist builder */}
           <div className="space-y-3">
             <Label>Itens do checklist</Label>
+
+            <SavedTemplatePicker
+              onLoad={(loaded, mode) =>
+                setItems((prev) =>
+                  mode === "replace"
+                    ? loaded.map((d) => ({ description: d }))
+                    : [
+                        ...prev,
+                        ...loaded
+                          .filter(
+                            (d) => !prev.some((i) => i.description === d),
+                          )
+                          .map((d) => ({ description: d })),
+                      ],
+                )
+              }
+            />
 
             {/* Category presets from DB */}
             <Select value={selectedCategory} onValueChange={handleAddCategory}>

@@ -363,6 +363,20 @@ export const queryKeys = {
         date,
       ] as const,
   },
+
+  // ============================================================================
+  // Qualidade (checklist templates + inspeções agregadas)
+  // ============================================================================
+  qualidade: {
+    all: ["qualidade"] as const,
+    templates: () => [...queryKeys.qualidade.all, "templates"] as const,
+    template: (id: string | undefined) =>
+      [...queryKeys.qualidade.all, "template", id] as const,
+    templateItems: (templateId: string | undefined) =>
+      [...queryKeys.qualidade.all, "template-items", templateId] as const,
+    inspecoes: (filters?: { status?: string; projectId?: string }) =>
+      [...queryKeys.qualidade.all, "inspecoes", filters ?? null] as const,
+  },
 } as const;
 
 // ============================================================================
