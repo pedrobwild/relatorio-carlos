@@ -437,6 +437,16 @@ const AppContent = () => {
                 }
               />
               <Route
+                path="/gestao/avanco-fisico"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<AvancoFisico />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+              <Route
                 path="/gestao/painel-obras"
                 element={
                   <StaffRoute>
