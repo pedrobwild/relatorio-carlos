@@ -82,6 +82,16 @@ export function GestaoSidebar() {
 
   const groups: NavGroup[] = [
     {
+      label: "Meu trabalho",
+      items: [
+        {
+          label: "Minha semana",
+          icon: Inbox,
+          path: "/gestao/minha-semana",
+        },
+      ],
+    },
+    {
       label: "Obras",
       items: [
         {
