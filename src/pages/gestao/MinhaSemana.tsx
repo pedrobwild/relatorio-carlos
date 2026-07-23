@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Inbox, RefreshCw, CheckCircle2 } from "lucide-react";
 import { useMinhaSemana, type InboxItem as InboxItemType } from "@/hooks/useMinhaSemana";
 import { InboxItem } from "@/components/gestao/minha-semana/InboxItem";
+import { DiariosHojeCard } from "@/components/gestao/minha-semana/DiariosHojeCard";
 import { cn } from "@/lib/utils";
 
 interface SectionProps {
