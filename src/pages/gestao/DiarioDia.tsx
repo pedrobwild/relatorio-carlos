@@ -58,6 +58,10 @@ import {
   useSaveProjectDailyLog,
   WeatherCondition,
 } from "@/hooks/useProjectDailyLog";
+import {
+  DailyLogPhoto,
+  useDailyLogPhotos,
+} from "@/hooks/useDailyLogPhotos";
 import { useDailyLogPhotos, DailyLogPhoto } from "@/hooks/useDailyLogPhotos";
 import { cn } from "@/lib/utils";
 
