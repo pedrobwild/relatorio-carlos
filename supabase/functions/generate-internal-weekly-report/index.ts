@@ -237,8 +237,8 @@ async function buildPayload(
     .from("non_conformities")
     .select("id, severity")
     .eq("project_id", projectId)
-    .gte("closed_at", startISO)
-    .lte("closed_at", endISO);
+    .gte("resolved_at", startISO)
+    .lte("resolved_at", endISO);
   const { data: ncsCriticalOpen } = await supabase
     .from("non_conformities")
     .select("id, title, severity, status, due_date")
@@ -253,7 +253,7 @@ async function buildPayload(
     .eq("project_id", projectId);
   const punchByRoom: Record<string, { total: number; done: number }> = {};
   for (const p of punch ?? []) {
-    const room = (p.room as string | null) ?? "Sem ambiente";
+    const room = (p.ambiente as string | null) ?? "Sem ambiente";
     if (!punchByRoom[room]) punchByRoom[room] = { total: 0, done: 0 };
     punchByRoom[room].total += 1;
     if (String(p.status) === "done" || String(p.status) === "closed") punchByRoom[room].done += 1;
@@ -262,12 +262,12 @@ async function buildPayload(
   // ==== Lookahead próxima semana ====
   const { data: lookahead } = await supabase
     .from("project_activities")
-    .select("id, description, planned_start, planned_end, assignee_id, weight")
+    .select("id, description, planned_start, planned_end, responsible_user_id, weight")
     .eq("project_id", projectId)
     .lte("planned_start", nextWeekEnd)
     .gte("planned_end", nextWeekStart)
     .order("planned_start", { ascending: true });
-  const lookaheadUnassigned = (lookahead ?? []).filter((a) => !a.assignee_id);
+  const lookaheadUnassigned = (lookahead ?? []).filter((a) => !a.responsible_user_id);
 
   return {
     project: project ?? null,
