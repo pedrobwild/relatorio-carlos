@@ -1271,6 +1271,11 @@ export default function PainelObras() {
             está em risco hoje?". Cada métrica é clicável e aplica filtro
             correspondente na tabela. Cores apenas via tokens semânticos.
           */}
+            {/* Visões salvas + faixa de exceções (staff cockpit).
+                Renderizadas acima do MetricRail para preservar a hierarquia
+                atual do cockpit (KPIs de status), sem duplicar contadores. */}
+            <SavedViewsBar />
+            <ExceptionsBar counts={excecaoCounts} isLoading={excecoesLoading} />
             {!isLoading && obras.length > 0 && (
               <div className="mb-3">
                 <MetricRail>
