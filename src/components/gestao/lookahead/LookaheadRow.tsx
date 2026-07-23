@@ -37,6 +37,8 @@ import { queryKeys } from "@/lib/queryKeys";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 import type { LookaheadActivity } from "@/hooks/useLookahead";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
+import { useActivityMeasurements } from "@/hooks/useActivityProgress";
+import { RegistrarAvancoDialog } from "@/components/gestao/avanco/RegistrarAvancoDialog";
 
 const UNASSIGNED = "__unassigned__";
 
