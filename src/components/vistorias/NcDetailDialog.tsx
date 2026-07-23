@@ -48,10 +48,12 @@ import {
   useUpdateNcEvidence,
   useNcHistory,
   useDeleteNonConformity,
+  useVerifyNcPostClose,
   type NonConformity,
   type NcStatus,
   type NcSeverity,
 } from "@/hooks/useNonConformities";
+
 import {
   AlertDialog,
   AlertDialogAction,
