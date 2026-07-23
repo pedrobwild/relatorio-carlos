@@ -2059,6 +2059,12 @@ export default function PainelObras() {
                           <TableHead className="min-w-[112px] sm:min-w-[140px] text-right">
                             Progresso
                           </TableHead>
+                          <TableHead className="min-w-[96px] sm:min-w-[120px] text-right hidden lg:table-cell">
+                            Avanço
+                          </TableHead>
+                          <TableHead className="min-w-[96px] sm:min-w-[120px] text-right hidden xl:table-cell">
+                            Custo
+                          </TableHead>
                           <TableHead className="min-w-[96px] sm:min-w-[120px] hidden xl:table-cell">
                             <SortableHeader
                               label="Início Of."
