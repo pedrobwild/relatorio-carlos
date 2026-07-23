@@ -111,11 +111,14 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const updateNc = useUpdateNonConformity();
   const updateEvidence = useUpdateNcEvidence();
   const deleteNc = useDeleteNonConformity();
+  const verifyPostClose = useVerifyNcPostClose();
   const { data: history = [] } = useNcHistory(nc.id);
   const { can } = useCan();
   const canApproveNc = can("ncs:approve");
   const canEdit = can("ncs:treat");
   const canDelete = can("ncs:create");
+  const canVerify = can("ncs:verify");
+
   const { data: staffUsers = [] } = useStaffUsers();
 
   const isEditable = canEdit && nc.status !== "closed";
