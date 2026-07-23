@@ -152,8 +152,15 @@ export default function DiarioDia() {
   const [weatherAfternoon, setWeatherAfternoon] =
     useState<WeatherCondition>(null);
   const [temperature, setTemperature] = useState<string>("");
+  const [severity, setSeverity] = useState<OccurrenceSeverity>(null);
   const [workers, setWorkers] = useState<DailyLogWorker[]>([]);
   const [services, setServices] = useState<DailyLogService[]>([]);
+  const [photoToDelete, setPhotoToDelete] = useState<DailyLogPhoto | null>(
+    null,
+  );
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const photos = useDailyLogPhotos(projectId || null, date);
 
   useEffect(() => {
     const d = logQ.data;
@@ -166,6 +173,7 @@ export default function DiarioDia() {
         ? ""
         : String(d.temperature_c),
     );
+    setSeverity(d.occurrence_severity);
     setWorkers(d.workers);
     setServices(d.services);
   }, [logQ.data]);
