@@ -2100,6 +2100,7 @@ export default function PainelObras() {
                           <ObraRow
                             key={o.id}
                             obra={o}
+                            snapshot={snapshotById.get(o.id)}
                             staffUsers={staffUsers}
                             expanded={expandedIds.has(o.id)}
                             onToggleExpanded={() => toggleExpanded(o.id)}
@@ -2118,6 +2119,18 @@ export default function PainelObras() {
           </div>
         </div>
       </PageContainer>
+      <ObraDetailSheet
+        obra={
+          obraParam
+            ? (obras.find((x) => x.id === obraParam) ?? null)
+            : null
+        }
+        snapshot={obraParam ? snapshotById.get(obraParam) : undefined}
+        open={!!obraParam}
+        onOpenChange={(o) => {
+          if (!o) closeDetail();
+        }}
+      />
     </TooltipProvider>
     </PainelPeriodProvider>
   );
@@ -2127,12 +2140,13 @@ export default function PainelObras() {
 // Total de colunas da tabela do Painel de Obras. Mantenha em sincronia com o
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
 // 1) Cliente / Obra · 2) Dados · 3) Status · 4) Etapa · 5) Progresso ·
-// 6) Início Of. · 7) Entrega Of. · 8) Início Real · 9) Entrega Real ·
-// 10) Relacionamento · 11) Responsável · 12) Ações
-const PAINEL_COLUMN_COUNT = 12;
+// 6) Avanço · 7) Custo · 8) Início Of. · 9) Entrega Of. · 10) Início Real ·
+// 11) Entrega Real · 12) Relacionamento · 13) Responsável · 14) Ações
+const PAINEL_COLUMN_COUNT = 14;
 
 interface ObraRowProps {
   obra: PainelObra;
+  snapshot?: import("@/hooks/usePortfolioSnapshot").PortfolioSnapshotRow;
   staffUsers: { id: string; nome: string }[];
   expanded: boolean;
   onToggleExpanded: () => void;
@@ -2142,6 +2156,7 @@ interface ObraRowProps {
   /** Abre o popup com a feature "Dados do cliente" para esta obra. */
   onOpenDados: () => void;
 }
+
 
 // ─── Skeletons ───────────────────────────────────────────────────────────────
 // Espelham a estrutura visual real da tela (tabela / board / kanban) para
