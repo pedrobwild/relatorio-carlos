@@ -1,11 +1,12 @@
-import { useNavigate } from "react-router-dom";
+
 /**
  * ObraDetailSheet — drawer lateral (Sheet) com resumo gerencial de uma obra.
  *
  * Aberto a partir do Painel de Obras (?obra=<id>). Consolida KPIs do snapshot
  * batch (avanço, custos, NCs, punch, lookahead) sem carregamentos adicionais.
- * A Curva S ainda não está implementada — mostramos um EmptyState com CTA
- * para "criar baseline" (redireciona para o cronograma da obra).
+ * Mini Curva S (planejado × realizado) reutiliza a RPC da Onda A via
+ * useSCurveWeekly, com fetch habilitado apenas quando o Sheet está aberto.
+ * Sem baseline/medições, renderiza EmptyState com CTA para /gestao/avanco-fisico.
  *
  * Regras de UX:
  *  - Largura desktop ~ 480–560px; mobile full-screen (`w-full`).
@@ -15,7 +16,7 @@ import { useNavigate } from "react-router-dom";
  */
 import * as React from "react";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
@@ -25,7 +26,7 @@ import {
   DollarSign,
   ExternalLink,
   FileText,
-  LineChart,
+  LineChart as LineChartIcon,
   ListChecks,
   Plus,
   ShoppingCart,
@@ -49,6 +50,15 @@ import { cn } from "@/lib/utils";
 import type { PainelObra } from "@/hooks/usePainelObras";
 import type { PortfolioSnapshotRow } from "@/hooks/usePortfolioSnapshot";
 import { useLookahead } from "@/hooks/useLookahead";
+import { useSCurveWeekly } from "@/hooks/useActivityProgress";
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip as RTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 // ─── formatters ──────────────────────────────────────────────────────────────
 const brl = new Intl.NumberFormat("pt-BR", {
@@ -210,25 +220,18 @@ export function ObraDetailSheet({
                 </dl>
               </section>
 
-              {/* Curva S — não implementada ainda */}
-              <section aria-label="Curva S">
-                <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                  Curva S
-                </h3>
-                <div className="rounded-lg border border-dashed border-border-subtle bg-surface-sunken/40 p-4">
-                  <EmptyState
-                    icon={LineChart}
-                    title="Sem baseline cadastrada"
-                    description="Registre uma baseline no cronograma para acompanhar avanço planejado × real."
-                    action={{
-                      label: "Criar baseline",
-                      onClick: () =>
-                        navigate(`/obra/${obra.id}/cronograma?baseline=1`),
-                      icon: Plus,
-                    }}
-                  />
-                </div>
-              </section>
+              {/* Mini Curva S — reutiliza a RPC/hook da Onda A (useSCurveWeekly).
+                  Fetch só quando o Sheet abre (enabled = open && projectId).
+                  Sem baseline/medições, mostra EmptyState com CTA que abre o
+                  CriarBaselineDialog em /gestao/avanco-fisico. */}
+              <SCurveSection
+                projectId={obra.id}
+                enabled={open}
+                onCreateBaseline={() =>
+                  navigate(`/gestao/avanco-fisico?projectId=${obra.id}`)
+                }
+              />
+
 
               {/* Lookahead 14d filtrado */}
               <section aria-label="Próximos 14 dias">
@@ -440,3 +443,120 @@ function ShortcutBtn({
     </Button>
   );
 }
+
+// ── Mini Curva S ────────────────────────────────────────────────────────────
+// Reutiliza useSCurveWeekly (RPC get_project_s_curve_weekly) da Onda A.
+// Fetch só habilitado com o Sheet aberto para não sobrecarregar o painel.
+// Gráfico compacto (~130px), linhas planejado (tracejada) × realizado, tokens
+// semânticos (--muted-foreground e --primary), sem eixos pesados e tooltip
+// minimalista. Baseline padrão: passamos undefined → RPC usa a baseline ativa.
+function SCurveSection({
+  projectId,
+  enabled,
+  onCreateBaseline,
+}: {
+  projectId: string;
+  enabled: boolean;
+  onCreateBaseline: () => void;
+}) {
+  const query = useSCurveWeekly(enabled ? projectId : undefined);
+  const points = query.data ?? [];
+  const hasData =
+    points.length > 0 &&
+    points.some((p) => p.planned_pct > 0 || p.actual_pct > 0);
+
+  return (
+    <section aria-label="Curva S">
+      <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+        Curva S
+      </h3>
+      {query.isLoading ? (
+        <div className="rounded-lg border border-border-subtle bg-surface-sunken/40 p-4">
+          <Skeleton className="h-[130px] w-full" />
+        </div>
+      ) : hasData ? (
+        <div className="rounded-lg border border-border-subtle bg-surface-sunken/40 p-2">
+          <div className="h-[130px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={points}
+                margin={{ top: 6, right: 8, bottom: 0, left: -18 }}
+              >
+                <XAxis
+                  dataKey="week_start"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tickFormatter={(v: string) => {
+                    const [, m, d] = v.split("-");
+                    return `${d}/${m}`;
+                  }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={24}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tickFormatter={(v: number) => `${v}%`}
+                  axisLine={false}
+                  tickLine={false}
+                  width={32}
+                />
+                <RTooltip
+                  cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
+                  contentStyle={{
+                    background: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    padding: "6px 8px",
+                    color: "hsl(var(--popover-foreground))",
+                  }}
+                  labelFormatter={(v: string) => {
+                    const [y, m, d] = v.split("-");
+                    return `Semana de ${d}/${m}/${y}`;
+                  }}
+                  formatter={(value: number, name: string) => [
+                    `${Number(value).toFixed(1)}%`,
+                    name === "planned_pct" ? "Planejado" : "Realizado",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="planned_pct"
+                  stroke="hsl(var(--muted-foreground))"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 3"
+                  dot={false}
+                  isAnimationActive={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="actual_pct"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-border-subtle bg-surface-sunken/40 p-4">
+          <EmptyState
+            icon={LineChartIcon}
+            title="Sem baseline cadastrada"
+            description="Registre uma baseline para acompanhar avanço planejado × real."
+            action={{
+              label: "Criar baseline",
+              onClick: onCreateBaseline,
+              icon: Plus,
+            }}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
