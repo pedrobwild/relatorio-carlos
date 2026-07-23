@@ -342,7 +342,7 @@ export default function RelatoriosInternos() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: projects = [], isLoading: loadingProjects } = useProjectsQuery({
-    filters: { status: "active" },
+    status: "active",
   });
   const reportsQ = useInternalWeeklyReports({
     projectId: projectId === "all" ? undefined : projectId,
@@ -374,7 +374,6 @@ export default function RelatoriosInternos() {
     <PageContainer>
       <div className="print:hidden">
         <PageHeader
-          icon={BookOpenCheck}
           title="Relatórios internos"
           description="Relatório executivo interno semanal por obra (staff-only). Não substitui os relatórios semanais enviados ao cliente."
           actions={
