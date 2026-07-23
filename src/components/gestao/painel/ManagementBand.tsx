@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   UserX,
   PauseCircle,
+  ClockAlert,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,7 +25,8 @@ export type ManagementTileId =
   | "estouro_custo"
   | "ncs_criticas"
   | "sem_responsavel"
-  | "paralisadas";
+  | "paralisadas"
+  | "sem_atualizacao_72h";
 
 export interface ManagementTile {
   id: ManagementTileId;
