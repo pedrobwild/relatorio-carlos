@@ -2,18 +2,20 @@
  * /gestao/diario/:projectId/:date — RDO de um dia específico (staff-only).
  *
  * Formulário mobile-first para 2 minutos: clima, efetivo (workers) por
- * função, serviços do dia, ocorrências (notas livres). Reutiliza
- * useProjectDailyLog + useSaveProjectDailyLog. Fotos e export PDF ficam
- * para Onda C2.
+ * função, serviços do dia, ocorrências (notas livres + severidade) e
+ * fotos do dia (bucket privado). Reutiliza useProjectDailyLog +
+ * useSaveProjectDailyLog + useDailyLogPhotos.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
+  Camera,
   CloudRain,
   CloudSun,
   HardHat,
   Plus,
+  Printer,
   Save,
   Sun,
   Trash2,
@@ -23,6 +25,16 @@ import { toast } from "sonner";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/ui-premium";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,10 +53,12 @@ import {
   DailyLogService,
   DailyLogServiceStatus,
   DailyLogWorker,
+  OccurrenceSeverity,
   useProjectDailyLog,
   useSaveProjectDailyLog,
   WeatherCondition,
 } from "@/hooks/useProjectDailyLog";
+import { useDailyLogPhotos, DailyLogPhoto } from "@/hooks/useDailyLogPhotos";
 import { cn } from "@/lib/utils";
 
 const WEATHER_OPTIONS: {
