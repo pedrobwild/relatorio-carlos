@@ -780,6 +780,123 @@ export default function PainelObras() {
   const handleForceDelete = () => runDelete(true);
 
 
+  /**
+   * Faixa gerencial única — 6 tiles.
+   * Contadores e Set de project_id restrito à fase corrente. Cada tile
+   * responde à pergunta "qual obra precisa de atenção HOJE?".
+   * DECLARADO ANTES do `filtered` porque `tileFilterSet` alimenta o filtro final.
+   */
+  const { managementTiles, tileFilterSet } = useMemo(() => {
+    const inFase = obras.filter(matchesFase);
+    const todayIso = format(new Date(), "yyyy-MM-dd");
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    const sevenDaysIso = format(sevenDaysFromNow, "yyyy-MM-dd");
+
+    const atrasadasIds = new Set(
+      inFase.filter((o) => computeDisplayStatus(o) === "Atrasado").map((o) => o.id),
+    );
+    const riscoIds = new Set(
+      inFase
+        .filter((o) => {
+          if (!o.entrega_oficial || o.entrega_real) return false;
+          return (
+            o.entrega_oficial >= todayIso && o.entrega_oficial <= sevenDaysIso
+          );
+        })
+        .map((o) => o.id),
+    );
+    const paralisadasIds = new Set(
+      inFase.filter((o) => o.status === "Paralisada").map((o) => o.id),
+    );
+    const estouroCustoIds = new Set(
+      inFase
+        .filter((o) => {
+          const s = snapshotById.get(o.id);
+          return s?.variacao_pct != null && s.variacao_pct > 0;
+        })
+        .map((o) => o.id),
+    );
+    const ncsCriticasIds = new Set(
+      inFase
+        .filter((o) => (snapshotById.get(o.id)?.ncs_criticas ?? 0) > 0)
+        .map((o) => o.id),
+    );
+    const semRespIds = new Set(
+      inFase
+        .filter(
+          (o) =>
+            (snapshotById.get(o.id)?.atividades_proximos_14d_sem_responsavel ??
+              0) > 0,
+        )
+        .map((o) => o.id),
+    );
+
+    const tiles: ManagementTile[] = [
+      {
+        id: "atrasadas",
+        label: "Atrasadas",
+        value: atrasadasIds.size,
+        hint: "Entrega vencida sem entrega real",
+        tone: atrasadasIds.size > 0 ? "destructive" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.atrasadas,
+      },
+      {
+        id: "risco",
+        label: "Risco 7d",
+        value: riscoIds.size,
+        hint: "Entrega em ≤ 7 dias",
+        tone: riscoIds.size > 0 ? "warning" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.risco,
+      },
+      {
+        id: "estouro_custo",
+        label: "Estouro de custo",
+        value: estouroCustoIds.size,
+        hint: "EAC acima do orçado",
+        tone: estouroCustoIds.size > 0 ? "destructive" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.estouro_custo,
+      },
+      {
+        id: "ncs_criticas",
+        label: "NCs críticas",
+        value: ncsCriticasIds.size,
+        hint: "Não conformidades críticas abertas",
+        tone: ncsCriticasIds.size > 0 ? "destructive" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.ncs_criticas,
+      },
+      {
+        id: "sem_responsavel",
+        label: "Sem responsável 14d",
+        value: semRespIds.size,
+        hint: "Atividades nos próximos 14 dias sem responsável",
+        tone: semRespIds.size > 0 ? "warning" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.sem_responsavel,
+      },
+      {
+        id: "paralisadas",
+        label: "Paralisadas",
+        value: paralisadasIds.size,
+        hint: "Obras sem progresso no momento",
+        tone: paralisadasIds.size > 0 ? "destructive" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.paralisadas,
+      },
+    ];
+
+    const setsById: Record<ManagementTileId, Set<string>> = {
+      atrasadas: atrasadasIds,
+      risco: riscoIds,
+      estouro_custo: estouroCustoIds,
+      ncs_criticas: ncsCriticasIds,
+      sem_responsavel: semRespIds,
+      paralisadas: paralisadasIds,
+    };
+    return {
+      managementTiles: tiles,
+      tileFilterSet: activeTile ? setsById[activeTile] : null,
+    };
+  }, [obras, fase, snapshotById, activeTile]);
+
   const filtered = useMemo(() => {
     // Separa obras (execução) de projetos (fase de projeto). Default: todas.
     let rows = obras.filter(matchesFase);
