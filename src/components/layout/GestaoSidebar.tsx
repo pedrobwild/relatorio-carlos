@@ -110,12 +110,6 @@ export function GestaoSidebar() {
           path: "/gestao/custos",
         },
         {
-          label: "Diário de obra",
-          icon: BookOpenCheck,
-          path: "/gestao/diario",
-          matchPaths: ["/gestao/diario/"],
-        },
-        {
           label: "Qualidade",
           icon: ShieldCheck,
           path: "/gestao/qualidade",

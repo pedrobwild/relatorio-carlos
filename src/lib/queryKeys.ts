@@ -340,35 +340,6 @@ export const queryKeys = {
       [...queryKeys.custos.all, "s-curve", projectId] as const,
   },
 
-  // ============================================================================
-  // Diário de obra (RDO) — Onda C1, staff-only
-  // ============================================================================
-  diario: {
-    all: ["diario"] as const,
-    coverage: (
-      projectIds: string[] | undefined,
-      start: string,
-      end: string,
-    ) =>
-      [
-        ...queryKeys.diario.all,
-        "coverage",
-        projectIds ? [...projectIds].sort().join(",") : "all",
-        start,
-        end,
-      ] as const,
-    day: (projectId: string | undefined, date: string) =>
-      [...queryKeys.diario.all, "day", projectId, date] as const,
-    photos: (projectId: string | undefined, date: string) =>
-      [...queryKeys.diario.all, "photos", projectId, date] as const,
-    todayCoverage: (projectIds: string[] | undefined, date: string) =>
-      [
-        ...queryKeys.diario.all,
-        "today-coverage",
-        projectIds ? [...projectIds].sort().join(",") : "all",
-        date,
-      ] as const,
-  },
 
   // ============================================================================
   // Qualidade (checklist templates + inspeções agregadas)
