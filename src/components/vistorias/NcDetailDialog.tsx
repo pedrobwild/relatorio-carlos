@@ -13,7 +13,9 @@ import {
   DollarSign,
   User,
   Trash2,
+  ShieldCheck,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { EvidenceUpload } from "./EvidenceUpload";
 import { CorrectiveActionTemplateSelector } from "./CorrectiveActionTemplateSelector";
