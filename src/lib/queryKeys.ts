@@ -272,7 +272,10 @@ export const queryKeys = {
       [...queryKeys.minhaSemana.all, "alerts", userId] as const,
     pendencias: (userId: string) =>
       [...queryKeys.minhaSemana.all, "pendencias", userId] as const,
+    punch: (userId: string) =>
+      [...queryKeys.minhaSemana.all, "punch", userId] as const,
   },
+
 
   // ============================================================================
   // Painel de Obras — exceções cross-domain (faixa clicável no topo)
