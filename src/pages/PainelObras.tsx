@@ -4346,7 +4346,8 @@ interface MobilePainelViewProps {
   clearAllFilters: () => void;
   mobileFiltersOpen: boolean;
   setMobileFiltersOpen: (open: boolean) => void;
-  onOpen: (id: string) => void;
+  onOpen: (id: string, e?: { metaKey?: boolean; ctrlKey?: boolean; button?: number }) => void;
+  snapshotById?: Map<string, import("@/hooks/usePortfolioSnapshot").PortfolioSnapshotRow>;
   onOpenDados: (o: PainelObra) => void;
   onDeleteRequest: (o: PainelObra) => void;
   onCreate: () => void;
