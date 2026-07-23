@@ -88,6 +88,7 @@ const Custos = lazy(() => import("./pages/gestao/Custos"));
 const Diario = lazy(() => import("./pages/gestao/Diario"));
 const DiarioDia = lazy(() => import("./pages/gestao/DiarioDia"));
 const DiarioDiaImprimir = lazy(() => import("./pages/gestao/DiarioDiaImprimir"));
+const Qualidade = lazy(() => import("./pages/gestao/Qualidade"));
 const PainelAlertasCronograma = lazy(
   () => import("./pages/PainelAlertasCronograma"),
 );
