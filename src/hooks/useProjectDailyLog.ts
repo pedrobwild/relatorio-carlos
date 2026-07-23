@@ -175,9 +175,18 @@ export function useSaveProjectDailyLog() {
             log_date: payload.log_date,
             notes: payload.notes,
             updated_by: uid,
-            // created_by s\u00f3 na primeira vez \u2014 upsert lida:
+            ...(payload.weather_morning !== undefined
+              ? { weather_morning: payload.weather_morning }
+              : {}),
+            ...(payload.weather_afternoon !== undefined
+              ? { weather_afternoon: payload.weather_afternoon }
+              : {}),
+            ...(payload.temperature_c !== undefined
+              ? { temperature_c: payload.temperature_c }
+              : {}),
+            // created_by só na primeira vez — upsert lida:
             ...(uid ? { created_by: uid } : {}),
-          },
+          } as never,
           { onConflict: "project_id,log_date" },
         )
         .select("id")
