@@ -296,6 +296,14 @@ export const queryKeys = {
   },
 
   // ============================================================================
+  // Painel de Obras — snapshot gerencial batch (RPC única)
+  // ============================================================================
+  painelSnapshot: {
+    all: ["painel-snapshot"] as const,
+    list: () => [...queryKeys.painelSnapshot.all, "list"] as const,
+  },
+
+  // ============================================================================
   // Lookahead (staff 14/21 dias) — see src/hooks/useLookahead.ts
   // ============================================================================
   lookahead: {

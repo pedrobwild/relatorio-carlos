@@ -7311,6 +7311,24 @@ export type Database = {
           urgency_level: string
         }[]
       }
+      get_portfolio_management_snapshot: {
+        Args: never
+        Returns: {
+          atividades_proximos_14d_sem_responsavel: number
+          comprometido: number
+          eac: number
+          ncs_abertas: number
+          ncs_criticas: number
+          orcado: number
+          project_id: string
+          proxima_atividade_data: string
+          proxima_atividade_titulo: string
+          punch_abertos: number
+          realizado: number
+          variacao_pct: number
+          weighted_progress_pct: number
+        }[]
+      }
       get_project_activity_timeline: {
         Args: { p_limit?: number; p_offset?: number; p_project_id: string }
         Returns: {

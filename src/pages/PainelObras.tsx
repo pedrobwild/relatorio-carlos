@@ -48,13 +48,19 @@ import {
   Download,
 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { PageHeader, MetricCard, MetricRail, SectionCard } from "@/components/ui-premium";
-import { ExceptionsBar } from "@/components/gestao/painel/ExceptionsBar";
+import { PageHeader, SectionCard } from "@/components/ui-premium";
 import { SavedViewsBar } from "@/components/gestao/painel/SavedViewsBar";
+import {
+  ManagementBand,
+  MANAGEMENT_TILE_ICONS,
+  type ManagementTile,
+  type ManagementTileId,
+} from "@/components/gestao/painel/ManagementBand";
 import {
   usePainelExcecoes,
   type ExcecaoKind,
 } from "@/hooks/usePainelExcecoes";
+import { usePortfolioSnapshot } from "@/hooks/usePortfolioSnapshot";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -575,6 +581,8 @@ export default function PainelObras() {
   // ?excecao=<kind> aplicando o Set correspondente de project_id.
   const { counts: excecaoCounts, sets: excecaoSets, isLoading: excecoesLoading } =
     usePainelExcecoes();
+  const { byId: snapshotById, isLoading: snapshotLoading } =
+    usePortfolioSnapshot();
   const excecaoParam = searchParams.get("excecao");
   const activeExcecao: ExcecaoKind | null =
     excecaoParam === "nc" ||
@@ -583,6 +591,32 @@ export default function PainelObras() {
     excecaoParam === "atv"
       ? excecaoParam
       : null;
+
+  // Faixa gerencial ÚNICA — tile ativo controlado via ?tile=
+  const tileParam = searchParams.get("tile");
+  const activeTile: ManagementTileId | null =
+    tileParam === "atrasadas" ||
+    tileParam === "risco" ||
+    tileParam === "estouro_custo" ||
+    tileParam === "ncs_criticas" ||
+    tileParam === "sem_responsavel" ||
+    tileParam === "paralisadas"
+      ? tileParam
+      : null;
+
+  const toggleManagementTile = useCallback(
+    (id: ManagementTileId) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (next.get("tile") === id) next.delete("tile");
+        else next.set("tile", id);
+        // Tiles são mutuamente exclusivos com o filtro legado ?excecao=.
+        next.delete("excecao");
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
 
 
 
@@ -746,6 +780,123 @@ export default function PainelObras() {
   const handleForceDelete = () => runDelete(true);
 
 
+  /**
+   * Faixa gerencial única — 6 tiles.
+   * Contadores e Set de project_id restrito à fase corrente. Cada tile
+   * responde à pergunta "qual obra precisa de atenção HOJE?".
+   * DECLARADO ANTES do `filtered` porque `tileFilterSet` alimenta o filtro final.
+   */
+  const { managementTiles, tileFilterSet } = useMemo(() => {
+    const inFase = obras.filter(matchesFase);
+    const todayIso = format(new Date(), "yyyy-MM-dd");
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    const sevenDaysIso = format(sevenDaysFromNow, "yyyy-MM-dd");
+
+    const atrasadasIds = new Set(
+      inFase.filter((o) => computeDisplayStatus(o) === "Atrasado").map((o) => o.id),
+    );
+    const riscoIds = new Set(
+      inFase
+        .filter((o) => {
+          if (!o.entrega_oficial || o.entrega_real) return false;
+          return (
+            o.entrega_oficial >= todayIso && o.entrega_oficial <= sevenDaysIso
+          );
+        })
+        .map((o) => o.id),
+    );
+    const paralisadasIds = new Set(
+      inFase.filter((o) => o.status === "Paralisada").map((o) => o.id),
+    );
+    const estouroCustoIds = new Set(
+      inFase
+        .filter((o) => {
+          const s = snapshotById.get(o.id);
+          return s?.variacao_pct != null && s.variacao_pct > 0;
+        })
+        .map((o) => o.id),
+    );
+    const ncsCriticasIds = new Set(
+      inFase
+        .filter((o) => (snapshotById.get(o.id)?.ncs_criticas ?? 0) > 0)
+        .map((o) => o.id),
+    );
+    const semRespIds = new Set(
+      inFase
+        .filter(
+          (o) =>
+            (snapshotById.get(o.id)?.atividades_proximos_14d_sem_responsavel ??
+              0) > 0,
+        )
+        .map((o) => o.id),
+    );
+
+    const tiles: ManagementTile[] = [
+      {
+        id: "atrasadas",
+        label: "Atrasadas",
+        value: atrasadasIds.size,
+        hint: "Entrega vencida sem entrega real",
+        tone: atrasadasIds.size > 0 ? "destructive" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.atrasadas,
+      },
+      {
+        id: "risco",
+        label: "Risco 7d",
+        value: riscoIds.size,
+        hint: "Entrega em ≤ 7 dias",
+        tone: riscoIds.size > 0 ? "warning" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.risco,
+      },
+      {
+        id: "estouro_custo",
+        label: "Estouro de custo",
+        value: estouroCustoIds.size,
+        hint: "EAC acima do orçado",
+        tone: estouroCustoIds.size > 0 ? "destructive" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.estouro_custo,
+      },
+      {
+        id: "ncs_criticas",
+        label: "NCs críticas",
+        value: ncsCriticasIds.size,
+        hint: "Não conformidades críticas abertas",
+        tone: ncsCriticasIds.size > 0 ? "destructive" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.ncs_criticas,
+      },
+      {
+        id: "sem_responsavel",
+        label: "Sem responsável 14d",
+        value: semRespIds.size,
+        hint: "Atividades nos próximos 14 dias sem responsável",
+        tone: semRespIds.size > 0 ? "warning" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.sem_responsavel,
+      },
+      {
+        id: "paralisadas",
+        label: "Paralisadas",
+        value: paralisadasIds.size,
+        hint: "Obras sem progresso no momento",
+        tone: paralisadasIds.size > 0 ? "destructive" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.paralisadas,
+      },
+    ];
+
+    const setsById: Record<ManagementTileId, Set<string>> = {
+      atrasadas: atrasadasIds,
+      risco: riscoIds,
+      estouro_custo: estouroCustoIds,
+      ncs_criticas: ncsCriticasIds,
+      sem_responsavel: semRespIds,
+      paralisadas: paralisadasIds,
+    };
+    return {
+      managementTiles: tiles,
+      tileFilterSet: activeTile ? setsById[activeTile] : null,
+    };
+  }, [obras, fase, snapshotById, activeTile]);
+
   const filtered = useMemo(() => {
     // Separa obras (execução) de projetos (fase de projeto). Default: todas.
     let rows = obras.filter(matchesFase);
@@ -825,6 +976,11 @@ export default function PainelObras() {
       const allowed = excecaoSets[activeExcecao];
       rows = rows.filter((o) => allowed.has(o.id));
     }
+    // Filtro por tile gerencial (?tile=): restringe ao Set correspondente.
+    if (tileFilterSet) {
+      const allowed = tileFilterSet;
+      rows = rows.filter((o) => allowed.has(o.id));
+    }
     return rows;
   }, [
     obras,
@@ -841,6 +997,7 @@ export default function PainelObras() {
     sortDir,
     activeExcecao,
     excecaoSets,
+    tileFilterSet,
   ]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
@@ -919,6 +1076,10 @@ export default function PainelObras() {
       paralisadas,
     };
   }, [obras, fase]);
+
+
+
+
 
   /** Aplica/limpa o filtro de status disparado pelos KPIs clicáveis. */
   const applyStatusFilter = useCallback((status: PainelStatus) => {
@@ -1266,64 +1427,18 @@ export default function PainelObras() {
 
           {/* ── Desktop: toolbar + tabela/board/kanban (preserva comportamento) ── */}
           <div className="hidden md:block">
-            {/*
-            Cockpit operacional — KPIs no topo respondem em <5s "qual obra
-            está em risco hoje?". Cada métrica é clicável e aplica filtro
-            correspondente na tabela. Cores apenas via tokens semânticos.
-          */}
-            {/* Visões salvas + faixa de exceções (staff cockpit).
-                Renderizadas acima do MetricRail para preservar a hierarquia
-                atual do cockpit (KPIs de status), sem duplicar contadores. */}
+            {/* Faixa gerencial ÚNICA — 6 tiles clicáveis que substituíram
+                MetricRail + ExceptionsBar. Cada tile aplica um filtro
+                cross-domain na tabela abaixo (via ?tile=). */}
             <SavedViewsBar />
-            <ExceptionsBar counts={excecaoCounts} isLoading={excecoesLoading} />
-            {!isLoading && obras.length > 0 && (
-              <div className="mb-3">
-                <MetricRail>
-                  <MetricCard
-                    label="Atrasadas"
-                    value={cockpitMetrics.atrasadas}
-                    hint="Status atrasado"
-                    accent={
-                      cockpitMetrics.atrasadas > 0 ? "destructive" : "muted"
-                    }
-                    onClick={() => applyStatusFilter("Atrasado")}
-                  />
-                  <MetricCard
-                    label="Risco semana"
-                    value={cockpitMetrics.riscoSemana}
-                    hint="Entrega em ≤ 7 dias"
-                    accent={
-                      cockpitMetrics.riscoSemana > 0 ? "warning" : "muted"
-                    }
-                  />
-                  <MetricCard
-                    label="Aprovação pendente"
-                    value={cockpitMetrics.aguardandoAprovacao}
-                    hint="Executivo / Vistoria"
-                    accent={
-                      cockpitMetrics.aguardandoAprovacao > 0 ? "info" : "muted"
-                    }
-                  />
-                  <MetricCard
-                    label="Pendências"
-                    value={cockpitMetrics.pendenciasAbertas}
-                    hint="Total de itens abertos"
-                    accent={
-                      cockpitMetrics.pendenciasAbertas > 0 ? "warning" : "muted"
-                    }
-                  />
-                  <MetricCard
-                    label="Paralisadas"
-                    value={cockpitMetrics.paralisadas}
-                    hint="Sem progresso"
-                    accent={
-                      cockpitMetrics.paralisadas > 0 ? "destructive" : "muted"
-                    }
-                    onClick={() => applyStatusFilter("Paralisada")}
-                  />
-                </MetricRail>
-              </div>
-            )}
+            <ManagementBand
+              tiles={managementTiles}
+              activeTile={activeTile}
+              onSelect={toggleManagementTile}
+              isLoading={isLoading || snapshotLoading || excecoesLoading}
+            />
+
+
             {/*
             Toolbar redesenhada — referência híbrida (Linear + Notion):
             - linha única densa (h-9), divisores verticais entre grupos
