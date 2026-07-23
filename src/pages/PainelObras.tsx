@@ -59,6 +59,11 @@ import {
   type ManagementTileId,
 } from "@/components/gestao/painel/ManagementBand";
 import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
+import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
+import {
+  calculateObraSeverity,
+  type SeverityBreakdown,
+} from "@/lib/calculateObraSeverity";
 import {
   usePainelExcecoes,
   type ExcecaoKind,
@@ -307,6 +312,27 @@ const computeOverdueDays = (obra: {
   return countBusinessDaysInclusive(start, today);
 };
 
+/**
+ * Detecta se uma obra está concluída — usada pela aba Ativas/Concluídas
+ * do Painel de Obras. Uma obra é concluída quando tem entrega real
+ * registrada OU está marcada como etapa `Finalizada`.
+ */
+const isObraConcluida = (o: {
+  entrega_real: string | null;
+  etapa: PainelEtapa | null;
+}): boolean => !!o.entrega_real || o.etapa === "Finalizada";
+
+/**
+ * Horas desde `iso` até agora. `null` quando a data é inválida ou ausente.
+ * Impuro (usa Date.now()); manter fora do escopo puro de severity.
+ */
+const hoursSince = (iso: string | null | undefined): number | null => {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return null;
+  return Math.max(0, (Date.now() - t) / 3_600_000);
+};
+
 import { getEtapaWeek, formatEtapaLabel } from "@/lib/painelEtapaWeek";
 
 const statusDotClass = (s: PainelStatus | null): string => {
@@ -498,6 +524,20 @@ export default function PainelObras() {
 
   const matchesFase = (o: PainelObra) =>
     fase === "todas" ? true : fase === "projetos" ? o.is_project_phase : !o.is_project_phase;
+
+  // Aba Ativas/Concluídas — segmentação PRINCIPAL do Painel de Obras.
+  // Obras concluídas (entrega real registrada ou etapa Finalizada) somem
+  // da visão padrão. Cartões gerenciais e snapshot contam SOMENTE ativas.
+  // Persistido em URL via ?aba=concluidas para deep-link.
+  const abaParam = searchParams.get("aba");
+  const aba: "ativas" | "concluidas" = abaParam === "concluidas" ? "concluidas" : "ativas";
+  const handleAbaChange = (next: "ativas" | "concluidas") => {
+    const params = new URLSearchParams(searchParams);
+    if (next === "ativas") params.delete("aba");
+    else params.set("aba", next);
+    setSearchParams(params, { replace: true });
+  };
+
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
