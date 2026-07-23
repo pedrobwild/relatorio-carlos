@@ -818,6 +818,13 @@ export default function PainelObras() {
         return av.localeCompare(bv);
       });
     }
+    // Filtro por exceção cross-domain (?excecao=): restringe ao Set de
+    // project_id devolvido pela hook usePainelExcecoes. Aplicado por último
+    // para preservar as outras regras de filtro/ordenação.
+    if (activeExcecao) {
+      const allowed = excecaoSets[activeExcecao];
+      rows = rows.filter((o) => allowed.has(o.id));
+    }
     return rows;
   }, [
     obras,
@@ -832,6 +839,8 @@ export default function PainelObras() {
     periodByProject,
     sortKey,
     sortDir,
+    activeExcecao,
+    excecaoSets,
   ]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
