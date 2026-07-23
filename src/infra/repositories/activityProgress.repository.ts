@@ -272,7 +272,7 @@ export async function getSCurveWeekly(
 ): Promise<SCurveWeekPoint[]> {
   const { data, error } = await supabase.rpc("get_project_s_curve_weekly", {
     p_project_id: projectId,
-    p_baseline_id: baselineId ?? null,
+    p_baseline_id: baselineId ?? undefined,
   });
   if (error) throw error;
   return ((data ?? []) as Array<{
@@ -292,7 +292,7 @@ export async function getWeightedProgress(
 ): Promise<number> {
   const { data, error } = await supabase.rpc("get_project_weighted_progress", {
     p_project_id: projectId,
-    p_baseline_id: baselineId ?? null,
+    p_baseline_id: baselineId ?? undefined,
   });
   if (error) throw error;
   return Number(data ?? 0) || 0;
