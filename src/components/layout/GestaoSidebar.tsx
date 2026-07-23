@@ -115,6 +115,11 @@ export function GestaoSidebar() {
           path: "/gestao/diario",
           matchPaths: ["/gestao/diario/"],
         },
+        {
+          label: "Qualidade",
+          icon: ShieldCheck,
+          path: "/gestao/qualidade",
+        },
       ],
     },
     {
