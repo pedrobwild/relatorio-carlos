@@ -2004,7 +2004,7 @@ export default function PainelObras() {
                   onClearSelection={clearSelection}
                   onBulkUpdate={bulkUpdate}
                   bulkUpdating={bulkUpdating}
-                  onOpen={(id) => navigate(`/obra/${id}`)}
+                  onOpen={(id) => handleOpenObra(id)}
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                   onUpdateStatus={(id, status) => updateObra(id, { status })}
                 />
