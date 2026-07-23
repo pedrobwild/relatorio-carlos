@@ -61,7 +61,13 @@ const KIND_META: Record<
     icon: KeySquare,
     tone: "bg-accent/40 text-foreground border-border",
   },
+  compra: {
+    label: "Entrega atrasada",
+    icon: ShoppingCart,
+    tone: "bg-destructive/10 text-destructive border-destructive/25",
+  },
 };
+
 
 
 function formatDeadline(item: InboxItemType): string {
