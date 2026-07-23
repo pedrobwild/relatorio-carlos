@@ -4495,6 +4495,7 @@ function MobilePainelView({
   mobileFiltersOpen,
   setMobileFiltersOpen,
   onOpen,
+  snapshotById,
   onOpenDados,
   onDeleteRequest,
   onCreate,
