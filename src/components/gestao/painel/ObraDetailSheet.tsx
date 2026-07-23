@@ -16,7 +16,7 @@
  */
 import * as React from "react";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
