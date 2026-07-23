@@ -220,25 +220,18 @@ export function ObraDetailSheet({
                 </dl>
               </section>
 
-              {/* Curva S — não implementada ainda */}
-              <section aria-label="Curva S">
-                <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                  Curva S
-                </h3>
-                <div className="rounded-lg border border-dashed border-border-subtle bg-surface-sunken/40 p-4">
-                  <EmptyState
-                    icon={LineChart}
-                    title="Sem baseline cadastrada"
-                    description="Registre uma baseline no cronograma para acompanhar avanço planejado × real."
-                    action={{
-                      label: "Criar baseline",
-                      onClick: () =>
-                        navigate(`/obra/${obra.id}/cronograma?baseline=1`),
-                      icon: Plus,
-                    }}
-                  />
-                </div>
-              </section>
+              {/* Mini Curva S — reutiliza a RPC/hook da Onda A (useSCurveWeekly).
+                  Fetch só quando o Sheet abre (enabled = open && projectId).
+                  Sem baseline/medições, mostra EmptyState com CTA que abre o
+                  CriarBaselineDialog em /gestao/avanco-fisico. */}
+              <SCurveSection
+                projectId={obra.id}
+                enabled={open}
+                onCreateBaseline={() =>
+                  navigate(`/gestao/avanco-fisico?projectId=${obra.id}`)
+                }
+              />
+
 
               {/* Lookahead 14d filtrado */}
               <section aria-label="Próximos 14 dias">
