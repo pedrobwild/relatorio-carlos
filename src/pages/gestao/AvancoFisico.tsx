@@ -298,15 +298,11 @@ export default function AvancoFisico() {
                   icon={LineIcon}
                   title="Sem baseline para esta obra"
                   description="Crie uma baseline para congelar o cronograma atual como referência. A curva S compara o planejado dessa baseline com as medições registradas."
-                  action={
-                    <Button
-                      onClick={() => setDialogOpen(true)}
-                      className="gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Criar baseline
-                    </Button>
-                  }
+                  action={{
+                    label: "Criar baseline",
+                    onClick: () => setDialogOpen(true),
+                    icon: Plus,
+                  }}
                 />
               ) : chartData.length === 0 ? (
                 <EmptyState
