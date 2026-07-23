@@ -379,7 +379,13 @@ export const queryKeys = {
       [...queryKeys.qualidade.all, "template-items", templateId] as const,
     inspecoes: (filters?: { status?: string; projectId?: string }) =>
       [...queryKeys.qualidade.all, "inspecoes", filters ?? null] as const,
+    punchItems: (filters?: {
+      projectId?: string;
+      responsibleUserId?: string;
+      status?: string;
+    }) => [...queryKeys.qualidade.all, "punch-items", filters ?? null] as const,
   },
+
 } as const;
 
 // ============================================================================
