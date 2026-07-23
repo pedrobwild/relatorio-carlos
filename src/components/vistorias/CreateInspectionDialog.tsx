@@ -28,6 +28,7 @@ import {
   TYPE_TO_TEMPLATE_CATEGORY,
   type InspectionType,
 } from "./inspectionConstants";
+import { SavedTemplatePicker } from "./SavedTemplatePicker";
 
 interface Props {
   projectId: string;
