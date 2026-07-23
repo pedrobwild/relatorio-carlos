@@ -26,7 +26,7 @@ import {
   DollarSign,
   ExternalLink,
   FileText,
-  LineChart,
+  LineChart as LineChartIcon,
   ListChecks,
   Plus,
   ShoppingCart,
