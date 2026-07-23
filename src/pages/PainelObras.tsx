@@ -1272,17 +1272,6 @@ export default function PainelObras() {
 
           {/* ── Desktop: toolbar + tabela/board/kanban (preserva comportamento) ── */}
           <div className="hidden md:block">
-            {/*
-            Cockpit operacional — KPIs no topo respondem em <5s "qual obra
-            está em risco hoje?". Cada métrica é clicável e aplica filtro
-            correspondente na tabela. Cores apenas via tokens semânticos.
-          */}
-            {/* Visões salvas + faixa de exceções (staff cockpit).
-                Renderizadas acima do MetricRail para preservar a hierarquia
-                atual do cockpit (KPIs de status), sem duplicar contadores. */}
-            <SavedViewsBar />
-            <ExceptionsBar counts={excecaoCounts} isLoading={excecoesLoading} />
-            {!isLoading && obras.length > 0 && (
             {/* Faixa gerencial ÚNICA — 6 tiles clicáveis que substituíram
                 MetricRail + ExceptionsBar. Cada tile aplica um filtro
                 cross-domain na tabela abaixo (via ?tile=). */}
@@ -1293,6 +1282,7 @@ export default function PainelObras() {
               onSelect={toggleManagementTile}
               isLoading={isLoading || snapshotLoading || excecoesLoading}
             />
+
 
             {/*
             Toolbar redesenhada — referência híbrida (Linear + Notion):
