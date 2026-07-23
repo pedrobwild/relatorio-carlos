@@ -85,6 +85,8 @@ const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const Lookahead = lazy(() => import("./pages/gestao/Lookahead"));
 const AvancoFisico = lazy(() => import("./pages/gestao/AvancoFisico"));
 const Custos = lazy(() => import("./pages/gestao/Custos"));
+const Diario = lazy(() => import("./pages/gestao/Diario"));
+const DiarioDia = lazy(() => import("./pages/gestao/DiarioDia"));
 const PainelAlertasCronograma = lazy(
   () => import("./pages/PainelAlertasCronograma"),
 );
