@@ -6856,6 +6856,15 @@ export type Database = {
           payload: Json
         }[]
       }
+      get_project_cost_s_curve_weekly: {
+        Args: { p_project_id: string }
+        Returns: {
+          committed_projected_cum: number
+          planned_cum: number
+          realized_cum: number
+          week_start: string
+        }[]
+      }
       get_project_cost_summary: {
         Args: { p_project_id: string }
         Returns: {
