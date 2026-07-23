@@ -248,6 +248,7 @@ export default function DiarioDia() {
       weather_morning: weatherMorning,
       weather_afternoon: weatherAfternoon,
       temperature_c: parsedTemp,
+      occurrence_severity: severity,
       workers: cleanWorkers.map((w, i) => ({ ...w, position: i })),
       services: cleanServices.map((s, i) => ({ ...s, position: i })),
     });
@@ -255,9 +256,18 @@ export default function DiarioDia() {
 
   const totalWorkers = workers.filter((w) => (w.name ?? "").trim()).length;
 
+  const handleFilePick = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (files.length === 0) return;
+    await photos.upload(files);
+  };
+
   return (
     <PageContainer>
-      <div className="mb-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <Button
           asChild
           variant="ghost"
@@ -267,6 +277,21 @@ export default function DiarioDia() {
           <Link to="/gestao/diario">
             <ArrowLeft className="h-4 w-4 mr-1.5" />
             Voltar ao diário
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="h-9"
+        >
+          <Link
+            to={`/gestao/diario/${projectId}/${date}/imprimir`}
+            target="_blank"
+            rel="noopener"
+          >
+            <Printer className="h-4 w-4 mr-1.5" />
+            Imprimir
           </Link>
         </Button>
       </div>
