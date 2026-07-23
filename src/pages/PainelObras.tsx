@@ -60,6 +60,12 @@ import {
 } from "@/components/gestao/painel/ManagementBand";
 import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
 import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
+import {
+  PortfolioHealthMatrix,
+  useHealthMatrixOpen,
+  type HealthMatrixPoint,
+} from "@/components/gestao/painel/PortfolioHealthMatrix";
+import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   calculateObraSeverity,
@@ -874,9 +880,8 @@ export default function PainelObras() {
    * DECLARADO ANTES do `filtered` porque `tileFilterSet` alimenta o filtro final.
    */
   // Severidade calculada por obra (score 0-100 + breakdown). Reusa o
-  // snapshot batch para variação de custo e NCs críticas; usa dados já
-  // presentes em `obra` para prazo, pendências e desatualização. Pura.
-  // TODO(Onda P1.5): estender RPC com pending_overdue e compras críticas.
+  // snapshot batch (Onda P2 incluiu compras_criticas) e dados já presentes
+  // em `obra` para prazo, pendências e desatualização. Pura.
   const severityById = useMemo(() => {
     const m = new Map<string, SeverityBreakdown>();
     for (const o of obras) {
@@ -887,7 +892,7 @@ export default function PainelObras() {
           overdueDays: computeOverdueDays(o),
           variacaoPct: snap?.variacao_pct ?? null,
           pendingOverdue: o.overdue_count ?? 0,
-          comprasCriticas: 0, // pendente extensão de RPC (cortado desta onda)
+          comprasCriticas: snap?.compras_criticas ?? 0,
           hoursSinceUpdate: hoursSince(o.ultima_atualizacao),
           ncsCriticas: snap?.ncs_criticas ?? 0,
         }),
@@ -895,6 +900,43 @@ export default function PainelObras() {
     }
     return m;
   }, [obras, snapshotById]);
+
+  // ── Onda P2 · Matriz de saúde do portfólio ────────────────────────────────
+  // Aberta/fechada persistida em localStorage por usuário. Fechada por padrão
+  // para não pesar a tela única.
+  const { user } = useAuth();
+  const [matrixOpen, setMatrixOpen] = useHealthMatrixOpen(user?.id ?? null);
+
+  const matrixPoints = useMemo<HealthMatrixPoint[]>(() => {
+    return obras
+      .filter((o) => matchesFase(o) && !isObraConcluida(o))
+      .map<HealthMatrixPoint>((o) => {
+        const snap = snapshotById.get(o.id);
+        const severity = severityById.get(o.id);
+        return {
+          id: o.id,
+          nome: o.nome ?? "Sem nome",
+          cliente: o.customer_name ?? null,
+          responsavel: o.responsavel_nome ?? null,
+          overdueDays: computeOverdueDays(o),
+          variacaoPct: snap?.variacao_pct ?? null,
+          orcado: snap?.orcado ?? null,
+          severity: severity ?? {
+            score: 0,
+            level: "saudavel",
+            triggeredCritical: false,
+            criticalReasons: [],
+            components: {
+              prazo: 0,
+              financeiro: 0,
+              pendencias: 0,
+              compras: 0,
+              desatualizacao: 0,
+            },
+          },
+        };
+      });
+  }, [obras, snapshotById, severityById]);
 
   const { managementTiles, tileFilterSet } = useMemo(() => {
     // Tiles só contam obras ATIVAS (excluem concluídas), independente da
@@ -1621,6 +1663,18 @@ export default function PainelObras() {
                 isLoading={isLoading || snapshotLoading || excecoesLoading}
               />
             )}
+
+            {aba === "ativas" && (
+              <PortfolioHealthMatrix
+                points={matrixPoints}
+                isLoading={isLoading || snapshotLoading}
+                isOpen={matrixOpen}
+                onOpenChange={setMatrixOpen}
+                onSelectObra={(id) => handleOpenObra(id)}
+              />
+            )}
+
+
 
 
             {/*

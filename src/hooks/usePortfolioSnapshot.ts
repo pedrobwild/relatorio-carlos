@@ -23,6 +23,8 @@ export interface PortfolioSnapshotRow {
   atividades_proximos_14d_sem_responsavel: number;
   proxima_atividade_titulo: string | null;
   proxima_atividade_data: string | null;
+  /** Onda P2 — compras com entrega ≤14d (ou vencida) ainda não recebidas. */
+  compras_criticas: number;
 }
 
 function toNum(v: unknown): number | null {
@@ -65,6 +67,7 @@ export function usePortfolioSnapshot() {
           typeof r.proxima_atividade_data === "string"
             ? r.proxima_atividade_data
             : null,
+        compras_criticas: toNum(r.compras_criticas) ?? 0,
       }));
     },
     staleTime: 60_000,
