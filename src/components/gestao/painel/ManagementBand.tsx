@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   UserX,
   PauseCircle,
+  Timer,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,7 +25,8 @@ export type ManagementTileId =
   | "estouro_custo"
   | "ncs_criticas"
   | "sem_responsavel"
-  | "paralisadas";
+  | "paralisadas"
+  | "sem_atualizacao_72h";
 
 export interface ManagementTile {
   id: ManagementTileId;
@@ -123,4 +125,5 @@ export const MANAGEMENT_TILE_ICONS = {
   ncs_criticas: ShieldAlert,
   sem_responsavel: UserX,
   paralisadas: PauseCircle,
+  sem_atualizacao_72h: Timer,
 } satisfies Record<ManagementTileId, LucideIcon>;

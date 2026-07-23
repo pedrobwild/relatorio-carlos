@@ -944,6 +944,15 @@ export default function PainelObras() {
         .map((o) => o.id),
     );
 
+    const semAtualizacao72hIds = new Set(
+      inFase
+        .filter((o) => {
+          const h = hoursSince(o.ultima_atualizacao);
+          return h != null && h > 72;
+        })
+        .map((o) => o.id),
+    );
+
     const tiles: ManagementTile[] = [
       {
         id: "atrasadas",
@@ -993,6 +1002,14 @@ export default function PainelObras() {
         tone: paralisadasIds.size > 0 ? "destructive" : "muted",
         icon: MANAGEMENT_TILE_ICONS.paralisadas,
       },
+      {
+        id: "sem_atualizacao_72h",
+        label: "Sem atualização 72h+",
+        value: semAtualizacao72hIds.size,
+        hint: "Última atualização há mais de 72h",
+        tone: semAtualizacao72hIds.size > 0 ? "warning" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.sem_atualizacao_72h,
+      },
     ];
 
     const setsById: Record<ManagementTileId, Set<string>> = {
@@ -1002,6 +1019,7 @@ export default function PainelObras() {
       ncs_criticas: ncsCriticasIds,
       sem_responsavel: semRespIds,
       paralisadas: paralisadasIds,
+      sem_atualizacao_72h: semAtualizacao72hIds,
     };
     return {
       managementTiles: tiles,
@@ -2260,6 +2278,7 @@ export default function PainelObras() {
             : null
         }
         snapshot={obraParam ? snapshotById.get(obraParam) : undefined}
+        severity={obraParam ? severityById.get(obraParam) : undefined}
         open={!!obraParam}
         onOpenChange={(o) => {
           if (!o) closeDetail();
@@ -2641,6 +2660,29 @@ function ObraRow({
               </span>
             </button>
           </div>
+          {(() => {
+            const h = hoursSince(obra.ultima_atualizacao);
+            if (h == null || h <= 72) return null;
+            const days = Math.floor(h / 24);
+            const isCritical = h > 120;
+            return (
+              <div className="mt-1 pl-7">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 h-4 px-1.5 rounded text-[10px] font-medium tabular-nums",
+                    isCritical
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-warning/10 text-warning",
+                  )}
+                  aria-label={`Sem atualização há ${days} dias`}
+                  title={`Última atualização há ${Math.round(h)}h`}
+                >
+                  <Clock className="h-2.5 w-2.5" aria-hidden />
+                  sem atualização há {days}d
+                </span>
+              </div>
+            );
+          })()}
         </TableCell>
 
         {/* Criticidade — score calculado (severidade 0-100) + tooltip com breakdown. */}
