@@ -139,7 +139,6 @@ export default function AvancoFisico() {
       <PageHeader
         title="Avanço físico"
         description="Curva S semanal por obra, baselines e histórico de medições."
-        icon={<LineIcon className="h-5 w-5" />}
       />
 
       {noProjects ? (
