@@ -50,6 +50,15 @@ import { cn } from "@/lib/utils";
 import type { PainelObra } from "@/hooks/usePainelObras";
 import type { PortfolioSnapshotRow } from "@/hooks/usePortfolioSnapshot";
 import { useLookahead } from "@/hooks/useLookahead";
+import { useSCurveWeekly } from "@/hooks/useActivityProgress";
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip as RTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 // ─── formatters ──────────────────────────────────────────────────────────────
 const brl = new Intl.NumberFormat("pt-BR", {
