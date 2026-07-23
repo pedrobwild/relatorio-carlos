@@ -386,7 +386,26 @@ export const queryKeys = {
     }) => [...queryKeys.qualidade.all, "punch-items", filters ?? null] as const,
   },
 
+  // ============================================================================
+  // Suprimentos (Requisições + Cotações)
+  // ============================================================================
+  suprimentos: {
+    all: ["suprimentos"] as const,
+    requisicoes: (filters?: {
+      projectId?: string;
+      status?: string;
+      needyDays?: number;
+    }) => [...queryKeys.suprimentos.all, "requisicoes", filters ?? null] as const,
+    requisicao: (id: string | undefined) =>
+      [...queryKeys.suprimentos.all, "requisicao", id] as const,
+    itens: (requisitionId: string | undefined) =>
+      [...queryKeys.suprimentos.all, "itens", requisitionId] as const,
+    cotacoes: (requisitionId: string | undefined) =>
+      [...queryKeys.suprimentos.all, "cotacoes", requisitionId] as const,
+  },
+
 } as const;
+
 
 // ============================================================================
 // Helper Types
