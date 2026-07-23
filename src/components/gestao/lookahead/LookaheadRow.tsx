@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Loader2,
   Play,
+  TrendingUp,
   UserPlus,
   UserX,
 } from "lucide-react";
