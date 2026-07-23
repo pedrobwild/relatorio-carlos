@@ -308,6 +308,72 @@ async function fetchMyPendencias(userId: string): Promise<InboxItem[]> {
   }));
 }
 
+async function fetchMyPunchItems(userId: string): Promise<InboxItem[]> {
+  // 1) Itens atribuídos diretamente ao usuário (qualquer projeto).
+  const { data: mine, error: mineErr } = await supabase
+    .from("punch_items")
+    .select(
+      "id, ambiente, descricao, due_date, status, project_id, projects:project_id(id, name)",
+    )
+    .eq("responsible_user_id", userId)
+    .neq("status", "verificado")
+    .is("deleted_at", null)
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .limit(200);
+  if (mineErr) throw mineErr;
+
+  // 2) Itens sem responsável, mas em obras que o usuário gerencia
+  //    (visão de gestor: entrega da obra em risco).
+  const { data: myProjects } = await supabase
+    .from("projects")
+    .select("id, name")
+    .eq("painel_responsavel_id", userId)
+    .is("deleted_at", null);
+  const projectIds = (myProjects ?? []).map((p) => p.id);
+  const projectNames = new Map((myProjects ?? []).map((p) => [p.id, p.name]));
+
+  let orphans: NonNullable<typeof mine> = [];
+  if (projectIds.length > 0) {
+    const { data, error } = await supabase
+      .from("punch_items")
+      .select(
+        "id, ambiente, descricao, due_date, status, project_id, projects:project_id(id, name)",
+      )
+      .in("project_id", projectIds)
+      .is("responsible_user_id", null)
+      .eq("status", "aberto")
+      .is("deleted_at", null)
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .limit(200);
+    if (error) throw error;
+    orphans = data ?? [];
+  }
+
+  const seen = new Set<string>();
+  const merged = [...(mine ?? []), ...orphans].filter((r) => {
+    if (seen.has(r.id)) return false;
+    seen.add(r.id);
+    return true;
+  });
+
+  return merged.map((row) => ({
+    id: `punch-${row.id}`,
+    kind: "entrega" as InboxKind,
+    title: `${row.ambiente} — ${row.descricao}`,
+    dueDate: row.due_date ?? null,
+    daysOverdue: calcOverdue(row.due_date ?? null),
+    businessDaysUntil: calcBusinessDaysUntil(row.due_date ?? null),
+    projectId: row.project_id,
+    projectName:
+      (row.projects as { name?: string } | null)?.name ??
+      projectNames.get(row.project_id) ??
+      "Sem obra",
+    href: `/gestao/qualidade?tab=entrega&projectId=${row.project_id}`,
+    hint: row.status === "resolvido" ? "Aguardando verificação" : "Aberta",
+  }));
+}
+
+
 // ---------- Hook principal ----------
 
 export function useMinhaSemana() {
