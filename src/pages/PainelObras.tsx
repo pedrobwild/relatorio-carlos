@@ -2659,6 +2659,29 @@ function ObraRow({
               </span>
             </button>
           </div>
+          {(() => {
+            const h = hoursSince(obra.ultima_atualizacao);
+            if (h == null || h <= 72) return null;
+            const days = Math.floor(h / 24);
+            const isCritical = h > 120;
+            return (
+              <div className="mt-1 pl-7">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 h-4 px-1.5 rounded text-[10px] font-medium tabular-nums",
+                    isCritical
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-warning/10 text-warning",
+                  )}
+                  aria-label={`Sem atualização há ${days} dias`}
+                  title={`Última atualização há ${Math.round(h)}h`}
+                >
+                  <Clock className="h-2.5 w-2.5" aria-hidden />
+                  sem atualização há {days}d
+                </span>
+              </div>
+            );
+          })()}
         </TableCell>
 
         {/* Criticidade — score calculado (severidade 0-100) + tooltip com breakdown. */}
