@@ -51,6 +51,8 @@ import type { PainelObra } from "@/hooks/usePainelObras";
 import type { PortfolioSnapshotRow } from "@/hooks/usePortfolioSnapshot";
 import { useLookahead } from "@/hooks/useLookahead";
 import { useSCurveWeekly } from "@/hooks/useActivityProgress";
+import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
+import type { SeverityBreakdown } from "@/lib/calculateObraSeverity";
 import {
   Line,
   LineChart,
