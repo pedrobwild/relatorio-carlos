@@ -18,6 +18,7 @@ import {
   Building2,
   ClipboardEdit,
   Inbox,
+  CalendarRange,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
