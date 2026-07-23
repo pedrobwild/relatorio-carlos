@@ -288,6 +288,15 @@ export const queryKeys = {
     atividadesSemResponsavel: () =>
       [...queryKeys.painelExcecoes.all, "atividades-sem-responsavel"] as const,
   },
+
+  // ============================================================================
+  // Lookahead (staff 14/21 dias) — see src/hooks/useLookahead.ts
+  // ============================================================================
+  lookahead: {
+    all: ["lookahead"] as const,
+    list: (windowDays: number) =>
+      [...queryKeys.lookahead.all, "list", windowDays] as const,
+  },
 } as const;
 
 // ============================================================================
