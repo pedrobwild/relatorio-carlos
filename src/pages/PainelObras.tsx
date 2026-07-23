@@ -2182,6 +2182,8 @@ const TABLE_COLS: {
   { width: "min-w-[112px] sm:min-w-[140px]" }, // Status
   { width: "min-w-[128px] sm:min-w-[160px]" }, // Etapa
   { width: "min-w-[112px] sm:min-w-[140px]", align: "right" }, // Progresso
+  { width: "min-w-[96px] sm:min-w-[120px]", align: "right", hide: "hidden lg:table-cell" }, // Avanço (snapshot)
+  { width: "min-w-[96px] sm:min-w-[120px]", align: "right", hide: "hidden xl:table-cell" }, // Custo (variação EAC)
   { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden xl:table-cell" }, // Início Of.
   { width: "min-w-[96px] sm:min-w-[120px]" }, // Entrega Of.
   { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden xl:table-cell" }, // Início Real
