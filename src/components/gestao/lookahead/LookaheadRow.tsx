@@ -57,6 +57,11 @@ export function LookaheadRow({ activity, windowDays }: Props) {
   const queryClient = useQueryClient();
   const { data: staff = [] } = useStaffUsers();
   const [assignOpen, setAssignOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(false);
+  const { data: measurements = [] } = useActivityMeasurements(
+    progressOpen ? activity.id : undefined,
+  );
+  const latestPct = measurements[0]?.progress_pct ?? null;
 
   // Reusa mutation existente para actual_start/actual_end.
   const { updateActivity, isUpdating } = useProjectActivities(
