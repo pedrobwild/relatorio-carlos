@@ -315,6 +315,10 @@ export const queryKeys = {
       [...queryKeys.avancoFisico.all, "baseline-current", projectId] as const,
     baselineActivities: (baselineId: string | undefined) =>
       [...queryKeys.avancoFisico.all, "baseline-activities", baselineId] as const,
+    sCurve: (projectId: string | undefined, baselineId: string | undefined | null) =>
+      [...queryKeys.avancoFisico.all, "s-curve", projectId, baselineId ?? "current"] as const,
+    weightedProgress: (projectId: string | undefined, baselineId: string | undefined | null) =>
+      [...queryKeys.avancoFisico.all, "weighted-progress", projectId, baselineId ?? "current"] as const,
   },
 } as const;
 
