@@ -15,7 +15,7 @@ import {
   ShieldAlert,
   UserX,
   PauseCircle,
-  ClockAlert,
+  Timer,
   type LucideIcon,
 } from "lucide-react";
 
