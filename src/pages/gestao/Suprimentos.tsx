@@ -161,9 +161,11 @@ export default function Suprimentos() {
         <PageSkeleton />
       ) : filtered.length === 0 ? (
         <EmptyState
+          icon={PackageSearch}
           title="Nenhuma requisição"
           description="Crie a primeira requisição para começar a rastrear pedidos de material."
         />
+
       ) : (
         <div className="grid grid-cols-1 gap-3">
           {filtered.map((r) => {
