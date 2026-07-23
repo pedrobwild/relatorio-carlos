@@ -125,4 +125,5 @@ export const MANAGEMENT_TILE_ICONS = {
   ncs_criticas: ShieldAlert,
   sem_responsavel: UserX,
   paralisadas: PauseCircle,
+  sem_atualizacao_72h: Timer,
 } satisfies Record<ManagementTileId, LucideIcon>;
