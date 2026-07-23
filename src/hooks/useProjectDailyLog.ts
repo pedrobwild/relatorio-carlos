@@ -205,6 +205,9 @@ export function useSaveProjectDailyLog() {
             ...(payload.temperature_c !== undefined
               ? { temperature_c: payload.temperature_c }
               : {}),
+            ...(payload.occurrence_severity !== undefined
+              ? { occurrence_severity: payload.occurrence_severity }
+              : {}),
             // created_by só na primeira vez — upsert lida:
             ...(uid ? { created_by: uid } : {}),
           } as never,
