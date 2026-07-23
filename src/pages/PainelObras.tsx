@@ -1664,6 +1664,18 @@ export default function PainelObras() {
               />
             )}
 
+            {aba === "ativas" && (
+              <PortfolioHealthMatrix
+                points={matrixPoints}
+                isLoading={isLoading || snapshotLoading}
+                isOpen={matrixOpen}
+                onOpenChange={setMatrixOpen}
+                onSelectObra={(id) => handleOpenObra(id)}
+              />
+            )}
+
+
+
 
             {/*
             Toolbar redesenhada — referência híbrida (Linear + Notion):
