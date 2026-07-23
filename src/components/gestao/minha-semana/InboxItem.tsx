@@ -54,7 +54,13 @@ const KIND_META: Record<
     icon: ListTodo,
     tone: "bg-muted text-muted-foreground border-border",
   },
+  entrega: {
+    label: "Pendência de entrega",
+    icon: KeySquare,
+    tone: "bg-accent/40 text-foreground border-border",
+  },
 };
+
 
 function formatDeadline(item: InboxItemType): string {
   if (item.daysOverdue > 0) {
