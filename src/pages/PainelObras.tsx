@@ -2104,7 +2104,7 @@ export default function PainelObras() {
                             expanded={expandedIds.has(o.id)}
                             onToggleExpanded={() => toggleExpanded(o.id)}
                             onUpdate={(patch) => updateObra(o.id, patch)}
-                            onOpen={() => navigate(`/obra/${o.id}`)}
+                            onOpen={(e) => handleOpenObra(o.id, e)}
                             onDeleteRequest={() => setDeleteTarget(o)}
                             onOpenDados={() => setDadosTarget(o)}
                           />
