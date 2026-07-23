@@ -11,7 +11,16 @@
  */
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AlertTriangle, Coins, Download, Wallet } from "lucide-react";
+import { AlertTriangle, Coins, Download, LineChart as LineIcon, Wallet } from "lucide-react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
@@ -36,7 +45,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
-import { useCostSummary, useCostTotals } from "@/hooks/useCosts";
+import { useCostSCurveWeekly, useCostSummary, useCostTotals } from "@/hooks/useCosts";
 import type { CostSummaryRow } from "@/infra/repositories/costs.repository";
 import { cn } from "@/lib/utils";
 
