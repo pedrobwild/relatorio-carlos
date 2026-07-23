@@ -93,6 +93,8 @@ function costToneClass(v: number | null | undefined): string {
 export interface ObraDetailSheetProps {
   obra: PainelObra | null;
   snapshot: PortfolioSnapshotRow | undefined;
+  /** Breakdown de severidade (score + gatilhos) da obra. */
+  severity?: SeverityBreakdown | undefined;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -100,6 +102,7 @@ export interface ObraDetailSheetProps {
 export function ObraDetailSheet({
   obra,
   snapshot,
+  severity,
   open,
   onOpenChange,
 }: ObraDetailSheetProps) {
