@@ -4696,8 +4696,35 @@ function MobilePainelView({
                     </span>
                   </span>
                 )}
+                {snapshotById?.get(o.id) && (
+                  <>
+                    <span className="inline-flex items-center gap-1 tabular-nums">
+                      <TrendingUp className="h-3 w-3 opacity-60" />
+                      Avanço {Math.round(snapshotById.get(o.id)!.weighted_progress_pct)}%
+                    </span>
+                    {snapshotById.get(o.id)!.variacao_pct != null && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 tabular-nums font-semibold",
+                          snapshotById.get(o.id)!.variacao_pct! >= 5
+                            ? "text-destructive"
+                            : snapshotById.get(o.id)!.variacao_pct! <= -5
+                              ? "text-success"
+                              : snapshotById.get(o.id)!.variacao_pct! > 0
+                                ? "text-warning"
+                                : "text-muted-foreground",
+                        )}
+                      >
+                        <DollarSign className="h-3 w-3" />
+                        {snapshotById.get(o.id)!.variacao_pct! > 0 ? "+" : ""}
+                        {snapshotById.get(o.id)!.variacao_pct!.toFixed(1)}%
+                      </span>
+                    )}
+                  </>
+                )}
               </span>
             );
+
 
             const isExpanded = expandedIds.has(o.id);
             return (
