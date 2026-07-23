@@ -872,8 +872,33 @@ export default function PainelObras() {
    * responde à pergunta "qual obra precisa de atenção HOJE?".
    * DECLARADO ANTES do `filtered` porque `tileFilterSet` alimenta o filtro final.
    */
+  // Severidade calculada por obra (score 0-100 + breakdown). Reusa o
+  // snapshot batch para variação de custo e NCs críticas; usa dados já
+  // presentes em `obra` para prazo, pendências e desatualização. Pura.
+  // TODO(Onda P1.5): estender RPC com pending_overdue e compras críticas.
+  const severityById = useMemo(() => {
+    const m = new Map<string, SeverityBreakdown>();
+    for (const o of obras) {
+      const snap = snapshotById.get(o.id);
+      m.set(
+        o.id,
+        calculateObraSeverity({
+          overdueDays: computeOverdueDays(o),
+          variacaoPct: snap?.variacao_pct ?? null,
+          pendingOverdue: o.overdue_count ?? 0,
+          comprasCriticas: 0, // pendente extensão de RPC (cortado desta onda)
+          hoursSinceUpdate: hoursSince(o.ultima_atualizacao),
+          ncsCriticas: snap?.ncs_criticas ?? 0,
+        }),
+      );
+    }
+    return m;
+  }, [obras, snapshotById]);
+
   const { managementTiles, tileFilterSet } = useMemo(() => {
-    const inFase = obras.filter(matchesFase);
+    // Tiles só contam obras ATIVAS (excluem concluídas), independente da
+    // aba corrente — os cartões representam trabalho vivo em andamento.
+    const inFase = obras.filter((o) => matchesFase(o) && !isObraConcluida(o));
     const todayIso = format(new Date(), "yyyy-MM-dd");
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
