@@ -874,9 +874,8 @@ export default function PainelObras() {
    * DECLARADO ANTES do `filtered` porque `tileFilterSet` alimenta o filtro final.
    */
   // Severidade calculada por obra (score 0-100 + breakdown). Reusa o
-  // snapshot batch para variação de custo e NCs críticas; usa dados já
-  // presentes em `obra` para prazo, pendências e desatualização. Pura.
-  // TODO(Onda P1.5): estender RPC com pending_overdue e compras críticas.
+  // snapshot batch (Onda P2 incluiu compras_criticas) e dados já presentes
+  // em `obra` para prazo, pendências e desatualização. Pura.
   const severityById = useMemo(() => {
     const m = new Map<string, SeverityBreakdown>();
     for (const o of obras) {
@@ -887,7 +886,7 @@ export default function PainelObras() {
           overdueDays: computeOverdueDays(o),
           variacaoPct: snap?.variacao_pct ?? null,
           pendingOverdue: o.overdue_count ?? 0,
-          comprasCriticas: 0, // pendente extensão de RPC (cortado desta onda)
+          comprasCriticas: snap?.compras_criticas ?? 0,
           hoursSinceUpdate: hoursSince(o.ultima_atualizacao),
           ncsCriticas: snap?.ncs_criticas ?? 0,
         }),
