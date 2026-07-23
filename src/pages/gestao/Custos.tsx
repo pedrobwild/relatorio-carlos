@@ -447,6 +447,8 @@ export default function Custos() {
                         <TableHead className="text-right">Realizado</TableHead>
                         <TableHead className="text-right">Saldo</TableHead>
                         <TableHead className="min-w-[160px]">Consumido</TableHead>
+                        <TableHead className="text-right">EAC</TableHead>
+                        <TableHead className="text-right">Variação</TableHead>
                         <TableHead className="text-right">Compras</TableHead>
                       </TableRow>
                     </TableHeader>
