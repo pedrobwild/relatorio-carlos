@@ -41,6 +41,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
 
 import { queryKeys } from "@/lib/queryKeys";
@@ -49,6 +57,22 @@ import {
   inspectionChecklistTemplatesRepo,
   type ChecklistTemplate,
 } from "@/infra/repositories/inspectionChecklistTemplates.repository";
+import { useProjectsQuery } from "@/hooks/useProjectsQuery";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import {
+  usePunchItems,
+  useCreatePunchItem,
+  useUpdatePunchItem,
+  useResolvePunchItem,
+  useVerifyPunchItem,
+  useReopenPunchItem,
+  useDeletePunchItem,
+  type PunchItem,
+} from "@/hooks/usePunchItems";
+import { CheckCircle2, RotateCcw, ShieldCheck } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
 
 /* ============================================================================
  * Página /gestao/qualidade  (StaffRoute)
