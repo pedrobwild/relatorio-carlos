@@ -254,6 +254,40 @@ export const queryKeys = {
     eventsList: (projectId: string | undefined, limit: number) =>
       [...queryKeys.agent.events(projectId), limit] as const,
   },
+
+  // ============================================================================
+  // Minha Semana (staff personal inbox) — see src/hooks/useMinhaSemana.ts
+  // ============================================================================
+  minhaSemana: {
+    all: ["minha-semana"] as const,
+    activities: (userId: string) =>
+      [...queryKeys.minhaSemana.all, "activities", userId] as const,
+    ncs: (userId: string) =>
+      [...queryKeys.minhaSemana.all, "ncs", userId] as const,
+    tickets: (userId: string) =>
+      [...queryKeys.minhaSemana.all, "tickets", userId] as const,
+    formalizations: () =>
+      [...queryKeys.minhaSemana.all, "formalizations"] as const,
+    alerts: (userId: string) =>
+      [...queryKeys.minhaSemana.all, "alerts", userId] as const,
+    pendencias: (userId: string) =>
+      [...queryKeys.minhaSemana.all, "pendencias", userId] as const,
+  },
+
+  // ============================================================================
+  // Painel de Obras — exceções cross-domain (faixa clicável no topo)
+  // ============================================================================
+  painelExcecoes: {
+    all: ["painel-excecoes"] as const,
+    ncsCriticas: () =>
+      [...queryKeys.painelExcecoes.all, "ncs-criticas"] as const,
+    formalizacoesParadas: () =>
+      [...queryKeys.painelExcecoes.all, "formalizacoes-paradas"] as const,
+    faturasVencidas: () =>
+      [...queryKeys.painelExcecoes.all, "faturas-vencidas"] as const,
+    atividadesSemResponsavel: () =>
+      [...queryKeys.painelExcecoes.all, "atividades-sem-responsavel"] as const,
+  },
 } as const;
 
 // ============================================================================
