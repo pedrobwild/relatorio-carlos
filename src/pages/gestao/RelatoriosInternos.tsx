@@ -374,7 +374,7 @@ export default function RelatoriosInternos() {
     <PageContainer>
       <div className="print:hidden">
         <PageHeader
-          icon={<BookOpenCheck className="h-5 w-5" />}
+          icon={BookOpenCheck}
           title="Relatórios internos"
           description="Relatório executivo interno semanal por obra (staff-only). Não substitui os relatórios semanais enviados ao cliente."
           actions={
@@ -422,7 +422,7 @@ export default function RelatoriosInternos() {
             </div>
           ) : reports.length === 0 ? (
             <EmptyState
-              icon={<BookOpenCheck className="h-6 w-6" />}
+              icon={BookOpenCheck}
               title="Nenhum relatório ainda"
               description="Escolha uma obra e clique em Gerar agora."
             />
@@ -459,7 +459,7 @@ export default function RelatoriosInternos() {
         <section>
           {!selected ? (
             <EmptyState
-              icon={<BookOpenCheck className="h-6 w-6" />}
+              icon={BookOpenCheck}
               title="Selecione um relatório"
               description="Escolha um relatório do histórico para visualizar."
             />
