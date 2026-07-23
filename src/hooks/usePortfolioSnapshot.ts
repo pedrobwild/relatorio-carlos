@@ -67,6 +67,7 @@ export function usePortfolioSnapshot() {
           typeof r.proxima_atividade_data === "string"
             ? r.proxima_atividade_data
             : null,
+        compras_criticas: toNum(r.compras_criticas) ?? 0,
       }));
     },
     staleTime: 60_000,
