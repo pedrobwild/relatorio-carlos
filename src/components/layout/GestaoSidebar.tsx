@@ -19,6 +19,7 @@ import {
   ClipboardEdit,
   Inbox,
   CalendarRange,
+  LineChart,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
