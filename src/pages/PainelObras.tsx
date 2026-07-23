@@ -48,13 +48,19 @@ import {
   Download,
 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { PageHeader, MetricCard, MetricRail, SectionCard } from "@/components/ui-premium";
-import { ExceptionsBar } from "@/components/gestao/painel/ExceptionsBar";
+import { PageHeader, SectionCard } from "@/components/ui-premium";
 import { SavedViewsBar } from "@/components/gestao/painel/SavedViewsBar";
+import {
+  ManagementBand,
+  MANAGEMENT_TILE_ICONS,
+  type ManagementTile,
+  type ManagementTileId,
+} from "@/components/gestao/painel/ManagementBand";
 import {
   usePainelExcecoes,
   type ExcecaoKind,
 } from "@/hooks/usePainelExcecoes";
+import { usePortfolioSnapshot } from "@/hooks/usePortfolioSnapshot";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
