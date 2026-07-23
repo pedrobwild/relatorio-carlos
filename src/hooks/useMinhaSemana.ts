@@ -418,8 +418,15 @@ export function useMinhaSemana() {
         enabled: !!uid,
         staleTime: 60_000,
       },
+      {
+        queryKey: queryKeys.minhaSemana.punch(uid),
+        queryFn: () => fetchMyPunchItems(uid),
+        enabled: !!uid,
+        staleTime: 60_000,
+      },
     ],
   });
+
 
   const isLoading = results.some((r) => r.isLoading);
   const isError = results.some((r) => r.isError);
