@@ -59,6 +59,12 @@ import {
   type ManagementTileId,
 } from "@/components/gestao/painel/ManagementBand";
 import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
+import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  calculateObraSeverity,
+  type SeverityBreakdown,
+} from "@/lib/calculateObraSeverity";
 import {
   usePainelExcecoes,
   type ExcecaoKind,
@@ -307,6 +313,27 @@ const computeOverdueDays = (obra: {
   return countBusinessDaysInclusive(start, today);
 };
 
+/**
+ * Detecta se uma obra está concluída — usada pela aba Ativas/Concluídas
+ * do Painel de Obras. Uma obra é concluída quando tem entrega real
+ * registrada OU está marcada como etapa `Finalizada`.
+ */
+const isObraConcluida = (o: {
+  entrega_real: string | null;
+  etapa: PainelEtapa | null;
+}): boolean => !!o.entrega_real || o.etapa === "Finalizada";
+
+/**
+ * Horas desde `iso` até agora. `null` quando a data é inválida ou ausente.
+ * Impuro (usa Date.now()); manter fora do escopo puro de severity.
+ */
+const hoursSince = (iso: string | null | undefined): number | null => {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return null;
+  return Math.max(0, (Date.now() - t) / 3_600_000);
+};
+
 import { getEtapaWeek, formatEtapaLabel } from "@/lib/painelEtapaWeek";
 
 const statusDotClass = (s: PainelStatus | null): string => {
@@ -498,6 +525,20 @@ export default function PainelObras() {
 
   const matchesFase = (o: PainelObra) =>
     fase === "todas" ? true : fase === "projetos" ? o.is_project_phase : !o.is_project_phase;
+
+  // Aba Ativas/Concluídas — segmentação PRINCIPAL do Painel de Obras.
+  // Obras concluídas (entrega real registrada ou etapa Finalizada) somem
+  // da visão padrão. Cartões gerenciais e snapshot contam SOMENTE ativas.
+  // Persistido em URL via ?aba=concluidas para deep-link.
+  const abaParam = searchParams.get("aba");
+  const aba: "ativas" | "concluidas" = abaParam === "concluidas" ? "concluidas" : "ativas";
+  const handleAbaChange = (next: "ativas" | "concluidas") => {
+    const params = new URLSearchParams(searchParams);
+    if (next === "ativas") params.delete("aba");
+    else params.set("aba", next);
+    setSearchParams(params, { replace: true });
+  };
+
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
   // Persistido em URL para que o usuário compartilhe / volte na mesma visão.
@@ -832,8 +873,33 @@ export default function PainelObras() {
    * responde à pergunta "qual obra precisa de atenção HOJE?".
    * DECLARADO ANTES do `filtered` porque `tileFilterSet` alimenta o filtro final.
    */
+  // Severidade calculada por obra (score 0-100 + breakdown). Reusa o
+  // snapshot batch para variação de custo e NCs críticas; usa dados já
+  // presentes em `obra` para prazo, pendências e desatualização. Pura.
+  // TODO(Onda P1.5): estender RPC com pending_overdue e compras críticas.
+  const severityById = useMemo(() => {
+    const m = new Map<string, SeverityBreakdown>();
+    for (const o of obras) {
+      const snap = snapshotById.get(o.id);
+      m.set(
+        o.id,
+        calculateObraSeverity({
+          overdueDays: computeOverdueDays(o),
+          variacaoPct: snap?.variacao_pct ?? null,
+          pendingOverdue: o.overdue_count ?? 0,
+          comprasCriticas: 0, // pendente extensão de RPC (cortado desta onda)
+          hoursSinceUpdate: hoursSince(o.ultima_atualizacao),
+          ncsCriticas: snap?.ncs_criticas ?? 0,
+        }),
+      );
+    }
+    return m;
+  }, [obras, snapshotById]);
+
   const { managementTiles, tileFilterSet } = useMemo(() => {
-    const inFase = obras.filter(matchesFase);
+    // Tiles só contam obras ATIVAS (excluem concluídas), independente da
+    // aba corrente — os cartões representam trabalho vivo em andamento.
+    const inFase = obras.filter((o) => matchesFase(o) && !isObraConcluida(o));
     const todayIso = format(new Date(), "yyyy-MM-dd");
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
@@ -945,7 +1011,12 @@ export default function PainelObras() {
 
   const filtered = useMemo(() => {
     // Separa obras (execução) de projetos (fase de projeto). Default: todas.
+    // Aplica fase (execução/projeto) + aba (ativas/concluídas).
     let rows = obras.filter(matchesFase);
+    rows =
+      aba === "concluidas"
+        ? rows.filter(isObraConcluida)
+        : rows.filter((o) => !isObraConcluida(o));
     if (search.trim()) {
       rows = rows.filter((o) =>
         matchesSearch(search, [o.nome, o.customer_name, o.responsavel_nome]),
@@ -1002,17 +1073,33 @@ export default function PainelObras() {
         if (!bv) return -1;
         return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
       });
-    } else {
-      // Ordenação padrão: por data de entrega oficial (ascendente).
-      // Datas passadas (obras atrasadas) ficam naturalmente no topo;
-      // obras sem data de entrega vão para o final.
+    } else if (aba === "concluidas") {
+      // Aba Concluídas: ordena por entrega real desc (recentes primeiro).
       rows = [...rows].sort((a, b) => {
-        const av = a.entrega_oficial ?? "";
-        const bv = b.entrega_oficial ?? "";
+        const av = a.entrega_real ?? "";
+        const bv = b.entrega_real ?? "";
         if (!av && !bv) return 0;
         if (!av) return 1;
         if (!bv) return -1;
-        return av.localeCompare(bv);
+        return bv.localeCompare(av);
+      });
+    } else {
+      // Ordenação padrão (Ativas): (1) severidade desc,
+      // (2) entrega oficial mais próxima, (3) última atualização mais antiga.
+      rows = [...rows].sort((a, b) => {
+        const sa = severityById.get(a.id)?.score ?? 0;
+        const sb = severityById.get(b.id)?.score ?? 0;
+        if (sa !== sb) return sb - sa;
+        const ea = a.entrega_oficial ?? "";
+        const eb = b.entrega_oficial ?? "";
+        if (ea !== eb) {
+          if (!ea) return 1;
+          if (!eb) return -1;
+          return ea.localeCompare(eb);
+        }
+        const ua = a.ultima_atualizacao ?? "";
+        const ub = b.ultima_atualizacao ?? "";
+        return ua.localeCompare(ub);
       });
     }
     // Filtro por exceção cross-domain (?excecao=): restringe ao Set de
@@ -1031,6 +1118,7 @@ export default function PainelObras() {
   }, [
     obras,
     fase,
+    aba,
     search,
     filterEtapa,
     filterStatuses,
@@ -1044,6 +1132,7 @@ export default function PainelObras() {
     activeExcecao,
     excecaoSets,
     tileFilterSet,
+    severityById,
   ]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
@@ -1478,12 +1567,42 @@ export default function PainelObras() {
                 MetricRail + ExceptionsBar. Cada tile aplica um filtro
                 cross-domain na tabela abaixo (via ?tile=). */}
             <SavedViewsBar />
-            <ManagementBand
-              tiles={managementTiles}
-              activeTile={activeTile}
-              onSelect={toggleManagementTile}
-              isLoading={isLoading || snapshotLoading || excecoesLoading}
-            />
+            {(() => {
+              const concluidasCount = obras.filter(isObraConcluida).length;
+              const ativasCount = obras.length - concluidasCount;
+              return (
+                <Tabs
+                  value={aba}
+                  onValueChange={(v) =>
+                    handleAbaChange(v === "concluidas" ? "concluidas" : "ativas")
+                  }
+                  className="mb-2"
+                >
+                  <TabsList className="h-8">
+                    <TabsTrigger value="ativas" className="text-xs h-7 px-3">
+                      Ativas
+                      <span className="ml-1.5 tabular-nums text-muted-foreground">
+                        {ativasCount}
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger value="concluidas" className="text-xs h-7 px-3">
+                      Concluídas
+                      <span className="ml-1.5 tabular-nums text-muted-foreground">
+                        {concluidasCount}
+                      </span>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              );
+            })()}
+            {aba === "ativas" && (
+              <ManagementBand
+                tiles={managementTiles}
+                activeTile={activeTile}
+                onSelect={toggleManagementTile}
+                isLoading={isLoading || snapshotLoading || excecoesLoading}
+              />
+            )}
 
 
             {/*
@@ -2044,6 +2163,12 @@ export default function PainelObras() {
                             Cliente / Obra
                           </TableHead>
                           <TableHead
+                            className="w-[92px] sm:w-[104px]"
+                            aria-label="Criticidade calculada"
+                          >
+                            Criticidade
+                          </TableHead>
+                          <TableHead
                             className="w-[52px] sm:w-[60px] text-center hidden lg:table-cell"
                             aria-label="Dados do cliente"
                           >
@@ -2109,6 +2234,7 @@ export default function PainelObras() {
                             key={o.id}
                             obra={o}
                             snapshot={snapshotById.get(o.id)}
+                            severity={severityById.get(o.id)}
                             staffUsers={staffUsers}
                             expanded={expandedIds.has(o.id)}
                             onToggleExpanded={() => toggleExpanded(o.id)}
@@ -2147,14 +2273,17 @@ export default function PainelObras() {
 // ----- row component -----
 // Total de colunas da tabela do Painel de Obras. Mantenha em sincronia com o
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
-// 1) Cliente / Obra · 2) Dados · 3) Status · 4) Etapa · 5) Progresso ·
-// 6) Avanço · 7) Custo · 8) Início Of. · 9) Entrega Of. · 10) Início Real ·
-// 11) Entrega Real · 12) Relacionamento · 13) Responsável · 14) Ações
-const PAINEL_COLUMN_COUNT = 14;
+// 1) Cliente / Obra · 2) Criticidade · 3) Dados · 4) Status · 5) Etapa ·
+// 6) Progresso · 7) Avanço · 8) Custo · 9) Início Of. · 10) Entrega Of. ·
+// 11) Início Real · 12) Entrega Real · 13) Relacionamento · 14) Responsável ·
+// 15) Ações
+const PAINEL_COLUMN_COUNT = 15;
 
 interface ObraRowProps {
   obra: PainelObra;
   snapshot?: import("@/hooks/usePortfolioSnapshot").PortfolioSnapshotRow;
+  /** Breakdown de severidade calculada (score + gatilhos). */
+  severity?: SeverityBreakdown;
   staffUsers: { id: string; nome: string }[];
   expanded: boolean;
   onToggleExpanded: () => void;
@@ -2186,6 +2315,7 @@ const TABLE_COLS: {
       "w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px]",
     stickyLeft: true,
   }, // Cliente / Obra (sticky)
+  { width: "w-[92px] sm:w-[104px]" }, // Criticidade
   { width: "w-[52px] sm:w-[60px]", align: "center", hide: "hidden lg:table-cell" }, // Dados
   { width: "min-w-[112px] sm:min-w-[140px]" }, // Status
   { width: "min-w-[128px] sm:min-w-[160px]" }, // Etapa
@@ -2378,6 +2508,7 @@ function KanbanSkeleton() {
 function ObraRow({
   obra,
   snapshot,
+  severity,
   staffUsers,
   expanded,
   onToggleExpanded,
@@ -2510,6 +2641,18 @@ function ObraRow({
               </span>
             </button>
           </div>
+        </TableCell>
+
+        {/* Criticidade — score calculado (severidade 0-100) + tooltip com breakdown. */}
+        <TableCell className="w-[92px] sm:w-[104px] align-middle">
+          {severity ? (
+            <CriticidadeBadge
+              breakdown={severity}
+              manualStatus={obra.status}
+            />
+          ) : (
+            <span className="text-muted-foreground text-xs">—</span>
+          )}
         </TableCell>
 
         {/* Dados do cliente — abre popup com a feature completa (Contratante / Imóvel / Info). */}
@@ -4349,6 +4492,12 @@ function BoardView({
               <TableRow className="hover:bg-transparent border-b border-border-subtle">
                 <TableHead className="w-[200px] min-w-[200px] max-w-[200px] sm:w-[240px] sm:min-w-[240px] sm:max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle shadow-[1px_0_0_0_hsl(var(--border))]">
                   Cliente / Obra
+                </TableHead>
+                <TableHead
+                  className="w-[92px] sm:w-[104px]"
+                  aria-label="Criticidade calculada"
+                >
+                  Criticidade
                 </TableHead>
                 <TableHead
                   className="w-[60px] text-center"
