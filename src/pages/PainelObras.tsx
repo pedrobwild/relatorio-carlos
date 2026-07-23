@@ -1010,7 +1010,12 @@ export default function PainelObras() {
 
   const filtered = useMemo(() => {
     // Separa obras (execução) de projetos (fase de projeto). Default: todas.
+    // Aplica fase (execução/projeto) + aba (ativas/concluídas).
     let rows = obras.filter(matchesFase);
+    rows =
+      aba === "concluidas"
+        ? rows.filter(isObraConcluida)
+        : rows.filter((o) => !isObraConcluida(o));
     if (search.trim()) {
       rows = rows.filter((o) =>
         matchesSearch(search, [o.nome, o.customer_name, o.responsavel_nome]),
