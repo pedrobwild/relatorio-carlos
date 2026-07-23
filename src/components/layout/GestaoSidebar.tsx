@@ -21,6 +21,7 @@ import {
   CalendarRange,
   LineChart,
   Coins,
+  BookOpenCheck,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -106,6 +107,12 @@ export function GestaoSidebar() {
           label: "Custos",
           icon: Coins,
           path: "/gestao/custos",
+        },
+        {
+          label: "Diário de obra",
+          icon: BookOpenCheck,
+          path: "/gestao/diario",
+          matchPaths: ["/gestao/diario/"],
         },
       ],
     },
