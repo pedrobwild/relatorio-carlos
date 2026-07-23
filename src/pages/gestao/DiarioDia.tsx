@@ -490,20 +490,145 @@ export default function DiarioDia() {
             </CardContent>
           </Card>
 
-          {/* Ocorrências / notas livres */}
+          {/* Ocorrências / notas livres + severidade */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">
                 Ocorrências e impedimentos
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Severidade
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      { v: "Baixa", cls: "bg-muted text-foreground border-border" },
+                      { v: "Média", cls: "bg-warning/10 text-warning border-warning/40" },
+                      { v: "Alta", cls: "bg-destructive/10 text-destructive border-destructive/40" },
+                    ] as { v: NonNullable<OccurrenceSeverity>; cls: string }[]
+                  ).map((opt) => {
+                    const active = severity === opt.v;
+                    return (
+                      <button
+                        key={opt.v}
+                        type="button"
+                        onClick={() => setSeverity(active ? null : opt.v)}
+                        aria-pressed={active}
+                        className={cn(
+                          "inline-flex items-center px-3 h-11 rounded-md border text-sm min-w-[44px] transition-colors",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          active
+                            ? opt.cls + " font-medium"
+                            : "bg-background border-input text-muted-foreground hover:bg-muted",
+                        )}
+                      >
+                        {opt.v}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Opcional. Use Alta para incidentes de segurança, paralisações ou
+                  impedimentos que exigem decisão hoje.
+                </p>
+              </div>
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Registre paradas, atrasos, visitas, incidentes de segurança ou observações do dia."
                 className="min-h-[120px]"
               />
+            </CardContent>
+          </Card>
+
+          {/* Fotos do dia */}
+          <Card>
+            <CardHeader className="pb-3 flex-row items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Camera className="h-4 w-4 text-muted-foreground" />
+                Fotos do dia
+                {photos.photos.length > 0 && (
+                  <span className="text-xs font-normal text-muted-foreground tabular-nums">
+                    ({photos.photos.length})
+                  </span>
+                )}
+              </CardTitle>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-9"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={photos.isUploading}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {photos.isUploading ? "Enviando…" : "Adicionar"}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                className="sr-only"
+                onChange={handleFilePick}
+              />
+            </CardHeader>
+            <CardContent>
+              {photos.isLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-square w-full rounded-md" />
+                  ))}
+                </div>
+              ) : photos.photos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma foto do dia. Toque em Adicionar para incluir imagens
+                  (a câmera do celular abre direto).
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {photos.photos.map((ph) => (
+                    <div
+                      key={ph.id}
+                      className="relative group aspect-square overflow-hidden rounded-md border bg-muted"
+                    >
+                      {ph.url ? (
+                        <a
+                          href={ph.url}
+                          target="_blank"
+                          rel="noopener"
+                          className="block h-full w-full"
+                        >
+                          <img
+                            src={ph.url}
+                            alt={ph.caption ?? "Foto do dia"}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        </a>
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                          Sem prévia
+                        </div>
+                      )}
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon"
+                        className="absolute top-1 right-1 h-9 w-9 opacity-90"
+                        aria-label="Remover foto"
+                        onClick={() => setPhotoToDelete(ph)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -542,6 +667,34 @@ export default function DiarioDia() {
           </div>
         </div>
       )}
+
+      <AlertDialog
+        open={!!photoToDelete}
+        onOpenChange={(o) => !o && setPhotoToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover foto do dia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A foto será apagada do RDO e do armazenamento. Esta ação não pode
+              ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!photoToDelete) return;
+                const target = photoToDelete;
+                setPhotoToDelete(null);
+                await photos.remove(target);
+              }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageContainer>
   );
 }
