@@ -46,6 +46,8 @@ import {
   Maximize2,
   Minimize2,
   Download,
+  TrendingUp,
+  DollarSign,
 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, SectionCard } from "@/components/ui-premium";
