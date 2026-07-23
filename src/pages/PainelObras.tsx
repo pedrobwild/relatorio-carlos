@@ -1567,12 +1567,42 @@ export default function PainelObras() {
                 MetricRail + ExceptionsBar. Cada tile aplica um filtro
                 cross-domain na tabela abaixo (via ?tile=). */}
             <SavedViewsBar />
-            <ManagementBand
-              tiles={managementTiles}
-              activeTile={activeTile}
-              onSelect={toggleManagementTile}
-              isLoading={isLoading || snapshotLoading || excecoesLoading}
-            />
+            {(() => {
+              const concluidasCount = obras.filter(isObraConcluida).length;
+              const ativasCount = obras.length - concluidasCount;
+              return (
+                <Tabs
+                  value={aba}
+                  onValueChange={(v) =>
+                    handleAbaChange(v === "concluidas" ? "concluidas" : "ativas")
+                  }
+                  className="mb-2"
+                >
+                  <TabsList className="h-8">
+                    <TabsTrigger value="ativas" className="text-xs h-7 px-3">
+                      Ativas
+                      <span className="ml-1.5 tabular-nums text-muted-foreground">
+                        {ativasCount}
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger value="concluidas" className="text-xs h-7 px-3">
+                      Concluídas
+                      <span className="ml-1.5 tabular-nums text-muted-foreground">
+                        {concluidasCount}
+                      </span>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              );
+            })()}
+            {aba === "ativas" && (
+              <ManagementBand
+                tiles={managementTiles}
+                activeTile={activeTile}
+                onSelect={toggleManagementTile}
+                isLoading={isLoading || snapshotLoading || excecoesLoading}
+              />
+            )}
 
 
             {/*
