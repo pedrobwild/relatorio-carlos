@@ -619,6 +619,49 @@ export default function PainelObras() {
     [setSearchParams],
   );
 
+  // ── Deep-link do Drawer de detalhe da obra (?obra=<id>) ────────────────
+  // O Sheet abre quando `?obra=<id>` está presente. Ctrl/Meta+click nos
+  // atalhos "abrir obra" mantém navegação direta para `/obra/:id` (pulando o
+  // drawer). Esc/X fechando o Sheet limpa o parâmetro.
+  const obraParam = searchParams.get("obra");
+  const openDetailFor = useCallback(
+    (id: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("obra", id);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+  const closeDetail = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("obra");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+  // Handler compartilhado: abre drawer, mas honra Ctrl/Meta+click para
+  // navegação direta em nova aba / rota completa (padrão do sistema).
+  const handleOpenObra = useCallback(
+    (id: string, e?: { metaKey?: boolean; ctrlKey?: boolean; button?: number }) => {
+      if (e && (e.metaKey || e.ctrlKey || e.button === 1)) {
+        navigate(`/obra/${id}`);
+        return;
+      }
+      openDetailFor(id);
+    },
+    [navigate, openDetailFor],
+  );
+
+
+
 
 
   const toggleStatusFilter = (value: string) => {
