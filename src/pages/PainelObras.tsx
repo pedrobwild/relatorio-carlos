@@ -581,6 +581,8 @@ export default function PainelObras() {
   // ?excecao=<kind> aplicando o Set correspondente de project_id.
   const { counts: excecaoCounts, sets: excecaoSets, isLoading: excecoesLoading } =
     usePainelExcecoes();
+  const { byId: snapshotById, isLoading: snapshotLoading } =
+    usePortfolioSnapshot();
   const excecaoParam = searchParams.get("excecao");
   const activeExcecao: ExcecaoKind | null =
     excecaoParam === "nc" ||
@@ -589,6 +591,32 @@ export default function PainelObras() {
     excecaoParam === "atv"
       ? excecaoParam
       : null;
+
+  // Faixa gerencial ÚNICA — tile ativo controlado via ?tile=
+  const tileParam = searchParams.get("tile");
+  const activeTile: ManagementTileId | null =
+    tileParam === "atrasadas" ||
+    tileParam === "risco" ||
+    tileParam === "estouro_custo" ||
+    tileParam === "ncs_criticas" ||
+    tileParam === "sem_responsavel" ||
+    tileParam === "paralisadas"
+      ? tileParam
+      : null;
+
+  const toggleManagementTile = useCallback(
+    (id: ManagementTileId) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (next.get("tile") === id) next.delete("tile");
+        else next.set("tile", id);
+        // Tiles são mutuamente exclusivos com o filtro legado ?excecao=.
+        next.delete("excecao");
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
 
 
 
