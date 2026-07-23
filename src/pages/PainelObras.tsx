@@ -570,6 +570,22 @@ export default function PainelObras() {
   const { byProject: periodByProject, isLoading: periodLoading } =
     usePainelPeriodActivities(periodFrom, periodTo);
 
+  // Faixa de exceções cross-domain (NCs críticas, formalizações paradas,
+  // faturas vencidas, atividades sem responsável). Filtra a tabela via
+  // ?excecao=<kind> aplicando o Set correspondente de project_id.
+  const { counts: excecaoCounts, sets: excecaoSets, isLoading: excecoesLoading } =
+    usePainelExcecoes();
+  const excecaoParam = searchParams.get("excecao");
+  const activeExcecao: ExcecaoKind | null =
+    excecaoParam === "nc" ||
+    excecaoParam === "form" ||
+    excecaoParam === "pag" ||
+    excecaoParam === "atv"
+      ? excecaoParam
+      : null;
+
+
+
   const toggleStatusFilter = (value: string) => {
     setFilterStatuses((prev) => {
       const next = new Set(prev);
