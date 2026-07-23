@@ -76,6 +76,10 @@ export default function Qualidade() {
             <ClipboardCheck className="h-4 w-4" />
             Inspeções
           </TabsTrigger>
+          <TabsTrigger value="entrega" className="gap-2">
+            <KeySquare className="h-4 w-4" />
+            Entrega
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="templates" className="space-y-4">
@@ -85,7 +89,12 @@ export default function Qualidade() {
         <TabsContent value="inspecoes" className="space-y-4">
           <InspecoesTab />
         </TabsContent>
+
+        <TabsContent value="entrega" className="space-y-4">
+          <PunchListTab />
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }
