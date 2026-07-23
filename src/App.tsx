@@ -83,6 +83,7 @@ const GestaoAtividades = lazy(() => import("./pages/GestaoAtividades"));
 const PainelObras = lazy(() => import("./pages/PainelObras"));
 const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const Lookahead = lazy(() => import("./pages/gestao/Lookahead"));
+const AvancoFisico = lazy(() => import("./pages/gestao/AvancoFisico"));
 const PainelAlertasCronograma = lazy(
   () => import("./pages/PainelAlertasCronograma"),
 );
@@ -431,6 +432,16 @@ const AppContent = () => {
                   <StaffRoute>
                     <AppShell variant="portfolio">
                       {withSuspense(<Lookahead />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+              <Route
+                path="/gestao/avanco-fisico"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<AvancoFisico />)}
                     </AppShell>
                   </StaffRoute>
                 }

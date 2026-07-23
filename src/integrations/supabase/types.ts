@@ -6856,6 +6856,18 @@ export type Database = {
           payload: Json
         }[]
       }
+      get_project_s_curve_weekly: {
+        Args: { p_baseline_id?: string; p_project_id: string }
+        Returns: {
+          actual_pct: number
+          planned_pct: number
+          week_start: string
+        }[]
+      }
+      get_project_weighted_progress: {
+        Args: { p_baseline_id?: string; p_project_id: string }
+        Returns: number
+      }
       get_user_org_id: { Args: { p_user_id: string }; Returns: string }
       get_user_profile: {
         Args: { p_user_id: string }

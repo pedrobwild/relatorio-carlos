@@ -17,6 +17,8 @@ import {
   deleteMeasurement,
   getCurrentBaseline,
   getLatestMeasurementsForProject,
+  getSCurveWeekly,
+  getWeightedProgress,
   listBaselineActivities,
   listBaselines,
   listMeasurementsByActivity,
@@ -26,6 +28,7 @@ import {
   type CreateProgressMeasurementInput,
   type ScheduleBaseline,
   type ScheduleBaselineActivity,
+  type SCurveWeekPoint,
 } from "@/infra/repositories/activityProgress.repository";
 
 export type {
@@ -208,5 +211,33 @@ export function useDeleteBaseline(projectId: string) {
       });
       toast.success("Baseline removida.");
     },
+  });
+}
+
+// ────────── Curva S & progresso ponderado (RPCs) ──────────
+
+export type { SCurveWeekPoint };
+
+export function useSCurveWeekly(
+  projectId: string | undefined,
+  baselineId?: string | null,
+) {
+  return useQuery({
+    queryKey: queryKeys.avancoFisico.sCurve(projectId, baselineId),
+    queryFn: () => getSCurveWeekly(projectId!, baselineId),
+    enabled: !!projectId,
+    staleTime: 60_000,
+  });
+}
+
+export function useWeightedProgress(
+  projectId: string | undefined,
+  baselineId?: string | null,
+) {
+  return useQuery({
+    queryKey: queryKeys.avancoFisico.weightedProgress(projectId, baselineId),
+    queryFn: () => getWeightedProgress(projectId!, baselineId),
+    enabled: !!projectId,
+    staleTime: 60_000,
   });
 }

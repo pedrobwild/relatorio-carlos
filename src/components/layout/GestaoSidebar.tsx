@@ -19,6 +19,7 @@ import {
   ClipboardEdit,
   Inbox,
   CalendarRange,
+  LineChart,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +95,11 @@ export function GestaoSidebar() {
           label: "Lookahead",
           icon: CalendarRange,
           path: "/gestao/lookahead",
+        },
+        {
+          label: "Avanço físico",
+          icon: LineChart,
+          path: "/gestao/avanco-fisico",
         },
       ],
     },
