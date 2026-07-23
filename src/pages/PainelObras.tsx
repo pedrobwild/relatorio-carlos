@@ -56,6 +56,7 @@ import {
   type ManagementTile,
   type ManagementTileId,
 } from "@/components/gestao/painel/ManagementBand";
+import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
 import {
   usePainelExcecoes,
   type ExcecaoKind,
