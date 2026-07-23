@@ -7315,6 +7315,7 @@ export type Database = {
         Args: never
         Returns: {
           atividades_proximos_14d_sem_responsavel: number
+          compras_criticas: number
           comprometido: number
           eac: number
           ncs_abertas: number
