@@ -93,7 +93,9 @@ export function useProjectDailyLog(projectId: string | null, logDate: string) {
 
       const { data: log, error } = await supabase
         .from("project_daily_logs")
-        .select("id, project_id, log_date, notes, updated_at")
+        .select(
+          "id, project_id, log_date, notes, updated_at, weather_morning, weather_afternoon, temperature_c",
+        )
         .eq("project_id", projectId)
         .eq("log_date", logDate)
         .maybeSingle();
@@ -127,6 +129,15 @@ export function useProjectDailyLog(projectId: string | null, logDate: string) {
         log_date: log.log_date,
         notes: log.notes,
         updated_at: log.updated_at,
+        weather_morning:
+          (log as unknown as { weather_morning: WeatherCondition })
+            .weather_morning ?? null,
+        weather_afternoon:
+          (log as unknown as { weather_afternoon: WeatherCondition })
+            .weather_afternoon ?? null,
+        temperature_c:
+          (log as unknown as { temperature_c: number | null })
+            .temperature_c ?? null,
         services: (servicesRes.data ?? []) as DailyLogService[],
         workers: (workersRes.data ?? []) as DailyLogWorker[],
       };
@@ -140,6 +151,9 @@ export interface DailyLogSavePayload {
   project_id: string;
   log_date: string;
   notes: string | null;
+  weather_morning?: WeatherCondition;
+  weather_afternoon?: WeatherCondition;
+  temperature_c?: number | null;
   services: DailyLogService[];
   workers: DailyLogWorker[];
 }
