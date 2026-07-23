@@ -4,8 +4,9 @@ import { useNavigate } from "react-router-dom";
  *
  * Aberto a partir do Painel de Obras (?obra=<id>). Consolida KPIs do snapshot
  * batch (avanço, custos, NCs, punch, lookahead) sem carregamentos adicionais.
- * A Curva S ainda não está implementada — mostramos um EmptyState com CTA
- * para "criar baseline" (redireciona para o cronograma da obra).
+ * Mini Curva S (planejado × realizado) reutiliza a RPC da Onda A via
+ * useSCurveWeekly, com fetch habilitado apenas quando o Sheet está aberto.
+ * Sem baseline/medições, renderiza EmptyState com CTA para /gestao/avanco-fisico.
  *
  * Regras de UX:
  *  - Largura desktop ~ 480–560px; mobile full-screen (`w-full`).
