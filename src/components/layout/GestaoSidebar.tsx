@@ -22,6 +22,7 @@ import {
   LineChart,
   Coins,
   BookOpenCheck,
+  ShieldCheck,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
