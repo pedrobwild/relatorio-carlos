@@ -63,7 +63,26 @@ function formatPct(value: number | null | undefined): string {
   return `${Number(value).toFixed(1)}%`;
 }
 
-function toCsv(rows: CostSummaryRow[]): string {
+interface EnrichedRow extends CostSummaryRow {
+  eac: number;
+  variacao: number;
+  variacao_pct: number | null;
+}
+
+function computeEac(row: CostSummaryRow): {
+  eac: number;
+  variacao: number;
+  variacao_pct: number | null;
+} {
+  // EAC = realizado + comprometido + max(0, orcado - realizado - comprometido)
+  const remainingBudget = Math.max(row.orcado - row.realizado - row.comprometido, 0);
+  const eac = row.realizado + row.comprometido + remainingBudget;
+  const variacao = eac - row.orcado;
+  const variacao_pct = row.orcado > 0 ? (variacao / row.orcado) * 100 : null;
+  return { eac, variacao, variacao_pct };
+}
+
+function toCsv(rows: EnrichedRow[]): string {
   const header = [
     "Categoria",
     "Orcado",
@@ -71,6 +90,9 @@ function toCsv(rows: CostSummaryRow[]): string {
     "Realizado",
     "Saldo",
     "Consumido (%)",
+    "EAC",
+    "Variacao",
+    "Variacao (%)",
     "Compras",
   ];
   const body = rows.map((r) => [
@@ -80,6 +102,9 @@ function toCsv(rows: CostSummaryRow[]): string {
     r.realizado.toFixed(2),
     r.saldo.toFixed(2),
     r.consumido_pct === null ? "" : r.consumido_pct.toFixed(2),
+    r.eac.toFixed(2),
+    r.variacao.toFixed(2),
+    r.variacao_pct === null ? "" : r.variacao_pct.toFixed(2),
     String(r.purchases_count),
   ]);
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
