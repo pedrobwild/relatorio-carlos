@@ -137,6 +137,7 @@ export default function Custos() {
 
   const summaryQ = useCostSummary(selectedProjectId);
   const totalsQ = useCostTotals(selectedProjectId);
+  const sCurveQ = useCostSCurveWeekly(selectedProjectId);
 
   const setSelectedProject = (id: string) => {
     const next = new URLSearchParams(searchParams);
@@ -144,8 +145,23 @@ export default function Custos() {
     setSearchParams(next, { replace: true });
   };
 
-  const rows = summaryQ.data ?? [];
+  const rows: EnrichedRow[] = useMemo(
+    () =>
+      (summaryQ.data ?? []).map((r) => ({ ...r, ...computeEac(r) })),
+    [summaryQ.data],
+  );
   const totals = totalsQ.data;
+
+  const chartData = useMemo(
+    () =>
+      (sCurveQ.data ?? []).map((p) => ({
+        week: p.week_start.slice(5), // MM-DD
+        planejado: Math.round(p.planned_cum),
+        realizado: Math.round(p.realized_cum),
+        comprometido: Math.round(p.committed_projected_cum),
+      })),
+    [sCurveQ.data],
+  );
 
   const overBudgetCount = useMemo(
     () =>
