@@ -66,16 +66,15 @@ import { useStaffUsers } from "@/hooks/useStaffUsers";
 import {
   usePunchItems,
   useCreatePunchItem,
-  useUpdatePunchItem,
   useResolvePunchItem,
   useVerifyPunchItem,
   useReopenPunchItem,
   useDeletePunchItem,
   type PunchItem,
 } from "@/hooks/usePunchItems";
-import { CheckCircle2, RotateCcw, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
 
 
 /* ============================================================================
