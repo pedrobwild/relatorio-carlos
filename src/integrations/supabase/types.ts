@@ -14,6 +14,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_progress_measurements: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          measured_by: string | null
+          measured_on: string
+          notes: string | null
+          progress_pct: number
+          project_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          measured_by?: string | null
+          measured_on?: string
+          notes?: string | null
+          progress_pct: number
+          project_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          measured_by?: string | null
+          measured_on?: string
+          notes?: string | null
+          progress_pct?: number
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_progress_measurements_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "project_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_progress_measurements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "activity_progress_measurements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       anexos: {
         Row: {
           created_at: string
@@ -5645,6 +5700,101 @@ export type Database = {
             columns: ["purchase_id"]
             isOneToOne: false
             referencedRelation: "project_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_baseline_activities: {
+        Row: {
+          activity_id: string | null
+          baseline_id: string
+          created_at: string
+          description: string
+          etapa: string | null
+          id: string
+          parent_activity_id: string | null
+          planned_end: string
+          planned_start: string
+          sort_order: number
+          weight: number
+        }
+        Insert: {
+          activity_id?: string | null
+          baseline_id: string
+          created_at?: string
+          description: string
+          etapa?: string | null
+          id?: string
+          parent_activity_id?: string | null
+          planned_end: string
+          planned_start: string
+          sort_order?: number
+          weight?: number
+        }
+        Update: {
+          activity_id?: string | null
+          baseline_id?: string
+          created_at?: string
+          description?: string
+          etapa?: string | null
+          id?: string
+          parent_activity_id?: string | null
+          planned_end?: string
+          planned_start?: string
+          sort_order?: number
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_baseline_activities_baseline_id_fkey"
+            columns: ["baseline_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_baselines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_baselines: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_current: boolean
+          name: string
+          notes: string | null
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          name: string
+          notes?: string | null
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          name?: string
+          notes?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_baselines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "schedule_baselines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
