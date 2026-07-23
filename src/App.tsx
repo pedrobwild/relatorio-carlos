@@ -462,6 +462,16 @@ const AppContent = () => {
                 }
               />
               <Route
+                path="/gestao/qualidade"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Qualidade />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+              <Route
                 path="/gestao/diario"
                 element={
                   <StaffRoute>
