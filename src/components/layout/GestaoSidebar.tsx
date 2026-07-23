@@ -96,6 +96,11 @@ export function GestaoSidebar() {
           icon: CalendarRange,
           path: "/gestao/lookahead",
         },
+        {
+          label: "Avanço físico",
+          icon: LineChart,
+          path: "/gestao/avanco-fisico",
+        },
       ],
     },
     {
