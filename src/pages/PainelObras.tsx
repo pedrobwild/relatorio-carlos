@@ -49,6 +49,12 @@ import {
 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, MetricCard, MetricRail, SectionCard } from "@/components/ui-premium";
+import { ExceptionsBar } from "@/components/gestao/painel/ExceptionsBar";
+import { SavedViewsBar } from "@/components/gestao/painel/SavedViewsBar";
+import {
+  usePainelExcecoes,
+  type ExcecaoKind,
+} from "@/hooks/usePainelExcecoes";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
