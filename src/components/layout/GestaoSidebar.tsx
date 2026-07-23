@@ -101,6 +101,11 @@ export function GestaoSidebar() {
           icon: LineChart,
           path: "/gestao/avanco-fisico",
         },
+        {
+          label: "Custos",
+          icon: Coins,
+          path: "/gestao/custos",
+        },
       ],
     },
     {
