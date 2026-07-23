@@ -2137,7 +2137,7 @@ interface ObraRowProps {
   expanded: boolean;
   onToggleExpanded: () => void;
   onUpdate: (patch: PainelObraPatch) => void;
-  onOpen: () => void;
+  onOpen: (e?: { metaKey?: boolean; ctrlKey?: boolean; button?: number }) => void;
   onDeleteRequest: () => void;
   /** Abre o popup com a feature "Dados do cliente" para esta obra. */
   onOpenDados: () => void;
