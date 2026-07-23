@@ -189,7 +189,7 @@ export default function Suprimentos() {
                       {r.needed_by && (
                         <>
                           {" · Necessária em "}
-                          {format(parseLocal(r.needed_by), "dd/MM/yyyy", {
+                          {format(parseLocalDate(r.needed_by), "dd/MM/yyyy", {
                             locale: ptBR,
                           })}
                         </>
