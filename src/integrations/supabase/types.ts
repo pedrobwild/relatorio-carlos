@@ -1833,6 +1833,57 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_weekly_reports: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          generated_at: string
+          generated_by: string | null
+          id: string
+          payload: Json
+          project_id: string
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          payload?: Json
+          project_id: string
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          payload?: Json
+          project_id?: string
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_weekly_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "internal_weekly_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null

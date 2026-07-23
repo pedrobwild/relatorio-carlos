@@ -120,6 +120,11 @@ export function GestaoSidebar() {
           icon: ShieldCheck,
           path: "/gestao/qualidade",
         },
+        {
+          label: "Relatórios internos",
+          icon: BookOpenCheck,
+          path: "/gestao/relatorios-internos",
+        },
       ],
     },
     {
