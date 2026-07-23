@@ -17,6 +17,7 @@ import {
   Trash2,
   Building2,
   ClipboardEdit,
+  Inbox,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
