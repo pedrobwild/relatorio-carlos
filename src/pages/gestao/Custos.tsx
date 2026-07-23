@@ -9,7 +9,7 @@
  * (SECURITY DEFINER, guard is_staff + has_project_access). Nunca referenciar em
  * superfícies do cliente.
  */
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AlertTriangle, Coins, Download, Wallet } from "lucide-react";
 
