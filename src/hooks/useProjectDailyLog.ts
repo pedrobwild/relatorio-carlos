@@ -56,6 +56,8 @@ export type WeatherCondition =
   | "Impraticável"
   | null;
 
+export type OccurrenceSeverity = "Baixa" | "Média" | "Alta" | null;
+
 export interface ProjectDailyLog {
   id: string | null; // null quando ainda não existe registro para a data
   project_id: string;
@@ -64,6 +66,7 @@ export interface ProjectDailyLog {
   weather_morning: WeatherCondition;
   weather_afternoon: WeatherCondition;
   temperature_c: number | null;
+  occurrence_severity: OccurrenceSeverity;
   services: DailyLogService[];
   workers: DailyLogWorker[];
   updated_at: string | null;
@@ -77,6 +80,7 @@ const emptyLog = (projectId: string, logDate: string): ProjectDailyLog => ({
   weather_morning: null,
   weather_afternoon: null,
   temperature_c: null,
+  occurrence_severity: null,
   services: [],
   workers: [],
   updated_at: null,
