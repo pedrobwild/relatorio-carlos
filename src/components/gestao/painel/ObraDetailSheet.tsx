@@ -459,6 +459,105 @@ function ShortcutBtn({
   );
 }
 
+// ── Criticidade ─────────────────────────────────────────────────────────────
+// Detalhamento do score de severidade (pesos e valores). Usa CriticidadeBadge
+// no topo para consistência com a tabela. Divergência com status manual gera
+// aviso explícito (não esconde o cálculo, apenas alerta).
+const COMPONENT_ROWS: {
+  key: keyof SeverityBreakdown["components"];
+  label: string;
+  max: number;
+}[] = [
+  { key: "prazo", label: "Prazo (atraso)", max: 35 },
+  { key: "financeiro", label: "Financeiro (EAC)", max: 30 },
+  { key: "pendencias", label: "Pendências vencidas", max: 15 },
+  { key: "compras", label: "Compras críticas", max: 10 },
+  { key: "desatualizacao", label: "Desatualização", max: 10 },
+];
+
+function SeveritySection({
+  severity,
+  manualStatus,
+}: {
+  severity: SeverityBreakdown;
+  manualStatus?: string | null;
+}) {
+  const divergent =
+    (manualStatus === "Em dia" && severity.level !== "saudavel") ||
+    (manualStatus === "Atrasado" && severity.level === "saudavel");
+
+  return (
+    <section aria-label="Criticidade">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Criticidade
+        </h3>
+        <CriticidadeBadge breakdown={severity} manualStatus={manualStatus} />
+      </div>
+      <div className="rounded-lg border border-border-subtle bg-card overflow-hidden">
+        <ul className="divide-y divide-border-subtle">
+          {COMPONENT_ROWS.map((row) => {
+            const value = severity.components[row.key];
+            const pct = Math.min(100, Math.max(0, (value / row.max) * 100));
+            return (
+              <li
+                key={row.key}
+                className="px-3 py-2 flex items-center gap-3"
+              >
+                <span className="text-[12px] text-foreground/80 flex-1 truncate">
+                  {row.label}
+                </span>
+                <div
+                  className="h-1 w-16 rounded-full bg-muted overflow-hidden shrink-0"
+                  aria-hidden
+                >
+                  <div
+                    className={cn(
+                      "h-full transition-all",
+                      pct >= 66
+                        ? "bg-destructive"
+                        : pct >= 33
+                          ? "bg-warning"
+                          : "bg-primary",
+                    )}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <span className="text-[12px] tabular-nums text-muted-foreground w-14 text-right shrink-0">
+                  {value.toFixed(1)}
+                  <span className="opacity-60"> / {row.max}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      {severity.criticalReasons.length > 0 && (
+        <div className="mt-2 rounded-md border border-destructive/25 bg-destructive/5 px-3 py-2">
+          <p className="text-[11px] font-semibold text-destructive mb-1">
+            Gatilhos críticos
+          </p>
+          <ul className="text-[12px] text-destructive space-y-0.5 list-disc list-inside">
+            {severity.criticalReasons.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {divergent && (
+        <div className="mt-2 rounded-md border border-warning/25 bg-warning/5 px-3 py-2 text-[12px] text-warning inline-flex items-start gap-1.5">
+          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden />
+          <span>
+            Status manual <strong>"{manualStatus}"</strong> diverge da
+            classificação calculada (<strong>{severity.level}</strong>).
+          </span>
+        </div>
+      )}
+    </section>
+  );
+}
+
+
 // ── Mini Curva S ────────────────────────────────────────────────────────────
 // Reutiliza useSCurveWeekly (RPC get_project_s_curve_weekly) da Onda A.
 // Fetch só habilitado com o Sheet aberto para não sobrecarregar o painel.
