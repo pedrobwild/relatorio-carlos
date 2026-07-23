@@ -24,3 +24,12 @@ export function useCostTotals(projectId: string | undefined) {
     staleTime: STALE,
   });
 }
+
+export function useCostSCurveWeekly(projectId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.custos.sCurve(projectId),
+    queryFn: () => costsRepo.getSCurveWeekly(projectId as string),
+    enabled: Boolean(projectId),
+    staleTime: STALE,
+  });
+}
