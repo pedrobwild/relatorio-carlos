@@ -49,11 +49,21 @@ export interface DailyLogWorker {
   position: number;
 }
 
+export type WeatherCondition =
+  | "Ensolarado"
+  | "Nublado"
+  | "Chuva"
+  | "Impraticável"
+  | null;
+
 export interface ProjectDailyLog {
-  id: string | null; // null quando ainda n\u00e3o existe registro para a data
+  id: string | null; // null quando ainda não existe registro para a data
   project_id: string;
   log_date: string;
   notes: string | null;
+  weather_morning: WeatherCondition;
+  weather_afternoon: WeatherCondition;
+  temperature_c: number | null;
   services: DailyLogService[];
   workers: DailyLogWorker[];
   updated_at: string | null;
@@ -64,6 +74,9 @@ const emptyLog = (projectId: string, logDate: string): ProjectDailyLog => ({
   project_id: projectId,
   log_date: logDate,
   notes: null,
+  weather_morning: null,
+  weather_afternoon: null,
+  temperature_c: null,
   services: [],
   workers: [],
   updated_at: null,
