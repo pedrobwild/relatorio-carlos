@@ -20,6 +20,7 @@ import {
   Inbox,
   CalendarRange,
   LineChart,
+  Coins,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
