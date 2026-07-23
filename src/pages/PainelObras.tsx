@@ -60,6 +60,7 @@ import {
 } from "@/components/gestao/painel/ManagementBand";
 import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
 import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   calculateObraSeverity,
   type SeverityBreakdown,
