@@ -859,6 +859,11 @@ export default function PainelObras() {
       const allowed = excecaoSets[activeExcecao];
       rows = rows.filter((o) => allowed.has(o.id));
     }
+    // Filtro por tile gerencial (?tile=): restringe ao Set correspondente.
+    if (tileFilterSet) {
+      const allowed = tileFilterSet;
+      rows = rows.filter((o) => allowed.has(o.id));
+    }
     return rows;
   }, [
     obras,
@@ -875,6 +880,7 @@ export default function PainelObras() {
     sortDir,
     activeExcecao,
     excecaoSets,
+    tileFilterSet,
   ]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
