@@ -112,6 +112,10 @@ export default function MinhaSemana() {
         }
       />
 
+      <div className="mt-4 mb-4">
+        <DiariosHojeCard />
+      </div>
+
       <div className="mt-4">
         {isLoading ? (
           <LoadingSkeleton />
