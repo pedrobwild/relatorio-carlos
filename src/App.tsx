@@ -89,6 +89,9 @@ const Diario = lazy(() => import("./pages/gestao/Diario"));
 const DiarioDia = lazy(() => import("./pages/gestao/DiarioDia"));
 const DiarioDiaImprimir = lazy(() => import("./pages/gestao/DiarioDiaImprimir"));
 const Qualidade = lazy(() => import("./pages/gestao/Qualidade"));
+const Suprimentos = lazy(() => import("./pages/gestao/Suprimentos"));
+const SuprimentosDetalhe = lazy(() => import("./pages/gestao/SuprimentosDetalhe"));
+
 const PainelAlertasCronograma = lazy(
   () => import("./pages/PainelAlertasCronograma"),
 );
