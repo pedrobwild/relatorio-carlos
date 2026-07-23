@@ -426,6 +426,16 @@ const AppContent = () => {
                 }
               />
               <Route
+                path="/gestao/lookahead"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Lookahead />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+              <Route
                 path="/gestao/painel-obras"
                 element={
                   <StaffRoute>
