@@ -2613,6 +2613,101 @@ export type Database = {
           },
         ]
       }
+      material_requisition_items: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          descricao: string
+          id: string
+          observacao: string | null
+          quantidade: number
+          requisition_id: string
+          unidade: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          descricao: string
+          id?: string
+          observacao?: string | null
+          quantidade?: number
+          requisition_id: string
+          unidade?: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          descricao?: string
+          id?: string
+          observacao?: string | null
+          quantidade?: number
+          requisition_id?: string
+          unidade?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_requisition_items_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "material_requisitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_requisitions: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          needed_by: string | null
+          notes: string | null
+          project_id: string
+          requested_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          needed_by?: string | null
+          notes?: string | null
+          project_id: string
+          requested_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          needed_by?: string | null
+          notes?: string | null
+          project_id?: string
+          requested_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_requisitions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "material_requisitions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nc_history: {
         Row: {
           action: string
@@ -5166,6 +5261,7 @@ export type Database = {
           purchase_type: string | null
           quantity: number
           required_by_date: string
+          requisition_id: string | null
           shipping_cost: number | null
           start_date: string | null
           status: string
@@ -5212,6 +5308,7 @@ export type Database = {
           purchase_type?: string | null
           quantity?: number
           required_by_date: string
+          requisition_id?: string | null
           shipping_cost?: number | null
           start_date?: string | null
           status?: string
@@ -5258,6 +5355,7 @@ export type Database = {
           purchase_type?: string | null
           quantity?: number
           required_by_date?: string
+          requisition_id?: string | null
           shipping_cost?: number | null
           start_date?: string | null
           status?: string
@@ -5302,6 +5400,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_purchases_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "material_requisitions"
             referencedColumns: ["id"]
           },
         ]
@@ -5899,6 +6004,69 @@ export type Database = {
             columns: ["purchase_id"]
             isOneToOne: false
             referencedRelation: "project_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requisition_quotes: {
+        Row: {
+          arquivo_path: string | null
+          created_at: string
+          created_by: string
+          frete: number | null
+          id: string
+          is_winner: boolean
+          observacao: string | null
+          prazo_entrega_dias: number | null
+          requisition_id: string
+          supplier_id: string | null
+          updated_at: string
+          validade: string | null
+          valor_total: number | null
+        }
+        Insert: {
+          arquivo_path?: string | null
+          created_at?: string
+          created_by: string
+          frete?: number | null
+          id?: string
+          is_winner?: boolean
+          observacao?: string | null
+          prazo_entrega_dias?: number | null
+          requisition_id: string
+          supplier_id?: string | null
+          updated_at?: string
+          validade?: string | null
+          valor_total?: number | null
+        }
+        Update: {
+          arquivo_path?: string | null
+          created_at?: string
+          created_by?: string
+          frete?: number | null
+          id?: string
+          is_winner?: boolean
+          observacao?: string | null
+          prazo_entrega_dias?: number | null
+          requisition_id?: string
+          supplier_id?: string | null
+          updated_at?: string
+          validade?: string | null
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_quotes_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "material_requisitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisition_quotes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
             referencedColumns: ["id"]
           },
         ]
