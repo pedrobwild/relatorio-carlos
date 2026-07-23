@@ -92,6 +92,7 @@ export function ObraDetailSheet({
   onOpenChange,
 }: ObraDetailSheetProps) {
   const projectId = obra?.id ?? null;
+  const navigate = useNavigate();
 
   // Lookahead 14 dias, restrito à obra ativa. Só busca quando o Sheet abre.
   const lookahead = useLookahead(14, {
