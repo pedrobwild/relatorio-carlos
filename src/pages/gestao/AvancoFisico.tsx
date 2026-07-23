@@ -54,10 +54,10 @@ import {
   useWeightedProgress,
 } from "@/hooks/useActivityProgress";
 import { CriarBaselineDialog } from "@/components/gestao/avanco/CriarBaselineDialog";
-import { parseLocal } from "@/lib/businessDays";
+import { parseLocalDate } from "@/lib/dates";
 
 function fmtWeek(iso: string): string {
-  const d = parseLocal(iso);
+  const d = parseLocalDate(iso);
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
@@ -138,7 +138,7 @@ export default function AvancoFisico() {
     <PageContainer>
       <PageHeader
         title="Avanço físico"
-        subtitle="Curva S semanal por obra, baselines e histórico de medições."
+        description="Curva S semanal por obra, baselines e histórico de medições."
         icon={<LineIcon className="h-5 w-5" />}
       />
 
