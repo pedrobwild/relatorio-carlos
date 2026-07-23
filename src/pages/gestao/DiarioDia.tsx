@@ -62,7 +62,7 @@ import {
   DailyLogPhoto,
   useDailyLogPhotos,
 } from "@/hooks/useDailyLogPhotos";
-import { useDailyLogPhotos, DailyLogPhoto } from "@/hooks/useDailyLogPhotos";
+
 import { cn } from "@/lib/utils";
 
 const WEATHER_OPTIONS: {
