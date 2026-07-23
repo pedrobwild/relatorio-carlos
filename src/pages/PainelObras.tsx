@@ -2242,14 +2242,17 @@ export default function PainelObras() {
 // ----- row component -----
 // Total de colunas da tabela do Painel de Obras. Mantenha em sincronia com o
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
-// 1) Cliente / Obra · 2) Dados · 3) Status · 4) Etapa · 5) Progresso ·
-// 6) Avanço · 7) Custo · 8) Início Of. · 9) Entrega Of. · 10) Início Real ·
-// 11) Entrega Real · 12) Relacionamento · 13) Responsável · 14) Ações
-const PAINEL_COLUMN_COUNT = 14;
+// 1) Cliente / Obra · 2) Criticidade · 3) Dados · 4) Status · 5) Etapa ·
+// 6) Progresso · 7) Avanço · 8) Custo · 9) Início Of. · 10) Entrega Of. ·
+// 11) Início Real · 12) Entrega Real · 13) Relacionamento · 14) Responsável ·
+// 15) Ações
+const PAINEL_COLUMN_COUNT = 15;
 
 interface ObraRowProps {
   obra: PainelObra;
   snapshot?: import("@/hooks/usePortfolioSnapshot").PortfolioSnapshotRow;
+  /** Breakdown de severidade calculada (score + gatilhos). */
+  severity?: SeverityBreakdown;
   staffUsers: { id: string; nome: string }[];
   expanded: boolean;
   onToggleExpanded: () => void;
