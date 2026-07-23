@@ -481,6 +481,14 @@ const AppContent = () => {
                 }
               />
               <Route
+                path="/gestao/diario/:projectId/:date/imprimir"
+                element={
+                  <StaffRoute>
+                    {withSuspense(<DiarioDiaImprimir />)}
+                  </StaffRoute>
+                }
+              />
+              <Route
                 path="/gestao/painel-obras"
                 element={
                   <StaffRoute>
