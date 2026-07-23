@@ -29,7 +29,9 @@ export type InboxKind =
   | "ticket"
   | "formalizacao"
   | "alerta"
-  | "pendencia";
+  | "pendencia"
+  | "entrega";
+
 
 export type InboxBucket = "atrasado" | "hoje" | "semana" | "proximas";
 
