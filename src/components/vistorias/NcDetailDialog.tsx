@@ -466,6 +466,25 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
               >
                 {statusLabels[nc.status]}
               </Badge>
+              {nc.status === "closed" && (
+                <Badge
+                  variant={nc.post_close_verified_at ? "default" : "outline"}
+                  className="gap-1"
+                  title={
+                    nc.post_close_verified_at
+                      ? `Verificada em campo em ${format(
+                          new Date(nc.post_close_verified_at),
+                          "dd/MM/yyyy",
+                          { locale: ptBR },
+                        )}`
+                      : "Ainda não passou por verificação técnica em campo"
+                  }
+                >
+                  <ShieldCheck className="h-3 w-3" />
+                  {nc.post_close_verified_at ? "Verificada" : "Executada"}
+                </Badge>
+              )}
+
               {nc.reopen_count > 0 && (
                 <Badge
                   variant={nc.reopen_count >= 3 ? "destructive" : "outline"}
