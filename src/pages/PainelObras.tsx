@@ -2612,6 +2612,18 @@ function ObraRow({
           </div>
         </TableCell>
 
+        {/* Criticidade — score calculado (severidade 0-100) + tooltip com breakdown. */}
+        <TableCell className="w-[92px] sm:w-[104px] align-middle">
+          {severity ? (
+            <CriticidadeBadge
+              breakdown={severity}
+              manualStatus={obra.status}
+            />
+          ) : (
+            <span className="text-muted-foreground text-xs">—</span>
+          )}
+        </TableCell>
+
         {/* Dados do cliente — abre popup com a feature completa (Contratante / Imóvel / Info). */}
         <TableCell className="w-[60px] text-center align-middle hidden lg:table-cell">
           <Tooltip>
