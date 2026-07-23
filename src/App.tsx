@@ -473,7 +473,9 @@ const AppContent = () => {
                     </AppShell>
                   </StaffRoute>
                 }
+              />
               <Route
+
                 path="/gestao/suprimentos"
                 element={
                   <StaffRoute>
