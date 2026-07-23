@@ -4264,8 +4264,11 @@ export type Database = {
           log_date: string
           notes: string | null
           project_id: string
+          temperature_c: number | null
           updated_at: string
           updated_by: string | null
+          weather_afternoon: string | null
+          weather_morning: string | null
         }
         Insert: {
           created_at?: string
@@ -4274,8 +4277,11 @@ export type Database = {
           log_date?: string
           notes?: string | null
           project_id: string
+          temperature_c?: number | null
           updated_at?: string
           updated_by?: string | null
+          weather_afternoon?: string | null
+          weather_morning?: string | null
         }
         Update: {
           created_at?: string
@@ -4284,8 +4290,11 @@ export type Database = {
           log_date?: string
           notes?: string | null
           project_id?: string
+          temperature_c?: number | null
           updated_at?: string
           updated_by?: string | null
+          weather_afternoon?: string | null
+          weather_morning?: string | null
         }
         Relationships: [
           {

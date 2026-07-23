@@ -49,11 +49,21 @@ export interface DailyLogWorker {
   position: number;
 }
 
+export type WeatherCondition =
+  | "Ensolarado"
+  | "Nublado"
+  | "Chuva"
+  | "Impraticável"
+  | null;
+
 export interface ProjectDailyLog {
-  id: string | null; // null quando ainda n\u00e3o existe registro para a data
+  id: string | null; // null quando ainda não existe registro para a data
   project_id: string;
   log_date: string;
   notes: string | null;
+  weather_morning: WeatherCondition;
+  weather_afternoon: WeatherCondition;
+  temperature_c: number | null;
   services: DailyLogService[];
   workers: DailyLogWorker[];
   updated_at: string | null;
@@ -64,6 +74,9 @@ const emptyLog = (projectId: string, logDate: string): ProjectDailyLog => ({
   project_id: projectId,
   log_date: logDate,
   notes: null,
+  weather_morning: null,
+  weather_afternoon: null,
+  temperature_c: null,
   services: [],
   workers: [],
   updated_at: null,
@@ -80,7 +93,9 @@ export function useProjectDailyLog(projectId: string | null, logDate: string) {
 
       const { data: log, error } = await supabase
         .from("project_daily_logs")
-        .select("id, project_id, log_date, notes, updated_at")
+        .select(
+          "id, project_id, log_date, notes, updated_at, weather_morning, weather_afternoon, temperature_c",
+        )
         .eq("project_id", projectId)
         .eq("log_date", logDate)
         .maybeSingle();
@@ -114,6 +129,15 @@ export function useProjectDailyLog(projectId: string | null, logDate: string) {
         log_date: log.log_date,
         notes: log.notes,
         updated_at: log.updated_at,
+        weather_morning:
+          (log as unknown as { weather_morning: WeatherCondition })
+            .weather_morning ?? null,
+        weather_afternoon:
+          (log as unknown as { weather_afternoon: WeatherCondition })
+            .weather_afternoon ?? null,
+        temperature_c:
+          (log as unknown as { temperature_c: number | null })
+            .temperature_c ?? null,
         services: (servicesRes.data ?? []) as DailyLogService[],
         workers: (workersRes.data ?? []) as DailyLogWorker[],
       };
@@ -127,6 +151,9 @@ export interface DailyLogSavePayload {
   project_id: string;
   log_date: string;
   notes: string | null;
+  weather_morning?: WeatherCondition;
+  weather_afternoon?: WeatherCondition;
+  temperature_c?: number | null;
   services: DailyLogService[];
   workers: DailyLogWorker[];
 }
@@ -148,9 +175,18 @@ export function useSaveProjectDailyLog() {
             log_date: payload.log_date,
             notes: payload.notes,
             updated_by: uid,
-            // created_by s\u00f3 na primeira vez \u2014 upsert lida:
+            ...(payload.weather_morning !== undefined
+              ? { weather_morning: payload.weather_morning }
+              : {}),
+            ...(payload.weather_afternoon !== undefined
+              ? { weather_afternoon: payload.weather_afternoon }
+              : {}),
+            ...(payload.temperature_c !== undefined
+              ? { temperature_c: payload.temperature_c }
+              : {}),
+            // created_by só na primeira vez — upsert lida:
             ...(uid ? { created_by: uid } : {}),
-          },
+          } as never,
           { onConflict: "project_id,log_date" },
         )
         .select("id")
