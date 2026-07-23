@@ -2683,6 +2683,65 @@ function ObraRow({
           )}
         </TableCell>
 
+        {/* Avanço físico (snapshot batch) — barra + % ponderado das atividades */}
+        <TableCell className="text-right hidden lg:table-cell">
+          {snapshot ? (
+            <div className="flex items-center justify-end gap-2">
+              <div className="h-1.5 w-14 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full transition-all",
+                    snapshot.weighted_progress_pct >= 100
+                      ? "bg-success"
+                      : "bg-primary",
+                  )}
+                  style={{
+                    width: `${Math.min(100, Math.max(0, snapshot.weighted_progress_pct))}%`,
+                  }}
+                />
+              </div>
+              <span
+                className={cn(
+                  "text-xs tabular-nums w-9 text-right",
+                  snapshot.weighted_progress_pct >= 100 &&
+                    "text-success font-semibold",
+                )}
+              >
+                {Math.round(snapshot.weighted_progress_pct)}%
+              </span>
+            </div>
+          ) : (
+            <span className="text-muted-foreground text-xs">—</span>
+          )}
+        </TableCell>
+
+        {/* Custo — variação % (EAC vs orçado). Semântica: >5% destructive,
+            <-5% success, entre 0..5 warning, negativo pequeno neutro. */}
+        <TableCell className="text-right hidden xl:table-cell">
+          {snapshot?.variacao_pct == null ? (
+            <span className="text-muted-foreground text-xs">—</span>
+          ) : (
+            (() => {
+              const v = snapshot.variacao_pct;
+              const tone =
+                v >= 5
+                  ? "text-destructive font-semibold"
+                  : v <= -5
+                    ? "text-success font-semibold"
+                    : v > 0
+                      ? "text-warning"
+                      : "text-foreground";
+              const sign = v > 0 ? "+" : "";
+              return (
+                <span className={cn("text-xs tabular-nums", tone)}>
+                  {sign}
+                  {v.toFixed(1)}%
+                </span>
+              );
+            })()
+          )}
+        </TableCell>
+
         {/* Datas */}
         <TableCell className="hidden xl:table-cell">
           <DateCell
