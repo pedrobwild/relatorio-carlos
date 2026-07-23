@@ -222,7 +222,8 @@ export function ObraDetailSheet({
                     description="Registre uma baseline no cronograma para acompanhar avanço planejado × real."
                     action={{
                       label: "Criar baseline",
-                      href: `/obra/${obra.id}/cronograma?baseline=1`,
+                      onClick: () =>
+                        navigate(`/obra/${obra.id}/cronograma?baseline=1`),
                       icon: Plus,
                     }}
                   />
