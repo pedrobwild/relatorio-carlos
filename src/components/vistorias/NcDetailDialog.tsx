@@ -892,7 +892,42 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
           </div>
         )}
 
+        {/* Verificação técnica pós-fechamento (Onda D2 — aditiva) */}
+        {nc.status === "closed" && !nc.post_close_verified_at && canVerify && (
+          <>
+            <Separator />
+            <div className="rounded-md border border-dashed bg-muted/30 p-3 flex items-start gap-3">
+              <ShieldCheck className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <div className="flex-1 space-y-2">
+                <p className="text-sm">
+                  A tratativa foi encerrada. Se você inspecionou em campo e
+                  confirmou a execução, registre a verificação técnica.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={verifyPostClose.isPending}
+                  onClick={() => verifyPostClose.mutate({ nc })}
+                >
+                  <ShieldCheck className="h-4 w-4 mr-1.5" />
+                  Marcar como verificado em campo
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+        {nc.status === "closed" && nc.post_close_verified_at && (
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Verificado em campo em{" "}
+            {format(new Date(nc.post_close_verified_at), "dd/MM/yyyy 'às' HH:mm", {
+              locale: ptBR,
+            })}
+          </div>
+        )}
+
         {/* History */}
+
         {history.length > 0 && (
           <>
             <Separator />
