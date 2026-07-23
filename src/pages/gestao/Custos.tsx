@@ -526,6 +526,25 @@ export default function Custos() {
                               </div>
                             </TableCell>
                             <TableCell className="text-right tabular-nums">
+                              {formatBRL(row.eac)}
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                "text-right tabular-nums",
+                                row.variacao > 0 && "text-destructive font-medium",
+                                row.variacao < 0 && "text-success",
+                              )}
+                            >
+                              {row.variacao === 0
+                                ? formatBRL(0)
+                                : `${row.variacao > 0 ? "+" : ""}${formatBRL(row.variacao)}`}
+                              {row.variacao_pct !== null && (
+                                <div className="text-[10px] text-muted-foreground font-normal">
+                                  {`${row.variacao_pct > 0 ? "+" : ""}${row.variacao_pct.toFixed(1)}%`}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">
                               {row.purchases_count}
                             </TableCell>
                           </TableRow>
@@ -537,11 +556,6 @@ export default function Custos() {
               )}
             </CardContent>
           </Card>
-
-          <p className="text-xs text-muted-foreground">
-            Curva S financeira e forecast por categoria (EAC detalhado) chegam
-            em <span className="font-medium">Onda B2</span>.
-          </p>
         </div>
       )}
     </PageContainer>
