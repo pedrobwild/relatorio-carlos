@@ -85,9 +85,6 @@ const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const Lookahead = lazy(() => import("./pages/gestao/Lookahead"));
 const AvancoFisico = lazy(() => import("./pages/gestao/AvancoFisico"));
 const Custos = lazy(() => import("./pages/gestao/Custos"));
-const Diario = lazy(() => import("./pages/gestao/Diario"));
-const DiarioDia = lazy(() => import("./pages/gestao/DiarioDia"));
-const DiarioDiaImprimir = lazy(() => import("./pages/gestao/DiarioDiaImprimir"));
 const Qualidade = lazy(() => import("./pages/gestao/Qualidade"));
 const Suprimentos = lazy(() => import("./pages/gestao/Suprimentos"));
 const SuprimentosDetalhe = lazy(() => import("./pages/gestao/SuprimentosDetalhe"));
@@ -507,34 +504,6 @@ const AppContent = () => {
                 }
               />
 
-              <Route
-                path="/gestao/diario"
-                element={
-                  <StaffRoute>
-                    <AppShell variant="portfolio">
-                      {withSuspense(<Diario />)}
-                    </AppShell>
-                  </StaffRoute>
-                }
-              />
-              <Route
-                path="/gestao/diario/:projectId/:date"
-                element={
-                  <StaffRoute>
-                    <AppShell variant="portfolio">
-                      {withSuspense(<DiarioDia />)}
-                    </AppShell>
-                  </StaffRoute>
-                }
-              />
-              <Route
-                path="/gestao/diario/:projectId/:date/imprimir"
-                element={
-                  <StaffRoute>
-                    {withSuspense(<DiarioDiaImprimir />)}
-                  </StaffRoute>
-                }
-              />
               <Route
                 path="/gestao/painel-obras"
                 element={
