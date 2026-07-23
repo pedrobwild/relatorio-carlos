@@ -353,6 +353,15 @@ export const queryKeys = {
       ] as const,
     day: (projectId: string | undefined, date: string) =>
       [...queryKeys.diario.all, "day", projectId, date] as const,
+    photos: (projectId: string | undefined, date: string) =>
+      [...queryKeys.diario.all, "photos", projectId, date] as const,
+    todayCoverage: (projectIds: string[] | undefined, date: string) =>
+      [
+        ...queryKeys.diario.all,
+        "today-coverage",
+        projectIds ? [...projectIds].sort().join(",") : "all",
+        date,
+      ] as const,
   },
 } as const;
 
