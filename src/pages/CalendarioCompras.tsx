@@ -3130,6 +3130,13 @@ export default function CalendarioCompras() {
                                     }
                                   />
                                   <PaymentInfoBadges p={p} />
+                                  <DeliveryStatusBadge
+                                    purchaseId={p.id}
+                                    expectedDeliveryDate={p.expected_delivery_date}
+                                    expectedQuantity={p.quantity}
+                                    expectedTotal={p.estimated_cost}
+                                  />
+
                                 </div>
                               </TableCell>
 
