@@ -443,3 +443,120 @@ function ShortcutBtn({
     </Button>
   );
 }
+
+// ── Mini Curva S ────────────────────────────────────────────────────────────
+// Reutiliza useSCurveWeekly (RPC get_project_s_curve_weekly) da Onda A.
+// Fetch só habilitado com o Sheet aberto para não sobrecarregar o painel.
+// Gráfico compacto (~130px), linhas planejado (tracejada) × realizado, tokens
+// semânticos (--muted-foreground e --primary), sem eixos pesados e tooltip
+// minimalista. Baseline padrão: passamos undefined → RPC usa a baseline ativa.
+function SCurveSection({
+  projectId,
+  enabled,
+  onCreateBaseline,
+}: {
+  projectId: string;
+  enabled: boolean;
+  onCreateBaseline: () => void;
+}) {
+  const query = useSCurveWeekly(enabled ? projectId : undefined);
+  const points = query.data ?? [];
+  const hasData =
+    points.length > 0 &&
+    points.some((p) => p.planned_pct > 0 || p.actual_pct > 0);
+
+  return (
+    <section aria-label="Curva S">
+      <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+        Curva S
+      </h3>
+      {query.isLoading ? (
+        <div className="rounded-lg border border-border-subtle bg-surface-sunken/40 p-4">
+          <Skeleton className="h-[130px] w-full" />
+        </div>
+      ) : hasData ? (
+        <div className="rounded-lg border border-border-subtle bg-surface-sunken/40 p-2">
+          <div className="h-[130px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={points}
+                margin={{ top: 6, right: 8, bottom: 0, left: -18 }}
+              >
+                <XAxis
+                  dataKey="week_start"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tickFormatter={(v: string) => {
+                    const [, m, d] = v.split("-");
+                    return `${d}/${m}`;
+                  }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={24}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tickFormatter={(v: number) => `${v}%`}
+                  axisLine={false}
+                  tickLine={false}
+                  width={32}
+                />
+                <RTooltip
+                  cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
+                  contentStyle={{
+                    background: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    padding: "6px 8px",
+                    color: "hsl(var(--popover-foreground))",
+                  }}
+                  labelFormatter={(v: string) => {
+                    const [y, m, d] = v.split("-");
+                    return `Semana de ${d}/${m}/${y}`;
+                  }}
+                  formatter={(value: number, name: string) => [
+                    `${Number(value).toFixed(1)}%`,
+                    name === "planned_pct" ? "Planejado" : "Realizado",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="planned_pct"
+                  stroke="hsl(var(--muted-foreground))"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 3"
+                  dot={false}
+                  isAnimationActive={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="actual_pct"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-border-subtle bg-surface-sunken/40 p-4">
+          <EmptyState
+            icon={LineChartIcon}
+            title="Sem baseline cadastrada"
+            description="Registre uma baseline para acompanhar avanço planejado × real."
+            action={{
+              label: "Criar baseline",
+              onClick: onCreateBaseline,
+              icon: Plus,
+            }}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
