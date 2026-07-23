@@ -12,9 +12,11 @@ import {
   FileSignature,
   Bell,
   ListTodo,
+  KeySquare,
   ArrowRight,
   type LucideIcon,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import type { InboxItem as InboxItemType, InboxKind } from "@/hooks/useMinhaSemana";
 
