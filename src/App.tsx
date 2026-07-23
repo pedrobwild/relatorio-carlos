@@ -81,6 +81,7 @@ const NaoConformidadesGlobal = lazy(
 );
 const GestaoAtividades = lazy(() => import("./pages/GestaoAtividades"));
 const PainelObras = lazy(() => import("./pages/PainelObras"));
+const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const PainelAlertasCronograma = lazy(
   () => import("./pages/PainelAlertasCronograma"),
 );
