@@ -225,3 +225,4 @@ Racional:
 - ✅ Cada onda cabe em UMA mensagem de implementação após o fatiamento A1/A2, C1/C2, D1/D2, E1/E2, F1/F2. Ondas B1/B2 idem. Total: 11 mensagens de execução.
 
 Quer que eu comece por **A1** (medições de avanço físico + baseline snapshot)?
+- Módulo Diário de Obra retirado por decisão do gestor em 23/07/2026 — não reintroduzir sem pedido explícito
