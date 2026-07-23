@@ -30,7 +30,9 @@ export type InboxKind =
   | "formalizacao"
   | "alerta"
   | "pendencia"
-  | "entrega";
+  | "entrega"
+  | "compra";
+
 
 
 export type InboxBucket = "atrasado" | "hoje" | "semana" | "proximas";
@@ -374,7 +376,73 @@ async function fetchMyPunchItems(userId: string): Promise<InboxItem[]> {
 }
 
 
-// ---------- Hook principal ----------
+async function fetchMyLateDeliveries(userId: string): Promise<InboxItem[]> {
+  // Obras onde sou responsável no painel — mesma escala de atribuição das
+  // pendências. Compras vencidas sem recebimento total viram inbox.
+  const { data: myProjects, error: projErr } = await supabase
+    .from("projects")
+    .select("id, name")
+    .eq("painel_responsavel_id", userId)
+    .is("deleted_at", null);
+  if (projErr) throw projErr;
+  if (!myProjects || myProjects.length === 0) return [];
+  const ids = myProjects.map((p) => p.id);
+  const nameMap = new Map(myProjects.map((p) => [p.id, p.name]));
+
+  const today = TODAY();
+  const { data: purchases, error } = await supabase
+    .from("project_purchases")
+    .select(
+      "id, item_name, expected_delivery_date, required_by_date, quantity, estimated_cost, purchase_type, status, project_id",
+    )
+    .in("project_id", ids)
+    .not("expected_delivery_date", "is", null)
+    .lt("expected_delivery_date", today)
+    .neq("status", "cancelled")
+    .limit(200);
+  if (error) throw error;
+  if (!purchases || purchases.length === 0) return [];
+
+  const purchaseIds = purchases.map((p) => p.id);
+  const { data: receipts } = await supabase
+    .from("purchase_receipts")
+    .select("purchase_id, quantidade, valor")
+    .in("purchase_id", purchaseIds)
+    .is("deleted_at", null);
+
+  const totals = new Map<string, { qty: number; val: number }>();
+  for (const r of receipts ?? []) {
+    const cur = totals.get(r.purchase_id) ?? { qty: 0, val: 0 };
+    cur.qty += Number(r.quantidade ?? 0);
+    cur.val += Number(r.valor ?? 0);
+    totals.set(r.purchase_id, cur);
+  }
+
+  return purchases
+    .filter((p) => {
+      const t = totals.get(p.id) ?? { qty: 0, val: 0 };
+      const qtyExp = Number(p.quantity ?? 0);
+      const valExp = Number(p.estimated_cost ?? 0);
+      const full =
+        (qtyExp > 0 && t.qty >= qtyExp - 0.0001) ||
+        (qtyExp === 0 && valExp > 0 && t.val >= valExp - 0.0001);
+      return !full;
+    })
+    .map((p) => ({
+      id: `compra-${p.id}`,
+      kind: "compra" as InboxKind,
+      title: p.item_name ?? "Compra",
+      dueDate: p.expected_delivery_date ?? null,
+      daysOverdue: calcOverdue(p.expected_delivery_date ?? null),
+      businessDaysUntil: calcBusinessDaysUntil(p.expected_delivery_date ?? null),
+      projectId: p.project_id,
+      projectName: nameMap.get(p.project_id) ?? "Sem obra",
+      href: `/gestao/calendario-compras?projectId=${p.project_id}`,
+      hint: p.purchase_type === "prestador" ? "Serviço" : "Material",
+    }));
+}
+
+
 
 export function useMinhaSemana() {
   const { user } = useAuth();
@@ -424,7 +492,14 @@ export function useMinhaSemana() {
         enabled: !!uid,
         staleTime: 60_000,
       },
+      {
+        queryKey: queryKeys.minhaSemana.entregasCompras(uid),
+        queryFn: () => fetchMyLateDeliveries(uid),
+        enabled: !!uid,
+        staleTime: 60_000,
+      },
     ],
+
   });
 
 

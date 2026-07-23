@@ -16,6 +16,9 @@ export * as auditoriaRepo from "./auditoria.repository";
 export * as journeyRepo from "./journey.repository";
 export * as formalizationsRepo from "./formalizations.repository";
 export * as agentMemoryRepo from "./agentMemory.repository";
+export { purchaseReceiptsRepo } from "./purchaseReceipts.repository";
+export type { PurchaseReceipt } from "./purchaseReceipts.repository";
+
 
 // Re-export types for convenience
 export type {

@@ -21,6 +21,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DeliveryStatusBadge } from "@/components/compras/DeliveryStatusBadge";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -3128,6 +3130,13 @@ export default function CalendarioCompras() {
                                     }
                                   />
                                   <PaymentInfoBadges p={p} />
+                                  <DeliveryStatusBadge
+                                    purchaseId={p.id}
+                                    expectedDeliveryDate={p.expected_delivery_date}
+                                    expectedQuantity={p.quantity}
+                                    expectedTotal={p.estimated_cost}
+                                  />
+
                                 </div>
                               </TableCell>
 
@@ -3383,6 +3392,13 @@ export default function CalendarioCompras() {
                                       }
                                     />
                                     <PaymentInfoBadges p={p} />
+                                    <DeliveryStatusBadge
+                                      purchaseId={p.id}
+                                      expectedDeliveryDate={p.expected_delivery_date}
+                                      expectedQuantity={p.quantity}
+                                      expectedTotal={p.estimated_cost}
+                                    />
+
                                   </div>
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap">

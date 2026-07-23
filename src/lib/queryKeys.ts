@@ -274,7 +274,10 @@ export const queryKeys = {
       [...queryKeys.minhaSemana.all, "pendencias", userId] as const,
     punch: (userId: string) =>
       [...queryKeys.minhaSemana.all, "punch", userId] as const,
+    entregasCompras: (userId: string) =>
+      [...queryKeys.minhaSemana.all, "entregas-compras", userId] as const,
   },
+
 
 
   // ============================================================================
@@ -404,7 +407,23 @@ export const queryKeys = {
       [...queryKeys.suprimentos.all, "cotacoes", requisitionId] as const,
   },
 
+  // ============================================================================
+  // Recebimentos de compra (Onda E2) — staff-only
+  // ============================================================================
+  purchaseReceipts: {
+    all: ["purchase-receipts"] as const,
+    byPurchase: (purchaseId: string | undefined) =>
+      [...queryKeys.purchaseReceipts.all, "by-purchase", purchaseId] as const,
+    byPurchaseIds: (purchaseIds: string[] | undefined) =>
+      [
+        ...queryKeys.purchaseReceipts.all,
+        "by-purchase-ids",
+        purchaseIds ? [...purchaseIds].sort().join(",") : "empty",
+      ] as const,
+  },
+
 } as const;
+
 
 
 // ============================================================================

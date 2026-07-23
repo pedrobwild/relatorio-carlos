@@ -6008,6 +6008,59 @@ export type Database = {
           },
         ]
       }
+      purchase_receipts: {
+        Row: {
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          id: string
+          notes: string | null
+          photo_path: string | null
+          purchase_id: string
+          quantidade: number | null
+          received_by: string | null
+          received_on: string
+          updated_at: string
+          valor: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          photo_path?: string | null
+          purchase_id: string
+          quantidade?: number | null
+          received_by?: string | null
+          received_on?: string
+          updated_at?: string
+          valor?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          photo_path?: string | null
+          purchase_id?: string
+          quantidade?: number | null
+          received_by?: string | null
+          received_on?: string
+          updated_at?: string
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_receipts_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "project_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requisition_quotes: {
         Row: {
           arquivo_path: string | null
