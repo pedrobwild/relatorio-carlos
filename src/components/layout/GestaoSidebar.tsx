@@ -90,6 +90,11 @@ export function GestaoSidebar() {
           icon: Inbox,
           path: "/gestao/minha-semana",
         },
+        {
+          label: "Lookahead",
+          icon: CalendarRange,
+          path: "/gestao/lookahead",
+        },
       ],
     },
     {
