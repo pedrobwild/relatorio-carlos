@@ -4463,6 +4463,12 @@ function BoardView({
                   Cliente / Obra
                 </TableHead>
                 <TableHead
+                  className="w-[92px] sm:w-[104px]"
+                  aria-label="Criticidade calculada"
+                >
+                  Criticidade
+                </TableHead>
+                <TableHead
                   className="w-[60px] text-center"
                   aria-label="Dados do cliente"
                 >
