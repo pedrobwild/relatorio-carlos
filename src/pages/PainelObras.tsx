@@ -46,6 +46,8 @@ import {
   Maximize2,
   Minimize2,
   Download,
+  TrendingUp,
+  DollarSign,
 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, SectionCard } from "@/components/ui-premium";
@@ -56,6 +58,7 @@ import {
   type ManagementTile,
   type ManagementTileId,
 } from "@/components/gestao/painel/ManagementBand";
+import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
 import {
   usePainelExcecoes,
   type ExcecaoKind,
@@ -617,6 +620,49 @@ export default function PainelObras() {
     },
     [setSearchParams],
   );
+
+  // ── Deep-link do Drawer de detalhe da obra (?obra=<id>) ────────────────
+  // O Sheet abre quando `?obra=<id>` está presente. Ctrl/Meta+click nos
+  // atalhos "abrir obra" mantém navegação direta para `/obra/:id` (pulando o
+  // drawer). Esc/X fechando o Sheet limpa o parâmetro.
+  const obraParam = searchParams.get("obra");
+  const openDetailFor = useCallback(
+    (id: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("obra", id);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+  const closeDetail = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("obra");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+  // Handler compartilhado: abre drawer, mas honra Ctrl/Meta+click para
+  // navegação direta em nova aba / rota completa (padrão do sistema).
+  const handleOpenObra = useCallback(
+    (id: string, e?: { metaKey?: boolean; ctrlKey?: boolean; button?: number }) => {
+      if (e && (e.metaKey || e.ctrlKey || e.button === 1)) {
+        navigate(`/obra/${id}`);
+        return;
+      }
+      openDetailFor(id);
+    },
+    [navigate, openDetailFor],
+  );
+
+
 
 
 
@@ -1417,7 +1463,8 @@ export default function PainelObras() {
             clearAllFilters={clearFilters}
             mobileFiltersOpen={mobileFiltersOpen}
             setMobileFiltersOpen={setMobileFiltersOpen}
-            onOpen={(id) => navigate(`/obra/${id}`)}
+            onOpen={(id, e) => handleOpenObra(id, e)}
+            snapshotById={snapshotById}
             onOpenDados={(o) => setDadosTarget(o)}
             onDeleteRequest={(o) => setDeleteTarget(o)}
             onCreate={() => navigate("/gestao/nova-obra")}
@@ -1960,7 +2007,7 @@ export default function PainelObras() {
                   onClearSelection={clearSelection}
                   onBulkUpdate={bulkUpdate}
                   bulkUpdating={bulkUpdating}
-                  onOpen={(id) => navigate(`/obra/${id}`)}
+                  onOpen={(id) => handleOpenObra(id)}
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                   onUpdateStatus={(id, status) => updateObra(id, { status })}
                 />
@@ -1971,7 +2018,7 @@ export default function PainelObras() {
                   expandedIds={expandedIds}
                   onToggleExpanded={toggleExpanded}
                   onUpdate={updateObra}
-                  onOpen={(id) => navigate(`/obra/${id}`)}
+                  onOpen={(id) => handleOpenObra(id)}
                   onDeleteRequest={(o) => setDeleteTarget(o)}
                   onOpenDados={(o) => setDadosTarget(o)}
                   renderSortableHeader={(label, key) => (
@@ -2014,6 +2061,12 @@ export default function PainelObras() {
                           <TableHead className="min-w-[112px] sm:min-w-[140px] text-right">
                             Progresso
                           </TableHead>
+                          <TableHead className="min-w-[96px] sm:min-w-[120px] text-right hidden lg:table-cell">
+                            Avanço
+                          </TableHead>
+                          <TableHead className="min-w-[96px] sm:min-w-[120px] text-right hidden xl:table-cell">
+                            Custo
+                          </TableHead>
                           <TableHead className="min-w-[96px] sm:min-w-[120px] hidden xl:table-cell">
                             <SortableHeader
                               label="Início Of."
@@ -2055,11 +2108,12 @@ export default function PainelObras() {
                           <ObraRow
                             key={o.id}
                             obra={o}
+                            snapshot={snapshotById.get(o.id)}
                             staffUsers={staffUsers}
                             expanded={expandedIds.has(o.id)}
                             onToggleExpanded={() => toggleExpanded(o.id)}
                             onUpdate={(patch) => updateObra(o.id, patch)}
-                            onOpen={() => navigate(`/obra/${o.id}`)}
+                            onOpen={(e) => handleOpenObra(o.id, e)}
                             onDeleteRequest={() => setDeleteTarget(o)}
                             onOpenDados={() => setDadosTarget(o)}
                           />
@@ -2073,6 +2127,18 @@ export default function PainelObras() {
           </div>
         </div>
       </PageContainer>
+      <ObraDetailSheet
+        obra={
+          obraParam
+            ? (obras.find((x) => x.id === obraParam) ?? null)
+            : null
+        }
+        snapshot={obraParam ? snapshotById.get(obraParam) : undefined}
+        open={!!obraParam}
+        onOpenChange={(o) => {
+          if (!o) closeDetail();
+        }}
+      />
     </TooltipProvider>
     </PainelPeriodProvider>
   );
@@ -2082,21 +2148,23 @@ export default function PainelObras() {
 // Total de colunas da tabela do Painel de Obras. Mantenha em sincronia com o
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
 // 1) Cliente / Obra · 2) Dados · 3) Status · 4) Etapa · 5) Progresso ·
-// 6) Início Of. · 7) Entrega Of. · 8) Início Real · 9) Entrega Real ·
-// 10) Relacionamento · 11) Responsável · 12) Ações
-const PAINEL_COLUMN_COUNT = 12;
+// 6) Avanço · 7) Custo · 8) Início Of. · 9) Entrega Of. · 10) Início Real ·
+// 11) Entrega Real · 12) Relacionamento · 13) Responsável · 14) Ações
+const PAINEL_COLUMN_COUNT = 14;
 
 interface ObraRowProps {
   obra: PainelObra;
+  snapshot?: import("@/hooks/usePortfolioSnapshot").PortfolioSnapshotRow;
   staffUsers: { id: string; nome: string }[];
   expanded: boolean;
   onToggleExpanded: () => void;
   onUpdate: (patch: PainelObraPatch) => void;
-  onOpen: () => void;
+  onOpen: (e?: { metaKey?: boolean; ctrlKey?: boolean; button?: number }) => void;
   onDeleteRequest: () => void;
   /** Abre o popup com a feature "Dados do cliente" para esta obra. */
   onOpenDados: () => void;
 }
+
 
 // ─── Skeletons ───────────────────────────────────────────────────────────────
 // Espelham a estrutura visual real da tela (tabela / board / kanban) para
@@ -2122,6 +2190,8 @@ const TABLE_COLS: {
   { width: "min-w-[112px] sm:min-w-[140px]" }, // Status
   { width: "min-w-[128px] sm:min-w-[160px]" }, // Etapa
   { width: "min-w-[112px] sm:min-w-[140px]", align: "right" }, // Progresso
+  { width: "min-w-[96px] sm:min-w-[120px]", align: "right", hide: "hidden lg:table-cell" }, // Avanço (snapshot)
+  { width: "min-w-[96px] sm:min-w-[120px]", align: "right", hide: "hidden xl:table-cell" }, // Custo (variação EAC)
   { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden xl:table-cell" }, // Início Of.
   { width: "min-w-[96px] sm:min-w-[120px]" }, // Entrega Of.
   { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden xl:table-cell" }, // Início Real
@@ -2307,6 +2377,7 @@ function KanbanSkeleton() {
 
 function ObraRow({
   obra,
+  snapshot,
   staffUsers,
   expanded,
   onToggleExpanded,
@@ -2611,6 +2682,65 @@ function ObraRow({
             </div>
           ) : (
             <span className="text-muted-foreground text-xs">—</span>
+          )}
+        </TableCell>
+
+        {/* Avanço físico (snapshot batch) — barra + % ponderado das atividades */}
+        <TableCell className="text-right hidden lg:table-cell">
+          {snapshot ? (
+            <div className="flex items-center justify-end gap-2">
+              <div className="h-1.5 w-14 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full transition-all",
+                    snapshot.weighted_progress_pct >= 100
+                      ? "bg-success"
+                      : "bg-primary",
+                  )}
+                  style={{
+                    width: `${Math.min(100, Math.max(0, snapshot.weighted_progress_pct))}%`,
+                  }}
+                />
+              </div>
+              <span
+                className={cn(
+                  "text-xs tabular-nums w-9 text-right",
+                  snapshot.weighted_progress_pct >= 100 &&
+                    "text-success font-semibold",
+                )}
+              >
+                {Math.round(snapshot.weighted_progress_pct)}%
+              </span>
+            </div>
+          ) : (
+            <span className="text-muted-foreground text-xs">—</span>
+          )}
+        </TableCell>
+
+        {/* Custo — variação % (EAC vs orçado). Semântica: >5% destructive,
+            <-5% success, entre 0..5 warning, negativo pequeno neutro. */}
+        <TableCell className="text-right hidden xl:table-cell">
+          {snapshot?.variacao_pct == null ? (
+            <span className="text-muted-foreground text-xs">—</span>
+          ) : (
+            (() => {
+              const v = snapshot.variacao_pct;
+              const tone =
+                v >= 5
+                  ? "text-destructive font-semibold"
+                  : v <= -5
+                    ? "text-success font-semibold"
+                    : v > 0
+                      ? "text-warning"
+                      : "text-foreground";
+              const sign = v > 0 ? "+" : "";
+              return (
+                <span className={cn("text-xs tabular-nums", tone)}>
+                  {sign}
+                  {v.toFixed(1)}%
+                </span>
+              );
+            })()
           )}
         </TableCell>
 
@@ -4301,7 +4431,8 @@ interface MobilePainelViewProps {
   clearAllFilters: () => void;
   mobileFiltersOpen: boolean;
   setMobileFiltersOpen: (open: boolean) => void;
-  onOpen: (id: string) => void;
+  onOpen: (id: string, e?: { metaKey?: boolean; ctrlKey?: boolean; button?: number }) => void;
+  snapshotById?: Map<string, import("@/hooks/usePortfolioSnapshot").PortfolioSnapshotRow>;
   onOpenDados: (o: PainelObra) => void;
   onDeleteRequest: (o: PainelObra) => void;
   onCreate: () => void;
@@ -4366,6 +4497,7 @@ function MobilePainelView({
   mobileFiltersOpen,
   setMobileFiltersOpen,
   onOpen,
+  snapshotById,
   onOpenDados,
   onDeleteRequest,
   onCreate,
@@ -4566,8 +4698,35 @@ function MobilePainelView({
                     </span>
                   </span>
                 )}
+                {snapshotById?.get(o.id) && (
+                  <>
+                    <span className="inline-flex items-center gap-1 tabular-nums">
+                      <TrendingUp className="h-3 w-3 opacity-60" />
+                      Avanço {Math.round(snapshotById.get(o.id)!.weighted_progress_pct)}%
+                    </span>
+                    {snapshotById.get(o.id)!.variacao_pct != null && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 tabular-nums font-semibold",
+                          snapshotById.get(o.id)!.variacao_pct! >= 5
+                            ? "text-destructive"
+                            : snapshotById.get(o.id)!.variacao_pct! <= -5
+                              ? "text-success"
+                              : snapshotById.get(o.id)!.variacao_pct! > 0
+                                ? "text-warning"
+                                : "text-muted-foreground",
+                        )}
+                      >
+                        <DollarSign className="h-3 w-3" />
+                        {snapshotById.get(o.id)!.variacao_pct! > 0 ? "+" : ""}
+                        {snapshotById.get(o.id)!.variacao_pct!.toFixed(1)}%
+                      </span>
+                    )}
+                  </>
+                )}
               </span>
             );
+
 
             const isExpanded = expandedIds.has(o.id);
             return (
