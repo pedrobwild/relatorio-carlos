@@ -2015,7 +2015,7 @@ export default function PainelObras() {
                   expandedIds={expandedIds}
                   onToggleExpanded={toggleExpanded}
                   onUpdate={updateObra}
-                  onOpen={(id) => navigate(`/obra/${id}`)}
+                  onOpen={(id) => handleOpenObra(id)}
                   onDeleteRequest={(o) => setDeleteTarget(o)}
                   onOpenDados={(o) => setDadosTarget(o)}
                   renderSortableHeader={(label, key) => (
