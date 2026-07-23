@@ -2,18 +2,20 @@
  * /gestao/diario/:projectId/:date — RDO de um dia específico (staff-only).
  *
  * Formulário mobile-first para 2 minutos: clima, efetivo (workers) por
- * função, serviços do dia, ocorrências (notas livres). Reutiliza
- * useProjectDailyLog + useSaveProjectDailyLog. Fotos e export PDF ficam
- * para Onda C2.
+ * função, serviços do dia, ocorrências (notas livres + severidade) e
+ * fotos do dia (bucket privado). Reutiliza useProjectDailyLog +
+ * useSaveProjectDailyLog + useDailyLogPhotos.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
+  Camera,
   CloudRain,
   CloudSun,
   HardHat,
   Plus,
+  Printer,
   Save,
   Sun,
   Trash2,
@@ -23,6 +25,16 @@ import { toast } from "sonner";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/ui-premium";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,10 +53,16 @@ import {
   DailyLogService,
   DailyLogServiceStatus,
   DailyLogWorker,
+  OccurrenceSeverity,
   useProjectDailyLog,
   useSaveProjectDailyLog,
   WeatherCondition,
 } from "@/hooks/useProjectDailyLog";
+import {
+  DailyLogPhoto,
+  useDailyLogPhotos,
+} from "@/hooks/useDailyLogPhotos";
+
 import { cn } from "@/lib/utils";
 
 const WEATHER_OPTIONS: {
@@ -138,8 +156,15 @@ export default function DiarioDia() {
   const [weatherAfternoon, setWeatherAfternoon] =
     useState<WeatherCondition>(null);
   const [temperature, setTemperature] = useState<string>("");
+  const [severity, setSeverity] = useState<OccurrenceSeverity>(null);
   const [workers, setWorkers] = useState<DailyLogWorker[]>([]);
   const [services, setServices] = useState<DailyLogService[]>([]);
+  const [photoToDelete, setPhotoToDelete] = useState<DailyLogPhoto | null>(
+    null,
+  );
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const photos = useDailyLogPhotos(projectId || null, date);
 
   useEffect(() => {
     const d = logQ.data;
@@ -152,6 +177,7 @@ export default function DiarioDia() {
         ? ""
         : String(d.temperature_c),
     );
+    setSeverity(d.occurrence_severity);
     setWorkers(d.workers);
     setServices(d.services);
   }, [logQ.data]);
@@ -226,6 +252,7 @@ export default function DiarioDia() {
       weather_morning: weatherMorning,
       weather_afternoon: weatherAfternoon,
       temperature_c: parsedTemp,
+      occurrence_severity: severity,
       workers: cleanWorkers.map((w, i) => ({ ...w, position: i })),
       services: cleanServices.map((s, i) => ({ ...s, position: i })),
     });
@@ -233,9 +260,18 @@ export default function DiarioDia() {
 
   const totalWorkers = workers.filter((w) => (w.name ?? "").trim()).length;
 
+  const handleFilePick = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (files.length === 0) return;
+    await photos.upload(files);
+  };
+
   return (
     <PageContainer>
-      <div className="mb-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <Button
           asChild
           variant="ghost"
@@ -245,6 +281,21 @@ export default function DiarioDia() {
           <Link to="/gestao/diario">
             <ArrowLeft className="h-4 w-4 mr-1.5" />
             Voltar ao diário
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="h-9"
+        >
+          <Link
+            to={`/gestao/diario/${projectId}/${date}/imprimir`}
+            target="_blank"
+            rel="noopener"
+          >
+            <Printer className="h-4 w-4 mr-1.5" />
+            Imprimir
           </Link>
         </Button>
       </div>
@@ -443,20 +494,145 @@ export default function DiarioDia() {
             </CardContent>
           </Card>
 
-          {/* Ocorrências / notas livres */}
+          {/* Ocorrências / notas livres + severidade */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">
                 Ocorrências e impedimentos
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Severidade
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      { v: "Baixa", cls: "bg-muted text-foreground border-border" },
+                      { v: "Média", cls: "bg-warning/10 text-warning border-warning/40" },
+                      { v: "Alta", cls: "bg-destructive/10 text-destructive border-destructive/40" },
+                    ] as { v: NonNullable<OccurrenceSeverity>; cls: string }[]
+                  ).map((opt) => {
+                    const active = severity === opt.v;
+                    return (
+                      <button
+                        key={opt.v}
+                        type="button"
+                        onClick={() => setSeverity(active ? null : opt.v)}
+                        aria-pressed={active}
+                        className={cn(
+                          "inline-flex items-center px-3 h-11 rounded-md border text-sm min-w-[44px] transition-colors",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          active
+                            ? opt.cls + " font-medium"
+                            : "bg-background border-input text-muted-foreground hover:bg-muted",
+                        )}
+                      >
+                        {opt.v}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Opcional. Use Alta para incidentes de segurança, paralisações ou
+                  impedimentos que exigem decisão hoje.
+                </p>
+              </div>
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Registre paradas, atrasos, visitas, incidentes de segurança ou observações do dia."
                 className="min-h-[120px]"
               />
+            </CardContent>
+          </Card>
+
+          {/* Fotos do dia */}
+          <Card>
+            <CardHeader className="pb-3 flex-row items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Camera className="h-4 w-4 text-muted-foreground" />
+                Fotos do dia
+                {photos.photos.length > 0 && (
+                  <span className="text-xs font-normal text-muted-foreground tabular-nums">
+                    ({photos.photos.length})
+                  </span>
+                )}
+              </CardTitle>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-9"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={photos.isUploading}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {photos.isUploading ? "Enviando…" : "Adicionar"}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                className="sr-only"
+                onChange={handleFilePick}
+              />
+            </CardHeader>
+            <CardContent>
+              {photos.isLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-square w-full rounded-md" />
+                  ))}
+                </div>
+              ) : photos.photos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma foto do dia. Toque em Adicionar para incluir imagens
+                  (a câmera do celular abre direto).
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {photos.photos.map((ph) => (
+                    <div
+                      key={ph.id}
+                      className="relative group aspect-square overflow-hidden rounded-md border bg-muted"
+                    >
+                      {ph.url ? (
+                        <a
+                          href={ph.url}
+                          target="_blank"
+                          rel="noopener"
+                          className="block h-full w-full"
+                        >
+                          <img
+                            src={ph.url}
+                            alt={ph.caption ?? "Foto do dia"}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        </a>
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                          Sem prévia
+                        </div>
+                      )}
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon"
+                        className="absolute top-1 right-1 h-9 w-9 opacity-90"
+                        aria-label="Remover foto"
+                        onClick={() => setPhotoToDelete(ph)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -495,6 +671,34 @@ export default function DiarioDia() {
           </div>
         </div>
       )}
+
+      <AlertDialog
+        open={!!photoToDelete}
+        onOpenChange={(o) => !o && setPhotoToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover foto do dia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A foto será apagada do RDO e do armazenamento. Esta ação não pode
+              ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!photoToDelete) return;
+                const target = photoToDelete;
+                setPhotoToDelete(null);
+                await photos.remove(target);
+              }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageContainer>
   );
 }

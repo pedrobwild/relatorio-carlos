@@ -4088,6 +4088,47 @@ export type Database = {
           },
         ]
       }
+      project_daily_log_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          daily_log_id: string
+          id: string
+          project_id: string
+          sort_order: number
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          daily_log_id: string
+          id?: string
+          project_id: string
+          sort_order?: number
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          daily_log_id?: string
+          id?: string
+          project_id?: string
+          sort_order?: number
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_daily_log_photos_daily_log_id_fkey"
+            columns: ["daily_log_id"]
+            isOneToOne: false
+            referencedRelation: "project_daily_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_daily_log_service_tasks: {
         Row: {
           completed_at: string | null
@@ -4263,6 +4304,7 @@ export type Database = {
           id: string
           log_date: string
           notes: string | null
+          occurrence_severity: string | null
           project_id: string
           temperature_c: number | null
           updated_at: string
@@ -4276,6 +4318,7 @@ export type Database = {
           id?: string
           log_date?: string
           notes?: string | null
+          occurrence_severity?: string | null
           project_id: string
           temperature_c?: number | null
           updated_at?: string
@@ -4289,6 +4332,7 @@ export type Database = {
           id?: string
           log_date?: string
           notes?: string | null
+          occurrence_severity?: string | null
           project_id?: string
           temperature_c?: number | null
           updated_at?: string
