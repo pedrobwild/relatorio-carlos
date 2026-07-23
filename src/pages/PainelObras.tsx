@@ -60,6 +60,12 @@ import {
 } from "@/components/gestao/painel/ManagementBand";
 import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
 import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
+import {
+  PortfolioHealthMatrix,
+  useHealthMatrixOpen,
+  type HealthMatrixPoint,
+} from "@/components/gestao/painel/PortfolioHealthMatrix";
+import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   calculateObraSeverity,
