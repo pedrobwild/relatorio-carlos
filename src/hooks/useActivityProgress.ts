@@ -17,6 +17,8 @@ import {
   deleteMeasurement,
   getCurrentBaseline,
   getLatestMeasurementsForProject,
+  getSCurveWeekly,
+  getWeightedProgress,
   listBaselineActivities,
   listBaselines,
   listMeasurementsByActivity,
@@ -26,6 +28,7 @@ import {
   type CreateProgressMeasurementInput,
   type ScheduleBaseline,
   type ScheduleBaselineActivity,
+  type SCurveWeekPoint,
 } from "@/infra/repositories/activityProgress.repository";
 
 export type {
