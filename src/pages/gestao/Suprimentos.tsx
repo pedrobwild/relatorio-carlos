@@ -42,7 +42,7 @@ import {
   type RequisitionStatus,
 } from "@/hooks/useSuprimentos";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
-import { nDate } from "@/lib/dates";
+import { parseLocalDate } from "@/lib/dates";
 
 const STATUS_META: Record<
   RequisitionStatus,
