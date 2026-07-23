@@ -81,6 +81,7 @@ const NaoConformidadesGlobal = lazy(
 );
 const GestaoAtividades = lazy(() => import("./pages/GestaoAtividades"));
 const PainelObras = lazy(() => import("./pages/PainelObras"));
+const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const PainelAlertasCronograma = lazy(
   () => import("./pages/PainelAlertasCronograma"),
 );
@@ -411,6 +412,16 @@ const AppContent = () => {
                       </AppShell>
                     </AssistantAccessGuard>
                   </AdminRoute>
+                }
+              />
+              <Route
+                path="/gestao/minha-semana"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<MinhaSemana />)}
+                    </AppShell>
+                  </StaffRoute>
                 }
               />
               <Route

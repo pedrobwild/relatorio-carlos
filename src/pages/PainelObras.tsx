@@ -49,6 +49,12 @@ import {
 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, MetricCard, MetricRail, SectionCard } from "@/components/ui-premium";
+import { ExceptionsBar } from "@/components/gestao/painel/ExceptionsBar";
+import { SavedViewsBar } from "@/components/gestao/painel/SavedViewsBar";
+import {
+  usePainelExcecoes,
+  type ExcecaoKind,
+} from "@/hooks/usePainelExcecoes";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -564,6 +570,22 @@ export default function PainelObras() {
   const { byProject: periodByProject, isLoading: periodLoading } =
     usePainelPeriodActivities(periodFrom, periodTo);
 
+  // Faixa de exceções cross-domain (NCs críticas, formalizações paradas,
+  // faturas vencidas, atividades sem responsável). Filtra a tabela via
+  // ?excecao=<kind> aplicando o Set correspondente de project_id.
+  const { counts: excecaoCounts, sets: excecaoSets, isLoading: excecoesLoading } =
+    usePainelExcecoes();
+  const excecaoParam = searchParams.get("excecao");
+  const activeExcecao: ExcecaoKind | null =
+    excecaoParam === "nc" ||
+    excecaoParam === "form" ||
+    excecaoParam === "pag" ||
+    excecaoParam === "atv"
+      ? excecaoParam
+      : null;
+
+
+
   const toggleStatusFilter = (value: string) => {
     setFilterStatuses((prev) => {
       const next = new Set(prev);
@@ -796,6 +818,13 @@ export default function PainelObras() {
         return av.localeCompare(bv);
       });
     }
+    // Filtro por exceção cross-domain (?excecao=): restringe ao Set de
+    // project_id devolvido pela hook usePainelExcecoes. Aplicado por último
+    // para preservar as outras regras de filtro/ordenação.
+    if (activeExcecao) {
+      const allowed = excecaoSets[activeExcecao];
+      rows = rows.filter((o) => allowed.has(o.id));
+    }
     return rows;
   }, [
     obras,
@@ -810,6 +839,8 @@ export default function PainelObras() {
     periodByProject,
     sortKey,
     sortDir,
+    activeExcecao,
+    excecaoSets,
   ]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
@@ -1240,6 +1271,11 @@ export default function PainelObras() {
             está em risco hoje?". Cada métrica é clicável e aplica filtro
             correspondente na tabela. Cores apenas via tokens semânticos.
           */}
+            {/* Visões salvas + faixa de exceções (staff cockpit).
+                Renderizadas acima do MetricRail para preservar a hierarquia
+                atual do cockpit (KPIs de status), sem duplicar contadores. */}
+            <SavedViewsBar />
+            <ExceptionsBar counts={excecaoCounts} isLoading={excecoesLoading} />
             {!isLoading && obras.length > 0 && (
               <div className="mb-3">
                 <MetricRail>

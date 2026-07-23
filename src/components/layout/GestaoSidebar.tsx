@@ -17,6 +17,7 @@ import {
   Trash2,
   Building2,
   ClipboardEdit,
+  Inbox,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +81,16 @@ export function GestaoSidebar() {
   };
 
   const groups: NavGroup[] = [
+    {
+      label: "Meu trabalho",
+      items: [
+        {
+          label: "Minha semana",
+          icon: Inbox,
+          path: "/gestao/minha-semana",
+        },
+      ],
+    },
     {
       label: "Obras",
       items: [
