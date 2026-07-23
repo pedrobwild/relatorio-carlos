@@ -82,6 +82,7 @@ const NaoConformidadesGlobal = lazy(
 const GestaoAtividades = lazy(() => import("./pages/GestaoAtividades"));
 const PainelObras = lazy(() => import("./pages/PainelObras"));
 const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
+const Lookahead = lazy(() => import("./pages/gestao/Lookahead"));
 const PainelAlertasCronograma = lazy(
   () => import("./pages/PainelAlertasCronograma"),
 );
@@ -420,6 +421,16 @@ const AppContent = () => {
                   <StaffRoute>
                     <AppShell variant="portfolio">
                       {withSuspense(<MinhaSemana />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+              <Route
+                path="/gestao/lookahead"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Lookahead />)}
                     </AppShell>
                   </StaffRoute>
                 }

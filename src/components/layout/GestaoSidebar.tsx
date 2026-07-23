@@ -18,6 +18,7 @@ import {
   Building2,
   ClipboardEdit,
   Inbox,
+  CalendarRange,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +89,11 @@ export function GestaoSidebar() {
           label: "Minha semana",
           icon: Inbox,
           path: "/gestao/minha-semana",
+        },
+        {
+          label: "Lookahead",
+          icon: CalendarRange,
+          path: "/gestao/lookahead",
         },
       ],
     },

@@ -45,6 +45,7 @@ export interface ActivityInput {
   predecessor_ids?: string[];
   etapa?: string | null;
   detailed_description?: string | null;
+  responsible_user_id?: string | null;
 }
 
 // Fetch activities for a project
