@@ -2278,6 +2278,7 @@ export default function PainelObras() {
             : null
         }
         snapshot={obraParam ? snapshotById.get(obraParam) : undefined}
+        severity={obraParam ? severityById.get(obraParam) : undefined}
         open={!!obraParam}
         onOpenChange={(o) => {
           if (!o) closeDetail();
