@@ -20,6 +20,7 @@ import {
   Inbox,
   CalendarRange,
   LineChart,
+  Coins,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +101,11 @@ export function GestaoSidebar() {
           label: "Avanço físico",
           icon: LineChart,
           path: "/gestao/avanco-fisico",
+        },
+        {
+          label: "Custos",
+          icon: Coins,
+          path: "/gestao/custos",
         },
       ],
     },

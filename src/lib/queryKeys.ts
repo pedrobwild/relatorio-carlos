@@ -320,6 +320,17 @@ export const queryKeys = {
     weightedProgress: (projectId: string | undefined, baselineId: string | undefined | null) =>
       [...queryKeys.avancoFisico.all, "weighted-progress", projectId, baselineId ?? "current"] as const,
   },
+
+  // ============================================================================
+  // Custos (orçado × comprometido × realizado) — Onda B1, staff-only
+  // ============================================================================
+  custos: {
+    all: ["custos"] as const,
+    summary: (projectId: string | undefined) =>
+      [...queryKeys.custos.all, "summary", projectId] as const,
+    totals: (projectId: string | undefined) =>
+      [...queryKeys.custos.all, "totals", projectId] as const,
+  },
 } as const;
 
 // ============================================================================
