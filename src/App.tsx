@@ -91,6 +91,7 @@ const DiarioDiaImprimir = lazy(() => import("./pages/gestao/DiarioDiaImprimir"))
 const Qualidade = lazy(() => import("./pages/gestao/Qualidade"));
 const Suprimentos = lazy(() => import("./pages/gestao/Suprimentos"));
 const SuprimentosDetalhe = lazy(() => import("./pages/gestao/SuprimentosDetalhe"));
+const RelatoriosInternos = lazy(() => import("./pages/gestao/RelatoriosInternos"));
 
 const PainelAlertasCronograma = lazy(
   () => import("./pages/PainelAlertasCronograma"),
@@ -491,6 +492,16 @@ const AppContent = () => {
                   <StaffRoute>
                     <AppShell variant="portfolio">
                       {withSuspense(<SuprimentosDetalhe />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+              <Route
+                path="/gestao/relatorios-internos"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<RelatoriosInternos />)}
                     </AppShell>
                   </StaffRoute>
                 }
