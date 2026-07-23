@@ -944,6 +944,15 @@ export default function PainelObras() {
         .map((o) => o.id),
     );
 
+    const semAtualizacao72hIds = new Set(
+      inFase
+        .filter((o) => {
+          const h = hoursSince(o.ultima_atualizacao);
+          return h != null && h > 72;
+        })
+        .map((o) => o.id),
+    );
+
     const tiles: ManagementTile[] = [
       {
         id: "atrasadas",
@@ -993,6 +1002,14 @@ export default function PainelObras() {
         tone: paralisadasIds.size > 0 ? "destructive" : "muted",
         icon: MANAGEMENT_TILE_ICONS.paralisadas,
       },
+      {
+        id: "sem_atualizacao_72h",
+        label: "Sem atualização 72h+",
+        value: semAtualizacao72hIds.size,
+        hint: "Última atualização há mais de 72h",
+        tone: semAtualizacao72hIds.size > 0 ? "warning" : "muted",
+        icon: MANAGEMENT_TILE_ICONS.sem_atualizacao_72h,
+      },
     ];
 
     const setsById: Record<ManagementTileId, Set<string>> = {
@@ -1002,6 +1019,7 @@ export default function PainelObras() {
       ncs_criticas: ncsCriticasIds,
       sem_responsavel: semRespIds,
       paralisadas: paralisadasIds,
+      sem_atualizacao_72h: semAtualizacao72hIds,
     };
     return {
       managementTiles: tiles,
