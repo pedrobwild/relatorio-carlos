@@ -492,7 +492,14 @@ export function useMinhaSemana() {
         enabled: !!uid,
         staleTime: 60_000,
       },
+      {
+        queryKey: queryKeys.minhaSemana.entregasCompras(uid),
+        queryFn: () => fetchMyLateDeliveries(uid),
+        enabled: !!uid,
+        staleTime: 60_000,
+      },
     ],
+
   });
 
 
