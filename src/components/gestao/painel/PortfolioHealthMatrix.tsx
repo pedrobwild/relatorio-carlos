@@ -352,7 +352,6 @@ export function useHealthMatrixOpen(userId: string | null): [boolean, (v: boolea
     } catch {
       /* localStorage indisponível: mantém padrão fechado */
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   const set = (v: boolean) => {
