@@ -202,6 +202,16 @@ export function ObraDetailSheet({
                 </div>
               </section>
 
+              {/* Criticidade — badge + breakdown do score calculado.
+                  Aviso de divergência aparece quando o status manual
+                  não bate com a classificação calculada. */}
+              {severity && (
+                <SeveritySection
+                  severity={severity}
+                  manualStatus={obra.status}
+                />
+              )}
+
               {/* Custos */}
               <section aria-label="Resumo de custos">
                 <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
