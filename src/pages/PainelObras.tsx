@@ -1072,17 +1072,33 @@ export default function PainelObras() {
         if (!bv) return -1;
         return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
       });
-    } else {
-      // Ordenação padrão: por data de entrega oficial (ascendente).
-      // Datas passadas (obras atrasadas) ficam naturalmente no topo;
-      // obras sem data de entrega vão para o final.
+    } else if (aba === "concluidas") {
+      // Aba Concluídas: ordena por entrega real desc (recentes primeiro).
       rows = [...rows].sort((a, b) => {
-        const av = a.entrega_oficial ?? "";
-        const bv = b.entrega_oficial ?? "";
+        const av = a.entrega_real ?? "";
+        const bv = b.entrega_real ?? "";
         if (!av && !bv) return 0;
         if (!av) return 1;
         if (!bv) return -1;
-        return av.localeCompare(bv);
+        return bv.localeCompare(av);
+      });
+    } else {
+      // Ordenação padrão (Ativas): (1) severidade desc,
+      // (2) entrega oficial mais próxima, (3) última atualização mais antiga.
+      rows = [...rows].sort((a, b) => {
+        const sa = severityById.get(a.id)?.score ?? 0;
+        const sb = severityById.get(b.id)?.score ?? 0;
+        if (sa !== sb) return sb - sa;
+        const ea = a.entrega_oficial ?? "";
+        const eb = b.entrega_oficial ?? "";
+        if (ea !== eb) {
+          if (!ea) return 1;
+          if (!eb) return -1;
+          return ea.localeCompare(eb);
+        }
+        const ua = a.ultima_atualizacao ?? "";
+        const ub = b.ultima_atualizacao ?? "";
+        return ua.localeCompare(ub);
       });
     }
     // Filtro por exceção cross-domain (?excecao=): restringe ao Set de
