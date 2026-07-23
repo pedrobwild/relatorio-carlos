@@ -1117,6 +1117,7 @@ export default function PainelObras() {
   }, [
     obras,
     fase,
+    aba,
     search,
     filterEtapa,
     filterStatuses,
@@ -1130,6 +1131,7 @@ export default function PainelObras() {
     activeExcecao,
     excecaoSets,
     tileFilterSet,
+    severityById,
   ]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
