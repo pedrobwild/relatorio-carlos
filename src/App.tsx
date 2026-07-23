@@ -473,7 +473,27 @@ const AppContent = () => {
                     </AppShell>
                   </StaffRoute>
                 }
+              <Route
+                path="/gestao/suprimentos"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Suprimentos />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
               />
+              <Route
+                path="/gestao/suprimentos/:requisitionId"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<SuprimentosDetalhe />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+
               <Route
                 path="/gestao/diario"
                 element={
