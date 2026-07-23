@@ -2375,6 +2375,7 @@ function KanbanSkeleton() {
 
 function ObraRow({
   obra,
+  snapshot,
   staffUsers,
   expanded,
   onToggleExpanded,
