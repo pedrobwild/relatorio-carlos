@@ -1461,7 +1461,8 @@ export default function PainelObras() {
             clearAllFilters={clearFilters}
             mobileFiltersOpen={mobileFiltersOpen}
             setMobileFiltersOpen={setMobileFiltersOpen}
-            onOpen={(id) => navigate(`/obra/${id}`)}
+            onOpen={(id, e) => handleOpenObra(id, e)}
+            snapshotById={snapshotById}
             onOpenDados={(o) => setDadosTarget(o)}
             onDeleteRequest={(o) => setDeleteTarget(o)}
             onCreate={() => navigate("/gestao/nova-obra")}
