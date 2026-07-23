@@ -330,6 +330,8 @@ export const queryKeys = {
       [...queryKeys.custos.all, "summary", projectId] as const,
     totals: (projectId: string | undefined) =>
       [...queryKeys.custos.all, "totals", projectId] as const,
+    sCurve: (projectId: string | undefined) =>
+      [...queryKeys.custos.all, "s-curve", projectId] as const,
   },
 } as const;
 

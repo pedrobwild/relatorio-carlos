@@ -11,7 +11,16 @@
  */
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AlertTriangle, Coins, Download, Wallet } from "lucide-react";
+import { AlertTriangle, Coins, Download, LineChart as LineIcon, Wallet } from "lucide-react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
@@ -36,7 +45,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
-import { useCostSummary, useCostTotals } from "@/hooks/useCosts";
+import { useCostSCurveWeekly, useCostSummary, useCostTotals } from "@/hooks/useCosts";
 import type { CostSummaryRow } from "@/infra/repositories/costs.repository";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +63,26 @@ function formatPct(value: number | null | undefined): string {
   return `${Number(value).toFixed(1)}%`;
 }
 
-function toCsv(rows: CostSummaryRow[]): string {
+interface EnrichedRow extends CostSummaryRow {
+  eac: number;
+  variacao: number;
+  variacao_pct: number | null;
+}
+
+function computeEac(row: CostSummaryRow): {
+  eac: number;
+  variacao: number;
+  variacao_pct: number | null;
+} {
+  // EAC = realizado + comprometido + max(0, orcado - realizado - comprometido)
+  const remainingBudget = Math.max(row.orcado - row.realizado - row.comprometido, 0);
+  const eac = row.realizado + row.comprometido + remainingBudget;
+  const variacao = eac - row.orcado;
+  const variacao_pct = row.orcado > 0 ? (variacao / row.orcado) * 100 : null;
+  return { eac, variacao, variacao_pct };
+}
+
+function toCsv(rows: EnrichedRow[]): string {
   const header = [
     "Categoria",
     "Orcado",
@@ -62,6 +90,9 @@ function toCsv(rows: CostSummaryRow[]): string {
     "Realizado",
     "Saldo",
     "Consumido (%)",
+    "EAC",
+    "Variacao",
+    "Variacao (%)",
     "Compras",
   ];
   const body = rows.map((r) => [
@@ -71,6 +102,9 @@ function toCsv(rows: CostSummaryRow[]): string {
     r.realizado.toFixed(2),
     r.saldo.toFixed(2),
     r.consumido_pct === null ? "" : r.consumido_pct.toFixed(2),
+    r.eac.toFixed(2),
+    r.variacao.toFixed(2),
+    r.variacao_pct === null ? "" : r.variacao_pct.toFixed(2),
     String(r.purchases_count),
   ]);
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
@@ -103,6 +137,7 @@ export default function Custos() {
 
   const summaryQ = useCostSummary(selectedProjectId);
   const totalsQ = useCostTotals(selectedProjectId);
+  const sCurveQ = useCostSCurveWeekly(selectedProjectId);
 
   const setSelectedProject = (id: string) => {
     const next = new URLSearchParams(searchParams);
@@ -110,8 +145,23 @@ export default function Custos() {
     setSearchParams(next, { replace: true });
   };
 
-  const rows = summaryQ.data ?? [];
+  const rows: EnrichedRow[] = useMemo(
+    () =>
+      (summaryQ.data ?? []).map((r) => ({ ...r, ...computeEac(r) })),
+    [summaryQ.data],
+  );
   const totals = totalsQ.data;
+
+  const chartData = useMemo(
+    () =>
+      (sCurveQ.data ?? []).map((p) => ({
+        week: p.week_start.slice(5), // MM-DD
+        planejado: Math.round(p.planned_cum),
+        realizado: Math.round(p.realized_cum),
+        comprometido: Math.round(p.committed_projected_cum),
+      })),
+    [sCurveQ.data],
+  );
 
   const overBudgetCount = useMemo(
     () =>
@@ -265,6 +315,104 @@ export default function Custos() {
             </Card>
           )}
 
+          {/* Curva S financeira */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <LineIcon className="h-4 w-4 text-muted-foreground" />
+                Curva S financeira — desembolso acumulado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {sCurveQ.isLoading ? (
+                <Skeleton className="h-72 w-full" />
+              ) : chartData.length === 0 ? (
+                <EmptyState
+                  icon={LineIcon}
+                  title="Sem dados suficientes para a curva"
+                  description="Cadastre datas planejadas de início/fim da obra e registre pedidos com data de emissão e pagamento para visualizar a curva S financeira."
+                />
+              ) : (
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={chartData}
+                      margin={{ top: 8, right: 16, bottom: 4, left: 8 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-border"
+                      />
+                      <XAxis
+                        dataKey="week"
+                        tick={{ fontSize: 11 }}
+                        className="text-muted-foreground"
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v: number) =>
+                          v >= 1000
+                            ? `${(v / 1000).toFixed(0)}k`
+                            : String(v)
+                        }
+                        className="text-muted-foreground"
+                        width={56}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "hsl(var(--popover))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: 8,
+                          fontSize: 12,
+                        }}
+                        formatter={(v: number) => formatBRL(v)}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="planejado"
+                        name="Planejado"
+                        stroke="hsl(var(--muted-foreground))"
+                        strokeDasharray="4 4"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="comprometido"
+                        name="Comprometido projetado"
+                        stroke="hsl(var(--warning))"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="realizado"
+                        name="Realizado"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                  <div className="flex flex-wrap gap-4 mt-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-0.5 w-4 border-b-2 border-dashed border-muted-foreground" />
+                      Planejado
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-0.5 w-4 bg-warning" />
+                      Comprometido projetado
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-0.5 w-4 bg-primary" />
+                      Realizado
+                    </span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Tabela por categoria */}
           <Card>
             <CardHeader className="pb-3">
@@ -299,6 +447,8 @@ export default function Custos() {
                         <TableHead className="text-right">Realizado</TableHead>
                         <TableHead className="text-right">Saldo</TableHead>
                         <TableHead className="min-w-[160px]">Consumido</TableHead>
+                        <TableHead className="text-right">EAC</TableHead>
+                        <TableHead className="text-right">Variação</TableHead>
                         <TableHead className="text-right">Compras</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -376,6 +526,25 @@ export default function Custos() {
                               </div>
                             </TableCell>
                             <TableCell className="text-right tabular-nums">
+                              {formatBRL(row.eac)}
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                "text-right tabular-nums",
+                                row.variacao > 0 && "text-destructive font-medium",
+                                row.variacao < 0 && "text-success",
+                              )}
+                            >
+                              {row.variacao === 0
+                                ? formatBRL(0)
+                                : `${row.variacao > 0 ? "+" : ""}${formatBRL(row.variacao)}`}
+                              {row.variacao_pct !== null && (
+                                <div className="text-[10px] text-muted-foreground font-normal">
+                                  {`${row.variacao_pct > 0 ? "+" : ""}${row.variacao_pct.toFixed(1)}%`}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">
                               {row.purchases_count}
                             </TableCell>
                           </TableRow>
@@ -387,11 +556,6 @@ export default function Custos() {
               )}
             </CardContent>
           </Card>
-
-          <p className="text-xs text-muted-foreground">
-            Curva S financeira e forecast por categoria (EAC detalhado) chegam
-            em <span className="font-medium">Onda B2</span>.
-          </p>
         </div>
       )}
     </PageContainer>

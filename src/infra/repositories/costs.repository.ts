@@ -76,4 +76,25 @@ export const costsRepo = {
       categories_over_budget: Number(row.categories_over_budget ?? 0),
     };
   },
+
+  async getSCurveWeekly(projectId: string): Promise<CostSCurvePoint[]> {
+    const { data, error } = await supabase.rpc(
+      "get_project_cost_s_curve_weekly",
+      { p_project_id: projectId },
+    );
+    if (error) throw error;
+    return (data ?? []).map((row) => ({
+      week_start: String(row.week_start),
+      planned_cum: toNumber(row.planned_cum),
+      realized_cum: toNumber(row.realized_cum),
+      committed_projected_cum: toNumber(row.committed_projected_cum),
+    }));
+  },
 };
+
+export interface CostSCurvePoint {
+  week_start: string;
+  planned_cum: number;
+  realized_cum: number;
+  committed_projected_cum: number;
+}
