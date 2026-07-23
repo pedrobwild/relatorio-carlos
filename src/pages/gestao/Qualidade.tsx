@@ -196,17 +196,14 @@ function TemplatesTab() {
           icon={ListChecks}
           title="Nenhum template ainda"
           description="Crie um template de checklist reutilizável para agilizar novas vistorias."
-          action={
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditingId(null);
-                setEditorOpen(true);
-              }}
-            >
-              Criar primeiro template
-            </Button>
-          }
+          action={{
+            label: "Criar primeiro template",
+            onClick: () => {
+              setEditingId(null);
+              setEditorOpen(true);
+            },
+            icon: Plus,
+          }}
         />
       ) : (
         grouped.map(([category, list]) => (
