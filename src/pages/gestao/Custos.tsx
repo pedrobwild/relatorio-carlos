@@ -315,6 +315,104 @@ export default function Custos() {
             </Card>
           )}
 
+          {/* Curva S financeira */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <LineIcon className="h-4 w-4 text-muted-foreground" />
+                Curva S financeira — desembolso acumulado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {sCurveQ.isLoading ? (
+                <Skeleton className="h-72 w-full" />
+              ) : chartData.length === 0 ? (
+                <EmptyState
+                  icon={LineIcon}
+                  title="Sem dados suficientes para a curva"
+                  description="Cadastre datas planejadas de início/fim da obra e registre pedidos com data de emissão e pagamento para visualizar a curva S financeira."
+                />
+              ) : (
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={chartData}
+                      margin={{ top: 8, right: 16, bottom: 4, left: 8 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-border"
+                      />
+                      <XAxis
+                        dataKey="week"
+                        tick={{ fontSize: 11 }}
+                        className="text-muted-foreground"
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v: number) =>
+                          v >= 1000
+                            ? `${(v / 1000).toFixed(0)}k`
+                            : String(v)
+                        }
+                        className="text-muted-foreground"
+                        width={56}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "hsl(var(--popover))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: 8,
+                          fontSize: 12,
+                        }}
+                        formatter={(v: number) => formatBRL(v)}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="planejado"
+                        name="Planejado"
+                        stroke="hsl(var(--muted-foreground))"
+                        strokeDasharray="4 4"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="comprometido"
+                        name="Comprometido projetado"
+                        stroke="hsl(var(--warning))"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="realizado"
+                        name="Realizado"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                  <div className="flex flex-wrap gap-4 mt-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-0.5 w-4 border-b-2 border-dashed border-muted-foreground" />
+                      Planejado
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-0.5 w-4 bg-warning" />
+                      Comprometido projetado
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-0.5 w-4 bg-primary" />
+                      Realizado
+                    </span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Tabela por categoria */}
           <Card>
             <CardHeader className="pb-3">
