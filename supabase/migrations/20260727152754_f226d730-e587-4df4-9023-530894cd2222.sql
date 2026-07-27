@@ -1,0 +1,1 @@
+UPDATE public.users_profile SET status = 'inativo' WHERE id = 'e113abfa-ad4d-401f-99bb-12338d5dd6eb';
