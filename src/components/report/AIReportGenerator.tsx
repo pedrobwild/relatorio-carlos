@@ -75,8 +75,23 @@ export function AIReportGenerator({
       );
 
       if (cancelledRef.current) return;
+
+      // A função retorna 402/429 com corpo JSON — traduzir para microcopy clara
+      const status = (error as { context?: { status?: number } } | null)
+        ?.context?.status;
+      if (status === 402) {
+        throw new Error(
+          "Os créditos de IA do workspace acabaram. Adicione créditos para gerar o relatório automaticamente — enquanto isso, você pode preencher o relatório manualmente.",
+        );
+      }
+      if (status === 429) {
+        throw new Error(
+          "Muitas gerações em sequência. Aguarde alguns segundos e tente novamente.",
+        );
+      }
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Falha na geração");
+      if (!data?.success)
+        throw new Error(data?.error || "Não foi possível gerar o relatório.");
 
       const generated = data.data;
 
