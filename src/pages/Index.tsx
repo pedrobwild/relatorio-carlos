@@ -103,6 +103,7 @@ const Index = () => {
     availableAtByWeek,
     isSavingReport,
     savingWeek,
+    weeklyReportsLoading,
     updateActivity,
     handleMilestoneDateChange,
     handleActivityDateChange: _handleActivityDateChange,
@@ -766,7 +767,26 @@ const Index = () => {
                                 reportsChronological.length - 1
                               }
                             />
-                            {(() => {
+                            {weeklyReportsLoading ? (
+                              // Nunca montar o editor com template vazio
+                              // enquanto os relatórios ainda carregam — um
+                              // autosave sobre o template vazio apagaria o
+                              // conteúdo real da semana (upsert por semana).
+                              <div
+                                role="status"
+                                aria-busy="true"
+                                aria-label="Carregando relatório semanal"
+                                className="space-y-6 animate-pulse"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+                                  <p className="text-sm font-medium text-muted-foreground">
+                                    Carregando relatórios…
+                                  </p>
+                                </div>
+                                <ContentSkeleton variant="report" />
+                              </div>
+                            ) : (() => {
                               const extendedReport =
                                 selectedWeeklyReport as ExtendedWeeklyReport;
                               const weekNum = extendedReport.weekNumber;
