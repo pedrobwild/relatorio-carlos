@@ -114,6 +114,22 @@ async function refreshGalleryUrls(
   });
 }
 
+/**
+ * True quando o relatório tem qualquer conteúdo preenchido (texto, listas
+ * ou fotos). Usado pelo guarda anti-apagão em saveReport.
+ */
+function hasReportContent(d: WeeklyReportData | null | undefined): boolean {
+  if (!d) return false;
+  return (
+    (d.executiveSummary?.trim().length ?? 0) > 0 ||
+    (d.lookaheadTasks?.length ?? 0) > 0 ||
+    (d.risksAndIssues?.length ?? 0) > 0 ||
+    (d.clientDecisions?.length ?? 0) > 0 ||
+    (d.incidents?.length ?? 0) > 0 ||
+    (d.gallery?.length ?? 0) > 0
+  );
+}
+
 interface WeeklyReportRow {
   id: string;
   project_id: string;
@@ -287,6 +303,38 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       }
 
       setSavingWeek(weekNumber);
+
+      // Guarda anti-apagão: o upsert por (project_id, week_number) é
+      // last-write-wins. Se o payload está totalmente vazio (ex.: editor
+      // montado com template vazio antes do carregamento, ou estado local
+      // corrompido) e o servidor já tem conteúdo, RECUSA a sobrescrita —
+      // era assim que relatórios preenchidos "apareciam zerados" no dia
+      // seguinte.
+      if (!hasReportContent(data)) {
+        const { data: existing } = await supabase
+          .from("weekly_reports")
+          .select("data")
+          .eq("project_id", projectId)
+          .eq("week_number", weekNumber)
+          .maybeSingle();
+
+        if (
+          hasReportContent(
+            (existing?.data as unknown as WeeklyReportData | null) ?? null,
+          )
+        ) {
+          const err = new Error(
+            "Salvamento bloqueado: o relatório no servidor já tem conteúdo e a versão local está vazia. Recarregue a página e tente novamente.",
+          );
+          reportLogger.error("save-week-guard", err, { weekNumber });
+          toast.error(
+            "Salvamento bloqueado para não apagar o relatório existente. Recarregue a página e tente novamente.",
+            { duration: 8000 },
+          );
+          setSavingWeek(null);
+          throw err;
+        }
+      }
 
       // Upload any blob URLs to permanent storage before saving
       let dataToSave = data;
