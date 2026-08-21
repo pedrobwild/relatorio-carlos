@@ -56,11 +56,21 @@ export function useAutoSave<T>({
 
   // Guard against concurrent saves
   const isSavingRef = useRef(false);
+  // Set when a save is requested while another save is in flight — the
+  // newer data must be persisted when the current save finishes, instead
+  // of being silently dropped (causa de perda de dados ao trocar de aba).
+  const pendingTrailingSaveRef = useRef(false);
+  // Self-reference so performSave can schedule a trailing save.
+  const performSaveRef = useRef<() => Promise<void>>(async () => {});
 
   // Stable performSave that reads from refs
   const performSave = useCallback(async () => {
     if (!enabledRef.current) return;
-    if (isSavingRef.current) return; // Prevent concurrent saves
+    if (isSavingRef.current) {
+      // Prevent concurrent saves, but remember that newer data is pending
+      pendingTrailingSaveRef.current = true;
+      return;
+    }
 
     const currentData = dataRef.current;
     const currentSerialized = JSON.stringify(currentData);
@@ -93,8 +103,25 @@ export function useAutoSave<T>({
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
+      // Trailing save: data changed while this save was in flight (or a
+      // save was requested during it). Persist the latest snapshot now.
+      const latestSerialized = JSON.stringify(dataRef.current);
+      if (
+        enabledRef.current &&
+        (pendingTrailingSaveRef.current ||
+          latestSerialized !== previousSavedDataRef.current)
+      ) {
+        pendingTrailingSaveRef.current = false;
+        setTimeout(() => {
+          void performSaveRef.current();
+        }, 0);
+      }
     }
   }, []); // No dependencies - uses refs
+
+  useEffect(() => {
+    performSaveRef.current = performSave;
+  }, [performSave]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -136,18 +163,25 @@ export function useAutoSave<T>({
   useEffect(() => {
     if (!enabled) return;
 
-    const handleVisibilityChange = () => {
+    const flushUnsaved = () => {
       const currentSerialized = JSON.stringify(dataRef.current);
-      if (
-        document.hidden &&
-        currentSerialized !== previousSavedDataRef.current
-      ) {
+      if (currentSerialized !== previousSavedDataRef.current) {
         // Clear pending timeout and save immediately
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
         performSave();
       }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) flushUnsaved();
+    };
+
+    // pagehide é mais confiável que beforeunload em mobile (iOS/Android),
+    // onde a aba pode ser congelada ou descartada sem beforeunload.
+    const handlePageHide = () => {
+      flushUnsaved();
     };
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -159,19 +193,30 @@ export function useAutoSave<T>({
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [enabled, performSave]);
 
-  // Cleanup timeout on unmount
+  // Cleanup on unmount: em vez de apenas cancelar o debounce pendente
+  // (o que descartava silenciosamente edições recentes ao navegar/trocar
+  // de aba interna), tenta um save final best-effort se houver mudanças.
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+      }
+      const currentSerialized = JSON.stringify(dataRef.current);
+      if (
+        enabledRef.current &&
+        currentSerialized !== previousSavedDataRef.current
+      ) {
+        void performSaveRef.current();
       }
     };
   }, []);

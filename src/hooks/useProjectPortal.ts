@@ -175,6 +175,7 @@ export function useProjectPortal() {
     saveReport: saveWeeklyReport,
     isSaving: isSavingReport,
     savingWeek,
+    isLoading: weeklyReportsLoading,
   } = useWeeklyReports({ projectId });
 
   const canEditSchedule = can("schedule:edit");
@@ -637,6 +638,7 @@ export function useProjectPortal() {
     availableAtByWeek,
     isSavingReport,
     savingWeek,
+    weeklyReportsLoading,
     updateActivity,
     // Handlers
     handleMilestoneDateChange,
