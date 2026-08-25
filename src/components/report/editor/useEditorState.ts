@@ -9,9 +9,12 @@ import {
 } from "@/types/weeklyReport";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { toast } from "sonner";
+import { useServerStateCheck } from "./useServerStateCheck";
 
 interface UseEditorStateOptions {
   data: WeeklyReportData;
+  /** Necessário para a verificação de divergência com o servidor. */
+  projectId?: string;
   // When a handler returns the persisted WeeklyReportData (i.e. the upload
   // pipeline replaced blob: URLs with permanent ones), the editor patches its
   // local formData.gallery so previews stay valid and subsequent saves don't
@@ -24,6 +27,7 @@ interface UseEditorStateOptions {
   ) => void | Promise<WeeklyReportData | null | undefined | void>;
   externalIsSaving?: boolean;
 }
+
 
 const validTypes = [
   "image/jpeg",
@@ -51,10 +55,12 @@ function validateFile(file: File): boolean {
 
 export function useEditorState({
   data,
+  projectId,
   onAutoSave,
   onSaveAndClose,
   externalIsSaving,
 }: UseEditorStateOptions) {
+
   const [formData, setFormData] = useState<WeeklyReportData>(data);
   const [richTextOpen, setRichTextOpen] = useState(false);
   const hasUserEdited = useRef(false);
@@ -106,6 +112,16 @@ export function useEditorState({
     [],
   );
 
+  // Verificação de divergência no carregamento: enquanto ela roda (ou
+
+  // enquanto uma divergência não é resolvida), o autosave fica suspenso.
+  const serverCheck = useServerStateCheck({
+    projectId,
+    weekNumber: data.weekNumber,
+    localData: formData,
+    enabled: !!projectId && !!onAutoSave,
+  });
+
   const { isSaving: autoSaving, lastSaved } = useAutoSave({
     data: formData,
     onSave: async (payload) => {
@@ -116,8 +132,18 @@ export function useEditorState({
       return result ?? undefined;
     },
     debounceMs: 3000,
-    enabled: !!onAutoSave,
+    enabled: !!onAutoSave && !serverCheck.blocksAutoSave,
   });
+
+  // Aplica a versão do servidor sobre o estado local e libera o autosave.
+  const applyServerVersion = useCallback(() => {
+    if (serverCheck.serverData) {
+      hasUserEdited.current = false;
+      setFormData(serverCheck.serverData);
+    }
+    serverCheck.acceptServer();
+  }, [serverCheck]);
+
 
   const isSaving = externalIsSaving || autoSaving;
 
@@ -371,6 +397,8 @@ export function useEditorState({
   return {
     formData,
     setFormData,
+    serverCheck,
+    applyServerVersion,
     richTextOpen,
     setRichTextOpen,
     isSaving,

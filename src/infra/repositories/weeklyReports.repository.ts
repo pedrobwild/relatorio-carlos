@@ -113,3 +113,25 @@ export async function restoreVersion(versionId: string) {
     };
   });
 }
+
+/**
+ * Lê a versão atual do relatório direto do servidor (sem cache), usada na
+ * verificação de divergência ao carregar o editor.
+ */
+export async function getWeeklyReportSnapshot(
+  projectId: string,
+  weekNumber: number,
+) {
+  return executeQuery<WeeklyReportRow | null>(async () => {
+    const { data, error } = await supabase
+      .from("weekly_reports")
+      .select("*")
+      .eq("project_id", projectId)
+      .eq("week_number", weekNumber)
+      .maybeSingle();
+    return {
+      data: (data as unknown as WeeklyReportRow) ?? null,
+      error,
+    };
+  });
+}
