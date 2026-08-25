@@ -176,6 +176,15 @@ export function useEditorState({
     enabled: !!onAutoSave && !serverCheck.blocksAutoSave,
   });
 
+  useAutoSaveToasts({
+    status: autoSaveStatus,
+    lastSaved,
+    errorMessage: autoSaveError,
+    onRetry: retryAutoSave,
+    enabled: !!onAutoSave,
+  });
+
+
   // Aplica a versão do servidor sobre o estado local e libera o autosave.
   const applyServerVersion = useCallback(() => {
     if (serverCheck.serverData) {
