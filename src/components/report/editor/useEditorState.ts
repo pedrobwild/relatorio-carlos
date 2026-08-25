@@ -8,6 +8,7 @@ import {
   GalleryPhoto,
 } from "@/types/weeklyReport";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useAutoSaveToasts } from "@/hooks/useAutoSaveToasts";
 import { usePhotoUploadQueue } from "@/hooks/usePhotoUploadQueue";
 import {
   enqueuePhotoUpload,
