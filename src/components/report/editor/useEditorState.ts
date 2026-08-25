@@ -380,9 +380,11 @@ export function useEditorState({
   const removeGalleryPhoto = (index: number) => {
     setFormDataWithTracking((prev) => {
       const removed = prev.gallery[index];
+      if (removed?.id) void removePendingUpload(removed.id);
       if (removed?.url?.startsWith("blob:")) {
         URL.revokeObjectURL(removed.url);
       }
+
       return { ...prev, gallery: prev.gallery.filter((_, i) => i !== index) };
     });
   };
