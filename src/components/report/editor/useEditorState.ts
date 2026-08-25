@@ -233,6 +233,17 @@ export function useEditorState({
     serverCheck.acceptServer();
   }, [serverCheck]);
 
+  // Base da comparação offline: o que veio do servidor no carregamento.
+  const markSyncedRef = useRef(offlineConflict.markSynced);
+  markSyncedRef.current = offlineConflict.markSynced;
+  useEffect(() => {
+    markSyncedRef.current(data);
+    // Só na montagem: depois disso a base é atualizada a cada gravação.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+
 
   const isSaving = externalIsSaving || autoSaving;
 
