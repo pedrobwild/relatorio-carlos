@@ -65,7 +65,12 @@ const WeeklyReportEditor = ({
       </div>
 
       {projectId && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
+          <WeeklyReportVersionHistory
+            projectId={projectId}
+            weekNumber={state.formData.weekNumber}
+            onRestored={(restored) => state.setFormData(restored)}
+          />
           <AIReportGenerator
             projectId={projectId}
             weekNumber={state.formData.weekNumber}
@@ -76,6 +81,7 @@ const WeeklyReportEditor = ({
           />
         </div>
       )}
+
 
       <Accordion
         type="multiple"
