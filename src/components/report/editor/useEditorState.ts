@@ -8,8 +8,14 @@ import {
   GalleryPhoto,
 } from "@/types/weeklyReport";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { usePhotoUploadQueue } from "@/hooks/usePhotoUploadQueue";
+import {
+  enqueuePhotoUpload,
+  removePendingUpload,
+} from "@/lib/photoUploadQueue";
 import { toast } from "sonner";
 import { useServerStateCheck } from "./useServerStateCheck";
+
 
 interface UseEditorStateOptions {
   data: WeeklyReportData;
