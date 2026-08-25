@@ -471,6 +471,7 @@ export function useEditorState({
     richTextOpen,
     setRichTextOpen,
     isSaving,
+    uploadQueue,
     lastSaved,
     autoSaveStatus,
     retryInSeconds,
