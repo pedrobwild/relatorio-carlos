@@ -13,7 +13,9 @@ import GallerySection from "./editor/GallerySection";
 import { AIReportGenerator } from "./AIReportGenerator";
 import { WeeklyReportVersionHistory } from "./WeeklyReportVersionHistory";
 import ServerDivergenceAlert from "./editor/ServerDivergenceAlert";
+import OfflineConflictAlert from "./editor/OfflineConflictAlert";
 import PendingUploadsBanner from "./editor/PendingUploadsBanner";
+
 
 
 
