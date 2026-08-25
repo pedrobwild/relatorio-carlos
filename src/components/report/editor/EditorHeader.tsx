@@ -1,7 +1,7 @@
-import { FileText, CheckCircle2, Loader2, Save } from "lucide-react";
+import { FileText, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import AutoSaveIndicator from "./AutoSaveIndicator";
+import type { AutoSaveStatus } from "@/hooks/useAutoSave";
 
 interface EditorHeaderProps {
   weekNumber: number;
@@ -9,6 +9,10 @@ interface EditorHeaderProps {
   periodEnd: string;
   isSaving: boolean;
   lastSaved: Date | null;
+  autoSaveStatus?: AutoSaveStatus;
+  retryInSeconds?: number | null;
+  autoSaveError?: string | null;
+  onRetryAutoSave?: () => void;
   onSave: () => void;
   onCancel?: () => void;
 }
@@ -19,6 +23,10 @@ const EditorHeader = ({
   periodEnd,
   isSaving,
   lastSaved,
+  autoSaveStatus,
+  retryInSeconds,
+  autoSaveError,
+  onRetryAutoSave,
   onSave,
   onCancel,
 }: EditorHeaderProps) => (
@@ -34,20 +42,16 @@ const EditorHeader = ({
             <span className="truncate">
               Período: {periodStart} a {periodEnd}
             </span>
-            {isSaving ? (
-              <span className="flex items-center gap-1.5 text-white/70">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Salvando...
-              </span>
-            ) : (
-              lastSaved && (
-                <span className="flex items-center gap-1.5 text-green-300">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Salvo às {format(lastSaved, "HH:mm", { locale: ptBR })}
-                </span>
-              )
-            )}
+            <AutoSaveIndicator
+              status={isSaving ? "saving" : (autoSaveStatus ?? "idle")}
+              lastSaved={lastSaved}
+              retryInSeconds={retryInSeconds}
+              errorMessage={autoSaveError}
+              onRetry={onRetryAutoSave}
+              onDark
+            />
           </div>
+
         </div>
       </div>
       <div className="flex gap-2 shrink-0">
