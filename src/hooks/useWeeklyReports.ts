@@ -443,7 +443,9 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   return {
     reportDataByWeek,
     availableAtByWeek,
+    updatedAtByWeek,
     isLoading,
+
     error,
     saveReport,
     isSaving: upsertMutation.isPending || isUploading,
