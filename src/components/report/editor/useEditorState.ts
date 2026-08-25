@@ -112,8 +112,8 @@ export function useEditorState({
     [],
   );
 
-  const { isSaving: autoSaving, lastSaved } = useAutoSave({
   // Verificação de divergência no carregamento: enquanto ela roda (ou
+
   // enquanto uma divergência não é resolvida), o autosave fica suspenso.
   const serverCheck = useServerStateCheck({
     projectId,
