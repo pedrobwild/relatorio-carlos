@@ -72,7 +72,7 @@ export async function saveWeeklyReport(input: SaveWeeklyReportInput) {
       p_week_start: input.weekStart,
       p_week_end: input.weekEnd,
       p_data: input.data as unknown as Json,
-      p_expected_updated_at: input.expectedUpdatedAt,
+      p_expected_updated_at: input.expectedUpdatedAt ?? undefined,
     });
     return {
       data: (data as unknown as WeeklyReportRow) ?? null,
