@@ -61,6 +61,10 @@ const WeeklyReportEditor = ({
             periodEnd={state.formData.periodEnd}
             isSaving={state.isSaving}
             lastSaved={state.lastSaved}
+            autoSaveStatus={state.autoSaveStatus}
+            retryInSeconds={state.retryInSeconds}
+            autoSaveError={state.autoSaveError}
+            onRetryAutoSave={state.retryAutoSave}
             onSave={state.handleSave}
             onCancel={onCancel}
           />
