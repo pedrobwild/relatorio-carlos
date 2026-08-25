@@ -188,8 +188,8 @@ export function WeeklyReportVersionHistory({
               {isRestoring ? "Restaurando…" : "Restaurar versão"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+        </AlertDialogContent>
+
       </AlertDialog>
     </>
   );
