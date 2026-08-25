@@ -141,7 +141,76 @@ export function WeeklyReportVersionHistory({
             </SheetDescription>
           </SheetHeader>
 
+          {versions.length > 1 && (
+            <div className="mt-4 rounded-lg border border-border p-3 space-y-3">
+              <p className="text-sm font-medium">Comparar duas versões</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="diff-from"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Versão base
+                  </Label>
+                  <Select
+                    value={fromId ?? undefined}
+                    onValueChange={setCompareFromId}
+                  >
+                    <SelectTrigger id="diff-from" className="min-h-11">
+                      <SelectValue placeholder="Escolher versão" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {versions.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          Versão {v.version} · {formatDateTime(v.created_at)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="diff-to"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Comparar com
+                  </Label>
+                  <Select
+                    value={toId ?? undefined}
+                    onValueChange={setCompareToId}
+                  >
+                    <SelectTrigger id="diff-to" className="min-h-11">
+                      <SelectValue placeholder="Escolher versão" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {versions.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          Versão {v.version} · {formatDateTime(v.created_at)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="w-full min-h-11"
+                disabled={!canCompare}
+                onClick={() => setDiffOpen(true)}
+              >
+                <GitCompare className="w-4 h-4 mr-2" />
+                Ver diferenças
+              </Button>
+              {!canCompare && (
+                <p className="text-xs text-muted-foreground">
+                  Escolha duas versões diferentes para comparar.
+                </p>
+              )}
+            </div>
+          )}
+
           <ScrollArea className="flex-1 -mx-6 px-6 mt-4">
+
             {isLoading ? (
               <div className="flex items-center justify-center py-10 text-muted-foreground">
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
