@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { GalleryPhoto, WeeklyReportData } from "@/types/weeklyReport";
@@ -7,6 +7,11 @@ import { Json } from "@/integrations/supabase/types";
 import { useReportImageUpload } from "./useReportImageUpload";
 import { queryKeys } from "@/lib/queryKeys";
 import { reportLogger } from "@/lib/devLogger";
+import {
+  saveWeeklyReport as saveWeeklyReportRpc,
+  isConflictError,
+} from "@/infra/repositories/weeklyReports.repository";
+
 
 const WEEKLY_REPORTS_BUCKET = "weekly-reports";
 // Signed URL TTL is 6h; the query refetches itself every 4h
@@ -152,9 +157,12 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   const queryClient = useQueryClient();
   const [savingWeek, setSavingWeek] = useState<number | null>(null);
   const { uploadGalleryPhotos, isUploading } = useReportImageUpload();
+  // week_number -> updated_at da última versão conhecida do servidor.
+  const lastPersistedUpdatedAt = useRef(new Map<number, string>());
 
   // Use centralized query key for consistency
   const queryKey = queryKeys.weeklyReports.list(projectId);
+
 
   const {
     data: reports = [],
@@ -186,13 +194,21 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   // When set, this is the source of truth for whether a customer may view the
   // report — the frontend date heuristic is only a fallback.
   const availableAtByWeek = new Map<number, string | null>();
+  // Map week_number -> updated_at da linha carregada. Base do controle de
+  // concorrência otimista (evita last-write-wins entre dois editores).
+  const updatedAtByWeek = new Map<number, string>();
   for (const row of reports) {
     reportDataByWeek.set(
       row.week_number,
       row.data as unknown as WeeklyReportData,
     );
     availableAtByWeek.set(row.week_number, row.available_at);
+    if (!row.id.startsWith("optimistic-")) {
+      updatedAtByWeek.set(row.week_number, row.updated_at);
+      lastPersistedUpdatedAt.current.set(row.week_number, row.updated_at);
+    }
   }
+
 
   const upsertMutation = useMutation({
     mutationFn: async ({
@@ -216,24 +232,39 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
 
       setSavingWeek(weekNumber);
 
-      const { error } = await supabase.from("weekly_reports").upsert(
-        {
-          project_id: projectId,
-          week_number: weekNumber,
-          week_start: weekStart,
-          week_end: weekEnd,
-          data: data as unknown as Json,
-        },
-        { onConflict: "project_id,week_number" },
+      // `expectedUpdatedAt` vem do último estado servidor conhecido — a RPC
+      // recusa a gravação se alguém salvou depois disso.
+      const serverRows =
+        queryClient.getQueryData<WeeklyReportRow[]>(queryKey) ?? [];
+      const serverRow = serverRows.find(
+        (r) => r.week_number === weekNumber && !r.id.startsWith("optimistic-"),
       );
+      const expectedUpdatedAt =
+        lastPersistedUpdatedAt.current.get(weekNumber) ??
+        serverRow?.updated_at ??
+        null;
 
-      if (error) {
-        reportLogger.error(operationId, error, { weekNumber });
-        throw error;
+      const result = await saveWeeklyReportRpc({
+        projectId,
+        weekNumber,
+        weekStart,
+        weekEnd,
+        data,
+        expectedUpdatedAt,
+      });
+
+      if (result.error) {
+        reportLogger.error(operationId, result.error, { weekNumber });
+        throw result.error;
+      }
+
+      if (result.data?.updated_at) {
+        lastPersistedUpdatedAt.current.set(weekNumber, result.data.updated_at);
       }
 
       reportLogger.end(operationId, { level: "success", data: { weekNumber } });
     },
+
     // Optimistic update: write to cache immediately so the UI doesn't flicker
     // while the upsert is in flight, especially on slow connections.
     onMutate: async ({ weekNumber, weekStart, weekEnd, data }) => {
@@ -270,21 +301,35 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
 
       return { previousReports };
     },
-    onSuccess: () => {
+    onSuccess: (_data, vars) => {
       // Refetch to replace the optimistic row with the canonical server row
       // (real id, timestamps, etc.).
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.weeklyReports.versions(projectId, vars.weekNumber),
+      });
       toast.success("Relatório salvo com sucesso!");
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       // Roll back to the snapshot so we don't leave a fake row in the cache.
       if (context?.previousReports !== undefined) {
         queryClient.setQueryData(queryKey, context.previousReports);
+      }
+      if (isConflictError(err)) {
+        // Conflito: outra pessoa salvou depois do carregamento. Nada é
+        // sobrescrito — recarregamos a versão do servidor e avisamos.
+        queryClient.invalidateQueries({ queryKey });
+        toast.error(
+          "Outra pessoa atualizou este relatório enquanto você editava. Recarregamos a versão mais recente — revise e salve novamente. Nenhuma informação foi perdida: o histórico de versões guarda tudo.",
+          { duration: 10000 },
+        );
+        return;
       }
       toast.error(
         "Erro ao salvar relatório. Suas alterações foram mantidas, tente novamente.",
       );
     },
+
     onSettled: () => {
       setSavingWeek(null);
     },
@@ -398,7 +443,9 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   return {
     reportDataByWeek,
     availableAtByWeek,
+    updatedAtByWeek,
     isLoading,
+
     error,
     saveReport,
     isSaving: upsertMutation.isPending || isUploading,

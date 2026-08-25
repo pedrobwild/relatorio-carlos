@@ -6865,6 +6865,50 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_report_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          project_id: string
+          report_id: string
+          restored_from_version: number | null
+          version: number
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data: Json
+          id?: string
+          project_id: string
+          report_id: string
+          restored_from_version?: number | null
+          version: number
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          project_id?: string
+          report_id?: string
+          restored_from_version?: number | null
+          version?: number
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_report_versions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_reports: {
         Row: {
           available_at: string | null
@@ -7511,10 +7555,61 @@ export type Database = {
         Returns: undefined
       }
       restore_project: { Args: { p_project_id: string }; Returns: undefined }
+      restore_weekly_report_version: {
+        Args: { p_version_id: string }
+        Returns: {
+          available_at: string | null
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          project_id: string
+          updated_at: string
+          updated_by: string | null
+          week_end: string
+          week_number: number
+          week_start: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "weekly_reports"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       resync_projects_planned_dates: { Args: never; Returns: number }
       save_project_baseline: {
         Args: { p_project_id: string }
         Returns: undefined
+      }
+      save_weekly_report: {
+        Args: {
+          p_data: Json
+          p_expected_updated_at?: string
+          p_project_id: string
+          p_week_end: string
+          p_week_number: number
+          p_week_start: string
+        }
+        Returns: {
+          available_at: string | null
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          project_id: string
+          updated_at: string
+          updated_by: string | null
+          week_end: string
+          week_number: number
+          week_start: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "weekly_reports"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       soft_delete_project: {
         Args: { p_force?: boolean; p_project_id: string }

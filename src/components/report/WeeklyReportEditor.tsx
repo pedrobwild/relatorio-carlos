@@ -11,6 +11,8 @@ import DecisionsSection from "./editor/DecisionsSection";
 import IncidentsSection from "./editor/IncidentsSection";
 import GallerySection from "./editor/GallerySection";
 import { AIReportGenerator } from "./AIReportGenerator";
+import { WeeklyReportVersionHistory } from "./WeeklyReportVersionHistory";
+
 
 interface WeeklyReportEditorProps {
   data: WeeklyReportData;
@@ -63,7 +65,12 @@ const WeeklyReportEditor = ({
       </div>
 
       {projectId && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
+          <WeeklyReportVersionHistory
+            projectId={projectId}
+            weekNumber={state.formData.weekNumber}
+            onRestored={(restored) => state.setFormData(restored)}
+          />
           <AIReportGenerator
             projectId={projectId}
             weekNumber={state.formData.weekNumber}
@@ -74,6 +81,7 @@ const WeeklyReportEditor = ({
           />
         </div>
       )}
+
 
       <Accordion
         type="multiple"

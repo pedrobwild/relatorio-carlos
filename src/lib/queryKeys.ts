@@ -133,7 +133,15 @@ export const queryKeys = {
       [...queryKeys.weeklyReports.all, "detail", reportId] as const,
     current: (projectId: string | undefined) =>
       [...queryKeys.weeklyReports.all, "current", projectId] as const,
+    versions: (projectId: string | undefined, weekNumber: number | undefined) =>
+      [
+        ...queryKeys.weeklyReports.all,
+        "versions",
+        projectId,
+        weekNumber,
+      ] as const,
   },
+
 
   // ============================================================================
   // Users & Profiles
