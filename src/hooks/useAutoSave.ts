@@ -78,6 +78,30 @@ export function useAutoSave<T>({
   const previousSavedDataRef = useRef<string>("");
   const isFirstRender = useRef(true);
 
+  // ---- Fila offline -------------------------------------------------
+  const offlineKeyRef = useRef(offlineKey);
+  offlineKeyRef.current = offlineKey;
+  const [offlineSince, setOfflineSince] = useState<Date | null>(() => {
+    if (!offlineKey) return null;
+    const queued = readOfflineSnapshot<T>(offlineKey);
+    return queued ? new Date(queued.queuedAt) : null;
+  });
+
+  const queueOffline = useCallback((snapshot: T) => {
+    const key = offlineKeyRef.current;
+    if (!key) return;
+    enqueueOfflineSnapshot(key, snapshot);
+    setOfflineSince(new Date());
+  }, []);
+
+  const clearOffline = useCallback(() => {
+    const key = offlineKeyRef.current;
+    if (key) clearOfflineSnapshot(key);
+    setOfflineSince(null);
+  }, []);
+
+
+
 
   // Keep refs for latest values to avoid recreating callbacks
   const dataRef = useRef<T>(data);
