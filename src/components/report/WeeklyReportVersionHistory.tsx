@@ -1,7 +1,21 @@
-import { useState } from "react";
-import { History, RotateCcw, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  History,
+  RotateCcw,
+  Image as ImageIcon,
+  Loader2,
+  GitCompare,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -23,8 +37,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/states";
 import { useWeeklyReportVersions } from "@/hooks/useWeeklyReportVersions";
+import VersionDiffDialog from "./VersionDiffDialog";
 import type { WeeklyReportVersion } from "@/infra/repositories/weeklyReports.repository";
 import type { WeeklyReportData } from "@/types/weeklyReport";
+
 
 interface Props {
   projectId: string;
@@ -61,8 +77,37 @@ export function WeeklyReportVersionHistory({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<WeeklyReportVersion | null>(null);
+  const [compareFromId, setCompareFromId] = useState<string | null>(null);
+  const [compareToId, setCompareToId] = useState<string | null>(null);
+  const [diffOpen, setDiffOpen] = useState(false);
   const { versions, isLoading, restoreVersion, isRestoring } =
     useWeeklyReportVersions({ projectId, weekNumber, enabled: open });
+
+  // Padrão: comparar a penúltima versão com a atual — a dúvida mais comum
+  // é "o que mudou no último salvamento?".
+  const fromId = compareFromId ?? versions[1]?.id ?? null;
+  const toId = compareToId ?? versions[0]?.id ?? null;
+  const fromVersion = useMemo(
+    () => versions.find((v) => v.id === fromId) ?? null,
+    [versions, fromId],
+  );
+  const toVersion = useMemo(
+    () => versions.find((v) => v.id === toId) ?? null,
+    [versions, toId],
+  );
+  // A comparação sempre parte da versão mais antiga para a mais recente.
+  const [diffBefore, diffAfter] =
+    fromVersion && toVersion && fromVersion.version > toVersion.version
+      ? [toVersion, fromVersion]
+      : [fromVersion, toVersion];
+  const canCompare =
+    !!diffBefore && !!diffAfter && diffBefore.id !== diffAfter.id;
+
+  const openDiffWithCurrent = (version: WeeklyReportVersion) => {
+    setCompareFromId(version.id);
+    setCompareToId(versions[0]?.id ?? null);
+    setDiffOpen(true);
+  };
 
   const handleRestore = async () => {
     if (!pending) return;
@@ -75,6 +120,7 @@ export function WeeklyReportVersionHistory({
       // Feedback já exibido pelo hook.
     }
   };
+
 
   return (
     <>
@@ -95,7 +141,76 @@ export function WeeklyReportVersionHistory({
             </SheetDescription>
           </SheetHeader>
 
+          {versions.length > 1 && (
+            <div className="mt-4 rounded-lg border border-border p-3 space-y-3">
+              <p className="text-sm font-medium">Comparar duas versões</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="diff-from"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Versão base
+                  </Label>
+                  <Select
+                    value={fromId ?? undefined}
+                    onValueChange={setCompareFromId}
+                  >
+                    <SelectTrigger id="diff-from" className="min-h-11">
+                      <SelectValue placeholder="Escolher versão" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {versions.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          Versão {v.version} · {formatDateTime(v.created_at)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="diff-to"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Comparar com
+                  </Label>
+                  <Select
+                    value={toId ?? undefined}
+                    onValueChange={setCompareToId}
+                  >
+                    <SelectTrigger id="diff-to" className="min-h-11">
+                      <SelectValue placeholder="Escolher versão" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {versions.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          Versão {v.version} · {formatDateTime(v.created_at)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="w-full min-h-11"
+                disabled={!canCompare}
+                onClick={() => setDiffOpen(true)}
+              >
+                <GitCompare className="w-4 h-4 mr-2" />
+                Ver diferenças
+              </Button>
+              {!canCompare && (
+                <p className="text-xs text-muted-foreground">
+                  Escolha duas versões diferentes para comparar.
+                </p>
+              )}
+            </div>
+          )}
+
           <ScrollArea className="flex-1 -mx-6 px-6 mt-4">
+
             {isLoading ? (
               <div className="flex items-center justify-center py-10 text-muted-foreground">
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -137,18 +252,32 @@ export function WeeklyReportVersionHistory({
                             {formatDateTime(version.created_at)}
                           </p>
                         </div>
-                        {!isCurrent && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="shrink-0 min-h-11"
-                            onClick={() => setPending(version)}
-                            disabled={isRestoring}
-                          >
-                            <RotateCcw className="w-4 h-4 mr-2" />
-                            Restaurar
-                          </Button>
-                        )}
+                        <div className="flex flex-col gap-2 shrink-0">
+                          {!isCurrent && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="min-h-11"
+                                onClick={() => openDiffWithCurrent(version)}
+                              >
+                                <GitCompare className="w-4 h-4 mr-2" />
+                                Ver diferenças
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="min-h-11"
+                                onClick={() => setPending(version)}
+                                disabled={isRestoring}
+                              >
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Restaurar
+                              </Button>
+                            </>
+                          )}
+                        </div>
+
                       </div>
                       <p className="text-sm text-muted-foreground mt-2">
                         {summarize(version.data)}
@@ -191,6 +320,14 @@ export function WeeklyReportVersionHistory({
         </AlertDialogContent>
 
       </AlertDialog>
+
+      <VersionDiffDialog
+        open={diffOpen}
+        onOpenChange={setDiffOpen}
+        before={diffBefore}
+        after={diffAfter}
+      />
+
     </>
   );
 }

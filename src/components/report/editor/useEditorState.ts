@@ -8,6 +8,7 @@ import {
   GalleryPhoto,
 } from "@/types/weeklyReport";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useAutoSaveToasts } from "@/hooks/useAutoSaveToasts";
 import { usePhotoUploadQueue } from "@/hooks/usePhotoUploadQueue";
 import {
   enqueuePhotoUpload,
@@ -175,6 +176,15 @@ export function useEditorState({
     debounceMs: 3000,
     enabled: !!onAutoSave && !serverCheck.blocksAutoSave,
   });
+
+  useAutoSaveToasts({
+    status: autoSaveStatus,
+    lastSaved,
+    errorMessage: autoSaveError,
+    onRetry: retryAutoSave,
+    enabled: !!onAutoSave,
+  });
+
 
   // Aplica a versão do servidor sobre o estado local e libera o autosave.
   const applyServerVersion = useCallback(() => {
