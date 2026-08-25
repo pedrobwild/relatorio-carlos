@@ -186,12 +186,18 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   // When set, this is the source of truth for whether a customer may view the
   // report — the frontend date heuristic is only a fallback.
   const availableAtByWeek = new Map<number, string | null>();
+  // Map week_number -> updated_at da linha carregada. Base do controle de
+  // concorrência otimista (evita last-write-wins entre dois editores).
+  const updatedAtByWeek = new Map<number, string>();
   for (const row of reports) {
     reportDataByWeek.set(
       row.week_number,
       row.data as unknown as WeeklyReportData,
     );
     availableAtByWeek.set(row.week_number, row.available_at);
+    if (!row.id.startsWith("optimistic-")) {
+      updatedAtByWeek.set(row.week_number, row.updated_at);
+    }
   }
 
   const upsertMutation = useMutation({
@@ -216,24 +222,39 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
 
       setSavingWeek(weekNumber);
 
-      const { error } = await supabase.from("weekly_reports").upsert(
-        {
-          project_id: projectId,
-          week_number: weekNumber,
-          week_start: weekStart,
-          week_end: weekEnd,
-          data: data as unknown as Json,
-        },
-        { onConflict: "project_id,week_number" },
+      // `expectedUpdatedAt` vem do último estado servidor conhecido — a RPC
+      // recusa a gravação se alguém salvou depois disso.
+      const serverRows =
+        queryClient.getQueryData<WeeklyReportRow[]>(queryKey) ?? [];
+      const serverRow = serverRows.find(
+        (r) => r.week_number === weekNumber && !r.id.startsWith("optimistic-"),
       );
+      const expectedUpdatedAt =
+        lastPersistedUpdatedAt.current.get(weekNumber) ??
+        serverRow?.updated_at ??
+        null;
 
-      if (error) {
-        reportLogger.error(operationId, error, { weekNumber });
-        throw error;
+      const result = await saveWeeklyReportRpc({
+        projectId,
+        weekNumber,
+        weekStart,
+        weekEnd,
+        data,
+        expectedUpdatedAt,
+      });
+
+      if (result.error) {
+        reportLogger.error(operationId, result.error, { weekNumber });
+        throw result.error;
+      }
+
+      if (result.data?.updated_at) {
+        lastPersistedUpdatedAt.current.set(weekNumber, result.data.updated_at);
       }
 
       reportLogger.end(operationId, { level: "success", data: { weekNumber } });
     },
+
     // Optimistic update: write to cache immediately so the UI doesn't flicker
     // while the upsert is in flight, especially on slow connections.
     onMutate: async ({ weekNumber, weekStart, weekEnd, data }) => {
