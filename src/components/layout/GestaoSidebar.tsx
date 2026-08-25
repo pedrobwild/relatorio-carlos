@@ -23,6 +23,8 @@ import {
   Coins,
   BookOpenCheck,
   ShieldCheck,
+  FileSearch,
+
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
