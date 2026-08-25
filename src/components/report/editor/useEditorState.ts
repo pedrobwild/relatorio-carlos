@@ -55,10 +55,12 @@ function validateFile(file: File): boolean {
 
 export function useEditorState({
   data,
+  projectId,
   onAutoSave,
   onSaveAndClose,
   externalIsSaving,
 }: UseEditorStateOptions) {
+
   const [formData, setFormData] = useState<WeeklyReportData>(data);
   const [richTextOpen, setRichTextOpen] = useState(false);
   const hasUserEdited = useRef(false);
