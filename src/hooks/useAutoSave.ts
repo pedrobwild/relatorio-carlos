@@ -229,6 +229,11 @@ export function useAutoSave<T>({
     // Skip if not enabled
     if (!enabled) return;
 
+    // Alterações pendentes ainda não gravadas
+    if (!isSavingRef.current) {
+      setStatus((s) => (s === "error" || s === "retrying" ? s : "pending"));
+    }
+
     // Clear existing timeout - this is the key debounce behavior
     // Every change resets the timer, so save only happens after user stops editing
     if (timeoutRef.current) {
@@ -239,6 +244,7 @@ export function useAutoSave<T>({
     timeoutRef.current = setTimeout(() => {
       performSave();
     }, debounceMs);
+
 
     // Cleanup on unmount or when serializedData changes
     return () => {
