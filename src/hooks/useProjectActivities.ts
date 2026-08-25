@@ -5,7 +5,7 @@
  * with optimistic updates for Gantt chart interactions.
  */
 
-import { useEffect, useId, useMemo } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -35,6 +35,7 @@ export interface ProjectActivity {
 }
 
 export interface ActivityInput {
+  id?: string;
   description: string;
   planned_start: string;
   planned_end: string;
@@ -66,6 +67,7 @@ export function useProjectActivities(projectId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const instanceId = useId();
+  const saveQueueRef = useRef<Promise<boolean>>(Promise.resolve(true));
 
   // Main query for activities
   const {
@@ -113,6 +115,7 @@ export function useProjectActivities(projectId: string | undefined) {
       }
 
       const rows = newActivities.map((activity, index) => ({
+        id: activity.id,
         description: activity.description,
         planned_start: activity.planned_start,
         planned_end: activity.planned_end,
@@ -126,7 +129,9 @@ export function useProjectActivities(projectId: string | undefined) {
         detailed_description: activity.detailed_description?.trim() || null,
       }));
 
-      // Atomic RPC: delete + insert in a single transaction (no race condition)
+      // Atomic RPC: update by id, insert new rows, then remove only omitted rows.
+      // Existing ids must be preserved because measurements and other records
+      // reference them.
       const { error: rpcError } = await supabase.rpc(
         "replace_project_activities" as any,
         {
@@ -135,36 +140,8 @@ export function useProjectActivities(projectId: string | undefined) {
         },
       );
 
-      // Fallback: if RPC doesn't exist, use legacy insert-then-delete
       if (rpcError) {
-        console.warn("[saveActivities] RPC fallback:", rpcError.message);
-
-        const activitiesToInsert = rows.map((r) => ({
-          ...r,
-          project_id: projectId,
-        }));
-
-        const { data: existingRows } = await supabase
-          .from("project_activities")
-          .select("id")
-          .eq("project_id", projectId);
-
-        const oldIds = (existingRows ?? []).map((r) => r.id);
-
-        if (activitiesToInsert.length > 0) {
-          const { error: insertError } = await supabase
-            .from("project_activities")
-            .insert(activitiesToInsert);
-          if (insertError) throw insertError;
-        }
-
-        if (oldIds.length > 0) {
-          const { error: deleteError } = await supabase
-            .from("project_activities")
-            .delete()
-            .in("id", oldIds);
-          if (deleteError) throw deleteError;
-        }
+        throw rpcError;
       }
 
       return newActivities;
@@ -295,16 +272,24 @@ export function useProjectActivities(projectId: string | undefined) {
   );
 
   // Public API (backwards compatible)
-  const saveActivities = async (
-    newActivities: ActivityInput[],
-  ): Promise<boolean> => {
-    try {
-      await saveActivitiesMutation.mutateAsync(newActivities);
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  const saveActivities = useCallback(
+    (newActivities: ActivityInput[]): Promise<boolean> => {
+      const snapshot = newActivities.map((activity) => ({ ...activity }));
+      const queuedSave = saveQueueRef.current.then(async () => {
+        try {
+          await saveActivitiesMutation.mutateAsync(snapshot);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+
+      // Keep processing future saves even if a prior request failed.
+      saveQueueRef.current = queuedSave.catch(() => false);
+      return queuedSave;
+    },
+    [saveActivitiesMutation],
+  );
 
   const updateActivity = async (
     activityId: string,
