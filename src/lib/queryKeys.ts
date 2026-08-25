@@ -140,7 +140,12 @@ export const queryKeys = {
         projectId,
         weekNumber,
       ] as const,
+    audit: (filters: Record<string, unknown>) =>
+      [...queryKeys.weeklyReports.all, "audit", filters] as const,
+    auditPayload: (versionId: string | undefined) =>
+      [...queryKeys.weeklyReports.all, "audit-payload", versionId] as const,
   },
+
 
 
   // ============================================================================
