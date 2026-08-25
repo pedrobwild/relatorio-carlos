@@ -410,6 +410,10 @@ export function useEditorState({
     setRichTextOpen,
     isSaving,
     lastSaved,
+    autoSaveStatus,
+    retryInSeconds,
+    autoSaveError,
+    retryAutoSave,
     handleSave,
     updateExecutiveSummary,
     // Lookahead
