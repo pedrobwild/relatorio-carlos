@@ -15,11 +15,30 @@ interface UseAutoSaveOptions<T> {
   enabled?: boolean;
 }
 
+export type AutoSaveStatus =
+  | "idle"
+  | "pending"
+  | "saving"
+  | "saved"
+  | "retrying"
+  | "error";
+
 interface UseAutoSaveReturn {
   isSaving: boolean;
   lastSaved: Date | null;
   saveNow: () => void;
+  /** Estado atual para o indicador de autosave. */
+  status: AutoSaveStatus;
+  /** Tentativas de gravação já feitas na falha atual (0 quando não há falha). */
+  attempt: number;
+  /** Segundos até a próxima tentativa automática (null quando não há). */
+  retryInSeconds: number | null;
+  /** Mensagem amigável do último erro de gravação. */
+  errorMessage: string | null;
 }
+
+/** Backoff das tentativas automáticas: 5s, 15s, 45s. */
+const RETRY_DELAYS_MS = [5000, 15000, 45000];
 
 export function useAutoSave<T>({
   data,
@@ -29,9 +48,17 @@ export function useAutoSave<T>({
 }: UseAutoSaveOptions<T>): UseAutoSaveReturn {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [status, setStatus] = useState<AutoSaveStatus>("idle");
+  const [attempt, setAttempt] = useState(0);
+  const [retryInSeconds, setRetryInSeconds] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const attemptRef = useRef(0);
   const previousSavedDataRef = useRef<string>("");
   const isFirstRender = useRef(true);
+
 
   // Keep refs for latest values to avoid recreating callbacks
   const dataRef = useRef<T>(data);
