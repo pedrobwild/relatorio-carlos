@@ -205,8 +205,10 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
     availableAtByWeek.set(row.week_number, row.available_at);
     if (!row.id.startsWith("optimistic-")) {
       updatedAtByWeek.set(row.week_number, row.updated_at);
+      lastPersistedUpdatedAt.current.set(row.week_number, row.updated_at);
     }
   }
+
 
   const upsertMutation = useMutation({
     mutationFn: async ({
