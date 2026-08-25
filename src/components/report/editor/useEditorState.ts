@@ -366,10 +366,21 @@ export function useEditorState({
       URL.revokeObjectURL(previousUrl);
     }
     const localUrl = URL.createObjectURL(file);
+    const photoId = formData.gallery[index]?.id;
     updateGalleryPhoto(index, "url", localUrl);
-    toast.success(
-      "Arquivo selecionado! O upload será feito ao salvar o relatório.",
-    );
+    if (projectId && photoId) {
+      // Guarda os bytes no aparelho para que o envio sobreviva a navegação,
+      // perda de sinal ou descarte da aba no celular.
+      await enqueuePhotoUpload({
+        id: photoId,
+        projectId,
+        weekNumber: formData.weekNumber,
+        blob: file,
+        mimeType: file.type,
+        fileName: file.name,
+      });
+    }
+    toast.success("Arquivo selecionado! O envio começa automaticamente.");
     event.target.value = "";
   };
 
@@ -395,11 +406,26 @@ export function useEditorState({
       ...prev,
       gallery: [...prev.gallery, ...newPhotos],
     }));
+    if (projectId) {
+      await Promise.all(
+        newPhotos.map((photo, idx) =>
+          enqueuePhotoUpload({
+            id: photo.id,
+            projectId,
+            weekNumber: formData.weekNumber,
+            blob: validFiles[idx],
+            mimeType: validFiles[idx].type,
+            fileName: validFiles[idx].name,
+          }),
+        ),
+      );
+    }
     toast.success(
-      `${validFiles.length} arquivo(s) adicionado(s)! O upload será feito ao salvar.`,
+      `${validFiles.length} arquivo(s) adicionado(s)! O envio começa automaticamente.`,
     );
     event.target.value = "";
   };
+
 
   return {
     formData,
