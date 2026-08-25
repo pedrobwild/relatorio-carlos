@@ -11,6 +11,8 @@ import DecisionsSection from "./editor/DecisionsSection";
 import IncidentsSection from "./editor/IncidentsSection";
 import GallerySection from "./editor/GallerySection";
 import { AIReportGenerator } from "./AIReportGenerator";
+import { WeeklyReportVersionHistory } from "./WeeklyReportVersionHistory";
+
 
 interface WeeklyReportEditorProps {
   data: WeeklyReportData;
