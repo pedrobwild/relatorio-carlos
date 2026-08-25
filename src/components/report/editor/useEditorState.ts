@@ -175,7 +175,11 @@ export function useEditorState({
     },
     debounceMs: 3000,
     enabled: !!onAutoSave && !serverCheck.blocksAutoSave,
+    // Fila offline por obra: alterações feitas sem internet ficam guardadas
+    // no dispositivo e sobem sozinhas quando a conexão volta.
+    offlineKey: projectId ? `weekly-report:${projectId}` : undefined,
   });
+
 
   useAutoSaveToasts({
     status: autoSaveStatus,

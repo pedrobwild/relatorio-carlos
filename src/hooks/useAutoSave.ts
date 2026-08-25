@@ -1,5 +1,11 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { toast } from "sonner";
+import {
+  clearOfflineSnapshot,
+  enqueueOfflineSnapshot,
+  isOffline,
+  readOfflineSnapshot,
+} from "@/lib/offlineAutoSaveQueue";
 
 interface UseAutoSaveOptions<T> {
   data: T;
@@ -13,6 +19,12 @@ interface UseAutoSaveOptions<T> {
   onSave: (data: T) => void | T | Promise<void | T>;
   debounceMs?: number;
   enabled?: boolean;
+  /**
+   * Chave da fila offline (ex.: `weekly-report:<projectId>`). Quando
+   * informada, as alterações que não puderam ir ao servidor ficam
+   * guardadas localmente e sobem sozinhas quando a conexão voltar.
+   */
+  offlineKey?: string;
 }
 
 export type AutoSaveStatus =
@@ -21,7 +33,8 @@ export type AutoSaveStatus =
   | "saving"
   | "saved"
   | "retrying"
-  | "error";
+  | "error"
+  | "offline";
 
 interface UseAutoSaveReturn {
   isSaving: boolean;
@@ -35,6 +48,10 @@ interface UseAutoSaveReturn {
   retryInSeconds: number | null;
   /** Mensagem amigável do último erro de gravação. */
   errorMessage: string | null;
+  /** Há alterações guardadas localmente aguardando sincronização. */
+  hasOfflineChanges: boolean;
+  /** Momento em que a alteração offline mais recente foi enfileirada. */
+  offlineSince: Date | null;
 }
 
 /** Backoff das tentativas automáticas: 5s, 15s, 45s. */
@@ -45,7 +62,9 @@ export function useAutoSave<T>({
   onSave,
   debounceMs = 3000,
   enabled = true,
+  offlineKey,
 }: UseAutoSaveOptions<T>): UseAutoSaveReturn {
+
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [status, setStatus] = useState<AutoSaveStatus>("idle");
@@ -58,6 +77,30 @@ export function useAutoSave<T>({
   const attemptRef = useRef(0);
   const previousSavedDataRef = useRef<string>("");
   const isFirstRender = useRef(true);
+
+  // ---- Fila offline -------------------------------------------------
+  const offlineKeyRef = useRef(offlineKey);
+  offlineKeyRef.current = offlineKey;
+  const [offlineSince, setOfflineSince] = useState<Date | null>(() => {
+    if (!offlineKey) return null;
+    const queued = readOfflineSnapshot<T>(offlineKey);
+    return queued ? new Date(queued.queuedAt) : null;
+  });
+
+  const queueOffline = useCallback((snapshot: T) => {
+    const key = offlineKeyRef.current;
+    if (!key) return;
+    enqueueOfflineSnapshot(key, snapshot);
+    setOfflineSince(new Date());
+  }, []);
+
+  const clearOffline = useCallback(() => {
+    const key = offlineKeyRef.current;
+    if (key) clearOfflineSnapshot(key);
+    setOfflineSince(null);
+  }, []);
+
+
 
 
   // Keep refs for latest values to avoid recreating callbacks
@@ -150,6 +193,15 @@ export function useAutoSave<T>({
       return;
     }
 
+    // Sem conexão: guarda localmente e espera o evento "online" em vez de
+    // queimar tentativas que já sabemos que vão falhar.
+    if (offlineKeyRef.current && isOffline()) {
+      queueOffline(currentData);
+      clearRetryTimers();
+      setStatus("offline");
+      return;
+    }
+
     isSavingRef.current = true;
     let failed = false;
     try {
@@ -161,7 +213,9 @@ export function useAutoSave<T>({
       attemptRef.current = 0;
       setAttempt(0);
       setErrorMessage(null);
+      clearOffline();
       setStatus("saved");
+
       // If onSave returned the persisted shape, use it as the new
       // baseline so post-save reshaping (e.g. blob: → signed URL) doesn't
       // trigger a phantom diff that re-fires the debounce or shows a
@@ -175,6 +229,8 @@ export function useAutoSave<T>({
       console.error("Auto-save failed:", error);
       // IMPORTANT: Do NOT update previousSavedDataRef on error
       // This ensures we'll retry on next change/visibility event
+      // A alteração fica na fila local até uma gravação bem-sucedida.
+      queueOffline(dataRef.current);
       attemptRef.current += 1;
       setAttempt(attemptRef.current);
       setErrorMessage(
@@ -187,9 +243,16 @@ export function useAutoSave<T>({
       isSavingRef.current = false;
       setIsSaving(false);
       if (failed) {
-        // Nova tentativa com backoff em vez de repetir imediatamente.
-        scheduleRetry();
+        if (offlineKeyRef.current && isOffline()) {
+          // Ficou sem rede no meio do envio: aguarda a volta da conexão.
+          clearRetryTimers();
+          setStatus("offline");
+        } else {
+          // Nova tentativa com backoff em vez de repetir imediatamente.
+          scheduleRetry();
+        }
       } else {
+
         // Trailing save: data changed while this save was in flight (or a
         // save was requested during it). Persist the latest snapshot now.
         const latestSerialized = JSON.stringify(dataRef.current);
@@ -205,7 +268,7 @@ export function useAutoSave<T>({
         }
       }
     }
-  }, [clearRetryTimers, scheduleRetry]);
+  }, [clearRetryTimers, scheduleRetry, queueOffline, clearOffline]);
 
 
   useEffect(() => {
@@ -318,17 +381,36 @@ export function useAutoSave<T>({
     };
   }, []);
 
-  // Ao recuperar a conexão, tenta imediatamente em vez de esperar o backoff.
+  // Ao recuperar a conexão, sincroniza a fila offline imediatamente em vez
+  // de esperar o backoff.
   useEffect(() => {
     const handleOnline = () => {
-      if (attemptRef.current > 0) {
+      const hasQueued = offlineKeyRef.current
+        ? readOfflineSnapshot(offlineKeyRef.current) !== null
+        : false;
+      if (attemptRef.current > 0 || hasQueued) {
+        attemptRef.current = 0;
+        setAttempt(0);
         clearRetryTimers();
         void performSaveRef.current();
       }
     };
+    const handleOffline = () => {
+      if (!offlineKeyRef.current || !enabledRef.current) return;
+      const currentSerialized = JSON.stringify(dataRef.current);
+      if (currentSerialized !== previousSavedDataRef.current) {
+        queueOffline(dataRef.current);
+      }
+      clearRetryTimers();
+      setStatus("offline");
+    };
     window.addEventListener("online", handleOnline);
-    return () => window.removeEventListener("online", handleOnline);
-  }, [clearRetryTimers]);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [clearRetryTimers, queueOffline]);
 
   const saveNow = useCallback(() => {
     if (timeoutRef.current) {
@@ -349,6 +431,9 @@ export function useAutoSave<T>({
     attempt,
     retryInSeconds,
     errorMessage,
+    hasOfflineChanges: offlineSince !== null,
+    offlineSince,
   };
+
 
 }

@@ -39,13 +39,26 @@ export function useAutoSaveToasts({
     // Não avisa nada no primeiro render (estado inicial ainda não é evento).
     if (previous === null || previous === status) return;
 
+    if (status === "offline") {
+      toast.warning("Sem conexão — alterações guardadas neste dispositivo", {
+        id: TOAST_ID,
+        description: "Vamos sincronizar sozinho assim que a internet voltar.",
+        duration: 6000,
+      });
+      return;
+    }
+
     if (status === "saved" && lastSaved) {
+      const hora = format(lastSaved, "HH:mm", { locale: ptBR });
       toast.success(
-        `Salvo às ${format(lastSaved, "HH:mm", { locale: ptBR })}`,
+        previous === "offline"
+          ? `Alterações sincronizadas às ${hora}`
+          : `Salvo às ${hora}`,
         { id: TOAST_ID, duration: 2500 },
       );
       return;
     }
+
 
     if (status === "retrying") {
       toast.warning("Falha ao salvar. Tentando de novo…", {

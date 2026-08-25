@@ -4,11 +4,13 @@ import {
   AlertTriangle,
   RefreshCw,
   Clock,
+  CloudOff,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import type { AutoSaveStatus } from "@/hooks/useAutoSave";
+
 
 interface AutoSaveIndicatorProps {
   status: AutoSaveStatus;
@@ -31,6 +33,21 @@ const AutoSaveIndicator = ({
   const muted = onDark ? "text-white/70" : "text-muted-foreground";
   const ok = onDark ? "text-green-300" : "text-success";
   const bad = onDark ? "text-red-200" : "text-destructive";
+  const warn = onDark ? "text-amber-200" : "text-warning";
+
+  if (status === "offline") {
+    return (
+      <span
+        className={`flex items-center gap-1.5 ${warn}`}
+        role="status"
+        aria-live="polite"
+      >
+        <CloudOff className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+        Sem conexão — alterações guardadas neste dispositivo
+      </span>
+    );
+  }
+
 
   if (status === "saving") {
     return (
