@@ -90,6 +90,49 @@ export function useAutoSave<T>({
   // Self-reference so performSave can schedule a trailing save.
   const performSaveRef = useRef<() => Promise<void>>(async () => {});
 
+  const clearRetryTimers = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    setRetryInSeconds(null);
+  }, []);
+
+  // Agenda a próxima tentativa automática com backoff progressivo.
+  const scheduleRetry = useCallback(() => {
+    clearRetryTimers();
+    const delay = RETRY_DELAYS_MS[attemptRef.current - 1];
+    if (!delay) {
+      // Esgotou as tentativas automáticas: cabe ao usuário tentar de novo.
+      setStatus("error");
+      toast.error(
+        "Não foi possível salvar automaticamente. Suas alterações estão na tela — use “Tentar novamente”.",
+      );
+      return;
+    }
+
+    setStatus("retrying");
+    let remaining = Math.round(delay / 1000);
+    setRetryInSeconds(remaining);
+    countdownRef.current = setInterval(() => {
+      remaining -= 1;
+      setRetryInSeconds(remaining > 0 ? remaining : 0);
+      if (remaining <= 0 && countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    }, 1000);
+
+    retryTimeoutRef.current = setTimeout(() => {
+      retryTimeoutRef.current = null;
+      void performSaveRef.current();
+    }, delay);
+  }, [clearRetryTimers]);
+
   // Stable performSave that reads from refs
   const performSave = useCallback(async () => {
     if (!enabledRef.current) return;
@@ -108,10 +151,17 @@ export function useAutoSave<T>({
     }
 
     isSavingRef.current = true;
+    let failed = false;
     try {
+      clearRetryTimers();
       setIsSaving(true);
+      setStatus("saving");
       const result = await onSaveRef.current(currentData);
       setLastSaved(new Date());
+      attemptRef.current = 0;
+      setAttempt(0);
+      setErrorMessage(null);
+      setStatus("saved");
       // If onSave returned the persisted shape, use it as the new
       // baseline so post-save reshaping (e.g. blob: → signed URL) doesn't
       // trigger a phantom diff that re-fires the debounce or shows a
@@ -121,30 +171,42 @@ export function useAutoSave<T>({
           ? JSON.stringify(result)
           : currentSerialized;
     } catch (error) {
+      failed = true;
       console.error("Auto-save failed:", error);
       // IMPORTANT: Do NOT update previousSavedDataRef on error
       // This ensures we'll retry on next change/visibility event
-      toast.error(
-        "Erro ao salvar o relatório. Suas alterações foram mantidas, tente novamente.",
+      attemptRef.current += 1;
+      setAttempt(attemptRef.current);
+      setErrorMessage(
+        error instanceof Error && error.message
+          ? error.message
+          : "Falha de conexão ao salvar.",
       );
+      setStatus("error");
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
-      // Trailing save: data changed while this save was in flight (or a
-      // save was requested during it). Persist the latest snapshot now.
-      const latestSerialized = JSON.stringify(dataRef.current);
-      if (
-        enabledRef.current &&
-        (pendingTrailingSaveRef.current ||
-          latestSerialized !== previousSavedDataRef.current)
-      ) {
-        pendingTrailingSaveRef.current = false;
-        setTimeout(() => {
-          void performSaveRef.current();
-        }, 0);
+      if (failed) {
+        // Nova tentativa com backoff em vez de repetir imediatamente.
+        scheduleRetry();
+      } else {
+        // Trailing save: data changed while this save was in flight (or a
+        // save was requested during it). Persist the latest snapshot now.
+        const latestSerialized = JSON.stringify(dataRef.current);
+        if (
+          enabledRef.current &&
+          (pendingTrailingSaveRef.current ||
+            latestSerialized !== previousSavedDataRef.current)
+        ) {
+          pendingTrailingSaveRef.current = false;
+          setTimeout(() => {
+            void performSaveRef.current();
+          }, 0);
+        }
       }
     }
-  }, []); // No dependencies - uses refs
+  }, [clearRetryTimers, scheduleRetry]);
+
 
   useEffect(() => {
     performSaveRef.current = performSave;
