@@ -122,7 +122,14 @@ export function useEditorState({
     enabled: !!projectId && !!onAutoSave,
   });
 
-  const { isSaving: autoSaving, lastSaved } = useAutoSave({
+  const {
+    isSaving: autoSaving,
+    lastSaved,
+    status: autoSaveStatus,
+    retryInSeconds,
+    errorMessage: autoSaveError,
+    saveNow: retryAutoSave,
+  } = useAutoSave({
     data: formData,
     onSave: async (payload) => {
       const result = await onAutoSave?.(payload);
