@@ -23,6 +23,8 @@ import {
   Coins,
   BookOpenCheck,
   ShieldCheck,
+  FileSearch,
+
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -118,6 +120,11 @@ export function GestaoSidebar() {
           label: "Relatórios internos",
           icon: BookOpenCheck,
           path: "/gestao/relatorios-internos",
+        },
+        {
+          label: "Auditoria de semanais",
+          icon: FileSearch,
+          path: "/gestao/auditoria-semanais",
         },
       ],
     },
