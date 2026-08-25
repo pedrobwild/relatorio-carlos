@@ -301,21 +301,35 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
 
       return { previousReports };
     },
-    onSuccess: () => {
+    onSuccess: (_data, vars) => {
       // Refetch to replace the optimistic row with the canonical server row
       // (real id, timestamps, etc.).
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.weeklyReports.versions(projectId, vars.weekNumber),
+      });
       toast.success("Relatório salvo com sucesso!");
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       // Roll back to the snapshot so we don't leave a fake row in the cache.
       if (context?.previousReports !== undefined) {
         queryClient.setQueryData(queryKey, context.previousReports);
+      }
+      if (isConflictError(err)) {
+        // Conflito: outra pessoa salvou depois do carregamento. Nada é
+        // sobrescrito — recarregamos a versão do servidor e avisamos.
+        queryClient.invalidateQueries({ queryKey });
+        toast.error(
+          "Outra pessoa atualizou este relatório enquanto você editava. Recarregamos a versão mais recente — revise e salve novamente. Nenhuma informação foi perdida: o histórico de versões guarda tudo.",
+          { duration: 10000 },
+        );
+        return;
       }
       toast.error(
         "Erro ao salvar relatório. Suas alterações foram mantidas, tente novamente.",
       );
     },
+
     onSettled: () => {
       setSavingWeek(null);
     },
