@@ -306,6 +306,8 @@ export function useAutoSave<T>({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
       const currentSerialized = JSON.stringify(dataRef.current);
       if (
         enabledRef.current &&
@@ -316,16 +318,37 @@ export function useAutoSave<T>({
     };
   }, []);
 
+  // Ao recuperar a conexão, tenta imediatamente em vez de esperar o backoff.
+  useEffect(() => {
+    const handleOnline = () => {
+      if (attemptRef.current > 0) {
+        clearRetryTimers();
+        void performSaveRef.current();
+      }
+    };
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, [clearRetryTimers]);
+
   const saveNow = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
+    // Retry manual reinicia o ciclo de tentativas automáticas.
+    attemptRef.current = 0;
+    setAttempt(0);
+    clearRetryTimers();
     performSave();
-  }, [performSave]);
+  }, [performSave, clearRetryTimers]);
 
   return {
     isSaving,
     lastSaved,
     saveNow,
+    status,
+    attempt,
+    retryInSeconds,
+    errorMessage,
   };
+
 }
