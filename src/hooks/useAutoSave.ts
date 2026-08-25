@@ -268,7 +268,7 @@ export function useAutoSave<T>({
         }
       }
     }
-  }, [clearRetryTimers, scheduleRetry]);
+  }, [clearRetryTimers, scheduleRetry, queueOffline, clearOffline]);
 
 
   useEffect(() => {
