@@ -108,7 +108,10 @@ export function useEditorState({
           if (!saved?.url || saved.url.startsWith("blob:")) return photo;
           mutated = true;
           toRevoke.push(photo.url);
+          // Já persistido pelo pipeline de save: sai da fila de reenvio.
+          void removePendingUpload(photo.id);
           return { ...photo, url: saved.url, path: saved.path ?? photo.path };
+
         });
         if (!mutated) return prev;
         for (const url of toRevoke) URL.revokeObjectURL(url);
