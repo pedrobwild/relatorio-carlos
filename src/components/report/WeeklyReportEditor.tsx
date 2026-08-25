@@ -13,6 +13,7 @@ import GallerySection from "./editor/GallerySection";
 import { AIReportGenerator } from "./AIReportGenerator";
 import { WeeklyReportVersionHistory } from "./WeeklyReportVersionHistory";
 import ServerDivergenceAlert from "./editor/ServerDivergenceAlert";
+import PendingUploadsBanner from "./editor/PendingUploadsBanner";
 
 
 
@@ -75,6 +76,10 @@ const WeeklyReportEditor = ({
         check={state.serverCheck}
         onUseServerVersion={state.applyServerVersion}
       />
+
+      <PendingUploadsBanner {...state.uploadQueue} />
+
+
 
 
       {projectId && (

@@ -8,8 +8,14 @@ import {
   GalleryPhoto,
 } from "@/types/weeklyReport";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { usePhotoUploadQueue } from "@/hooks/usePhotoUploadQueue";
+import {
+  enqueuePhotoUpload,
+  removePendingUpload,
+} from "@/lib/photoUploadQueue";
 import { toast } from "sonner";
 import { useServerStateCheck } from "./useServerStateCheck";
+
 
 interface UseEditorStateOptions {
   data: WeeklyReportData;
@@ -102,7 +108,10 @@ export function useEditorState({
           if (!saved?.url || saved.url.startsWith("blob:")) return photo;
           mutated = true;
           toRevoke.push(photo.url);
+          // Já persistido pelo pipeline de save: sai da fila de reenvio.
+          void removePendingUpload(photo.id);
           return { ...photo, url: saved.url, path: saved.path ?? photo.path };
+
         });
         if (!mutated) return prev;
         for (const url of toRevoke) URL.revokeObjectURL(url);
@@ -111,6 +120,31 @@ export function useEditorState({
     },
     [],
   );
+
+  // Aplica no editor o resultado de um upload retomado em segundo plano.
+  const applyQueuedUpload = useCallback(
+    (photoId: string, path: string, url: string) => {
+      setFormData((prev) => {
+        const index = prev.gallery.findIndex((p) => p.id === photoId);
+        if (index === -1) return prev;
+        const current = prev.gallery[index];
+        if (current.path === path && current.url === url) return prev;
+        if (current.url?.startsWith("blob:")) {
+          URL.revokeObjectURL(current.url);
+        }
+        const nextGallery = [...prev.gallery];
+        nextGallery[index] = { ...current, path, url };
+        return { ...prev, gallery: nextGallery };
+      });
+    },
+    [],
+  );
+
+  const uploadQueue = usePhotoUploadQueue({
+    projectId,
+    weekNumber: data.weekNumber,
+    onUploaded: applyQueuedUpload,
+  });
 
   // Verificação de divergência no carregamento: enquanto ela roda (ou
 
@@ -346,9 +380,11 @@ export function useEditorState({
   const removeGalleryPhoto = (index: number) => {
     setFormDataWithTracking((prev) => {
       const removed = prev.gallery[index];
+      if (removed?.id) void removePendingUpload(removed.id);
       if (removed?.url?.startsWith("blob:")) {
         URL.revokeObjectURL(removed.url);
       }
+
       return { ...prev, gallery: prev.gallery.filter((_, i) => i !== index) };
     });
   };
@@ -366,10 +402,21 @@ export function useEditorState({
       URL.revokeObjectURL(previousUrl);
     }
     const localUrl = URL.createObjectURL(file);
+    const photoId = formData.gallery[index]?.id;
     updateGalleryPhoto(index, "url", localUrl);
-    toast.success(
-      "Arquivo selecionado! O upload será feito ao salvar o relatório.",
-    );
+    if (projectId && photoId) {
+      // Guarda os bytes no aparelho para que o envio sobreviva a navegação,
+      // perda de sinal ou descarte da aba no celular.
+      await enqueuePhotoUpload({
+        id: photoId,
+        projectId,
+        weekNumber: formData.weekNumber,
+        blob: file,
+        mimeType: file.type,
+        fileName: file.name,
+      });
+    }
+    toast.success("Arquivo selecionado! O envio começa automaticamente.");
     event.target.value = "";
   };
 
@@ -395,11 +442,26 @@ export function useEditorState({
       ...prev,
       gallery: [...prev.gallery, ...newPhotos],
     }));
+    if (projectId) {
+      await Promise.all(
+        newPhotos.map((photo, idx) =>
+          enqueuePhotoUpload({
+            id: photo.id,
+            projectId,
+            weekNumber: formData.weekNumber,
+            blob: validFiles[idx],
+            mimeType: validFiles[idx].type,
+            fileName: validFiles[idx].name,
+          }),
+        ),
+      );
+    }
     toast.success(
-      `${validFiles.length} arquivo(s) adicionado(s)! O upload será feito ao salvar.`,
+      `${validFiles.length} arquivo(s) adicionado(s)! O envio começa automaticamente.`,
     );
     event.target.value = "";
   };
+
 
   return {
     formData,
@@ -409,6 +471,7 @@ export function useEditorState({
     richTextOpen,
     setRichTextOpen,
     isSaving,
+    uploadQueue,
     lastSaved,
     autoSaveStatus,
     retryInSeconds,
