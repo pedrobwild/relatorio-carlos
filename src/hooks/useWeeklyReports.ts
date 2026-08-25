@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { GalleryPhoto, WeeklyReportData } from "@/types/weeklyReport";
@@ -7,6 +7,11 @@ import { Json } from "@/integrations/supabase/types";
 import { useReportImageUpload } from "./useReportImageUpload";
 import { queryKeys } from "@/lib/queryKeys";
 import { reportLogger } from "@/lib/devLogger";
+import {
+  saveWeeklyReport as saveWeeklyReportRpc,
+  isConflictError,
+} from "@/infra/repositories/weeklyReports.repository";
+
 
 const WEEKLY_REPORTS_BUCKET = "weekly-reports";
 // Signed URL TTL is 6h; the query refetches itself every 4h
