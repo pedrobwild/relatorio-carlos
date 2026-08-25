@@ -162,6 +162,24 @@ export function useEditorState({
     enabled: !!projectId && !!onAutoSave,
   });
 
+  const offlineKey = projectId ? `weekly-report:${projectId}` : undefined;
+  const retryRef = useRef<() => void>(() => {});
+
+  // Guarda de conflito: se o relatório mudou no servidor enquanto o aparelho
+  // estava sem conexão, junta o que der e pausa o envio quando a mesma seção
+  // mudou dos dois lados.
+  const offlineConflict = useOfflineConflict({
+    projectId,
+    weekNumber: data.weekNumber,
+    offlineKey,
+    enabled: !!projectId && !!onAutoSave,
+    onApply: (next) => {
+      hasUserEdited.current = true;
+      setFormData(next);
+    },
+    requestSave: () => retryRef.current(),
+  });
+
   const {
     isSaving: autoSaving,
     lastSaved,
@@ -172,18 +190,29 @@ export function useEditorState({
   } = useAutoSave({
     data: formData,
     onSave: async (payload) => {
-      const result = await onAutoSave?.(payload);
+      const gate = await offlineConflict.beforeSave(payload);
+      if (gate.blocked) throw new OfflineConflictError();
+      const toSave = gate.data;
+      const result = await onAutoSave?.(toSave);
       syncGalleryFromPersisted(result);
+      const persisted = (result as WeeklyReportData | undefined) ?? toSave;
+      offlineConflict.markSynced(persisted);
       // Hand the persisted shape back to useAutoSave so it doesn't think
       // the post-sync formData (blob: → signed URL) is an unsaved change.
-      return result ?? undefined;
+      return persisted;
     },
     debounceMs: 3000,
-    enabled: !!onAutoSave && !serverCheck.blocksAutoSave,
+    enabled:
+      !!onAutoSave &&
+      !serverCheck.blocksAutoSave &&
+      !offlineConflict.blocksAutoSave,
     // Fila offline por obra: alterações feitas sem internet ficam guardadas
     // no dispositivo e sobem sozinhas quando a conexão volta.
-    offlineKey: projectId ? `weekly-report:${projectId}` : undefined,
+    offlineKey,
   });
+
+  retryRef.current = retryAutoSave;
+
 
 
   useAutoSaveToasts({
