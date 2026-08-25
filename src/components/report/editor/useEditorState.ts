@@ -16,6 +16,11 @@ import {
 } from "@/lib/photoUploadQueue";
 import { toast } from "sonner";
 import { useServerStateCheck } from "./useServerStateCheck";
+import {
+  useOfflineConflict,
+  OfflineConflictError,
+} from "./useOfflineConflict";
+
 
 
 interface UseEditorStateOptions {
