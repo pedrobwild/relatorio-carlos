@@ -132,7 +132,7 @@ export function VersionDiffDialog({
                         return <span key={index}>{token.value}</span>;
                       const cls =
                         token.type === "added"
-                          ? "bg-success/15 text-success-foreground rounded px-0.5"
+                          ? "bg-success/15 text-success rounded px-0.5"
                           : "bg-destructive/15 text-destructive line-through rounded px-0.5";
                       return (
                         <span key={index} className={cls}>
