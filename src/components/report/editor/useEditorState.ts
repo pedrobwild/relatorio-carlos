@@ -121,6 +121,31 @@ export function useEditorState({
     [],
   );
 
+  // Aplica no editor o resultado de um upload retomado em segundo plano.
+  const applyQueuedUpload = useCallback(
+    (photoId: string, path: string, url: string) => {
+      setFormData((prev) => {
+        const index = prev.gallery.findIndex((p) => p.id === photoId);
+        if (index === -1) return prev;
+        const current = prev.gallery[index];
+        if (current.path === path && current.url === url) return prev;
+        if (current.url?.startsWith("blob:")) {
+          URL.revokeObjectURL(current.url);
+        }
+        const nextGallery = [...prev.gallery];
+        nextGallery[index] = { ...current, path, url };
+        return { ...prev, gallery: nextGallery };
+      });
+    },
+    [],
+  );
+
+  const uploadQueue = usePhotoUploadQueue({
+    projectId,
+    weekNumber: data.weekNumber,
+    onUploaded: applyQueuedUpload,
+  });
+
   // Verificação de divergência no carregamento: enquanto ela roda (ou
 
   // enquanto uma divergência não é resolvida), o autosave fica suspenso.
