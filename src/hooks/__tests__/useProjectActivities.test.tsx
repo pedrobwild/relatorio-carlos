@@ -4,8 +4,10 @@ import type { PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useProjectActivities } from "../useProjectActivities";
 
-const rpc = vi.fn();
-const from = vi.fn();
+const { rpc, from } = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  from: vi.fn(),
+}));
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
