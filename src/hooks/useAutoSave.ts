@@ -1,5 +1,11 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { toast } from "sonner";
+import {
+  clearOfflineSnapshot,
+  enqueueOfflineSnapshot,
+  isOffline,
+  readOfflineSnapshot,
+} from "@/lib/offlineAutoSaveQueue";
 
 interface UseAutoSaveOptions<T> {
   data: T;
@@ -13,6 +19,12 @@ interface UseAutoSaveOptions<T> {
   onSave: (data: T) => void | T | Promise<void | T>;
   debounceMs?: number;
   enabled?: boolean;
+  /**
+   * Chave da fila offline (ex.: `weekly-report:<projectId>`). Quando
+   * informada, as alterações que não puderam ir ao servidor ficam
+   * guardadas localmente e sobem sozinhas quando a conexão voltar.
+   */
+  offlineKey?: string;
 }
 
 export type AutoSaveStatus =
@@ -21,7 +33,8 @@ export type AutoSaveStatus =
   | "saving"
   | "saved"
   | "retrying"
-  | "error";
+  | "error"
+  | "offline";
 
 interface UseAutoSaveReturn {
   isSaving: boolean;
@@ -35,6 +48,10 @@ interface UseAutoSaveReturn {
   retryInSeconds: number | null;
   /** Mensagem amigável do último erro de gravação. */
   errorMessage: string | null;
+  /** Há alterações guardadas localmente aguardando sincronização. */
+  hasOfflineChanges: boolean;
+  /** Momento em que a alteração offline mais recente foi enfileirada. */
+  offlineSince: Date | null;
 }
 
 /** Backoff das tentativas automáticas: 5s, 15s, 45s. */
@@ -45,7 +62,9 @@ export function useAutoSave<T>({
   onSave,
   debounceMs = 3000,
   enabled = true,
+  offlineKey,
 }: UseAutoSaveOptions<T>): UseAutoSaveReturn {
+
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [status, setStatus] = useState<AutoSaveStatus>("idle");
