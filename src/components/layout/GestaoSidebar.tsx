@@ -119,6 +119,11 @@ export function GestaoSidebar() {
           icon: BookOpenCheck,
           path: "/gestao/relatorios-internos",
         },
+        {
+          label: "Auditoria de semanais",
+          icon: FileSearch,
+          path: "/gestao/auditoria-semanais",
+        },
       ],
     },
     {
