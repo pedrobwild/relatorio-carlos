@@ -7468,6 +7468,40 @@ export type Database = {
           user_role: string
         }[]
       }
+      get_weekly_report_audit: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_only_empty?: boolean
+          p_project_id?: string
+          p_search?: string
+          p_week_number?: number
+        }
+        Returns: {
+          activities_count: number
+          author_email: string
+          author_id: string
+          author_name: string
+          created_at: string
+          gallery_count: number
+          is_empty: boolean
+          payload_bytes: number
+          project_id: string
+          project_name: string
+          report_id: string
+          restored_from_version: number
+          risks_count: number
+          summary_chars: number
+          total_count: number
+          version: number
+          version_id: string
+          week_number: number
+        }[]
+      }
+      get_weekly_report_audit_payload: {
+        Args: { p_version_id: string }
+        Returns: Json
+      }
       hard_delete_project: {
         Args: { p_project_id: string }
         Returns: undefined
