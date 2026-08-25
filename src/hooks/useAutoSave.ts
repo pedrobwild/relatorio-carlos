@@ -229,6 +229,8 @@ export function useAutoSave<T>({
       console.error("Auto-save failed:", error);
       // IMPORTANT: Do NOT update previousSavedDataRef on error
       // This ensures we'll retry on next change/visibility event
+      // A alteração fica na fila local até uma gravação bem-sucedida.
+      queueOffline(dataRef.current);
       attemptRef.current += 1;
       setAttempt(attemptRef.current);
       setErrorMessage(
@@ -241,9 +243,16 @@ export function useAutoSave<T>({
       isSavingRef.current = false;
       setIsSaving(false);
       if (failed) {
-        // Nova tentativa com backoff em vez de repetir imediatamente.
-        scheduleRetry();
+        if (offlineKeyRef.current && isOffline()) {
+          // Ficou sem rede no meio do envio: aguarda a volta da conexão.
+          clearRetryTimers();
+          setStatus("offline");
+        } else {
+          // Nova tentativa com backoff em vez de repetir imediatamente.
+          scheduleRetry();
+        }
       } else {
+
         // Trailing save: data changed while this save was in flight (or a
         // save was requested during it). Persist the latest snapshot now.
         const latestSerialized = JSON.stringify(dataRef.current);
