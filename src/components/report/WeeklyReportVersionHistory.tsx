@@ -77,8 +77,37 @@ export function WeeklyReportVersionHistory({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<WeeklyReportVersion | null>(null);
+  const [compareFromId, setCompareFromId] = useState<string | null>(null);
+  const [compareToId, setCompareToId] = useState<string | null>(null);
+  const [diffOpen, setDiffOpen] = useState(false);
   const { versions, isLoading, restoreVersion, isRestoring } =
     useWeeklyReportVersions({ projectId, weekNumber, enabled: open });
+
+  // Padrão: comparar a penúltima versão com a atual — a dúvida mais comum
+  // é "o que mudou no último salvamento?".
+  const fromId = compareFromId ?? versions[1]?.id ?? null;
+  const toId = compareToId ?? versions[0]?.id ?? null;
+  const fromVersion = useMemo(
+    () => versions.find((v) => v.id === fromId) ?? null,
+    [versions, fromId],
+  );
+  const toVersion = useMemo(
+    () => versions.find((v) => v.id === toId) ?? null,
+    [versions, toId],
+  );
+  // A comparação sempre parte da versão mais antiga para a mais recente.
+  const [diffBefore, diffAfter] =
+    fromVersion && toVersion && fromVersion.version > toVersion.version
+      ? [toVersion, fromVersion]
+      : [fromVersion, toVersion];
+  const canCompare =
+    !!diffBefore && !!diffAfter && diffBefore.id !== diffAfter.id;
+
+  const openDiffWithCurrent = (version: WeeklyReportVersion) => {
+    setCompareFromId(version.id);
+    setCompareToId(versions[0]?.id ?? null);
+    setDiffOpen(true);
+  };
 
   const handleRestore = async () => {
     if (!pending) return;
@@ -91,6 +120,7 @@ export function WeeklyReportVersionHistory({
       // Feedback já exibido pelo hook.
     }
   };
+
 
   return (
     <>
