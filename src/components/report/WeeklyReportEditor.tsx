@@ -12,6 +12,8 @@ import IncidentsSection from "./editor/IncidentsSection";
 import GallerySection from "./editor/GallerySection";
 import { AIReportGenerator } from "./AIReportGenerator";
 import { WeeklyReportVersionHistory } from "./WeeklyReportVersionHistory";
+import ServerDivergenceAlert from "./editor/ServerDivergenceAlert";
+
 
 
 interface WeeklyReportEditorProps {
@@ -39,6 +41,7 @@ const WeeklyReportEditor = ({
 }: WeeklyReportEditorProps) => {
   const state = useEditorState({
     data,
+    projectId,
     onAutoSave,
     onSaveAndClose,
     externalIsSaving,
@@ -63,6 +66,12 @@ const WeeklyReportEditor = ({
           />
         </div>
       </div>
+
+      <ServerDivergenceAlert
+        check={state.serverCheck}
+        onUseServerVersion={state.applyServerVersion}
+      />
+
 
       {projectId && (
         <div className="flex flex-wrap justify-end gap-2">
