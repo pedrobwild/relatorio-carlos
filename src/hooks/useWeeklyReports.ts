@@ -157,9 +157,12 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   const queryClient = useQueryClient();
   const [savingWeek, setSavingWeek] = useState<number | null>(null);
   const { uploadGalleryPhotos, isUploading } = useReportImageUpload();
+  // week_number -> updated_at da última versão conhecida do servidor.
+  const lastPersistedUpdatedAt = useRef(new Map<number, string>());
 
   // Use centralized query key for consistency
   const queryKey = queryKeys.weeklyReports.list(projectId);
+
 
   const {
     data: reports = [],
