@@ -9,9 +9,12 @@ import {
 } from "@/types/weeklyReport";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { toast } from "sonner";
+import { useServerStateCheck } from "./useServerStateCheck";
 
 interface UseEditorStateOptions {
   data: WeeklyReportData;
+  /** Necessário para a verificação de divergência com o servidor. */
+  projectId?: string;
   // When a handler returns the persisted WeeklyReportData (i.e. the upload
   // pipeline replaced blob: URLs with permanent ones), the editor patches its
   // local formData.gallery so previews stay valid and subsequent saves don't
@@ -24,6 +27,7 @@ interface UseEditorStateOptions {
   ) => void | Promise<WeeklyReportData | null | undefined | void>;
   externalIsSaving?: boolean;
 }
+
 
 const validTypes = [
   "image/jpeg",
