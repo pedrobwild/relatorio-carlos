@@ -501,6 +501,7 @@ const Cronograma = () => {
 
     setSaving(true);
     const activityInputs: ActivityInput[] = activities.map((act, index) => ({
+      id: act.id,
       description: act.description.trim(),
       planned_start: act.plannedStart,
       planned_end: act.plannedEnd,
@@ -550,6 +551,7 @@ const Cronograma = () => {
     autosaveTimerRef.current = setTimeout(async () => {
       setAutosaveStatus("saving");
       const inputs: ActivityInput[] = activities.map((act, index) => ({
+        id: act.id,
         description: act.description.trim(),
         planned_start: act.plannedStart,
         planned_end: act.plannedEnd,
@@ -571,6 +573,9 @@ const Cronograma = () => {
         );
       } else {
         setAutosaveStatus("error");
+        toast.error("Não foi possível salvar o cronograma", {
+          description: "Suas alterações continuam nesta tela. Tente salvar novamente.",
+        });
       }
     }, 1200);
 
@@ -578,6 +583,22 @@ const Cronograma = () => {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
   }, [activities, hasDateErrors, saving, saveActivities]);
+
+  useEffect(() => {
+    const warnBeforeDiscard = (event: BeforeUnloadEvent) => {
+      if (!initializedRef.current) return;
+      const hasUnsavedChanges =
+        autosaveStatus === "saving" ||
+        JSON.stringify(activities) !== lastSavedSnapshotRef.current;
+      if (!hasUnsavedChanges) return;
+
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", warnBeforeDiscard);
+    return () => window.removeEventListener("beforeunload", warnBeforeDiscard);
+  }, [activities, autosaveStatus]);
 
   if (projectLoading || activitiesLoading) {
     return (
