@@ -79,7 +79,10 @@ const WeeklyReportEditor = ({
         onUseServerVersion={state.applyServerVersion}
       />
 
+      <OfflineConflictAlert guard={state.offlineConflict} />
+
       <PendingUploadsBanner {...state.uploadQueue} />
+
 
 
 
