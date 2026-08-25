@@ -397,6 +397,8 @@ export function useEditorState({
   return {
     formData,
     setFormData,
+    serverCheck,
+    applyServerVersion,
     richTextOpen,
     setRichTextOpen,
     isSaving,
