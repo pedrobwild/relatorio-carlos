@@ -113,6 +113,16 @@ export function useEditorState({
   );
 
   const { isSaving: autoSaving, lastSaved } = useAutoSave({
+  // Verificação de divergência no carregamento: enquanto ela roda (ou
+  // enquanto uma divergência não é resolvida), o autosave fica suspenso.
+  const serverCheck = useServerStateCheck({
+    projectId,
+    weekNumber: data.weekNumber,
+    localData: formData,
+    enabled: !!projectId && !!onAutoSave,
+  });
+
+  const { isSaving: autoSaving, lastSaved } = useAutoSave({
     data: formData,
     onSave: async (payload) => {
       const result = await onAutoSave?.(payload);
@@ -122,8 +132,18 @@ export function useEditorState({
       return result ?? undefined;
     },
     debounceMs: 3000,
-    enabled: !!onAutoSave,
+    enabled: !!onAutoSave && !serverCheck.blocksAutoSave,
   });
+
+  // Aplica a versão do servidor sobre o estado local e libera o autosave.
+  const applyServerVersion = useCallback(() => {
+    if (serverCheck.serverData) {
+      hasUserEdited.current = false;
+      setFormData(serverCheck.serverData);
+    }
+    serverCheck.acceptServer();
+  }, [serverCheck]);
+
 
   const isSaving = externalIsSaving || autoSaving;
 
