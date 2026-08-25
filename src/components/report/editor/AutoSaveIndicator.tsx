@@ -4,11 +4,13 @@ import {
   AlertTriangle,
   RefreshCw,
   Clock,
+  CloudOff,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import type { AutoSaveStatus } from "@/hooks/useAutoSave";
+
 
 interface AutoSaveIndicatorProps {
   status: AutoSaveStatus;
