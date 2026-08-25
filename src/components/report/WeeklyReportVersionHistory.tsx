@@ -183,18 +183,32 @@ export function WeeklyReportVersionHistory({
                             {formatDateTime(version.created_at)}
                           </p>
                         </div>
-                        {!isCurrent && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="shrink-0 min-h-11"
-                            onClick={() => setPending(version)}
-                            disabled={isRestoring}
-                          >
-                            <RotateCcw className="w-4 h-4 mr-2" />
-                            Restaurar
-                          </Button>
-                        )}
+                        <div className="flex flex-col gap-2 shrink-0">
+                          {!isCurrent && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="min-h-11"
+                                onClick={() => openDiffWithCurrent(version)}
+                              >
+                                <GitCompare className="w-4 h-4 mr-2" />
+                                Ver diferenças
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="min-h-11"
+                                onClick={() => setPending(version)}
+                                disabled={isRestoring}
+                              >
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Restaurar
+                              </Button>
+                            </>
+                          )}
+                        </div>
+
                       </div>
                       <p className="text-sm text-muted-foreground mt-2">
                         {summarize(version.data)}
