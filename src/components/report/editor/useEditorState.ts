@@ -526,7 +526,9 @@ export function useEditorState({
     formData,
     setFormData,
     serverCheck,
+    offlineConflict,
     applyServerVersion,
+
     richTextOpen,
     setRichTextOpen,
     isSaving,
