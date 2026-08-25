@@ -320,6 +320,14 @@ export function WeeklyReportVersionHistory({
         </AlertDialogContent>
 
       </AlertDialog>
+
+      <VersionDiffDialog
+        open={diffOpen}
+        onOpenChange={setDiffOpen}
+        before={diffBefore}
+        after={diffAfter}
+      />
+
     </>
   );
 }
