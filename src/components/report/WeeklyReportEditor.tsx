@@ -76,6 +76,10 @@ const WeeklyReportEditor = ({
         onUseServerVersion={state.applyServerVersion}
       />
 
+      <PendingUploadsBanner {...state.uploadQueue} />
+
+
+
 
       {projectId && (
         <div className="flex flex-wrap justify-end gap-2">
