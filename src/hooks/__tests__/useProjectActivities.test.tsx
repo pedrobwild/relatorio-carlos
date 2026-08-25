@@ -112,7 +112,7 @@ describe("useProjectActivities", () => {
       ]);
     });
 
-    expect(rpc).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(rpc).toHaveBeenCalledTimes(1));
     releaseFirst?.();
 
     await act(async () => {
