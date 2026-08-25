@@ -1,7 +1,21 @@
-import { useState } from "react";
-import { History, RotateCcw, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  History,
+  RotateCcw,
+  Image as ImageIcon,
+  Loader2,
+  GitCompare,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -23,8 +37,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/states";
 import { useWeeklyReportVersions } from "@/hooks/useWeeklyReportVersions";
+import VersionDiffDialog from "./VersionDiffDialog";
 import type { WeeklyReportVersion } from "@/infra/repositories/weeklyReports.repository";
 import type { WeeklyReportData } from "@/types/weeklyReport";
+
 
 interface Props {
   projectId: string;
