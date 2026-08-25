@@ -381,17 +381,36 @@ export function useAutoSave<T>({
     };
   }, []);
 
-  // Ao recuperar a conexão, tenta imediatamente em vez de esperar o backoff.
+  // Ao recuperar a conexão, sincroniza a fila offline imediatamente em vez
+  // de esperar o backoff.
   useEffect(() => {
     const handleOnline = () => {
-      if (attemptRef.current > 0) {
+      const hasQueued = offlineKeyRef.current
+        ? readOfflineSnapshot(offlineKeyRef.current) !== null
+        : false;
+      if (attemptRef.current > 0 || hasQueued) {
+        attemptRef.current = 0;
+        setAttempt(0);
         clearRetryTimers();
         void performSaveRef.current();
       }
     };
+    const handleOffline = () => {
+      if (!offlineKeyRef.current || !enabledRef.current) return;
+      const currentSerialized = JSON.stringify(dataRef.current);
+      if (currentSerialized !== previousSavedDataRef.current) {
+        queueOffline(dataRef.current);
+      }
+      clearRetryTimers();
+      setStatus("offline");
+    };
     window.addEventListener("online", handleOnline);
-    return () => window.removeEventListener("online", handleOnline);
-  }, [clearRetryTimers]);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [clearRetryTimers, queueOffline]);
 
   const saveNow = useCallback(() => {
     if (timeoutRef.current) {
@@ -412,6 +431,9 @@ export function useAutoSave<T>({
     attempt,
     retryInSeconds,
     errorMessage,
+    hasOfflineChanges: offlineSince !== null,
+    offlineSince,
   };
+
 
 }
