@@ -193,6 +193,15 @@ export function useAutoSave<T>({
       return;
     }
 
+    // Sem conexão: guarda localmente e espera o evento "online" em vez de
+    // queimar tentativas que já sabemos que vão falhar.
+    if (offlineKeyRef.current && isOffline()) {
+      queueOffline(currentData);
+      clearRetryTimers();
+      setStatus("offline");
+      return;
+    }
+
     isSavingRef.current = true;
     let failed = false;
     try {
@@ -204,7 +213,9 @@ export function useAutoSave<T>({
       attemptRef.current = 0;
       setAttempt(0);
       setErrorMessage(null);
+      clearOffline();
       setStatus("saved");
+
       // If onSave returned the persisted shape, use it as the new
       // baseline so post-save reshaping (e.g. blob: → signed URL) doesn't
       // trigger a phantom diff that re-fires the debounce or shows a
