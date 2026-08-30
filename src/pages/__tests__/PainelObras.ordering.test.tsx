@@ -246,8 +246,13 @@ describe("PainelObras — ordenação por data de entrega oficial", () => {
         etapa: "Medição",
         entrega_oficial: "2026-12-20",
       }),
+      // Etapa ATIVA de propósito: a aba padrão do Painel é "ativas" e obras
+      // concluídas (etapa `Finalizada` ou com `entrega_real`) não são
+      // renderizadas nela. O que este caso exercita é a ordenação por
+      // `entrega_oficial`, então a etapa aqui é irrelevante — só não pode ser
+      // uma que remova a obra da visão.
       obra("Entrega Próxima", {
-        etapa: "Finalizada",
+        etapa: "Vistoria",
         entrega_oficial: "2026-05-10",
       }),
       obra("Sem Entrega", { etapa: "Execução", entrega_oficial: null }),
@@ -319,9 +324,10 @@ describe("PainelObras — ordenação por data de entrega oficial", () => {
     const idxS2 = labels.findIndex((l) => l.startsWith("Execução - S2"));
     const idxS3 = labels.findIndex((l) => l.startsWith("Execução - S3"));
     const idxS5 = labels.findIndex((l) => l.startsWith("Execução - S5"));
-    const idxFinal = labels.findIndex((l) => l.startsWith("Finalizada"));
 
-    // Todos os grupos esperados existem
+    // Todos os grupos esperados existem.
+    // "Finalizada" fica de fora: a aba padrão é "ativas" e obras concluídas
+    // não entram nela — a ordenação da etapa final é coberta logo abaixo.
     for (const [name, idx] of Object.entries({
       Medição: idxMed,
       Planejamento: idxPlan,
@@ -329,7 +335,6 @@ describe("PainelObras — ordenação por data de entrega oficial", () => {
       "Execução - S2": idxS2,
       "Execução - S3": idxS3,
       "Execução - S5": idxS5,
-      Finalizada: idxFinal,
     })) {
       expect(idx, `grupo "${name}" ausente do board`).toBeGreaterThanOrEqual(0);
     }
@@ -340,7 +345,30 @@ describe("PainelObras — ordenação por data de entrega oficial", () => {
     expect(idxS1).toBeLessThan(idxS2);
     expect(idxS2).toBeLessThan(idxS3);
     expect(idxS3).toBeLessThan(idxS5);
-    expect(idxS5).toBeLessThan(idxFinal);
+
+    expect(
+      labels.some((l) => l.startsWith("Finalizada")),
+      'board da aba Ativas não deveria ter grupo "Finalizada"',
+    ).toBe(false);
+  });
+
+  it("board (aba Concluídas): grupo Finalizada aparece", () => {
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras?view=board&aba=concluidas">
+        <PainelObras />
+      </Wrapper>,
+    );
+
+    const labels = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(
+        '[aria-controls^="board-group-"]',
+      ),
+    ).map((b) => b.textContent?.trim() ?? "");
+
+    expect(
+      labels.findIndex((l) => l.startsWith("Finalizada")),
+      'board da aba Concluídas deveria ter grupo "Finalizada"',
+    ).toBeGreaterThanOrEqual(0);
   });
 
   it("tabela: prioriza obras atrasadas no topo (mais atrasada primeiro), independente da etapa canônica", () => {

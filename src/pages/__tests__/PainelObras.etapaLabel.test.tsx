@@ -80,6 +80,19 @@ const obrasFixture: PainelObra[] = [
   }),
 ];
 
+/**
+ * O Painel segmenta por aba Ativas/Concluídas (`?aba=concluidas`), e a visão
+ * padrão ("ativas") ESCONDE obras concluídas — etapa `Finalizada` ou com
+ * `entrega_real` registrada. Ver o filtro em src/pages/PainelObras.tsx.
+ *
+ * Os testes abaixo asseguram a paridade de rótulos dentro de cada aba, em vez
+ * de esperar que todas as obras do fixture apareçam na visão padrão.
+ */
+const isConcluida = (o: PainelObra) =>
+  !!o.entrega_real || o.etapa === "Finalizada";
+const obrasAtivas = obrasFixture.filter((o) => !isConcluida(o));
+const obrasConcluidas = obrasFixture.filter(isConcluida);
+
 vi.mock("@/hooks/usePainelObras", async () => {
   const actual = await vi.importActual<typeof import("@/hooks/usePainelObras")>(
     "@/hooks/usePainelObras",
@@ -182,9 +195,10 @@ describe("PainelObras — paridade rótulo renderizado × formatEtapaLabel", () 
       });
     }
 
-    // Para cada obra do fixture, achar a linha correspondente pelo customer_name
-    // (textContent inclui também `obra.nome`, então usamos `includes`).
-    for (const obra of obrasFixture) {
+    // Para cada obra ATIVA do fixture, achar a linha correspondente pelo
+    // customer_name (textContent inclui também `obra.nome`, então usamos
+    // `includes`).
+    for (const obra of obrasAtivas) {
       const expected = obra.etapa ? (formatEtapaLabel(obra, TODAY) ?? "") : "";
       const match = rendered.find((r) =>
         r.cliente.includes(obra.customer_name ?? ""),
@@ -199,8 +213,54 @@ describe("PainelObras — paridade rótulo renderizado × formatEtapaLabel", () 
       ).toBe(expected);
     }
 
+    // A aba padrão é "ativas": obra concluída não pode vazar para cá.
+    for (const obra of obrasConcluidas) {
+      expect(
+        rendered.some((r) => r.cliente.includes(obra.customer_name ?? "")),
+        `obra concluída "${obra.customer_name}" não deveria aparecer na aba Ativas`,
+      ).toBe(false);
+    }
+
     // Sanidade: pelo menos uma obra com rótulo S{N} foi renderizada.
     expect(rendered.some((r) => /^Execução - S\d+$/.test(r.label))).toBe(true);
+  });
+
+  it("tabela (aba Concluídas): obras finalizadas aparecem com o rótulo correto", () => {
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras?aba=concluidas">
+        <PainelObras />
+      </Wrapper>,
+    );
+
+    const desktopTh = container.querySelector(
+      '[data-testid="painel-obras-th-cliente"]',
+    );
+    expect(desktopTh).not.toBeNull();
+    const desktopTable = desktopTh!.closest("table")!;
+    const rows = within(desktopTable).getAllByTestId("painel-obras-row");
+
+    const rendered = rows.map((row) => ({
+      cliente:
+        within(row)
+          .getByTestId("painel-obras-cell-cliente")
+          .textContent?.trim() ?? "",
+      label:
+        within(row)
+          .getByTestId("painel-obras-cell-etapa")
+          .getAttribute("data-etapa-label") ?? "",
+    }));
+
+    for (const obra of obrasConcluidas) {
+      const expected = obra.etapa ? (formatEtapaLabel(obra, TODAY) ?? "") : "";
+      const match = rendered.find((r) =>
+        r.cliente.includes(obra.customer_name ?? ""),
+      );
+      expect(
+        match,
+        `linha de "${obra.customer_name}" não encontrada na aba Concluídas`,
+      ).toBeTruthy();
+      expect(match!.label).toBe(expected);
+    }
   });
 
   it("board: cada grupo de Execução tem label === formatEtapaLabel da obra", () => {
@@ -232,11 +292,37 @@ describe("PainelObras — paridade rótulo renderizado × formatEtapaLabel", () 
     }
 
     // Etapas não-Execução também devem aparecer com o nome puro.
-    for (const etapa of ["Planejamento", "Medição", "Finalizada"] as const) {
+    // "Finalizada" NÃO entra aqui: a aba padrão é "ativas" e obras concluídas
+    // ficam fora dela — verificado no teste seguinte.
+    for (const etapa of ["Planejamento", "Medição"] as const) {
       const found = labels.find(
         (l) => l === etapa || l.startsWith(`${etapa} `),
       );
       expect(found, `board sem grupo "${etapa}"`).toBeTruthy();
     }
+
+    expect(
+      labels.some((l) => l === "Finalizada" || l.startsWith("Finalizada ")),
+      'board da aba Ativas não deveria ter grupo "Finalizada"',
+    ).toBe(false);
+  });
+
+  it("board (aba Concluídas): grupo Finalizada aparece", () => {
+    const { container } = render(
+      <Wrapper route="/gestao/painel-obras?view=board&aba=concluidas">
+        <PainelObras />
+      </Wrapper>,
+    );
+
+    const labels = Array.from(
+      container.querySelectorAll<HTMLElement>(
+        '[data-testid="board-group-label"]',
+      ),
+    ).map((el) => el.textContent?.trim() ?? "");
+
+    expect(
+      labels.find((l) => l === "Finalizada" || l.startsWith("Finalizada ")),
+      'board da aba Concluídas deveria ter grupo "Finalizada"',
+    ).toBeTruthy();
   });
 });

@@ -66,12 +66,19 @@ describe("calculateObraSeverity", () => {
   });
 
   it("score entre 30 e 59 é atenção", () => {
-    // 10d atraso ~ 11.6 prazo; 8% variação ~ 16 financeiro; total ~27.6 → saudável
-    // Aumenta pendências para chegar em atenção:
+    // 10d atraso  → 10/30 * 35 = 11.7 prazo
+    // 8% variação →  8/15 * 30 = 16.0 financeiro  (≤10%, não dispara gatilho)
+    // 5 pendências→  5/10 * 15 =  7.5 pendências
+    // total = 35.2 → 'atencao'
+    //
+    // O caso antes passava variacaoPct: 5 (= 10.0 financeiro), somando 29.2 e
+    // caindo em 'saudavel' por 1 ponto — contradizendo o próprio comentário do
+    // teste, que já dizia "8% variação ~ 16 financeiro". Os valores agora
+    // batem com a intenção descrita.
     const r = calculateObraSeverity({
       ...base,
       overdueDays: 10,
-      variacaoPct: 5,
+      variacaoPct: 8,
       pendingOverdue: 5,
     });
     expect(r.level).toBe("atencao");
