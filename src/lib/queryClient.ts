@@ -5,7 +5,7 @@ import { mapError } from "@/lib/errorMapping";
 import {
   describeError,
   isExpiredSessionError,
-  recoverFromAuthError,
+  recoverSession,
 } from "@/lib/authRecovery";
 
 function softNavigate(to: string, options?: { replace?: boolean }) {
@@ -254,9 +254,9 @@ function handleAuthError(): Promise<void> {
   if (authRecoveryInFlight) return authRecoveryInFlight;
 
   authRecoveryInFlight = (async () => {
-    const recovered = await recoverFromAuthError();
+    const outcome = await recoverSession();
 
-    if (recovered) {
+    if (outcome === "recovered") {
       toast.info("Conexão com sua conta renovada. Recarregando os dados…", {
         id: "session-recovered",
       });
@@ -264,6 +264,19 @@ function handleAuthError(): Promise<void> {
       return;
     }
 
+    if (outcome === "unknown") {
+      // NÃO deslogar. Não conseguimos falar com o servidor de autenticação —
+      // isso não prova que a sessão morreu. Deslogar aqui expulsava um
+      // usuário com credencial válida só porque a rede oscilou ou a
+      // renovação demorou mais que o teto de 15s.
+      toast.error(
+        "Estamos com instabilidade para confirmar sua sessão. Tente de novo em instantes.",
+        { id: "session-unverified" },
+      );
+      return;
+    }
+
+    // outcome === "rejected": o servidor recusou o refresh token. Agora sim.
     toast.error("Sua sessão expirou. Entre novamente para continuar.", {
       id: "session-expired",
     });

@@ -52,7 +52,7 @@ const MIN_CHECK_INTERVAL_MS = 10_000;
  */
 const CHECK_TIMEOUT_MS = 15_000;
 
-let inFlight: Promise<boolean> | null = null;
+let inFlight: Promise<SessionRecoveryOutcome> | null = null;
 let inFlightForced = false;
 let lastCheckAt = 0;
 let installed = false;
@@ -126,11 +126,14 @@ export function isExpiredSessionError(error: unknown): boolean {
   return EXPIRED_SESSION_PATTERNS.test(text);
 }
 
-function withTimeout(promise: Promise<boolean>): Promise<boolean> {
-  return new Promise<boolean>((resolve) => {
+function withTimeout(
+  promise: Promise<SessionRecoveryOutcome>,
+): Promise<SessionRecoveryOutcome> {
+  return new Promise<SessionRecoveryOutcome>((resolve) => {
     const timer = setTimeout(() => {
       debugAuth("ensureFreshSession: timeout", { ms: CHECK_TIMEOUT_MS });
-      resolve(false);
+      // Estourar o tempo NÃO é prova de que a sessão morreu.
+      resolve("unknown");
     }, CHECK_TIMEOUT_MS);
 
     promise
@@ -140,7 +143,7 @@ function withTimeout(promise: Promise<boolean>): Promise<boolean> {
       })
       .catch(() => {
         clearTimeout(timer);
-        resolve(false);
+        resolve("unknown");
       });
   });
 }
@@ -173,20 +176,33 @@ export function isBackendUnavailableError(error: unknown): boolean {
   return BACKEND_UNAVAILABLE_PATTERNS.test(text);
 }
 
-async function checkAndRefresh(force: boolean): Promise<boolean> {
+/**
+ * Resultado de uma tentativa de recuperar a sessão.
+ *
+ * A distinção importa: só "rejected" autoriza deslogar. Tratar "unknown"
+ * (timeout, rede caída, backend fora) como sessão morta expulsa um usuário
+ * cuja credencial estava perfeita — exatamente o oposto do que se quer
+ * durante uma instabilidade.
+ */
+export type SessionRecoveryOutcome = "recovered" | "rejected" | "unknown";
+
+async function checkAndRefreshDetailed(
+  force: boolean,
+): Promise<SessionRecoveryOutcome> {
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {
     debugAuth("ensureFreshSession: getSession error", {
       message: describeError(error).text,
     });
-    return false;
+    // Não conseguimos nem ler a sessão — isso não prova que ela morreu.
+    return "unknown";
   }
 
   const session = data?.session ?? null;
   if (!session) {
     debugAuth("ensureFreshSession: sem sessão");
-    return false;
+    return "rejected";
   }
 
   const expiresAtMs = session.expires_at ? session.expires_at * 1000 : 0;
@@ -201,7 +217,7 @@ async function checkAndRefresh(force: boolean): Promise<boolean> {
     debugAuth("ensureFreshSession: token ainda válido", {
       secondsToExpiry: Math.round(msToExpiry / 1000),
     });
-    return true;
+    return "recovered";
   }
 
   debugAuth("ensureFreshSession: renovando token", {
@@ -215,20 +231,32 @@ async function checkAndRefresh(force: boolean): Promise<boolean> {
     await supabase.auth.refreshSession();
 
   if (refreshError || !refreshed?.session) {
-    // Refresh token revogado/expirado — a sessão morreu de verdade.
+    // Distinguir "o servidor recusou o refresh token" de "não deu para
+    // perguntar". Só o primeiro significa sessão morta; o segundo é
+    // indisponibilidade e NÃO pode deslogar ninguém.
+    const undetermined =
+      isBackendUnavailableError(refreshError) ||
+      /failed\s*to\s*fetch|network|timeout|abort/i.test(
+        describeError(refreshError).text,
+      );
+
     logError(
       "Falha ao renovar a sessão",
       refreshError ?? new Error("refreshSession sem sessão"),
-      { component: "authRecovery", secondsExpired: Math.round(-msToExpiry / 1000) },
+      {
+        component: "authRecovery",
+        secondsExpired: Math.round(-msToExpiry / 1000),
+        undetermined,
+      },
     );
-    return false;
+    return undetermined ? "unknown" : "rejected";
   }
 
   logInfo("Sessão renovada", {
     component: "authRecovery",
     wasExpired: msToExpiry <= 0,
   });
-  return true;
+  return "recovered";
 }
 
 /**
@@ -241,7 +269,7 @@ async function checkAndRefresh(force: boolean): Promise<boolean> {
  */
 export function ensureFreshSession(
   opts: { force?: boolean } = {},
-): Promise<boolean> {
+): Promise<SessionRecoveryOutcome> {
   const force = !!opts.force;
 
   if (inFlight) {
@@ -254,15 +282,15 @@ export function ensureFreshSession(
   }
 
   if (!force && Date.now() - lastCheckAt < MIN_CHECK_INTERVAL_MS) {
-    return Promise.resolve(true);
+    return Promise.resolve("recovered");
   }
 
-  const promise = withTimeout(checkAndRefresh(force))
+  const promise = withTimeout(checkAndRefreshDetailed(force))
     .catch((err) => {
       logError("Erro inesperado ao verificar a sessão", err, {
         component: "authRecovery",
       });
-      return false;
+      return "unknown" as SessionRecoveryOutcome;
     })
     .finally(() => {
       lastCheckAt = Date.now();
@@ -285,6 +313,17 @@ export function ensureFreshSession(
  * usuário perceba. Retorna `true` se a sessão foi recuperada.
  */
 export function recoverFromAuthError(): Promise<boolean> {
+  return ensureFreshSession({ force: true }).then((o) => o === "recovered");
+}
+
+/**
+ * Igual a `recoverFromAuthError`, mas devolve o desfecho completo.
+ *
+ * Use quando a decisão for DESLOGAR: só "rejected" autoriza. "unknown"
+ * significa que não deu para verificar (timeout, rede, backend fora) — e
+ * expulsar o usuário nesse caso é justamente o erro que se quer evitar.
+ */
+export function recoverSession(): Promise<SessionRecoveryOutcome> {
   return ensureFreshSession({ force: true });
 }
 
