@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { describeError, isExpiredSessionError } from "@/lib/authRecovery";
+import {
+  describeError,
+  isExpiredSessionError,
+  isBackendUnavailableError,
+} from "@/lib/authRecovery";
 
 /**
  * Regressão do bug que deixava o app numa "sessão zumbi".
@@ -86,5 +90,41 @@ describe("isExpiredSessionError", () => {
   it("ignora erro vazio", () => {
     expect(isExpiredSessionError(null)).toBe(false);
     expect(isExpiredSessionError({})).toBe(false);
+  });
+});
+
+/**
+ * Regressão do incidente de 29-30/08: o PostgREST ficou sem conexões no
+ * próprio pool (PGRST003) e não conseguiu recarregar o schema cache
+ * (PGRST002), respondendo 503 em toda requisição REST. A credencial do
+ * usuário estava perfeita — mas o app anunciava "Não conseguimos confirmar
+ * suas permissões", jogando a culpa na conta dele.
+ */
+describe("isBackendUnavailableError", () => {
+  it.each([
+    ["PGRST002 — schema cache", { code: "PGRST002", message: "Could not query the database for the schema cache. Retrying." }],
+    ["PGRST003 — pool esgotado", { code: "PGRST003", message: "Timed out acquiring connection from connection pool." }],
+    ["503 explícito", { status: 503, message: "Service Unavailable" }],
+    ["502", { status: 502, message: "Bad Gateway" }],
+    ["504", { status: 504, message: "Gateway Timeout" }],
+  ])("detecta %s", (_label, error) => {
+    expect(isBackendUnavailableError(error)).toBe(true);
+  });
+
+  it("NÃO confunde com sessão expirada", () => {
+    const jwt = { code: "PGRST301", message: "JWT expired" };
+    expect(isBackendUnavailableError(jwt)).toBe(false);
+    expect(isExpiredSessionError(jwt)).toBe(true);
+  });
+
+  it("NÃO confunde com falta de permissão", () => {
+    expect(
+      isBackendUnavailableError({ code: "42501", message: "permission denied for table user_roles" }),
+    ).toBe(false);
+  });
+
+  it("indisponibilidade não é sessão expirada — renovar token não resolveria", () => {
+    const down = { code: "PGRST002", message: "Could not query the database for the schema cache. Retrying." };
+    expect(isExpiredSessionError(down)).toBe(false);
   });
 });

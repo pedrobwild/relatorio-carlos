@@ -25,6 +25,7 @@ export function AuthRedirect() {
     isCustomer,
     error: roleError,
     sessionExpired,
+    backendUnavailable,
     refetch: refetchRoles,
   } = useUserRole();
   const { data: projects = [], isLoading: projectsLoading } =
@@ -149,12 +150,16 @@ export function AuthRedirect() {
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-3">
           <p className="text-body text-foreground">
-            Não conseguimos carregar seu acesso.
+            {backendUnavailable
+              ? "Estamos com instabilidade no servidor."
+              : "Não conseguimos carregar seu acesso."}
           </p>
           <p className="text-caption text-muted-foreground">
-            {roleError
-              ? "Sua conexão pode ter caído ou sua sessão expirou."
-              : "Sua conta ainda não tem um perfil definido. Fale com o time da Bwild."}
+            {backendUnavailable
+              ? "Não é problema na sua conta. Tente de novo em alguns segundos."
+              : roleError
+                ? "Sua conexão pode ter caído ou sua sessão expirou."
+                : "Sua conta ainda não tem um perfil definido. Fale com o time da Bwild."}
           </p>
           <button
             type="button"
