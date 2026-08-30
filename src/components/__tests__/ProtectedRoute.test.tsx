@@ -51,6 +51,7 @@ const createMockRoleState = (roles: AppRole[], loading = false) => ({
     checkRoles.some((r) => roles.includes(r)),
   error: null,
   sessionExpired: false,
+  backendUnavailable: false,
   refetch: vi.fn(),
 });
 

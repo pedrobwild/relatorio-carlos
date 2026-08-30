@@ -24,6 +24,7 @@ export function ProtectedRoute({
     loading: roleLoading,
     error: roleError,
     sessionExpired,
+    backendUnavailable,
     refetch: refetchRoles,
   } = useUserRole();
   const location = useLocation();
@@ -93,12 +94,19 @@ export function ProtectedRoute({
     return (
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-background p-6">
         <div className="max-w-sm w-full text-center space-y-3">
+          {/* Instabilidade do servidor NÃO pode ser anunciada como problema de
+              permissão: a conta do usuário está perfeita e não há nada que ele
+              possa fazer a respeito. Foi assim que uma indisponibilidade do
+              PostgREST (503/PGRST002) virou, para o time, "perdi meu acesso". */}
           <p className="text-body text-foreground">
-            Não conseguimos confirmar suas permissões.
+            {backendUnavailable
+              ? "Estamos com instabilidade no servidor."
+              : "Não conseguimos confirmar suas permissões."}
           </p>
           <p className="text-caption text-muted-foreground">
-            Sua conexão pode ter caído ou sua sessão expirou. Tente novamente —
-            se continuar, entre na sua conta outra vez.
+            {backendUnavailable
+              ? "Não é problema na sua conta — o sistema está fora do ar por instantes. Já tentamos algumas vezes; tente de novo em alguns segundos."
+              : "Sua conexão pode ter caído ou sua sessão expirou. Tente novamente — se continuar, entre na sua conta outra vez."}
           </p>
           <button
             type="button"

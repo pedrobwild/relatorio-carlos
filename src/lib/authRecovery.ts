@@ -145,6 +145,34 @@ function withTimeout(promise: Promise<boolean>): Promise<boolean> {
   });
 }
 
+const BACKEND_UNAVAILABLE_PATTERNS =
+  /schema\s*cache|connection\s*pool|service\s*unavailable|bad\s*gateway|gateway\s*time-?out|timed\s*out\s*acquiring/i;
+
+/**
+ * O BACKEND esta indisponivel — a credencial do usuario esta boa.
+ *
+ * Foi exatamente este caso que derrubou o portal por horas: o PostgREST ficou
+ * sem conexoes no proprio pool (PGRST003) e nao conseguiu recarregar o schema
+ * cache (PGRST002), passando a responder 503 em TODA requisicao REST. Como a
+ * leitura de papeis falhava, o app mostrava "Nao conseguimos confirmar suas
+ * permissoes" — uma mensagem que joga a culpa na conta do usuario e nao se
+ * recupera sozinha quando o backend volta.
+ *
+ * Isto NAO e sessao expirada (renovar token nao resolve) nem falta de
+ * permissao (o papel existe). E indisponibilidade temporaria: o certo e
+ * avisar que ha instabilidade e tentar de novo.
+ */
+export function isBackendUnavailableError(error: unknown): boolean {
+  const { text, code, status } = describeError(error);
+  if (status === 502 || status === 503 || status === 504) return true;
+  // PGRST002: nao conseguiu ler o schema cache. PGRST003: estourou o tempo
+  // esperando uma conexao do pool do PostgREST.
+  if (code === "PGRST002" || code === "PGRST003") return true;
+  if (!text) return false;
+  if (/\b(502|503|504)\b/.test(text)) return true;
+  return BACKEND_UNAVAILABLE_PATTERNS.test(text);
+}
+
 async function checkAndRefresh(force: boolean): Promise<boolean> {
   const { data, error } = await supabase.auth.getSession();
 

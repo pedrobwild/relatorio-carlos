@@ -5,6 +5,7 @@ import { debugAuth } from "@/lib/debugAuth";
 import { logError, logInfo } from "@/lib/errorLogger";
 import {
   isExpiredSessionError,
+  isBackendUnavailableError,
   describeError,
   recoverFromAuthError,
 } from "@/lib/authRecovery";
@@ -35,6 +36,11 @@ interface UserRoleState {
   error: Error | null;
   /** A sessão morreu (refresh já tentado e recusado) — mande entrar de novo. */
   sessionExpired: boolean;
+  /**
+   * O backend está indisponível (503/PGRST002/PGRST003), não a conta do
+   * usuário. A UI deve falar em instabilidade, não em permissão.
+   */
+  backendUnavailable: boolean;
   refetch: () => void;
   isStaff: boolean;
   isAdmin: boolean;
@@ -72,27 +78,67 @@ async function fetchRolesFromServer(userId: string): Promise<AppRole[]> {
 }
 
 /**
- * Busca os papéis, RENOVANDO a sessão e tentando de novo quando o servidor
- * responde 401.
+ * Espera com jitter, para que N abas nao voltem todas no mesmo instante e
+ * recriem a avalanche que derrubou o backend.
+ */
+function wait(ms: number): Promise<void> {
+  const jitter = Math.floor(Math.random() * 400);
+  return new Promise((resolve) => setTimeout(resolve, ms + jitter));
+}
+
+/** Backoff para indisponibilidade do backend. LIMITADO de proposito. */
+const UNAVAILABLE_DELAYS_MS = [2000, 6000, 15000];
+
+/**
+ * Busca os papéis lidando com as duas falhas que travam a entrada.
  *
- * Esta leitura não passa pelo TanStack Query — é uma chamada direta ao
- * Supabase — então a recuperação de sessão do `queryClient` nunca a alcança.
- * Sem este retry, um token vencido no primeiro carregamento (a renovação de
- * `installSessionRecovery` ainda em voo quando o React monta) deixava o
- * usuário parado na tela "Não conseguimos confirmar suas permissões", e o
- * botão de tentar novamente só repetia o mesmo 401.
+ * Esta leitura não passa pelo TanStack Query — é chamada direta ao Supabase —
+ * então a recuperação de sessão do `queryClient` nunca a alcança.
+ *
+ * 1. 401 / sessão expirada → renova o token e refaz a leitura uma vez.
+ *    Sem isso, um token vencido no boot (a renovação de installSessionRecovery
+ *    ainda em voo quando o React monta) travava o usuário na tela de
+ *    permissões, e o botão de tentar novamente só repetia o mesmo 401.
+ *
+ * 2. 503 / backend indisponível (PGRST002 schema cache, PGRST003 pool
+ *    esgotado) → tenta de novo com backoff limitado. Foi este o caso que
+ *    manteve o portal fora do ar: a credencial estava boa, o PostgREST é que
+ *    não respondia, e o app tratava isso como problema da conta do usuário.
+ *
+ * O número de tentativas é PEQUENO e com jitter de propósito: o incidente que
+ * originou este código foi causado por retentativa sem limite martelando o
+ * banco. Esgotado o orçamento, o erro sobe e quem decide é o usuário.
  */
 async function fetchRolesWithRecovery(userId: string): Promise<AppRole[]> {
-  try {
-    return await fetchRolesFromServer(userId);
-  } catch (err) {
-    if (!isExpiredSessionError(err)) throw err;
+  let sessionRetryUsed = false;
 
-    debugAuth("useUserRole: 401 ao ler papéis, renovando a sessão", { userId });
-    const recovered = await recoverFromAuthError();
-    if (!recovered) throw err;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fetchRolesFromServer(userId);
+    } catch (err) {
+      if (isExpiredSessionError(err)) {
+        if (sessionRetryUsed) throw err;
+        sessionRetryUsed = true;
+        debugAuth("useUserRole: 401 ao ler papéis, renovando a sessão", {
+          userId,
+        });
+        const recovered = await recoverFromAuthError();
+        if (!recovered) throw err;
+        continue;
+      }
 
-    return await fetchRolesFromServer(userId);
+      if (!isBackendUnavailableError(err)) throw err;
+
+      const delay = UNAVAILABLE_DELAYS_MS[attempt];
+      if (delay === undefined) throw err;
+
+      debugAuth("useUserRole: backend indisponível, tentando de novo", {
+        userId,
+        attempt: attempt + 1,
+        delay,
+      });
+      await wait(delay);
+    }
   }
 }
 
@@ -135,6 +181,7 @@ export function useUserRole(): UserRoleState {
    * "tentar novamente": o caminho de saída é entrar na conta de novo.
    */
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   const isMounted = useRef(true);
@@ -153,6 +200,7 @@ export function useUserRole(): UserRoleState {
       setRoles([]);
       setError(null);
       setSessionExpired(false);
+      setBackendUnavailable(false);
       setLoading(false);
       return;
     }
@@ -177,6 +225,7 @@ export function useUserRole(): UserRoleState {
         setRoles(fetched);
         setError(null);
         setSessionExpired(false);
+        setBackendUnavailable(false);
         logInfo("User roles fetched", { userId, roles: fetched });
         debugAuth("useUserRole: roles fetched", { userId, roles: fetched });
       })
@@ -194,13 +243,16 @@ export function useUserRole(): UserRoleState {
             ? err
             : new Error(describeError(err).text || "Erro ao carregar permissões");
         const sessionIsDead = isExpiredSessionError(err);
+        const backendIsDown = !sessionIsDead && isBackendUnavailableError(err);
         setRoles([]);
         setError(normalized);
         setSessionExpired(sessionIsDead);
+        setBackendUnavailable(backendIsDown);
         logError("Error fetching user roles", err, {
           component: "useUserRole",
           userId,
           isSessionError: sessionIsDead,
+          isBackendUnavailable: backendIsDown,
         });
       })
       .finally(() => {
@@ -255,6 +307,7 @@ export function useUserRole(): UserRoleState {
     loading: loading || authLoading,
     error,
     sessionExpired,
+    backendUnavailable,
     refetch,
     isStaff,
     isAdmin,
