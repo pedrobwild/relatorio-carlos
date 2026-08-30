@@ -50,6 +50,7 @@ const createMockRoleState = (roles: AppRole[], loading = false) => ({
   hasAnyRole: (checkRoles: AppRole[]) =>
     checkRoles.some((r) => roles.includes(r)),
   error: null,
+  sessionExpired: false,
   refetch: vi.fn(),
 });
 

@@ -53,6 +53,7 @@ const MIN_CHECK_INTERVAL_MS = 10_000;
 const CHECK_TIMEOUT_MS = 15_000;
 
 let inFlight: Promise<boolean> | null = null;
+let inFlightForced = false;
 let lastCheckAt = 0;
 let installed = false;
 
@@ -215,7 +216,14 @@ export function ensureFreshSession(
 ): Promise<boolean> {
   const force = !!opts.force;
 
-  if (inFlight) return inFlight;
+  if (inFlight) {
+    // Um pedido FORÇADO não pode ser atendido por uma verificação passiva já em
+    // voo: a passiva devolve `true` sem renovar quando o token ainda não está
+    // perto de expirar, e quem chamou forçado acabou de tomar um 401. Espera a
+    // que está rodando e então força de verdade.
+    if (!force || inFlightForced) return inFlight;
+    return inFlight.then(() => ensureFreshSession({ force: true }));
+  }
 
   if (!force && Date.now() - lastCheckAt < MIN_CHECK_INTERVAL_MS) {
     return Promise.resolve(true);
@@ -230,10 +238,14 @@ export function ensureFreshSession(
     })
     .finally(() => {
       lastCheckAt = Date.now();
-      if (inFlight === promise) inFlight = null;
+      if (inFlight === promise) {
+        inFlight = null;
+        inFlightForced = false;
+      }
     });
 
   inFlight = promise;
+  inFlightForced = force;
   return promise;
 }
 
@@ -278,6 +290,7 @@ export function installSessionRecovery(): void {
 /** Somente para testes. */
 export function __resetAuthRecoveryForTests(): void {
   inFlight = null;
+  inFlightForced = false;
   lastCheckAt = 0;
   installed = false;
 }

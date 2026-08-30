@@ -3,7 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { debugAuth } from "@/lib/debugAuth";
 import { logError, logInfo } from "@/lib/errorLogger";
-import { isExpiredSessionError, describeError } from "@/lib/authRecovery";
+import {
+  isExpiredSessionError,
+  describeError,
+  recoverFromAuthError,
+} from "@/lib/authRecovery";
 
 export type AppRole =
   | "engineer"
@@ -29,6 +33,8 @@ interface UserRoleState {
    * erro com "tentar novamente" em vez de assumir um papel.
    */
   error: Error | null;
+  /** A sessão morreu (refresh já tentado e recusado) — mande entrar de novo. */
+  sessionExpired: boolean;
   refetch: () => void;
   isStaff: boolean;
   isAdmin: boolean;
@@ -65,6 +71,31 @@ async function fetchRolesFromServer(userId: string): Promise<AppRole[]> {
   return (data ?? []).map((r) => r.role as AppRole);
 }
 
+/**
+ * Busca os papéis, RENOVANDO a sessão e tentando de novo quando o servidor
+ * responde 401.
+ *
+ * Esta leitura não passa pelo TanStack Query — é uma chamada direta ao
+ * Supabase — então a recuperação de sessão do `queryClient` nunca a alcança.
+ * Sem este retry, um token vencido no primeiro carregamento (a renovação de
+ * `installSessionRecovery` ainda em voo quando o React monta) deixava o
+ * usuário parado na tela "Não conseguimos confirmar suas permissões", e o
+ * botão de tentar novamente só repetia o mesmo 401.
+ */
+async function fetchRolesWithRecovery(userId: string): Promise<AppRole[]> {
+  try {
+    return await fetchRolesFromServer(userId);
+  } catch (err) {
+    if (!isExpiredSessionError(err)) throw err;
+
+    debugAuth("useUserRole: 401 ao ler papéis, renovando a sessão", { userId });
+    const recovered = await recoverFromAuthError();
+    if (!recovered) throw err;
+
+    return await fetchRolesFromServer(userId);
+  }
+}
+
 function loadRoles(userId: string): Promise<AppRole[]> {
   const cached = roleCache.get(userId);
   if (cached) return Promise.resolve(cached);
@@ -72,7 +103,7 @@ function loadRoles(userId: string): Promise<AppRole[]> {
   const existing = inFlightFetches.get(userId);
   if (existing) return existing;
 
-  const promise = fetchRolesFromServer(userId)
+  const promise = fetchRolesWithRecovery(userId)
     .then((roles) => {
       // Só cacheia resposta REAL do servidor.
       roleCache.set(userId, roles);
@@ -98,6 +129,12 @@ export function useUserRole(): UserRoleState {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  /**
+   * True quando a leitura falhou porque a sessão morreu de vez — o refresh
+   * token não vale mais e a renovação já foi tentada. Aqui não adianta
+   * "tentar novamente": o caminho de saída é entrar na conta de novo.
+   */
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   const isMounted = useRef(true);
@@ -115,6 +152,7 @@ export function useUserRole(): UserRoleState {
     if (!user) {
       setRoles([]);
       setError(null);
+      setSessionExpired(false);
       setLoading(false);
       return;
     }
@@ -138,6 +176,7 @@ export function useUserRole(): UserRoleState {
         if (cancelled || !isMounted.current) return;
         setRoles(fetched);
         setError(null);
+        setSessionExpired(false);
         logInfo("User roles fetched", { userId, roles: fetched });
         debugAuth("useUserRole: roles fetched", { userId, roles: fetched });
       })
@@ -154,12 +193,14 @@ export function useUserRole(): UserRoleState {
           err instanceof Error
             ? err
             : new Error(describeError(err).text || "Erro ao carregar permissões");
+        const sessionIsDead = isExpiredSessionError(err);
         setRoles([]);
         setError(normalized);
+        setSessionExpired(sessionIsDead);
         logError("Error fetching user roles", err, {
           component: "useUserRole",
           userId,
-          isSessionError: isExpiredSessionError(err),
+          isSessionError: sessionIsDead,
         });
       })
       .finally(() => {
@@ -213,6 +254,7 @@ export function useUserRole(): UserRoleState {
           : roles[0] || null,
     loading: loading || authLoading,
     error,
+    sessionExpired,
     refetch,
     isStaff,
     isAdmin,

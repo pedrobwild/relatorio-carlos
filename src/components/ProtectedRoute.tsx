@@ -23,6 +23,7 @@ export function ProtectedRoute({
     isCustomer,
     loading: roleLoading,
     error: roleError,
+    sessionExpired,
     refetch: refetchRoles,
   } = useUserRole();
   const location = useLocation();
@@ -69,10 +70,21 @@ export function ProtectedRoute({
     );
   }
 
-  // Falha ao LER as permissões (rede/401/RLS) — não sabemos o papel do
-  // usuário. Nunca adivinhe: mandar um admin para o portal do cliente (ou
-  // para /auth, gerando loop) é pior do que dizer a verdade e oferecer
-  // "tentar novamente".
+  // Sessão morta (a renovação já foi tentada e recusada). Não adianta oferecer
+  // "tentar novamente" — isso era um beco sem saída: o retry repetia o mesmo
+  // 401 para sempre. O caminho de saída é entrar na conta de novo.
+  if (isAuthenticated && sessionExpired) {
+    debugNav("ProtectedRoute: sessão expirada, indo para /auth", {
+      path: location.pathname,
+    });
+    return (
+      <Navigate to="/auth" state={{ from: location.pathname }} replace />
+    );
+  }
+
+  // Falha ao LER as permissões (rede/RLS) — não sabemos o papel do usuário.
+  // Nunca adivinhe: mandar um admin para o portal do cliente é pior do que
+  // dizer a verdade e oferecer "tentar novamente".
   if (isAuthenticated && roleError) {
     debugNav("ProtectedRoute: falha ao carregar permissões", {
       path: location.pathname,

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
@@ -24,6 +24,7 @@ export function AuthRedirect() {
     isStaff,
     isCustomer,
     error: roleError,
+    sessionExpired,
     refetch: refetchRoles,
   } = useUserRole();
   const { data: projects = [], isLoading: projectsLoading } =
@@ -132,6 +133,12 @@ export function AuthRedirect() {
         <span className="sr-only">Carregando...</span>
       </div>
     );
+  }
+
+  // Sessão morta: manda entrar de novo em vez de oferecer um retry que só
+  // repetiria o mesmo 401.
+  if (isAuthenticated && sessionExpired) {
+    return <Navigate to="/auth" replace />;
   }
 
   // Sem papel resolvido não há para onde redirecionar. Antes isso devolvia
