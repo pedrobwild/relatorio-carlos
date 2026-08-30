@@ -1,0 +1,1 @@
+ALTER FUNCTION public.replace_project_activities(uuid, jsonb) SECURITY DEFINER;
