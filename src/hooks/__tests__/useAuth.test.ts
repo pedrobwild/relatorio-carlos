@@ -26,7 +26,7 @@ vi.mock("@/lib/debugAuth", () => ({
 }));
 
 // Mock useUserRole to avoid circular dependency
-vi.mock("@/hooks/useUserCustomerOnLogin", () => ({
+vi.mock("@/hooks/useLinkCustomerOnLogin", () => ({
   ensureCustomerProjectLink: vi.fn().mockResolvedValue(undefined),
 }));
 
