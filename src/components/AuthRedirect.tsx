@@ -18,7 +18,14 @@ export function AuthRedirect() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { roles, loading: roleLoading, isStaff, isCustomer } = useUserRole();
+  const {
+    roles,
+    loading: roleLoading,
+    isStaff,
+    isCustomer,
+    error: roleError,
+    refetch: refetchRoles,
+  } = useUserRole();
   const { data: projects = [], isLoading: projectsLoading } =
     useProjectsQuery();
 
@@ -123,6 +130,33 @@ export function AuthRedirect() {
       >
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         <span className="sr-only">Carregando...</span>
+      </div>
+    );
+  }
+
+  // Sem papel resolvido não há para onde redirecionar. Antes isso devolvia
+  // `null` — o usuário ficava olhando uma página em branco na raiz sem
+  // nenhuma pista do que aconteceu.
+  if (isAuthenticated && (roleError || roles.length === 0)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <div className="max-w-sm w-full text-center space-y-3">
+          <p className="text-body text-foreground">
+            Não conseguimos carregar seu acesso.
+          </p>
+          <p className="text-caption text-muted-foreground">
+            {roleError
+              ? "Sua conexão pode ter caído ou sua sessão expirou."
+              : "Sua conta ainda não tem um perfil definido. Fale com o time da Bwild."}
+          </p>
+          <button
+            type="button"
+            onClick={refetchRoles}
+            className="inline-flex items-center justify-center min-h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 active:scale-[0.98] transition"
+          >
+            Tentar novamente
+          </button>
+        </div>
       </div>
     );
   }

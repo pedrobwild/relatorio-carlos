@@ -27,3 +27,26 @@ export function registerOfflineCacheSW() {
       console.warn("[SW] Registration failed:", err);
     });
 }
+
+/**
+ * Apaga o cache offline da API.
+ *
+ * Chamado no logout: sem isto, os dados da conta anterior continuam legíveis
+ * offline no aparelho — um problema real em celular compartilhado na obra.
+ */
+export function clearOfflineApiCache(): void {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
+    return;
+  }
+  try {
+    navigator.serviceWorker.ready
+      .then((reg) => {
+        reg.active?.postMessage({ type: "bwild-clear-api-cache" });
+      })
+      .catch(() => {
+        /* SW indisponível — nada a limpar */
+      });
+  } catch {
+    /* ignore */
+  }
+}

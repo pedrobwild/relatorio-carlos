@@ -6,6 +6,7 @@ import { clearRoleCache } from "./useUserRole";
 import { useLinkCustomerOnLogin } from "./useLinkCustomerOnLogin";
 import { queryClient } from "@/lib/queryClient";
 import { clearPersistedCache } from "@/lib/queryPersister";
+import { clearOfflineApiCache } from "@/lib/registerSW";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -103,16 +104,23 @@ export function useAuth() {
         isSameSession: newSession?.access_token === lastSessionId.current,
       });
 
-      // TOKEN_REFRESHED: only sync the cached access token, no re-render needed.
-      // We must NOT skip this entirely — if another tab signed out, the token
-      // here may differ and we need to update lastSessionId to keep tabs in sync.
+      // TOKEN_REFRESHED: token novo em mãos.
+      //
+      // Antes este handler só atualizava a ref e voltava, sem tocar no estado
+      // do React. O `session` exposto pelo hook ficava preso no token ANTIGO —
+      // qualquer consumidor que lesse `session.access_token` (edge functions,
+      // downloads autenticados) mandava uma credencial já vencida e tomava 401.
+      // Agora sincronizamos o estado; a checagem de igualdade acima continua
+      // evitando re-render quando o token não mudou de fato.
       if (event === "TOKEN_REFRESHED") {
         if (newSession?.access_token === lastSessionId.current) {
           debugAuth("Ignoring TOKEN_REFRESHED for same access token");
           return;
         }
         lastSessionId.current = newSession?.access_token ?? null;
-        debugAuth("TOKEN_REFRESHED with new access token, updated ref");
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        debugAuth("TOKEN_REFRESHED with new access token, state synced");
         return;
       }
 
@@ -140,6 +148,7 @@ export function useAuth() {
           queryClient.clear();
           clearPersistedCache();
           clearRoleCache();
+          clearOfflineApiCache();
         }
 
         setSession(newSession);
@@ -192,6 +201,7 @@ export function useAuth() {
     }
     queryClient.clear();
     clearPersistedCache();
+    clearOfflineApiCache();
     const authStorageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
 
     // CRITICAL: We do NOT set loading=true here because:

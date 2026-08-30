@@ -61,6 +61,8 @@ export function useClientDashboard() {
     data: projects = [],
     isLoading: projectsLoading,
     error: projectsError,
+    refetch: refetchProjects,
+    isFetching: projectsFetching,
   } = useProjectSummaryQuery();
 
   // Fetch upcoming unpaid payments across all user's projects
@@ -109,5 +111,8 @@ export function useClientDashboard() {
     upcomingPayments,
     isLoading: projectsLoading,
     error: projectsError,
+    /** Refaz só a query que falhou — sem recarregar a página inteira. */
+    refetch: refetchProjects,
+    isRefetching: projectsFetching && !projectsLoading,
   };
 }
