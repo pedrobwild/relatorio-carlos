@@ -2,6 +2,11 @@ import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { mapError } from "@/lib/errorMapping";
+import {
+  describeError,
+  isExpiredSessionError,
+  recoverFromAuthError,
+} from "@/lib/authRecovery";
 
 function softNavigate(to: string, options?: { replace?: boolean }) {
   if (typeof window === "undefined") return;
@@ -165,20 +170,40 @@ const networkErrorPatterns = [
 // Auth error codes that should NOT retry
 const authErrorCodes = ["401", "403"];
 
+/**
+ * Texto pesquisável de um erro.
+ *
+ * CUIDADO: NÃO use `String(error)` aqui. Os erros que chegam do Supabase são
+ * objetos simples (`{ message, details, hint, code }`) — inclusive os que o
+ * `base.repository` clona via `Object.assign({}, error, ...)`, que deixam de
+ * ser instâncias de `Error`. `String(objeto)` devolve `"[object Object]"`, o
+ * que fazia TODAS as heurísticas abaixo (rede, auth, JWT) darem sempre falso:
+ * erros de rede nunca eram repetidos e sessão expirada nunca era detectada.
+ */
+function errorText(error: unknown): string {
+  return describeError(error).text.toLowerCase();
+}
+
 // Check if error is a network error (retryable)
 function isNetworkError(error: unknown): boolean {
   if (!error) return false;
-  const errorString = String(error).toLowerCase();
-  return networkErrorPatterns.some((pattern) => errorString.includes(pattern));
+  const text = errorText(error);
+  if (!text) return false;
+  return networkErrorPatterns.some((pattern) => text.includes(pattern));
 }
 
 // Check if error is an auth error (NOT retryable)
 function isAuthErrorCode(error: unknown): boolean {
   if (!error) return false;
-  const errorString = String(error).toLowerCase();
+  const { text, code, status } = describeError(error);
+  if (status === 401 || status === 403) return true;
+  if (code && authErrorCodes.includes(code)) return true;
+
+  const lowered = text.toLowerCase();
+  if (!lowered) return false;
 
   // Check for explicit auth error codes
-  if (authErrorCodes.some((code) => errorString.includes(code))) {
+  if (authErrorCodes.some((c) => lowered.includes(c))) {
     return true;
   }
 
@@ -190,7 +215,7 @@ function isAuthErrorCode(error: unknown): boolean {
     "not authenticated",
     "unauthorized",
   ];
-  return authKeywords.some((keyword) => errorString.includes(keyword));
+  return authKeywords.some((keyword) => lowered.includes(keyword));
 }
 
 /**
@@ -208,26 +233,47 @@ export function getUserFriendlyMessage(error: unknown): string {
 // Mantém o objeto `errorMessages` apenas para referência (não usado em runtime).
 void errorMessages;
 
-// Check if error is an auth/permission error requiring logout
+// Check if error is an auth/permission error requiring recovery
 function isAuthError(error: unknown): boolean {
-  if (!error) return false;
-
-  const errorMessage = String(error).toLowerCase();
-  const authKeywords = [
-    "jwt expired",
-    "jwt malformed",
-    "invalid jwt",
-    "not authenticated",
-  ];
-
-  return authKeywords.some((keyword) => errorMessage.includes(keyword));
+  return isExpiredSessionError(error);
 }
 
-// Handle auth errors by signing out and redirecting
-async function handleAuthError() {
-  toast.error("Sessão expirada. Por favor, faça login novamente.");
-  await supabase.auth.signOut();
-  softNavigate("/auth", { replace: true });
+/**
+ * Sessão expirada: TENTA RENOVAR antes de desistir.
+ *
+ * O comportamento anterior era deslogar direto — e como a detecção estava
+ * quebrada (`String(error)`), na prática nunca rodava: o usuário ficava numa
+ * sessão zumbi, com o nome no header e todo request devolvendo 401. Agora:
+ *  1. renova o token (resolve o caso comum da aba que ficou em segundo plano);
+ *  2. revalida as queries para a tela se recompor sozinha;
+ *  3. só desloga se o refresh token realmente não valer mais.
+ */
+let authRecoveryInFlight: Promise<void> | null = null;
+
+function handleAuthError(): Promise<void> {
+  if (authRecoveryInFlight) return authRecoveryInFlight;
+
+  authRecoveryInFlight = (async () => {
+    const recovered = await recoverFromAuthError();
+
+    if (recovered) {
+      toast.info("Conexão com sua conta renovada. Recarregando os dados…", {
+        id: "session-recovered",
+      });
+      await queryClient.invalidateQueries();
+      return;
+    }
+
+    toast.error("Sua sessão expirou. Entre novamente para continuar.", {
+      id: "session-expired",
+    });
+    await supabase.auth.signOut();
+    softNavigate("/auth", { replace: true });
+  })().finally(() => {
+    authRecoveryInFlight = null;
+  });
+
+  return authRecoveryInFlight;
 }
 
 // Generic error handler
@@ -235,7 +281,7 @@ function handleError(error: unknown, context?: string) {
   console.error(`${context || "Error"}:`, error);
 
   if (isAuthError(error)) {
-    handleAuthError();
+    void handleAuthError();
     return;
   }
 
@@ -256,8 +302,18 @@ const mutationRetryState = new Map<
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
-      // Only show error toast if the query has already been successful before
-      // This prevents showing errors on initial load failures
+      // Sessão expirada tem que ser tratada SEMPRE, inclusive na primeira
+      // carga. Era exatamente esse o buraco: o usuário abria o app com um
+      // token vencido, tudo falhava com 401 e — como `query.state.data` ainda
+      // era `undefined` — o app não avisava nem tentava renovar. Resultado:
+      // "Não foi possível carregar seus projetos" para sempre.
+      if (isAuthError(error)) {
+        void handleAuthError();
+        return;
+      }
+
+      // Demais erros: só avisa se a query já tinha funcionado antes, para não
+      // encher a tela de toast durante a carga inicial.
       if (query.state.data !== undefined) {
         handleError(error, "Query error");
       }

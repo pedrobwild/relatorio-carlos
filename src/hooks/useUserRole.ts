@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { debugAuth } from "@/lib/debugAuth";
 import { logError, logInfo } from "@/lib/errorLogger";
+import { isExpiredSessionError, describeError } from "@/lib/authRecovery";
 
 export type AppRole =
   | "engineer"
@@ -20,6 +21,15 @@ interface UserRoleState {
   /** @deprecated Use roles array instead. Returns the first/primary role for backwards compatibility */
   role: AppRole | null;
   loading: boolean;
+  /**
+   * Preenchido quando a leitura de `user_roles` FALHOU (rede, 401, RLS).
+   *
+   * É diferente de "usuário sem papel": aqui não sabemos qual é o papel. Quem
+   * decide navegação (ProtectedRoute/AuthRedirect) deve mostrar um estado de
+   * erro com "tentar novamente" em vez de assumir um papel.
+   */
+  error: Error | null;
+  refetch: () => void;
   isStaff: boolean;
   isAdmin: boolean;
   isCustomer: boolean;
@@ -28,124 +38,147 @@ interface UserRoleState {
   hasAnyRole: (roles: AppRole[]) => boolean;
 }
 
-// Cache roles by user ID to prevent refetches on re-mounts
+// Cache roles by user ID to prevent refetches on re-mounts.
+// SÓ guarda resultados que vieram do servidor — nunca um fallback de erro.
 const roleCache = new Map<string, AppRole[]>();
 
-// Track pending fetches to prevent duplicate concurrent requests
-const pendingFetches = new Set<string>();
+/**
+ * Fetches em andamento, por usuário.
+ *
+ * Guardamos a PROMISE, não apenas um marcador booleano. Antes isto era um
+ * `Set` e a segunda instância do hook simplesmente dava `return` ao ver o
+ * marcador — sem nunca receber o resultado e sem sair de `loading: true`.
+ * Como `ProtectedRoute` renderiza um skeleton enquanto `loading` for true,
+ * qualquer tela que montasse dois `useUserRole` em paralelo tinha chance de
+ * ficar presa no skeleton para sempre ("não consigo entrar").
+ */
+const inFlightFetches = new Map<string, Promise<AppRole[]>>();
+
+async function fetchRolesFromServer(userId: string): Promise<AppRole[]> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+
+  if (error) throw error;
+
+  return (data ?? []).map((r) => r.role as AppRole);
+}
+
+function loadRoles(userId: string): Promise<AppRole[]> {
+  const cached = roleCache.get(userId);
+  if (cached) return Promise.resolve(cached);
+
+  const existing = inFlightFetches.get(userId);
+  if (existing) return existing;
+
+  const promise = fetchRolesFromServer(userId)
+    .then((roles) => {
+      // Só cacheia resposta REAL do servidor.
+      roleCache.set(userId, roles);
+      return roles;
+    })
+    .finally(() => {
+      if (inFlightFetches.get(userId) === promise) {
+        inFlightFetches.delete(userId);
+      }
+    });
+
+  inFlightFetches.set(userId, promise);
+  return promise;
+}
 
 export function useUserRole(): UserRoleState {
   const { user, loading: authLoading } = useAuth();
   const [roles, setRoles] = useState<AppRole[]>(() => {
-    // Check cache on initial mount
     if (user?.id && roleCache.has(user.id)) {
       return roleCache.get(user.id) ?? [];
     }
     return [];
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
-  // Use ref to track if component is mounted
   const isMounted = useRef(true);
-
-  const fetchRoles = useCallback(async (userId: string) => {
-    // Prevent duplicate fetches for the same user
-    if (pendingFetches.has(userId)) {
-      debugAuth("useUserRole: fetch already in progress", { userId });
-      return;
-    }
-
-    // Check cache first (double-check in case it was set between renders)
-    if (roleCache.has(userId)) {
-      const cachedRoles = roleCache.get(userId)!;
-      debugAuth("useUserRole: using cached roles", {
-        userId,
-        roles: cachedRoles,
-      });
-      if (isMounted.current) {
-        setRoles(cachedRoles);
-        setLoading(false);
-      }
-      return;
-    }
-
-    pendingFetches.add(userId);
-    debugAuth("useUserRole: fetching roles", { userId });
-
-    try {
-      // Fetch ALL roles for the user (not just single)
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-
-      if (!isMounted.current) {
-        pendingFetches.delete(userId);
-        return;
-      }
-
-      if (error) {
-        logError("Error fetching user roles", error, {
-          component: "useUserRole",
-          userId,
-        });
-        const defaultRoles: AppRole[] = ["customer"];
-        setRoles(defaultRoles);
-        roleCache.set(userId, defaultRoles);
-      } else {
-        const fetchedRoles = (data || []).map((r) => r.role as AppRole);
-        // If no roles found, default to customer
-        const finalRoles =
-          fetchedRoles.length > 0 ? fetchedRoles : (["customer"] as AppRole[]);
-        setRoles(finalRoles);
-        roleCache.set(userId, finalRoles);
-        logInfo("User roles fetched", { userId, roles: finalRoles });
-        debugAuth("useUserRole: roles fetched", { userId, roles: finalRoles });
-      }
-    } catch (err) {
-      logError("Unexpected error in useUserRole", err, {
-        component: "useUserRole",
-        userId,
-      });
-      if (isMounted.current) {
-        const defaultRoles: AppRole[] = ["customer"];
-        setRoles(defaultRoles);
-        roleCache.set(userId, defaultRoles);
-      }
-    } finally {
-      pendingFetches.delete(userId);
-      if (isMounted.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
+  useEffect(() => {
     if (authLoading) return;
 
     if (!user) {
       setRoles([]);
+      setError(null);
       setLoading(false);
       return;
     }
 
-    // Check cache synchronously first
-    if (roleCache.has(user.id)) {
-      const cachedRoles = roleCache.get(user.id)!;
-      setRoles(cachedRoles);
+    const userId = user.id;
+
+    const cached = roleCache.get(userId);
+    if (cached) {
+      setRoles(cached);
+      setError(null);
       setLoading(false);
       return;
     }
 
-    // Fetch roles if not cached
-    fetchRoles(user.id);
+    let cancelled = false;
+    setLoading(true);
+    debugAuth("useUserRole: fetching roles", { userId });
+
+    loadRoles(userId)
+      .then((fetched) => {
+        if (cancelled || !isMounted.current) return;
+        setRoles(fetched);
+        setError(null);
+        logInfo("User roles fetched", { userId, roles: fetched });
+        debugAuth("useUserRole: roles fetched", { userId, roles: fetched });
+      })
+      .catch((err) => {
+        if (cancelled || !isMounted.current) return;
+
+        // NÃO assumimos "customer" aqui.
+        //
+        // O fallback antigo (`roles = ["customer"]`, ainda por cima cacheado)
+        // rebaixava um admin a cliente sempre que a leitura falhasse — era
+        // por isso que um admin com o token vencido caía no "Portal do
+        // Cliente" em vez de ver o erro de sessão. Agora o erro sobe.
+        const normalized =
+          err instanceof Error
+            ? err
+            : new Error(describeError(err).text || "Erro ao carregar permissões");
+        setRoles([]);
+        setError(normalized);
+        logError("Error fetching user roles", err, {
+          component: "useUserRole",
+          userId,
+          isSessionError: isExpiredSessionError(err),
+        });
+      })
+      .finally(() => {
+        if (cancelled || !isMounted.current) return;
+        setLoading(false);
+      });
 
     return () => {
-      isMounted.current = false;
+      cancelled = true;
     };
-  }, [user?.id, authLoading, fetchRoles]);
+  }, [user?.id, authLoading, attempt]);
+
+  const refetch = useCallback(() => {
+    if (user?.id) {
+      roleCache.delete(user.id);
+      inFlightFetches.delete(user.id);
+    }
+    setAttempt((n) => n + 1);
+  }, [user?.id]);
 
   // Helper functions
   const hasRole = useCallback((role: AppRole) => roles.includes(role), [roles]);
@@ -179,6 +212,8 @@ export function useUserRole(): UserRoleState {
           ? "engineer"
           : roles[0] || null,
     loading: loading || authLoading,
+    error,
+    refetch,
     isStaff,
     isAdmin,
     isCustomer,
@@ -191,5 +226,5 @@ export function useUserRole(): UserRoleState {
 // Export function to clear cache (useful for testing or logout)
 export function clearRoleCache(): void {
   roleCache.clear();
-  pendingFetches.clear();
+  inFlightFetches.clear();
 }

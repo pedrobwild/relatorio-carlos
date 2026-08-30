@@ -22,6 +22,8 @@ export function ProtectedRoute({
     isStaff,
     isCustomer,
     loading: roleLoading,
+    error: roleError,
+    refetch: refetchRoles,
   } = useUserRole();
   const location = useLocation();
 
@@ -63,6 +65,37 @@ export function ProtectedRoute({
           </div>
         </div>
         <span className="sr-only">Verificando autenticação...</span>
+      </div>
+    );
+  }
+
+  // Falha ao LER as permissões (rede/401/RLS) — não sabemos o papel do
+  // usuário. Nunca adivinhe: mandar um admin para o portal do cliente (ou
+  // para /auth, gerando loop) é pior do que dizer a verdade e oferecer
+  // "tentar novamente".
+  if (isAuthenticated && roleError) {
+    debugNav("ProtectedRoute: falha ao carregar permissões", {
+      path: location.pathname,
+      message: roleError.message,
+    });
+    return (
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-background p-6">
+        <div className="max-w-sm w-full text-center space-y-3">
+          <p className="text-body text-foreground">
+            Não conseguimos confirmar suas permissões.
+          </p>
+          <p className="text-caption text-muted-foreground">
+            Sua conexão pode ter caído ou sua sessão expirou. Tente novamente —
+            se continuar, entre na sua conta outra vez.
+          </p>
+          <button
+            type="button"
+            onClick={refetchRoles}
+            className="inline-flex items-center justify-center min-h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 active:scale-[0.98] transition"
+          >
+            Tentar novamente
+          </button>
+        </div>
       </div>
     );
   }

@@ -16,6 +16,7 @@ import { ProjectDashboardCard } from "@/pages/minhas-obras/ProjectDashboardCard"
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { buildSupportWhatsappUrl } from "@/config/contact";
 import { differenceInDays, parseISO } from "date-fns";
+import { mapError } from "@/lib/errorMapping";
 import type { ProjectSummary } from "@/infra/repositories/projects.repository";
 
 /** Saudação contextual por horário — reduz fricção emocional na entrada. */
@@ -52,8 +53,19 @@ const STATUS_ORDER: Record<string, number> = {
 export default function MinhasObras() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { projects, stats, upcomingPayments, isLoading, error } =
-    useClientDashboard();
+  const {
+    projects,
+    stats,
+    upcomingPayments,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useClientDashboard();
+  // A mensagem vem do erro real (`mapError`), não de um chute. Dizer
+  // "verifique sua conexão" quando o problema é sessão expirada ou permissão
+  // manda o usuário caçar um problema que não existe.
+  const errorInfo = error ? mapError(error) : null;
   const displayName =
     user?.user_metadata?.display_name ||
     user?.user_metadata?.full_name ||
@@ -149,15 +161,32 @@ export default function MinhasObras() {
                   Não foi possível carregar seus projetos agora.
                 </p>
                 <p className="text-caption text-muted-foreground">
-                  Verifique sua conexão e tente novamente.
+                  {errorInfo?.userMessage ??
+                    "Verifique sua conexão e tente novamente."}
                 </p>
                 <button
                   type="button"
-                  onClick={() => window.location.reload()}
-                  className="inline-flex items-center justify-center min-h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 active:scale-[0.98] transition"
+                  disabled={isRefetching}
+                  onClick={() => {
+                    if (errorInfo?.suggestedAction === "redirect_auth") {
+                      navigate("/auth", { replace: true });
+                      return;
+                    }
+                    void refetch();
+                  }}
+                  className="inline-flex items-center justify-center min-h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 active:scale-[0.98] transition disabled:opacity-60"
                 >
-                  Tentar novamente
+                  {isRefetching
+                    ? "Tentando…"
+                    : errorInfo?.suggestedAction === "redirect_auth"
+                      ? "Entrar novamente"
+                      : "Tentar novamente"}
                 </button>
+                {errorInfo?.code && (
+                  <p className="text-[11px] text-muted-foreground/70">
+                    Código: {errorInfo.code}
+                  </p>
+                )}
               </Card>
             ) : sortedProjects.length === 0 ? (
               <EmptyState

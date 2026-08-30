@@ -153,6 +153,17 @@ interface UseWeeklyReportsOptions {
   projectId: string | undefined;
 }
 
+/**
+ * Marca as linhas escritas pelo update otimista, para que nunca sejam
+ * confundidas com o estado do servidor. O campo é local ao cache do TanStack
+ * Query e jamais é enviado ao banco.
+ */
+type OptimisticFlag = { __optimistic?: true };
+
+function isOptimisticRow(row: WeeklyReportRow & OptimisticFlag): boolean {
+  return row.__optimistic === true || row.id.startsWith("optimistic-");
+}
+
 export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   const queryClient = useQueryClient();
   const [savingWeek, setSavingWeek] = useState<number | null>(null);
@@ -203,7 +214,15 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       row.data as unknown as WeeklyReportData,
     );
     availableAtByWeek.set(row.week_number, row.available_at);
-    if (!row.id.startsWith("optimistic-")) {
+    // Só o que veio do SERVIDOR alimenta o controle de concorrência.
+    //
+    // A linha otimista de um relatório que JÁ EXISTE mantém o id real, então o
+    // teste antigo (`!id.startsWith("optimistic-")`) não a filtrava: o
+    // `updated_at` do relógio do cliente, gravado por `onMutate`, virava o
+    // `expectedUpdatedAt` da própria gravação e a RPC recusava com
+    // WEEKLY_REPORT_CONFLICT — um conflito que nunca existiu. Era isso que
+    // fazia o relatório falhar ao salvar e só passar na segunda tentativa.
+    if (!isOptimisticRow(row)) {
       updatedAtByWeek.set(row.week_number, row.updated_at);
       lastPersistedUpdatedAt.current.set(row.week_number, row.updated_at);
     }
@@ -235,9 +254,11 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       // `expectedUpdatedAt` vem do último estado servidor conhecido — a RPC
       // recusa a gravação se alguém salvou depois disso.
       const serverRows =
-        queryClient.getQueryData<WeeklyReportRow[]>(queryKey) ?? [];
+        queryClient.getQueryData<Array<WeeklyReportRow & OptimisticFlag>>(
+          queryKey,
+        ) ?? [];
       const serverRow = serverRows.find(
-        (r) => r.week_number === weekNumber && !r.id.startsWith("optimistic-"),
+        (r) => r.week_number === weekNumber && !isOptimisticRow(r),
       );
       const expectedUpdatedAt =
         lastPersistedUpdatedAt.current.get(weekNumber) ??
@@ -273,9 +294,12 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
         queryClient.getQueryData<WeeklyReportRow[]>(queryKey);
 
       const nowIso = new Date().toISOString();
-      queryClient.setQueryData<WeeklyReportRow[]>(queryKey, (old = []) => {
+      queryClient.setQueryData<Array<WeeklyReportRow & OptimisticFlag>>(
+        queryKey,
+        (old = []) => {
         const existingIdx = old.findIndex((r) => r.week_number === weekNumber);
-        const optimisticRow: WeeklyReportRow = {
+        const optimisticRow: WeeklyReportRow & OptimisticFlag = {
+          __optimistic: true,
           id:
             existingIdx >= 0 ? old[existingIdx].id : `optimistic-${weekNumber}`,
           project_id: projectId!,
@@ -297,7 +321,8 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
         return [...old, optimisticRow].sort(
           (a, b) => a.week_number - b.week_number,
         );
-      });
+        },
+      );
 
       return { previousReports };
     },

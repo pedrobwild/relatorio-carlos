@@ -52,6 +52,8 @@ const createMockRoleState = (roles: AppRole[], loading = false) => ({
   hasRole: (role: AppRole) => roles.includes(role),
   hasAnyRole: (checkRoles: AppRole[]) =>
     checkRoles.some((r) => roles.includes(r)),
+  error: null,
+  refetch: vi.fn(),
 });
 
 describe("AuthRedirect", () => {
