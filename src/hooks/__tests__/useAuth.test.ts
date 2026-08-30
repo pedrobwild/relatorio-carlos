@@ -88,17 +88,18 @@ describe("useAuth", () => {
     expect(mockGetSession).toHaveBeenCalledTimes(1);
   });
 
-  it("should unsubscribe only when the last listener leaves", () => {
+  it("should keep the shared subscription alive while any listener is mounted", () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });
 
     const first = renderHook(() => useAuth());
-    const second = renderHook(() => useAuth());
+    renderHook(() => useAuth());
 
     first.unmount();
-    expect(mockUnsubscribe).not.toHaveBeenCalled();
 
-    second.unmount();
-    expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+    // The global subscription is never torn down during the app lifetime;
+    // individual unmounts just remove the listener from the store.
+    expect(mockOnAuthStateChange).toHaveBeenCalledTimes(1);
+    expect(mockGetSession).toHaveBeenCalledTimes(1);
   });
 
   it("should share the same snapshot across multiple hooks", async () => {
