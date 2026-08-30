@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useAuth } from "@/hooks/useAuth";
+import { resetAuthStoreForTests } from "@/hooks/authStore";
 
 // Mock Supabase client
 const mockUnsubscribe = vi.fn();
@@ -25,15 +26,34 @@ vi.mock("@/lib/debugAuth", () => ({
 }));
 
 // Mock useUserRole to avoid circular dependency
+vi.mock("@/hooks/useUserCustomerOnLogin", () => ({
+  ensureCustomerProjectLink: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/hooks/useUserRole", () => ({
   clearRoleCache: vi.fn(),
 }));
 
+vi.mock("@/lib/queryClient", () => ({
+  queryClient: {
+    cancelQueries: vi.fn().mockResolvedValue(undefined),
+    clear: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/queryPersister", () => ({
+  clearPersistedCache: vi.fn(),
+}));
+
 describe("useAuth", () => {
+  let stateChangeCallback: ((event: string, session: unknown) => void) | null = null;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    resetAuthStoreForTests();
     mockUnsubscribe.mockClear();
-    mockOnAuthStateChange.mockImplementation(() => {
+    mockOnAuthStateChange.mockImplementation((callback) => {
+      stateChangeCallback = callback;
       return {
         data: {
           subscription: {
@@ -57,22 +77,47 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
   });
 
-  it("should set up auth state listener on mount", () => {
+  it("should set up a single auth state listener across multiple mounts", () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });
 
     renderHook(() => useAuth());
+    renderHook(() => useAuth());
+    renderHook(() => useAuth());
 
-    expect(mockOnAuthStateChange).toHaveBeenCalled();
+    expect(mockOnAuthStateChange).toHaveBeenCalledTimes(1);
+    expect(mockGetSession).toHaveBeenCalledTimes(1);
   });
 
-  it("should unsubscribe on unmount", () => {
+  it("should unsubscribe only when the last listener leaves", () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });
 
-    const { unmount } = renderHook(() => useAuth());
+    const first = renderHook(() => useAuth());
+    const second = renderHook(() => useAuth());
 
-    unmount();
+    first.unmount();
+    expect(mockUnsubscribe).not.toHaveBeenCalled();
 
-    expect(mockUnsubscribe).toHaveBeenCalled();
+    second.unmount();
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it("should share the same snapshot across multiple hooks", async () => {
+    const mockUser = { id: "user-123", email: "test@example.com" };
+    const mockSession = { user: mockUser, access_token: "token" };
+
+    mockGetSession.mockResolvedValue({ data: { session: mockSession } });
+
+    const first = renderHook(() => useAuth());
+    const second = renderHook(() => useAuth());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(first.result.current.isAuthenticated).toBe(true);
+    expect(second.result.current.isAuthenticated).toBe(true);
+    expect(first.result.current.user).toBe(second.result.current.user);
+    expect(first.result.current.session).toBe(second.result.current.session);
   });
 
   it("should update state when session exists", async () => {
@@ -80,25 +125,12 @@ describe("useAuth", () => {
     const mockSession = { user: mockUser, access_token: "token" };
 
     mockGetSession.mockResolvedValue({ data: { session: mockSession } });
-    mockOnAuthStateChange.mockImplementation((callback) => {
-      // Simulate auth state change
-      setTimeout(() => callback("SIGNED_IN", mockSession), 0);
-      return {
-        data: {
-          subscription: {
-            unsubscribe: mockUnsubscribe,
-          },
-        },
-      };
-    });
 
-    const { result, rerender } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth());
 
-    // Wait for async updates
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
-    rerender();
 
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(mockUser);
@@ -107,20 +139,9 @@ describe("useAuth", () => {
 
   it("should call signOut when requested", async () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });
-    mockOnAuthStateChange.mockImplementation((callback) => {
-      setTimeout(() => callback("SIGNED_OUT", null), 0);
-      return {
-        data: {
-          subscription: {
-            unsubscribe: mockUnsubscribe,
-          },
-        },
-      };
-    });
 
     const { result } = renderHook(() => useAuth());
 
-    // Wait for loading to complete
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
@@ -134,23 +155,37 @@ describe("useAuth", () => {
 
   it("should handle null session (logged out)", async () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });
-    mockOnAuthStateChange.mockImplementation((callback) => {
-      setTimeout(() => callback("SIGNED_OUT", null), 0);
-      return {
-        data: {
-          subscription: {
-            unsubscribe: mockUnsubscribe,
-          },
-        },
-      };
-    });
 
-    const { result, rerender } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth());
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
-    rerender();
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBe(null);
+    expect(result.current.session).toBe(null);
+  });
+
+  it("should handle SIGNED_OUT event and clear caches", async () => {
+    const mockUser = { id: "user-123", email: "test@example.com" };
+    const mockSession = { user: mockUser, access_token: "token" };
+
+    mockGetSession.mockResolvedValue({ data: { session: mockSession } });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+
+    act(() => {
+      if (stateChangeCallback) {
+        stateChangeCallback("SIGNED_OUT", null);
+      }
+    });
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBe(null);
