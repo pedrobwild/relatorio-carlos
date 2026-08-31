@@ -2,7 +2,10 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useProjectActivities } from "../useProjectActivities";
+import {
+  useProjectActivities,
+  type SaveActivitiesResult,
+} from "../useProjectActivities";
 
 const { rpc, from } = vi.hoisted(() => ({
   rpc: vi.fn(),
@@ -65,7 +68,7 @@ describe("useProjectActivities", () => {
     });
 
     await act(async () => {
-      expect(await result.current.saveActivities([activity])).toBe(true);
+      expect(await result.current.saveActivities([activity])).toEqual({ ok: true });
     });
 
     expect(rpc).toHaveBeenCalledWith(
@@ -83,10 +86,44 @@ describe("useProjectActivities", () => {
     });
 
     await act(async () => {
-      expect(await result.current.saveActivities([activity])).toBe(false);
+      const falha = await result.current.saveActivities([activity]);
+      expect(falha.ok).toBe(false);
     });
 
     expect(from).toHaveBeenCalledTimes(1);
+  });
+
+
+  it("propaga o motivo real da RPC e marca erro de permissão como permanente", async () => {
+    // Forma real do postgrest-js: corpo cru em `error`, `status` como irmão.
+    rpc.mockResolvedValueOnce({
+      data: null,
+      error: {
+        message: "Sem permissão para editar o cronograma desta obra",
+        details: "",
+        hint: "",
+        code: "P0001",
+      },
+      status: 400,
+      statusText: "Bad Request",
+    });
+    const { result } = renderHook(() => useProjectActivities("project-1"), {
+      wrapper: createWrapper(),
+    });
+
+    let saved: SaveActivitiesResult;
+    await act(async () => {
+      saved = await result.current.saveActivities([activity]);
+    });
+
+    expect(saved!.ok).toBe(false);
+    if (saved!.ok) throw new Error("esperava falha");
+    // Antes: virava `false` num catch vazio e o usuário só via "tente novamente".
+    expect(saved!.message).toBe(
+      "Sem permissão para editar o cronograma desta obra",
+    );
+    // Retentar isto em loop foi o que travou o cronograma em 31/08.
+    expect(saved!.permanent).toBe(true);
   });
 
   it("serializa salvamentos concorrentes e persiste a alteração mais recente", async () => {
@@ -102,8 +139,8 @@ describe("useProjectActivities", () => {
     const { result } = renderHook(() => useProjectActivities("project-1"), {
       wrapper: createWrapper(),
     });
-    let firstSave: Promise<boolean>;
-    let secondSave: Promise<boolean>;
+    let firstSave: Promise<SaveActivitiesResult>;
+    let secondSave: Promise<SaveActivitiesResult>;
 
     act(() => {
       firstSave = result.current.saveActivities([activity]);
@@ -116,8 +153,8 @@ describe("useProjectActivities", () => {
     releaseFirst?.();
 
     await act(async () => {
-      expect(await firstSave).toBe(true);
-      expect(await secondSave).toBe(true);
+      expect(await firstSave).toEqual({ ok: true });
+      expect(await secondSave).toEqual({ ok: true });
     });
     await waitFor(() => expect(rpc).toHaveBeenCalledTimes(2));
     expect(rpc.mock.calls[1][1].p_rows[0].description).toBe(

@@ -13,7 +13,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 
-const selectResults: Array<{ data: unknown; error: unknown }> = [];
+const selectResults: Array<{
+  data: unknown;
+  error: unknown;
+  status?: number;
+}> = [];
 let selectCalls = 0;
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -24,6 +28,7 @@ vi.mock("@/integrations/supabase/client", () => ({
           const next = selectResults[selectCalls] ?? {
             data: [],
             error: null,
+            status: 200,
           };
           selectCalls += 1;
           return Promise.resolve(next);
@@ -141,5 +146,76 @@ describe("useUserRole — recuperação de sessão", () => {
 
     expect(second.result.current.roles).toEqual(["engineer"]);
     expect(second.result.current.error).toBeNull();
+  });
+});
+
+
+/**
+ * Regressão apontada pela auditoria multi-agente.
+ *
+ * O postgrest-js entrega o corpo cru do PostgREST como `error`
+ * (`error = JSON.parse(body)`) e devolve o `status` como campo IRMÃO. Um
+ * `throw error` simples descartava o status — e as guardas `status === 401` /
+ * `status === 503` de authRecovery viravam código morto para toda leitura
+ * via `.from()`.
+ *
+ * Pior: os primeiros testes que escrevi usavam `{ status: 401, ... }` dentro
+ * do objeto de erro — uma forma que o PostgREST NUNCA produz. Passavam sem
+ * exercitar o caminho real. Estes usam a forma verdadeira.
+ */
+describe("useUserRole — status HTTP preservado (forma real do postgrest-js)", () => {
+  it("401 sem `code` e sem a palavra jwt ainda é tratado como sessão", async () => {
+    // Corpo real de um 401 de gateway: nem PGRST301, nem 'jwt'.
+    selectResults.push({
+      data: null,
+      error: { message: "Invalid API key", details: "", hint: "", code: "" },
+      status: 401,
+    });
+    selectResults.push({ data: [{ role: "admin" }], error: null, status: 200 });
+    recoverFromAuthError.mockResolvedValue(true);
+
+    const { result } = renderHook(() => useUserRole());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // Antes: escapava da classificação e travava na tela de permissões.
+    expect(recoverFromAuthError).toHaveBeenCalledTimes(1);
+    expect(result.current.roles).toEqual(["admin"]);
+  });
+
+  it("503 sem `code` é tratado como backend indisponível", async () => {
+    // A resposta 503 sintética do service worker chega exatamente assim:
+    // corpo não-JSON vira `{ message: <corpo> }`, sem code.
+    selectResults.push({
+      data: null,
+      error: { message: '{"error":"offline"}', details: "", hint: "", code: "" },
+      status: 503,
+    });
+    selectResults.push({ data: [{ role: "admin" }], error: null, status: 200 });
+
+    const { result } = renderHook(() => useUserRole());
+    await waitFor(() => expect(result.current.loading).toBe(false), {
+      timeout: 15000,
+    });
+
+    expect(recoverFromAuthError).not.toHaveBeenCalled();
+    expect(result.current.roles).toEqual(["admin"]);
+  }, 20000);
+
+  it("lista vazia NUNCA é cacheada — 200 com [] pode ser token anônimo", async () => {
+    // A policy é `user_id = auth.uid()`. Sem sessão, o supabase-js manda a
+    // chave anônima: auth.uid() é NULL e a leitura devolve 200 com [] SEM
+    // erro. Cachear isso gravava "usuário sem papel" para sempre.
+    selectResults.push({ data: [], error: null, status: 200 });
+
+    const first = renderHook(() => useUserRole());
+    await waitFor(() => expect(first.result.current.loading).toBe(false));
+    expect(first.result.current.roles).toEqual([]);
+
+    // A montagem seguinte precisa CONSULTAR o servidor de novo.
+    selectResults.push({ data: [{ role: "admin" }], error: null, status: 200 });
+    const second = renderHook(() => useUserRole());
+    await waitFor(() => expect(second.result.current.loading).toBe(false));
+
+    expect(second.result.current.roles).toEqual(["admin"]);
   });
 });

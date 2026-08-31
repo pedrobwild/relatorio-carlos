@@ -66,15 +66,36 @@ const roleCache = new Map<string, AppRole[]>();
  */
 const inFlightFetches = new Map<string, Promise<AppRole[]>>();
 
+/**
+ * Lê os papéis PRESERVANDO o status HTTP.
+ *
+ * O postgrest-js entrega o corpo cru do PostgREST como `error`
+ * (`error = JSON.parse(body)`) e devolve `status` como campo IRMÃO no mesmo
+ * objeto de resposta. Um `throw error` simples descarta o status — e com isso
+ * as guardas `status === 401` e `status === 503` de authRecovery viravam
+ * código morto para TODA leitura via `.from()`.
+ *
+ * Isso não é teórico: quando o corpo não é JSON conhecido (HTML de gateway,
+ * texto do proxy, ou a resposta 503 sintética do service worker), o
+ * postgrest-js monta `{ message: body }` — sem `code` e sem `status`. Sem o
+ * status anexado aqui, esse erro escapa das duas classificações e o usuário
+ * cai na tela de permissões com a sessão perfeitamente saudável.
+ */
 async function fetchRolesFromServer(userId: string): Promise<AppRole[]> {
-  const { data, error } = await supabase
+  const response = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
 
-  if (error) throw error;
+  if (response.error) {
+    throw Object.assign(
+      new Error(response.error.message || "Falha ao ler permissões"),
+      response.error,
+      { status: response.status, statusText: response.statusText },
+    );
+  }
 
-  return (data ?? []).map((r) => r.role as AppRole);
+  return (response.data ?? []).map((r) => r.role as AppRole);
 }
 
 /**
@@ -151,8 +172,19 @@ function loadRoles(userId: string): Promise<AppRole[]> {
 
   const promise = fetchRolesWithRecovery(userId)
     .then((roles) => {
-      // Só cacheia resposta REAL do servidor.
-      roleCache.set(userId, roles);
+      // NUNCA cachear lista vazia.
+      //
+      // A policy de user_roles é `user_id = auth.uid()`. Quando o supabase-js
+      // não tem sessão carregada ainda, ele envia a chave anônima como Bearer:
+      // `auth.uid()` é NULL, a leitura devolve 200 com [] e NENHUM erro.
+      // Verificado no banco: o papel `anon` enxerga 0 linhas em user_roles.
+      //
+      // Cachear isso gravava "usuário sem papel" de forma definitiva — o
+      // usuário passava a ser expulso para /auth sem nenhuma mensagem de erro,
+      // porque do ponto de vista do código a resposta foi um sucesso.
+      if (roles.length > 0) {
+        roleCache.set(userId, roles);
+      }
       return roles;
     })
     .finally(() => {
@@ -211,6 +243,12 @@ export function useUserRole(): UserRoleState {
     if (cached) {
       setRoles(cached);
       setError(null);
+      // Limpar TAMBÉM os dois sinalizadores de falha. Sem isto, uma instância
+      // que já tinha marcado `sessionExpired` continuava mandando para /auth
+      // mesmo com os papéis carregados do cache — expulsando um usuário
+      // perfeitamente autenticado.
+      setSessionExpired(false);
+      setBackendUnavailable(false);
       setLoading(false);
       return;
     }

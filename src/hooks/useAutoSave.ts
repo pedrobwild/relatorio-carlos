@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { toast } from "sonner";
+import { isBackendUnavailableError } from "@/lib/authRecovery";
 import {
   clearOfflineSnapshot,
   enqueueOfflineSnapshot,
@@ -57,6 +58,38 @@ interface UseAutoSaveReturn {
 /** Backoff das tentativas automáticas: 5s, 15s, 45s. */
 const RETRY_DELAYS_MS = [5000, 15000, 45000];
 
+/**
+ * Backoff quando o SERVIDOR está sobrecarregado (503/PGRST002/PGRST003).
+ *
+ * Muito mais longo de propósito: insistir rápido contra um backend em
+ * dificuldade é o que transforma uma instabilidade passageira em queda. Foi
+ * exatamente isso que derrubou o portal por 27h — a fila de autosave manteve
+ * o pool de conexões do PostgREST saturado até ele não conseguir nem
+ * recarregar o próprio schema cache.
+ */
+const UNAVAILABLE_DELAYS_MS = [20000, 60000, 180000];
+
+/**
+ * Teto ABSOLUTO de tentativas automáticas por edição.
+ *
+ * Diferente de `attemptRef`, este contador NÃO é zerado por eventos de
+ * `online`/visibilidade — só por uma gravação bem-sucedida ou por um clique
+ * explícito do usuário em "Tentar novamente".
+ *
+ * Sem ele, o limite de 3 tentativas era ficção: em rede instável de obra o
+ * evento `online` dispara sem parar, zerava o contador e o app voltava a
+ * martelar o servidor indefinidamente.
+ */
+const MAX_TOTAL_ATTEMPTS = 8;
+
+/** Piso entre duas tentativas, venham do gatilho que vierem. */
+const MIN_ATTEMPT_INTERVAL_MS = 2000;
+
+/** Espalha as retentativas para N abas não voltarem no mesmo instante. */
+function withJitter(ms: number): number {
+  return ms + Math.floor(Math.random() * 1000);
+}
+
 export function useAutoSave<T>({
   data,
   onSave,
@@ -75,6 +108,12 @@ export function useAutoSave<T>({
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const attemptRef = useRef(0);
+  /** Tentativas acumuladas que NENHUM evento automático pode zerar. */
+  const totalAttemptsRef = useRef(0);
+  /** Momento da última tentativa — sustenta o piso entre tentativas. */
+  const lastAttemptAtRef = useRef(0);
+  /** A última falha foi indisponibilidade do servidor? Muda o backoff. */
+  const lastErrorWasUnavailableRef = useRef(false);
   const previousSavedDataRef = useRef<string>("");
   const isFirstRender = useRef(true);
 
@@ -148,8 +187,23 @@ export function useAutoSave<T>({
   // Agenda a próxima tentativa automática com backoff progressivo.
   const scheduleRetry = useCallback(() => {
     clearRetryTimers();
-    const delay = RETRY_DELAYS_MS[attemptRef.current - 1];
-    if (!delay) {
+
+    // Teto absoluto: nenhum evento automático pode furá-lo. Sem isto, o
+    // `online` de uma rede instável zerava o contador e o app martelava o
+    // servidor sem fim — a origem da avalanche que derrubou o backend.
+    if (totalAttemptsRef.current >= MAX_TOTAL_ATTEMPTS) {
+      setStatus("error");
+      toast.error(
+        "Não foi possível salvar automaticamente. Suas alterações estão na tela — use “Tentar novamente”.",
+      );
+      return;
+    }
+
+    const ladder = lastErrorWasUnavailableRef.current
+      ? UNAVAILABLE_DELAYS_MS
+      : RETRY_DELAYS_MS;
+    const base = ladder[attemptRef.current - 1];
+    if (!base) {
       // Esgotou as tentativas automáticas: cabe ao usuário tentar de novo.
       setStatus("error");
       toast.error(
@@ -157,6 +211,7 @@ export function useAutoSave<T>({
       );
       return;
     }
+    const delay = withJitter(base);
 
     setStatus("retrying");
     let remaining = Math.round(delay / 1000);
@@ -202,6 +257,16 @@ export function useAutoSave<T>({
       return;
     }
 
+    // Piso entre tentativas, qualquer que seja o gatilho (debounce,
+    // visibilidade, online, unmount). Garante que nenhum caminho consiga
+    // produzir um laço apertado contra o servidor.
+    const sinceLastAttempt = Date.now() - lastAttemptAtRef.current;
+    if (lastAttemptAtRef.current > 0 && sinceLastAttempt < MIN_ATTEMPT_INTERVAL_MS) {
+      pendingTrailingSaveRef.current = true;
+      return;
+    }
+    lastAttemptAtRef.current = Date.now();
+
     isSavingRef.current = true;
     let failed = false;
     try {
@@ -211,6 +276,8 @@ export function useAutoSave<T>({
       const result = await onSaveRef.current(currentData);
       setLastSaved(new Date());
       attemptRef.current = 0;
+      totalAttemptsRef.current = 0;
+      lastErrorWasUnavailableRef.current = false;
       setAttempt(0);
       setErrorMessage(null);
       clearOffline();
@@ -232,6 +299,8 @@ export function useAutoSave<T>({
       // A alteração fica na fila local até uma gravação bem-sucedida.
       queueOffline(dataRef.current);
       attemptRef.current += 1;
+      totalAttemptsRef.current += 1;
+      lastErrorWasUnavailableRef.current = isBackendUnavailableError(error);
       setAttempt(attemptRef.current);
       setErrorMessage(
         error instanceof Error && error.message
@@ -322,6 +391,10 @@ export function useAutoSave<T>({
     if (!enabled) return;
 
     const flushUnsaved = () => {
+      // Há uma retentativa agendada: respeitá-la. Salvar aqui furaria o
+      // backoff — e trocar de aba é justamente o que mais dispara este
+      // caminho no celular.
+      if (retryTimeoutRef.current) return;
       const currentSerialized = JSON.stringify(dataRef.current);
       if (currentSerialized !== previousSavedDataRef.current) {
         // Clear pending timeout and save immediately
@@ -388,12 +461,18 @@ export function useAutoSave<T>({
       const hasQueued = offlineKeyRef.current
         ? readOfflineSnapshot(offlineKeyRef.current) !== null
         : false;
-      if (attemptRef.current > 0 || hasQueued) {
-        attemptRef.current = 0;
-        setAttempt(0);
-        clearRetryTimers();
-        void performSaveRef.current();
-      }
+      if (attemptRef.current === 0 && !hasQueued) return;
+
+      // A conexão voltar NÃO devolve orçamento de tentativas. Antes zerávamos
+      // `attemptRef` aqui, e como `online` dispara repetidamente em rede
+      // instável (celular em obra), o limite de 3 tentativas nunca era
+      // atingido de fato — virava retentativa infinita.
+      if (totalAttemptsRef.current >= MAX_TOTAL_ATTEMPTS) return;
+
+      attemptRef.current = 0;
+      setAttempt(0);
+      clearRetryTimers();
+      void performSaveRef.current();
     };
     const handleOffline = () => {
       if (!offlineKeyRef.current || !enabledRef.current) return;
@@ -416,8 +495,13 @@ export function useAutoSave<T>({
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    // Retry manual reinicia o ciclo de tentativas automáticas.
+    // Retry manual reinicia o ciclo — inclusive o teto absoluto. É a única
+    // porta que devolve orçamento de tentativas, porque há uma pessoa
+    // decidindo, e não um evento de rede.
     attemptRef.current = 0;
+    totalAttemptsRef.current = 0;
+    lastAttemptAtRef.current = 0;
+    lastErrorWasUnavailableRef.current = false;
     setAttempt(0);
     clearRetryTimers();
     performSave();

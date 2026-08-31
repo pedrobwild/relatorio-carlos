@@ -17,6 +17,7 @@ import {
   ActivityInput,
 } from "@/hooks/useProjectActivities";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useCan } from "@/hooks/useCan";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -39,6 +40,23 @@ interface ActivityFormData {
   etapa: string;
   detailed_description: string;
 }
+
+/** Debounce do autosave: tempo parado digitando antes de gravar. */
+const AUTOSAVE_DEBOUNCE_MS = 1200;
+
+/**
+ * Teto absoluto de gravações automáticas falhas antes de o autosave se calar.
+ * Só um salvamento bem-sucedido ou um clique explícito em "Salvar" devolve o
+ * orçamento — nenhum evento automático fura este teto.
+ */
+const MAX_AUTOSAVE_ATTEMPTS = 5;
+
+/**
+ * Id fixo do toast de erro. Sem ele, cada falha criava um toast novo, que
+ * reiniciava o cronômetro de 4s e mantinha o aviso permanentemente sobre o
+ * botão "Salvar" (o Toaster fica em top-right no desktop), impedindo o clique.
+ */
+const AUTOSAVE_ERROR_TOAST_ID = "cronograma-autosave-error";
 
 const toISO = (d: Date) => {
   const y = d.getFullYear();
@@ -169,6 +187,13 @@ const Cronograma = () => {
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const isMobile = useIsMobile();
+  const { can } = useCan();
+  // A tela nao pode liberar o que o banco vai negar: replace_project_activities
+  // e save_project_baseline exigem staff com acesso a obra. Sem isto, um
+  // cliente monta o cronograma inteiro e so descobre no primeiro save.
+  const canEditSchedule = can("schedule:edit");
+  const canSaveBaseline = can("schedule:save_baseline");
+  const canImportSchedule = can("schedule:import");
   const {
     activities: existingActivities,
     loading: activitiesLoading,
@@ -486,6 +511,11 @@ const Cronograma = () => {
 
   const hasDateErrors = Object.keys(dateValidationErrors).length > 0;
 
+  /** Gravações automáticas falhas desde o último sucesso ou clique em Salvar. */
+  const autosaveAttemptsRef = useRef(0);
+  /** Quando true, o autosave para de tentar sozinho até o usuário agir. */
+  const autosaveBlockedRef = useRef(false);
+
   const handleSave = async () => {
     const hasEmptyFields = activities.some(
       (act) => !act.description.trim() || !act.plannedStart || !act.plannedEnd,
@@ -513,12 +543,27 @@ const Cronograma = () => {
       etapa: act.etapa?.trim() || null,
       detailed_description: act.detailed_description?.trim() || null,
     }));
-    const success = await saveActivities(activityInputs);
+    const result = await saveActivities(activityInputs);
     setSaving(false);
-    if (success) {
+    if (result.ok) {
+      autosaveAttemptsRef.current = 0;
+      autosaveBlockedRef.current = false;
+      toast.dismiss(AUTOSAVE_ERROR_TOAST_ID);
       toast.success("Cronograma salvo com sucesso");
       navigate(paths.relatorio);
+      return;
     }
+    // Mostra o motivo real — "Sem permissão para editar o cronograma desta
+    // obra" não é a mesma coisa que "tente novamente".
+    toast.error("Não foi possível salvar o cronograma", {
+      id: AUTOSAVE_ERROR_TOAST_ID,
+      description: result.message,
+    });
+    // Um clique explícito devolve o orçamento de retentativas do autosave —
+    // mas só quando ainda faz sentido tentar. Num erro permanente, insistir
+    // sozinho não resolve: quem tem de agir é uma pessoa.
+    autosaveAttemptsRef.current = 0;
+    autosaveBlockedRef.current = result.permanent;
   };
 
   // Autosave: persist changes with debounce after the user stops editing.
@@ -537,6 +582,11 @@ const Cronograma = () => {
       return;
     }
     if (saving) return;
+    // Erro permanente ou orçamento esgotado: continuar remarcando o timer só
+    // martelaria o servidor com uma chamada que já sabemos que falha.
+    if (autosaveBlockedRef.current) return;
+    // Modo leitura: nem agenda gravacao.
+    if (!canEditSchedule) return;
 
     // Skip if invalid (incomplete or with date errors)
     const hasEmpty = activities.some(
@@ -563,26 +613,47 @@ const Cronograma = () => {
         etapa: act.etapa?.trim() || null,
         detailed_description: act.detailed_description?.trim() || null,
       }));
-      const ok = await saveActivities(inputs);
-      if (ok) {
+      autosaveAttemptsRef.current += 1;
+      const result = await saveActivities(inputs);
+
+      if (result.ok) {
         lastSavedSnapshotRef.current = snapshot;
+        autosaveAttemptsRef.current = 0;
+        autosaveBlockedRef.current = false;
+        toast.dismiss(AUTOSAVE_ERROR_TOAST_ID);
         setAutosaveStatus("saved");
         setTimeout(
           () => setAutosaveStatus((s) => (s === "saved" ? "idle" : s)),
           2000,
         );
-      } else {
-        setAutosaveStatus("error");
-        toast.error("Não foi possível salvar o cronograma", {
-          description: "Suas alterações continuam nesta tela. Tente salvar novamente.",
-        });
+        return;
       }
-    }, 1200);
+
+      setAutosaveStatus("error");
+
+      // Erro permanente (permissão, regra de negócio, payload) ou orçamento
+      // esgotado: para de tentar. Sem isso o autosave remarcava a cada ~1,2s
+      // para sempre — foi o que martelou a RPC em 31/08 e o que fez o toast
+      // renascer em cima do botão Salvar, impedindo o clique.
+      const esgotou = autosaveAttemptsRef.current >= MAX_AUTOSAVE_ATTEMPTS;
+      if (result.permanent || esgotou) {
+        autosaveBlockedRef.current = true;
+      }
+
+      // Um único toast, com id fixo: repetições substituem em vez de empilhar
+      // e de reiniciar o cronômetro de 4s indefinidamente.
+      toast.error("Não foi possível salvar o cronograma", {
+        id: AUTOSAVE_ERROR_TOAST_ID,
+        description: autosaveBlockedRef.current
+          ? `${result.message} Suas alterações continuam nesta tela — clique em Salvar para tentar de novo.`
+          : result.message,
+      });
+    }, AUTOSAVE_DEBOUNCE_MS);
 
     return () => {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
-  }, [activities, hasDateErrors, saving, saveActivities]);
+  }, [activities, hasDateErrors, saving, saveActivities, canEditSchedule]);
 
   useEffect(() => {
     const warnBeforeDiscard = (event: BeforeUnloadEvent) => {
@@ -742,6 +813,7 @@ const Cronograma = () => {
               <span className="hidden sm:inline">Compras</span>
             </Button>
           </Link>
+          {canSaveBaseline && (
           <Button
             variant="outline"
             size="sm"
@@ -760,6 +832,8 @@ const Cronograma = () => {
               {hasBaseline ? "Atualizar Baseline" : "Baseline"}
             </span>
           </Button>
+          )}
+          {canImportSchedule && (
           <Button
             variant="outline"
             size="sm"
@@ -769,6 +843,7 @@ const Cronograma = () => {
             <Upload className="w-4 h-4 mr-1.5" />
             <span className="hidden sm:inline">Importar</span>
           </Button>
+          )}
           <CronogramaPdfButton
             project={project}
             activities={existingActivities}
@@ -777,6 +852,7 @@ const Cronograma = () => {
             defaultEventType="schedule_request"
             placeholder="Ex: A demolição encontrou parede de tijolo maciço — qual o impacto no caminho crítico?"
           />
+          {canEditSchedule && (
           <Button size="sm" onClick={handleSave} disabled={saving}>
             {saving ? (
               <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
@@ -785,6 +861,7 @@ const Cronograma = () => {
             )}
             Salvar
           </Button>
+          )}
         </div>
       </PageHeader>
 
