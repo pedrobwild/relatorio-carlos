@@ -12,6 +12,16 @@ import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { queryKeys, invalidateActivityQueries } from "@/lib/queryKeys";
 import { QUERY_TIMING } from "@/lib/queryClient";
+import { describeSaveError } from "@/lib/saveErrors";
+
+/**
+ * Resultado de uma gravação de cronograma. `permanent` distingue "não adianta
+ * retentar" (permissão, regra de negócio, payload inválido) de "tente de novo
+ * daqui a pouco" (rede, backend indisponível).
+ */
+export type SaveActivitiesResult =
+  | { ok: true }
+  | { ok: false; error: unknown; message: string; permanent: boolean };
 
 export interface ProjectActivity {
   id: string;
@@ -67,7 +77,9 @@ export function useProjectActivities(projectId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const instanceId = useId();
-  const saveQueueRef = useRef<Promise<boolean>>(Promise.resolve(true));
+  const saveQueueRef = useRef<Promise<SaveActivitiesResult>>(
+    Promise.resolve({ ok: true }),
+  );
 
   // Main query for activities
   const {
@@ -132,16 +144,20 @@ export function useProjectActivities(projectId: string | undefined) {
       // Atomic RPC: update by id, insert new rows, then remove only omitted rows.
       // Existing ids must be preserved because measurements and other records
       // reference them.
-      const { error: rpcError } = await supabase.rpc(
-        "replace_project_activities" as any,
-        {
-          p_project_id: projectId,
-          p_rows: rows,
-        },
-      );
+      const response = await supabase.rpc("replace_project_activities" as any, {
+        p_project_id: projectId,
+        p_rows: rows,
+      });
 
-      if (rpcError) {
-        throw rpcError;
+      if (response.error) {
+        // O postgrest-js entrega o corpo cru do PostgREST como `error` e devolve
+        // `status` como campo IRMÃO. Um `throw response.error` simples descarta o
+        // status e a classificação permanente x transitório vira código morto.
+        throw Object.assign(
+          new Error(response.error.message || "Falha ao salvar o cronograma"),
+          response.error,
+          { status: response.status, statusText: response.statusText },
+        );
       }
 
       return newActivities;
@@ -156,6 +172,12 @@ export function useProjectActivities(projectId: string | undefined) {
       // Error toast handled by caller
     },
   });
+
+  // useMutation devolve um objeto novo a cada render. Guardamos só o
+  // mutateAsync numa ref para que a identidade de saveActivities seja estável
+  // e não reinicie o debounce do autosave a cada re-render.
+  const mutateActivitiesRef = useRef(saveActivitiesMutation.mutateAsync);
+  mutateActivitiesRef.current = saveActivitiesMutation.mutateAsync;
 
   // Update single activity with optimistic update
   const updateActivityMutation = useMutation({
@@ -271,24 +293,41 @@ export function useProjectActivities(projectId: string | undefined) {
     [activities],
   );
 
-  // Public API (backwards compatible)
+  // Public API. Devolve o motivo da falha em vez de um booleano: um `catch {}`
+  // que vira `false` apaga a mensagem do banco, e é ela que diz ao usuário o
+  // que fazer ("Sem permissão para editar o cronograma desta obra") e ao
+  // chamador se vale a pena retentar.
   const saveActivities = useCallback(
-    (newActivities: ActivityInput[]): Promise<boolean> => {
+    (newActivities: ActivityInput[]): Promise<SaveActivitiesResult> => {
       const snapshot = newActivities.map((activity) => ({ ...activity }));
-      const queuedSave = saveQueueRef.current.then(async () => {
-        try {
-          await saveActivitiesMutation.mutateAsync(snapshot);
-          return true;
-        } catch {
-          return false;
-        }
-      });
+      const queuedSave = saveQueueRef.current.then(
+        async (): Promise<SaveActivitiesResult> => {
+          try {
+            await mutateActivitiesRef.current(snapshot);
+            return { ok: true };
+          } catch (error) {
+            const { message, permanent } = describeSaveError(error);
+            return { ok: false, error, message, permanent };
+          }
+        },
+      );
 
       // Keep processing future saves even if a prior request failed.
-      saveQueueRef.current = queuedSave.catch(() => false);
+      saveQueueRef.current = queuedSave.catch(
+        (): SaveActivitiesResult => ({
+          ok: false,
+          error: undefined,
+          message: "Não foi possível salvar. Tente novamente.",
+          permanent: false,
+        }),
+      );
       return queuedSave;
     },
-    [saveActivitiesMutation],
+    // Sem dependências: a mutação é lida por ref. O objeto devolvido por
+    // useMutation é recriado a cada render, então depender dele trocava a
+    // identidade de saveActivities toda vez — o que reiniciava o debounce do
+    // autosave do cronograma a cada render.
+    [],
   );
 
   const updateActivity = async (
