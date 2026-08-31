@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole, AppRole } from "./useUserRole";
 import { toast } from "@/hooks/use-toast";
+import { describeSaveError } from "@/lib/saveErrors";
 
 export interface UserWithRole {
   id: string;
@@ -68,12 +69,28 @@ export function useUsers() {
 
   const updateUserRole = async (userId: string, newRole: AppRole) => {
     try {
-      const { error } = await supabase
-        .from("user_roles")
-        .update({ role: newRole })
-        .eq("user_id", userId);
+      // RPC atômica: escreve os TRÊS stores de papel numa só transação
+      // (user_roles, users_profile.perfil e profiles.role). Ver a migração
+      // 20260831170000_admin_set_user_role_atomico.sql.
+      //
+      // Antes daqui saía um `update user_roles set role = X where user_id = Y`,
+      // que gravava só o store que a UI lê. Toda promoção feita nesta tela
+      // nascia divergente dos gates do banco — foi assim que a Bianca virou
+      // admin na tela e continuou 'engineer' no banco, sem conseguir salvar
+      // nenhum cronograma. E, sem filtrar a linha, o UPDATE ainda violava
+      // UNIQUE (user_id, role) para quem tem mais de um papel.
+      const response = await supabase.rpc("admin_set_user_role" as any, {
+        p_user_id: userId,
+        p_role: newRole,
+      });
 
-      if (error) throw error;
+      if (response.error) {
+        throw Object.assign(
+          new Error(response.error.message || "Falha ao atualizar o papel"),
+          response.error,
+          { status: response.status, statusText: response.statusText },
+        );
+      }
 
       // Update local state
       setUsers((prev) =>
@@ -83,16 +100,18 @@ export function useUsers() {
       );
 
       toast({
-        title: "Role atualizada",
+        title: "Papel atualizado",
         description: `Usuário atualizado para ${newRole}`,
       });
 
       return true;
     } catch (err) {
       console.error("Error updating role:", err);
+      // A RPC devolve o motivo em PT-BR ("Apenas administradores podem alterar
+      // papéis de usuário"); mostrar isso é mais útil que um texto genérico.
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar a role do usuário",
+        description: describeSaveError(err).message,
         variant: "destructive",
       });
       return false;

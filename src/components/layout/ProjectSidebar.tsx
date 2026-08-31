@@ -114,6 +114,10 @@ export function ProjectSidebar() {
           label: L("cronograma"),
           icon: GanttChartSquare,
           path: paths.cronograma,
+          // O filtro por feature ja existe abaixo e estava ocioso neste item.
+          // schedule:view (nao staffOnly): o cliente consulta o cronograma em
+          // leitura legitimamente — quem edita e gateado dentro da propria tela.
+          feature: "schedule:view",
           disabledInProjectPhase: true,
         },
       ],

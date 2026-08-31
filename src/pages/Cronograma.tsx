@@ -17,6 +17,7 @@ import {
   ActivityInput,
 } from "@/hooks/useProjectActivities";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useCan } from "@/hooks/useCan";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -186,6 +187,13 @@ const Cronograma = () => {
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const isMobile = useIsMobile();
+  const { can } = useCan();
+  // A tela nao pode liberar o que o banco vai negar: replace_project_activities
+  // e save_project_baseline exigem staff com acesso a obra. Sem isto, um
+  // cliente monta o cronograma inteiro e so descobre no primeiro save.
+  const canEditSchedule = can("schedule:edit");
+  const canSaveBaseline = can("schedule:save_baseline");
+  const canImportSchedule = can("schedule:import");
   const {
     activities: existingActivities,
     loading: activitiesLoading,
@@ -577,6 +585,8 @@ const Cronograma = () => {
     // Erro permanente ou orçamento esgotado: continuar remarcando o timer só
     // martelaria o servidor com uma chamada que já sabemos que falha.
     if (autosaveBlockedRef.current) return;
+    // Modo leitura: nem agenda gravacao.
+    if (!canEditSchedule) return;
 
     // Skip if invalid (incomplete or with date errors)
     const hasEmpty = activities.some(
@@ -643,7 +653,7 @@ const Cronograma = () => {
     return () => {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
-  }, [activities, hasDateErrors, saving, saveActivities]);
+  }, [activities, hasDateErrors, saving, saveActivities, canEditSchedule]);
 
   useEffect(() => {
     const warnBeforeDiscard = (event: BeforeUnloadEvent) => {
@@ -803,6 +813,7 @@ const Cronograma = () => {
               <span className="hidden sm:inline">Compras</span>
             </Button>
           </Link>
+          {canSaveBaseline && (
           <Button
             variant="outline"
             size="sm"
@@ -821,6 +832,8 @@ const Cronograma = () => {
               {hasBaseline ? "Atualizar Baseline" : "Baseline"}
             </span>
           </Button>
+          )}
+          {canImportSchedule && (
           <Button
             variant="outline"
             size="sm"
@@ -830,6 +843,7 @@ const Cronograma = () => {
             <Upload className="w-4 h-4 mr-1.5" />
             <span className="hidden sm:inline">Importar</span>
           </Button>
+          )}
           <CronogramaPdfButton
             project={project}
             activities={existingActivities}
@@ -838,6 +852,7 @@ const Cronograma = () => {
             defaultEventType="schedule_request"
             placeholder="Ex: A demolição encontrou parede de tijolo maciço — qual o impacto no caminho crítico?"
           />
+          {canEditSchedule && (
           <Button size="sm" onClick={handleSave} disabled={saving}>
             {saving ? (
               <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
@@ -846,6 +861,7 @@ const Cronograma = () => {
             )}
             Salvar
           </Button>
+          )}
         </div>
       </PageHeader>
 
