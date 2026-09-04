@@ -60,11 +60,13 @@ let installed = false;
 /** Assinatura textual de um erro Supabase/HTTP, sem `String(obj)`. */
 export function describeError(error: unknown): {
   text: string;
+  /** Só campos descritivos do erro — nunca `details`/`hint`, que trazem dado de linha. */
+  safeText?: string;
   code?: string;
   status?: number;
 } {
   if (!error) return { text: "" };
-  if (typeof error === "string") return { text: error };
+  if (typeof error === "string") return { text: error, safeText: error };
   if (error instanceof Error) {
     const withExtras = error as Error & {
       code?: string | number;
@@ -72,6 +74,7 @@ export function describeError(error: unknown): {
     };
     return {
       text: `${error.name} ${error.message}`,
+      safeText: `${error.name} ${error.message}`,
       code: withExtras.code != null ? String(withExtras.code) : undefined,
       status: withExtras.status,
     };
@@ -101,6 +104,13 @@ export function describeError(error: unknown): {
     ].filter(Boolean);
     return {
       text: parts.join(" | "),
+      // Texto SEGURO para casamento numérico. `details` e `hint` do PostgREST
+      // carregam dado de linha ("Key (id)=(…)"), onde um "503" delimitado por
+      // hífen ou espaço apareceria por acaso e seria lido como indisponibilidade
+      // do servidor. Só entram aqui campos que descrevem o erro, não o dado.
+      safeText: [err.message, err.name, err.error_description]
+        .filter(Boolean)
+        .join(" | "),
       code: err.code != null ? String(err.code) : err.error?.code,
       status: err.status ?? err.statusCode,
     };
@@ -152,6 +162,17 @@ const BACKEND_UNAVAILABLE_PATTERNS =
   /schema\s*cache|connection\s*pool|service\s*unavailable|bad\s*gateway|gateway\s*time-?out|timed\s*out\s*acquiring/i;
 
 /**
+ * Assinaturas de uma requisição que nunca recebeu resposta HTTP. Variam por
+ * navegador: Chrome "Failed to fetch", Firefox "NetworkError when attempting
+ * to fetch resource", Safari "Load failed".
+ */
+/** Marca que o nosso service worker põe no corpo quando a rede não respondeu. */
+export const SW_OFFLINE_CODE = "BWILD_OFFLINE";
+
+const NETWORK_FAILURE_PATTERNS =
+  /failed\s*to\s*fetch|networkerror|network\s*request\s*failed|load\s*failed|err_(?:internet|network|connection)|abort(?:ed|error)?|ecconnreset|socket\s*hang\s*up/i;
+
+/**
  * O BACKEND esta indisponivel — a credencial do usuario esta boa.
  *
  * Foi exatamente este caso que derrubou o portal por horas: o PostgREST ficou
@@ -166,14 +187,43 @@ const BACKEND_UNAVAILABLE_PATTERNS =
  * avisar que ha instabilidade e tentar de novo.
  */
 export function isBackendUnavailableError(error: unknown): boolean {
-  const { text, code, status } = describeError(error);
+  const { text, safeText, code, status } = describeError(error);
+  // O 503 fabricado pelo nosso service worker quando a requisição não sai do
+  // aparelho NÃO é o servidor caindo — é a conexão do usuário. Ver
+  // public/sw-cache.js.
+  if (code === SW_OFFLINE_CODE) return false;
   if (status === 502 || status === 503 || status === 504) return true;
   // PGRST002: nao conseguiu ler o schema cache. PGRST003: estourou o tempo
   // esperando uma conexao do pool do PostgREST.
   if (code === "PGRST002" || code === "PGRST003") return true;
   if (!text) return false;
-  if (/\b(502|503|504)\b/.test(text)) return true;
+  // O número solto só é evidência quando NÃO veio status estruturado (corpo de
+  // gateway virando `message`) e só em campos descritivos — ver `safeText`.
+  if (status == null && /\b(502|503|504)\b/.test(safeText ?? "")) return true;
   return BACKEND_UNAVAILABLE_PATTERNS.test(text);
+}
+
+/**
+ * A requisição não chegou a receber resposta: DNS, rede caída, TLS, CORS,
+ * `AbortError`. Não há status porque não houve resposta HTTP nenhuma.
+ *
+ * Isto NÃO é o mesmo que o servidor estar fora do ar, e a diferença importa
+ * para o usuário: um caso ele resolve olhando a própria conexão, o outro não
+ * há nada que ele possa fazer. Anunciar "o sistema está fora do ar" quando o
+ * que caiu foi o Wi-Fi dele é uma afirmação que o cliente não tem como provar
+ * — e manda o time inteiro caçar uma queda que nunca existiu.
+ */
+export function isConnectionFailure(error: unknown): boolean {
+  const { text, status, code } = describeError(error);
+  // O service worker marca explicitamente o que ele mesmo fabricou.
+  if (code === SW_OFFLINE_CODE) return true;
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return true;
+  }
+  // Houve resposta HTTP (ou erro do Postgres): o problema não é de alcance.
+  if (status != null || (code && code.startsWith("PGRST"))) return false;
+  if (!text) return false;
+  return NETWORK_FAILURE_PATTERNS.test(text);
 }
 
 /**

@@ -128,8 +128,60 @@ export function logError(
     error: entry.error,
   });
 
-  // In production, could send to external logging service like Sentry
-  // Example: Sentry.captureException(error, { extra: entry.context });
+  // Persiste no servidor. Sem isto um erro pontual num único usuário fica só
+  // no console dele: quando o relato chega, não há como confirmar nem
+  // descartar nada — foi exatamente o que aconteceu em 04/09/2026.
+  //
+  // Import dinâmico de propósito: o logger é importado por praticamente todo
+  // módulo, inclusive pelo authRecovery, e uma dependência estática do cliente
+  // Supabase aqui criaria um ciclo de importação.
+  void import("@/infra/repositories/clientErrors.repository")
+    .then(({ recordClientError }) =>
+      recordClientError({
+        context: typeof entry.context.component === "string"
+          ? entry.context.component
+          : undefined,
+        message: entry.error
+          ? `${entry.message} — ${entry.error.message}`
+          : entry.message,
+        errorCode:
+          typeof entry.context.errorCode === "string"
+            ? entry.context.errorCode
+            : undefined,
+        httpStatus:
+          typeof entry.context.httpStatus === "number"
+            ? entry.context.httpStatus
+            : undefined,
+        extra: sanitizeExtra(entry.context),
+      }),
+    )
+    // Nunca deixar o registro de um erro virar um erro.
+    .catch(() => undefined);
+}
+
+/** Campos já promovidos a coluna, ou grandes demais, não vão para `extra`. */
+const EXTRA_OMITIR = new Set([
+  "component",
+  "errorCode",
+  "httpStatus",
+  "route",
+  "correlationId",
+]);
+
+function sanitizeExtra(context: ErrorContext): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [chave, valor] of Object.entries(context)) {
+    if (EXTRA_OMITIR.has(chave)) continue;
+    // Só primitivos: objeto aninhado pode arrastar dado que não queremos.
+    if (
+      typeof valor === "string" ||
+      typeof valor === "number" ||
+      typeof valor === "boolean"
+    ) {
+      out[chave] = typeof valor === "string" ? valor.slice(0, 200) : valor;
+    }
+  }
+  return out;
 }
 
 /**

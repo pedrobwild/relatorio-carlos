@@ -56,3 +56,9 @@ export type {
   BwildAgentEvent,
   CreateAgentEventInput,
 } from "./agentMemory.repository";
+
+export {
+  recordClientError,
+  resetClientErrorThrottle,
+} from "./clientErrors.repository";
+export type { ClientErrorInput } from "./clientErrors.repository";
