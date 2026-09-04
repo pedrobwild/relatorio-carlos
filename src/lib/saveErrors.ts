@@ -25,6 +25,11 @@ const PERMANENT_PG_CODES = new Set([
   "23514", // check_violation
   "22P02", // invalid_text_representation (cast inválido, ex.: uuid malformado)
   "22008", // datetime_field_overflow
+  // serialization_failure — é o código do nosso WEEKLY_REPORT_CONFLICT: a
+  // versão que o cliente tem não vale mais, e repetir com o MESMO carimbo dá
+  // o mesmo resultado. O PostgREST devolve 500 para a classe 40, então sem
+  // esta linha o conflito passava por instabilidade e era retentado.
+  "40001",
 ]);
 
 /**

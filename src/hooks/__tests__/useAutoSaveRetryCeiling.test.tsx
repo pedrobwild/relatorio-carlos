@@ -143,4 +143,83 @@ describe("useAutoSave — teto de retentativas", () => {
 
     expect(onSave.mock.calls.length).toBeGreaterThan(beforeNewEdit);
   });
+
+  it("o teto vale na ENTRADA: novas mudanças de dado não o furam", async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error("falha de gravação"));
+
+    const { rerender } = renderHook(
+      ({ data }) =>
+        useAutoSave({ data, onSave, debounceMs: 10, offlineKey: "ceiling-4" }),
+      { initialProps: { data: { texto: "inicial" } } },
+    );
+
+    rerender({ data: { texto: "editado" } });
+    await act(async () => {
+      vi.advanceTimersByTime(200_000);
+    });
+    await flapNetwork(20);
+    const exhausted = onSave.mock.calls.length;
+
+    // Regressão de 04/09: o teto só existia em `scheduleRetry`. O debounce,
+    // a troca de aba e o desmonte chamam `performSave` direto — e cada
+    // chamada rendia mais uma tentativa. Com o dado mudando (teclado,
+    // sincronização, re-render), era um laço sem fim contra o servidor.
+    for (let i = 0; i < 15; i++) {
+      rerender({ data: { texto: `edição ${i}` } });
+      await act(async () => {
+        vi.advanceTimersByTime(5_000);
+      });
+    }
+    expect(onSave.mock.calls.length).toBe(exhausted);
+
+    // Trocar de aba também não fura.
+    await act(async () => {
+      Object.defineProperty(document, "hidden", {
+        value: true,
+        configurable: true,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      vi.advanceTimersByTime(5_000);
+    });
+    Object.defineProperty(document, "hidden", {
+      value: false,
+      configurable: true,
+    });
+    expect(onSave.mock.calls.length).toBe(exhausted);
+  });
+
+  it("erro PERMANENTE não é retentado sozinho — só uma pessoa destrava", async () => {
+    // Forma real: corpo do PostgREST + status anexado ao Error lançado.
+    const conflito = Object.assign(new Error("WEEKLY_REPORT_CONFLICT"), {
+      code: "40001",
+      details: "",
+      hint: "",
+      status: 500,
+    });
+    const onSave = vi.fn().mockRejectedValue(conflito);
+
+    const { rerender, result } = renderHook(
+      ({ data }) =>
+        useAutoSave({ data, onSave, debounceMs: 10, offlineKey: "ceiling-5" }),
+      { initialProps: { data: { texto: "inicial" } } },
+    );
+
+    rerender({ data: { texto: "editado" } });
+    for (let i = 0; i < 6; i++) {
+      await act(async () => {
+        vi.advanceTimersByTime(60_000);
+      });
+    }
+
+    // Antes: 40001 chega como HTTP 500, passava por instabilidade e entrava
+    // no backoff (5s, 15s, 45s) repetindo o MESMO carimbo — inútil.
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(result.current.status).toBe("error");
+
+    await act(async () => {
+      result.current.saveNow();
+      vi.advanceTimersByTime(1_000);
+    });
+    expect(onSave).toHaveBeenCalledTimes(2);
+  });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { isBackendUnavailableError } from "@/lib/authRecovery";
+import { isPermanentSaveError } from "@/lib/saveErrors";
 import {
   clearOfflineSnapshot,
   enqueueOfflineSnapshot,
@@ -114,6 +115,12 @@ export function useAutoSave<T>({
   const lastAttemptAtRef = useRef(0);
   /** A última falha foi indisponibilidade do servidor? Muda o backoff. */
   const lastErrorWasUnavailableRef = useRef(false);
+  /**
+   * A última falha foi PERMANENTE (permissão, conflito de versão, payload
+   * inválido)? Repetir o mesmo pedido dá o mesmo resultado — só uma pessoa
+   * resolve. Foi assim no cronograma em 31/08 e no relatório em 04/09.
+   */
+  const lastErrorWasPermanentRef = useRef(false);
   const previousSavedDataRef = useRef<string>("");
   const isFirstRender = useRef(true);
 
@@ -248,6 +255,16 @@ export function useAutoSave<T>({
       return;
     }
 
+    // Teto absoluto na ENTRADA, e não só ao agendar o retry. Sem isto o
+    // teto era furável: debounce, troca de aba, `pagehide` e desmonte chamam
+    // performSave direto, e cada chamada rendia mais uma tentativa — com o
+    // dado mudando (ou o teto já batido), virava um laço sem fim. Só
+    // `saveNow` (uma pessoa) devolve orçamento.
+    if (totalAttemptsRef.current >= MAX_TOTAL_ATTEMPTS) {
+      setStatus("error");
+      return;
+    }
+
     // Sem conexão: guarda localmente e espera o evento "online" em vez de
     // queimar tentativas que já sabemos que vão falhar.
     if (offlineKeyRef.current && isOffline()) {
@@ -278,6 +295,7 @@ export function useAutoSave<T>({
       attemptRef.current = 0;
       totalAttemptsRef.current = 0;
       lastErrorWasUnavailableRef.current = false;
+      lastErrorWasPermanentRef.current = false;
       setAttempt(0);
       setErrorMessage(null);
       clearOffline();
@@ -301,6 +319,7 @@ export function useAutoSave<T>({
       attemptRef.current += 1;
       totalAttemptsRef.current += 1;
       lastErrorWasUnavailableRef.current = isBackendUnavailableError(error);
+      lastErrorWasPermanentRef.current = isPermanentSaveError(error);
       setAttempt(attemptRef.current);
       setErrorMessage(
         error instanceof Error && error.message
@@ -316,6 +335,12 @@ export function useAutoSave<T>({
           // Ficou sem rede no meio do envio: aguarda a volta da conexão.
           clearRetryTimers();
           setStatus("offline");
+        } else if (lastErrorWasPermanentRef.current) {
+          // Erro permanente: retentar sozinho é inútil e só empilha pedidos
+          // idênticos no servidor. Fica em "error" com o motivo na tela e o
+          // botão "Tentar agora" — a próxima edição também tenta de novo.
+          clearRetryTimers();
+          setStatus("error");
         } else {
           // Nova tentativa com backoff em vez de repetir imediatamente.
           scheduleRetry();
@@ -502,6 +527,7 @@ export function useAutoSave<T>({
     totalAttemptsRef.current = 0;
     lastAttemptAtRef.current = 0;
     lastErrorWasUnavailableRef.current = false;
+    lastErrorWasPermanentRef.current = false;
     setAttempt(0);
     clearRetryTimers();
     performSave();
