@@ -184,9 +184,41 @@ function errorText(error: unknown): string {
   return describeError(error).text.toLowerCase();
 }
 
+/**
+ * Um erro com SQLSTATE veio do Postgres: o servidor RECEBEU o pedido e
+ * respondeu. Repetir o mesmo pedido dá o mesmo resultado — salvo nas classes
+ * abaixo, em que a falha é da infraestrutura, não do pedido.
+ *
+ * Sem esta distinção, "canceling statement due to lock timeout" (55P03) e
+ * "statement timeout" (57014) casavam com o padrão "timeout" e cada gravação
+ * virava até 4 chamadas ao banco — um multiplicador da avalanche de 04/09.
+ */
+const SQLSTATE_RE = /^[0-9A-Z]{5}$/;
+const TRANSIENT_SQLSTATE_CLASSES = new Set([
+  "08", // connection exception
+  "53", // insufficient resources (too many connections, out of memory…)
+  "XX", // internal error
+]);
+const TRANSIENT_SQLSTATES = new Set([
+  "57P01", // admin_shutdown
+  "57P02", // crash_shutdown
+  "57P03", // cannot_connect_now
+]);
+
+function isTransientPostgresError(code: string): boolean {
+  return (
+    TRANSIENT_SQLSTATE_CLASSES.has(code.slice(0, 2)) ||
+    TRANSIENT_SQLSTATES.has(code)
+  );
+}
+
 // Check if error is a network error (retryable)
 function isNetworkError(error: unknown): boolean {
   if (!error) return false;
+  const { code } = describeError(error);
+  if (code && SQLSTATE_RE.test(code) && !isTransientPostgresError(code)) {
+    return false;
+  }
   const text = errorText(error);
   if (!text) return false;
   return networkErrorPatterns.some((pattern) => text.includes(pattern));

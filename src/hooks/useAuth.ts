@@ -6,7 +6,40 @@ import { clearRoleCache } from "./useUserRole";
 import { useLinkCustomerOnLogin } from "./useLinkCustomerOnLogin";
 import { queryClient } from "@/lib/queryClient";
 import { clearPersistedCache } from "@/lib/queryPersister";
+import { logError } from "@/lib/errorLogger";
 import { clearOfflineApiCache } from "@/lib/registerSW";
+
+/**
+ * Teto para a leitura inicial da sessão. Oito segundos é muito mais que o
+ * normal (dezenas de ms) e curto o bastante para o usuário não desistir.
+ */
+const GET_SESSION_TIMEOUT_MS = 8000;
+
+/**
+ * Rejeita se a promise não resolver a tempo, para que o `.catch` existente
+ * assuma e a tela saia do estado de carregamento.
+ */
+function comTeto<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(
+        Object.assign(new Error("Tempo esgotado ao ler a sessão"), {
+          name: "SessionTimeoutError",
+        }),
+      );
+    }, ms);
+    Promise.resolve(promise).then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -37,9 +70,18 @@ export function useAuth() {
 
     debugAuth("useAuth mount");
 
-    // Check for existing session first
-    supabase.auth
-      .getSession()
+    // Check for existing session first.
+    //
+    // COM TETO, de propósito. O supabase-js serializa `getSession()` atrás de um
+    // lock de navegador (Web Locks) compartilhado entre TODAS as abas desta
+    // origem. Se o dono do lock trava — aba suspensa, renderer morto, processo
+    // congelado pelo SO —, esta promise NUNCA resolve. Como `setLoading(false)`
+    // só acontece no `.then`/`.catch`, `loading` ficava true para sempre e o
+    // usuário encarava o esqueleto do ProtectedRoute sem mensagem, sem botão e
+    // sem saída — e recarregar não adiantava, porque o lock é da origem, não da
+    // aba. O mesmo modo de falha já estava previsto e protegido em
+    // src/lib/authRecovery.ts (CHECK_TIMEOUT_MS); aqui tinha ficado de fora.
+    comTeto(supabase.auth.getSession(), GET_SESSION_TIMEOUT_MS)
       .then(({ data: { session: initialSession } }) => {
         if (!isMounted) return;
 
@@ -70,6 +112,16 @@ export function useAuth() {
           .includes("refresh token not found");
 
         debugAuth("getSession error", { message, isInvalidRefreshToken });
+
+        // Registra no servidor. O estouro de teto é o sintoma do lock preso
+        // entre abas, e sem rastro ele é indistinguível de "o usuário deslogou".
+        const foiTimeout =
+          error instanceof Error && error.name === "SessionTimeoutError";
+        logError("Falha ao ler a sessão inicial", error, {
+          component: "useAuth",
+          errorCode: foiTimeout ? "SESSION_READ_TIMEOUT" : undefined,
+          isInvalidRefreshToken,
+        });
 
         // Recover cleanly from stale local tokens so app doesn't crash-loop.
         if (isInvalidRefreshToken) {

@@ -105,3 +105,17 @@ describe("describeSaveError", () => {
     expect(message.length).toBeGreaterThan(0);
   });
 });
+
+describe("conflito de versão do relatório (40001)", () => {
+  it("é permanente mesmo chegando como HTTP 500 do PostgREST", () => {
+    // O PostgREST mapeia a classe 40 para 500. Sem tratar o código, o
+    // conflito passava por instabilidade e o autosave repetia o MESMO
+    // carimbo em backoff — nunca ia passar.
+    const erro = erroDaRpc(
+      { message: "WEEKLY_REPORT_CONFLICT", code: "40001" },
+      500,
+    );
+    expect(isPermanentSaveError(erro)).toBe(true);
+    expect(describeSaveError(erro).permanent).toBe(true);
+  });
+});

@@ -164,6 +164,14 @@ function isOptimisticRow(row: WeeklyReportRow & OptimisticFlag): boolean {
   return row.__optimistic === true || row.id.startsWith("optimistic-");
 }
 
+/** `a` é estritamente mais recente que `b`? Ambos vêm do servidor (ISO). */
+function isNewerTimestamp(a: string, b: string): boolean {
+  const ta = Date.parse(a);
+  const tb = Date.parse(b);
+  if (Number.isNaN(ta) || Number.isNaN(tb)) return a !== b;
+  return ta > tb;
+}
+
 export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   const queryClient = useQueryClient();
   const [savingWeek, setSavingWeek] = useState<number | null>(null);
@@ -224,7 +232,15 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
     // fazia o relatório falhar ao salvar e só passar na segunda tentativa.
     if (!isOptimisticRow(row)) {
       updatedAtByWeek.set(row.week_number, row.updated_at);
-      lastPersistedUpdatedAt.current.set(row.week_number, row.updated_at);
+      // E nunca anda para trás. O cache pode entregar uma linha MAIS VELHA
+      // que a resposta da última gravação (refetch cancelado por `onMutate`,
+      // cache persistido no localStorage, rollback de um erro). Se ela
+      // virasse `expectedUpdatedAt`, a gravação seguinte seria recusada por
+      // um conflito fabricado — com o cliente insistindo no mesmo carimbo.
+      const known = lastPersistedUpdatedAt.current.get(row.week_number);
+      if (!known || isNewerTimestamp(row.updated_at, known)) {
+        lastPersistedUpdatedAt.current.set(row.week_number, row.updated_at);
+      }
     }
   }
 
@@ -335,7 +351,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       });
       toast.success("Relatório salvo com sucesso!");
     },
-    onError: (err, _vars, context) => {
+    onError: async (err, vars, context) => {
       // Roll back to the snapshot so we don't leave a fake row in the cache.
       if (context?.previousReports !== undefined) {
         queryClient.setQueryData(queryKey, context.previousReports);
@@ -343,7 +359,29 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       if (isConflictError(err)) {
         // Conflito: outra pessoa salvou depois do carregamento. Nada é
         // sobrescrito — recarregamos a versão do servidor e avisamos.
-        queryClient.invalidateQueries({ queryKey });
+        //
+        // O carimbo que tínhamos não vale mais: esquece, e ESPERA a versão do
+        // servidor chegar antes de devolver o erro. Assim quem retenta
+        // (autosave, "Tentar agora") já parte do carimbo certo. Sem o await,
+        // o `onMutate` da tentativa seguinte cancelava este refetch e o
+        // carimbo velho ficava congelado — o laço de centenas de chamadas
+        // por segundo que derrubou o portal em 04/09 era exatamente isso.
+        await queryClient.invalidateQueries({ queryKey });
+        // Adota o carimbo que o servidor acabou de mandar, diretamente. Não
+        // dá para só apagar e deixar o render resemear: o `onMutate` da
+        // tentativa seguinte troca a linha do cache pela otimista ANTES do
+        // `mutationFn` ler, e um carimbo ausente viraria `null` — ou seja,
+        // gravação sem verificação de versão, sobrescrevendo outra pessoa.
+        const fresh = queryClient
+          .getQueryData<Array<WeeklyReportRow & OptimisticFlag>>(queryKey)
+          ?.find(
+            (r) => r.week_number === vars.weekNumber && !isOptimisticRow(r),
+          );
+        if (fresh) {
+          lastPersistedUpdatedAt.current.set(vars.weekNumber, fresh.updated_at);
+        } else {
+          lastPersistedUpdatedAt.current.delete(vars.weekNumber);
+        }
         toast.error(
           "Outra pessoa atualizou este relatório enquanto você editava. Recarregamos a versão mais recente — revise e salve novamente. Nenhuma informação foi perdida: o histórico de versões guarda tudo.",
           { duration: 10000 },
