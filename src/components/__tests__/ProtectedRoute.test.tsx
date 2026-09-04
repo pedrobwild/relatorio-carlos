@@ -52,6 +52,7 @@ const createMockRoleState = (roles: AppRole[], loading = false) => ({
   error: null,
   sessionExpired: false,
   backendUnavailable: false,
+  connectionFailed: false,
   refetch: vi.fn(),
 });
 

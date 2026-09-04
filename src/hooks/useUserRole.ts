@@ -6,6 +6,7 @@ import { logError, logInfo } from "@/lib/errorLogger";
 import {
   isExpiredSessionError,
   isBackendUnavailableError,
+  isConnectionFailure,
   describeError,
   recoverFromAuthError,
 } from "@/lib/authRecovery";
@@ -41,6 +42,8 @@ interface UserRoleState {
    * usuário. A UI deve falar em instabilidade, não em permissão.
    */
   backendUnavailable: boolean;
+  /** A requisição não chegou ao servidor (rede/DNS/offline). */
+  connectionFailed: boolean;
   refetch: () => void;
   isStaff: boolean;
   isAdmin: boolean;
@@ -81,11 +84,54 @@ const inFlightFetches = new Map<string, Promise<AppRole[]>>();
  * status anexado aqui, esse erro escapa das duas classificações e o usuário
  * cai na tela de permissões com a sessão perfeitamente saudável.
  */
+/**
+ * Rejeita se a promise não resolver a tempo.
+ *
+ * O erro carrega `status: 504` e a palavra "timeout" para ser classificado
+ * como indisponibilidade/falha de conexão pelo authRecovery, e não como
+ * sessão morta — timeout NUNCA é prova de credencial inválida.
+ */
+function withDeadline<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(
+        Object.assign(new Error("Tempo esgotado ao falar com o servidor"), {
+          name: "TimeoutError",
+          status: 504,
+        }),
+      );
+    }, ms);
+
+    Promise.resolve(promise).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
+/**
+ * Teto para a leitura de papéis.
+ *
+ * Sem isto, uma requisição PENDURADA (rede que aceita a conexão e nunca
+ * responde — firewall, portal cativo, DNS sequestrado) deixa `loading` em true
+ * para sempre, e o usuário fica olhando o esqueleto do ProtectedRoute
+ * indefinidamente: sem mensagem, sem botão, sem saída. Falhar é melhor que
+ * pendurar — o erro entra no backoff que já existe e, no fim, vira uma tela
+ * explicativa com "Tentar novamente".
+ */
+const ROLE_FETCH_TIMEOUT_MS = 12_000;
+
 async function fetchRolesFromServer(userId: string): Promise<AppRole[]> {
-  const response = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
+  const response = await withDeadline(
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+    ROLE_FETCH_TIMEOUT_MS,
+  );
 
   if (response.error) {
     throw Object.assign(
@@ -214,6 +260,7 @@ export function useUserRole(): UserRoleState {
    */
   const [sessionExpired, setSessionExpired] = useState(false);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
+  const [connectionFailed, setConnectionFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   const isMounted = useRef(true);
@@ -233,6 +280,7 @@ export function useUserRole(): UserRoleState {
       setError(null);
       setSessionExpired(false);
       setBackendUnavailable(false);
+      setConnectionFailed(false);
       setLoading(false);
       return;
     }
@@ -249,6 +297,7 @@ export function useUserRole(): UserRoleState {
       // perfeitamente autenticado.
       setSessionExpired(false);
       setBackendUnavailable(false);
+      setConnectionFailed(false);
       setLoading(false);
       return;
     }
@@ -264,6 +313,8 @@ export function useUserRole(): UserRoleState {
         setError(null);
         setSessionExpired(false);
         setBackendUnavailable(false);
+        setConnectionFailed(false);
+      setConnectionFailed(false);
         logInfo("User roles fetched", { userId, roles: fetched });
         debugAuth("useUserRole: roles fetched", { userId, roles: fetched });
       })
@@ -282,15 +333,24 @@ export function useUserRole(): UserRoleState {
             : new Error(describeError(err).text || "Erro ao carregar permissões");
         const sessionIsDead = isExpiredSessionError(err);
         const backendIsDown = !sessionIsDead && isBackendUnavailableError(err);
+        // Só é "falha de conexão" quando o servidor não chegou a responder.
+        // Um 5xx é resposta: o problema é do lado de lá, não do usuário.
+        const cannotReach =
+          !sessionIsDead && !backendIsDown && isConnectionFailure(err);
         setRoles([]);
         setError(normalized);
         setSessionExpired(sessionIsDead);
         setBackendUnavailable(backendIsDown);
+        setConnectionFailed(cannotReach);
+        const { code, status } = describeError(err);
         logError("Error fetching user roles", err, {
           component: "useUserRole",
           userId,
           isSessionError: sessionIsDead,
           isBackendUnavailable: backendIsDown,
+          isConnectionFailure: cannotReach,
+          httpStatus: status,
+          errorCode: code,
         });
       })
       .finally(() => {
@@ -346,6 +406,7 @@ export function useUserRole(): UserRoleState {
     error,
     sessionExpired,
     backendUnavailable,
+    connectionFailed,
     refetch,
     isStaff,
     isAdmin,

@@ -25,6 +25,7 @@ export function ProtectedRoute({
     error: roleError,
     sessionExpired,
     backendUnavailable,
+    connectionFailed,
     refetch: refetchRoles,
   } = useUserRole();
   const location = useLocation();
@@ -101,12 +102,16 @@ export function ProtectedRoute({
           <p className="text-body text-foreground">
             {backendUnavailable
               ? "Estamos com instabilidade no servidor."
-              : "Não conseguimos confirmar suas permissões."}
+              : connectionFailed
+                ? "Não conseguimos falar com o servidor."
+                : "Não conseguimos confirmar suas permissões."}
           </p>
           <p className="text-caption text-muted-foreground">
             {backendUnavailable
               ? "Não é problema na sua conta — o sistema está fora do ar por instantes. Já tentamos algumas vezes; tente de novo em alguns segundos."
-              : "Sua conexão pode ter caído ou sua sessão expirou. Tente novamente — se continuar, entre na sua conta outra vez."}
+              : connectionFailed
+                ? "A requisição não chegou até nós — verifique sua conexão e tente de novo. Sua conta e seus dados estão salvos."
+                : "Sua sessão pode ter expirado. Tente novamente — se continuar, entre na sua conta outra vez."}
           </p>
           <button
             type="button"
