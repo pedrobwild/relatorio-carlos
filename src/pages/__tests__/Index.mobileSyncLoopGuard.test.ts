@@ -109,3 +109,38 @@ describe("Index — mobile sync loop guards", () => {
     expect(calls).toEqual([routeMap.financeiro]);
   });
 });
+
+describe("Index — obra em fase de projeto não disputa a URL com o redirect", () => {
+  const source = readFileSync(resolve(__dirname, "../Index.tsx"), "utf8");
+
+  it("persisted-slot restore e route-only sync saem cedo quando redirectToJourney", () => {
+    const slotStart = source.indexOf("restoreCheckedRef.current = true");
+    expect(slotStart).toBeGreaterThan(-1);
+    const slotBefore = source.slice(Math.max(0, slotStart - 400), slotStart);
+    expect(slotBefore).toMatch(/if \(redirectToJourney\) return;/);
+
+    const routeStart = source.indexOf("const routeMap: Record<string, string>");
+    expect(routeStart).toBeGreaterThan(-1);
+    const routeBefore = source.slice(Math.max(0, routeStart - 200), routeStart);
+    expect(routeBefore).toMatch(/if \(redirectToJourney\) return;/);
+  });
+
+  it("a sincronização ?tab= <-> activeTab é delegada ao useIndexTabUrlSync e desligada no redirect", () => {
+    // O laço de history.replaceState (Safari: 100 chamadas/10 s) vivia em dois
+    // efeitos inline aqui; a lógica agora mora no hook, com teste próprio.
+    expect(source).not.toMatch(/state -> URL: when the user toggles/);
+    const call = source.indexOf("useIndexTabUrlSync({");
+    expect(call).toBeGreaterThan(-1);
+    const block = source.slice(call, source.indexOf("});", call));
+    expect(block).toMatch(/enabled: !redirectToJourney/);
+  });
+
+  it("o hook useProjectPortal não faz mais o redirect duplicado para a raiz da obra", () => {
+    const hook = readFileSync(
+      resolve(__dirname, "../../hooks/useProjectPortal.ts"),
+      "utf8",
+    );
+    expect(hook).not.toMatch(/navigate\(`\/obra\/\$\{projectId\}`/);
+    expect(hook).not.toMatch(/useNavigate/);
+  });
+});

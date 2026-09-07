@@ -41,10 +41,15 @@ import { pdfLogger } from "@/lib/devLogger";
 import { prefetchForTab } from "@/lib/prefetch";
 import { format } from "date-fns";
 import { useProjectPortal } from "@/hooks/useProjectPortal";
+import { useIndexTabUrlSync } from "@/hooks/useIndexTabUrlSync";
 import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LiveStatus } from "@/components/a11y/LiveStatus";
 import { trackAmplitude } from "@/lib/amplitude";
+
+// Abas da Index que vivem em `?tab=`; as demais (financeiro, documentos,
+// formalizacoes, pendencias) são rotas próprias no mobile.
+const INDEX_VISIBLE_TABS = ["cronograma", "evolucao", "relatorios"] as const;
 
 // Lazy load heavy components
 const _GanttChart = lazy(() => import("@/components/GanttChart"));
@@ -115,21 +120,26 @@ const Index = () => {
   } = useProjectPortal();
 
   const isMobile = useIsMobile();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const restoreCheckedRef = useRef(false);
 
-  // Redirect to Jornada when project is in project phase
+  // Obra em fase de projeto: a home é a Jornada. Enquanto esse redirect não
+  // acontece, nenhum outro efeito desta página pode mexer na URL — dentro de
+  // um mesmo commit o último navigate vence, e um setSearchParams tardio
+  // desfazia o redirect, deixando o cliente preso no cockpit de obra.
+  const redirectToJourney =
+    !projectLoading && !!project?.is_project_phase && !!projectId;
   useEffect(() => {
-    if (!projectLoading && project?.is_project_phase && projectId) {
-      navigate(`/obra/${projectId}/jornada`, { replace: true });
-    }
-  }, [projectLoading, project?.is_project_phase, projectId, navigate]);
+    if (!redirectToJourney) return;
+    navigate(`/obra/${projectId}/jornada`, { replace: true });
+  }, [redirectToJourney, projectId, navigate]);
 
   // Restore the last bottom-nav slot the user picked for this project.
   // Runs once per mount: if we landed at /obra/:projectId on mobile and there
   // is a remembered slot, jump straight to that route so the bottom-nav
   // selection is preserved across sessions.
   useEffect(() => {
+    if (redirectToJourney) return;
     if (!isMobile || !projectId) return;
     if (restoreCheckedRef.current) return;
     restoreCheckedRef.current = true;
@@ -150,7 +160,14 @@ const Index = () => {
       reason: "persisted_slot_restore",
     });
     navigate(target, { replace: true });
-  }, [isMobile, projectId, location.pathname, navigate, searchParams]);
+  }, [
+    redirectToJourney,
+    isMobile,
+    projectId,
+    location.pathname,
+    navigate,
+    searchParams,
+  ]);
 
   // Mobile sync: route-only tabs (financeiro/documentos/formalizacoes/pendencias)
   // live in the bottom nav as standalone pages. If a stale activeTab still
@@ -158,6 +175,7 @@ const Index = () => {
   // Guard against navigation loops: only redirect when the current pathname
   // does not already match the resolved target.
   useEffect(() => {
+    if (redirectToJourney) return;
     if (!isMobile || !projectId) return;
     const routeMap: Record<string, string> = {
       financeiro: `/obra/${projectId}/financeiro`,
@@ -191,6 +209,7 @@ const Index = () => {
       setActiveTab("cronograma");
     }
   }, [
+    redirectToJourney,
     isMobile,
     activeTab,
     projectId,
@@ -199,69 +218,18 @@ const Index = () => {
     location.pathname,
   ]);
 
-  // URL <-> activeTab sync for the visible Index tabs.
-  // Keeps the address bar (and browser back/forward history) authoritative,
-  // so the bottom-nav highlight + the top TabsList always reflect the URL.
-  const VISIBLE_TABS = ["cronograma", "evolucao", "relatorios"] as const;
-  const urlTab = searchParams.get("tab");
-  const activeTabStorageKey = projectId
-    ? `mobileActiveTab:${projectId}`
-    : null;
-
-  // URL -> state: when the user lands or hits back/forward, adopt the tab
-  // from the query string if it is a valid Index tab. On mobile, if no ?tab
-  // is present, fall back to the value persisted in localStorage so a refresh
-  // restores the last selected tab.
-  useEffect(() => {
-    if (urlTab) {
-      if (!(VISIBLE_TABS as readonly string[]).includes(urlTab)) return;
-      if (urlTab === activeTab) return;
-      trackAmplitude("mobile_tab_synced", {
-        projectId: projectId ?? null,
-        from: activeTab,
-        to: urlTab,
-        reason: "url_param",
-      });
-      setActiveTab(urlTab);
-      return;
-    }
-    if (!isMobile || !activeTabStorageKey) return;
-    try {
-      const stored = localStorage.getItem(activeTabStorageKey);
-      if (!stored) return;
-      if (!(VISIBLE_TABS as readonly string[]).includes(stored)) return;
-      if (stored === activeTab) return;
-      trackAmplitude("mobile_tab_synced", {
-        projectId: projectId ?? null,
-        from: activeTab,
-        to: stored,
-        reason: "localstorage_restore",
-      });
-      setActiveTab(stored);
-    } catch {
-      // ignore storage access errors (private mode, quota, etc.)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlTab, isMobile, activeTabStorageKey]);
-
-  // state -> URL: when the user toggles a tab on Index, mirror it to ?tab=
-  // (replace, no extra history entries) so refresh and deep-links keep state.
-  // Also persist the selection in localStorage per project so it survives
-  // a hard reload on mobile.
-  useEffect(() => {
-    if (!(VISIBLE_TABS as readonly string[]).includes(activeTab)) return;
-    if (activeTabStorageKey) {
-      try {
-        localStorage.setItem(activeTabStorageKey, activeTab);
-      } catch {
-        // ignore storage access errors
-      }
-    }
-    if (searchParams.get("tab") === activeTab) return;
-    const next = new URLSearchParams(searchParams);
-    next.set("tab", activeTab);
-    setSearchParams(next, { replace: true });
-  }, [activeTab, searchParams, setSearchParams, activeTabStorageKey]);
+  // URL <-> activeTab sync das abas visíveis da Index (URL autoritativa;
+  // localStorage só restaura no mobile). Vive em useIndexTabUrlSync, que
+  // também carrega as guardas contra o laço de history.replaceState que
+  // derrubava a página no Safari — ver useIndexTabUrlSync.test.tsx.
+  useIndexTabUrlSync({
+    projectId,
+    activeTab,
+    setActiveTab,
+    visibleTabs: INDEX_VISIBLE_TABS,
+    isMobile,
+    enabled: !redirectToJourney,
+  });
 
   // When the user opens a weekly report (click on the list, or prev/next),
   // ensure the report header is brought into view. The project shell scrolls

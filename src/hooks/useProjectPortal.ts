@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ReportData,
@@ -149,7 +148,6 @@ function calculateEndDateFromActivities(
 }
 
 export function useProjectPortal() {
-  const navigate = useNavigate();
   const {
     project,
     loading: projectLoading,
@@ -595,13 +593,6 @@ export function useProjectPortal() {
       });
     }
   }, [selectedWeekIndex, reportsChronological, viewStateKey]);
-
-  // Redirect to journey for "fase de projeto"
-  useEffect(() => {
-    if (!projectLoading && project?.is_project_phase && projectId) {
-      navigate(`/obra/${projectId}`, { replace: true });
-    }
-  }, [projectLoading, project?.is_project_phase, projectId, navigate]);
 
   return {
     // State
