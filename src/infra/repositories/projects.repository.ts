@@ -455,6 +455,32 @@ export async function createProjectWithCustomer(input: {
 }
 
 /**
+ * Encerra a fase de projeto da obra NO LUGAR — mesma obra, mesmo id, mesma
+ * jornada, mesmo cronograma. Conclui a etapa informada (Mobilização), tira
+ * `is_project_phase` e grava os marcos, tudo em uma transação no banco.
+ *
+ * Substitui `cloneProjectForConstruction` no fluxo de Mobilização: o clone
+ * criava um card novo SEM a jornada, então a jornada era recriada do zero no
+ * Briefing e a obra parecia ter "voltado para as etapas anteriores".
+ *
+ * A RPC levanta exceção quando o usuário não tem permissão — diferente do
+ * `update` direto, que o RLS transforma em zero linhas afetadas e nenhum erro.
+ */
+export async function promoteProjectToExecution(
+  projectId: string,
+  options: { stageId?: string; plannedStartDate?: string } = {},
+): Promise<RepositoryResult<null>> {
+  return executeQuery(async () => {
+    const { error } = await supabase.rpc("promote_project_to_execution", {
+      p_project_id: projectId,
+      p_stage_id: options.stageId ?? undefined,
+      p_planned_start_date: options.plannedStartDate ?? undefined,
+    });
+    return { data: null, error };
+  });
+}
+
+/**
  * Get project data with customer for mobilization completion
  */
 export async function getProjectWithCustomerAndStages(projectId: string) {
@@ -480,6 +506,14 @@ export async function getProjectWithCustomerAndStages(projectId: string) {
 
 /**
  * Clone a project and all its related data for construction phase
+ *
+ * @deprecated NÃO use para encerrar a fase de projeto — prefira
+ * `promoteProjectToExecution`. Este clone criava um card novo e marcava o
+ * original como concluído, mas copia 13 tabelas e NÃO copia a jornada
+ * (journey_stages / hero / footer / csm): ao abrir o card novo a jornada era
+ * recriada do zero no Briefing, e a obra parecia ter "voltado para as etapas
+ * anteriores", com o cronograma dividido entre dois cards. Também não é
+ * atômico — uma falha no meio deixa card novo incompleto e original escondido.
  */
 export async function cloneProjectForConstruction(
   sourceProjectId: string,

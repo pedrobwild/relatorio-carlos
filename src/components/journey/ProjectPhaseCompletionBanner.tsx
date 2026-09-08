@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { CheckCircle2, Loader2, Sparkles, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { projectsRepo } from "@/infra/repositories";
+import { useProjectOptional } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -30,6 +31,7 @@ export function ProjectPhaseCompletionBanner({
   isStaff,
 }: Props) {
   const queryClient = useQueryClient();
+  const projectContext = useProjectOptional();
   const [submitting, setSubmitting] = useState(false);
   const [dismissed, setDismissed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -46,14 +48,15 @@ export function ProjectPhaseCompletionBanner({
   const handleConfirm = async () => {
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("projects")
-        .update({ is_project_phase: false })
-        .eq("id", projectId);
+      // Via RPC, e não `update` direto: quando o RLS barra o usuário, o update
+      // volta sem erro e com zero linhas afetadas — o banner dizia "Cronograma
+      // liberado" e a obra continuava presa na fase de projeto. A RPC levanta.
+      const { error } = await projectsRepo.promoteProjectToExecution(projectId);
       if (error) throw error;
       toast.success("Fase de projeto concluída. Cronograma liberado.");
       await queryClient.invalidateQueries({ queryKey: ["project", projectId] });
       await queryClient.invalidateQueries({ queryKey: ["projects"] });
+      await projectContext?.refetch();
     } catch (err: any) {
       console.error("Failed to flip is_project_phase", err);
       toast.error(

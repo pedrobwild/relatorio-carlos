@@ -7580,6 +7580,14 @@ export type Database = {
       pii_projects_backfill: { Args: never; Returns: Json }
       pii_projects_drop_legacy_columns: { Args: never; Returns: Json }
       pii_projects_status: { Args: never; Returns: Json }
+      promote_project_to_execution: {
+        Args: {
+          p_planned_start_date?: string
+          p_project_id: string
+          p_stage_id?: string
+        }
+        Returns: undefined
+      }
       reorder_project_activities: {
         Args: { p_ordered_ids: string[]; p_project_id: string }
         Returns: undefined

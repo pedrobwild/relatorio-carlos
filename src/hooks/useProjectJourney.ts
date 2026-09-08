@@ -99,6 +99,14 @@ async function fetchProjectJourney(
         .order("sort_order", { ascending: true }),
     ]);
 
+  // Leitura que falha não pode virar "esta obra não tem jornada": JornadaProjeto
+  // chama initialize_project_journey quando o hero vem nulo, e o erro engolido
+  // (RLS, rede, JWT vencido) fazia a tela ficar em "inicializando" para sempre.
+  // Propagando, o TanStack Query repete e mostra a mensagem em PT-BR.
+  const readError =
+    heroResult.error || stagesResult.error || todosResult.error;
+  if (readError) throw readError;
+
   // Group todos by stage_id
   const todosByStage = new Map<string, JourneyTodo[]>();
   if (todosResult.data) {
