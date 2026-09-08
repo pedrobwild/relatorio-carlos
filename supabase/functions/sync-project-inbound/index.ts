@@ -76,11 +76,21 @@ Deno.serve(async (req) => {
       estimated_duration_weeks: project.estimated_duration_weeks ?? null,
       budget_value: typeof project.budget_value === "number" ? project.budget_value : null,
       budget_code: project.budget_code ?? null,
-      status: "draft",
-      is_project_phase: true,
       notes: project.notes ?? null,
       consultora_comercial: project.consultora_comercial ?? null,
       contract_value: typeof project.budget_value === "number" ? project.budget_value : null,
+    };
+
+    // Ciclo de vida da obra é do Portal, não do Envision: só vale na CRIAÇÃO.
+    // Estes dois campos estavam no payload comum e eram reaplicados no update,
+    // então um reenvio do Envision jogava uma obra em execução de volta para
+    // 'draft' + fase de projeto — o que esconde o Cronograma na navegação e faz
+    // a obra parecer ter voltado para as etapas iniciais. Mesmo sintoma que a
+    // operação relatou em 08/09. Nenhuma obra foi reenviada até hoje (os 4
+    // syncs registrados são de abril, um por obra), então é regressão latente.
+    const lifecycleOnCreate = {
+      status: "draft",
+      is_project_phase: true,
     };
 
     // --- Upsert: check if already linked ---
@@ -106,6 +116,7 @@ Deno.serve(async (req) => {
         .from("projects")
         .insert({
           ...projectPayload,
+          ...lifecycleOnCreate,
           external_id: source_id,
           external_system: "envision",
           created_by: adminUser.id,

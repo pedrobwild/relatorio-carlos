@@ -89,18 +89,21 @@ export async function getCurrentStageName(
 export async function getCurrentObraEtapa(
   projectId: string,
 ): Promise<string | null> {
-  const { data } = await supabase
-    .from("atividades")
-    .select("titulo, etapa, status, data_prevista_fim")
-    .eq("obra_id", projectId)
-    .in("status", ["em_andamento", "nao_iniciada"])
-    .order("data_prevista_fim", { ascending: true })
+  // Lia `atividades`, que é a tabela LEGADA e está vazia — o cronograma vivo
+  // é `project_activities`. Como a consulta sempre voltava zero linhas, a
+  // "etapa atual" ficava em branco no card de TODA obra em execução (é
+  // justamente aí que ProjectCardSummary habilita esta busca).
+  // Atividade atual = a primeira ainda não concluída, pela data prevista de fim.
+  const { data, error } = await supabase
+    .from("project_activities")
+    .select("description, etapa, planned_end, actual_end")
+    .eq("project_id", projectId)
+    .is("actual_end", null)
+    .order("planned_end", { ascending: true, nullsFirst: false })
     .limit(1);
 
-  if (data && data.length > 0) {
-    return data[0].etapa || data[0].titulo;
-  }
-  return null;
+  if (error || !data || data.length === 0) return null;
+  return data[0].etapa || data[0].description;
 }
 
 /**

@@ -497,6 +497,14 @@ export async function getProjectWithCustomerAndStages(projectId: string) {
       .eq("project_id", projectId)
       .order("sort_order"),
   ]);
+
+  // Leitura que falha não pode virar "obra sem dados": quem chama usa o
+  // retorno para habilitar a conclusão da Mobilização, e com project nulo o
+  // botão simplesmente não fazia nada — sem erro, sem aviso. Lançando, a tela
+  // mostra "Erro ao carregar dados do projeto" e a pessoa sabe tentar de novo.
+  const readError = projectRes.error || customerRes.error || stagesRes.error;
+  if (readError) throw readError;
+
   return {
     project: projectRes.data,
     customer: customerRes.data?.[0],
