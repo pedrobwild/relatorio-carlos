@@ -52,6 +52,7 @@ import type { PortfolioSnapshotRow } from "@/hooks/usePortfolioSnapshot";
 import { useLookahead } from "@/hooks/useLookahead";
 import { useSCurveWeekly } from "@/hooks/useActivityProgress";
 import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
+import { GestorObraSelect } from "@/components/obra/GestorObraSelect";
 import type { SeverityBreakdown } from "@/lib/calculateObraSeverity";
 import {
   Line,
@@ -158,6 +159,15 @@ export function ObraDetailSheet({
                     Cronograma
                   </Link>
                 </Button>
+                {/* Gestor da obra — editável direto do drawer, que é o que
+                    abre no clique simples da linha do Painel. Grava a coluna
+                    única `painel_responsavel_id`, a mesma que alimenta o
+                    filtro "Resp." e os cards. */}
+                <GestorObraSelect
+                  projectId={obra.id}
+                  gestorId={obra.responsavel_id}
+                  variant="chip"
+                />
               </div>
             </SheetHeader>
 

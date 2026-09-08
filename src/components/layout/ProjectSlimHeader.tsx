@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { GestorObraSelect } from "@/components/obra/GestorObraSelect";
 
 function useCurrentPageLabel(
   projectId: string | undefined,
@@ -78,7 +79,7 @@ const STATUS_ORDER = ["draft", "active", "paused", "completed", "cancelled"];
 export function ProjectSlimHeader() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { project } = useProject();
+  const { project, setProject } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const { data: projects = [] } = useProjectsQuery();
   const { stats: pendenciasStats } = usePendencias({ projectId });
@@ -317,6 +318,21 @@ export function ProjectSlimHeader() {
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Gestor da obra — visível em TODAS as páginas da obra para o staff.
+          Grava a coluna única `painel_responsavel_id`; o mesmo campo que
+          alimenta os cards e o filtro "Resp." do Painel de Obras. */}
+      {projectId && (
+        <GestorObraSelect
+          projectId={projectId}
+          gestorId={project?.painel_responsavel_id ?? null}
+          variant="chip"
+          className="hidden lg:flex"
+          onSaved={(gestorId) =>
+            project && setProject({ ...project, painel_responsavel_id: gestorId })
+          }
+        />
+      )}
 
       {/* Global search */}
       <GlobalSearchDialog />

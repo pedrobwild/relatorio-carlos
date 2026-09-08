@@ -44,6 +44,12 @@ export interface Project {
   org_id: string | null;
   is_project_phase?: boolean;
   contract_signing_date?: string | null;
+  /**
+   * Gestor responsável pela obra (FK -> users_profile.id).
+   * Coluna ÚNICA: por construção uma obra tem no máximo um gestor.
+   * É a fonte lida pelos cards e pelo filtro "Resp." do Painel de Obras.
+   */
+  painel_responsavel_id?: string | null;
 }
 
 export interface ProjectWithCustomer extends Project {
@@ -322,6 +328,29 @@ export async function restoreProject(
     const { error } = await supabase.rpc("restore_project", {
       p_project_id: projectId,
     });
+    return { data: null, error };
+  });
+}
+
+/**
+ * Define (ou limpa) o gestor da obra.
+ *
+ * Grava a coluna única `projects.painel_responsavel_id` — a mesma que
+ * alimenta os cards e o filtro "Resp." do Painel de Obras. Por ser uma
+ * coluna (e não uma tabela de vínculo), não existe caminho para cadastrar
+ * um segundo responsável: cada gravação substitui a anterior.
+ *
+ * `null` limpa o gestor.
+ */
+export async function setGestorObra(
+  projectId: string,
+  gestorId: string | null,
+): Promise<RepositoryResult<null>> {
+  return executeQuery(async () => {
+    const { error } = await supabase
+      .from("projects")
+      .update({ painel_responsavel_id: gestorId } as never)
+      .eq("id", projectId);
     return { data: null, error };
   });
 }
