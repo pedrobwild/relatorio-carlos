@@ -82,6 +82,9 @@ export function useNovaObraSubmit() {
         : null,
       created_by: user.id,
       is_project_phase: formData.is_project_phase,
+      // Gestor da obra: coluna única em `projects`, não uma linha em
+      // `project_members` — não há como criar um segundo responsável.
+      painel_responsavel_id: formData.painel_responsavel_id || null,
     });
 
     if (projectError)

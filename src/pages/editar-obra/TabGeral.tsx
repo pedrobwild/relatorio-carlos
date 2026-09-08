@@ -5,9 +5,11 @@ import {
   DollarSign,
   Map,
   User,
+  UserCog,
   Info,
   RefreshCw,
   CalendarRange,
+  AlertTriangle,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,7 +33,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { countBusinessDaysInclusive } from "@/lib/businessDays";
+import { cn } from "@/lib/utils";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
 import type { Project, Customer, Activity } from "./types";
+
+/**
+ * Sentinela do Select: Radix não aceita `value=""`, então "sem gestor"
+ * viaja como este valor e é convertido de volta para `null` ao salvar.
+ */
+const SEM_GESTOR = "__sem_gestor__";
 import { ScheduleSyncAlert } from "./ScheduleSyncAlert";
 import { WeeklyRecalcPreviewDialog } from "./WeeklyRecalcPreviewDialog";
 
@@ -70,6 +80,8 @@ export function TabGeral({
   onApplyBusinessDaysDuration,
   isSaving,
 }: TabGeralProps) {
+  const { data: staffUsers = [] } = useStaffUsers();
+
   // Dias úteis derivados do intervalo atual planned_start..planned_end
   const derivedDuration = useMemo(() => {
     if (!project.planned_start_date || !project.planned_end_date) return "";
@@ -119,6 +131,67 @@ export function TabGeral({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* ── Gestor da obra ────────────────────────────────────────────
+              Em evidência no topo porque, até então, o único lugar para
+              definir o gestor era uma coluna do Painel de Obras escondida
+              abaixo de 1280px — por isso quase nenhuma obra tinha gestor e
+              o filtro "Resp." do painel não retornava nada.
+              É UM gestor por obra: `painel_responsavel_id` é coluna única,
+              então não há como cadastrar um segundo aqui. A aba Equipe trata
+              de outra coisa (quem tem acesso à obra), não de responsabilidade. */}
+          <div
+            className={cn(
+              "rounded-lg border p-4 space-y-3",
+              project.painel_responsavel_id
+                ? "bg-muted/40"
+                : "border-amber-500/40 bg-amber-500/5",
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-0.5">
+                <Label
+                  htmlFor="painel_responsavel_id"
+                  className="inline-flex items-center gap-2 text-sm font-medium"
+                >
+                  <UserCog className="h-4 w-4" />
+                  Gestor da obra
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Único responsável pela obra. Aparece nos cards e alimenta o
+                  filtro por responsável no Painel de Obras.
+                </p>
+              </div>
+            </div>
+            <Select
+              value={project.painel_responsavel_id ?? SEM_GESTOR}
+              onValueChange={(v) =>
+                onProjectChange(
+                  "painel_responsavel_id",
+                  v === SEM_GESTOR ? null : v,
+                )
+              }
+            >
+              <SelectTrigger id="painel_responsavel_id" className="bg-background">
+                <SelectValue placeholder="Selecione o gestor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SEM_GESTOR}>Sem gestor definido</SelectItem>
+                {staffUsers.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!project.painel_responsavel_id && (
+              <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-500">
+                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                Sem gestor definido, esta obra não aparece em nenhum filtro por
+                responsável.
+              </p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <Label>Condomínio *</Label>

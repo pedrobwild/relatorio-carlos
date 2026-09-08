@@ -129,6 +129,7 @@ import { matchesSearch } from "@/lib/searchNormalize";
 import { countBusinessDaysInclusive } from "@/lib/businessDays";
 import { useUserRole } from "@/hooks/useUserRole";
 import {
+  buildResponsavelOptions,
   ETAPA_OPTIONS,
   RELACIONAMENTO_OPTIONS,
   STATUS_OPTIONS,
@@ -1195,6 +1196,25 @@ export default function PainelObras() {
     severityById,
   ]);
 
+  // Opções do filtro "Resp." — derivadas das obras do escopo atual
+  // (fase + aba), não da lista inteira de staff.
+  //
+  // Antes o Select listava TODO o staff ativo. Como quase nenhuma obra tinha
+  // gestor definido (o campo só existia numa coluna do painel escondida
+  // abaixo de 1280px), praticamente toda opção filtrava para zero — dava a
+  // impressão de que os nomes vinham de lugar nenhum. Agora só aparece quem
+  // de fato é gestor de alguma obra, com a contagem ao lado.
+  const responsavelOptions = useMemo(() => {
+    const base = obras
+      .filter(matchesFase)
+      .filter((o) =>
+        aba === "concluidas" ? isObraConcluida(o) : !isObraConcluida(o),
+      );
+    return buildResponsavelOptions(base);
+    // matchesFase deriva de `fase`; isObraConcluida é estável (módulo).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [obras, fase, aba]);
+
   const toggleSort = (key: NonNullable<SortKey>) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else {
@@ -1600,6 +1620,7 @@ export default function PainelObras() {
               (filterResponsavel !== ALL ? 1 : 0)
             }
             staffUsers={staffUsers}
+            responsavelOptions={responsavelOptions}
             filterEtapa={filterEtapa}
             onFilterEtapa={setFilterEtapa}
             filterStatuses={filterStatuses}
@@ -1902,19 +1923,28 @@ export default function PainelObras() {
                             ? "todos"
                             : filterResponsavel === NONE
                               ? "(sem)"
-                              : (staffUsers.find(
+                              : (responsavelOptions.comGestor.find(
                                   (u) => u.id === filterResponsavel,
                                 )?.nome ?? "selecionado")}
                         </span>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={ALL}>Todos responsáveis</SelectItem>
-                        <SelectItem value={NONE}>(sem responsável)</SelectItem>
-                        {staffUsers.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.nome}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value={NONE}>
+                          Sem gestor ({responsavelOptions.semGestor})
+                        </SelectItem>
+                        {responsavelOptions.comGestor.length === 0 ? (
+                          <div className="px-2 py-2 text-xs text-muted-foreground">
+                            Nenhuma obra com gestor definido. Defina o gestor na
+                            página da obra.
+                          </div>
+                        ) : (
+                          responsavelOptions.comGestor.map((u) => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.nome} ({u.total})
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
 
@@ -4664,6 +4694,11 @@ interface MobilePainelViewProps {
   hasFilters: boolean;
   activeFilterCount: number;
   staffUsers: { id: string; nome: string }[];
+  /** Gestores que realmente têm obra no escopo atual (+ quantas sem gestor). */
+  responsavelOptions: {
+    comGestor: { id: string; nome: string; total: number }[];
+    semGestor: number;
+  };
   filterEtapa: string;
   onFilterEtapa: (v: string) => void;
   filterStatuses: Set<string>;
@@ -4741,6 +4776,7 @@ function MobilePainelView({
   clearAllFilters,
   mobileFiltersOpen,
   setMobileFiltersOpen,
+  responsavelOptions,
   onOpen,
   snapshotById,
   onOpenDados,
@@ -5196,12 +5232,20 @@ function MobilePainelView({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL}>Todos responsáveis</SelectItem>
-              <SelectItem value={NONE}>(sem responsável)</SelectItem>
-              {staffUsers.map((u) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.nome}
-                </SelectItem>
-              ))}
+              <SelectItem value={NONE}>
+                Sem gestor ({responsavelOptions.semGestor})
+              </SelectItem>
+              {responsavelOptions.comGestor.length === 0 ? (
+                <div className="px-2 py-2 text-xs text-muted-foreground">
+                  Nenhuma obra com gestor definido.
+                </div>
+              ) : (
+                responsavelOptions.comGestor.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.nome} ({u.total})
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </fieldset>

@@ -37,9 +37,15 @@ import type { Customer, Engineer, AvailableEngineer } from "./types";
 
 const roleDescriptions: Record<string, { label: string; description: string }> =
   {
+    // ATENÇÃO: isto é NÍVEL DE ACESSO, não o gestor da obra.
+    // `project_members.role = 'owner'` é o que libera RLS e admite várias
+    // pessoas por obra (em produção há obras com 19). O gestor da obra é
+    // único e mora em `projects.painel_responsavel_id`, definido na aba
+    // Geral. Rotular ambos de "Responsável" era o que criava o risco de
+    // alguém achar que estava cadastrando um segundo responsável aqui.
     owner: {
-      label: "Responsável",
-      description: "Acesso total: edita cronograma, financeiro e equipe",
+      label: "Acesso total",
+      description: "Edita cronograma, financeiro e equipe",
     },
     engineer: {
       label: "Engenheiro",
@@ -116,11 +122,12 @@ export function TabEquipe({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5" />
-              Adicionar Membro
+              Membros e acessos
             </CardTitle>
             <CardDescription>
-              Selecione um engenheiro disponível para adicionar à equipe do
-              projeto
+              Quem tem acesso a esta obra e com qual permissão. Vários membros
+              podem ter acesso total. O <strong>gestor da obra</strong> é único
+              e fica na aba Geral.
             </CardDescription>
           </CardHeader>
           <CardContent>

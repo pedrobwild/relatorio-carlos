@@ -121,6 +121,46 @@ export const RELACIONAMENTO_OPTIONS: PainelRelacionamento[] = [
   "Crítico",
 ];
 
+/**
+ * Opções do filtro por responsável do Painel de Obras.
+ *
+ * Deriva a lista das obras recebidas — NÃO da lista de staff. Listar todo o
+ * staff fazia com que praticamente toda opção filtrasse para zero (quase
+ * nenhuma obra tinha gestor), sem deixar claro de onde vinham os nomes.
+ */
+export function buildResponsavelOptions(
+  obras: Pick<PainelObra, "responsavel_id" | "responsavel_nome">[],
+): {
+  comGestor: { id: string; nome: string; total: number }[];
+  semGestor: number;
+} {
+  const porGestor = new Map<string, { id: string; nome: string; total: number }>();
+  let semGestor = 0;
+  for (const o of obras) {
+    if (!o.responsavel_id) {
+      semGestor += 1;
+      continue;
+    }
+    const atual = porGestor.get(o.responsavel_id);
+    if (atual) {
+      atual.total += 1;
+      // Primeiro nome não-nulo vence: o mapa de staff pode não ter resolvido
+      // o nome em todas as linhas.
+      if (!atual.nome && o.responsavel_nome) atual.nome = o.responsavel_nome;
+    } else {
+      porGestor.set(o.responsavel_id, {
+        id: o.responsavel_id,
+        nome: o.responsavel_nome ?? "",
+        total: 1,
+      });
+    }
+  }
+  const comGestor = [...porGestor.values()]
+    .map((g) => ({ ...g, nome: g.nome || "Gestor sem nome" }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  return { comGestor, semGestor };
+}
+
 /** Patch suportado para edição inline (somente campos operacionais). */
 export type PainelObraPatch = Partial<{
   prazo: string | null;
