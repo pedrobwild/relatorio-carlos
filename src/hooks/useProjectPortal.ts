@@ -604,6 +604,9 @@ export function useProjectPortal() {
     projectError,
     projectErrorKind,
     refetchProject,
+    // Exposto para que a página atualize o projeto em cache sem refetch
+    // (ex.: gravar o gestor da obra pelo seletor do cockpit).
+    setProject,
     activitiesLoading,
     projectActivities: dbActivities,
 

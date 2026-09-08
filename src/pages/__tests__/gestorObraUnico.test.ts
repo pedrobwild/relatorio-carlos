@@ -84,4 +84,60 @@ describe("gestor da obra — um por obra", () => {
     const loader = read("../nova-obra/useEditProjectLoader.ts");
     expect(loader).toMatch(/painel_responsavel_id/);
   });
+
+  it("a escrita direta do seletor também é escalar e não toca project_members", () => {
+    const repo = read("../../infra/repositories/projects.repository.ts");
+    const bloco = repo.slice(
+      repo.indexOf("export async function setGestorObra"),
+      repo.indexOf("Permanently delete a soft-deleted project"),
+    );
+    expect(bloco).toMatch(/painel_responsavel_id: gestorId/);
+    expect(bloco).toMatch(/gestorId: string \| null/);
+    expect(bloco).not.toMatch(/project_members/);
+    expect(bloco).not.toMatch(/\binsert\(/);
+  });
+});
+
+/**
+ * Regressão do dia 08/09: o campo tinha sido colocado só em /gestao/obra/:id
+ * e no wizard de nova obra — telas de cadastro que o time não abre. Da página
+ * da obra (/obra/:id), que é onde eles trabalham, o gestor "não aparecia em
+ * lugar nenhum". Estes testes travam a presença do controle nas telas de uso.
+ */
+describe("gestor da obra — visível onde o time trabalha", () => {
+  const telas: { arquivo: string; fonte: string }[] = [
+    { arquivo: "cockpit da obra (/obra/:id)", fonte: read("../Index.tsx") },
+    {
+      arquivo: "cabeçalho de todas as páginas da obra",
+      fonte: read("../../components/layout/ProjectSlimHeader.tsx"),
+    },
+    {
+      arquivo: "drawer do Painel de Obras",
+      fonte: read("../../components/gestao/painel/ObraDetailSheet.tsx"),
+    },
+  ];
+
+  it("cada tela de uso monta o seletor de gestor", () => {
+    for (const { arquivo, fonte } of telas) {
+      expect(fonte, `${arquivo} não importa o seletor`).toMatch(
+        /import \{ GestorObraSelect \} from "@\/components\/obra\/GestorObraSelect"/,
+      );
+      expect(fonte, `${arquivo} não renderiza o seletor`).toMatch(
+        /<GestorObraSelect/,
+      );
+    }
+  });
+
+  it("cada tela passa o valor atual do gestor, não um placeholder", () => {
+    for (const { arquivo, fonte } of telas) {
+      expect(fonte, `${arquivo} não passa gestorId`).toMatch(
+        /gestorId=\{[^}]*(painel_responsavel_id|responsavel_id)/,
+      );
+    }
+  });
+
+  it("o seletor só aparece para staff", () => {
+    const seletor = read("../../components/obra/GestorObraSelect.tsx");
+    expect(seletor).toMatch(/if \(roleLoading \|\| !isStaff\) return null;/);
+  });
 });

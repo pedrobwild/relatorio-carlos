@@ -43,6 +43,7 @@ import { format } from "date-fns";
 import { useProjectPortal } from "@/hooks/useProjectPortal";
 import { useIndexTabUrlSync } from "@/hooks/useIndexTabUrlSync";
 import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
+import { GestorObraSelect } from "@/components/obra/GestorObraSelect";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LiveStatus } from "@/components/a11y/LiveStatus";
 import { trackAmplitude } from "@/lib/amplitude";
@@ -84,6 +85,7 @@ const Index = () => {
     projectError,
     projectErrorKind,
     refetchProject,
+    setProject,
 
     activitiesLoading,
     projectActivities,
@@ -327,6 +329,16 @@ const Index = () => {
   }, [selectedWeeklyReport]);
 
 
+  // Mantém o projeto em cache alinhado com o gestor recém-gravado, para
+  // que o chip do cabeçalho e o bloco do cockpit não divirjam.
+  const handleGestorSaved = useCallback(
+    (gestorId: string | null) => {
+      if (!project) return;
+      setProject({ ...project, painel_responsavel_id: gestorId });
+    },
+    [project, setProject],
+  );
+
   const handleExportPDF = useCallback(async () => {
     if (!reportRef.current) return;
     const operationId = "pdf-export";
@@ -460,6 +472,13 @@ const Index = () => {
       <div className="min-h-screen min-h-[100dvh] pb-safe">
         <div className="px-4 md:p-4 lg:p-6 xl:p-8">
           <div className="max-w-[1600px] mx-auto space-y-6">
+            {projectId && (
+              <GestorObraSelect
+                projectId={projectId}
+                gestorId={project?.painel_responsavel_id ?? null}
+                onSaved={handleGestorSaved}
+              />
+            )}
             <ReportHeader
               projectName={reportData.projectName}
               unitName={reportData.unitName}
@@ -507,6 +526,21 @@ const Index = () => {
         <div className="max-w-[1600px] mx-auto">
           {/* Bloco "Ação necessária" removido do ambiente da obra do cliente
               a pedido — segue disponível em /minhas-obras. */}
+
+          {/* Gestor da obra — primeiro bloco da página, fora de `reportRef`
+              (não entra no PDF do relatório). Só staff enxerga; para o
+              cliente o componente não renderiza nada. Escrever aqui grava a
+              coluna única `painel_responsavel_id`, a mesma do Painel de
+              Obras — não existe caminho para um segundo responsável. */}
+          {projectId && (
+            <GestorObraSelect
+              projectId={projectId}
+              gestorId={project?.painel_responsavel_id ?? null}
+              className="mb-3 md:mb-4"
+              onSaved={handleGestorSaved}
+            />
+          )}
+
           <div ref={reportRef}>
             <div
               className="opacity-0 animate-fade-in-up"
