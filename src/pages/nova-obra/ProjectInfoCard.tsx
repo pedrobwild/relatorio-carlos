@@ -1,4 +1,4 @@
-import { Building2, Search, Loader2, Home } from "lucide-react";
+import { Building2, Search, Loader2, Home, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -20,8 +20,12 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useCepLookup, formatCep } from "@/hooks/useCepLookup";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
 import { AiFieldIndicator } from "./AiFieldIndicator";
 import type { FormData } from "./types";
+
+/** Radix não aceita `value=""`; sentinela para "sem gestor". */
+const SEM_GESTOR = "__sem_gestor__";
 
 interface ProjectInfoCardProps {
   formData: FormData;
@@ -39,6 +43,7 @@ export function ProjectInfoCard({
   aiConflictFields = new Set(),
 }: ProjectInfoCardProps) {
   const { lookup, loading: cepLoading } = useCepLookup();
+  const { data: staffUsers = [] } = useStaffUsers();
 
   const handleCepChange = (rawValue: string) => {
     const formatted = formatCep(rawValue);
@@ -108,6 +113,47 @@ export function ProjectInfoCard({
                 onChange("is_project_phase", checked)
               }
             />
+          </div>
+
+          {/* ── Gestor da obra ──────────────────────────────────────────
+              Definido já no cadastro para a obra não nascer sem gestor —
+              era essa lacuna que deixava o filtro por responsável vazio.
+              Coluna única (`painel_responsavel_id`): um gestor por obra. */}
+          <div className="rounded-lg border p-4 bg-muted/50 space-y-3">
+            <div className="space-y-0.5">
+              <Label
+                htmlFor="painel_responsavel_id"
+                className="inline-flex items-center gap-2 text-sm font-medium"
+              >
+                <UserCog className="h-4 w-4" />
+                Gestor da obra
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Único responsável pela obra. Aparece nos cards e no filtro por
+                responsável do Painel de Obras. Pode ser definido depois.
+              </p>
+            </div>
+            <Select
+              value={formData.painel_responsavel_id || SEM_GESTOR}
+              onValueChange={(v) =>
+                onChange("painel_responsavel_id", v === SEM_GESTOR ? "" : v)
+              }
+            >
+              <SelectTrigger
+                id="painel_responsavel_id"
+                className="bg-background"
+              >
+                <SelectValue placeholder="Selecione o gestor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SEM_GESTOR}>Definir depois</SelectItem>
+                {staffUsers.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

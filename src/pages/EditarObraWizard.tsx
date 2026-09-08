@@ -190,6 +190,7 @@ export default function EditarObraWizard() {
             ? parseFloat(formData.contract_value)
             : null,
           is_project_phase: formData.is_project_phase,
+          painel_responsavel_id: formData.painel_responsavel_id || null,
           status: "active",
         })
         .eq("id", projectId);

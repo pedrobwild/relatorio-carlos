@@ -113,6 +113,8 @@ export interface FormData {
   tipo_de_locacao: string;
   data_recebimento_chaves: string;
   is_project_phase: boolean;
+  /** Gestor da obra (users_profile.id). "" = ainda não definido. */
+  painel_responsavel_id: string;
 
   // Cronograma
   planned_start_date: string;
@@ -163,6 +165,7 @@ export const initialFormData: FormData = {
   tipo_de_locacao: "",
   data_recebimento_chaves: "",
   is_project_phase: false,
+  painel_responsavel_id: "",
 
   planned_start_date: "",
   planned_end_date: "",

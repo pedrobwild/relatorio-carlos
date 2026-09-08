@@ -12,6 +12,12 @@ export interface Project {
   contract_value: number | null;
   status: string;
   is_project_phase: boolean;
+  /**
+   * Gestor responsável pela obra (FK -> users_profile.id).
+   * Coluna ÚNICA por obra: por construção não existe "segundo responsável".
+   * É a mesma fonte lida pelo Painel de Obras (filtro "Resp." e cards).
+   */
+  painel_responsavel_id: string | null;
   date_briefing_arch: string | null;
   date_approval_3d: string | null;
   date_approval_exec: string | null;

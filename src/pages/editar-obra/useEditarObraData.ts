@@ -405,6 +405,9 @@ export function useEditarObraData(projectId: string | undefined) {
           contract_value: project.contract_value,
           status: project.status,
           is_project_phase: project.is_project_phase,
+          // Gestor da obra: coluna única. Enviar `null` quando vazio para
+          // limpar o vínculo em vez de gravar string vazia.
+          painel_responsavel_id: project.painel_responsavel_id || null,
           date_briefing_arch: project.date_briefing_arch || null,
           date_approval_3d: project.date_approval_3d || null,
           date_approval_exec: project.date_approval_exec || null,

@@ -71,6 +71,9 @@ export function useEditProjectLoader(
           tipo_de_locacao: studio?.tipo_de_locacao || "",
           data_recebimento_chaves: studio?.data_recebimento_chaves || "",
           is_project_phase: p.is_project_phase || false,
+          painel_responsavel_id:
+            (p as { painel_responsavel_id?: string | null })
+              .painel_responsavel_id || "",
 
           // Cronograma
           planned_start_date: p.planned_start_date || "",
