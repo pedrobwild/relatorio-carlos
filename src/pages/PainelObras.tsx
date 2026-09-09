@@ -2231,6 +2231,10 @@ export default function PainelObras() {
                   onOpen={(id) => handleOpenObra(id)}
                   onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
                   onUpdateStatus={(id, status) => updateObra(id, { status })}
+                  staffUsers={staffUsers}
+                  onUpdateResponsavel={(id, responsavel_id) =>
+                    updateObra(id, { responsavel_id })
+                  }
                 />
               ) : activeView === "board" ? (
                 <BoardView
@@ -2321,7 +2325,7 @@ export default function PainelObras() {
                           <TableHead className="min-w-[120px] sm:min-w-[150px] hidden lg:table-cell">
                             Relacionamento
                           </TableHead>
-                          <TableHead className="min-w-[140px] sm:min-w-[180px] hidden xl:table-cell">
+                          <TableHead className="min-w-[140px] sm:min-w-[180px]">
                             <SortableHeader
                               label="Responsável"
                               sortKey="responsavel_nome"
@@ -3078,8 +3082,12 @@ function ObraRow({
           </Select>
         </TableCell>
 
-        {/* Responsável */}
-        <TableCell className="min-w-[150px] relative z-table-body overflow-hidden hidden xl:table-cell">
+        {/* Gestor da obra — SEM `hidden xl:table-cell`: era exatamente essa
+            regra que escondia o gestor abaixo de 1280px e deixava o campo
+            invisível para quase todo mundo. O cabeçalho do Board já não
+            escondia esta coluna, então abaixo de xl a tabela do Board ficava
+            desalinhada (mais um motivo para a coluna ser sempre visível). */}
+        <TableCell className="min-w-[150px] relative z-table-body overflow-hidden">
           <Select
             value={obra.responsavel_id ?? NONE}
             onValueChange={(v) =>
@@ -3412,6 +3420,9 @@ interface KanbanViewProps {
   onOpen: (id: string) => void;
   onUpdateEtapa: (id: string, etapa: PainelEtapa | null) => void;
   onUpdateStatus: (id: string, status: PainelStatus | null) => void;
+  /** Staff elegível a gestor — alimenta o seletor do card. */
+  staffUsers: { id: string; nome: string }[];
+  onUpdateResponsavel: (id: string, responsavelId: string | null) => void;
 }
 
 function KanbanView({
@@ -3433,6 +3444,8 @@ function KanbanView({
   onOpen,
   onUpdateEtapa,
   onUpdateStatus,
+  staffUsers,
+  onUpdateResponsavel,
 }: KanbanViewProps) {
   const labels = getLabelsFor(groupBy);
   const defaultOrder = getDefaultOrderFor(groupBy);
@@ -3929,6 +3942,8 @@ function KanbanView({
                         onOpen={() => onOpen(o.id)}
                         onChangeEtapa={(e) => onUpdateEtapa(o.id, e)}
                         onChangeStatus={(s) => onUpdateStatus(o.id, s)}
+                        staffUsers={staffUsers}
+                        onChangeResponsavel={(r) => onUpdateResponsavel(o.id, r)}
                       />
                     ))
                   )}
@@ -3959,6 +3974,9 @@ interface KanbanCardProps {
   onOpen: () => void;
   onChangeEtapa: (etapa: PainelEtapa | null) => void;
   onChangeStatus: (status: PainelStatus | null) => void;
+  /** Staff elegível a gestor da obra. */
+  staffUsers: { id: string; nome: string }[];
+  onChangeResponsavel: (responsavelId: string | null) => void;
 }
 
 function KanbanCard({
@@ -3973,6 +3991,8 @@ function KanbanCard({
   onOpen,
   onChangeEtapa,
   onChangeStatus,
+  staffUsers,
+  onChangeResponsavel,
 }: KanbanCardProps) {
   const displayStatus = computeDisplayStatus(obra);
   const overdueDays = computeOverdueDays(obra);
@@ -4089,15 +4109,57 @@ function KanbanCard({
             {fmtDate(obra.entrega_oficial)}
           </span>
         )}
-        {obra.responsavel_nome && (
-          <span
-            className="inline-flex items-center gap-1 truncate max-w-[120px]"
-            title={obra.responsavel_nome}
+        {/* Gestor da obra — SEMPRE presente, inclusive vazio. Esconder o
+            campo quando não há gestor era o que fazia parecer que o card não
+            tinha essa informação; e obra sem gestor é justamente a que some
+            de qualquer filtro por responsável. Editável aqui para o cadastro
+            acontecer onde o time olha. Grava a coluna única
+            `painel_responsavel_id`: um gestor por obra, sempre. */}
+        <span
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          onDragStart={(e) => e.stopPropagation()}
+          draggable={false}
+        >
+          <Select
+            value={obra.responsavel_id ?? NONE}
+            onValueChange={(v) => onChangeResponsavel(v === NONE ? null : v)}
           >
-            <User className="h-3 w-3 opacity-60" />
-            <span className="truncate">{obra.responsavel_nome}</span>
-          </span>
-        )}
+            <SelectTrigger
+              className={cn(
+                "h-5 w-fit max-w-[140px] rounded px-1 py-0 text-[11px] border-0 shadow-none",
+                "bg-transparent [&>svg]:hidden hover:bg-accent/60 justify-start",
+                inlinePillTrigger,
+                !obra.responsavel_nome && "italic opacity-80",
+              )}
+              aria-label={
+                obra.responsavel_nome
+                  ? `Gestor da obra: ${obra.responsavel_nome}`
+                  : "Definir gestor da obra"
+              }
+              title={
+                obra.responsavel_nome
+                  ? `Gestor: ${obra.responsavel_nome}`
+                  : "Sem gestor definido"
+              }
+            >
+              <span className="inline-flex items-center gap-1 min-w-0">
+                <User className="h-3 w-3 shrink-0 opacity-60" />
+                <span className="truncate">
+                  {obra.responsavel_nome ?? "Sem gestor"}
+                </span>
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>(sem gestor)</SelectItem>
+              {staffUsers.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </span>
         {overdueDays > 0 && (
           <span className="inline-flex items-center gap-1 text-destructive font-medium tabular-nums">
             <Clock className="h-3 w-3" />+{overdueDays}d
@@ -4971,14 +5033,19 @@ function MobilePainelView({
                     {dias}d atraso
                   </span>
                 )}
-                {responsavel && (
-                  <span className="inline-flex items-center gap-1 truncate">
-                    <User className="h-3 w-3 opacity-60" />
-                    <span className="truncate max-w-[140px]">
-                      {responsavel}
-                    </span>
+                {/* Gestor sempre visível — inclusive vazio. O card mobile
+                    abre o drawer da obra, onde dá para definir. */}
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 truncate",
+                    !responsavel && "italic opacity-80",
+                  )}
+                >
+                  <User className="h-3 w-3 opacity-60" />
+                  <span className="truncate max-w-[140px]">
+                    {responsavel ?? "Sem gestor"}
                   </span>
-                )}
+                </span>
                 {snapshotById?.get(o.id) && (
                   <>
                     <span className="inline-flex items-center gap-1 tabular-nums">
