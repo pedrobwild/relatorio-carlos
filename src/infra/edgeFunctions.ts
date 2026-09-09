@@ -23,6 +23,34 @@ export async function invokeFunction<T = unknown>(
 }
 
 /**
+ * Extrai a mensagem de erro real devolvida por uma edge function.
+ *
+ * `supabase.functions.invoke` converte qualquer resposta não-2xx em um
+ * `FunctionsHttpError` com mensagem genérica ("Edge Function returned a
+ * non-2xx status code"); o motivo em PT-BR fica no corpo JSON (`{ error }`),
+ * acessível pelo `context` (a `Response` original).
+ */
+export async function readFunctionError(
+  error: unknown,
+  fallback = "Erro inesperado",
+): Promise<string> {
+  const context = (error as { context?: unknown } | null)?.context;
+  if (context instanceof Response) {
+    try {
+      // clone() para não consumir o corpo de quem também for lê-lo.
+      const body = await context.clone().json();
+      const detail = (body as { error?: unknown } | null)?.error;
+      if (typeof detail === "string" && detail.trim()) return detail;
+    } catch {
+      // corpo já consumido, vazio ou não-JSON — cai na mensagem do erro
+    }
+  }
+
+  const message = (error as { message?: unknown } | null)?.message;
+  return typeof message === "string" && message.trim() ? message : fallback;
+}
+
+/**
  * Invoke an edge function via fetch (for FormData uploads)
  */
 export async function invokeFunctionRaw(
