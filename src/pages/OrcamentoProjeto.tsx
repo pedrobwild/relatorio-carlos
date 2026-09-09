@@ -8,6 +8,7 @@ import {
   Upload,
   FileSpreadsheet,
   CheckCircle2,
+  AlertCircle,
   X,
   Sparkles,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { invokeFunction, readFunctionError } from "@/infra/edgeFunctions";
 import OrcamentoDetalhe from "@/pages/gestao/OrcamentoDetalhe";
 
 function formatFileSize(bytes: number): string {
@@ -39,6 +41,7 @@ export default function OrcamentoProjeto() {
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
 
   const { data: project } = useQuery({
     queryKey: queryKeys.projects.detail(projectId),
@@ -91,6 +94,7 @@ export default function OrcamentoProjeto() {
       toast.error("Arquivo muito grande. Máximo: 20MB");
       return;
     }
+    setImportError(null);
     setFile(f);
   };
 
@@ -105,8 +109,11 @@ export default function OrcamentoProjeto() {
     if (!file || !projectId) return;
 
     setImporting(true);
+    setImportError(null);
     setProgress(10);
     setStatusText("Enviando arquivo...");
+
+    let creep: ReturnType<typeof setInterval> | undefined;
 
     try {
       // 1. Upload to storage
@@ -120,24 +127,32 @@ export default function OrcamentoProjeto() {
       }
 
       setProgress(30);
-      setStatusText("Analisando orçamento com IA...");
+      setStatusText("Analisando o orçamento com IA — pode levar alguns minutos.");
+
+      // A leitura do PDF é demorada: o avanço lento mostra que ainda está rodando.
+      creep = setInterval(() => {
+        setProgress((current) => (current < 85 ? current + 1 : current));
+      }, 2000);
 
       // 2. Call edge function
-      const { data, error } = await supabase.functions.invoke(
-        "parse-budget-pdf",
-        {
-          body: {
-            project_id: projectId,
-            storage_path: storagePath,
-            project_name: project?.name || "",
-            client_name: project?.client_name || "",
-          },
-        },
-      );
+      const { data, error } = await invokeFunction<{
+        message?: string;
+        error?: string;
+      }>("parse-budget-pdf", {
+        project_id: projectId,
+        storage_path: storagePath,
+        project_name: project?.name || "",
+        client_name: project?.client_name || "",
+      });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(
+          await readFunctionError(error, "Erro ao importar orçamento"),
+        );
+      }
       if (data?.error) throw new Error(data.error);
 
+      clearInterval(creep);
       setProgress(90);
       setStatusText("Finalizando importação...");
 
@@ -148,19 +163,28 @@ export default function OrcamentoProjeto() {
 
       setProgress(100);
       setStatusText("Concluído!");
-      toast.success(data.message || "Orçamento importado com sucesso!");
-    } catch (err: any) {
-      console.error("Import error:", err);
-      toast.error(err.message || "Erro ao importar orçamento");
-      setProgress(0);
-      setStatusText("");
-    } finally {
+      toast.success(data?.message || "Orçamento importado com sucesso!");
+
       setTimeout(() => {
         setImporting(false);
         setFile(null);
         setProgress(0);
         setStatusText("");
       }, 1500);
+    } catch (err) {
+      clearInterval(creep);
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "Erro ao importar orçamento";
+
+      // O motivo fica na tela: antes o card se limpava sozinho e a falha
+      // parecia "não aconteceu nada".
+      setImportError(message);
+      toast.error(message);
+      setImporting(false);
+      setProgress(0);
+      setStatusText("");
     }
   };
 
@@ -212,6 +236,23 @@ export default function OrcamentoProjeto() {
               }}
             />
 
+            {importError && !importing && (
+              <div
+                role="alert"
+                className="flex items-start gap-3 p-3 rounded-lg border border-destructive/30 bg-destructive/5"
+              >
+                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">
+                    Não foi possível importar
+                  </p>
+                  <p className="text-sm text-muted-foreground break-words">
+                    {importError}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {importing ? (
               <div className="space-y-3 py-4">
                 <div className="flex items-center gap-3">
@@ -260,7 +301,10 @@ export default function OrcamentoProjeto() {
                     variant="ghost"
                     size="icon"
                     className="shrink-0 h-8 w-8"
-                    onClick={() => setFile(null)}
+                    onClick={() => {
+                      setFile(null);
+                      setImportError(null);
+                    }}
                     aria-label="Remover arquivo"
                   >
                     <X className="h-4 w-4" />
@@ -268,7 +312,7 @@ export default function OrcamentoProjeto() {
                 </div>
                 <Button onClick={handleImport} className="w-full gap-2">
                   <Sparkles className="h-4 w-4" />
-                  Importar com IA
+                  {importError ? "Tentar novamente" : "Importar com IA"}
                 </Button>
               </div>
             )}
