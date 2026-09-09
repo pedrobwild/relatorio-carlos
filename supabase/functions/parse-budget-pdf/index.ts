@@ -235,7 +235,9 @@ Deno.serve(async (req) => {
         try {
           // Import sob demanda: uma falha ao carregar o parser de planilha não
           // pode derrubar o caminho do PDF, que é o formato principal.
-          const XLSX = await import('https://esm.sh/xlsx@0.18.5');
+          const mod = await import('https://esm.sh/xlsx@0.18.5');
+          // SheetJS é CJS: dependendo do wrapper, a API vem no namespace ou no default.
+          const XLSX = (mod as { default?: typeof mod }).default ?? mod;
           const workbook = XLSX.read(bytes, { type: 'array' });
           tabular = workbook.SheetNames
             .map(
