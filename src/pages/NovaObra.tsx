@@ -522,6 +522,18 @@ export default function NovaObra() {
     setErrors({});
 
     try {
+      // Bloqueia duplicidade: mesmo cliente + mesmo endereço + mesma unidade
+      const existing = await projectsRepo.findDuplicateProject({
+        customerEmail: formData.customer_email,
+        address: formData.address,
+        unitName: formData.unit_name,
+      });
+      if (existing) {
+        setDuplicate(existing);
+        setLoading(false);
+        return;
+      }
+
       await submit(
         formData,
         selectedTemplate,
