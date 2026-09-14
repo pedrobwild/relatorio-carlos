@@ -215,6 +215,9 @@ export default function NovaObra() {
   >(draft?.scheduleActivities ?? []);
   const [draftRestored, setDraftRestored] = useState(!!draft);
   const [direction, setDirection] = useState(1);
+  const [duplicate, setDuplicate] = useState<DuplicateProjectMatch | null>(
+    null,
+  );
 
   // Contract import state — restore from draft including conflicts/missing
   const [contractState, setContractState] = useState<ContractImportState>(
