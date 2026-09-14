@@ -44,6 +44,9 @@ import { MobileSummarySheet } from "./nova-obra/MobileSummarySheet";
 import { cn } from "@/lib/utils";
 import { safeParseInt, trackBlock1CUsage } from "@/lib/block1cMonitor";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { projectsRepo } from "@/infra/repositories";
+import { DuplicateProjectDialog } from "@/components/obras/DuplicateProjectDialog";
+import type { DuplicateProjectMatch } from "@/infra/repositories/projects.repository";
 
 const STEPS: Step[] = [
   {
