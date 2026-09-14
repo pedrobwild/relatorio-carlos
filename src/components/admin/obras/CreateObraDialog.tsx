@@ -49,6 +49,9 @@ export function CreateObraDialog({ onCreated }: { onCreated: () => void }) {
   const [loading, setLoading] = useState(false);
   const [sendInvite, setSendInvite] = useState(true);
   const [formData, setFormData] = useState<FormData>({ ...EMPTY_FORM });
+  const [duplicate, setDuplicate] = useState<DuplicateProjectMatch | null>(
+    null,
+  );
 
   const handleChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
