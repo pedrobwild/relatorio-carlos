@@ -152,6 +152,7 @@ export function CreateObraDialog({ onCreated }: { onCreated: () => void }) {
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
