@@ -16,6 +16,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { projectsRepo } from "@/infra/repositories";
 import { toast } from "@/hooks/use-toast";
+import { DuplicateProjectDialog } from "@/components/obras/DuplicateProjectDialog";
+import type { DuplicateProjectMatch } from "@/infra/repositories/projects.repository";
 
 interface FormData {
   name: string;
