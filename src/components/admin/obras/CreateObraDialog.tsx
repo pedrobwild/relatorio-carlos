@@ -341,5 +341,12 @@ export function CreateObraDialog({ onCreated }: { onCreated: () => void }) {
         </form>
       </DialogContent>
     </Dialog>
+    <DuplicateProjectDialog
+      duplicate={duplicate}
+      onOpenChange={(o) => {
+        if (!o) setDuplicate(null);
+      }}
+    />
+    </>
   );
 }
