@@ -16,6 +16,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { projectsRepo } from "@/infra/repositories";
 import { toast } from "@/hooks/use-toast";
+import { DuplicateProjectDialog } from "@/components/obras/DuplicateProjectDialog";
+import type { DuplicateProjectMatch } from "@/infra/repositories/projects.repository";
 
 interface FormData {
   name: string;
@@ -47,6 +49,9 @@ export function CreateObraDialog({ onCreated }: { onCreated: () => void }) {
   const [loading, setLoading] = useState(false);
   const [sendInvite, setSendInvite] = useState(true);
   const [formData, setFormData] = useState<FormData>({ ...EMPTY_FORM });
+  const [duplicate, setDuplicate] = useState<DuplicateProjectMatch | null>(
+    null,
+  );
 
   const handleChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -94,6 +99,18 @@ export function CreateObraDialog({ onCreated }: { onCreated: () => void }) {
     setLoading(true);
 
     try {
+      // Bloqueia duplicidade: mesmo cliente + mesmo endereço + mesma unidade
+      const existing = await projectsRepo.findDuplicateProject({
+        customerEmail: formData.customer_email,
+        address: formData.address,
+        unitName: formData.unit_name,
+      });
+      if (existing) {
+        setDuplicate(existing);
+        setLoading(false);
+        return;
+      }
+
       const { error } = await projectsRepo.createProjectWithCustomer({
         name: formData.name,
         unit_name: formData.unit_name || null,
@@ -135,6 +152,7 @@ export function CreateObraDialog({ onCreated }: { onCreated: () => void }) {
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
@@ -323,5 +341,12 @@ export function CreateObraDialog({ onCreated }: { onCreated: () => void }) {
         </form>
       </DialogContent>
     </Dialog>
+    <DuplicateProjectDialog
+      duplicate={duplicate}
+      onOpenChange={(o) => {
+        if (!o) setDuplicate(null);
+      }}
+    />
+    </>
   );
 }

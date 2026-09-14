@@ -7341,6 +7341,21 @@ export type Database = {
           storage_path: string
         }[]
       }
+      find_duplicate_project: {
+        Args: {
+          p_address: string
+          p_customer_email: string
+          p_unit_name?: string
+        }
+        Returns: {
+          address: string
+          created_at: string
+          project_id: string
+          project_name: string
+          status: string
+          unit_name: string
+        }[]
+      }
       generate_file_storage_path: {
         Args: { p_filename: string; p_org_id: string; p_project_id: string }
         Returns: string

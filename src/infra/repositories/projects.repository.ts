@@ -995,3 +995,44 @@ export async function get3DFilePaths(
   if (error || !data?.length) return null;
   return data[0].storage_path;
 }
+
+// ============================================================================
+// Duplicate detection (mesmo cliente + mesmo endereço + mesma unidade)
+// ============================================================================
+
+export interface DuplicateProjectMatch {
+  project_id: string;
+  project_name: string;
+  unit_name: string | null;
+  address: string | null;
+  status: string;
+  created_at: string;
+}
+
+/**
+ * Verifica se já existe uma obra ativa para o mesmo cliente (e-mail),
+ * no mesmo endereço e na mesma unidade. Retorna a obra existente ou null.
+ */
+export async function findDuplicateProject(input: {
+  customerEmail: string;
+  address: string;
+  unitName?: string | null;
+}): Promise<DuplicateProjectMatch | null> {
+  const email = input.customerEmail?.trim();
+  const address = input.address?.trim();
+  if (!email || !address) return null;
+
+  const { data, error } = await supabase.rpc("find_duplicate_project", {
+    p_customer_email: email,
+    p_address: address,
+    p_unit_name: input.unitName?.trim() || "",
+  });
+
+  if (error) {
+    console.warn("[findDuplicateProject]", error.message);
+    return null;
+  }
+
+  const rows = (data ?? []) as DuplicateProjectMatch[];
+  return rows.length > 0 ? rows[0] : null;
+}

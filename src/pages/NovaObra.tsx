@@ -44,6 +44,9 @@ import { MobileSummarySheet } from "./nova-obra/MobileSummarySheet";
 import { cn } from "@/lib/utils";
 import { safeParseInt, trackBlock1CUsage } from "@/lib/block1cMonitor";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { projectsRepo } from "@/infra/repositories";
+import { DuplicateProjectDialog } from "@/components/obras/DuplicateProjectDialog";
+import type { DuplicateProjectMatch } from "@/infra/repositories/projects.repository";
 
 const STEPS: Step[] = [
   {
@@ -212,6 +215,9 @@ export default function NovaObra() {
   >(draft?.scheduleActivities ?? []);
   const [draftRestored, setDraftRestored] = useState(!!draft);
   const [direction, setDirection] = useState(1);
+  const [duplicate, setDuplicate] = useState<DuplicateProjectMatch | null>(
+    null,
+  );
 
   // Contract import state — restore from draft including conflicts/missing
   const [contractState, setContractState] = useState<ContractImportState>(
@@ -522,6 +528,18 @@ export default function NovaObra() {
     setErrors({});
 
     try {
+      // Bloqueia duplicidade: mesmo cliente + mesmo endereço + mesma unidade
+      const existing = await projectsRepo.findDuplicateProject({
+        customerEmail: formData.customer_email,
+        address: formData.address,
+        unitName: formData.unit_name,
+      });
+      if (existing) {
+        setDuplicate(existing);
+        setLoading(false);
+        return;
+      }
+
       await submit(
         formData,
         selectedTemplate,
@@ -965,6 +983,13 @@ export default function NovaObra() {
           </div>
         </div>
       </div>
+
+      <DuplicateProjectDialog
+        duplicate={duplicate}
+        onOpenChange={(open) => {
+          if (!open) setDuplicate(null);
+        }}
+      />
     </div>
   );
 }
