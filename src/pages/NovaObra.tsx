@@ -983,6 +983,13 @@ export default function NovaObra() {
           </div>
         </div>
       </div>
+
+      <DuplicateProjectDialog
+        duplicate={duplicate}
+        onOpenChange={(open) => {
+          if (!open) setDuplicate(null);
+        }}
+      />
     </div>
   );
 }
