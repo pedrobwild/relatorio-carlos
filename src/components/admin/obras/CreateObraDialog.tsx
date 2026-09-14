@@ -94,6 +94,18 @@ export function CreateObraDialog({ onCreated }: { onCreated: () => void }) {
     setLoading(true);
 
     try {
+      // Bloqueia duplicidade: mesmo cliente + mesmo endereço + mesma unidade
+      const existing = await projectsRepo.findDuplicateProject({
+        customerEmail: formData.customer_email,
+        address: formData.address,
+        unitName: formData.unit_name,
+      });
+      if (existing) {
+        setDuplicate(existing);
+        setLoading(false);
+        return;
+      }
+
       const { error } = await projectsRepo.createProjectWithCustomer({
         name: formData.name,
         unit_name: formData.unit_name || null,
