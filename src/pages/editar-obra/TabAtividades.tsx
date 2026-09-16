@@ -181,7 +181,7 @@ function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps["onAdd"] }) {
       onKeyDown={handleKeyDown}
     >
       {/* Desktop inline row */}
-      <div className="hidden md:grid md:grid-cols-[1fr_100px_130px_130px_130px_130px_70px_44px] gap-0 items-start">
+      <div className="hidden 2xl:grid 2xl:grid-cols-[minmax(220px,1fr)_100px_130px_130px_130px_130px_70px_44px] gap-0 items-start">
         <div className="p-2 pl-3 flex items-start gap-2">
           <span className="inline-flex items-center justify-center w-6 h-[38px] text-xs font-bold text-primary/40">
             +
@@ -248,7 +248,7 @@ function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps["onAdd"] }) {
         </div>
       </div>
       {/* Desktop: optional detailed description row */}
-      <div className="hidden md:block px-3 pb-2">
+      <div className="hidden 2xl:block px-3 pb-2">
         <button
           type="button"
           onClick={() => setShowDetails(!showDetails)}
@@ -277,7 +277,7 @@ function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps["onAdd"] }) {
       </div>
 
       {/* Mobile add form */}
-      <div className="md:hidden p-3 space-y-3">
+      <div className="2xl:hidden p-3 space-y-3">
         <AutoResizeTextarea
           value={form.description}
           onChange={(v) => setForm({ ...form, description: v })}
@@ -410,7 +410,7 @@ function ActivityRow({
       {/* Desktop row */}
       <div
         className={cn(
-          "hidden md:block group/row border-b border-border/40 last:border-b-0 transition-colors hover:bg-accent/30",
+          "hidden 2xl:block group/row border-b border-border/40 last:border-b-0 transition-colors hover:bg-accent/30",
           index % 2 === 1 && "bg-muted/20",
           isDragging && "opacity-55",
           isDragOver && "bg-primary/10 ring-1 ring-inset ring-primary/30",
@@ -418,7 +418,7 @@ function ActivityRow({
         onDragOver={(event) => onDragOver(event, index)}
         onDrop={(event) => onDrop(event, index)}
       >
-        <div className="grid grid-cols-[1fr_100px_130px_130px_130px_130px_70px_44px] gap-0 items-start">
+        <div className="grid grid-cols-[minmax(220px,1fr)_100px_130px_130px_130px_130px_70px_44px] gap-0 items-start">
           <div className="p-2 pl-3 flex items-start gap-2">
             <div className="flex items-center gap-1 shrink-0 pt-2">
               {hasDetail || detailOpen ? (
@@ -581,7 +581,7 @@ function ActivityRow({
       {/* Mobile card */}
       <div
         className={cn(
-          "md:hidden border-b border-border/40 last:border-b-0 p-3 space-y-2.5",
+          "2xl:hidden border-b border-border/40 last:border-b-0 p-3 space-y-2.5",
           isDragging && "opacity-55",
           isDragOver && "bg-primary/10 ring-1 ring-inset ring-primary/30",
         )}
@@ -857,7 +857,7 @@ export function TabAtividades({
 
         <CardContent className="p-0 mt-3">
           {/* Desktop column headers */}
-          <div className="hidden md:grid md:grid-cols-[1fr_100px_130px_130px_130px_130px_70px_44px] gap-0 bg-muted/60 border-y border-border/60 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <div className="hidden 2xl:grid 2xl:grid-cols-[minmax(220px,1fr)_100px_130px_130px_130px_130px_70px_44px] gap-0 bg-muted/60 border-y border-border/60 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             <div className="py-2.5 pl-3 pr-2 flex items-center gap-2">
               <span className="w-[calc(1rem+20px+0.5rem)]" />
               Descrição
