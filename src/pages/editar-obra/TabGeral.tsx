@@ -35,7 +35,8 @@ import { format } from "date-fns";
 import { countBusinessDaysInclusive } from "@/lib/businessDays";
 import { cn } from "@/lib/utils";
 import {
-  filterCoordenadorasObra,
+  buildCoordenadoraOptions,
+  isCoordenadoraObra,
   useStaffUsers,
 } from "@/hooks/useStaffUsers";
 import type { Project, Customer, Activity } from "./types";
@@ -84,7 +85,10 @@ export function TabGeral({
   isSaving,
 }: TabGeralProps) {
   const { data: staffUsers = [] } = useStaffUsers();
-  const coordenadoras = filterCoordenadorasObra(staffUsers);
+  const coordenadoras = buildCoordenadoraOptions(
+    staffUsers,
+    project.painel_responsavel_id,
+  );
 
   // Dias úteis derivados do intervalo atual planned_start..planned_end
   const derivedDuration = useMemo(() => {
@@ -181,8 +185,12 @@ export function TabGeral({
               <SelectContent>
                  <SelectItem value={SEM_GESTOR}>Sem coordenadora definida</SelectItem>
                  {coordenadoras.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.nome}
+                   <SelectItem
+                     key={u.id}
+                     value={u.id}
+                     disabled={!isCoordenadoraObra(u)}
+                   >
+                     {u.nome}{!isCoordenadoraObra(u) ? " (coordenador atual)" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>

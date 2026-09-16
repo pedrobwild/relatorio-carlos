@@ -28,7 +28,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import {
-  filterCoordenadorasObra,
+  buildCoordenadoraOptions,
+  isCoordenadoraObra,
   useStaffUsers,
 } from "@/hooks/useStaffUsers";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -62,7 +63,7 @@ export function GestorObraSelect({
 }: GestorObraSelectProps) {
   const { isStaff, loading: roleLoading } = useUserRole();
   const { data: staffUsers = [] } = useStaffUsers();
-  const coordenadoras = filterCoordenadorasObra(staffUsers);
+  const coordenadoras = buildCoordenadoraOptions(staffUsers, value);
   // Espelha o valor do pai, mas responde na hora ao clique (otimista) e
   // volta atrás se o banco recusar.
   const [value, setValue] = useState<string | null>(gestorId ?? null);
@@ -111,8 +112,8 @@ export function GestorObraSelect({
     <SelectContent>
       <SelectItem value={SEM_GESTOR}>Sem coordenadora definida</SelectItem>
       {coordenadoras.map((u) => (
-        <SelectItem key={u.id} value={u.id}>
-          {u.nome}
+        <SelectItem key={u.id} value={u.id} disabled={!isCoordenadoraObra(u)}>
+          {u.nome}{!isCoordenadoraObra(u) ? " (coordenador atual)" : ""}
         </SelectItem>
       ))}
     </SelectContent>

@@ -22,6 +22,18 @@ export function filterCoordenadorasObra(users: StaffUser[]): StaffUser[] {
   return users.filter(isCoordenadoraObra);
 }
 
+/** Mantém a coordenadora atual visível em cadastros antigos, sem oferecer
+ * outras pessoas como novas escolhas. */
+export function buildCoordenadoraOptions(
+  users: StaffUser[],
+  currentId?: string | null,
+): StaffUser[] {
+  const elegiveis = filterCoordenadorasObra(users);
+  const atual = currentId ? users.find((user) => user.id === currentId) : undefined;
+  if (!atual || elegiveis.some((user) => user.id === atual.id)) return elegiveis;
+  return [atual, ...elegiveis];
+}
+
 // Mantém alinhado com a função SQL `is_staff()` para que o seletor de
 // responsável mostre todos os perfis internos (não só admin/engineer).
 const STAFF_ROLES = [

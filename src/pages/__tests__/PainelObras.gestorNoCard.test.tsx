@@ -78,10 +78,26 @@ vi.mock("@/hooks/usePainelObras", async () => {
 });
 
 vi.mock("@/hooks/useStaffUsers", () => ({
+  filterCoordenadorasObra: (users: Array<{ email: string }>) =>
+    users.filter((user) =>
+      ["gabriellafranco@bwild.com.br", "bruna.sampaio@bewild.com.br"].includes(
+        user.email,
+      ),
+    ),
   useStaffUsers: () => ({
     data: [
-      { id: "u-ana", nome: "Ana Souza", email: "ana@x", perfil: "gestor" },
-      { id: "u-caio", nome: "Caio Lima", email: "caio@x", perfil: "gestor" },
+      {
+        id: "u-gabi",
+        nome: "Gabriella Franco",
+        email: "gabriellafranco@bwild.com.br",
+        perfil: "admin",
+      },
+      {
+        id: "u-bruna",
+        nome: "Bruna Sampaio",
+        email: "bruna.sampaio@bewild.com.br",
+        perfil: "admin",
+      },
     ],
     isLoading: false,
   }),
@@ -138,7 +154,7 @@ describe("PainelObras — gestor visível no card", () => {
       </Wrapper>,
     );
 
-    const trigger = screen.getByLabelText("Gestor da obra: Ana Souza");
+    const trigger = screen.getByLabelText("Coordenadora da obra: Ana Souza");
     expect(trigger).toHaveTextContent("Ana Souza");
   });
 
@@ -152,8 +168,8 @@ describe("PainelObras — gestor visível no card", () => {
     // O ponto do bug: antes o card não renderizava NADA quando o gestor era
     // nulo, e como quase toda obra estava sem gestor o card parecia não ter
     // esse dado.
-    const trigger = screen.getByLabelText("Definir gestor da obra");
-    expect(trigger).toHaveTextContent("Sem gestor");
+    const trigger = screen.getByLabelText("Definir coordenadora da obra");
+    expect(trigger).toHaveTextContent("Sem coordenadora");
   });
 
   it("o gestor do card é um seletor de valor único — nunca uma lista", () => {
@@ -163,11 +179,11 @@ describe("PainelObras — gestor visível no card", () => {
       </Wrapper>,
     );
 
-    const trigger = screen.getByLabelText("Definir gestor da obra");
+    const trigger = screen.getByLabelText("Definir coordenadora da obra");
     expect(trigger).toHaveAttribute("role", "combobox");
     expect(trigger).not.toHaveAttribute("multiple");
     // Um gatilho por card: não há como abrir dois gestores para a mesma obra.
-    expect(screen.getAllByLabelText(/gestor da obra/i)).toHaveLength(2);
+    expect(screen.getAllByLabelText(/coordenadora da obra/i)).toHaveLength(2);
   });
 
   it("card mobile mostra o gestor com nome e, sem gestor, o aviso", () => {
@@ -186,7 +202,7 @@ describe("PainelObras — gestor visível no card", () => {
       screen.getByLabelText(
         "Abrir obra Obra sem gestor de Cliente Sem Gestor",
       ),
-    ).toHaveTextContent("Sem gestor");
+    ).toHaveTextContent("Sem coordenadora");
   });
 
   it("coluna do gestor na tabela não some em tela estreita", () => {
