@@ -142,7 +142,7 @@ import {
 } from "@/hooks/usePainelObras";
 import { EmptyState } from "@/components/ui/states";
 import {
-  filterCoordenadorasObra,
+  filterCoordenadoresObra,
   useStaffUsers,
 } from "@/hooks/useStaffUsers";
 import { DailyLogInline } from "@/components/admin/obras/DailyLogInline";
@@ -517,7 +517,7 @@ export default function PainelObras() {
   const { obras, isLoading, updateObra } = usePainelObras();
   const { data: allStaffUsers = [] } = useStaffUsers();
   const staffUsers = useMemo(
-    () => filterCoordenadorasObra(allStaffUsers),
+    () => filterCoordenadoresObra(allStaffUsers),
     [allStaffUsers],
   );
   const queryClient = useQueryClient();
@@ -1748,7 +1748,7 @@ export default function PainelObras() {
                     <Input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                       placeholder="Buscar obra, cliente ou coordenadora"
+                       placeholder="Buscar obra, cliente ou coordenador"
                       aria-label="Buscar"
                       className="h-8 pl-8 pr-7 text-xs bg-surface border-border-subtle focus-visible:ring-1 focus-visible:ring-ring/40"
                     />
@@ -1936,13 +1936,13 @@ export default function PainelObras() {
                         </span>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={ALL}>Todas coordenadoras</SelectItem>
+                        <SelectItem value={ALL}>Todas coordenadores</SelectItem>
                         <SelectItem value={NONE}>
-                          Sem coordenadora ({responsavelOptions.semGestor})
+                          Sem coordenador ({responsavelOptions.semGestor})
                         </SelectItem>
                         {responsavelOptions.comGestor.length === 0 ? (
                           <div className="px-2 py-2 text-xs text-muted-foreground">
-                            Nenhuma obra com coordenadora definida. Defina a coordenadora na
+                            Nenhuma obra com coordenador definida. Defina a coordenador na
                             página da obra.
                           </div>
                         ) : (
@@ -2027,7 +2027,7 @@ export default function PainelObras() {
                                         inicio_oficial: "início oficial",
                                         entrega_real: "entrega real",
                                         inicio_real: "início real",
-                                         responsavel_nome: "coordenadora",
+                                         responsavel_nome: "coordenador",
                                       } as Record<string, string>
                                     )[sortKey] ?? "custom")
                                   : "padrão"}
@@ -2053,7 +2053,7 @@ export default function PainelObras() {
                                 Início real
                               </SelectItem>
                               <SelectItem value="responsavel_nome">
-                                 Coordenadora
+                                 Coordenador
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -2334,7 +2334,7 @@ export default function PainelObras() {
                           </TableHead>
                           <TableHead className="min-w-[140px] sm:min-w-[180px]">
                             <SortableHeader
-                               label="Coordenadora"
+                               label="Coordenador"
                               sortKey="responsavel_nome"
                             />
                           </TableHead>
@@ -3107,7 +3107,7 @@ function ObraRow({
                 inlinePillTrigger,
                 !obra.responsavel_id && "text-muted-foreground italic",
               )}
-              aria-label="Coordenadora da obra"
+              aria-label="Coordenador da obra"
             >
               <User className="h-3 w-3 shrink-0 opacity-60" />
               <span className="truncate font-medium">
@@ -3116,7 +3116,7 @@ function ObraRow({
               </span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE}>(sem coordenadora)</SelectItem>
+              <SelectItem value={NONE}>(sem coordenador)</SelectItem>
               {staffUsers.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.nome}
@@ -4141,24 +4141,24 @@ function KanbanCard({
               )}
               aria-label={
                 obra.responsavel_nome
-                  ? `Coordenadora da obra: ${obra.responsavel_nome}`
-                  : "Definir coordenadora da obra"
+                  ? `Coordenador da obra: ${obra.responsavel_nome}`
+                  : "Definir coordenador da obra"
               }
               title={
                 obra.responsavel_nome
                   ? `Gestor: ${obra.responsavel_nome}`
-                  : "Sem coordenadora definida"
+                  : "Sem coordenador definida"
               }
             >
               <span className="inline-flex items-center gap-1 min-w-0">
                 <User className="h-3 w-3 shrink-0 opacity-60" />
                 <span className="truncate">
-                  {obra.responsavel_nome ?? "Sem coordenadora"}
+                  {obra.responsavel_nome ?? "Sem coordenador"}
                 </span>
               </span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE}>(sem coordenadora)</SelectItem>
+              <SelectItem value={NONE}>(sem coordenador)</SelectItem>
               {staffUsers.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.nome}
@@ -4721,7 +4721,7 @@ function BoardView({
                   Relacionamento
                 </TableHead>
                 <TableHead className="min-w-[150px]">
-                  {renderSortableHeader("Coordenadora", "responsavel_nome")}
+                  {renderSortableHeader("Coordenador", "responsavel_nome")}
                 </TableHead>
                 <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
               </TableRow>
@@ -5050,7 +5050,7 @@ function MobilePainelView({
                 >
                   <User className="h-3 w-3 opacity-60" />
                   <span className="truncate max-w-[140px]">
-                    {responsavel ?? "Sem coordenadora"}
+                    {responsavel ?? "Sem coordenador"}
                   </span>
                 </span>
                 {snapshotById?.get(o.id) && (
@@ -5295,23 +5295,23 @@ function MobilePainelView({
         {/* Responsável */}
         <fieldset>
           <legend className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-            Coordenadora
+            Coordenador
           </legend>
           <Select value={filterResponsavel} onValueChange={onFilterResponsavel}>
             <SelectTrigger
-              aria-label="Filtrar por coordenadora"
+              aria-label="Filtrar por coordenador"
               className="h-11 w-full text-[14px]"
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>Todas coordenadoras</SelectItem>
+              <SelectItem value={ALL}>Todas coordenadores</SelectItem>
               <SelectItem value={NONE}>
-                Sem coordenadora ({responsavelOptions.semGestor})
+                Sem coordenador ({responsavelOptions.semGestor})
               </SelectItem>
               {responsavelOptions.comGestor.length === 0 ? (
                 <div className="px-2 py-2 text-xs text-muted-foreground">
-                   Nenhuma obra com coordenadora definida.
+                   Nenhuma obra com coordenador definida.
                 </div>
               ) : (
                 responsavelOptions.comGestor.map((u) => (

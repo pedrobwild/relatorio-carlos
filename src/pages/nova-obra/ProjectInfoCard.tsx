@@ -21,8 +21,8 @@ import {
 import { toast } from "sonner";
 import { useCepLookup, formatCep } from "@/hooks/useCepLookup";
 import {
-  buildCoordenadoraOptions,
-  isCoordenadoraObra,
+  buildCoordenadorOptions,
+  isCoordenadorObra,
   useStaffUsers,
 } from "@/hooks/useStaffUsers";
 import { AiFieldIndicator } from "./AiFieldIndicator";
@@ -48,7 +48,7 @@ export function ProjectInfoCard({
 }: ProjectInfoCardProps) {
   const { lookup, loading: cepLoading } = useCepLookup();
   const { data: staffUsers = [] } = useStaffUsers();
-  const coordenadoras = buildCoordenadoraOptions(
+  const coordenadores = buildCoordenadorOptions(
     staffUsers,
     formData.painel_responsavel_id,
   );
@@ -134,10 +134,10 @@ export function ProjectInfoCard({
                 className="inline-flex items-center gap-2 text-sm font-medium"
               >
                 <UserCog className="h-4 w-4" />
-                Coordenadora da obra
+                Coordenador da obra
               </Label>
               <p className="text-xs text-muted-foreground">
-                 Uma única coordenadora por obra. Aparece nos cards e no filtro
+                 Uma única coordenador por obra. Aparece nos cards e no filtro
                  por responsável do Painel de Obras. Pode ser definida depois.
               </p>
             </div>
@@ -151,17 +151,17 @@ export function ProjectInfoCard({
                 id="painel_responsavel_id"
                 className="bg-background"
               >
-                 <SelectValue placeholder="Selecione a coordenadora" />
+                 <SelectValue placeholder="Selecione a coordenador" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={SEM_GESTOR}>Definir depois</SelectItem>
-                 {coordenadoras.map((u) => (
+                 {coordenadores.map((u) => (
                    <SelectItem
                      key={u.id}
                      value={u.id}
-                     disabled={!isCoordenadoraObra(u)}
+                     disabled={!isCoordenadorObra(u)}
                    >
-                     {u.nome}{!isCoordenadoraObra(u) ? " (coordenador atual)" : ""}
+                     {u.nome}{!isCoordenadorObra(u) ? " (coordenador atual)" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>

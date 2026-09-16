@@ -8,27 +8,27 @@ export interface StaffUser {
   perfil: string;
 }
 
-/** Pessoas que podem ser escolhidas como coordenadoras de uma obra. */
-const COORDENADORAS_OBRA_EMAILS = new Set([
+/** Pessoas que podem ser escolhidas como coordenadores de uma obra. */
+const COORDENADORES_OBRA_EMAILS = new Set([
   "gabriellafranco@bwild.com.br",
   "bruna.sampaio@bewild.com.br",
 ]);
 
-export function isCoordenadoraObra(user: StaffUser): boolean {
-  return COORDENADORAS_OBRA_EMAILS.has(user.email.trim().toLowerCase());
+export function isCoordenadorObra(user: StaffUser): boolean {
+  return COORDENADORES_OBRA_EMAILS.has(user.email.trim().toLowerCase());
 }
 
-export function filterCoordenadorasObra(users: StaffUser[]): StaffUser[] {
-  return users.filter(isCoordenadoraObra);
+export function filterCoordenadoresObra(users: StaffUser[]): StaffUser[] {
+  return users.filter(isCoordenadorObra);
 }
 
-/** Mantém a coordenadora atual visível em cadastros antigos, sem oferecer
+/** Mantém a coordenador atual visível em cadastros antigos, sem oferecer
  * outras pessoas como novas escolhas. */
-export function buildCoordenadoraOptions(
+export function buildCoordenadorOptions(
   users: StaffUser[],
   currentId?: string | null,
 ): StaffUser[] {
-  const elegiveis = filterCoordenadorasObra(users);
+  const elegiveis = filterCoordenadoresObra(users);
   const atual = currentId ? users.find((user) => user.id === currentId) : undefined;
   if (!atual || elegiveis.some((user) => user.id === atual.id)) return elegiveis;
   return [atual, ...elegiveis];

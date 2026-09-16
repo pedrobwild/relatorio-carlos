@@ -16,11 +16,11 @@ import userEvent from "@testing-library/user-event";
 vi.mock("@/hooks/useUserRole", () => ({ useUserRole: vi.fn() }));
 vi.mock("@/hooks/useStaffUsers", () => ({
   useStaffUsers: vi.fn(),
-  isCoordenadoraObra: (user: { email: string }) =>
+  isCoordenadorObra: (user: { email: string }) =>
     ["gabriellafranco@bwild.com.br", "bruna.sampaio@bewild.com.br"].includes(
       user.email,
     ),
-  buildCoordenadoraOptions: (
+  buildCoordenadorOptions: (
     users: Array<{ id: string; email: string }>,
     currentId?: string | null,
   ) =>
@@ -78,15 +78,15 @@ describe("GestorObraSelect", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("avisa o staff quando a obra está sem coordenadora", () => {
+  it("avisa o staff quando a obra está sem coordenador", () => {
     render(<GestorObraSelect projectId="p1" gestorId={null} />);
-    expect(screen.getByText(/Coordenadora da obra/i)).toBeInTheDocument();
+    expect(screen.getByText(/Coordenador da obra/i)).toBeInTheDocument();
     expect(
       screen.getByText(/não aparece em nenhum filtro por responsável/i),
     ).toBeInTheDocument();
   });
 
-  it("mostra a coordenadora atual e some com o aviso", () => {
+  it("mostra a coordenador atual e some com o aviso", () => {
     render(<GestorObraSelect projectId="p1" gestorId="u-gabi" />);
     expect(screen.getByText("Gabriella Franco")).toBeInTheDocument();
     expect(
@@ -118,11 +118,11 @@ describe("GestorObraSelect", () => {
     }
   });
 
-  it("limpar a coordenadora grava null", async () => {
+  it("limpar a coordenador grava null", async () => {
     render(<GestorObraSelect projectId="p1" gestorId="u-gabi" />);
     await userEvent.click(screen.getByRole("combobox"));
     await userEvent.click(
-      await screen.findByRole("option", { name: /Sem coordenadora definida/i }),
+      await screen.findByRole("option", { name: /Sem coordenador definida/i }),
     );
     await waitFor(() => expect(mockedSet).toHaveBeenCalledWith("p1", null));
   });
