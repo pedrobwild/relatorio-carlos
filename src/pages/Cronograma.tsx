@@ -295,11 +295,7 @@ const Cronograma = () => {
       etapa: "",
       detailed_description: "",
     }));
-    if (activities.length === 1 && !activities[0].description.trim()) {
-      setActivities(mapped);
-    } else {
-      setActivities([...activities, ...mapped]);
-    }
+    setActivities(mapped);
   };
 
   // Load existing activities or auto-generate weekly slots
@@ -731,6 +727,7 @@ const Cronograma = () => {
           open={importModalOpen}
           onOpenChange={setImportModalOpen}
           onImport={handleImportActivities}
+          startDate={project?.planned_start_date}
         />
       </div>
     );
@@ -1228,6 +1225,7 @@ const Cronograma = () => {
         open={importModalOpen}
         onOpenChange={setImportModalOpen}
         onImport={handleImportActivities}
+        startDate={project?.planned_start_date}
       />
     </div>
   );

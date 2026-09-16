@@ -19,6 +19,13 @@ export interface ActivityTemplateSet {
   activities: ActivityTemplate[];
 }
 
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export const activityTemplateSets: ActivityTemplateSet[] = [
   {
     id: "reforma-studio",
@@ -187,6 +194,8 @@ export function generateActivitiesFromTemplate(
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
+  let previousId: string | null = null;
+
   return template.activities.map((act) => {
     const start = new Date(currentDate);
 
@@ -207,17 +216,20 @@ export function generateActivitiesFromTemplate(
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    const fmt = (d: Date) => d.toISOString().split("T")[0];
+    const id = crypto.randomUUID();
 
-    return {
-      id: crypto.randomUUID(),
+    const activity = {
+      id,
       description: act.description,
-      plannedStart: fmt(start),
-      plannedEnd: fmt(end),
+      plannedStart: formatLocalDate(start),
+      plannedEnd: formatLocalDate(end),
       actualStart: "",
       actualEnd: "",
       weight: String(act.weight),
-      predecessorIds: [],
+      predecessorIds: previousId ? [previousId] : [],
     };
+
+    previousId = id;
+    return activity;
   });
 }
