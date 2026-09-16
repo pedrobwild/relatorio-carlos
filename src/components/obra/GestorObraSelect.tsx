@@ -76,7 +76,7 @@ export function GestorObraSelect({
   if (roleLoading || !isStaff) return null;
 
   const nomeAtual = value
-    ? (staffUsers.find((u) => u.id === value)?.nome ?? "Gestor")
+    ? (staffUsers.find((u) => u.id === value)?.nome ?? "Coordenadora")
     : null;
 
   const handleChange = async (next: string) => {

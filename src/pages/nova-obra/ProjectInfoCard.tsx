@@ -21,7 +21,8 @@ import {
 import { toast } from "sonner";
 import { useCepLookup, formatCep } from "@/hooks/useCepLookup";
 import {
-  filterCoordenadorasObra,
+  buildCoordenadoraOptions,
+  isCoordenadoraObra,
   useStaffUsers,
 } from "@/hooks/useStaffUsers";
 import { AiFieldIndicator } from "./AiFieldIndicator";
@@ -47,7 +48,10 @@ export function ProjectInfoCard({
 }: ProjectInfoCardProps) {
   const { lookup, loading: cepLoading } = useCepLookup();
   const { data: staffUsers = [] } = useStaffUsers();
-  const coordenadoras = filterCoordenadorasObra(staffUsers);
+  const coordenadoras = buildCoordenadoraOptions(
+    staffUsers,
+    formData.painel_responsavel_id,
+  );
 
   const handleCepChange = (rawValue: string) => {
     const formatted = formatCep(rawValue);
@@ -152,8 +156,12 @@ export function ProjectInfoCard({
               <SelectContent>
                 <SelectItem value={SEM_GESTOR}>Definir depois</SelectItem>
                  {coordenadoras.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.nome}
+                   <SelectItem
+                     key={u.id}
+                     value={u.id}
+                     disabled={!isCoordenadoraObra(u)}
+                   >
+                     {u.nome}{!isCoordenadoraObra(u) ? " (coordenador atual)" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>

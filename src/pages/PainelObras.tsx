@@ -1748,7 +1748,7 @@ export default function PainelObras() {
                     <Input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Buscar obra, cliente ou responsável"
+                       placeholder="Buscar obra, cliente ou coordenadora"
                       aria-label="Buscar"
                       className="h-8 pl-8 pr-7 text-xs bg-surface border-border-subtle focus-visible:ring-1 focus-visible:ring-ring/40"
                     />
@@ -2027,7 +2027,7 @@ export default function PainelObras() {
                                         inicio_oficial: "início oficial",
                                         entrega_real: "entrega real",
                                         inicio_real: "início real",
-                                        responsavel_nome: "responsável",
+                                         responsavel_nome: "coordenadora",
                                       } as Record<string, string>
                                     )[sortKey] ?? "custom")
                                   : "padrão"}
@@ -2053,7 +2053,7 @@ export default function PainelObras() {
                                 Início real
                               </SelectItem>
                               <SelectItem value="responsavel_nome">
-                                Responsável
+                                 Coordenadora
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -2334,7 +2334,7 @@ export default function PainelObras() {
                           </TableHead>
                           <TableHead className="min-w-[140px] sm:min-w-[180px]">
                             <SortableHeader
-                              label="Responsável"
+                               label="Coordenadora"
                               sortKey="responsavel_nome"
                             />
                           </TableHead>
@@ -4721,7 +4721,7 @@ function BoardView({
                   Relacionamento
                 </TableHead>
                 <TableHead className="min-w-[150px]">
-                  {renderSortableHeader("Responsável", "responsavel_nome")}
+                  {renderSortableHeader("Coordenadora", "responsavel_nome")}
                 </TableHead>
                 <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
               </TableRow>

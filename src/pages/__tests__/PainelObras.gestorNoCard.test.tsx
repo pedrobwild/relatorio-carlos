@@ -222,7 +222,7 @@ describe("PainelObras — gestor visível no card", () => {
     )!;
 
     const celula = within(linha)
-      .getByLabelText("Responsável pela obra")
+      .getByLabelText("Coordenadora da obra")
       .closest("td")!;
     // `hidden xl:table-cell` escondia o gestor abaixo de 1280px — era por
     // isso que ninguém via nem preenchia o campo. (`overflow-hidden` é outra
