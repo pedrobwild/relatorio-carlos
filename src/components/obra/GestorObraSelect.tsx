@@ -63,11 +63,11 @@ export function GestorObraSelect({
 }: GestorObraSelectProps) {
   const { isStaff, loading: roleLoading } = useUserRole();
   const { data: staffUsers = [] } = useStaffUsers();
-  const coordenadoras = buildCoordenadoraOptions(staffUsers, value);
   // Espelha o valor do pai, mas responde na hora ao clique (otimista) e
   // volta atrás se o banco recusar.
   const [value, setValue] = useState<string | null>(gestorId ?? null);
   const [saving, setSaving] = useState(false);
+  const coordenadoras = buildCoordenadoraOptions(staffUsers, value);
 
   useEffect(() => {
     setValue(gestorId ?? null);

@@ -1924,7 +1924,7 @@ export default function PainelObras() {
                         className={triggerClass(filterResponsavel !== ALL)}
                         aria-label="Filtrar por responsável"
                       >
-                        <span className="text-muted-foreground">Resp.</span>
+                        <span className="text-muted-foreground">Coord.</span>
                         <span className="text-foreground/90 truncate max-w-[120px]">
                           {filterResponsavel === ALL
                             ? "todos"
@@ -1936,7 +1936,7 @@ export default function PainelObras() {
                         </span>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={ALL}>Todos responsáveis</SelectItem>
+                        <SelectItem value={ALL}>Todas coordenadoras</SelectItem>
                         <SelectItem value={NONE}>
                           Sem coordenadora ({responsavelOptions.semGestor})
                         </SelectItem>
@@ -3107,7 +3107,7 @@ function ObraRow({
                 inlinePillTrigger,
                 !obra.responsavel_id && "text-muted-foreground italic",
               )}
-              aria-label="Responsável pela obra"
+              aria-label="Coordenadora da obra"
             >
               <User className="h-3 w-3 shrink-0 opacity-60" />
               <span className="truncate font-medium">
@@ -3116,7 +3116,7 @@ function ObraRow({
               </span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE}>(sem responsável)</SelectItem>
+              <SelectItem value={NONE}>(sem coordenadora)</SelectItem>
               {staffUsers.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.nome}
@@ -5295,17 +5295,17 @@ function MobilePainelView({
         {/* Responsável */}
         <fieldset>
           <legend className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-            Responsável
+            Coordenadora
           </legend>
           <Select value={filterResponsavel} onValueChange={onFilterResponsavel}>
             <SelectTrigger
-              aria-label="Filtrar por responsável"
+              aria-label="Filtrar por coordenadora"
               className="h-11 w-full text-[14px]"
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>Todos responsáveis</SelectItem>
+              <SelectItem value={ALL}>Todas coordenadoras</SelectItem>
               <SelectItem value={NONE}>
                 Sem coordenadora ({responsavelOptions.semGestor})
               </SelectItem>

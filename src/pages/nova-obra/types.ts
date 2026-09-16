@@ -113,7 +113,7 @@ export interface FormData {
   tipo_de_locacao: string;
   data_recebimento_chaves: string;
   is_project_phase: boolean;
-  /** Gestor da obra (users_profile.id). "" = ainda não definido. */
+  /** Coordenadora da obra (users_profile.id). "" = ainda não definida. */
   painel_responsavel_id: string;
 
   // Cronograma
