@@ -86,7 +86,7 @@ describe("GestorObraSelect", () => {
     ).toBeInTheDocument();
   });
 
-  it("mostra a coordenador atual e some com o aviso", () => {
+  it("mostra o coordenador atual e some com o aviso", () => {
     render(<GestorObraSelect projectId="p1" gestorId="u-gabi" />);
     expect(screen.getByText("Gabriella Franco")).toBeInTheDocument();
     expect(
@@ -118,11 +118,11 @@ describe("GestorObraSelect", () => {
     }
   });
 
-  it("limpar a coordenador grava null", async () => {
+  it("limpar o coordenador grava null", async () => {
     render(<GestorObraSelect projectId="p1" gestorId="u-gabi" />);
     await userEvent.click(screen.getByRole("combobox"));
     await userEvent.click(
-      await screen.findByRole("option", { name: /Sem coordenador definida/i }),
+      await screen.findByRole("option", { name: /Sem coordenador definido/i }),
     );
     await waitFor(() => expect(mockedSet).toHaveBeenCalledWith("p1", null));
   });

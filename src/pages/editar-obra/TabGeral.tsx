@@ -165,7 +165,7 @@ export function TabGeral({
                   Coordenador da obra
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                   Uma única coordenador por obra. Aparece nos cards e alimenta
+                   Um único coordenador por obra. Aparece nos cards e alimenta
                    o filtro por responsável no Painel de Obras.
                 </p>
               </div>
@@ -180,10 +180,10 @@ export function TabGeral({
               }
             >
               <SelectTrigger id="painel_responsavel_id" className="bg-background">
-                 <SelectValue placeholder="Selecione a coordenador" />
+                 <SelectValue placeholder="Selecione o coordenador" />
               </SelectTrigger>
               <SelectContent>
-                 <SelectItem value={SEM_GESTOR}>Sem coordenador definida</SelectItem>
+                 <SelectItem value={SEM_GESTOR}>Sem coordenador definido</SelectItem>
                  {coordenadores.map((u) => (
                    <SelectItem
                      key={u.id}
@@ -198,7 +198,7 @@ export function TabGeral({
             {!project.painel_responsavel_id && (
               <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-500">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                 Sem coordenador definida, esta obra não aparece em nenhum filtro por
+                 Sem coordenador definido, esta obra não aparece em nenhum filtro por
                 responsável.
               </p>
             )}

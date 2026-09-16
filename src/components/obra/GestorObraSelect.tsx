@@ -94,7 +94,7 @@ export function GestorObraSelect({
         action: "set_gestor_obra",
         projectId,
       });
-      toast.error("Não foi possível salvar a coordenador da obra.");
+      toast.error("Não foi possível salvar o coordenador da obra.");
       return;
     }
     // O gestor aparece nos cards e no filtro do Painel de Obras: as listas
@@ -103,14 +103,14 @@ export function GestorObraSelect({
     onSaved?.(nextId);
     toast.success(
       nextId
-        ? `Coordenador da obra: ${staffUsers.find((u) => u.id === nextId)?.nome ?? "atualizada"}`
-        : "Coordenador da obra removida",
+        ? `Coordenador da obra: ${staffUsers.find((u) => u.id === nextId)?.nome ?? "atualizado"}`
+        : "Coordenador da obra removido",
     );
   };
 
   const selectItems = (
     <SelectContent>
-      <SelectItem value={SEM_GESTOR}>Sem coordenador definida</SelectItem>
+      <SelectItem value={SEM_GESTOR}>Sem coordenador definido</SelectItem>
       {coordenadores.map((u) => (
         <SelectItem key={u.id} value={u.id} disabled={!isCoordenadorObra(u)}>
           {u.nome}{!isCoordenadorObra(u) ? " (coordenador atual)" : ""}
@@ -193,7 +193,7 @@ export function GestorObraSelect({
               id={`gestor-obra-${projectId}`}
               className="w-full bg-background sm:w-64"
             >
-              <SelectValue placeholder="Selecione a coordenador" />
+              <SelectValue placeholder="Selecione o coordenador" />
             </SelectTrigger>
             {selectItems}
           </Select>
@@ -202,7 +202,7 @@ export function GestorObraSelect({
       {!value && (
         <p className="mt-3 flex items-start gap-1.5 text-xs text-warning">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          Sem coordenador definida, esta obra não aparece em nenhum filtro por
+          Sem coordenador definido, esta obra não aparece em nenhum filtro por
           responsável.
         </p>
       )}

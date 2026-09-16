@@ -22,7 +22,7 @@ export function filterCoordenadoresObra(users: StaffUser[]): StaffUser[] {
   return users.filter(isCoordenadorObra);
 }
 
-/** Mantém a coordenador atual visível em cadastros antigos, sem oferecer
+/** Mantém o coordenador atual visível em cadastros antigos, sem oferecer
  * outras pessoas como novas escolhas. */
 export function buildCoordenadorOptions(
   users: StaffUser[],

@@ -137,7 +137,7 @@ export function ProjectInfoCard({
                 Coordenador da obra
               </Label>
               <p className="text-xs text-muted-foreground">
-                 Uma única coordenador por obra. Aparece nos cards e no filtro
+                 Um único coordenador por obra. Aparece nos cards e no filtro
                  por responsável do Painel de Obras. Pode ser definida depois.
               </p>
             </div>
@@ -151,7 +151,7 @@ export function ProjectInfoCard({
                 id="painel_responsavel_id"
                 className="bg-background"
               >
-                 <SelectValue placeholder="Selecione a coordenador" />
+                 <SelectValue placeholder="Selecione o coordenador" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={SEM_GESTOR}>Definir depois</SelectItem>

@@ -1936,13 +1936,13 @@ export default function PainelObras() {
                         </span>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={ALL}>Todas coordenadores</SelectItem>
+                        <SelectItem value={ALL}>Todos os coordenadores</SelectItem>
                         <SelectItem value={NONE}>
                           Sem coordenador ({responsavelOptions.semGestor})
                         </SelectItem>
                         {responsavelOptions.comGestor.length === 0 ? (
                           <div className="px-2 py-2 text-xs text-muted-foreground">
-                            Nenhuma obra com coordenador definida. Defina a coordenador na
+                            Nenhuma obra com coordenador definido. Defina o coordenador na
                             página da obra.
                           </div>
                         ) : (
@@ -4147,7 +4147,7 @@ function KanbanCard({
               title={
                 obra.responsavel_nome
                   ? `Gestor: ${obra.responsavel_nome}`
-                  : "Sem coordenador definida"
+                  : "Sem coordenador definido"
               }
             >
               <span className="inline-flex items-center gap-1 min-w-0">
@@ -5305,13 +5305,13 @@ function MobilePainelView({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>Todas coordenadores</SelectItem>
+              <SelectItem value={ALL}>Todos os coordenadores</SelectItem>
               <SelectItem value={NONE}>
                 Sem coordenador ({responsavelOptions.semGestor})
               </SelectItem>
               {responsavelOptions.comGestor.length === 0 ? (
                 <div className="px-2 py-2 text-xs text-muted-foreground">
-                   Nenhuma obra com coordenador definida.
+                   Nenhuma obra com coordenador definido.
                 </div>
               ) : (
                 responsavelOptions.comGestor.map((u) => (
