@@ -8,6 +8,20 @@ export interface StaffUser {
   perfil: string;
 }
 
+/** Pessoas que podem ser escolhidas como coordenadoras de uma obra. */
+const COORDENADORAS_OBRA_EMAILS = new Set([
+  "gabriellafranco@bwild.com.br",
+  "bruna.sampaio@bewild.com.br",
+]);
+
+export function isCoordenadoraObra(user: StaffUser): boolean {
+  return COORDENADORAS_OBRA_EMAILS.has(user.email.trim().toLowerCase());
+}
+
+export function filterCoordenadorasObra(users: StaffUser[]): StaffUser[] {
+  return users.filter(isCoordenadoraObra);
+}
+
 // Mantém alinhado com a função SQL `is_staff()` para que o seletor de
 // responsável mostre todos os perfis internos (não só admin/engineer).
 const STAFF_ROLES = [

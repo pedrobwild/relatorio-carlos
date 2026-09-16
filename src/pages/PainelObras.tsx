@@ -141,7 +141,10 @@ import {
   type PainelStatus,
 } from "@/hooks/usePainelObras";
 import { EmptyState } from "@/components/ui/states";
-import { useStaffUsers } from "@/hooks/useStaffUsers";
+import {
+  filterCoordenadorasObra,
+  useStaffUsers,
+} from "@/hooks/useStaffUsers";
 import { DailyLogInline } from "@/components/admin/obras/DailyLogInline";
 import { DadosClienteDialog } from "@/components/admin/obras/DadosClienteDialog";
 import {
@@ -512,7 +515,11 @@ export default function PainelObras() {
   const navigate = useNavigate();
   const { isStaff, isAdmin, loading: roleLoading } = useUserRole();
   const { obras, isLoading, updateObra } = usePainelObras();
-  const { data: staffUsers = [] } = useStaffUsers();
+  const { data: allStaffUsers = [] } = useStaffUsers();
+  const staffUsers = useMemo(
+    () => filterCoordenadorasObra(allStaffUsers),
+    [allStaffUsers],
+  );
   const queryClient = useQueryClient();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1931,11 +1938,11 @@ export default function PainelObras() {
                       <SelectContent>
                         <SelectItem value={ALL}>Todos responsáveis</SelectItem>
                         <SelectItem value={NONE}>
-                          Sem gestor ({responsavelOptions.semGestor})
+                          Sem coordenadora ({responsavelOptions.semGestor})
                         </SelectItem>
                         {responsavelOptions.comGestor.length === 0 ? (
                           <div className="px-2 py-2 text-xs text-muted-foreground">
-                            Nenhuma obra com gestor definido. Defina o gestor na
+                            Nenhuma obra com coordenadora definida. Defina a coordenadora na
                             página da obra.
                           </div>
                         ) : (
@@ -4134,24 +4141,24 @@ function KanbanCard({
               )}
               aria-label={
                 obra.responsavel_nome
-                  ? `Gestor da obra: ${obra.responsavel_nome}`
-                  : "Definir gestor da obra"
+                  ? `Coordenadora da obra: ${obra.responsavel_nome}`
+                  : "Definir coordenadora da obra"
               }
               title={
                 obra.responsavel_nome
                   ? `Gestor: ${obra.responsavel_nome}`
-                  : "Sem gestor definido"
+                  : "Sem coordenadora definida"
               }
             >
               <span className="inline-flex items-center gap-1 min-w-0">
                 <User className="h-3 w-3 shrink-0 opacity-60" />
                 <span className="truncate">
-                  {obra.responsavel_nome ?? "Sem gestor"}
+                  {obra.responsavel_nome ?? "Sem coordenadora"}
                 </span>
               </span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE}>(sem gestor)</SelectItem>
+              <SelectItem value={NONE}>(sem coordenadora)</SelectItem>
               {staffUsers.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.nome}
@@ -5043,7 +5050,7 @@ function MobilePainelView({
                 >
                   <User className="h-3 w-3 opacity-60" />
                   <span className="truncate max-w-[140px]">
-                    {responsavel ?? "Sem gestor"}
+                    {responsavel ?? "Sem coordenadora"}
                   </span>
                 </span>
                 {snapshotById?.get(o.id) && (
@@ -5300,11 +5307,11 @@ function MobilePainelView({
             <SelectContent>
               <SelectItem value={ALL}>Todos responsáveis</SelectItem>
               <SelectItem value={NONE}>
-                Sem gestor ({responsavelOptions.semGestor})
+                Sem coordenadora ({responsavelOptions.semGestor})
               </SelectItem>
               {responsavelOptions.comGestor.length === 0 ? (
                 <div className="px-2 py-2 text-xs text-muted-foreground">
-                  Nenhuma obra com gestor definido.
+                   Nenhuma obra com coordenadora definida.
                 </div>
               ) : (
                 responsavelOptions.comGestor.map((u) => (

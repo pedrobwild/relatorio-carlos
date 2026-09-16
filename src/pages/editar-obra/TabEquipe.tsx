@@ -126,8 +126,8 @@ export function TabEquipe({
             </CardTitle>
             <CardDescription>
               Quem tem acesso a esta obra e com qual permissão. Vários membros
-              podem ter acesso total. O <strong>gestor da obra</strong> é único
-              e fica na aba Geral.
+              podem ter acesso total. A <strong>coordenadora da obra</strong> é
+              única e fica na aba Geral.
             </CardDescription>
           </CardHeader>
           <CardContent>

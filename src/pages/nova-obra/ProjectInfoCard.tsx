@@ -20,7 +20,10 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useCepLookup, formatCep } from "@/hooks/useCepLookup";
-import { useStaffUsers } from "@/hooks/useStaffUsers";
+import {
+  filterCoordenadorasObra,
+  useStaffUsers,
+} from "@/hooks/useStaffUsers";
 import { AiFieldIndicator } from "./AiFieldIndicator";
 import type { FormData } from "./types";
 
@@ -44,6 +47,7 @@ export function ProjectInfoCard({
 }: ProjectInfoCardProps) {
   const { lookup, loading: cepLoading } = useCepLookup();
   const { data: staffUsers = [] } = useStaffUsers();
+  const coordenadoras = filterCoordenadorasObra(staffUsers);
 
   const handleCepChange = (rawValue: string) => {
     const formatted = formatCep(rawValue);
@@ -126,11 +130,11 @@ export function ProjectInfoCard({
                 className="inline-flex items-center gap-2 text-sm font-medium"
               >
                 <UserCog className="h-4 w-4" />
-                Gestor da obra
+                Coordenadora da obra
               </Label>
               <p className="text-xs text-muted-foreground">
-                Único responsável pela obra. Aparece nos cards e no filtro por
-                responsável do Painel de Obras. Pode ser definido depois.
+                 Uma única coordenadora por obra. Aparece nos cards e no filtro
+                 por responsável do Painel de Obras. Pode ser definida depois.
               </p>
             </div>
             <Select
@@ -143,11 +147,11 @@ export function ProjectInfoCard({
                 id="painel_responsavel_id"
                 className="bg-background"
               >
-                <SelectValue placeholder="Selecione o gestor" />
+                 <SelectValue placeholder="Selecione a coordenadora" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={SEM_GESTOR}>Definir depois</SelectItem>
-                {staffUsers.map((u) => (
+                 {coordenadoras.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {u.nome}
                   </SelectItem>
