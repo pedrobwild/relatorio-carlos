@@ -51,7 +51,7 @@ export const errorLabels = {
   },
   permissionDenied: {
     title: "Sem permissão para esta ação",
-    description: "Fale com o gestor da obra se precisar de acesso.",
+    description: "Fale com o coordenador da obra se precisar de acesso.",
   },
   sessionExpired: {
     title: "Sua sessão expirou",

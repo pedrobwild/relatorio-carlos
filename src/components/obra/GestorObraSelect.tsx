@@ -27,7 +27,11 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useStaffUsers } from "@/hooks/useStaffUsers";
+import {
+  buildCoordenadorOptions,
+  isCoordenadorObra,
+  useStaffUsers,
+} from "@/hooks/useStaffUsers";
 import { useUserRole } from "@/hooks/useUserRole";
 import { projectsRepo } from "@/infra/repositories";
 import { invalidateProjectQueries } from "@/lib/queryKeys";
@@ -63,6 +67,7 @@ export function GestorObraSelect({
   // volta atrás se o banco recusar.
   const [value, setValue] = useState<string | null>(gestorId ?? null);
   const [saving, setSaving] = useState(false);
+  const coordenadores = buildCoordenadorOptions(staffUsers, value);
 
   useEffect(() => {
     setValue(gestorId ?? null);
@@ -71,7 +76,7 @@ export function GestorObraSelect({
   if (roleLoading || !isStaff) return null;
 
   const nomeAtual = value
-    ? (staffUsers.find((u) => u.id === value)?.nome ?? "Gestor")
+    ? (staffUsers.find((u) => u.id === value)?.nome ?? "Coordenador")
     : null;
 
   const handleChange = async (next: string) => {
@@ -89,7 +94,7 @@ export function GestorObraSelect({
         action: "set_gestor_obra",
         projectId,
       });
-      toast.error("Não foi possível salvar o gestor da obra.");
+      toast.error("Não foi possível salvar o coordenador da obra.");
       return;
     }
     // O gestor aparece nos cards e no filtro do Painel de Obras: as listas
@@ -98,17 +103,17 @@ export function GestorObraSelect({
     onSaved?.(nextId);
     toast.success(
       nextId
-        ? `Gestor da obra: ${staffUsers.find((u) => u.id === nextId)?.nome ?? "atualizado"}`
-        : "Gestor da obra removido",
+        ? `Coordenador da obra: ${staffUsers.find((u) => u.id === nextId)?.nome ?? "atualizado"}`
+        : "Coordenador da obra removido",
     );
   };
 
   const selectItems = (
     <SelectContent>
-      <SelectItem value={SEM_GESTOR}>Sem gestor definido</SelectItem>
-      {staffUsers.map((u) => (
-        <SelectItem key={u.id} value={u.id}>
-          {u.nome}
+      <SelectItem value={SEM_GESTOR}>Sem coordenador definido</SelectItem>
+      {coordenadores.map((u) => (
+        <SelectItem key={u.id} value={u.id} disabled={!isCoordenadorObra(u)}>
+          {u.nome}{!isCoordenadorObra(u) ? " (coordenador atual)" : ""}
         </SelectItem>
       ))}
     </SelectContent>
@@ -122,9 +127,11 @@ export function GestorObraSelect({
         disabled={saving}
       >
         <SelectTrigger
-          aria-label="Gestor da obra"
+          aria-label="Coordenador da obra"
           title={
-            nomeAtual ? `Gestor da obra: ${nomeAtual}` : "Definir gestor da obra"
+            nomeAtual
+              ? `Coordenador da obra: ${nomeAtual}`
+              : "Definir coordenador da obra"
           }
           className={cn(
             "h-8 w-auto max-w-[200px] gap-1.5 rounded-full border px-3 text-xs font-medium",
@@ -140,7 +147,7 @@ export function GestorObraSelect({
             <UserCog className="h-3.5 w-3.5 shrink-0" />
           )}
           <span className="truncate">
-            {nomeAtual ?? "Definir gestor"}
+            {nomeAtual ?? "Definir coordenador"}
           </span>
         </SelectTrigger>
         {selectItems}
@@ -163,7 +170,7 @@ export function GestorObraSelect({
             className="inline-flex items-center gap-2 text-sm font-semibold"
           >
             <UserCog className="h-4 w-4" />
-            Gestor da obra
+            Coordenador da obra
           </Label>
           <p className="text-xs text-muted-foreground">
             Um único responsável por obra. Aparece nos cards e alimenta o
@@ -186,7 +193,7 @@ export function GestorObraSelect({
               id={`gestor-obra-${projectId}`}
               className="w-full bg-background sm:w-64"
             >
-              <SelectValue placeholder="Selecione o gestor" />
+              <SelectValue placeholder="Selecione o coordenador" />
             </SelectTrigger>
             {selectItems}
           </Select>
@@ -195,7 +202,7 @@ export function GestorObraSelect({
       {!value && (
         <p className="mt-3 flex items-start gap-1.5 text-xs text-warning">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          Sem gestor definido, esta obra não aparece em nenhum filtro por
+          Sem coordenador definido, esta obra não aparece em nenhum filtro por
           responsável.
         </p>
       )}

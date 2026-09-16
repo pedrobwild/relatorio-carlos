@@ -34,7 +34,11 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { countBusinessDaysInclusive } from "@/lib/businessDays";
 import { cn } from "@/lib/utils";
-import { useStaffUsers } from "@/hooks/useStaffUsers";
+import {
+  buildCoordenadorOptions,
+  isCoordenadorObra,
+  useStaffUsers,
+} from "@/hooks/useStaffUsers";
 import type { Project, Customer, Activity } from "./types";
 
 /**
@@ -81,6 +85,10 @@ export function TabGeral({
   isSaving,
 }: TabGeralProps) {
   const { data: staffUsers = [] } = useStaffUsers();
+  const coordenadores = buildCoordenadorOptions(
+    staffUsers,
+    project.painel_responsavel_id,
+  );
 
   // Dias úteis derivados do intervalo atual planned_start..planned_end
   const derivedDuration = useMemo(() => {
@@ -154,11 +162,11 @@ export function TabGeral({
                   className="inline-flex items-center gap-2 text-sm font-medium"
                 >
                   <UserCog className="h-4 w-4" />
-                  Gestor da obra
+                  Coordenador da obra
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Único responsável pela obra. Aparece nos cards e alimenta o
-                  filtro por responsável no Painel de Obras.
+                   Um único coordenador por obra. Aparece nos cards e alimenta
+                   o filtro por responsável no Painel de Obras.
                 </p>
               </div>
             </div>
@@ -172,13 +180,17 @@ export function TabGeral({
               }
             >
               <SelectTrigger id="painel_responsavel_id" className="bg-background">
-                <SelectValue placeholder="Selecione o gestor" />
+                 <SelectValue placeholder="Selecione o coordenador" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={SEM_GESTOR}>Sem gestor definido</SelectItem>
-                {staffUsers.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.nome}
+                 <SelectItem value={SEM_GESTOR}>Sem coordenador definido</SelectItem>
+                 {coordenadores.map((u) => (
+                   <SelectItem
+                     key={u.id}
+                     value={u.id}
+                     disabled={!isCoordenadorObra(u)}
+                   >
+                     {u.nome}{!isCoordenadorObra(u) ? " (coordenador atual)" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -186,7 +198,7 @@ export function TabGeral({
             {!project.painel_responsavel_id && (
               <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-500">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                Sem gestor definido, esta obra não aparece em nenhum filtro por
+                 Sem coordenador definido, esta obra não aparece em nenhum filtro por
                 responsável.
               </p>
             )}

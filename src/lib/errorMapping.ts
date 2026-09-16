@@ -76,7 +76,7 @@ const PATTERNS: PatternRule[] = [
       /row[\s-]level\s*security|violates?\s*row|new\s*row\s*violates|\brls\b|policy/i,
     kind: "forbidden",
     userMessage:
-      "Você não tem permissão para acessar este conteúdo. Fale com o gestor da obra.",
+      "Você não tem permissão para acessar este conteúdo. Fale com o coordenador da obra.",
     suggestedAction: "contact_support",
   },
   {
