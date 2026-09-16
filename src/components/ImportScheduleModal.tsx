@@ -34,12 +34,14 @@ interface ImportScheduleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImport: (activities: ActivityFormData[]) => void;
+  startDate?: string | null;
 }
 
 export const ImportScheduleModal = ({
   open,
   onOpenChange,
   onImport,
+  startDate,
 }: ImportScheduleModalProps) => {
   const [step, setStep] = useState<ImportStep>("upload");
   const [rawData, setRawData] = useState<Record<string, unknown>[]>([]);
@@ -53,6 +55,9 @@ export const ImportScheduleModal = ({
     weight: "",
   });
   const [mappedData, setMappedData] = useState<ActivityFormData[]>([]);
+  const [previewSource, setPreviewSource] = useState<"template" | "file">(
+    "file",
+  );
   const [isProcessing, setIsProcessing] = useState(false);
 
   const resetState = () => {
@@ -68,6 +73,7 @@ export const ImportScheduleModal = ({
       weight: "",
     });
     setMappedData([]);
+    setPreviewSource("file");
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -131,8 +137,15 @@ export const ImportScheduleModal = ({
   };
 
   const handleTemplateSelect = (template: ActivityTemplateSet) => {
-    const activities = generateActivitiesFromTemplate(template);
+    const parsedStartDate = startDate
+      ? new Date(`${startDate}T00:00:00`)
+      : new Date();
+    const activities = generateActivitiesFromTemplate(
+      template,
+      Number.isNaN(parsedStartDate.getTime()) ? new Date() : parsedStartDate,
+    );
     setMappedData(activities);
+    setPreviewSource("template");
     setStep("preview");
     toast.success(
       `Template "${template.name}" carregado com ${activities.length} atividades`,
@@ -167,6 +180,7 @@ export const ImportScheduleModal = ({
     }
 
     setMappedData(valid);
+    setPreviewSource("file");
     setStep("preview");
   };
 
@@ -214,7 +228,9 @@ export const ImportScheduleModal = ({
         {step === "preview" && (
           <PreviewStep
             mappedData={mappedData}
-            onBack={() => setStep("mapping")}
+            onBack={() =>
+              setStep(previewSource === "template" ? "upload" : "mapping")
+            }
             onImport={handleImport}
           />
         )}
