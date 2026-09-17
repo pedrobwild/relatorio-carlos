@@ -53,7 +53,7 @@ export function FloatingApprovalBanner({
             : { type: "spring", damping: 25, stiffness: 300 }
         }
         className={cn(
-          "fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50",
+          "fixed bottom-cta mb-4 md:mb-6 left-1/2 -translate-x-1/2 z-50",
           "max-w-md w-[calc(100%-2rem)]",
           "bg-card border rounded-xl shadow-lg px-4 py-3",
           hasOverdue

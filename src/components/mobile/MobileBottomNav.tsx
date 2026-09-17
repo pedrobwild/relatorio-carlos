@@ -95,6 +95,9 @@ export function MobileBottomNav() {
   const isSlotActive = (slot: MobileNavSlot, to: string): boolean => {
     const path = location.pathname;
     if (slot.end) {
+      // Staff sem obra recente: "Obras" cai no mesmo destino de "Início"
+      // (painel-obras). Só "Início" deve aparecer ativo nesse caso.
+      if (slot.id === "obras" && !(projectId ?? lastProjectId)) return false;
       if (path === to) return true;
       if (slot.matchReportHub) {
         const id = projectId ?? lastProjectId;

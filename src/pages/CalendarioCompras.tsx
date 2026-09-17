@@ -282,7 +282,9 @@ function DateCell({
           {value ? format(parseISO(value), "dd/MM/yy") : placeholder}
           {value ? (
             <X
-              className="h-3 w-3 opacity-0 group-hover:opacity-60 hover:text-destructive transition-opacity"
+              className="h-3 w-3 opacity-60 md:opacity-0 md:group-hover:opacity-60 hover:text-destructive transition-opacity"
+              role="button"
+              aria-label="Limpar data"
               onClick={(e) => {
                 e.stopPropagation();
                 onSave(null);
@@ -290,7 +292,7 @@ function DateCell({
               }}
             />
           ) : (
-            <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+            <Pencil className="h-3 w-3 opacity-60 md:opacity-0 md:group-hover:opacity-60 transition-opacity" />
           )}
         </button>
       </PopoverTrigger>
@@ -697,7 +699,7 @@ function ActualCostCell({
           ? fmtCompact(purchase.actual_cost)
           : "Informar"}
       </span>
-      <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+      <Pencil className="h-3 w-3 opacity-60 md:opacity-0 md:group-hover:opacity-60 transition-opacity" />
     </button>
   );
 }

@@ -529,7 +529,8 @@ export default function AtividadeDetalhe() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                className="h-8 w-8 md:h-6 md:w-6 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:focus-within:opacity-100 transition-opacity shrink-0"
+                aria-label="Remover subtarefa"
                 onClick={() => deleteSubtask.mutate(st.id)}
               >
                 <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
@@ -723,7 +724,8 @@ export default function AtividadeDetalhe() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 ml-auto opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity"
+                        className="h-8 w-8 md:h-6 md:w-6 ml-auto md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:focus-within:opacity-100 transition-opacity"
+                        aria-label="Excluir comentário"
                         onClick={() => deleteComment.mutate(c.id)}
                       >
                         <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />

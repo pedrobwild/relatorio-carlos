@@ -46,13 +46,16 @@ export function ResetPasswordDialog({
       return;
     }
     setLoading(true);
-    const success = await onReset(user.id, newPassword);
-    if (success) {
-      setNewPassword("");
-      setConfirmPassword("");
-      setOpen(false);
+    try {
+      const success = await onReset(user.id, newPassword);
+      if (success) {
+        setNewPassword("");
+        setConfirmPassword("");
+        setOpen(false);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

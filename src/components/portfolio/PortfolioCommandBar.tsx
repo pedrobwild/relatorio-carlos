@@ -172,7 +172,8 @@ export function PortfolioCommandBar({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs px-2.5 rounded-lg hidden sm:flex"
+              className="h-8 gap-1.5 text-xs px-2.5 rounded-lg"
+              aria-label="Exportar"
               onClick={onExport}
               disabled={!onExport}
             >
@@ -182,7 +183,8 @@ export function PortfolioCommandBar({
 
             <Button
               size="sm"
-              className="h-8 gap-1.5 text-xs font-semibold px-3 rounded-lg bg-gradient-to-r from-primary to-[hsl(var(--primary-dark))] hover:opacity-90 shadow-sm hidden sm:flex"
+              className="h-8 gap-1.5 text-xs font-semibold px-3 rounded-lg bg-gradient-to-r from-primary to-[hsl(var(--primary-dark))] hover:opacity-90 shadow-sm"
+              aria-label="Nova Obra"
               onClick={() => navigate("/gestao/nova-obra")}
             >
               <Plus className="h-3.5 w-3.5" />

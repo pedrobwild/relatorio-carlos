@@ -19,6 +19,7 @@ import {
 } from "./types";
 import { MilestonesBar } from "./ProjectStateSection";
 import { ProgressSection } from "./ProgressSection";
+import { getHeaderProgressPct } from "./progressPct";
 import type { ProjectWithCustomer } from "@/infra/repositories";
 import type { Activity } from "@/types/report";
 
@@ -83,12 +84,7 @@ export function MobileReportHeader({
   const addressParts = [address, bairro, cep].filter(Boolean);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const progressPct =
-    metrics.totalWorkingDays > 0
-      ? Math.round(
-          (metrics.elapsedWorkingDays / metrics.totalWorkingDays) * 100,
-        )
-      : 0;
+  const progressPct = getHeaderProgressPct(metrics);
 
   return (
     <div className="md:hidden">

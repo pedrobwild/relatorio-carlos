@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toLocalISODate } from "@/lib/localDate";
 import { Loader2, Calendar, ArrowRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,7 @@ interface MobilizacaoCompletionModalProps {
 }
 
 function formatDateForInput(date: Date): string {
-  return date.toISOString().split("T")[0];
+  return toLocalISODate(date);
 }
 
 export function MobilizacaoCompletionModal({

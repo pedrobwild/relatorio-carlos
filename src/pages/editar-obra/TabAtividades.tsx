@@ -523,7 +523,8 @@ function ActivityRow({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-[38px] w-[38px] text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/row:opacity-100 transition-opacity"
+                  className="h-[38px] w-[38px] text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 md:opacity-0 md:group-hover/row:opacity-100 md:focus-visible:opacity-100 transition-opacity"
+                  aria-label="Remover atividade"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -566,7 +567,7 @@ function ActivityRow({
         )}
         {/* Add detail button — BUG-A: only opens panel, no DB write */}
         {!hasDetail && !detailOpen && (
-          <div className="px-3 pb-1 pl-[calc(1.5rem+20px+2rem)] opacity-0 group-hover/row:opacity-100 transition-opacity">
+          <div className="px-3 pb-1 pl-[calc(1.5rem+20px+2rem)] md:opacity-0 md:group-hover/row:opacity-100 md:focus-within:opacity-100 transition-opacity">
             <button
               type="button"
               onClick={onToggleDetail}

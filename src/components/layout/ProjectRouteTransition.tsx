@@ -195,6 +195,17 @@ export function ProjectRouteTransition({
     <div
       key={location.pathname}
       className={reduceMotion ? undefined : "animate-fade-in"}
+      // A animação usa `forwards` e, mesmo terminando em translateY(0), o
+      // wrapper fica com `transform` computado (matriz identidade). Um
+      // ancestral com transform vira o bloco de contenção de QUALQUER
+      // `position: fixed` descendente — FABs e barras fixas das páginas de
+      // obra passavam a ser posicionados em relação a este div, caindo fora
+      // da viewport no celular. Ao terminar, removemos a classe.
+      onAnimationEnd={(e) => {
+        if (e.target === e.currentTarget) {
+          e.currentTarget.classList.remove("animate-fade-in");
+        }
+      }}
     >
       {children}
     </div>

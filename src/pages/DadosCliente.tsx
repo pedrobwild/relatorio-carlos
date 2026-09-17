@@ -211,10 +211,23 @@ export default function DadosCliente({
   const { lookup: lookupCep, loading: cepLoading } = useCepLookup();
 
   useEffect(() => {
-    if (projectId) fetchData();
+    if (!projectId) {
+      // Sem obra na URL não há o que buscar — sair do skeleton em vez de
+      // ficar carregando para sempre.
+      setLoading(false);
+      return;
+    }
+    // Flag de cancelamento: ao trocar de obra em rede lenta, a resposta da
+    // obra anterior chegava depois e sobrescrevia os dados da obra atual.
+    let cancelled = false;
+    fetchData(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  const fetchData = async () => {
+  const fetchData = async (isCancelled: () => boolean = () => false) => {
     setLoading(true);
     try {
       const [studioRes, projectRes] = await Promise.all([
@@ -229,6 +242,7 @@ export default function DadosCliente({
           .eq("id", projectId!)
           .single(),
       ]);
+      if (isCancelled()) return;
 
       if (studioRes.data) {
         const raw = studioRes.data as StudioData;
@@ -268,10 +282,11 @@ export default function DadosCliente({
       }
       if (projectRes.data) setProject(projectRes.data);
     } catch (err) {
+      if (isCancelled()) return;
       console.error("Error fetching client data:", err);
       toast.error("Erro ao carregar dados do cliente");
     } finally {
-      setLoading(false);
+      if (!isCancelled()) setLoading(false);
     }
   };
 

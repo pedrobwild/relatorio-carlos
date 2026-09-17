@@ -105,8 +105,19 @@ export function TabPagamentos({
     .filter((p) => p.paid_at)
     .reduce((sum, p) => sum + p.amount, 0);
 
+  const [adding, setAdding] = useState(false);
+
   const handleAdd = async () => {
-    const ok = await onAdd(newPayment);
+    // Guarda contra toque duplo: sem ela, dois toques em rede lenta criavam
+    // duas parcelas com o mesmo installment_number.
+    if (adding) return;
+    setAdding(true);
+    let ok = false;
+    try {
+      ok = await onAdd(newPayment);
+    } finally {
+      setAdding(false);
+    }
     if (ok)
       setNewPayment({
         description: "",
@@ -230,9 +241,9 @@ export function TabPagamentos({
               </div>
             </div>
             <div className="sm:col-span-5 flex justify-end">
-              <Button onClick={handleAdd}>
+              <Button onClick={handleAdd} disabled={adding}>
                 <Plus className="h-4 w-4 mr-1" />
-                Adicionar Parcela
+                {adding ? "Adicionando…" : "Adicionar Parcela"}
               </Button>
             </div>
           </div>

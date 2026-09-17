@@ -34,7 +34,7 @@ export function AssistantFab() {
         <Button
           aria-label="Abrir assistente de IA"
           size="lg"
-          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 h-14 w-14 rounded-full shadow-lg shadow-primary/30 z-40 p-0"
+          className="fixed bottom-cta mb-4 right-4 md:mb-6 md:right-6 h-14 w-14 rounded-full shadow-lg shadow-primary/30 z-40 p-0"
         >
           <Sparkles className="h-6 w-6" />
         </Button>

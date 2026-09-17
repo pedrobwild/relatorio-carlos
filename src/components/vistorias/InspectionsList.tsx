@@ -158,6 +158,15 @@ export function InspectionsList({
                 key={inspection.id}
                 className="cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.98]"
                 onClick={() => onSelect(inspection)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Abrir vistoria ${inspection.activity_description ?? inspection.inspection_type ?? ""}`.trim()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect(inspection);
+                  }
+                }}
               >
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center justify-between gap-3">
