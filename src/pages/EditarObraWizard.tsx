@@ -201,7 +201,9 @@ export default function EditarObraWizard() {
 
       // Upsert customer data
       if (formData.customer_name && formData.customer_email) {
-        await supabase.from("project_customers").upsert(
+        const { error: customerError } = await supabase
+          .from("project_customers")
+          .upsert(
           {
             project_id: projectId,
             customer_name: formData.customer_name.trim(),
@@ -218,6 +220,10 @@ export default function EditarObraWizard() {
           },
           { onConflict: "project_id,customer_email" },
         );
+        if (customerError)
+          throw new Error(
+            "Falha ao salvar dados do cliente: " + customerError.message,
+          );
       }
 
       // Upsert studio info
@@ -230,7 +236,9 @@ export default function EditarObraWizard() {
         formData.cidade_imovel;
 
       if (hasStudioData) {
-        await supabase.from("project_studio_info" as any).upsert({
+        const { error: studioError } = await supabase
+          .from("project_studio_info" as any)
+          .upsert({
           project_id: projectId,
           nome_do_empreendimento:
             formData.nome_do_empreendimento.trim() || null,
@@ -245,13 +253,22 @@ export default function EditarObraWizard() {
           tipo_de_locacao: formData.tipo_de_locacao || null,
           data_recebimento_chaves: formData.data_recebimento_chaves || null,
         } as any);
+        if (studioError)
+          throw new Error(
+            "Falha ao salvar dados do imóvel: " + studioError.message,
+          );
       }
 
       // Initialize journey if project phase
       if (formData.is_project_phase) {
-        await supabase.rpc("initialize_project_journey", {
-          p_project_id: projectId,
-        });
+        const { error: journeyError } = await supabase.rpc(
+          "initialize_project_journey",
+          { p_project_id: projectId },
+        );
+        if (journeyError)
+          throw new Error(
+            "Falha ao iniciar a jornada do projeto: " + journeyError.message,
+          );
       }
 
       await queryClient.invalidateQueries({ queryKey: projectKeys.all });

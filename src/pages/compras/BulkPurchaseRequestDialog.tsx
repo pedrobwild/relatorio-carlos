@@ -25,7 +25,7 @@ import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+import { invalidatePurchaseQueries } from "@/lib/queryKeys";
 import type { PurchaseType } from "@/hooks/useProjectPurchases";
 
 interface BulkItem {
@@ -154,9 +154,7 @@ export function BulkPurchaseRequestDialog({
           ? "Solicitação criada"
           : `${validItems.length} solicitações criadas`,
       );
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.purchases.list(values.projectId),
-      });
+      invalidatePurchaseQueries();
       clearDraft();
       setLastSavedAt(null);
       onOpenChange(false);
