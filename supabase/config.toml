@@ -71,3 +71,8 @@ verify_jwt = true
 
 [functions.bwild-agent]
 verify_jwt = true
+
+# Chamada pelo trigger notify_executivo_aprovado (pg_net, chave anon).
+# A função valida a etapa da obra e só envia para perfis ativos de users_profile.
+[functions.send-executivo-aprovado]
+verify_jwt = false
