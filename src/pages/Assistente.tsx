@@ -186,7 +186,7 @@ export default function Assistente() {
                   <AlertDialogTrigger asChild>
                     <button
                       aria-label="Excluir conversa"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:text-destructive"
+                      className="md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:focus-within:opacity-100 transition-opacity p-2.5 md:p-1.5 hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

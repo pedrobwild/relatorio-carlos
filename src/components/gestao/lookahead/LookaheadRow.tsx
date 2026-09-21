@@ -10,6 +10,7 @@
  * responsável.
  */
 import { useState } from "react";
+import { toLocalISODate } from "@/lib/localDate";
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -122,7 +123,7 @@ export function LookaheadRow({ activity, windowDays }: Props) {
   const handleStart = async () => {
     if (activity.actual_start) return;
     const ok = await updateActivity(activity.id, {
-      actual_start: new Date().toISOString().slice(0, 10),
+      actual_start: toLocalISODate(new Date()),
     });
     if (ok) {
       toast.success("Atividade marcada como iniciada.");
@@ -131,7 +132,7 @@ export function LookaheadRow({ activity, windowDays }: Props) {
   };
 
   const handleComplete = async () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toLocalISODate(new Date());
     const ok = await updateActivity(activity.id, {
       actual_start: activity.actual_start ?? today,
       actual_end: today,

@@ -300,9 +300,12 @@ export function CreateNcDialog({
     }
   };
 
-  const uploadMediaFiles = async (ncId: string): Promise<string[]> => {
-    if (mediaFiles.length === 0) return [];
+  const uploadMediaFiles = async (
+    ncId: string,
+  ): Promise<{ paths: string[]; failed: number }> => {
+    if (mediaFiles.length === 0) return { paths: [], failed: 0 };
     const paths: string[] = [];
+    let failed = 0;
 
     for (const media of mediaFiles) {
       const safeName = media.file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -312,11 +315,12 @@ export function CreateNcDialog({
         .upload(path, media.file);
       if (error) {
         console.error("Upload failed:", error);
+        failed += 1;
         continue;
       }
       paths.push(path);
     }
-    return paths;
+    return { paths, failed };
   };
 
   const handleSubmit = async () => {
@@ -344,12 +348,27 @@ export function CreateNcDialog({
 
       // Upload media and attach to NC
       if (mediaFiles.length > 0 && nc?.id) {
-        const paths = await uploadMediaFiles(nc.id);
+        const { paths, failed } = await uploadMediaFiles(nc.id);
         if (paths.length > 0) {
-          await supabase
+          const { error: attachError } = await supabase
             .from("non_conformities")
             .update({ evidence_photos_before: paths })
             .eq("id", nc.id);
+          if (attachError) {
+            console.error("Attach evidence failed:", attachError);
+            toast.error(
+              "NC criada, mas as evidências não foram vinculadas. Anexe-as pela tela da NC.",
+            );
+          }
+        }
+        if (failed > 0) {
+          // Antes a falha era silenciosa: a NC nascia sem fotos e o usuário
+          // só descobria depois. Avisamos sem bloquear a criação.
+          toast.warning(
+            failed === 1
+              ? "1 evidência não foi enviada (falha de rede). Anexe-a pela tela da NC."
+              : `${failed} evidências não foram enviadas (falha de rede). Anexe-as pela tela da NC.`,
+          );
         }
       }
 

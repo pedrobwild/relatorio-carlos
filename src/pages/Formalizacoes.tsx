@@ -171,7 +171,7 @@ export default function Formalizacoes() {
       </main>
 
       {isAdmin && (
-        <div className="fixed bottom-6 right-6 lg:hidden">
+        <div className="fixed bottom-cta mb-4 right-4 lg:hidden z-shell">
           <Button
             size="lg"
             onClick={() => navigate(paths.formalizacoesNova)}

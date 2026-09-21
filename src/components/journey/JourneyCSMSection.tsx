@@ -43,7 +43,11 @@ export function JourneyCSMSection({
     phone: csm.phone || "",
   });
 
+  const [saving, setSaving] = useState(false);
+
   const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       const { error } = await journeyRepo.updateCSM(csm.id, {
         name: formData.name,
@@ -131,6 +135,8 @@ export function JourneyCSMSection({
               <Button
                 size="icon"
                 onClick={handleSave}
+                disabled={saving}
+                aria-label="Salvar"
                 className="h-11 w-11 min-h-[44px]"
               >
                 <Check className="h-4 w-4" />

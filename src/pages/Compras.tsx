@@ -262,7 +262,7 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
             Limpar filtros
           </Button>
         )}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-2">
           {isProduto && (
             <Button
               variant="outline"

@@ -18,6 +18,7 @@ import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon, FilterX, Plus, ChevronDown, ChevronUp, Package, FileText, Truck, ArrowUpDown, MoreHorizontal, Trash2, User, Clock, ThumbsUp, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { invalidatePurchaseQueries } from "@/lib/queryKeys";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -282,7 +283,9 @@ function DateCell({
           {value ? format(parseISO(value), "dd/MM/yy") : placeholder}
           {value ? (
             <X
-              className="h-3 w-3 opacity-0 group-hover:opacity-60 hover:text-destructive transition-opacity"
+              className="h-3 w-3 opacity-60 md:opacity-0 md:group-hover:opacity-60 hover:text-destructive transition-opacity"
+              role="button"
+              aria-label="Limpar data"
               onClick={(e) => {
                 e.stopPropagation();
                 onSave(null);
@@ -290,7 +293,7 @@ function DateCell({
               }}
             />
           ) : (
-            <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+            <Pencil className="h-3 w-3 opacity-60 md:opacity-0 md:group-hover:opacity-60 transition-opacity" />
           )}
         </button>
       </PopoverTrigger>
@@ -697,7 +700,7 @@ function ActualCostCell({
           ? fmtCompact(purchase.actual_cost)
           : "Informar"}
       </span>
-      <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+      <Pencil className="h-3 w-3 opacity-60 md:opacity-0 md:group-hover:opacity-60 transition-opacity" />
     </button>
   );
 }
@@ -1834,7 +1837,7 @@ export default function CalendarioCompras() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["all-purchases-calendar"] });
+      invalidatePurchaseQueries();
       toast.success("Custo real atualizado");
     },
     onError: (e) => {
@@ -1893,10 +1896,7 @@ export default function CalendarioCompras() {
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["all-purchases-calendar"] });
-      queryClient.invalidateQueries({
-        queryKey: ["purchase-installments-totals"],
-      });
+      invalidatePurchaseQueries();
       const msg =
         vars.value === "partial"
           ? "Pagamento parcial registrado"
@@ -1952,7 +1952,7 @@ export default function CalendarioCompras() {
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["all-purchases-calendar"] });
+      invalidatePurchaseQueries();
       toast.success(
         vars.field === "planned_purchase_date"
           ? "Data da compra atualizada"
@@ -2025,7 +2025,7 @@ export default function CalendarioCompras() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["all-purchases-calendar"] });
+      invalidatePurchaseQueries();
     },
     onError: (e: Error) => {
       console.error(e);
@@ -2058,7 +2058,7 @@ export default function CalendarioCompras() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["all-purchases-calendar"] });
+      invalidatePurchaseQueries();
       toast.success("Solicitação de compra excluída");
       setDeleteTarget(null);
     },

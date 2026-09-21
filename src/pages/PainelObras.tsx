@@ -4908,6 +4908,18 @@ function MobilePainelView({
               </span>
             )}
           </Button>
+
+          {/* "Nova obra" no mobile: no desktop fica nas actions do PageHeader
+              (hidden md:flex); aqui era inexistente fora do estado vazio. */}
+          <Button
+            type="button"
+            onClick={onCreate}
+            className="shrink-0 h-11 w-11 p-0"
+            aria-label="Nova obra"
+            title="Nova obra"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Linha secundária: contador + limpar (só quando há filtros) */}

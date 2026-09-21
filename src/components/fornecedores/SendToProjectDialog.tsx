@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { invalidatePurchaseQueries } from "@/lib/queryKeys";
 import { ArrowRight } from "lucide-react";
 
 interface PriceItem {
@@ -91,7 +92,7 @@ export function SendToProjectDialog({
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["fornecedor-purchases"] });
+      invalidatePurchaseQueries();
       toast({ title: "Item enviado para a obra com sucesso" });
       onOpenChange(false);
       setProjectId("");

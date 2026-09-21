@@ -195,7 +195,8 @@ export function ExecutivoPDFViewerModal({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            className="h-8 w-8 md:h-6 md:w-6 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:focus-within:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            aria-label="Excluir comentário"
                             onClick={() => deleteComment(comment.id)}
                           >
                             <Trash2 className="h-3 w-3" />

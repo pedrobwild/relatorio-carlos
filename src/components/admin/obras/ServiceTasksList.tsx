@@ -421,7 +421,7 @@ function TaskRow({ task, staffUsers, onUpdate, onDelete }: TaskRowProps) {
         size="icon"
         variant="ghost"
         onClick={onDelete}
-        className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="h-8 w-8 md:h-6 md:w-6 text-muted-foreground hover:text-destructive shrink-0 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:focus-within:opacity-100 transition-opacity"
         title="Remover tarefa"
         aria-label="Remover tarefa"
       >

@@ -250,7 +250,7 @@ export default function MinhasObras() {
                   }
                 >
                   {/* Projects List */}
-                  <div className="space-y-3">
+                  <div className="space-y-3 min-w-0">
                     <h3 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
                       {hasMultipleProjects ? "Meus Projetos" : "Meu Projeto"}
                     </h3>

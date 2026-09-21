@@ -204,7 +204,7 @@ const Projeto3D = () => {
                       )}
                       {isStaff && (
                         <button
-                          className="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur-sm rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-1.5 right-1.5 bg-background/80 backdrop-blur-sm rounded-full p-1.5 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:focus-within:opacity-100 transition-opacity"
                           onClick={(e) => {
                             e.stopPropagation();
                             deletePhoto(photo);

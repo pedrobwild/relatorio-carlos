@@ -203,13 +203,14 @@ function ProjectCard({
       )}
     >
       {/* Quick actions menu */}
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+      <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:focus-within:opacity-100 transition-opacity z-10">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm border border-border/50"
+              className="h-9 w-9 md:h-7 md:w-7 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm border border-border/50"
+              aria-label="Ações da obra"
             >
               <MoreHorizontal className="h-3.5 w-3.5" />
             </Button>

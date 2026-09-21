@@ -510,6 +510,27 @@ export function invalidateActivityQueries(
 /**
  * Invalidate formalization queries after changes
  */
+/**
+ * Invalida TODAS as visões de compras de uma vez.
+ *
+ * As compras aparecem em quatro lugares com chaves diferentes: aba Compras da
+ * obra (`purchases.list`/`alerts`), Calendário de Compras
+ * (`all-purchases-calendar` + `purchase-installments-totals`), relatórios por
+ * criação (`purchases-by-creation`) e histórico do fornecedor
+ * (`fornecedor-purchases`). Cada tela invalidava só a própria chave e as
+ * outras mostravam dados antigos até recarregar — no celular isso parecia
+ * "não salvou".
+ */
+export function invalidatePurchaseQueries() {
+  queryClient.invalidateQueries({ queryKey: queryKeys.purchases.all });
+  queryClient.invalidateQueries({ queryKey: ["all-purchases-calendar"] });
+  queryClient.invalidateQueries({
+    queryKey: ["purchase-installments-totals"],
+  });
+  queryClient.invalidateQueries({ queryKey: ["purchases-by-creation"] });
+  queryClient.invalidateQueries({ queryKey: ["fornecedor-purchases"] });
+}
+
 export function invalidateFormalizacaoQueries(
   projectId?: string,
   formalizacaoId?: string,

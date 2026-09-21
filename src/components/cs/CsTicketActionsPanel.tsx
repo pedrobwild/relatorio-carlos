@@ -296,7 +296,8 @@ export function CsTicketActionsPanel({ ticketId }: CsTicketActionsPanelProps) {
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && newTitle.trim()) handleCreate();
+              if (e.key === "Enter" && newTitle.trim() && !create.isPending)
+                handleCreate();
             }}
             placeholder="Nova ação… (ex.: Ligar para o cliente)"
             className="h-9 text-sm"

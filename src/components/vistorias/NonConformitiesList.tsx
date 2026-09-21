@@ -390,6 +390,15 @@ export function NonConformitiesList({
                     : ""
                 }`}
                 onClick={() => onSelect(nc)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Abrir não conformidade ${nc.title ?? ""}`.trim()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect(nc);
+                  }
+                }}
               >
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start sm:items-center justify-between gap-3">

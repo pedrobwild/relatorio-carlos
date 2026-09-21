@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { toLocalISODate } from "@/lib/localDate";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -284,7 +285,7 @@ export default function NovaObra() {
     const end = addBusinessDays(start, duration - 1);
     setFormData((prev) => ({
       ...prev,
-      planned_end_date: end.toISOString().split("T")[0],
+      planned_end_date: toLocalISODate(end),
     }));
   };
 
@@ -925,7 +926,7 @@ export default function NovaObra() {
       </PageContainer>
 
       {/* Mobile sticky bottom navigation */}
-      <div className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur-md border-t border-border sm:hidden keyboard-aware">
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-card border-t border-border sm:hidden keyboard-aware">
         <div className="px-4 py-3 pb-safe">
           <div className="flex gap-3">
             {currentStep > 0 ? (

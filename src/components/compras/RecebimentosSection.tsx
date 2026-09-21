@@ -5,6 +5,7 @@
  * comportamento do formulário existente. Só aparece em modo edição.
  */
 import { useMemo, useState } from "react";
+import { toLocalISODate } from "@/lib/localDate";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Package, Plus, Trash2 } from "lucide-react";
@@ -64,7 +65,7 @@ export function RecebimentosSection({
   const remove = useDeletePurchaseReceipt(purchaseId);
 
   const [receivedOn, setReceivedOn] = useState(() =>
-    new Date().toISOString().slice(0, 10),
+    toLocalISODate(new Date()),
   );
   const [quantidade, setQuantidade] = useState<string>("");
   const [valor, setValor] = useState<string>("");

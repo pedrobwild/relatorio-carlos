@@ -37,7 +37,10 @@ export function SCurveSparkline({
   if (chartData.length < 2) return null;
 
   return (
-    <div style={{ width: "100%", height }} className="opacity-80">
+    <div
+      style={{ width: "100%", height }}
+      className="opacity-80 min-w-0 max-w-full overflow-hidden"
+    >
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={chartData}

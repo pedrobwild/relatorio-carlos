@@ -32,9 +32,15 @@ export function EditUserDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await onSave(user.id, { display_name: displayName, email });
-    if (success) setOpen(false);
-    setLoading(false);
+    try {
+      const success = await onSave(user.id, {
+        display_name: displayName,
+        email,
+      });
+      if (success) setOpen(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

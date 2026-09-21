@@ -270,6 +270,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       start_date: formData.start_date || null,
       end_date: formData.end_date || null,
     };
+    let savingInstallments = false;
     try {
       let purchaseId: string;
       if (editingPurchase) {
@@ -280,15 +281,19 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
         purchaseId = result.id;
       }
       // Save payment installments for prestadores
+      savingInstallments = true;
       if (
         input.purchase_type === "prestador" &&
         paymentInstallments.length > 0
       ) {
-        // Delete existing installments
-        await supabase
+        // Delete existing installments — verificando erro: antes, uma falha
+        // aqui (ou no insert abaixo) era engolida pelo catch vazio, o diálogo
+        // fechava como sucesso e as parcelas antigas podiam sumir sem aviso.
+        const { error: deleteError } = await supabase
           .from("purchase_payment_schedule")
           .delete()
           .eq("purchase_id", purchaseId);
+        if (deleteError) throw deleteError;
         // Insert new ones
         const rows = paymentInstallments.map((inst, i) => ({
           purchase_id: purchaseId,
@@ -298,22 +303,37 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
           amount: inst.amount,
           due_date: inst.due_date || null,
         }));
-        await supabase.from("purchase_payment_schedule").insert(rows);
+        const { error: insertError } = await supabase
+          .from("purchase_payment_schedule")
+          .insert(rows);
+        if (insertError) throw insertError;
       } else if (
         input.purchase_type === "prestador" &&
         paymentInstallments.length === 0 &&
         editingPurchase
       ) {
-        await supabase
+        const { error: deleteError } = await supabase
           .from("purchase_payment_schedule")
           .delete()
           .eq("purchase_id", editingPurchase.id);
+        if (deleteError) throw deleteError;
       }
       // Successful save → clear any persisted draft
       clearDraft();
       setIsDialogOpen(false);
-    } catch {
-      // Error toast already handled by mutation onError
+    } catch (err) {
+      // Erros das mutations já geram toast no onError; os acessos diretos ao
+      // cronograma de pagamentos (acima) não passam por mutation, então
+      // avisamos aqui e mantemos o diálogo aberto para o usuário tentar de novo.
+      if (savingInstallments) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : (err as { message?: string } | null)?.message;
+        toast.error("Não foi possível salvar as parcelas de pagamento", {
+          description: message,
+        });
+      }
     }
   };
 
