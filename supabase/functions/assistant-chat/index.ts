@@ -360,7 +360,7 @@ Deno.serve(async (req) => {
             .select('id')
             .single();
           if (convErr) throw new Error('Falha ao criar conversa: ' + convErr.message);
-          conversationId = conv.id;
+          conversationId = String(conv.id);
         }
         send('conversation', { conversation_id: conversationId, request_id: requestId });
 
@@ -387,7 +387,7 @@ Deno.serve(async (req) => {
               SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG +
               '\n\n' + PLANNER_EXTERNAL_DELTA + '\n\n' + EXTERNAL_CATALOG,
           },
-          ...(history ?? []).map((m: { role: string; content: string }) => ({
+          ...((history ?? []) as Array<{ role: string; content: string }>).map((m) => ({
             role: m.role === 'assistant' ? 'assistant' : 'user',
             content: m.content,
           })),
@@ -497,7 +497,7 @@ Deno.serve(async (req) => {
 
             if (rpcErr) {
               const msg = (rpcErr.message || '').toLowerCase();
-              const stepStatus: typeof status =
+              const stepStatus: 'sql_blocked' | 'sql_error' | 'timeout' =
                 msg.includes('proibido') || msg.includes('apenas') || msg.includes('multiplas') || msg.includes('blocos') || msg.includes('esquemas')
                   ? 'sql_blocked'
                   : msg.includes('timeout') || msg.includes('canceling statement')
@@ -900,7 +900,7 @@ Deno.serve(async (req) => {
 // Modo legado não-streaming (mantém compatibilidade com testes)
 // ============================================================
 async function runNonStreaming(opts: {
-  supabase: ReturnType<typeof createClient>;
+  supabase: any;
   userId: string;
   question: string;
   conversationId: string | null;
@@ -940,7 +940,7 @@ async function runNonStreaming(opts: {
         .select('id')
         .single();
       if (convErr) throw new Error('Falha ao criar conversa: ' + convErr.message);
-      conversationId = conv.id;
+      conversationId = String(conv.id);
     }
 
     await supabase.from('assistant_messages').insert({
@@ -966,7 +966,7 @@ async function runNonStreaming(opts: {
               SYSTEM_PROMPT + '\n\n' + SCHEMA_CATALOG +
               '\n\n' + PLANNER_EXTERNAL_DELTA + '\n\n' + EXTERNAL_CATALOG,
           },
-          ...(history ?? []).map((m: { role: string; content: string }) => ({
+          ...((history ?? []) as Array<{ role: string; content: string }>).map((m) => ({
             role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content,
           })),
         ],
@@ -1011,7 +1011,7 @@ async function runNonStreaming(opts: {
         const r = await supabase.rpc('execute_assistant_query', { p_sql: step.sql });
         if (r.error) {
           const msg = (r.error.message || '').toLowerCase();
-          const stepStatus: typeof status =
+          const stepStatus: 'sql_blocked' | 'sql_error' | 'timeout' =
             msg.includes('proibido') || msg.includes('apenas')
               ? 'sql_blocked'
               : msg.includes('timeout')

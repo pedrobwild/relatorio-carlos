@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }, 500);
   }
 
-  const db = createClient(SUPABASE_URL, SERVICE_KEY);
+  const db: any = createClient(SUPABASE_URL, SERVICE_KEY);
 
   try {
     const body = await req.json();
@@ -332,7 +332,7 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
  * Uses 'general' notification type (valid enum value).
  */
 async function notifyAdmins(
-  db: ReturnType<typeof createClient>,
+  db: any,
   entityType: string,
   sourceId: string,
   message: string,

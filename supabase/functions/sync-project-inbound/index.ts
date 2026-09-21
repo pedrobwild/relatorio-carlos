@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }, 500);
     }
 
-    const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const db: any = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body = await req.json();
     const { project, source_id, budget, client } = body;
@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
  * the project-documents bucket + project_documents table.
  */
 async function downloadAndStoreContract(
-  db: ReturnType<typeof createClient>,
+  db: any,
   projectId: string,
   contractFileUrl: string,
   projectName: string,
@@ -395,7 +395,7 @@ Retorne o JSON com estas 3 chaves: project_fields, customer_details, payment_sch
  * Download the contract PDF, send to AI for extraction, and update the project.
  */
 async function enrichProjectWithAI(
-  db: ReturnType<typeof createClient>,
+  db: any,
   projectId: string,
   existingData: Record<string, unknown>,
   contractFileUrl: string,
@@ -658,7 +658,7 @@ async function processBudget(
         project_id: projectId,
         sequential_code: project.budget_code ?? null,
         project_name: project.name?.trim() ?? "",
-        client_name: (client?.name ?? project.client_name)?.trim() ?? "",
+        client_name: project.client_name?.trim() ?? "",
         property_type: project.property_type ?? null,
         city: project.city ?? null,
         bairro: project.neighborhood ?? null,
@@ -790,7 +790,7 @@ async function processBudget(
  * Kept as a no-op safety net; the trigger does the real work.
  */
 async function assignDefaultTeamMembers(
-  _db: ReturnType<typeof createClient>,
+  _db: any,
   _projectId: string,
 ) {
   // The DB trigger auto_assign_default_project_members handles this now.
@@ -812,7 +812,7 @@ const DEFAULT_CUSTOMER_PASSWORD = "512451";
  * (in which case the project_customers record exists but is unlinked).
  */
 async function createCustomerUser(
-  db: ReturnType<typeof createClient>,
+  db: any,
   projectId: string,
   email: string,
   displayName: string,
@@ -912,7 +912,7 @@ async function createCustomerUser(
  * This runs BEFORE AI enrichment, so AI only fills in what is missing.
  */
 async function seedClientDetails(
-  db: ReturnType<typeof createClient>,
+  db: any,
   projectId: string,
   customerEmail: string,
   client: Record<string, unknown>,
@@ -968,7 +968,7 @@ function parseMetragemNumber(value: unknown): number | null {
  * project_documents (category: plano_reforma) so it shows in the Documents tab.
  */
 async function downloadAndStoreFloorPlan(
-  db: ReturnType<typeof createClient>,
+  db: any,
   projectId: string,
   floorPlanUrl: string,
   projectName: string,
