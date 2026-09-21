@@ -215,7 +215,7 @@ function mapCategoria(cat: string | null | undefined): string {
 }
 
 async function logSyncResult(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   sourceSystem: string,
   sourceId: string,
   syncId: string,

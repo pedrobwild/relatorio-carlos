@@ -24,7 +24,7 @@ function isFutureDate(s: string, types: string[]): boolean {
 }
 
 async function getUserRole(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   userId: string
 ): Promise<string> {
   const { data } = await supabase
@@ -40,7 +40,7 @@ async function getUserRole(
 }
 
 async function logEvent(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   stageDateId: string,
   actorUserId: string,
   actorRole: string,
