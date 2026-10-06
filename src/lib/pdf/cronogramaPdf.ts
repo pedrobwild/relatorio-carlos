@@ -41,6 +41,11 @@ export interface CronogramaPdfOptions {
   now?: Date;
   /** When provided, overrides the auto-generated filename. */
   fileName?: string;
+  /**
+   * "planned" = apenas o planejado; "comparison" = planejado x realizado.
+   * Default: automático (planejado se a obra não iniciou).
+   */
+  mode?: "planned" | "comparison";
 }
 
 export class CronogramaPdfEmptyError extends Error {
@@ -310,6 +315,12 @@ function computeProjectStats(activities: ProjectActivity[], now: Date) {
 
 type AutoTableFn = typeof import("jspdf-autotable").default;
 
+/** Nome da atividade + descrição detalhada (quando houver) abaixo. */
+function activityLabel(act: ProjectActivity): string {
+  const desc = act.detailed_description?.trim();
+  return desc ? `${act.description}\n${desc}` : act.description;
+}
+
 function buildEtapaRow(label: string, columns: number) {
   return [
     {
@@ -353,7 +364,7 @@ function buildNotStartedTable(
       counter++;
       body.push([
         counter,
-        act.description,
+        activityLabel(act),
         formatDate(act.planned_start),
         formatDate(act.planned_end),
         durationBusinessDays(act).toString(),
@@ -451,7 +462,7 @@ function buildInProgressTable(
 
       body.push([
         counter,
-        act.description,
+        activityLabel(act),
         formatDate(act.planned_start),
         formatDate(act.planned_end),
         formatDate(act.actual_start),
