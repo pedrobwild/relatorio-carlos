@@ -41,6 +41,11 @@ export interface CronogramaPdfOptions {
   now?: Date;
   /** When provided, overrides the auto-generated filename. */
   fileName?: string;
+  /**
+   * "planned" = apenas o planejado; "comparison" = planejado x realizado.
+   * Default: automático (planejado se a obra não iniciou).
+   */
+  mode?: "planned" | "comparison";
 }
 
 export class CronogramaPdfEmptyError extends Error {
@@ -148,7 +153,9 @@ export async function generateCronogramaPdf(
   const marginX = 12;
 
   const sorted = sortActivities(activities);
-  const notStarted = isProjectNotStarted(activities);
+  const notStarted = options.mode
+    ? options.mode === "planned"
+    : isProjectNotStarted(activities);
   const now = options.now ?? new Date();
 
   const plannedStarts = sorted
@@ -189,7 +196,9 @@ export async function generateCronogramaPdf(
     locale: ptBR,
   });
   infoLines.push(`Emitido em: ${emittedAt}`);
-  infoLines.push(`Status geral: ${notStarted ? "Não iniciada" : "Em andamento"}`);
+  infoLines.push(
+    `Visão: ${notStarted ? "Apenas planejado" : "Planejado x realizado"}`,
+  );
   if (minStart) infoLines.push(`Início previsto: ${formatDate(minStart)}`);
   if (maxEnd) infoLines.push(`Término previsto: ${formatDate(maxEnd)}`);
 
@@ -231,9 +240,10 @@ export async function generateCronogramaPdf(
   }
 
   const totalPages = doc.getNumberOfPages();
-  const footerNote = notStarted
-    ? "Cronograma preliminar — obra ainda não iniciada."
-    : "";
+  const footerNote =
+    notStarted && isProjectNotStarted(activities)
+      ? "Cronograma preliminar — obra ainda não iniciada."
+      : "";
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
@@ -310,6 +320,12 @@ function computeProjectStats(activities: ProjectActivity[], now: Date) {
 
 type AutoTableFn = typeof import("jspdf-autotable").default;
 
+/** Nome da atividade + descrição detalhada (quando houver) abaixo. */
+function activityLabel(act: ProjectActivity): string {
+  const desc = act.detailed_description?.trim();
+  return desc ? `${act.description}\n${desc}` : act.description;
+}
+
 function buildEtapaRow(label: string, columns: number) {
   return [
     {
@@ -353,7 +369,7 @@ function buildNotStartedTable(
       counter++;
       body.push([
         counter,
-        act.description,
+        activityLabel(act),
         formatDate(act.planned_start),
         formatDate(act.planned_end),
         durationBusinessDays(act).toString(),
@@ -451,7 +467,7 @@ function buildInProgressTable(
 
       body.push([
         counter,
-        act.description,
+        activityLabel(act),
         formatDate(act.planned_start),
         formatDate(act.planned_end),
         formatDate(act.actual_start),
