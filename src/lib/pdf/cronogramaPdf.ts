@@ -153,7 +153,9 @@ export async function generateCronogramaPdf(
   const marginX = 12;
 
   const sorted = sortActivities(activities);
-  const notStarted = isProjectNotStarted(activities);
+  const notStarted = options.mode
+    ? options.mode === "planned"
+    : isProjectNotStarted(activities);
   const now = options.now ?? new Date();
 
   const plannedStarts = sorted
@@ -194,7 +196,9 @@ export async function generateCronogramaPdf(
     locale: ptBR,
   });
   infoLines.push(`Emitido em: ${emittedAt}`);
-  infoLines.push(`Status geral: ${notStarted ? "Não iniciada" : "Em andamento"}`);
+  infoLines.push(
+    `Visão: ${notStarted ? "Apenas planejado" : "Planejado x realizado"}`,
+  );
   if (minStart) infoLines.push(`Início previsto: ${formatDate(minStart)}`);
   if (maxEnd) infoLines.push(`Término previsto: ${formatDate(maxEnd)}`);
 
@@ -236,9 +240,10 @@ export async function generateCronogramaPdf(
   }
 
   const totalPages = doc.getNumberOfPages();
-  const footerNote = notStarted
-    ? "Cronograma preliminar — obra ainda não iniciada."
-    : "";
+  const footerNote =
+    notStarted && isProjectNotStarted(activities)
+      ? "Cronograma preliminar — obra ainda não iniciada."
+      : "";
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
