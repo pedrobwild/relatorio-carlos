@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsResponse, jsonResponse } from "../_shared/cors.ts";
-import { authenticateRequest } from "../_shared/auth.ts";
+import { authenticateRequest, isAdminUser, isStaffUser } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return corsResponse();
@@ -9,8 +9,7 @@ serve(async (req) => {
     const { user, supabaseAdmin } = await authenticateRequest(req);
 
     // Check staff access
-    const { data: isStaff } = await supabaseAdmin.rpc('is_staff', { _user_id: user.id });
-    if (!isStaff) {
+    if (!(await isStaffUser(supabaseAdmin, user.id))) {
       return jsonResponse({ error: 'Staff access required' }, 403);
     }
 
@@ -23,6 +22,12 @@ serve(async (req) => {
     const validRoles = ['admin', 'engineer', 'customer', 'manager', 'suprimentos', 'financeiro', 'gestor', 'cs'];
     if (!validRoles.includes(role)) {
       return jsonResponse({ error: 'Invalid role' }, 400);
+    }
+
+    // Conta de equipe só é criada por admin — senão qualquer colaborador
+    // criaria um admin. Clientes seguem liberados para toda a equipe.
+    if (role !== 'customer' && !(await isAdminUser(supabaseAdmin, user.id))) {
+      return jsonResponse({ error: 'Apenas administradores podem criar contas da equipe' }, 403);
     }
 
     // Check if user already exists — return their ID so project creation can continue
@@ -45,6 +50,9 @@ serve(async (req) => {
       email,
       password,
       email_confirm: true,
+      // O papel em user_metadata é só informativo: o próprio usuário edita
+      // esse campo, então os triggers de auth.users o ignoram e a conta nasce
+      // 'customer'. O papel efetivo é gravado logo abaixo, com service role.
       user_metadata: {
         display_name: display_name || email.split('@')[0],
         role,
@@ -64,13 +72,17 @@ serve(async (req) => {
       return jsonResponse({ error: 'Falha ao criar usuário' }, 500);
     }
 
-    // Update user_roles if not customer
+    // Papel de equipe: os três stores precisam ser gravados aqui.
+    const roleWriteErrors: string[] = [];
     if (role !== 'customer') {
       const { error: updateRoleError } = await supabaseAdmin
         .from('user_roles')
         .update({ role })
         .eq('user_id', newUser.user.id);
-      if (updateRoleError) console.error('Error updating user_roles:', updateRoleError);
+      if (updateRoleError) {
+        console.error('Error updating user_roles:', updateRoleError);
+        roleWriteErrors.push('user_roles');
+      }
     }
 
     // Update users_profile
@@ -78,7 +90,20 @@ serve(async (req) => {
       .from('users_profile')
       .update({ perfil: role, nome: display_name || email.split('@')[0] })
       .eq('id', newUser.user.id);
-    if (updateProfileError) console.error('Error updating users_profile:', updateProfileError);
+    if (updateProfileError) {
+      console.error('Error updating users_profile:', updateProfileError);
+      roleWriteErrors.push('users_profile');
+    }
+
+    // profiles.role é o terceiro store de papel (lido por user_is_admin()).
+    const { error: updateLegacyProfileError } = await supabaseAdmin
+      .from('profiles')
+      .update({ role })
+      .eq('user_id', newUser.user.id);
+    if (updateLegacyProfileError) {
+      console.error('Error updating profiles:', updateLegacyProfileError);
+      roleWriteErrors.push('profiles');
+    }
 
     // Add user to selected projects
     if (project_ids && Array.isArray(project_ids) && project_ids.length > 0) {
@@ -92,6 +117,15 @@ serve(async (req) => {
         .from('project_members')
         .insert(projectMemberRecords);
       if (projectMembersError) console.error('Error adding user to projects:', projectMembersError);
+    }
+
+    // Falha em gravar o papel deixa a conta como cliente (seguro), mas o
+    // admin precisa saber para corrigir pela tela de papéis.
+    if (role !== 'customer' && roleWriteErrors.length > 0) {
+      return jsonResponse({
+        error: `Usuário criado, mas o papel "${role}" não foi aplicado (${roleWriteErrors.join(', ')}). Ajuste o papel na tela de usuários.`,
+        user: { id: newUser.user.id, email: newUser.user.email },
+      }, 500);
     }
 
     return jsonResponse({
