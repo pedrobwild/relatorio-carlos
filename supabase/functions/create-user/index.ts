@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsResponse, jsonResponse } from "../_shared/cors.ts";
-import { authenticateRequest } from "../_shared/auth.ts";
+import { authenticateRequest, isAdminUser, isStaffUser } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return corsResponse();
@@ -9,8 +9,7 @@ serve(async (req) => {
     const { user, supabaseAdmin } = await authenticateRequest(req);
 
     // Check staff access
-    const { data: isStaff } = await supabaseAdmin.rpc('is_staff', { _user_id: user.id });
-    if (!isStaff) {
+    if (!(await isStaffUser(supabaseAdmin, user.id))) {
       return jsonResponse({ error: 'Staff access required' }, 403);
     }
 
@@ -23,6 +22,12 @@ serve(async (req) => {
     const validRoles = ['admin', 'engineer', 'customer', 'manager', 'suprimentos', 'financeiro', 'gestor', 'cs'];
     if (!validRoles.includes(role)) {
       return jsonResponse({ error: 'Invalid role' }, 400);
+    }
+
+    // Conta de equipe só é criada por admin — senão qualquer colaborador
+    // criaria um admin. Clientes seguem liberados para toda a equipe.
+    if (role !== 'customer' && !(await isAdminUser(supabaseAdmin, user.id))) {
+      return jsonResponse({ error: 'Apenas administradores podem criar contas da equipe' }, 403);
     }
 
     // Check if user already exists — return their ID so project creation can continue
@@ -45,6 +50,9 @@ serve(async (req) => {
       email,
       password,
       email_confirm: true,
+      // Os triggers de auth.users só confiam no papel de app_metadata (que só
+      // o service role escreve); user_metadata é editável pelo próprio usuário.
+      app_metadata: { role },
       user_metadata: {
         display_name: display_name || email.split('@')[0],
         role,
@@ -79,6 +87,13 @@ serve(async (req) => {
       .update({ perfil: role, nome: display_name || email.split('@')[0] })
       .eq('id', newUser.user.id);
     if (updateProfileError) console.error('Error updating users_profile:', updateProfileError);
+
+    // profiles.role é o terceiro store de papel (lido por user_is_admin()).
+    const { error: updateLegacyProfileError } = await supabaseAdmin
+      .from('profiles')
+      .update({ role })
+      .eq('user_id', newUser.user.id);
+    if (updateLegacyProfileError) console.error('Error updating profiles:', updateLegacyProfileError);
 
     // Add user to selected projects
     if (project_ids && Array.isArray(project_ids) && project_ids.length > 0) {

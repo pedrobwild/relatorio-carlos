@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsResponse, jsonResponse } from "../_shared/cors.ts";
-import { authenticateRequest } from "../_shared/auth.ts";
+import { assertCanManageAccount, authenticateRequest, isStaffUser } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return corsResponse();
@@ -10,8 +10,7 @@ serve(async (req) => {
     const { user, supabaseAdmin } = await authenticateRequest(req);
 
     // Check staff access
-    const { data: isStaff } = await supabaseAdmin.rpc('is_staff', { _user_id: user.id });
-    if (!isStaff) {
+    if (!(await isStaffUser(supabaseAdmin, user.id))) {
       return jsonResponse({ error: 'Staff access required' }, 403);
     }
 
@@ -24,6 +23,8 @@ serve(async (req) => {
     if (user_id === user.id) {
       return jsonResponse({ error: 'You cannot delete your own account' }, 400);
     }
+
+    await assertCanManageAccount(supabaseAdmin, user.id, user_id);
 
     console.log('Deleting user:', user_id);
 
