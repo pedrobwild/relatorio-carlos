@@ -70,6 +70,8 @@ import {
 } from "@/hooks/useCsTickets";
 import { CsTicketDialog } from "@/components/cs/CsTicketDialog";
 import { useAllCsActionsSummary } from "@/hooks/useCsTicketActions";
+import { usePinnedInternalNotes } from "@/hooks/useProjectInternalNotes";
+import { PinnedInternalNoteIndicator } from "@/components/internal-notes/PinnedInternalNoteIndicator";
 
 const ALL = "__all__";
 
@@ -147,6 +149,8 @@ export default function CsOperacional() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: tickets = [], isLoading } = useCsTickets();
   const { data: actionsSummary = {} } = useAllCsActionsSummary();
+  // Nota interna fixada por obra (uma query só; vazio sem permissão)
+  const { byProjectId: pinnedNotes } = usePinnedInternalNotes();
   const updateMutation = useUpdateCsTicket();
   const deleteMutation = useDeleteCsTicket();
 
@@ -292,17 +296,24 @@ export default function CsOperacional() {
         width: "minmax(220px, 1.4fr)",
         cell: (t) => (
           <div className="flex flex-col min-w-0">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/gestao/obra/${t.project_id}`);
-              }}
-              className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate text-left flex items-center gap-1 group/link"
-            >
-              <span className="truncate">{t.project_name ?? "—"}</span>
-              <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-100 shrink-0" />
-            </button>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/gestao/obra/${t.project_id}`);
+                }}
+                className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate text-left flex items-center gap-1 group/link min-w-0"
+              >
+                <span className="truncate">{t.project_name ?? "—"}</span>
+                <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-100 shrink-0" />
+              </button>
+              <PinnedInternalNoteIndicator
+                note={pinnedNotes.get(t.project_id)}
+                variant="badge"
+                className="shrink-0"
+              />
+            </div>
             {t.customer_name && (
               <span className="text-xs text-muted-foreground truncate">
                 {t.customer_name}
@@ -554,7 +565,7 @@ export default function CsOperacional() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [navigate, actionsSummary],
+    [navigate, actionsSummary, pinnedNotes],
   );
 
   return (

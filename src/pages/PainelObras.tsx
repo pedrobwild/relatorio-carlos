@@ -17,6 +17,11 @@ import {
   usePainelPeriodContext,
 } from "@/pages/PainelObras/painelPeriodContext";
 import {
+  PainelInternalNotesProvider,
+  usePainelPinnedNote,
+  usePainelPinnedNotes,
+} from "@/pages/PainelObras/painelInternalNotesContext";
+import {
   CalendarIcon,
   X,
   AlertTriangle,
@@ -48,6 +53,7 @@ import {
   Download,
   TrendingUp,
   DollarSign,
+  StickyNote,
 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, SectionCard } from "@/components/ui-premium";
@@ -76,6 +82,9 @@ import {
   type ExcecaoKind,
 } from "@/hooks/usePainelExcecoes";
 import { usePortfolioSnapshot } from "@/hooks/usePortfolioSnapshot";
+import { usePinnedInternalNotes } from "@/hooks/useProjectInternalNotes";
+import { PinnedInternalNoteIndicator } from "@/components/internal-notes/PinnedInternalNoteIndicator";
+import { getInternalNoteCategoryMeta } from "@/components/internal-notes/internalNoteMeta";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -641,6 +650,9 @@ export default function PainelObras() {
     usePainelExcecoes();
   const { byId: snapshotById, isLoading: snapshotLoading } =
     usePortfolioSnapshot();
+  // Observação interna fixada de cada obra (staff-only) — explica, p.ex.,
+  // por que a obra está sem atualização. Distribuída via contexto.
+  const { byProjectId: pinnedNotesById } = usePinnedInternalNotes();
   const excecaoParam = searchParams.get("excecao");
   const activeExcecao: ExcecaoKind | null =
     excecaoParam === "nc" ||
@@ -1385,6 +1397,7 @@ export default function PainelObras() {
         },
       }}
     >
+    <PainelInternalNotesProvider value={pinnedNotesById}>
     <TooltipProvider delayDuration={200}>
       <PageContainer maxWidth="screen">
         <PageHeader
@@ -2380,6 +2393,7 @@ export default function PainelObras() {
         }}
       />
     </TooltipProvider>
+    </PainelInternalNotesProvider>
     </PainelPeriodProvider>
   );
 }
@@ -2632,6 +2646,7 @@ function ObraRow({
   onOpenDados,
 }: ObraRowProps) {
   const stickyBase = "bg-card group-hover:bg-muted/50 transition-colors";
+  const pinnedNote = usePainelPinnedNote(obra.id);
 
   return (
     <>
@@ -2757,24 +2772,31 @@ function ObraRow({
           </div>
           {(() => {
             const h = hoursSince(obra.ultima_atualizacao);
-            if (h == null || h <= 72) return null;
-            const days = Math.floor(h / 24);
-            const isCritical = h > 120;
+            const isStale = h != null && h > 72;
+            if (!isStale && !pinnedNote) return null;
+            const days = isStale ? Math.floor(h / 24) : 0;
+            const isCritical = isStale && h > 120;
+            // Observação interna fixada fica ao lado do selo de atraso: é o
+            // "porquê" da obra estar sem atualização. Irmã do <button> do
+            // nome (nunca dentro dele) — o indicador é focável.
             return (
-              <div className="mt-1 pl-7">
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 h-4 px-1.5 rounded text-[10px] font-medium tabular-nums",
-                    isCritical
-                      ? "bg-destructive/10 text-destructive"
-                      : "bg-warning/10 text-warning",
-                  )}
-                  aria-label={`Sem atualização há ${days} dias`}
-                  title={`Última atualização há ${Math.round(h)}h`}
-                >
-                  <Clock className="h-2.5 w-2.5" aria-hidden />
-                  sem atualização há {days}d
-                </span>
+              <div className="mt-1 pl-7 flex flex-wrap items-center gap-1">
+                {isStale && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 h-4 px-1.5 rounded text-[10px] font-medium tabular-nums",
+                      isCritical
+                        ? "bg-destructive/10 text-destructive"
+                        : "bg-warning/10 text-warning",
+                    )}
+                    aria-label={`Sem atualização há ${days} dias`}
+                    title={`Última atualização há ${Math.round(h)}h`}
+                  >
+                    <Clock className="h-2.5 w-2.5" aria-hidden />
+                    sem atualização há {days}d
+                  </span>
+                )}
+                <PinnedInternalNoteIndicator note={pinnedNote} />
               </div>
             );
           })()}
@@ -4003,6 +4025,7 @@ function KanbanCard({
 }: KanbanCardProps) {
   const displayStatus = computeDisplayStatus(obra);
   const overdueDays = computeOverdueDays(obra);
+  const pinnedNote = usePainelPinnedNote(obra.id);
 
   // Card é navegável (clique/Enter abrem a obra). Controles internos
   // interrompem propagação para preservar interação inline (mover etapa).
@@ -4108,7 +4131,7 @@ function KanbanCard({
         </div>
       )}
 
-      {/* Linha inferior: entrega + responsável + atraso */}
+      {/* Linha inferior: entrega + responsável + atraso + observação interna */}
       <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
         {obra.entrega_oficial && (
           <span className="inline-flex items-center gap-1 tabular-nums">
@@ -4172,6 +4195,7 @@ function KanbanCard({
             <Clock className="h-3 w-3" />+{overdueDays}d
           </span>
         )}
+        <PinnedInternalNoteIndicator note={pinnedNote} />
       </div>
 
       {/* Mover obra de coluna — fica oculto até hover/focus para reduzir
@@ -4854,6 +4878,7 @@ function MobilePainelView({
   expandedIds,
   onToggleExpanded,
 }: MobilePainelViewProps) {
+  const pinnedNotesById = usePainelPinnedNotes();
   return (
     <div className="md:hidden">
       {/* ── Topo compacto: search + Filtros + contador ───────────────────
@@ -5020,6 +5045,17 @@ function MobilePainelView({
               chips.push({
                 label: o.relacionamento,
                 tone: relacionamentoChipTone(o.relacionamento),
+              });
+            }
+            // Observação interna fixada — chip (não o indicador com tooltip)
+            // porque os chips ficam dentro do <button> do card.
+            const pinnedNote = pinnedNotesById.get(o.id);
+            if (pinnedNote) {
+              chips.push({
+                label: getInternalNoteCategoryMeta(pinnedNote.category).label,
+                tone: "warning",
+                leading: <StickyNote className="h-3 w-3 shrink-0" aria-hidden />,
+                title: pinnedNote.body,
               });
             }
 
