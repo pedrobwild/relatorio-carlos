@@ -18,6 +18,17 @@ export * as formalizationsRepo from "./formalizations.repository";
 export * as agentMemoryRepo from "./agentMemory.repository";
 export { purchaseReceiptsRepo } from "./purchaseReceipts.repository";
 export type { PurchaseReceipt } from "./purchaseReceipts.repository";
+export {
+  projectInternalNotesRepo,
+  INTERNAL_NOTE_CATEGORIES,
+  INTERNAL_NOTE_MAX_LENGTH,
+} from "./projectInternalNotes.repository";
+export type {
+  ProjectInternalNote,
+  InternalNoteCategory,
+  CreateInternalNoteInput,
+  UpdateInternalNoteInput,
+} from "./projectInternalNotes.repository";
 
 
 // Re-export types for convenience

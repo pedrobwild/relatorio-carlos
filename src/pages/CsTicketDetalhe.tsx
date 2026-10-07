@@ -65,6 +65,7 @@ import {
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 import { CsTicketDialog } from "@/components/cs/CsTicketDialog";
 import { CsTicketActionsPanel } from "@/components/cs/CsTicketActionsPanel";
+import { InternalNotesCard } from "@/components/internal-notes/InternalNotesCard";
 import { formatDuration } from "@/hooks/useCsTicketActions";
 
 // ----- helpers visuais (espelham CsTickets) -----
@@ -661,6 +662,12 @@ export default function CsTicketDetalhe() {
               </div>
             )}
           </section>
+
+          {/* Observações internas da obra — contexto do time de obras antes
+              de falar com o cliente. O card se oculta sem permissão. */}
+          {ticket.project_id && (
+            <InternalNotesCard projectId={ticket.project_id} variant="compact" />
+          )}
         </aside>
       </div>
 

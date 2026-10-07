@@ -317,6 +317,16 @@ export const queryKeys = {
   },
 
   // ============================================================================
+  // Observações internas da obra — staff-only (cliente nunca vê)
+  // ============================================================================
+  internalNotes: {
+    all: ["internal-notes"] as const,
+    byProject: (projectId: string | undefined) =>
+      [...queryKeys.internalNotes.all, "by-project", projectId] as const,
+    pinned: () => [...queryKeys.internalNotes.all, "pinned"] as const,
+  },
+
+  // ============================================================================
   // Lookahead (staff 14/21 dias) — see src/hooks/useLookahead.ts
   // ============================================================================
   lookahead: {

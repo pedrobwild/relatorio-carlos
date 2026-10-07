@@ -44,6 +44,7 @@ import { useProjectPortal } from "@/hooks/useProjectPortal";
 import { useIndexTabUrlSync } from "@/hooks/useIndexTabUrlSync";
 import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
 import { GestorObraSelect } from "@/components/obra/GestorObraSelect";
+import { InternalNotesCard } from "@/components/internal-notes/InternalNotesCard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LiveStatus } from "@/components/a11y/LiveStatus";
 import { trackAmplitude } from "@/lib/amplitude";
@@ -479,6 +480,7 @@ const Index = () => {
                 onSaved={handleGestorSaved}
               />
             )}
+            {projectId && <InternalNotesCard projectId={projectId} />}
             <ReportHeader
               projectName={reportData.projectName}
               unitName={reportData.unitName}
@@ -539,6 +541,13 @@ const Index = () => {
               className="mb-3 md:mb-4"
               onSaved={handleGestorSaved}
             />
+          )}
+
+          {/* Observações internas — canal da equipe (obras + CS). Também
+              fora de `reportRef`: não pode entrar no PDF do cliente. Para o
+              cliente o componente não renderiza nada. */}
+          {projectId && (
+            <InternalNotesCard projectId={projectId} className="mb-3 md:mb-4" />
           )}
 
           <div ref={reportRef}>

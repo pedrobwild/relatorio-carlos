@@ -6,6 +6,7 @@ import {
   getFeaturesForRole,
   type Feature,
 } from "../permissions";
+import type { AppRole } from "@/hooks/useUserRole";
 
 describe("permissions", () => {
   describe("can()", () => {
@@ -128,7 +129,7 @@ describe("permissions", () => {
 
   describe("specific feature checks", () => {
     const testCases: Array<{
-      role: "customer" | "engineer" | "manager" | "admin";
+      role: AppRole;
       feature: Feature;
       expected: boolean;
     }> = [
@@ -151,6 +152,20 @@ describe("permissions", () => {
       // Admin permissions
       { role: "admin", feature: "admin:manage_system", expected: true },
       { role: "admin", feature: "projects:delete", expected: true },
+
+      // Observações internas — cliente nunca vê; toda a equipe lê e escreve;
+      // editar/remover nota alheia só admin/gestor (espelha a RLS).
+      { role: "customer", feature: "internal_notes:view", expected: false },
+      { role: "customer", feature: "internal_notes:create", expected: false },
+      { role: "cs", feature: "internal_notes:view", expected: true },
+      { role: "cs", feature: "internal_notes:create", expected: true },
+      { role: "engineer", feature: "internal_notes:create", expected: true },
+      { role: "suprimentos", feature: "internal_notes:view", expected: true },
+      { role: "financeiro", feature: "internal_notes:view", expected: true },
+      { role: "engineer", feature: "internal_notes:moderate", expected: false },
+      { role: "cs", feature: "internal_notes:moderate", expected: false },
+      { role: "gestor", feature: "internal_notes:moderate", expected: true },
+      { role: "admin", feature: "internal_notes:moderate", expected: true },
     ];
 
     testCases.forEach(({ role, feature, expected }) => {

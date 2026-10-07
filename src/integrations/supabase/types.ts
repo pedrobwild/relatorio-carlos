@@ -4989,6 +4989,63 @@ export type Database = {
           },
         ]
       }
+      project_internal_notes: {
+        Row: {
+          author_id: string
+          author_name: string
+          body: string
+          category: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          is_pinned: boolean
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string
+          author_name?: string
+          body: string
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          is_pinned?: boolean
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          body?: string
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          is_pinned?: boolean
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_internal_notes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_internal_notes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_member_permissions: {
         Row: {
           created_at: string
@@ -7709,6 +7766,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_project_internal_note_pinned: {
+        Args: { p_note_id: string; p_pinned: boolean }
+        Returns: undefined
       }
       soft_delete_project: {
         Args: { p_force?: boolean; p_project_id: string }
