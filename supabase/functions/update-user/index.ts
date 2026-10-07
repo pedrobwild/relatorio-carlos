@@ -24,6 +24,17 @@ serve(async (req) => {
 
     console.log('Updating user:', user_id);
 
+    // E-mail primeiro no auth: só depois de aceito (único, válido) ele vai
+    // para profiles. profiles.email decide quem assina formalizações, então
+    // não pode ficar com um e-mail que o auth recusou (p.ex. o de outra pessoa).
+    if (email) {
+      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(user_id, { email });
+      if (authError) {
+        console.error('Error updating auth email:', authError);
+        return jsonResponse({ error: authError.message }, 400);
+      }
+    }
+
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .update({ display_name, email, updated_at: new Date().toISOString() })
@@ -32,12 +43,6 @@ serve(async (req) => {
     if (profileError) {
       console.error('Error updating profile:', profileError);
       return jsonResponse({ error: profileError.message }, 400);
-    }
-
-    // If email changed, also update auth.users
-    if (email) {
-      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(user_id, { email });
-      if (authError) console.error('Error updating auth email:', authError);
     }
 
     console.log('User updated successfully:', user_id);

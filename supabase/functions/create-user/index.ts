@@ -50,9 +50,9 @@ serve(async (req) => {
       email,
       password,
       email_confirm: true,
-      // Os triggers de auth.users só confiam no papel de app_metadata (que só
-      // o service role escreve); user_metadata é editável pelo próprio usuário.
-      app_metadata: { role },
+      // O papel em user_metadata é só informativo: o próprio usuário edita
+      // esse campo, então os triggers de auth.users o ignoram e a conta nasce
+      // 'customer'. O papel efetivo é gravado logo abaixo, com service role.
       user_metadata: {
         display_name: display_name || email.split('@')[0],
         role,
@@ -72,13 +72,17 @@ serve(async (req) => {
       return jsonResponse({ error: 'Falha ao criar usuário' }, 500);
     }
 
-    // Update user_roles if not customer
+    // Papel de equipe: os três stores precisam ser gravados aqui.
+    const roleWriteErrors: string[] = [];
     if (role !== 'customer') {
       const { error: updateRoleError } = await supabaseAdmin
         .from('user_roles')
         .update({ role })
         .eq('user_id', newUser.user.id);
-      if (updateRoleError) console.error('Error updating user_roles:', updateRoleError);
+      if (updateRoleError) {
+        console.error('Error updating user_roles:', updateRoleError);
+        roleWriteErrors.push('user_roles');
+      }
     }
 
     // Update users_profile
@@ -86,14 +90,20 @@ serve(async (req) => {
       .from('users_profile')
       .update({ perfil: role, nome: display_name || email.split('@')[0] })
       .eq('id', newUser.user.id);
-    if (updateProfileError) console.error('Error updating users_profile:', updateProfileError);
+    if (updateProfileError) {
+      console.error('Error updating users_profile:', updateProfileError);
+      roleWriteErrors.push('users_profile');
+    }
 
     // profiles.role é o terceiro store de papel (lido por user_is_admin()).
     const { error: updateLegacyProfileError } = await supabaseAdmin
       .from('profiles')
       .update({ role })
       .eq('user_id', newUser.user.id);
-    if (updateLegacyProfileError) console.error('Error updating profiles:', updateLegacyProfileError);
+    if (updateLegacyProfileError) {
+      console.error('Error updating profiles:', updateLegacyProfileError);
+      roleWriteErrors.push('profiles');
+    }
 
     // Add user to selected projects
     if (project_ids && Array.isArray(project_ids) && project_ids.length > 0) {
@@ -107,6 +117,15 @@ serve(async (req) => {
         .from('project_members')
         .insert(projectMemberRecords);
       if (projectMembersError) console.error('Error adding user to projects:', projectMembersError);
+    }
+
+    // Falha em gravar o papel deixa a conta como cliente (seguro), mas o
+    // admin precisa saber para corrigir pela tela de papéis.
+    if (role !== 'customer' && roleWriteErrors.length > 0) {
+      return jsonResponse({
+        error: `Usuário criado, mas o papel "${role}" não foi aplicado (${roleWriteErrors.join(', ')}). Ajuste o papel na tela de usuários.`,
+        user: { id: newUser.user.id, email: newUser.user.email },
+      }, 500);
     }
 
     return jsonResponse({

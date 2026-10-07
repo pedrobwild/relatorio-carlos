@@ -15,9 +15,15 @@
 --    user_must_sign_formalization()).
 --
 -- O QUE MUDA
--- * O papel inicial vem APENAS de `raw_app_meta_data`, que só o service role
---   (API admin) consegue escrever. Sem ele, todo usuário nasce `customer`.
---   O mesmo vale para `customer_org_id` (sem ele, org nova e isolada).
+-- * O papel inicial vem APENAS de `raw_app_meta_data`, que o cliente não
+--   consegue escrever. Sem ele, todo usuário nasce `customer`; o mesmo vale
+--   para `customer_org_id` (sem ele, org nova e isolada).
+--   Atenção: a API admin do Supabase (auth.admin.createUser) grava
+--   app_metadata DEPOIS do INSERT, então para contas criadas por ela os
+--   triggers sempre veem `customer`. O papel de equipe é gravado em seguida
+--   pela edge function create-user (user_roles, users_profile, profiles), ou
+--   depois por admin_set_user_role. raw_app_meta_data só vale para INSERT
+--   direto em auth.users feito com service role.
 -- * Em public.profiles, usuário comum só altera o próprio `display_name`.
 --   Mudança de papel continua pelos caminhos legítimos: admin_set_user_role
 --   (SECURITY DEFINER) e edge functions com service role.
