@@ -53,6 +53,7 @@ import { useLookahead } from "@/hooks/useLookahead";
 import { useSCurveWeekly } from "@/hooks/useActivityProgress";
 import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
 import { GestorObraSelect } from "@/components/obra/GestorObraSelect";
+import { InternalNotesCard } from "@/components/internal-notes/InternalNotesCard";
 import type { SeverityBreakdown } from "@/lib/calculateObraSeverity";
 import {
   Line,
@@ -173,6 +174,11 @@ export function ObraDetailSheet({
 
             {/* Scroll body */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+              {/* Observações internas — o "porquê" da obra (sem atualização,
+                  aguardando cliente…) direto do Painel, para obras e CS.
+                  Só staff; o cliente nunca vê. */}
+              <InternalNotesCard projectId={obra.id} variant="compact" />
+
               {/* KPIs — grid 2×3 */}
               <section aria-label="Indicadores gerenciais">
                 <div className="grid grid-cols-2 gap-2">

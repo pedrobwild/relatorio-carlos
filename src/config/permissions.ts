@@ -63,7 +63,11 @@ export type Feature =
   | "ncs:approve"
   | "ncs:view"
   // BWild Assessor (stateful agent)
-  | "assessor:use";
+  | "assessor:use"
+  // Observações internas da obra (staff-only; cliente nunca vê)
+  | "internal_notes:view"
+  | "internal_notes:create"
+  | "internal_notes:moderate";
 
 /**
  * Permission matrix: role -> allowed features
@@ -132,6 +136,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "ncs:approve",
     "ncs:view",
     "assessor:use",
+    "internal_notes:view",
+    "internal_notes:create",
   ],
 
   manager: [
@@ -182,6 +188,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "ncs:approve",
     "ncs:view",
     "assessor:use",
+    "internal_notes:view",
+    "internal_notes:create",
   ],
 
   admin: [
@@ -233,6 +241,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "ncs:approve",
     "ncs:view",
     "assessor:use",
+    "internal_notes:view",
+    "internal_notes:create",
+    "internal_notes:moderate",
   ],
 
   gestor: [
@@ -283,6 +294,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "ncs:approve",
     "ncs:view",
     "assessor:use",
+    "internal_notes:view",
+    "internal_notes:create",
+    "internal_notes:moderate",
   ],
 
   suprimentos: [
@@ -298,6 +312,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "reports:export_pdf",
     "inspections:view",
     "ncs:view",
+    "internal_notes:view",
+    "internal_notes:create",
   ],
 
   financeiro: [
@@ -314,6 +330,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "reports:export_pdf",
     "inspections:view",
     "ncs:view",
+    "internal_notes:view",
+    "internal_notes:create",
   ],
 
   cs: [
@@ -364,6 +382,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "ncs:approve",
     "ncs:view",
     "assessor:use",
+    "internal_notes:view",
+    "internal_notes:create",
   ],
 
   arquitetura: [
@@ -414,6 +434,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "ncs:approve",
     "ncs:view",
     "assessor:use",
+    "internal_notes:view",
+    "internal_notes:create",
   ],
 };
 

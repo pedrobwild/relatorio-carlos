@@ -21,6 +21,7 @@ import { JornadaTabsBar } from "./jornada/JornadaTabsBar";
 import { JornadaTabContent } from "./jornada/JornadaTabContent";
 import { MobileNavDrawer } from "./jornada/MobileNavDrawer";
 import { ProjectPhaseCompletionBanner } from "@/components/journey/ProjectPhaseCompletionBanner";
+import { InternalNotesCard } from "@/components/internal-notes/InternalNotesCard";
 
 export default function JornadaProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -202,6 +203,12 @@ export default function JornadaProjeto() {
         role="region"
         aria-label={`Conteúdo da aba ${activeTab === "jornada" ? "Jornada" : activeTab === "financeiro" ? "Financeiro" : activeTab === "documentos" ? "Documentos" : activeTab === "formalizacoes" ? "Formalizações" : "Pendências"}`}
       >
+        {/* Obras em fase de projeto não passam pelo cockpit (/obra/:id
+            redireciona para cá): as observações internas da equipe ficam
+            aqui também. Para o cliente o componente não renderiza nada. */}
+        {activeTab === "jornada" && projectId && (
+          <InternalNotesCard projectId={projectId} className="mb-4" />
+        )}
         {activeTab === "jornada" && (
           <ProjectPhaseCompletionBanner
             projectId={projectId!}
