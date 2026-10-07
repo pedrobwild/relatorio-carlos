@@ -149,6 +149,9 @@ interface NoteItemProps {
   canPin: boolean;
   canEdit: boolean;
   busy: boolean;
+  /** Edição controlada pelo card: sobrevive a refetch e reordenação. */
+  editing: boolean;
+  onEditingChange: (editing: boolean) => void;
   onTogglePin: () => void;
   onDelete: () => void;
   onSaveEdit: (body: string, category: InternalNoteCategory) => Promise<void>;
@@ -159,11 +162,12 @@ function NoteItem({
   canPin,
   canEdit,
   busy,
+  editing,
+  onEditingChange,
   onTogglePin,
   onDelete,
   onSaveEdit,
 }: NoteItemProps) {
-  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(note.body);
   const [draftCategory, setDraftCategory] = useState<InternalNoteCategory>(
     note.category as InternalNoteCategory,
@@ -173,7 +177,7 @@ function NoteItem({
   const startEdit = () => {
     setDraft(note.body);
     setDraftCategory(note.category as InternalNoteCategory);
-    setEditing(true);
+    onEditingChange(true);
   };
 
   const saveEdit = async () => {
@@ -181,7 +185,7 @@ function NoteItem({
     setSaving(true);
     try {
       await onSaveEdit(draft, draftCategory);
-      setEditing(false);
+      onEditingChange(false);
     } catch {
       // O toast de erro vem do handler global de mutations.
     } finally {
@@ -303,7 +307,7 @@ function NoteItem({
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => setEditing(false)}
+                  onClick={() => onEditingChange(false)}
                   disabled={saving}
                 >
                   Cancelar
@@ -356,6 +360,7 @@ export function InternalNotesCard({
   const [pin, setPin] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [toDelete, setToDelete] = useState<ProjectInternalNote | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   if (!canView) return null;
 
@@ -363,8 +368,15 @@ export function InternalNotesCard({
   const limit = isCompact ? 3 : 5;
   const pinned = notes.find((n) => n.is_pinned) ?? null;
   const others = notes.filter((n) => !n.is_pinned);
-  const visibleOthers = showAll ? others : others.slice(0, limit);
+  // A nota em edição nunca sai da tela, mesmo que notas novas a empurrem
+  // para além do limite (texto digitado não pode sumir).
+  const visibleOthers = showAll
+    ? others
+    : others.filter((n, i) => i < limit || n.id === editingId);
   const hiddenCount = others.length - visibleOthers.length;
+  // Lista única com key estável: quando a nota ganha/perde a fixação ela
+  // muda de posição sem remontar (e sem perder uma edição em andamento).
+  const listed = pinned ? [pinned, ...visibleOthers] : visibleOthers;
   const busy = setPinned.isPending || deleteNote.isPending;
 
   const canEditNote = (note: ProjectInternalNote) =>
@@ -398,6 +410,8 @@ export function InternalNotesCard({
       canPin={canCreate}
       canEdit={canEditNote(note)}
       busy={busy}
+      editing={editingId === note.id}
+      onEditingChange={(next) => setEditingId(next ? note.id : null)}
       onTogglePin={() => setPinned.mutate({ id: note.id, pinned: !note.is_pinned })}
       onDelete={() => setToDelete(note)}
       onSaveEdit={async (nextBody, nextCategory) => {
@@ -506,8 +520,7 @@ export function InternalNotesCard({
           </p>
         ) : (
           <ul className="space-y-2">
-            {pinned && renderNote(pinned)}
-            {visibleOthers.map(renderNote)}
+            {listed.map(renderNote)}
           </ul>
         )}
         {(hiddenCount > 0 || (showAll && others.length > limit)) && (

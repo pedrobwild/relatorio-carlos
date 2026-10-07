@@ -135,9 +135,11 @@ export function useUpdateInternalNote() {
       if (result.error) throw result.error;
       return result.data;
     },
+    // Devolver a invalidação faz o mutateAsync/isPending cobrirem o refetch:
+    // sem isso a nota volta a mostrar o texto antigo até a lista recarregar.
     onSuccess: () => {
-      void invalidate();
       toast.success("Observação atualizada");
+      return invalidate();
     },
   });
 }
@@ -151,10 +153,10 @@ export function useSetInternalNotePinned() {
       return pinned;
     },
     onSuccess: (pinned) => {
-      void invalidate();
       toast.success(
         pinned ? "Fixada como status atual da obra" : "Observação desafixada",
       );
+      return invalidate();
     },
   });
 }

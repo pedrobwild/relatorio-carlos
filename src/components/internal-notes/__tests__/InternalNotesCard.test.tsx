@@ -204,6 +204,42 @@ describe("InternalNotesCard", () => {
     expect(screen.getByRole("menuitem", { name: /remover/i })).toBeInTheDocument();
   });
 
+  it("edição em andamento sobrevive quando a nota perde a fixação", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<InternalNotesCard projectId="p1" />);
+
+    const items = screen.getAllByRole("listitem");
+    await user.click(
+      within(items[0]).getByRole("button", { name: "Ações da observação" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: /editar/i }));
+    const editor = screen.getByLabelText("Editar observação");
+    await user.clear(editor);
+    await user.type(editor, "Texto ainda não salvo");
+
+    // Outro colaborador fixa uma nota nova: a minha desce para a lista.
+    mockedNotes.mockReturnValue({
+      data: [
+        {
+          ...notes[0],
+          id: "n-new",
+          body: "Nova fixada",
+          is_pinned: true,
+          created_at: "2026-10-07T10:00:00Z",
+        },
+        { ...notes[1], is_pinned: false },
+        { ...notes[0], is_pinned: false },
+      ],
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useProjectInternalNotes>);
+    rerender(<InternalNotesCard projectId="p1" />);
+
+    expect(screen.getByLabelText("Editar observação")).toHaveValue(
+      "Texto ainda não salvo",
+    );
+  });
+
   it("mostra estado vazio", () => {
     mockedNotes.mockReturnValue({
       data: [],

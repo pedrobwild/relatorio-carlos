@@ -122,8 +122,13 @@ BEGIN
     NEW.is_pinned := false;
   END IF;
 
-  -- Fixar esta desafixa a anterior da mesma obra.
+  -- Fixar esta desafixa a anterior da mesma obra. O lock por obra serializa
+  -- fixações simultâneas: sem ele, a segunda não enxerga a primeira (ainda
+  -- não commitada) e esbarra no índice único em vez de substituí-la.
   IF NEW.is_pinned AND (TG_OP = 'INSERT' OR NOT OLD.is_pinned) THEN
+    PERFORM pg_advisory_xact_lock(
+      hashtextextended('project_internal_notes_pin:' || NEW.project_id::text, 0)
+    );
     UPDATE public.project_internal_notes
        SET is_pinned = false
      WHERE project_id = NEW.project_id

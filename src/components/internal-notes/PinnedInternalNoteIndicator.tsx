@@ -50,7 +50,12 @@ export function PinnedInternalNoteIndicator({
               : "h-5 w-5 justify-center",
             className,
           )}
+          // Fica dentro de linhas/cards clicáveis (Painel, CS): nem clique
+          // nem Enter/Espaço no selo podem abrir a obra.
           onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") e.stopPropagation();
+          }}
         >
           <StickyNote
             className={variant === "badge" ? "h-2.5 w-2.5" : "h-3 w-3"}
