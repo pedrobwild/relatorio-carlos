@@ -7775,6 +7775,10 @@ export type Database = {
         Args: { p_force?: boolean; p_project_id: string }
         Returns: undefined
       }
+      start_project_execution: {
+        Args: { p_project_id: string; p_start_date?: string }
+        Returns: Json
+      }
       sync_budget_items_to_purchases: {
         Args: { p_project_id: string }
         Returns: number
