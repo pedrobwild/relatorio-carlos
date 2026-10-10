@@ -58,6 +58,9 @@ interface ProjectContextType {
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
+/** Intervalo mínimo entre buscas do projeto disparadas por foco/visibilidade. */
+export const SILENT_REFETCH_MIN_INTERVAL_MS = 60_000;
+
 function classifyError(err: unknown): {
   kind: ProjectErrorKind;
   message: string;
@@ -103,6 +106,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const requestIdRef = useRef(0);
   // Evita loop de redirect quando o fallback já disparou para o mesmo projectId.
   const fallbackTriedRef = useRef<string | null>(null);
+  // Throttle da atualização silenciosa (foco/visibilidade): instante da última
+  // busca do projeto, completa ou silenciosa.
+  const lastFetchAtRef = useRef(0);
+  // Espelho do status para os listeners de foco não precisarem se re-registrar.
+  const statusRef = useRef<ProjectStatus>(status);
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   const fetchProject = useCallback(async () => {
     if (!projectId || !user) {
@@ -214,6 +225,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         setProject(null);
         setStatus("not-found");
       } else {
+        lastFetchAtRef.current = Date.now();
         setProject(data);
         setStatus("ready");
         trackAmplitude("Project Opened", {
@@ -236,6 +248,56 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void fetchProject();
   }, [fetchProject]);
+
+  // Atualização silenciosa ao voltar para o app: o projeto (com
+  // `is_project_phase`, que decide entre Jornada e Cronograma) só era buscado
+  // ao trocar de obra/usuário — quem deixava a aba aberta não via a obra
+  // iniciar. Não passa por "loading" nem limpa o projeto (sem skeleton); em
+  // erro ou "não encontrado" mantém o que já está na tela.
+  const silentRefetch = useCallback(async () => {
+    if (!projectId || !user) return;
+    if (statusRef.current !== "ready") return;
+    const now = Date.now();
+    if (now - lastFetchAtRef.current < SILENT_REFETCH_MIN_INTERVAL_MS) return;
+    lastFetchAtRef.current = now;
+
+    // Mesma guarda das buscas completas, mas sem incrementar o contador: a
+    // busca silenciosa nunca invalida uma busca completa; já qualquer busca
+    // completa iniciada no meio do voo (troca de obra, refetch manual)
+    // descarta esta resposta.
+    const requestId = requestIdRef.current;
+    try {
+      const result = await projectsRepo.getProjectWithCustomer(projectId);
+      if (
+        requestId !== requestIdRef.current ||
+        statusRef.current !== "ready"
+      )
+        return;
+      const fresh = result.data;
+      if (result.error || !fresh || fresh.id !== projectId) return;
+      setProject((prev) =>
+        prev && JSON.stringify(prev) === JSON.stringify(fresh) ? prev : fresh,
+      );
+    } catch (err: unknown) {
+      if (requestId !== requestIdRef.current) return;
+      console.warn("Atualização silenciosa do projeto falhou:", err);
+    }
+  }, [projectId, user]);
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void silentRefetch();
+    };
+    const onFocus = () => {
+      void silentRefetch();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [silentRefetch]);
 
   const loading = status === "loading" || status === "linking";
   const linking = status === "linking";

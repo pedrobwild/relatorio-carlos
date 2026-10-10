@@ -118,7 +118,8 @@ export function ProjectSidebar() {
           // schedule:view (nao staffOnly): o cliente consulta o cronograma em
           // leitura legitimamente — quem edita e gateado dentro da propria tela.
           feature: "schedule:view",
-          disabledInProjectPhase: true,
+          // Liberado na fase de projeto: a equipe precisa subir o cronograma
+          // ANTES de iniciar a obra (start_project_execution exige atividades).
         },
       ],
     },

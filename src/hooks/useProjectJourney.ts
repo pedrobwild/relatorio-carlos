@@ -99,6 +99,17 @@ async function fetchProjectJourney(
         .order("sort_order", { ascending: true }),
     ]);
 
+  // Etapas, checklists e hero são o núcleo da jornada: erro aqui é propagado
+  // em vez de virar lista vazia/null. Engolido, uma falha transitória era
+  // cacheada (e persistida no localStorage) como "jornada vazia" por cima dos
+  // dados bons — e hero null ainda dispara a inicialização da jornada. Com o
+  // throw, o React Query mantém os dados anteriores e busca de novo no
+  // próximo foco/montagem (erros de rede ainda têm o retry global).
+  // Rodapé e CSM são decorativos e seguem best-effort.
+  if (stagesResult.error) throw stagesResult.error;
+  if (todosResult.error) throw todosResult.error;
+  if (heroResult.error) throw heroResult.error;
+
   // Group todos by stage_id
   const todosByStage = new Map<string, JourneyTodo[]>();
   if (todosResult.data) {
@@ -134,6 +145,12 @@ export function useProjectJourney(projectId: string | undefined) {
     queryKey: ["project-journey", projectId],
     queryFn: () => fetchProjectJourney(projectId!),
     enabled: !!projectId,
+    // O padrão do app é false; aqui o cliente que volta ao app (aba/foco)
+    // precisa ver as etapas que a equipe avançou enquanto ele estava fora.
+    // O foco só recarrega dado vencido: com os 5 min padrão, quem voltava
+    // em seguida continuava vendo a etapa antiga.
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 

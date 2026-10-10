@@ -355,6 +355,36 @@ export async function setGestorObra(
   });
 }
 
+export interface StartProjectExecutionResult {
+  project_id: string;
+  already_in_execution: boolean;
+  activities: number;
+  completed_stages: number;
+  start_date?: string;
+}
+
+/**
+ * Inicia a obra: tira da fase de projeto, conclui as etapas pendentes da
+ * jornada e libera o cronograma para o cliente — tudo numa transação
+ * (RPC `start_project_execution`). Exige cronograma cadastrado; NÃO clona a
+ * obra. Idempotente para obra que já está em execução.
+ */
+export async function startProjectExecution(
+  projectId: string,
+  startDate?: string | null,
+): Promise<RepositoryResult<StartProjectExecutionResult>> {
+  return executeQuery(async () => {
+    const { data, error } = await supabase.rpc("start_project_execution", {
+      p_project_id: projectId,
+      ...(startDate ? { p_start_date: startDate } : {}),
+    });
+    return {
+      data: (data as unknown as StartProjectExecutionResult | null) ?? null,
+      error,
+    };
+  });
+}
+
 /**
  * Permanently delete a soft-deleted project (admin only)
  */
@@ -509,6 +539,12 @@ export async function getProjectWithCustomerAndStages(projectId: string) {
 
 /**
  * Clone a project and all its related data for construction phase
+ *
+ * @deprecated Não use para iniciar a obra. Clonar criava uma obra nova,
+ * marcava a original como 'completed' e perdia o vínculo do cliente
+ * (duplicatas). Use {@link startProjectExecution}, que tira a obra da fase de
+ * projeto na mesma obra (RPC `start_project_execution`). Mantida só para
+ * referência; não há mais chamadores.
  */
 export async function cloneProjectForConstruction(
   sourceProjectId: string,
