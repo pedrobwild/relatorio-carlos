@@ -22,18 +22,32 @@ import { JornadaTabContent } from "./jornada/JornadaTabContent";
 import { MobileNavDrawer } from "./jornada/MobileNavDrawer";
 import { ProjectPhaseCompletionBanner } from "@/components/journey/ProjectPhaseCompletionBanner";
 import { InternalNotesCard } from "@/components/internal-notes/InternalNotesCard";
+import { deriveJourneyForViewer } from "@/components/journey/journeyStageDisplay";
 
 export default function JornadaProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { project, loading: projectLoading } = useProject();
-  const { role, loading: roleLoading } = useUserRole();
+  const { role, loading: roleLoading, isStaff } = useUserRole();
   const { hasShell } = useProjectLayout();
   const {
-    data: journey,
+    data: rawJourney,
     isLoading: journeyLoading,
     refetch,
   } = useProjectJourney(projectId);
+  // Obra em execução: para o CLIENTE todas as etapas pré-obra aparecem
+  // concluídas, mesmo que tenham ficado pendentes no banco (só exibição).
+  // A equipe vê os status reais. Enquanto os papéis carregam, não deriva.
+  const journey = useMemo(
+    () =>
+      roleLoading
+        ? rawJourney
+        : deriveJourneyForViewer(rawJourney, {
+            isStaff,
+            isProjectPhase: project?.is_project_phase,
+          }),
+    [rawJourney, roleLoading, isStaff, project?.is_project_phase],
+  );
   const initializeJourney = useInitializeJourney();
 
   const tabFromUrl = searchParams.get("tab");
@@ -209,13 +223,13 @@ export default function JornadaProjeto() {
         {activeTab === "jornada" && projectId && (
           <InternalNotesCard projectId={projectId} className="mb-4" />
         )}
-        {activeTab === "jornada" && (
+        {/* Quem vê o banner é decidido por useCan("journey:edit_stages")
+            dentro dele — cliente nunca vê. */}
+        {activeTab === "jornada" && projectId && (
           <ProjectPhaseCompletionBanner
-            projectId={projectId!}
-            projectName={project.name}
+            projectId={projectId}
             isProjectPhase={!!project.is_project_phase}
             stages={journey.stages}
-            isStaff={isAdmin}
           />
         )}
         <JornadaTabContent

@@ -539,6 +539,12 @@ export async function getProjectWithCustomerAndStages(projectId: string) {
 
 /**
  * Clone a project and all its related data for construction phase
+ *
+ * @deprecated Não use para iniciar a obra. Clonar criava uma obra nova,
+ * marcava a original como 'completed' e perdia o vínculo do cliente
+ * (duplicatas). Use {@link startProjectExecution}, que tira a obra da fase de
+ * projeto na mesma obra (RPC `start_project_execution`). Mantida só para
+ * referência; não há mais chamadores.
  */
 export async function cloneProjectForConstruction(
   sourceProjectId: string,

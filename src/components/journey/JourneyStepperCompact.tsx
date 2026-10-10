@@ -1,5 +1,9 @@
 import { JourneyStage } from "@/hooks/useProjectJourney";
 import { Progress } from "@/components/ui/progress";
+import {
+  formatJourneyStagePosition,
+  getJourneyStagePosition,
+} from "@/components/journey/journeyStageDisplay";
 
 /* ─── Component ─── */
 
@@ -11,17 +15,20 @@ interface JourneyStepperCompactProps {
 }
 
 export function JourneyStepperCompact({ stages }: JourneyStepperCompactProps) {
-  const completedCount = stages.filter((s) => s.status === "completed").length;
+  const position = getJourneyStagePosition(stages);
   const progressPct =
-    stages.length > 0 ? Math.round((completedCount / stages.length) * 100) : 0;
+    position.total > 0
+      ? Math.round((position.completedCount / position.total) * 100)
+      : 0;
 
   return (
     <div className="space-y-3">
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <Progress value={progressPct} className="h-2 flex-1 mr-3" />
+          {/* Posição da etapa atual (não a contagem de concluídas). */}
           <span className="text-xs font-semibold tabular-nums text-muted-foreground whitespace-nowrap">
-            Etapa {completedCount} de {stages.length}
+            {formatJourneyStagePosition(position)}
           </span>
         </div>
       </div>

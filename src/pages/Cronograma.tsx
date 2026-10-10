@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, GripVertical, ChevronDown, FileText, BellRing } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, GripVertical, ChevronDown, FileText, BellRing, EyeOff, PlayCircle } from "lucide-react";
 import { isHoliday } from "@/lib/businessDays";
 import { AIScheduleGenerator } from "@/components/schedule/AIScheduleGenerator";
 import { useScheduleAlerts } from "@/hooks/useScheduleAlerts";
@@ -19,8 +19,20 @@ import {
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useCan } from "@/hooks/useCan";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useStartProjectExecution } from "@/hooks/useStartProjectExecution";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ImportScheduleModal } from "@/components/ImportScheduleModal";
 import { CronogramaMobileView } from "@/components/cronograma/CronogramaMobileView";
 import { CronogramaPdfButton } from "@/components/cronograma/CronogramaPdfButton";
@@ -178,6 +190,69 @@ function WeightSummary({ total }: { total: number }) {
   );
 }
 
+/* ── Aviso de fase de projeto ── */
+/**
+ * Na fase de projeto o cliente é redirecionado para a Jornada e não vê o
+ * cronograma (ver Index.tsx). Sem este aviso a equipe salvava o cronograma
+ * achando que já estava publicado.
+ */
+function ProjectPhaseNotice({
+  disabledReason,
+  starting,
+  onStart,
+}: {
+  /** Motivo para o botão estar desabilitado; null quando pode iniciar. */
+  disabledReason: string | null;
+  starting: boolean;
+  onStart: () => void;
+}) {
+  return (
+    <Alert
+      role="status"
+      className="border-warning/40 bg-warning/5 text-warning-foreground"
+    >
+      <EyeOff className="h-4 w-4 text-warning" />
+      <AlertTitle className="text-warning">
+        Este cronograma ainda não aparece para o cliente: a obra está em fase
+        de projeto.
+      </AlertTitle>
+      <AlertDescription className="space-y-2 mt-1">
+        <p className="text-sm text-foreground/90">
+          Ao iniciar a obra, as etapas pendentes da jornada são concluídas e o
+          cliente passa a ver este cronograma no portal.
+        </p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <Button
+            type="button"
+            size="sm"
+            onClick={onStart}
+            disabled={starting || disabledReason !== null}
+            aria-describedby={
+              disabledReason ? "cronograma-start-disabled-reason" : undefined
+            }
+            className="gap-1.5"
+          >
+            {starting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <PlayCircle className="h-3.5 w-3.5" />
+            )}
+            Iniciar obra e liberar cronograma
+          </Button>
+          {disabledReason && (
+            <span
+              id="cronograma-start-disabled-reason"
+              className="text-xs text-muted-foreground"
+            >
+              {disabledReason}
+            </span>
+          )}
+        </div>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
 /* ── Main component ── */
 const Cronograma = () => {
   const navigate = useNavigate();
@@ -194,6 +269,12 @@ const Cronograma = () => {
   const canEditSchedule = can("schedule:edit");
   const canSaveBaseline = can("schedule:save_baseline");
   const canImportSchedule = can("schedule:import");
+  // Fase de projeto: o cliente ainda não vê o cronograma (Index.tsx o manda
+  // para a Jornada). Quem edita o cronograma é quem pode liberar.
+  const isProjectPhase = project?.is_project_phase === true;
+  const { start: startExecution, isPending: startingExecution } =
+    useStartProjectExecution();
+  const [startPromptOpen, setStartPromptOpen] = useState(false);
   const {
     activities: existingActivities,
     loading: activitiesLoading,
@@ -217,6 +298,8 @@ const Cronograma = () => {
   const [activities, setActivities] = useState<ActivityFormData[]>([
     createEmptyActivity(),
   ]);
+  // Lista provisória antes da hidratação (ver o efeito de autosave).
+  const placeholderActivitiesRef = useRef(activities);
   const initializedRef = useRef(false);
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -544,8 +627,18 @@ const Cronograma = () => {
     if (result.ok) {
       autosaveAttemptsRef.current = 0;
       autosaveBlockedRef.current = false;
+      // Ficamos na tela na fase de projeto: sem isto o autosave regravaria o
+      // mesmo conteúdo e o aviso acusaria "alterações não salvas".
+      lastSavedSnapshotRef.current = JSON.stringify(activities);
+      setSavedSnapshot(lastSavedSnapshotRef.current);
       toast.dismiss(AUTOSAVE_ERROR_TOAST_ID);
       toast.success("Cronograma salvo com sucesso");
+      if (isProjectPhase) {
+        // paths.relatorio cai na Jornada na fase de projeto e parecia que
+        // nada tinha acontecido. Fica aqui e oferece iniciar a obra.
+        setStartPromptOpen(true);
+        return;
+      }
       navigate(paths.relatorio);
       return;
     }
@@ -569,12 +662,20 @@ const Cronograma = () => {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipNextAutosaveRef = useRef(true); // skip on initial hydration
   const lastSavedSnapshotRef = useRef<string>("");
+  // Espelho reativo do snapshot salvo: o aviso de fase de projeto precisa
+  // re-renderizar quando a gravação termina (mudar a ref não dispara render).
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
 
   useEffect(() => {
     if (!initializedRef.current) return;
+    // Com as atividades já em cache, este efeito roda no mesmo commit da
+    // hidratação, ainda com a lista provisória: o snapshot "salvo" saía
+    // errado e o autosave regravava o cronograma sem ninguém ter editado.
+    if (activities === placeholderActivitiesRef.current) return;
     if (skipNextAutosaveRef.current) {
       skipNextAutosaveRef.current = false;
       lastSavedSnapshotRef.current = JSON.stringify(activities);
+      setSavedSnapshot(lastSavedSnapshotRef.current);
       return;
     }
     if (saving) return;
@@ -614,6 +715,7 @@ const Cronograma = () => {
 
       if (result.ok) {
         lastSavedSnapshotRef.current = snapshot;
+        setSavedSnapshot(snapshot);
         autosaveAttemptsRef.current = 0;
         autosaveBlockedRef.current = false;
         toast.dismiss(AUTOSAVE_ERROR_TOAST_ID);
@@ -667,6 +769,38 @@ const Cronograma = () => {
     return () => window.removeEventListener("beforeunload", warnBeforeDiscard);
   }, [activities, autosaveStatus]);
 
+  // A RPC lê o cronograma gravado no banco: iniciar com alterações pendentes
+  // liberaria para o cliente uma versão diferente da que está na tela.
+  const showProjectPhaseNotice = isProjectPhase && canEditSchedule;
+  const hasUnsavedScheduleChanges =
+    showProjectPhaseNotice &&
+    (saving ||
+      autosaveStatus === "saving" ||
+      savedSnapshot === null ||
+      JSON.stringify(activities) !== savedSnapshot);
+  const startDisabledReason =
+    existingActivities.length === 0
+      ? "Salve o cronograma com ao menos uma atividade para iniciar a obra."
+      : hasUnsavedScheduleChanges
+        ? "Há alterações não salvas: salve o cronograma antes de iniciar a obra."
+        : null;
+
+  const handleStartExecution = async () => {
+    if (!projectId) return;
+    // Toasts de sucesso/erro ficam por conta do hook. Em caso de sucesso ele
+    // recarrega o projeto e este aviso some sozinho.
+    await startExecution(projectId, null);
+    setStartPromptOpen(false);
+  };
+
+  const projectPhaseNotice = showProjectPhaseNotice ? (
+    <ProjectPhaseNotice
+      disabledReason={startDisabledReason}
+      starting={startingExecution}
+      onStart={handleStartExecution}
+    />
+  ) : null;
+
   if (projectLoading || activitiesLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -710,7 +844,8 @@ const Cronograma = () => {
             activities={existingActivities}
           />
         </PageHeader>
-        <div className="max-w-lg mx-auto p-4">
+        <div className="max-w-lg mx-auto p-4 space-y-4">
+          {projectPhaseNotice}
           <CronogramaMobileView
             activities={existingActivities}
             loading={activitiesLoading}
@@ -863,6 +998,7 @@ const Cronograma = () => {
       </PageHeader>
 
       <div className="max-w-7xl mx-auto p-4 space-y-4">
+        {projectPhaseNotice}
         <WeightSummary total={totalWeight} />
 
         {/* ── Spreadsheet table ── */}
@@ -1227,6 +1363,41 @@ const Cronograma = () => {
         onImport={handleImportActivities}
         startDate={project?.planned_start_date}
       />
+
+      <AlertDialog
+        open={startPromptOpen}
+        onOpenChange={(open) => {
+          if (!startingExecution) setStartPromptOpen(open);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cronograma salvo</AlertDialogTitle>
+            <AlertDialogDescription>
+              O cliente ainda não vê porque a obra está em fase de projeto.
+              Iniciar a obra agora?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={startingExecution}>
+              Agora não
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={startingExecution}
+              onClick={(event) => {
+                // Mantém o diálogo aberto (com o spinner) até a RPC responder.
+                event.preventDefault();
+                void handleStartExecution();
+              }}
+            >
+              {startingExecution && (
+                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+              )}
+              Iniciar obra e liberar cronograma
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -1,105 +1,144 @@
 import { useState } from "react";
-import { CheckCircle2, Loader2, Sparkles, X } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
+import { CalendarClock, CalendarDays, HardHat, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { toast } from "sonner";
+import { useCan } from "@/hooks/useCan";
+import {
+  useProjectActivities,
+  type ProjectActivity,
+} from "@/hooks/useProjectActivities";
+import { useStartProjectExecution } from "@/hooks/useStartProjectExecution";
 import type { JourneyStage } from "@/hooks/useProjectJourney";
 
 interface Props {
   projectId: string;
-  projectName: string;
   isProjectPhase: boolean;
   stages: JourneyStage[];
-  isStaff: boolean;
 }
 
 const dismissKey = (id: string) => `phase_banner_dismissed_${id}`;
 
+// "Lembrar depois" vale só para a sessão: o banner existe justamente para a
+// obra não ficar esquecida na fase de projeto (cliente sem ver o cronograma).
+function readDismissed(projectId: string): boolean {
+  try {
+    return sessionStorage.getItem(dismissKey(projectId)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeDismissed(projectId: string) {
+  try {
+    sessionStorage.setItem(dismissKey(projectId), "1");
+  } catch {
+    // Sem storage (aba anônima/bloqueada): fica dispensado só neste render.
+  }
+}
+
 /**
- * Banner shown to staff when ALL journey stages are completed but the project
- * is still flagged as `is_project_phase = true`. Suggests flipping the switch
- * so the Schedule (Cronograma) becomes available.
+ * Cronograma "de verdade": ao menos uma atividade e não só o modelo de
+ * placeholders (todas na mesma data), que a RPC `start_project_execution`
+ * recusa.
+ */
+function hasRealSchedule(activities: ProjectActivity[]): boolean {
+  if (!activities.length) return false;
+  if (activities.length === 1) return true;
+  const starts = activities.map((a) => a.planned_start).sort();
+  const ends = activities.map((a) => a.planned_end).sort();
+  return starts[0] !== ends[ends.length - 1];
+}
+
+const isExecutivoStage = (stage: JourneyStage) =>
+  stage.name.toLowerCase().includes("projeto executivo");
+
+/**
+ * Banner da equipe para tirar a obra da fase de projeto: enquanto
+ * `is_project_phase = true` o cliente fica preso na Jornada e não vê o
+ * cronograma. Aparece quando já há cronograma cadastrado (inicia a obra na
+ * hora) ou quando o Projeto Executivo foi concluído (lembra de cadastrar o
+ * cronograma). Cliente nunca vê.
  */
 export function ProjectPhaseCompletionBanner({
   projectId,
-  projectName,
   isProjectPhase,
   stages,
-  isStaff,
 }: Props) {
-  const queryClient = useQueryClient();
-  const [submitting, setSubmitting] = useState(false);
-  const [dismissed, setDismissed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(dismissKey(projectId)) === "1";
-  });
+  const { can } = useCan();
+  const canStart = can("journey:edit_stages");
+  const enabled = canStart && isProjectPhase;
+  // Só busca atividades quando o banner pode aparecer (nada para o cliente).
+  const { activities, loading } = useProjectActivities(
+    enabled ? projectId : undefined,
+  );
+  const { start, isPending } = useStartProjectExecution();
+  const [dismissed, setDismissed] = useState(() => readDismissed(projectId));
 
-  // Only staff sees this; only when project is still in project phase
-  if (!isStaff || !isProjectPhase || dismissed) return null;
-  if (!stages.length) return null;
+  if (!enabled || dismissed || loading) return null;
 
-  const allCompleted = stages.every((s) => s.status === "completed");
-  if (!allCompleted) return null;
+  const scheduleReady = hasRealSchedule(activities);
+  const executivoDone = stages.some(
+    (s) => isExecutivoStage(s) && s.status === "completed",
+  );
+  if (!scheduleReady && !executivoDone) return null;
 
-  const handleConfirm = async () => {
-    setSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from("projects")
-        .update({ is_project_phase: false })
-        .eq("id", projectId);
-      if (error) throw error;
-      toast.success("Fase de projeto concluída. Cronograma liberado.");
-      await queryClient.invalidateQueries({ queryKey: ["project", projectId] });
-      await queryClient.invalidateQueries({ queryKey: ["projects"] });
-    } catch (err: any) {
-      console.error("Failed to flip is_project_phase", err);
-      toast.error(
-        err?.message || "Não foi possível concluir a fase de projeto.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+  const handleStart = async () => {
+    // Sem data: a RPC usa o início da primeira atividade. Toasts ficam no hook.
+    await start(projectId, null);
   };
 
   const handleDismiss = () => {
     setDismissed(true);
-    localStorage.setItem(dismissKey(projectId), "1");
+    writeDismissed(projectId);
   };
 
   return (
-    <Alert className="mb-4 border-primary/40 bg-primary/5">
-      <Sparkles className="h-4 w-4 text-primary" />
-      <AlertTitle className="flex items-center gap-2">
-        Todas as etapas da Jornada estão concluídas
+    <Alert className="mb-4 border-warning/30 bg-warning/10 [&>svg]:text-warning">
+      {scheduleReady ? (
+        <HardHat className="h-4 w-4" />
+      ) : (
+        <CalendarClock className="h-4 w-4" />
+      )}
+      <AlertTitle>
+        {scheduleReady
+          ? "O cliente ainda não vê o cronograma"
+          : "Projeto Executivo concluído"}
       </AlertTitle>
       <AlertDescription className="mt-1 space-y-3">
         <p className="text-sm text-muted-foreground">
-          A obra{" "}
-          <span className="font-medium text-foreground">{projectName}</span>{" "}
-          ainda está marcada como <em>fase de projeto</em>. Encerrar essa fase
-          libera o Cronograma para gestão da execução.
+          {scheduleReady
+            ? "O cronograma já está cadastrado, mas o cliente ainda não vê: a obra está em fase de projeto."
+            : "Quando a obra começar, cadastre o cronograma e inicie a obra para o cliente acompanhar."}
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            size="sm"
-            onClick={handleConfirm}
-            disabled={submitting}
-            className="gap-1.5"
-          >
-            {submitting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <CheckCircle2 className="h-3.5 w-3.5" />
-            )}
-            Encerrar fase de projeto
-          </Button>
+          {scheduleReady ? (
+            <Button
+              size="sm"
+              onClick={handleStart}
+              disabled={isPending}
+              className="gap-1.5"
+            >
+              {isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <HardHat className="h-3.5 w-3.5" />
+              )}
+              Iniciar obra e liberar cronograma
+            </Button>
+          ) : (
+            <Button size="sm" asChild className="gap-1.5">
+              <Link to={`/obra/${projectId}/cronograma`}>
+                <CalendarDays className="h-3.5 w-3.5" />
+                Cadastrar cronograma
+              </Link>
+            </Button>
+          )}
           <Button
             size="sm"
             variant="ghost"
             onClick={handleDismiss}
+            disabled={isPending}
             className="gap-1.5 text-muted-foreground"
           >
             <X className="h-3.5 w-3.5" />

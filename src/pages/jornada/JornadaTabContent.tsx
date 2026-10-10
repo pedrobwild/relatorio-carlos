@@ -20,6 +20,7 @@ import { JourneyWelcomeStage } from "@/components/journey/JourneyWelcomeStage";
 import { StageDetailInline } from "@/components/journey/StageDetailInline";
 import { PullToRefreshIndicator } from "@/components/journey/PullToRefreshIndicator";
 import { TabOnboardingTip } from "@/components/journey/TabOnboardingTip";
+import { pickCurrentStageId } from "@/components/journey/journeyStageDisplay";
 import { journeyCopy } from "@/constants/journeyCopy";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type {
@@ -94,7 +95,13 @@ export function JornadaTabContent({
 }: JornadaTabContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [timelineSheetOpen, setTimelineSheetOpen] = useState(false);
-  const hasAutoNavigated = useRef(false);
+  // Seleção automática da etapa atual. Antes era feita uma única vez — muitas
+  // vezes com o cache persistido no localStorage — e a tela não acompanhava os
+  // dados frescos. Agora segue a etapa atual sempre que ela muda, até o
+  // usuário escolher uma etapa manualmente nesta sessão (guardamos o projectId
+  // da escolha manual para não vazar entre obras).
+  const lastAutoSelectedStageIdRef = useRef<string | null>(null);
+  const manualSelectionProjectRef = useRef<string | null>(null);
   const isMobile = useIsMobile();
   // On mobile, null means "show overview", a stageId means "show detail"
   const [mobileDetailStageId, setMobileDetailStageId] = useState<string | null>(
@@ -104,19 +111,18 @@ export function JornadaTabContent({
   // Determine active view
   const [activeView, setActiveView] = useState<string>("welcome");
 
+  const currentStageId = useMemo(
+    () => pickCurrentStageId(journey.stages),
+    [journey.stages],
+  );
+
   useEffect(() => {
-    if (hasRealProgress && journey?.stages && !hasAutoNavigated.current) {
-      hasAutoNavigated.current = true;
-      const currentStage =
-        journey.stages.find(
-          (s) => s.status === "in_progress" || s.status === "waiting_action",
-        ) ||
-        journey.stages.find(
-          (s) => s.status !== "completed" && s.status !== "pending",
-        );
-      if (currentStage) setActiveView(currentStage.id);
-    }
-  }, [hasRealProgress, journey?.stages]);
+    if (!hasRealProgress || !currentStageId) return;
+    if (manualSelectionProjectRef.current === projectId) return;
+    if (lastAutoSelectedStageIdRef.current === currentStageId) return;
+    lastAutoSelectedStageIdRef.current = currentStageId;
+    setActiveView(currentStageId);
+  }, [hasRealProgress, currentStageId, projectId]);
 
   // Build stages list with virtual welcome stage
   const welcomeVirtualStage = useMemo(
@@ -174,9 +180,10 @@ export function JornadaTabContent({
     return journey.stages[idx + 1]?.name ?? null;
   }, [selectedStage, journey.stages]);
 
-  const handleTimelineClick = useCallback(
-    (stageId: string) => {
+  const goToStage = useCallback(
+    (stageId: string, { manual }: { manual: boolean }) => {
       if (stageId === "welcome") {
+        if (manual) manualSelectionProjectRef.current = projectId;
         setActiveView("welcome");
         if (isMobile) {
           setMobileDetailStageId("welcome");
@@ -193,6 +200,7 @@ export function JornadaTabContent({
         )
           return;
       }
+      if (manual) manualSelectionProjectRef.current = projectId;
       setActiveView(stageId);
       if (isMobile) {
         setMobileDetailStageId(stageId);
@@ -208,7 +216,13 @@ export function JornadaTabContent({
         );
       }
     },
-    [journey.stages, welcomeCompleted, isAdmin, isMobile],
+    [journey.stages, welcomeCompleted, isAdmin, isMobile, projectId],
+  );
+
+  /** Clique do usuário: interrompe a seleção automática nesta sessão. */
+  const handleTimelineClick = useCallback(
+    (stageId: string) => goToStage(stageId, { manual: true }),
+    [goToStage],
   );
 
   const handleAdvanceFromWelcome = useCallback(() => {
@@ -336,7 +350,10 @@ export function JornadaTabContent({
                         );
                         const next = journey.stages[idx + 1];
                         if (next)
-                          setTimeout(() => handleTimelineClick(next.id), 500);
+                          setTimeout(
+                            () => goToStage(next.id, { manual: false }),
+                            500,
+                          );
                       }}
                     />
                   </motion.div>
@@ -403,16 +420,13 @@ export function JornadaTabContent({
                     size="sm"
                     onClick={() => {
                       setMobileDetailStageId(null);
-                      // Reset to current active stage or welcome
-                      const currentStage = welcomeCompleted
-                        ? journey.stages.find(
-                            (s) =>
-                              s.status === "in_progress" ||
-                              s.status === "waiting_action",
-                          )
-                        : null;
+                      // Volta para a etapa atual (ou boas-vindas) e retoma a
+                      // seleção automática.
+                      manualSelectionProjectRef.current = null;
                       setActiveView(
-                        currentStage?.id || journey.stages[0]?.id || "welcome",
+                        (welcomeCompleted ? currentStageId : null) ||
+                          journey.stages[0]?.id ||
+                          "welcome",
                       );
                     }}
                     className="gap-1.5 -ml-2 mb-3 text-muted-foreground"
@@ -442,7 +456,10 @@ export function JornadaTabContent({
                         );
                         const next = journey.stages[idx + 1];
                         if (next)
-                          setTimeout(() => handleTimelineClick(next.id), 500);
+                          setTimeout(
+                            () => goToStage(next.id, { manual: false }),
+                            500,
+                          );
                       }}
                     />
                   ) : null}

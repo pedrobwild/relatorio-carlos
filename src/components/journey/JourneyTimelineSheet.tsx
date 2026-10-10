@@ -12,6 +12,10 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import {
+  formatJourneyStagePosition,
+  getJourneyStagePosition,
+} from "@/components/journey/journeyStageDisplay";
 
 /* ─── Visual state ─── */
 
@@ -124,11 +128,12 @@ export function JourneyTimelineSheet({
   activeStageId,
   onStageClick,
 }: JourneyTimelineSheetProps) {
-  const completedCount = stages.filter((s) => s.status === "completed").length;
-  const currentIdx = stages.findIndex(
-    (s) => s.status === "in_progress" || s.status === "waiting_action",
-  );
-  const displayIdx = currentIdx >= 0 ? currentIdx + 1 : completedCount;
+  // Posição da etapa atual (primeira não concluída). Antes, uma etapa atual
+  // ainda "pending" caía na contagem de concluídas e o número ficava 1 atrás.
+  const position = getJourneyStagePosition(stages);
+  const { completedCount } = position;
+  const displayIdx =
+    position.currentIndex >= 0 ? position.currentIndex + 1 : stages.length;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -152,7 +157,7 @@ export function JourneyTimelineSheet({
         <nav
           className="overflow-y-auto px-2"
           role="tablist"
-          aria-label={`${journeyCopy.a11y.stagesNav}. Etapa ${displayIdx} de ${stages.length}`}
+          aria-label={`${journeyCopy.a11y.stagesNav}. ${formatJourneyStagePosition(position)}`}
         >
           <ol className="space-y-0 list-none p-0 m-0 relative">
             {stages.map((stage, index) => {

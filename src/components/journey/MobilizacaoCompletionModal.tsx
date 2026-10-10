@@ -1,6 +1,14 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { toLocalISODate } from "@/lib/localDate";
-import { Loader2, Calendar, ArrowRight, Building2 } from "lucide-react";
+import { format, parseLocalDate } from "@/lib/dates";
+import {
+  AlertTriangle,
+  Calendar,
+  CalendarDays,
+  HardHat,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,180 +21,88 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { projectsRepo } from "@/infra/repositories";
-import { useAuth } from "@/hooks/useAuth";
-import { useCompleteStage } from "@/hooks/useProjectJourney";
 import { addBusinessDays } from "@/lib/businessDays";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  useProjectActivities,
+  type ProjectActivity,
+} from "@/hooks/useProjectActivities";
+import { useStartProjectExecution } from "@/hooks/useStartProjectExecution";
 
 interface MobilizacaoCompletionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Mantido por compatibilidade: a RPC conclui todas as etapas pendentes. */
   stageId: string;
   projectId: string;
   onSuccess?: () => void;
 }
 
-function formatDateForInput(date: Date): string {
-  return toLocalISODate(date);
+/**
+ * Resumo do cronograma para decidir se dá para iniciar a obra. Espelha as
+ * regras da RPC `start_project_execution` (a validação de verdade é lá):
+ * sem atividades, ou com o modelo de placeholders (todas na mesma data), o
+ * cliente não teria o que acompanhar.
+ */
+function summarizeSchedule(activities: ProjectActivity[]) {
+  if (!activities.length) {
+    return { count: 0, firstStart: null, isTemplate: false };
+  }
+  const starts = activities.map((a) => a.planned_start).sort();
+  const ends = activities.map((a) => a.planned_end).sort();
+  const firstStart = starts[0];
+  const lastEnd = ends[ends.length - 1];
+  return {
+    count: activities.length,
+    firstStart,
+    isTemplate: activities.length > 1 && firstStart === lastEnd,
+  };
 }
 
+function formatDateBR(isoDate: string): string {
+  return format(parseLocalDate(isoDate), "dd/MM/yyyy");
+}
+
+/**
+ * "Iniciar obra": tira a obra da fase de projeto NESTA MESMA obra (sem clonar)
+ * e libera o cronograma para o cliente. Abre a partir da etapa Mobilização.
+ */
 export function MobilizacaoCompletionModal({
   open,
   onOpenChange,
-  stageId,
   projectId,
   onSuccess,
 }: MobilizacaoCompletionModalProps) {
-  const { user } = useAuth();
-  const completeStage = useCompleteStage();
-  const queryClient = useQueryClient();
-  const [loading, setLoading] = useState(false);
-  const [plannedStartDate, setPlannedStartDate] = useState("");
-  const [projectData, setProjectData] = useState<{
-    name: string;
-    unit_name: string | null;
-    address: string | null;
-    bairro: string | null;
-    cep: string | null;
-    contract_value: number | null;
-    org_id: string | null;
-    customer_name: string;
-    customer_email: string;
-    customer_phone: string | null;
-    milestoneDates: {
-      contract_signing_date: string | null;
-      date_briefing_arch: string | null;
-      date_approval_3d: string | null;
-      date_approval_exec: string | null;
-      date_approval_obra: string | null;
-      date_mobilization_start: string | null;
-    };
-  } | null>(null);
+  const { start, isPending } = useStartProjectExecution();
+  const { activities, loading: activitiesLoading } = useProjectActivities(
+    open ? projectId : undefined,
+  );
+  // null = usuário ainda não mexeu na data; vale a sugestão calculada.
+  const [customDate, setCustomDate] = useState<string | null>(null);
 
-  // Load project data when modal opens
   useEffect(() => {
-    if (!open || !projectId) return;
+    if (open) setCustomDate(null);
+  }, [open]);
 
-    let cancelled = false;
-    const defaultDate = addBusinessDays(new Date(), 5);
-    setPlannedStartDate(formatDateForInput(defaultDate));
+  const schedule = useMemo(() => summarizeSchedule(activities), [activities]);
+  // Sugestão: início da 1ª atividade (o mesmo padrão da RPC); sem cronograma,
+  // 5 dias úteis a partir de hoje.
+  const suggestedDate =
+    schedule.firstStart ?? toLocalISODate(addBusinessDays(new Date(), 5));
+  const startDate = customDate ?? suggestedDate;
 
-    (async () => {
-      try {
-        const { project, customer, stages } =
-          await projectsRepo.getProjectWithCustomerAndStages(projectId);
-        if (cancelled) return;
-
-        if (project) {
-          const stageMap = new Map(
-            stages.map((s: { name: string; confirmed_end: string | null }) => [
-              s.name.toLowerCase(),
-              s.confirmed_end,
-            ]),
-          );
-
-          const milestoneDates = {
-            contract_signing_date:
-              project.contract_signing_date ??
-              stageMap.get("boas-vindas") ??
-              null,
-            date_briefing_arch:
-              (stageMap.get("briefing arquitetônico") as string | null) ?? null,
-            date_approval_3d:
-              (stageMap.get("projeto 3d") as string | null) ?? null,
-            date_approval_exec:
-              (stageMap.get("projeto executivo") as string | null) ?? null,
-            date_approval_obra:
-              (stageMap.get("liberação da obra") as string | null) ?? null,
-            date_mobilization_start:
-              (stageMap.get("mobilização") as string | null) ?? null,
-          };
-
-          setProjectData({
-            name: project.name,
-            unit_name: project.unit_name,
-            address: project.address,
-            bairro: project.bairro,
-            cep: project.cep,
-            contract_value: project.contract_value,
-            org_id: project.org_id,
-            customer_name: customer?.customer_name || "",
-            customer_email: customer?.customer_email || "",
-            customer_phone: customer?.customer_phone || null,
-            milestoneDates,
-          });
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.error("Failed to load project data for mobilization:", err);
-          toast.error("Erro ao carregar dados do projeto");
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, projectId]);
+  const cronogramaPath = `/obra/${projectId}/cronograma`;
+  const hasNoSchedule = !activitiesLoading && schedule.count === 0;
+  const isTemplateSchedule = !activitiesLoading && schedule.isTemplate;
+  const canStart =
+    !activitiesLoading && !hasNoSchedule && !isTemplateSchedule && !!startDate;
 
   const handleConfirm = async () => {
-    if (!user || !projectData || !plannedStartDate) return;
-
-    setLoading(true);
-
-    try {
-      // 1. Complete the Mobilização stage
-      await completeStage.mutateAsync({ stageId, projectId });
-
-      // 2. Clone the project using the repository
-      const { error } = await projectsRepo.cloneProjectForConstruction(
-        projectId,
-        {
-          name: projectData.name,
-          unit_name: projectData.unit_name,
-          address: projectData.address,
-          bairro: projectData.bairro,
-          cep: projectData.cep,
-          contract_value: projectData.contract_value,
-          org_id: projectData.org_id,
-          planned_start_date: plannedStartDate,
-          status: "active",
-          created_by: user.id,
-          is_project_phase: false,
-          contract_signing_date:
-            projectData.milestoneDates.contract_signing_date,
-          date_briefing_arch: projectData.milestoneDates.date_briefing_arch,
-          date_approval_3d: projectData.milestoneDates.date_approval_3d,
-          date_approval_exec: projectData.milestoneDates.date_approval_exec,
-          date_approval_obra: projectData.milestoneDates.date_approval_obra,
-          date_mobilization_start:
-            projectData.milestoneDates.date_mobilization_start,
-        },
-        user.id,
-      );
-
-      if (error) throw error;
-
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["staff-projects"] });
-
-      toast.success("Obra de acompanhamento criada com sucesso!", {
-        description: `A obra "${projectData.name}" está pronta para acompanhamento.`,
-      });
-
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (err: any) {
-      console.error("Error creating construction project:", err);
-      toast.error("Erro ao criar obra de acompanhamento", {
-        description: err.message,
-      });
-    } finally {
-      setLoading(false);
-    }
+    if (!canStart) return;
+    // O hook já mostra o toast de sucesso/erro com a mensagem da RPC.
+    const result = await start(projectId, startDate);
+    if (!result) return;
+    onOpenChange(false);
+    onSuccess?.();
   };
 
   return (
@@ -194,83 +110,86 @@ export function MobilizacaoCompletionModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
-            Concluir Mobilização
+            <HardHat className="h-5 w-5 text-primary" />
+            Iniciar obra
           </DialogTitle>
           <DialogDescription>
-            Ao concluir esta etapa, uma nova obra de acompanhamento será criada
-            com os dados do cliente e empreendimento. Documentos, financeiro,
-            formalizações e pendências serão mantidos.
+            A obra sai da fase de projeto aqui mesmo, nesta obra: nenhuma obra
+            nova é criada. As etapas pendentes da jornada são concluídas e o
+            cliente passa a acompanhar o cronograma no portal.
           </DialogDescription>
         </DialogHeader>
 
         <Separator />
 
         <div className="space-y-4 py-2">
-          {/* Project info summary */}
-          {projectData && (
-            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
-              <p className="text-sm font-medium">{projectData.name}</p>
-              {projectData.unit_name && (
-                <p className="text-xs text-muted-foreground">
-                  {projectData.unit_name}
-                </p>
-              )}
+          {activitiesLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Verificando o cronograma...
+            </div>
+          ) : hasNoSchedule || isTemplateSchedule ? (
+            <div
+              role="alert"
+              className="rounded-lg border border-warning/30 bg-warning/10 p-3 space-y-2"
+            >
+              <p className="flex items-start gap-1.5 text-sm font-medium text-foreground">
+                <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                {hasNoSchedule
+                  ? "Cadastre o cronograma antes de iniciar a obra"
+                  : "O cronograma ainda é o modelo (todas as atividades na mesma data)"}
+              </p>
               <p className="text-xs text-muted-foreground">
-                Cliente: {projectData.customer_name}
+                {hasNoSchedule
+                  ? "Sem cronograma o cliente não tem o que acompanhar."
+                  : "Preencha as datas reais das atividades antes de iniciar a obra."}
+              </p>
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="min-h-[44px] gap-1.5"
+              >
+                <Link to={cronogramaPath} onClick={() => onOpenChange(false)}>
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Abrir cronograma
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <p className="text-sm text-foreground">
+                Cronograma com {schedule.count}{" "}
+                {schedule.count === 1 ? "atividade" : "atividades"}
+                {schedule.firstStart
+                  ? `, começando em ${formatDateBR(schedule.firstStart)}`
+                  : ""}
+                .
               </p>
             </div>
           )}
 
-          {/* Start date picker */}
+          {/* Data de início */}
           <div className="space-y-2">
             <Label
               htmlFor="mob-start-date"
               className="flex items-center gap-1.5"
             >
               <Calendar className="h-3.5 w-3.5" />
-              Data de início da obra *
+              Data de início da obra
             </Label>
             <Input
               id="mob-start-date"
               type="date"
-              value={plannedStartDate}
-              onChange={(e) => setPlannedStartDate(e.target.value)}
+              value={startDate}
+              onChange={(e) => setCustomDate(e.target.value)}
               required
             />
             <p className="text-xs text-muted-foreground">
-              Sugestão: 5 dias úteis após a conclusão da liberação da obra.
+              {schedule.firstStart
+                ? "Sugestão: início da primeira atividade do cronograma."
+                : "Sugestão: 5 dias úteis a partir de hoje."}
             </p>
-          </div>
-
-          {/* What will be copied */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              O que será mantido na nova obra:
-            </p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {[
-                "Dados do cliente",
-                "Dados do empreendimento",
-                "Cronograma (atividades)",
-                "Financeiro (parcelas)",
-                "Documentos",
-                "Formalizações",
-                "Pendências",
-                "Compras",
-                "Equipe do projeto",
-                "Projeto 3D",
-                "Marcos do projeto",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center gap-1.5 text-xs text-foreground"
-                >
-                  <ArrowRight className="h-3 w-3 text-primary shrink-0" />
-                  {item}
-                </div>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -278,23 +197,23 @@ export function MobilizacaoCompletionModal({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={loading}
+            disabled={isPending}
             className="min-h-[44px]"
           >
             Cancelar
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={loading || !plannedStartDate}
+            disabled={isPending || !canStart}
             className="min-h-[44px] gap-1.5"
           >
-            {loading ? (
+            {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Criando obra...
+                Iniciando obra...
               </>
             ) : (
-              <>Concluir e criar obra</>
+              <>Iniciar obra</>
             )}
           </Button>
         </DialogFooter>

@@ -7,12 +7,16 @@
  * de declarar erro.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
 
-import { ProjectProvider, useProject } from "../ProjectContext";
+import {
+  ProjectProvider,
+  SILENT_REFETCH_MIN_INTERVAL_MS,
+  useProject,
+} from "../ProjectContext";
 
 const getProjectWithCustomerMock = vi.fn();
 const getCustomerProjectsMock = vi.fn();
@@ -189,6 +193,155 @@ describe("ProjectContext", () => {
     expect(result.current.error).toBe("permission denied");
     expect(ensureCustomerProjectLinkMock).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+});
+
+// Atualização silenciosa: `is_project_phase` decide entre Jornada e
+// Cronograma, mas o projeto só era buscado ao trocar de obra. Ao voltar para
+// a aba/janela, o provider rebusca em silêncio (sem loading, sem limpar o
+// projeto), no máximo uma vez por minuto.
+describe("ProjectContext atualização silenciosa (foco/visibilidade)", () => {
+  const T0 = 1_000_000;
+  let now = T0;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    now = T0;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "visible",
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const fireVisible = () =>
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+  const fireFocus = () =>
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
+    });
+
+  async function renderLoaded() {
+    getProjectWithCustomerMock.mockResolvedValue({
+      data: { ...PROJECT, is_project_phase: true },
+      error: null,
+    });
+    const seen: Array<{ loading: boolean; hasProject: boolean }> = [];
+    const hook = renderHook(
+      () => {
+        const ctx = useProject();
+        seen.push({ loading: ctx.loading, hasProject: !!ctx.project });
+        return ctx;
+      },
+      { wrapper: createWrapper() },
+    );
+    await waitFor(() => expect(hook.result.current.status).toBe("ready"));
+    return { ...hook, seen };
+  }
+
+  it("ao voltar para a aba atualiza o projeto sem loading nem limpar o projeto", async () => {
+    const { result, seen } = await renderLoaded();
+    expect(result.current.project?.is_project_phase).toBe(true);
+    const rendersBefore = seen.length;
+
+    getProjectWithCustomerMock.mockResolvedValue({
+      data: { ...PROJECT, is_project_phase: false },
+      error: null,
+    });
+    now = T0 + SILENT_REFETCH_MIN_INTERVAL_MS + 1;
+    fireVisible();
+
+    await waitFor(() =>
+      expect(result.current.project?.is_project_phase).toBe(false),
+    );
+    expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(2);
+    // Nenhum render intermediário com skeleton/projeto vazio.
+    expect(
+      seen.slice(rendersBefore).every((s) => !s.loading && s.hasProject),
+    ).toBe(true);
+    expect(result.current.status).toBe("ready");
+  });
+
+  it("no máximo uma busca por minuto (foco + visibilidade juntos)", async () => {
+    await renderLoaded();
+    expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(1);
+
+    // Logo após carregar: dentro da janela, nada.
+    fireFocus();
+    expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(1);
+
+    // Passou 1 minuto: foco e visibilidade disparam juntos → uma busca só.
+    now = T0 + SILENT_REFETCH_MIN_INTERVAL_MS + 1;
+    fireVisible();
+    fireFocus();
+    expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(2);
+
+    // 30s depois: ainda dentro da janela.
+    now += 30_000;
+    fireFocus();
+    expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(2);
+
+    now += SILENT_REFETCH_MIN_INTERVAL_MS;
+    fireFocus();
+    expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("erro na busca silenciosa mantém o projeto atual", async () => {
+    const { result } = await renderLoaded();
+    const warnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    getProjectWithCustomerMock.mockResolvedValue({
+      data: null,
+      error: new Error("Failed to fetch"),
+    });
+    now = T0 + SILENT_REFETCH_MIN_INTERVAL_MS + 1;
+    fireVisible();
+
+    await waitFor(() =>
+      expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(2),
+    );
+    expect(result.current.project).toMatchObject({ id: "p-1" });
+    expect(result.current.status).toBe("ready");
+    expect(result.current.error).toBeNull();
+    warnSpy.mockRestore();
+  });
+
+  it("resposta silenciosa atrasada não sobrescreve uma busca completa mais nova", async () => {
+    const { result } = await renderLoaded();
+
+    let resolveSilent: (v: unknown) => void = () => undefined;
+    getProjectWithCustomerMock.mockImplementationOnce(
+      () => new Promise((resolve) => (resolveSilent = resolve)),
+    );
+    now = T0 + SILENT_REFETCH_MIN_INTERVAL_MS + 1;
+    fireVisible();
+    expect(getProjectWithCustomerMock).toHaveBeenCalledTimes(2);
+
+    // Busca completa (refetch manual) começa e termina antes da silenciosa.
+    getProjectWithCustomerMock.mockResolvedValueOnce({
+      data: { ...PROJECT, name: "Obra Nova" },
+      error: null,
+    });
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(result.current.project?.name).toBe("Obra Nova");
+
+    await act(async () => {
+      resolveSilent({
+        data: { ...PROJECT, name: "Obra Antiga" },
+        error: null,
+      });
+    });
+    expect(result.current.project?.name).toBe("Obra Nova");
   });
 });
 

@@ -76,8 +76,9 @@ Deno.serve(async (req) => {
       estimated_duration_weeks: project.estimated_duration_weeks ?? null,
       budget_value: typeof project.budget_value === "number" ? project.budget_value : null,
       budget_code: project.budget_code ?? null,
-      status: "draft",
-      is_project_phase: true,
+      // status / is_project_phase NÃO entram aqui: só valem na criação (ver
+      // insert abaixo). Num re-sync, forçá-los devolvia à fase de projeto
+      // (e escondia o cronograma do cliente) uma obra já em execução.
       notes: project.notes ?? null,
       consultora_comercial: project.consultora_comercial ?? null,
       contract_value: typeof project.budget_value === "number" ? project.budget_value : null,
@@ -106,6 +107,8 @@ Deno.serve(async (req) => {
         .from("projects")
         .insert({
           ...projectPayload,
+          status: "draft",
+          is_project_phase: true,
           external_id: source_id,
           external_system: "envision",
           created_by: adminUser.id,
