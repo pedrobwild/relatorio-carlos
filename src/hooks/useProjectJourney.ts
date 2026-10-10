@@ -147,6 +147,9 @@ export function useProjectJourney(projectId: string | undefined) {
     enabled: !!projectId,
     // O padrão do app é false; aqui o cliente que volta ao app (aba/foco)
     // precisa ver as etapas que a equipe avançou enquanto ele estava fora.
+    // O foco só recarrega dado vencido: com os 5 min padrão, quem voltava
+    // em seguida continuava vendo a etapa antiga.
+    staleTime: 30_000,
     refetchOnWindowFocus: true,
   });
 }

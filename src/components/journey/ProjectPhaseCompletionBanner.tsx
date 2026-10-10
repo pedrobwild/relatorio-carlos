@@ -81,7 +81,9 @@ export function ProjectPhaseCompletionBanner({
   const executivoDone = stages.some(
     (s) => isExecutivoStage(s) && s.status === "completed",
   );
-  if (!scheduleReady && !executivoDone) return null;
+  // Antes do Projeto Executivo concluído a obra não pode começar (a RPC
+  // recusa): oferecer "Iniciar obra" ali só levaria a um erro.
+  if (!executivoDone) return null;
 
   const handleStart = async () => {
     // Sem data: a RPC usa o início da primeira atividade. Toasts ficam no hook.

@@ -110,7 +110,7 @@ describe("ProjectPhaseCompletionBanner", () => {
   });
 
   it("com cronograma cadastrado, inicia a obra pela RPC (data padrão da RPC)", async () => {
-    renderBanner();
+    renderBanner({ stages: stagesExecutivoConcluido });
 
     expect(mockedActivities).toHaveBeenCalledWith("p1");
     expect(
@@ -165,8 +165,13 @@ describe("ProjectPhaseCompletionBanner", () => {
     expect(mockedActivities).toHaveBeenCalledWith(undefined);
   });
 
+  it("com cronograma mas Executivo pendente, não oferece iniciar (a RPC recusaria)", () => {
+    const { container } = renderBanner({ stages: stagesExecutivoPendente });
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it("'Lembrar depois' esconde o banner", async () => {
-    const { container } = renderBanner();
+    const { container } = renderBanner({ stages: stagesExecutivoConcluido });
     await userEvent.click(screen.getByRole("button", { name: /Lembrar depois/ }));
     expect(container).toBeEmptyDOMElement();
     expect(start).not.toHaveBeenCalled();

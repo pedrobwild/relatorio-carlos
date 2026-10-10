@@ -51,6 +51,8 @@ export function useStartProjectExecution() {
       // Jornada, listas de obras e o projeto aberto mudam de uma vez.
       queryClient.invalidateQueries({ queryKey: ["project-journey", projectId] });
       invalidateProjectQueries(projectId);
+      // Painel de Obras / portfólio listam a fase e o status de todas as obras.
+      invalidateProjectQueries();
       if (projectContext?.project?.id === projectId) {
         await projectContext.refetch();
       }

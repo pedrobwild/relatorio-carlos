@@ -18,10 +18,10 @@
 -- Na mesma obra (sem clonar):
 --   1. exige cronograma cadastrado (project_activities) — sem ele o cliente
 --      cairia numa tela vazia;
---   2. conclui as etapas da jornada que ainda não estavam concluídas
---      (Liberação da Obra, Mobilização…), com a data de início como
---      confirmed_end quando não havia data — o cliente é notificado pelo
---      trigger notify_stage_changed já existente;
+--   2. exige as etapas de projeto (até o Projeto Executivo) concluídas e
+--      conclui as que restam (Liberação da Obra, Mobilização…), com a data de
+--      início — nunca no futuro — como confirmed_end quando não havia data; o
+--      cliente é notificado pelo trigger notify_stage_changed já existente;
 --   3. vira is_project_phase = false, preenche datas planejadas vazias e
 --      reativa obras em 'draft'/'completed' indevido.
 -- Idempotente: em obra que já está em execução, só devolve o estado.
@@ -43,9 +43,17 @@ DECLARE
   v_first_start date;
   v_last_end date;
   v_completed_stages int := 0;
+  -- current_date no Supabase é UTC (já é "amanhã" depois das 21h em SP).
+  v_today date := (now() AT TIME ZONE 'America/Sao_Paulo')::date;
 BEGIN
-  IF v_uid IS NULL OR NOT public.is_staff(v_uid) THEN
-    RAISE EXCEPTION 'Apenas a equipe pode iniciar a obra'
+  -- Mesmos papéis de 'journey:edit_stages' (src/config/permissions.ts):
+  -- financeiro/suprimentos são staff, mas não mexem na jornada.
+  IF v_uid IS NULL OR NOT EXISTS (
+       SELECT 1 FROM public.user_roles
+        WHERE user_id = v_uid
+          AND role IN ('admin', 'manager', 'engineer', 'gestor', 'cs', 'arquitetura')
+     ) THEN
+    RAISE EXCEPTION 'Sem permissão para iniciar a obra'
       USING ERRCODE = '42501';
   END IF;
 
@@ -91,12 +99,30 @@ BEGIN
             HINT = 'Abra o Cronograma da obra e ajuste as datas das atividades.';
   END IF;
 
-  v_start := COALESCE(p_start_date, v_first_start, current_date);
+  -- Etapas de projeto (até o Projeto Executivo) precisam estar concluídas:
+  -- iniciar a obra não pode encerrar à força o projeto que o cliente ainda
+  -- está aprovando. Obras sem a etapa "Liberação da Obra" não são barradas.
+  IF EXISTS (
+    SELECT 1 FROM public.journey_stages js
+     WHERE js.project_id = p_project_id
+       AND js.status <> 'completed'
+       AND js.sort_order < (
+         SELECT min(sort_order) FROM public.journey_stages
+          WHERE project_id = p_project_id AND name ILIKE 'Libera%o da Obra'
+       )
+  ) THEN
+    RAISE EXCEPTION 'Conclua as etapas de projeto (até o Projeto Executivo) antes de iniciar a obra'
+      USING ERRCODE = 'P0001',
+            HINT = 'Conclua o Projeto Executivo na Jornada e tente novamente.';
+  END IF;
+
+  v_start := COALESCE(p_start_date, v_first_start, v_today);
 
   WITH done AS (
     UPDATE public.journey_stages
        SET status = 'completed',
-           confirmed_end = COALESCE(confirmed_end, v_start)
+           -- Conclusão nunca no futuro, mesmo com início planejado adiante.
+           confirmed_end = COALESCE(confirmed_end, LEAST(v_start, v_today))
      WHERE project_id = p_project_id
        AND status <> 'completed'
     RETURNING 1
@@ -108,7 +134,7 @@ BEGIN
          status = CASE WHEN status IN ('draft', 'completed') THEN 'active' ELSE status END,
          planned_start_date = COALESCE(planned_start_date, v_start),
          planned_end_date = COALESCE(planned_end_date, v_last_end),
-         date_approval_obra = COALESCE(date_approval_obra, v_start),
+         date_approval_obra = COALESCE(date_approval_obra, LEAST(v_start, v_today)),
          date_mobilization_start = COALESCE(date_mobilization_start, v_start)
    WHERE id = p_project_id;
 

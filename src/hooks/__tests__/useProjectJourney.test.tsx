@@ -70,7 +70,7 @@ function setup() {
   const queryClient = new QueryClient({
     defaultOptions: {
       // Espelha o padrão do app (src/lib/queryClient.ts).
-      queries: { retry: false, refetchOnWindowFocus: false },
+      queries: { retry: false, refetchOnWindowFocus: false, staleTime: 5 * 60_000 },
     },
   });
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -147,11 +147,24 @@ describe("useProjectJourney", () => {
     expect(result.current.data?.stages).toHaveLength(2);
   });
 
-  it("rebusca ao voltar o foco para o app", async () => {
+  it("rebusca ao voltar o foco para o app depois de 30s", async () => {
+    const realNow = Date.now();
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(realNow);
     const { result } = setup();
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(db.calls.journey_stages).toBe(1);
 
+    // Voltar logo em seguida não rebusca (dado ainda fresco)…
+    act(() => {
+      focusManager.setFocused(false);
+    });
+    act(() => {
+      focusManager.setFocused(true);
+    });
+    expect(db.calls.journey_stages).toBe(1);
+
+    // …mas depois de 30s rebusca — e não 5 min, como o padrão do app.
+    nowSpy.mockReturnValue(realNow + 31_000);
     act(() => {
       focusManager.setFocused(false);
     });
@@ -160,5 +173,6 @@ describe("useProjectJourney", () => {
     });
 
     await waitFor(() => expect(db.calls.journey_stages).toBe(2));
+    nowSpy.mockRestore();
   });
 });

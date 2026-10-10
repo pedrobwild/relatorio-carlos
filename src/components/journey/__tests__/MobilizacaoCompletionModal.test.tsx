@@ -17,6 +17,10 @@ vi.mock("@/hooks/useProjectActivities", () => ({
 vi.mock("@/hooks/useStartProjectExecution", () => ({
   useStartProjectExecution: vi.fn(),
 }));
+const completeStageMutate = vi.fn();
+vi.mock("@/hooks/useProjectJourney", () => ({
+  useCompleteStage: () => ({ mutateAsync: completeStageMutate }),
+}));
 
 import { MobilizacaoCompletionModal } from "@/components/journey/MobilizacaoCompletionModal";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
@@ -132,5 +136,35 @@ describe("MobilizacaoCompletionModal", () => {
     expect(start).toHaveBeenCalledWith("p1", "2026-10-20");
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
     expect(onSuccess).not.toHaveBeenCalled();
+  });
+  it("obra já em execução: conclui a Mobilização pela etapa", async () => {
+    mockedActivities.mockReturnValue(
+      activitiesState([{ planned_start: "2026-10-20", planned_end: "2026-10-24" }]),
+    );
+    start.mockResolvedValue({ project_id: "p1", already_in_execution: true });
+    completeStageMutate.mockResolvedValue({ projectId: "p1" });
+    const user = userEvent.setup();
+    renderModal();
+
+    await user.click(confirmButton());
+
+    expect(completeStageMutate).toHaveBeenCalledWith({
+      stageId: "stage-mob",
+      projectId: "p1",
+    });
+    expect(onSuccess).toHaveBeenCalled();
+  });
+
+  it("obra iniciada pela RPC: não conclui a etapa de novo", async () => {
+    mockedActivities.mockReturnValue(
+      activitiesState([{ planned_start: "2026-10-20", planned_end: "2026-10-24" }]),
+    );
+    const user = userEvent.setup();
+    renderModal();
+
+    await user.click(confirmButton());
+
+    expect(start).toHaveBeenCalled();
+    expect(completeStageMutate).not.toHaveBeenCalled();
   });
 });

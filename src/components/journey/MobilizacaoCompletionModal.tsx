@@ -27,6 +27,7 @@ import {
   type ProjectActivity,
 } from "@/hooks/useProjectActivities";
 import { useStartProjectExecution } from "@/hooks/useStartProjectExecution";
+import { useCompleteStage } from "@/hooks/useProjectJourney";
 
 interface MobilizacaoCompletionModalProps {
   open: boolean;
@@ -69,10 +70,12 @@ function formatDateBR(isoDate: string): string {
 export function MobilizacaoCompletionModal({
   open,
   onOpenChange,
+  stageId,
   projectId,
   onSuccess,
 }: MobilizacaoCompletionModalProps) {
   const { start, isPending } = useStartProjectExecution();
+  const completeStage = useCompleteStage();
   const { activities, loading: activitiesLoading } = useProjectActivities(
     open ? projectId : undefined,
   );
@@ -101,6 +104,11 @@ export function MobilizacaoCompletionModal({
     // O hook já mostra o toast de sucesso/erro com a mensagem da RPC.
     const result = await start(projectId, startDate);
     if (!result) return;
+    // Obra já iniciada por outro caminho (contexto desatualizado): a RPC não
+    // mexe nas etapas, então a Mobilização é concluída aqui mesmo.
+    if (result.already_in_execution) {
+      await completeStage.mutateAsync({ stageId, projectId });
+    }
     onOpenChange(false);
     onSuccess?.();
   };

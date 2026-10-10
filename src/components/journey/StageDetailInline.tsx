@@ -32,6 +32,7 @@ import { VersionsListModal } from "@/components/projeto3d/VersionsListModal";
 import { ExecutivoVersionsModal } from "@/components/executivo/ExecutivoVersionsModal";
 import { usePageInstructions } from "@/hooks/usePageInstructions";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useProjectOptional } from "@/contexts/ProjectContext";
 import { RichTextEditorModal } from "@/components/report/RichTextEditorModal";
 import { STAGE_INSTRUCTIONS_DEFAULTS } from "@/constants/stageInstructionsTemplates";
 import { AdminEditForm } from "./stage-detail/AdminEditForm";
@@ -115,6 +116,7 @@ export function StageDetailInline({
   const displayHtml = instruction?.content_html || defaultTemplate;
   const hasInstructions = !!displayHtml && displayHtml !== "<p><br></p>";
 
+  const projectContext = useProjectOptional();
   const canComplete =
     isAdmin && stage.status !== "completed" && stage.status !== "pending";
 
@@ -127,6 +129,10 @@ export function StageDetailInline({
   const isMobilizacaoStage =
     stage.name.toLowerCase().includes("mobilização") ||
     stage.name.toLowerCase().includes("mobilizacao");
+  // "Iniciar obra" só faz sentido em fase de projeto. Em obra que já está
+  // em execução, Mobilização se conclui como qualquer outra etapa.
+  const opensStartObra =
+    isMobilizacaoStage && projectContext?.project?.is_project_phase !== false;
   const isMedicaoTecnicaStage =
     stage.name.toLowerCase().includes("medição técnica") ||
     stage.name.toLowerCase().includes("medicao tecnica");
@@ -395,7 +401,7 @@ export function StageDetailInline({
           </Button>
         )}
 
-        {canComplete && isMobilizacaoStage && (
+        {canComplete && opensStartObra && (
           <>
             <Button
               size="sm"
@@ -414,7 +420,7 @@ export function StageDetailInline({
           </>
         )}
 
-        {canComplete && !isMobilizacaoStage && (
+        {canComplete && !opensStartObra && (
           <CompleteStageButton
             stageName={stage.name}
             stageId={stage.id}
