@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { FileSignature, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { FileSignature, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,7 @@ import { useProjectDeadline, useUpdateContractTerms } from "@/hooks/useContractD
 import type { ContractStartTrigger } from "@/infra/repositories/contractDeadline.repository";
 import {
   DEADLINE_HEALTH_LABEL,
+  MAX_CONTRACT_BUSINESS_DAYS,
   START_TRIGGER_LABEL,
   deadlineHealth,
   parseDecimal,
@@ -48,7 +49,7 @@ const HEALTH_CLASS = {
 
 export function PrazoContratualCard({ projectId, canEdit }: Props) {
   const { toast } = useToast();
-  const { data: d, isLoading } = useProjectDeadline(projectId);
+  const { data: d, isLoading, isError, refetch, isFetching } = useProjectDeadline(projectId);
   const update = useUpdateContractTerms(projectId);
 
   const [days, setDays] = useState("");
@@ -66,7 +67,24 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
     setCap(toInput(d.penalty_cap_pct));
   }, [d]);
 
+  // Só libera edição depois de ler os termos atuais: com o prazo ainda
+  // carregando (ou com erro) o formulário está vazio, e salvar apagaria o
+  // prazo e a multa já cadastrados.
+  // Erro numa atualização em segundo plano não bloqueia: os termos lidos antes
+  // continuam na tela.
+  const ready = !isLoading && d != null;
+  const loadFailed = !isLoading && d == null;
+
+  const dirty =
+    !!d &&
+    (days !== (d.contract_business_days == null ? "" : String(d.contract_business_days)) ||
+      trigger !== (d.contract_start_trigger ?? "") ||
+      startDate !== (d.contract_start_date ?? "") ||
+      pct !== toInput(d.penalty_pct_per_day) ||
+      cap !== toInput(d.penalty_cap_pct));
+
   const save = (confirm: boolean) => {
+    if (!ready) return;
     const terms = {
       contract_business_days: days.trim() === "" ? null : Number(days),
       contract_start_trigger: trigger === "" ? null : trigger,
@@ -94,7 +112,9 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
     );
   };
 
-  const health = deadlineHealth(d);
+  // Obra entregue dentro do prazo não fica em "atenção" para sempre.
+  const deliveredOnTime = !!d?.actual_end_date && (d.business_days_late ?? 0) === 0 && !!d.current_deadline;
+  const health = deliveredOnTime ? "no_prazo" : deadlineHealth(d);
   const hasAmendments = (d?.amendment_business_days ?? 0) > 0;
 
   return (
@@ -105,7 +125,7 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
             <FileSignature className="h-5 w-5" />
             Prazo contratual
           </CardTitle>
-          {!isLoading && (
+          {ready && (
             <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", HEALTH_CLASS[health])}>
               {DEADLINE_HEALTH_LABEL[health]}
             </span>
@@ -116,6 +136,18 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        {loadFailed && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm"
+          >
+            <p>Não foi possível carregar o prazo contratual desta obra. Os campos ficam bloqueados até carregar.</p>
+            <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>
+              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+              Tentar de novo
+            </Button>
+          </div>
+        )}
         {d && d.contract_business_days != null && !d.contract_terms_confirmed && (
           <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
@@ -179,7 +211,8 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
               id="prazo-dias"
               inputMode="numeric"
               value={days}
-              disabled={!canEdit}
+              disabled={!canEdit || !ready}
+              maxLength={String(MAX_CONTRACT_BUSINESS_DAYS).length}
               onChange={(e) => setDays(e.target.value.replace(/\D/g, ""))}
               placeholder="Ex.: 60"
             />
@@ -188,7 +221,7 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
             <Label htmlFor="prazo-gatilho">Contagem começa em</Label>
             <Select
               value={trigger}
-              disabled={!canEdit}
+              disabled={!canEdit || !ready}
               onValueChange={(v) => setTrigger(v as ContractStartTrigger)}
             >
               <SelectTrigger id="prazo-gatilho">
@@ -209,7 +242,7 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
               id="prazo-data"
               type="date"
               value={startDate}
-              disabled={!canEdit}
+              disabled={!canEdit || !ready}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
@@ -220,7 +253,7 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
                 id="prazo-multa"
                 inputMode="decimal"
                 value={pct}
-                disabled={!canEdit}
+                disabled={!canEdit || !ready}
                 onChange={(e) => setPct(e.target.value)}
                 placeholder="Ex.: 0,5"
               />
@@ -231,7 +264,7 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
                 id="prazo-teto"
                 inputMode="decimal"
                 value={cap}
-                disabled={!canEdit}
+                disabled={!canEdit || !ready}
                 onChange={(e) => setCap(e.target.value)}
                 placeholder="Ex.: 10"
               />
@@ -247,10 +280,13 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
                 Conferido com o contrato
               </Badge>
             )}
-            <Button variant="outline" disabled={update.isPending} onClick={() => save(false)}>
+            <Button variant="outline" disabled={!ready || !dirty || update.isPending} onClick={() => save(false)}>
               Salvar
             </Button>
-            <Button disabled={update.isPending} onClick={() => save(true)}>
+            <Button
+              disabled={!ready || update.isPending || (!dirty && !!d?.contract_terms_confirmed)}
+              onClick={() => save(true)}
+            >
               Salvar e marcar como conferido
             </Button>
           </div>

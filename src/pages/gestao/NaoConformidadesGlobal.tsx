@@ -37,6 +37,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { NonConformity } from "@/hooks/useNonConformities";
+import { toLocalISODate } from "@/lib/localDate";
 
 type DeadlineFilter = "all" | "overdue" | "today" | "this_week" | "no_deadline";
 
@@ -58,7 +59,7 @@ export default function NaoConformidadesGlobal() {
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
   const [filterDeadline, setFilterDeadline] = useState<DeadlineFilter>("all");
 
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const today = useMemo(() => toLocalISODate(new Date()), []);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -75,7 +76,7 @@ export default function NaoConformidadesGlobal() {
     const day = d.getDay();
     const diff = 7 - day;
     d.setDate(d.getDate() + diff);
-    return d.toISOString().split("T")[0];
+    return toLocalISODate(d);
   }, []);
 
   const filteredNcs = useMemo(() => {

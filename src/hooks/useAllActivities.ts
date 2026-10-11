@@ -6,6 +6,7 @@ import type {
   ObraTaskStatus,
   ObraTaskPriority,
 } from "@/hooks/useObraTasks";
+import { toLocalISODate } from "@/lib/localDate";
 
 // Extended ObraTask with project info for the global view
 export interface GlobalTask extends ObraTask {
@@ -21,11 +22,11 @@ export type KanbanStatus =
 export function deriveKanbanStatus(task: GlobalTask): KanbanStatus {
   if (task.status === "concluido") return "completed";
   if (task.status === "em_andamento" || task.status === "pausado") {
-    if (task.due_date && task.due_date < new Date().toISOString().slice(0, 10))
+    if (task.due_date && task.due_date < toLocalISODate(new Date()))
       return "overdue";
     return "in_progress";
   }
-  if (task.due_date && task.due_date < new Date().toISOString().slice(0, 10))
+  if (task.due_date && task.due_date < toLocalISODate(new Date()))
     return "overdue";
   return "not_started";
 }

@@ -569,6 +569,18 @@ export function invalidateActivityQueries(
       queryKey: queryKeys.activities.detail(activityId),
     });
   }
+  // As datas das etapas alimentam a folga da tela Obras.
+  queryClient.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+}
+
+/**
+ * Prazo contratual calculado (v_project_deadlines) e tela Obras. Chamar
+ * depois de gravar em `projects` algo que muda o cálculo: valor do contrato,
+ * entrega real, status ou datas.
+ */
+export function invalidateContractDeadlineQueries() {
+  queryClient.invalidateQueries({ queryKey: queryKeys.contractDeadline.all });
+  queryClient.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
 }
 
 /**

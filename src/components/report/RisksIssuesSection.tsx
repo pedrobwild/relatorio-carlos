@@ -15,6 +15,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { parseLocalDate } from "@/lib/dates";
 
 interface RisksIssuesSectionProps {
   issues: RiskIssue[];
@@ -55,7 +56,13 @@ const RiskItem = ({
         </div>
         <div className="flex flex-wrap items-center gap-1.5 mt-1 ml-5">
           <span className="text-xs font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
-            {format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}
+            {format(
+              /^\d{4}-\d{2}-\d{2}$/.test(issue.dueDate)
+                ? parseLocalDate(issue.dueDate)
+                : new Date(issue.dueDate),
+              "dd/MM",
+              { locale: ptBR },
+            )}
           </span>
         </div>
       </div>

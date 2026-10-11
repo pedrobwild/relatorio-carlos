@@ -7,6 +7,7 @@ import type {
   NcSeverity,
 } from "@/hooks/useNonConformities";
 import { formatBRL } from "./ncConstants";
+import { toLocalISODate } from "@/lib/localDate";
 
 export type NcFilter =
   | { type: "overdue" }
@@ -27,7 +28,7 @@ export function NcSummaryCards({
   activeFilter,
   onFilterChange,
 }: Props) {
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const today = useMemo(() => toLocalISODate(new Date()), []);
 
   const stats = useMemo(() => {
     const open = nonConformities.filter((nc) => nc.status !== "closed");

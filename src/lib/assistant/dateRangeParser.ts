@@ -20,8 +20,7 @@ export interface ParsedDateRange {
 
 const today = (): Date => {
   const d = new Date();
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 };
 
 const iso = (d: Date): string => d.toISOString().slice(0, 10);

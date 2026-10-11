@@ -4,9 +4,11 @@ import type { ProjectDeadline } from "@/infra/repositories/contractDeadline.repo
 
 const mutate = vi.fn();
 let deadline: Partial<ProjectDeadline> | null = null;
+let query: { isLoading: boolean; isError: boolean } = { isLoading: false, isError: false };
+const refetch = vi.fn();
 
 vi.mock("@/hooks/useContractDeadline", () => ({
-  useProjectDeadline: () => ({ data: deadline, isLoading: false }),
+  useProjectDeadline: () => ({ data: deadline, ...query, isFetching: false, refetch }),
   useUpdateContractTerms: () => ({ mutate, isPending: false }),
 }));
 const toast = vi.fn();
@@ -37,6 +39,8 @@ describe("PrazoContratualCard", () => {
   beforeEach(() => {
     mutate.mockReset();
     toast.mockReset();
+    refetch.mockReset();
+    query = { isLoading: false, isError: false };
   });
 
   it("mostra aviso de conferência quando o prazo veio do cronograma", () => {
@@ -102,5 +106,65 @@ describe("PrazoContratualCard", () => {
     render(<PrazoContratualCard projectId="p1" canEdit />);
     expect(screen.getByText("Prazo não cadastrado")).toBeInTheDocument();
     expect(screen.queryByText(/Entrega vigente/)).toBeNull();
+  });
+
+  it("prazo ainda carregando: não deixa salvar um formulário vazio por cima dos termos", () => {
+    deadline = null;
+    query = { isLoading: true, isError: false };
+    render(<PrazoContratualCard projectId="p1" canEdit />);
+    expect(screen.getByLabelText("Dias úteis do contrato")).toBeDisabled();
+    const confirmar = screen.getByRole("button", { name: "Salvar e marcar como conferido" });
+    expect(confirmar).toBeDisabled();
+    fireEvent.click(confirmar);
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it("erro ao carregar: avisa, bloqueia os campos e oferece tentar de novo", () => {
+    deadline = null;
+    query = { isLoading: false, isError: true };
+    render(<PrazoContratualCard projectId="p1" canEdit />);
+    expect(screen.getByRole("alert")).toHaveTextContent(/Não foi possível carregar/);
+    expect(screen.getByLabelText("Multa por dia útil (%)")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Salvar" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it("falha ao atualizar em segundo plano não bloqueia o que já estava na tela", () => {
+    deadline = { ...base };
+    query = { isLoading: false, isError: true };
+    render(<PrazoContratualCard projectId="p1" canEdit />);
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByLabelText("Dias úteis do contrato")).toBeEnabled();
+  });
+
+  it("sem alterações: Salvar fica desabilitado", () => {
+    deadline = { ...base };
+    render(<PrazoContratualCard projectId="p1" canEdit />);
+    expect(screen.getByRole("button", { name: "Salvar" })).toBeDisabled();
+    // Conferir sem mudar nada continua possível enquanto não foi conferido.
+    expect(screen.getByRole("button", { name: "Salvar e marcar como conferido" })).toBeEnabled();
+  });
+
+  it('"10%" no teto é aceito como 10; texto que não é número é recusado', () => {
+    deadline = { ...base };
+    render(<PrazoContratualCard projectId="p1" canEdit />);
+    fireEvent.change(screen.getByLabelText("Teto da multa (%)"), { target: { value: "10%" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+    expect(mutate.mock.calls[0][0]).toMatchObject({ penalty_cap_pct: 10 });
+
+    mutate.mockReset();
+    fireEvent.change(screen.getByLabelText("Multa por dia útil (%)"), { target: { value: "meio" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+    expect(mutate).not.toHaveBeenCalled();
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: "destructive" }));
+  });
+
+  it("obra entregue dentro do prazo aparece como no prazo, não em atenção", () => {
+    deadline = { ...base, actual_end_date: "2026-05-26", business_days_remaining: 2, business_days_late: 0 };
+    render(<PrazoContratualCard projectId="p1" canEdit />);
+    expect(screen.getByText("No prazo")).toBeInTheDocument();
+    expect(screen.queryByText("Atenção ao prazo")).toBeNull();
   });
 });

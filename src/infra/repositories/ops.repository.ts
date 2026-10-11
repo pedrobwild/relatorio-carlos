@@ -170,6 +170,9 @@ export const opsRepo = {
       not_done_reason: outcome === "nao_feito" ? (opts.reason ?? null) : null,
     };
     if (opts.notes !== undefined) patch.notes = opts.notes;
+    // A observação só existe para explicar o "Não feito": desfazer apaga,
+    // senão ela reaparece embaixo de um "Feito" marcado depois.
+    else if (outcome === null) patch.notes = null;
     if (opts.photoPaths !== undefined) patch.photo_paths = opts.photoPaths;
     return executeQuery<OpsAssignment>(async () => {
       return await supabase.from("ops_assignments").update(patch).eq("id", id).select("*").single();

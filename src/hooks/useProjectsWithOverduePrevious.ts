@@ -15,11 +15,12 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { toLocalISODate } from "@/lib/localDate";
 
 async function fetchAllOpenPastActivities(): Promise<
   Array<{ project_id: string; planned_end: string }>
 > {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toLocalISODate(new Date());
   const { data, error } = await supabase
     .from("project_activities")
     .select("project_id, planned_end")
@@ -43,7 +44,7 @@ export interface OverduePreviousInfo {
 export function useProjectsWithOverduePrevious(weekStart: string) {
   const { user } = useAuth();
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toLocalISODate(new Date());
 
   const query = useQuery({
     queryKey: ["projects-overdue-previous", today],

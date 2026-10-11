@@ -104,7 +104,7 @@ describe("opsRepo", () => {
     expect(payload).toMatchObject({ activity_id: "act", worker_name: "João" });
   });
 
-  it("setOutcome: 'Não feito' leva o motivo; 'Feito' e desfazer limpam o motivo", async () => {
+  it("setOutcome: 'Não feito' leva o motivo; 'Feito' e desfazer limpam o motivo; desfazer limpa a observação", async () => {
     h.state.result = { data: { id: "x" }, error: null };
     await opsRepo.setOutcome("x", "nao_feito", { reason: "material", notes: "Massa não chegou" });
     expect(find("update")[0].args[0]).toEqual({ outcome: "nao_feito", not_done_reason: "material", notes: "Massa não chegou" });
@@ -113,7 +113,8 @@ describe("opsRepo", () => {
     expect(find("update")[0].args[0]).toEqual({ outcome: "feito", not_done_reason: null });
     h.state.calls = [];
     await opsRepo.setOutcome("x", null);
-    expect(find("update")[0].args[0]).toEqual({ outcome: null, not_done_reason: null });
+    // Desfazer apaga também a observação do "Não feito".
+    expect(find("update")[0].args[0]).toEqual({ outcome: null, not_done_reason: null, notes: null });
   });
 
   it("createReview grava em ops_reviews (retrabalho é criado no banco)", async () => {

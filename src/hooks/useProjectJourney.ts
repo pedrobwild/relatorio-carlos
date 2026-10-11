@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { JourneyCSM } from "@/components/journey/JourneyCSMSection";
 import { signProjectDocumentUrl } from "@/lib/projectDocumentUrl";
+import { toLocalISODate } from "@/lib/localDate";
 
 export type JourneyStageStatus =
   | "pending"
@@ -398,7 +399,7 @@ export function useCompleteStage() {
         .from("journey_stages")
         .update({
           status: "completed" as JourneyStageStatus,
-          confirmed_end: new Date().toISOString(),
+          confirmed_end: toLocalISODate(new Date()),
         })
         .eq("id", stageId);
       if (completeError) throw completeError;

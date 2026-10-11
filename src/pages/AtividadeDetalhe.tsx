@@ -69,6 +69,7 @@ import {
   statusVariant as statusColors,
   statusDots,
 } from "@/lib/taskUtils";
+import { toLocalISODate } from "@/lib/localDate";
 
 const statusLabels: Record<string, string> = {
   pendente: "Pendente",
@@ -218,7 +219,7 @@ export default function AtividadeDetalhe() {
   const isOverdue =
     task.due_date &&
     task.status !== "concluido" &&
-    task.due_date < new Date().toISOString().slice(0, 10);
+    task.due_date < toLocalISODate(new Date());
   const responsibleName = getMemberName(task.responsible_user_id);
   const creatorName = getMemberName(task.created_by);
   const prio = priorityConfig[task.priority] || priorityConfig.media;

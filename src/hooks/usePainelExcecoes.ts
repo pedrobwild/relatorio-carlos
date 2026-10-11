@@ -16,7 +16,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
-import { addBusinessDays } from "@/lib/businessDays";
+import { subtractBusinessDays } from "@/lib/businessDays";
+import { toLocalISODate } from "@/lib/localDate";
 
 export type ExcecaoKind = "nc" | "form" | "pag" | "atv";
 
@@ -29,20 +30,20 @@ export interface ExcecaoBuckets {
 const STALE = 60_000;
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalISODate(new Date());
 }
 
 function daysFromNowIso(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return toLocalISODate(d);
 }
 
 /** Data-limite (ISO) para "aguardando há mais de N dias úteis". */
 function businessDaysAgoIso(nBusinessDays: number): string {
   // 5 dias úteis atrás a partir de hoje = subtrai N dias úteis.
-  const back = addBusinessDays(new Date(), -nBusinessDays);
-  return back.toISOString().slice(0, 10);
+  const back = subtractBusinessDays(new Date(), nBusinessDays);
+  return toLocalISODate(back);
 }
 
 export function usePainelExcecoes(): ExcecaoBuckets {

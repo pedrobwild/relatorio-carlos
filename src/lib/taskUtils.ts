@@ -1,5 +1,6 @@
 import type { StaffUser } from "@/hooks/useStaffUsers";
 import type { ObraTaskPriority } from "@/hooks/useObraTasks";
+import { toLocalISODate } from "@/lib/localDate";
 
 // ── Shared member name resolver ──────────────────────────────
 export function getMemberName(
@@ -18,7 +19,7 @@ export function isTaskOverdue(task: {
 }): boolean {
   if (!task.due_date) return false;
   if (task.status === "concluido") return false;
-  return task.due_date < new Date().toISOString().slice(0, 10);
+  return task.due_date < toLocalISODate(new Date());
 }
 
 // ── Priority visual config ───────────────────────────────────

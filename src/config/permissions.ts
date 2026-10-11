@@ -86,8 +86,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "journey:view",
     "projects:view",
     "reports:export_pdf",
-    "inspections:view",
-    "ncs:view",
+    // Vistorias e não conformidades também são internas (Fase 2b): o que
+    // importa para o cliente chega como texto da etapa no relatório semanal.
   ],
 
   engineer: [

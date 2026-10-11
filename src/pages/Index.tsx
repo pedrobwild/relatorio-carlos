@@ -48,6 +48,7 @@ import { InternalNotesCard } from "@/components/internal-notes/InternalNotesCard
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LiveStatus } from "@/components/a11y/LiveStatus";
 import { trackAmplitude } from "@/lib/amplitude";
+import { toLocalISODate } from "@/lib/localDate";
 
 // Abas da Index que vivem em `?tab=`; as demais (financeiro, documentos,
 // formalizacoes, pendencias) são rotas próprias no mobile.
@@ -352,7 +353,7 @@ const Index = () => {
       const { default: html2pdf } = await import("html2pdf.js");
       const opt = {
         margin: [10, 10, 10, 10],
-        filename: `Relatorio_Obra_${new Date().toISOString().split("T")[0]}.pdf`,
+        filename: `Relatorio_Obra_${toLocalISODate(new Date())}.pdf`,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },

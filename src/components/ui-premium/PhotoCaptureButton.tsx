@@ -125,7 +125,13 @@ export function PhotoCaptureButton({
 
   const submit = async () => {
     if (pending.length === 0) return;
-    await onCapture(pending);
+    try {
+      await onCapture(pending);
+    } catch {
+      // Envio falhou (sinal fraco na obra): mantém as fotos para tentar de
+      // novo sem precisar tirar tudo outra vez. Quem chamou já avisou o erro.
+      return;
+    }
     setPending([]);
   };
 

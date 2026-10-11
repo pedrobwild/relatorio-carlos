@@ -10,6 +10,7 @@ import type {
   TablesInsert,
   TablesUpdate,
 } from "@/integrations/supabase/types";
+import { toLocalISODate } from "@/lib/localDate";
 
 export type MaterialRequisition = Tables<"material_requisitions">;
 export type MaterialRequisitionItem = Tables<"material_requisition_items">;
@@ -288,8 +289,7 @@ export const suprimentosRepo = {
     if (!items || items.length === 0)
       throw new Error("Requisição sem itens para converter.");
 
-    const requiredBy =
-      req.needed_by ?? new Date().toISOString().slice(0, 10);
+    const requiredBy = req.needed_by ?? toLocalISODate(new Date());
     const leadTime = winner.prazo_entrega_dias ?? 0;
 
     const rows: TablesInsert<"project_purchases">[] = items.map((it) => ({

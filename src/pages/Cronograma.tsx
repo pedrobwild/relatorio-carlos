@@ -939,12 +939,15 @@ const Cronograma = () => {
               )}
             </Button>
           </Link>
+          {/* Compras são internas: o cliente não vê nem o atalho. */}
+          {can("purchases:view") && (
           <Link to={paths.compras}>
             <Button variant="outline" size="sm" className="text-xs">
               <ShoppingCart className="w-4 h-4 mr-1.5" />
               <span className="hidden sm:inline">Compras</span>
             </Button>
           </Link>
+          )}
           {canSaveBaseline && (
           <Button
             variant="outline"

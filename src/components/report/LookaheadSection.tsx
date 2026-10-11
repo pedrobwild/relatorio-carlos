@@ -9,6 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { parseLocalDate } from "@/lib/dates";
 
 interface LookaheadSectionProps {
   tasks: LookaheadTask[];
@@ -71,7 +72,9 @@ const TaskItem = ({
           <span className="text-xs font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
             {(() => {
               try {
-                const d = new Date(task.date);
+                const d = /^\d{4}-\d{2}-\d{2}$/.test(task.date)
+                  ? parseLocalDate(task.date)
+                  : new Date(task.date);
                 return isNaN(d.getTime())
                   ? task.date
                   : format(d, "EEEE, dd/MM", { locale: ptBR });

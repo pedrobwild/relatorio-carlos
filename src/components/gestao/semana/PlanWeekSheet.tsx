@@ -6,7 +6,7 @@
  * execução · atividades ainda sem dia · etapas do cronograma previstas para
  * a semana sem atividade (vira uma atividade com o nome da etapa).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -59,15 +59,32 @@ export function PlanWeekSheet({
   const createActivity = useCreateOpsActivity();
   const createAssignments = useCreateOpsAssignments();
 
+  // Preenche ao abrir. Enquanto está aberto, as sugestões mudam (dados que
+  // chegam depois, refetch a cada item salvo): as linhas em que a pessoa não
+  // mexeu acompanham; o que ela já desmarcou ou editou não é desfeito por baixo.
+  const wasOpen = useRef(false);
+  const touched = useRef(new Set<string>());
   useEffect(() => {
-    if (!open) return;
-    const init: Record<string, RowState> = {};
-    for (const p of proposals) init[p.key] = { selected: true, who: whoText(p.who, staffNameById), days: p.days };
-    setRows(init);
+    if (!open) {
+      wasOpen.current = false;
+      return;
+    }
+    if (!wasOpen.current) touched.current = new Set();
+    wasOpen.current = true;
+    setRows((current) => {
+      const next: Record<string, RowState> = {};
+      for (const p of proposals) {
+        const kept = touched.current.has(p.key) ? current[p.key] : undefined;
+        next[p.key] = kept ?? { selected: p.preselect !== false, who: whoText(p.who, staffNameById), days: p.days };
+      }
+      return next;
+    });
   }, [open, proposals, staffNameById]);
 
-  const set = (key: string, patch: Partial<RowState>) =>
+  const set = (key: string, patch: Partial<RowState>) => {
+    touched.current.add(key);
     setRows((r) => ({ ...r, [key]: { ...r[key], ...patch } }));
+  };
 
   const chosen = proposals.filter((p) => rows[p.key]?.selected);
   const invalid = chosen.filter((p) => !parseWho(rows[p.key]?.who ?? "", staff) || (rows[p.key]?.days.length ?? 0) === 0);

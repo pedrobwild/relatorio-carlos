@@ -4,6 +4,7 @@ import type {
   InsightSeverity,
   MetricSnapshot,
 } from "./insightTypes";
+import { parseLocalDate } from "@/lib/dates";
 
 const BRL = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -13,7 +14,7 @@ const BRL = new Intl.NumberFormat("pt-BR", {
 });
 
 const DATE_BR = (s: string): string => {
-  const d = new Date(s);
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? parseLocalDate(s) : new Date(s);
   if (Number.isNaN(d.getTime())) return s;
   return d.toLocaleDateString("pt-BR");
 };

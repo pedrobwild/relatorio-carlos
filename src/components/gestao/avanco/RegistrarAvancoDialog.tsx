@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateMeasurement } from "@/hooks/useActivityProgress";
+import { toLocalISODate } from "@/lib/localDate";
 
 interface Props {
   open: boolean;
@@ -41,8 +42,8 @@ export function RegistrarAvancoDialog({
 }: Props) {
   const [pct, setPct] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
-  const [date, setDate] = useState<string>(
-    () => new Date().toISOString().slice(0, 10),
+  const [date, setDate] = useState<string>(() =>
+    toLocalISODate(new Date()),
   );
   const create = useCreateMeasurement();
 
@@ -54,7 +55,7 @@ export function RegistrarAvancoDialog({
           : "",
       );
       setNotes("");
-      setDate(new Date().toISOString().slice(0, 10));
+      setDate(toLocalISODate(new Date()));
     }
   }, [open, currentProgress]);
 

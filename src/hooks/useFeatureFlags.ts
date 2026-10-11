@@ -2,7 +2,7 @@
  * Hook for DB-backed feature flags.
  *
  * Flags are fetched once and cached for 10 minutes.
- * Falls back to `false` for unknown keys.
+ * Falls back to `FLAG_DEFAULTS` (or `false`) for unknown keys.
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +11,17 @@ import { useAuth } from "./useAuth";
 import type { FeatureFlagKey } from "@/types/permissions";
 
 const FLAG_QUERY_KEY = ["feature-flags"] as const;
+
+/**
+ * Valor usado enquanto as flags carregam, se a consulta falhar ou se a linha
+ * não existir no banco. Só entram aqui flags que nascem ligadas: sem isso o
+ * "ligada por padrão" dependia de a linha existir e o gestor via o menu
+ * completo piscar a cada carregamento. A linha no banco continua mandando
+ * (desligar lá desliga aqui).
+ */
+export const FLAG_DEFAULTS: Partial<Record<FeatureFlagKey, boolean>> = {
+  simpleModeGestor: true,
+};
 
 async function fetchFlags(): Promise<Record<string, boolean>> {
   const { data, error } = await supabase
@@ -39,10 +50,11 @@ export function useFeatureFlags() {
 
   /**
    * Check if a feature flag is enabled.
-   * Returns `false` while loading or if the flag doesn't exist.
+   * While loading or if the flag doesn't exist, returns its default
+   * (`FLAG_DEFAULTS`), otherwise `false`.
    */
   function isEnabled(key: FeatureFlagKey): boolean {
-    return flags[key] ?? false;
+    return flags[key] ?? FLAG_DEFAULTS[key] ?? false;
   }
 
   return { flags, isEnabled, isLoading };

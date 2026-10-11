@@ -18,6 +18,7 @@ import { ptBR } from "date-fns/locale";
 import { TASK_STATUSES, type ObraTask, type ObraTaskStatus } from "@/hooks/useObraTasks";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { toLocalISODate } from "@/lib/localDate";
 
 interface Props {
   task: ObraTask;
@@ -54,7 +55,7 @@ export function AtividadeMobileCard({
   const isOverdue =
     task.due_date &&
     task.status !== "concluido" &&
-    task.due_date < new Date().toISOString().slice(0, 10);
+    task.due_date < toLocalISODate(new Date());
   const isDone = task.status === "concluido";
 
   // Next logical status for quick action

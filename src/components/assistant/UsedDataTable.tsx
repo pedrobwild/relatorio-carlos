@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Table as TableIcon } from "lucide-react";
+import { parseLocalDate } from "@/lib/dates";
 
 interface Props {
   rows: Record<string, unknown>[];
@@ -40,7 +41,8 @@ const fmtCell = (v: unknown, key: string): string => {
     }
   }
   if (/(date|_at|deadline)$/i.test(key)) {
-    const d = new Date(String(v));
+    const s = String(v);
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? parseLocalDate(s) : new Date(s);
     if (!Number.isNaN(d.getTime())) return d.toLocaleDateString("pt-BR");
   }
   return typeof v === "object" ? JSON.stringify(v) : String(v);

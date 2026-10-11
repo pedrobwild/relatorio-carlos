@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { parseLocalDate } from "@/lib/dates";
 
 interface PurchaseAlertsPanelProps {
   alertThresholds: {
@@ -88,7 +89,7 @@ export function PurchaseAlertsPanel({
                 <p className="font-medium truncate">{purchase.item_name}</p>
                 <p className="text-xs text-muted-foreground">
                   Prazo:{" "}
-                  {format(new Date(purchase.required_by_date), "dd/MM/yyyy", {
+                  {format(parseLocalDate(purchase.required_by_date), "dd/MM/yyyy", {
                     locale: ptBR,
                   })}
                 </p>

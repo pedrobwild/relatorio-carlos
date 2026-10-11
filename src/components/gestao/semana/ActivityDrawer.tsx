@@ -127,7 +127,13 @@ export function ActivityDrawer({ activity, open, onOpenChange, staffNameById }: 
                   type="button"
                   variant="outline"
                   className="min-h-[44px]"
-                  onClick={() => patch({ status: "planejada", blocked_reason: null }, "Atividade desbloqueada")}
+                  onClick={() =>
+                    patch(
+                      // Quem já tinha dia feito volta para "em execução", não para o começo.
+                      { status: (activity.assignments_done ?? 0) > 0 ? "em_execucao" : "planejada", blocked_reason: null },
+                      "Atividade desbloqueada",
+                    )
+                  }
                 >
                   Desbloquear
                 </Button>

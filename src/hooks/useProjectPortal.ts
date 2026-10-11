@@ -21,6 +21,7 @@ import { generateWeeklyReports } from "@/components/WeeklyReportsHistory";
 import type { MilestoneKey } from "@/components/ReportHeader";
 import { reportLogger } from "@/lib/devLogger";
 import type { TablesUpdate } from "@/integrations/supabase/types";
+import { toLocalISODate } from "@/lib/localDate";
 
 type ProjectsUpdate = TablesUpdate<"projects">;
 
@@ -316,7 +317,7 @@ export function useProjectPortal() {
             project.actual_end_date || project.planned_end_date,
             activitiesEndDate,
           ),
-          reportDate: new Date().toISOString().split("T")[0],
+          reportDate: toLocalISODate(new Date()),
           activities: formattedActivities,
         };
       }
@@ -333,7 +334,7 @@ export function useProjectPortal() {
             project.actual_end_date || project.planned_end_date,
             demoEndDate,
           ),
-          reportDate: new Date().toISOString().split("T")[0],
+          reportDate: toLocalISODate(new Date()),
           activities: demoReportData.activities,
         };
       }
@@ -343,7 +344,7 @@ export function useProjectPortal() {
         clientName: project.customer_name || "",
         startDate: effectiveStartDate,
         endDate: effectiveEndDate,
-        reportDate: new Date().toISOString().split("T")[0],
+        reportDate: toLocalISODate(new Date()),
         activities: [],
       };
     }

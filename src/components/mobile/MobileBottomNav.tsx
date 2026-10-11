@@ -4,10 +4,15 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useMenuMode } from "@/hooks/useMenuMode";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { cn } from "@/lib/utils";
 import {
   CLIENT_NAV,
   STAFF_NAV,
+  STAFF_OBRAS_LEGADO,
+  STAFF_OBRAS_NOVO,
+  staffSimpleNav,
   PROFILE_SLOT,
   type MobileNavSlot,
 } from "@/config/mobileNav";
@@ -35,6 +40,9 @@ export function MobileBottomNav() {
   const { stats } = usePendencias({ projectId });
   const { unreadCount } = useNotifications();
   const { isStaff } = useUserRole();
+  const { isSimple } = useMenuMode();
+  const { isEnabled: isFlagOn } = useFeatureFlags();
+  const novoPainel = isFlagOn("novoPainelObras");
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -66,10 +74,13 @@ export function MobileBottomNav() {
   const criticalPendencias = stats.overdueCount + stats.urgentCount;
   const hasProject = !!projectId;
 
-  const navItems = useMemo<MobileNavSlot[]>(
-    () => (isStaff ? STAFF_NAV : CLIENT_NAV),
-    [isStaff],
-  );
+  // Modo simples (gestor de obra): a barra do celular mostra as mesmas três
+  // telas do menu lateral — Obras / Semana / Hoje.
+  const navItems = useMemo<MobileNavSlot[]>(() => {
+    if (!isStaff) return CLIENT_NAV;
+    if (isSimple) return staffSimpleNav(novoPainel ? STAFF_OBRAS_NOVO : STAFF_OBRAS_LEGADO);
+    return STAFF_NAV;
+  }, [isStaff, isSimple, novoPainel]);
 
   const resetProjectHubState = (targetProjectId?: string) => {
     if (!targetProjectId) return;
@@ -104,6 +115,9 @@ export function MobileBottomNav() {
         if (id && path === `/obra/${id}/relatorio`) return true;
       }
       return false;
+    }
+    if (slot.alsoActiveOn?.some((p) => path === p || path.startsWith(p.endsWith("/") ? p : p + "/"))) {
+      return true;
     }
     // Default: active on the route and its descendants (e.g. formalizacoes/nova).
     return path === to || path.startsWith(to + "/");

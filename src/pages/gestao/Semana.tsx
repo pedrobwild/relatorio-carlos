@@ -90,12 +90,22 @@ export default function Semana() {
   );
   useEffect(() => {
     if (obraParam || obraOptions.length === 0) return;
-    const last = window.localStorage.getItem(LAST_OBRA_KEY);
+    let last: string | null = null;
+    try {
+      last = window.localStorage.getItem(LAST_OBRA_KEY);
+    } catch {
+      /* localStorage bloqueado: segue sem lembrar a última obra */
+    }
     if (last && obraOptions.some((o) => o.id === last)) setParam({ obra: last });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [obraParam, obraOptions]);
   useEffect(() => {
-    if (obraParam) window.localStorage.setItem(LAST_OBRA_KEY, obraParam);
+    if (!obraParam) return;
+    try {
+      window.localStorage.setItem(LAST_OBRA_KEY, obraParam);
+    } catch {
+      /* sem armazenamento: só não lembra a última obra */
+    }
   }, [obraParam]);
   const projectId = obraParam ?? undefined;
   const obraName = obraOptions.find((o) => o.id === projectId)?.name;
@@ -108,10 +118,12 @@ export default function Semana() {
   const { data: stages = [], isLoading: stagesLoading } = useOpsStages(projectId);
   const { data: activities = [], isLoading: actsLoading } = useOpsActivities(projectId);
   const { data: weekAsg = [], isLoading: asgLoading } = useOpsAssignments(projectId, from, to);
-  const { data: prevAsg = [] } = useOpsAssignments(projectId, prev.from, prev.to);
+  const { data: prevAsg = [], isLoading: prevLoading } = useOpsAssignments(projectId, prev.from, prev.to);
   const { data: materials = [] } = useOpsProjectMaterials(projectId);
   const { data: deadline } = useProjectDeadline(projectId);
-  const loading = !!projectId && (stagesLoading || actsLoading || asgLoading);
+  // A semana anterior entra nas sugestões ("sobrou"): espera ela chegar para
+  // não abrir o "Planejar semana" com uma lista que muda depois.
+  const loading = !!projectId && (stagesLoading || actsLoading || asgLoading || prevLoading);
 
   const days = useMemo(
     () => weekDays(monday, { includeSaturday: hasSaturday(weekAsg, monday) }),

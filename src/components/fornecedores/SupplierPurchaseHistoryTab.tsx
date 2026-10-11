@@ -11,6 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Package } from "lucide-react";
+import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/dates";
 
 interface PurchaseRecord {
   id: string;
@@ -48,7 +50,7 @@ const formatCurrency = (v: number | null) =>
     : "—";
 
 const formatDate = (d: string | null) =>
-  d ? new Date(d).toLocaleDateString("pt-BR") : "—";
+  d ? format(parseLocalDate(d), "dd/MM/yyyy") : "—";
 
 export function SupplierPurchaseHistoryTab({
   fornecedorId,

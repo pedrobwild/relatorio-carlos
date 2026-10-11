@@ -10,7 +10,8 @@ import { queryKeys } from "@/lib/queryKeys";
 import { obrasPanelRepo } from "@/infra/repositories/obrasPanel.repository";
 import { useObraDeadlines } from "@/hooks/useContractDeadline";
 import { usePainelObras } from "@/hooks/usePainelObras";
-import { buildObraRow, groupBy, sortByRisk, type ObraRow } from "@/lib/obrasPainel";
+import { buildObraRow, groupBy, isObraEmExecucao, sortByRisk, type ObraRow } from "@/lib/obrasPainel";
+import { mapError } from "@/lib/errorMapping";
 import { todayISO } from "@/lib/hojeDia";
 
 const unwrap = <T,>(res: { data: T[] | null; error: unknown }): T[] => {
@@ -18,12 +19,18 @@ const unwrap = <T,>(res: { data: T[] | null; error: unknown }): T[] => {
   return res.data ?? [];
 };
 
+/** Mensagem em português para a tela; nunca o erro cru do Postgres. */
+function friendlyError(error: unknown): string {
+  const userMessage = (error as { userError?: { userMessage?: string } } | null)?.userError?.userMessage;
+  return userMessage ?? mapError(error).userMessage;
+}
+
 export function useObrasPainel(week: { from: string; to: string }) {
   const deadlinesQ = useObraDeadlines();
   const painel = usePainelObras();
 
   const active = useMemo(
-    () => (deadlinesQ.data ?? []).filter((d) => d.project_id && d.status === "active"),
+    () => (deadlinesQ.data ?? []).filter(isObraEmExecucao),
     [deadlinesQ.data],
   );
   const ids = useMemo(() => active.map((d) => d.project_id as string).sort(), [active]);
@@ -93,8 +100,9 @@ export function useObrasPainel(week: { from: string; to: string }) {
   return {
     rows,
     isLoading,
-    error: error ? (error as Error).message ?? "Erro ao carregar" : painel.error,
+    error: error ? friendlyError(error) : painel.error,
     refetch: () => {
+      void painel.refetch();
       void deadlinesQ.refetch();
       void stagesQ.refetch();
       void activitiesQ.refetch();

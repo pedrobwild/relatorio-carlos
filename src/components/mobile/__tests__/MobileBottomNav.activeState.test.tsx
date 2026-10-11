@@ -6,6 +6,8 @@ import { MobileBottomNav } from "../MobileBottomNav";
 const navState = {
   projectId: "proj-1" as string | undefined,
   isStaff: false,
+  isSimple: false,
+  novoPainel: false,
 };
 
 vi.mock("@/hooks/useProjectNavigation", () => ({
@@ -29,6 +31,14 @@ vi.mock("@/hooks/useUserRole", () => ({
   useUserRole: () => ({ isStaff: navState.isStaff }),
 }));
 
+vi.mock("@/hooks/useMenuMode", () => ({
+  useMenuMode: () => ({ isSimple: navState.isSimple }),
+}));
+
+vi.mock("@/hooks/useFeatureFlags", () => ({
+  useFeatureFlags: () => ({ isEnabled: (key: string) => key === "novoPainelObras" && navState.novoPainel }),
+}));
+
 vi.mock("../MobileProfileSheet", () => ({
   MobileProfileSheet: () => null,
 }));
@@ -43,6 +53,8 @@ describe("MobileBottomNav — active state on sub-routes", () => {
     localStorage.clear();
     navState.projectId = "proj-1";
     navState.isStaff = false;
+    navState.isSimple = false;
+    navState.novoPainel = false;
   });
 
   it('cliente em /financeiro: só "Financeiro" fica ativo, não "Obra"', () => {
@@ -100,5 +112,40 @@ describe("MobileBottomNav — active state on sub-routes", () => {
 
     expect(obra).toHaveAttribute("aria-current", "page");
     expect(financeiro).not.toHaveAttribute("aria-current");
+  });
+
+  it("gestor no modo simples: a barra é Obras / Semana / Hoje, com Hoje ativo na tela Hoje", () => {
+    navState.isStaff = true;
+    navState.isSimple = true;
+    navState.novoPainel = true;
+    navState.projectId = undefined;
+
+    render(
+      <MemoryRouter initialEntries={["/gestao/hoje"]}>
+        <MobileBottomNav />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("link", { name: /^Obras$/i })).toHaveAttribute("href", "/gestao/obras");
+    expect(screen.getByRole("link", { name: /^Semana$/i })).toHaveAttribute("href", "/gestao/semana");
+    expect(screen.getByRole("link", { name: /^Hoje$/i })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: /Atividades/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Pendências/i })).toBeNull();
+  });
+
+  it("modo simples sem a tela Obras nova: Obras leva ao Painel e fica ativo nele", () => {
+    navState.isStaff = true;
+    navState.isSimple = true;
+    navState.projectId = undefined;
+
+    render(
+      <MemoryRouter initialEntries={["/gestao/painel-obras"]}>
+        <MobileBottomNav />
+      </MemoryRouter>,
+    );
+
+    const obras = screen.getByRole("link", { name: /^Obras$/i });
+    expect(obras).toHaveAttribute("href", "/gestao/painel-obras");
+    expect(obras).toHaveAttribute("aria-current", "page");
   });
 });

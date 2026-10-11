@@ -37,14 +37,20 @@ export const START_TRIGGER_LABEL: Record<ContractStartTrigger, string> = {
   outro: "Outro",
 };
 
-/** Converte texto do formulário (aceita vírgula) em número ou null. */
+/** Teto de sanidade para "dias úteis do contrato" (≈ 6 anos de obra). */
+export const MAX_CONTRACT_BUSINESS_DAYS = 1500;
+
+/**
+ * Converte texto do formulário (aceita vírgula e "%" no fim) em número.
+ * Vazio → null (campo não informado). Texto que não é número → NaN, para a
+ * validação recusar em vez de gravar "sem multa" por engano.
+ */
 export function parseDecimal(value: string): number | null {
-  const raw = value.trim();
+  const raw = value.trim().replace(/\s*%$/, "").trim();
+  if (raw === "") return null;
   // "1.234,5" (pt-BR) → 1234.5 ; "0.5" → 0.5 ; "0,5" → 0.5
   const v = raw.includes(",") ? raw.replace(/\./g, "").replace(",", ".") : raw;
-  if (v === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
+  return /^-?\d+(\.\d+)?$/.test(v) ? Number(v) : Number.NaN;
 }
 
 /** Valida os termos antes de salvar. Retorna a mensagem de erro ou null. */
@@ -57,11 +63,20 @@ export function validateContractTerms(t: {
   if (t.contract_business_days != null && (!Number.isInteger(t.contract_business_days) || t.contract_business_days <= 0)) {
     return "Dias úteis do contrato deve ser um número inteiro maior que zero.";
   }
+  if (t.contract_business_days != null && t.contract_business_days > MAX_CONTRACT_BUSINESS_DAYS) {
+    return `Dias úteis do contrato acima de ${MAX_CONTRACT_BUSINESS_DAYS}. Confira o número.`;
+  }
   if (t.contract_business_days != null && !t.contract_start_date) {
     return "Informe a data do gatilho de início para calcular a entrega.";
   }
+  if (Number.isNaN(t.penalty_pct_per_day) || Number.isNaN(t.penalty_cap_pct)) {
+    return "Multa e teto aceitam só números (ex.: 0,5).";
+  }
   if (t.penalty_pct_per_day != null && t.penalty_pct_per_day < 0) {
     return "A multa por dia não pode ser negativa.";
+  }
+  if (t.penalty_pct_per_day != null && t.penalty_pct_per_day > 100) {
+    return "A multa por dia deve ser no máximo 100%.";
   }
   if (t.penalty_cap_pct != null && (t.penalty_cap_pct < 0 || t.penalty_cap_pct > 100)) {
     return "O teto da multa deve estar entre 0% e 100%.";

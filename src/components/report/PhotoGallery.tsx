@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { cn } from "@/lib/utils";
+import { parseLocalDate } from "@/lib/dates";
 
 interface PhotoGalleryProps {
   photos: GalleryPhoto[];
@@ -336,7 +337,11 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                     photos[selectedIndex].category,
                     (() => {
                       try {
-                        const d = new Date(photos[selectedIndex].date);
+                        const d = /^\d{4}-\d{2}-\d{2}$/.test(
+                          photos[selectedIndex].date,
+                        )
+                          ? parseLocalDate(photos[selectedIndex].date)
+                          : new Date(photos[selectedIndex].date);
                         return isNaN(d.getTime())
                           ? null
                           : format(d, "dd/MM/yyyy", { locale: ptBR });

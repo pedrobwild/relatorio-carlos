@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { toLocalISODate } from "@/lib/localDate";
 
 export type RecordCategory = "decision" | "conversation" | "history";
 export type RecordResponsible = "client" | "bwild";
@@ -60,8 +61,7 @@ export function useCreateStageRecord() {
         category: input.category,
         title: input.title,
         description: input.description ?? null,
-        record_date:
-          input.record_date ?? new Date().toISOString().split("T")[0],
+        record_date: input.record_date ?? toLocalISODate(new Date()),
         responsible: input.responsible ?? "bwild",
         evidence_url: input.evidence_url ?? null,
         created_by: input.created_by,

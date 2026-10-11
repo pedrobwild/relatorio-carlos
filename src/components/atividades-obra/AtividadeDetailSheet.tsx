@@ -39,6 +39,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { toLocalISODate } from "@/lib/localDate";
 
 interface Props {
   task: ObraTask | null;
@@ -120,7 +121,7 @@ export function AtividadeDetailSheet({
   const isOverdue =
     task.due_date &&
     task.status !== "concluido" &&
-    task.due_date < new Date().toISOString().slice(0, 10);
+    task.due_date < toLocalISODate(new Date());
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

@@ -130,6 +130,28 @@ describe("grade", () => {
     expect(g.at(-1)?.stageName).toBe("Sem etapa");
   });
 
+  it("atividade aberta sem nenhum dia aparece mesmo com o período da etapa já passado (nova atividade, retrabalho)", () => {
+    const late = stage("s5", "Hidráulica", "2026-09-21", "2026-10-02", 5); // etapa atrasada, ainda aberta
+    const acts = [
+      act({ id: "n1", stage_id: "s5", stage_name: "Hidráulica", title: "Trocar registro" }),
+      act({ id: "n2", stage_id: "s5", stage_name: "Hidráulica", title: "Refazer: Teste de pressão", rework_of_id: "x" }),
+      act({ id: "n3", stage_id: "s3", stage_name: "Pintura" }), // etapa só em novembro: ainda não
+    ];
+    const g = buildWeekGrid({ stages: [...stages, late], activities: acts, assignments: [], days });
+    expect(g.find((s) => s.stageName === "Hidráulica")?.rows.map((r) => r.activity.id)).toEqual(["n2", "n1"]);
+    expect(g.find((s) => s.stageName === "Pintura")).toBeUndefined();
+  });
+
+  it("concluída sem nenhum dia marcado continua na grade para poder ser aprovada", () => {
+    const late = stage("s5", "Hidráulica", "2026-09-21", "2026-10-02", 5);
+    const acts = [
+      act({ id: "c1", stage_id: "s5", status: "concluida" }),
+      act({ id: "c2", stage_id: "s5", status: "concluida", assignments_total: 2, last_work_date: "2026-10-02" }), // aparece na semana dela
+    ];
+    const g = buildWeekGrid({ stages: [...stages, late], activities: acts, assignments: [], days });
+    expect(g.find((s) => s.stageName === "Hidráulica")?.rows.map((r) => r.activity.id)).toEqual(["c1"]);
+  });
+
   it("data-limite própria vence a da etapa", () => {
     expect(limitFor({ late_finish: "2026-10-13" }, stages[0])).toBe("2026-10-13");
     expect(limitFor({ late_finish: null }, stages[0])).toBe("2026-10-14");
@@ -218,6 +240,22 @@ describe("planejar semana", () => {
     expect(p.find((x) => x.activityId === "a4")).toMatchObject({ kind: "sem_dia", days: ["2026-10-20"], who: { user_id: "u1", worker_name: null } });
     expect(p.some((x) => x.activityId === "a5")).toBe(false);
     expect(p.some((x) => x.activityId === "a6")).toBe(false);
+  });
+
+  it("sobra de semanas anteriores não some quando a semana passada ficou sem planejar", () => {
+    const acts = [
+      // "Não feito" em 29/09; a semana de 05/10 não foi planejada.
+      act({ id: "a7", stage_id: "s1", assignments_total: 1, assignments_not_done: 1, last_work_date: "2026-09-29", responsible_user_id: "u1" }),
+      // Em execução, tudo feito lá atrás, ainda aberta.
+      act({ id: "a8", stage_id: "s1", status: "em_execucao", assignments_total: 2, assignments_done: 2, last_work_date: "2026-09-30" }),
+      // Já tem dia marcado mais adiante: não sugere.
+      act({ id: "a9", stage_id: "s2", assignments_total: 1, assignments_pending: 1, last_work_date: "2026-10-28" }),
+    ];
+    const p = proposeWeek({ stages, activities: acts, previous: [], current: [], workingDays: NEXT });
+    // Voltam como lembrete, desmarcadas: a pessoa escolhe retomar.
+    expect(p.find((x) => x.activityId === "a7")).toMatchObject({ kind: "sobrou", days: ["2026-10-20"], who: { user_id: "u1", worker_name: null }, preselect: false });
+    expect(p.find((x) => x.activityId === "a8")).toMatchObject({ kind: "continua", days: ["2026-10-20"], preselect: false });
+    expect(p.some((x) => x.activityId === "a9")).toBe(false);
   });
 
   it("cronograma: etapa prevista na semana sem nenhuma atividade vira sugestão com os dias de sobreposição", () => {

@@ -1,5 +1,5 @@
 import { ClientDecision } from "@/types/weeklyReport";
-import { format, differenceInDays, isPast } from "date-fns";
+import { format, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronDown, AlertCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { parseLocalDate } from "@/lib/dates";
+import { getTodayLocal } from "@/lib/activityStatus";
 
 interface ClientDecisionsSectionProps {
   decisions: ClientDecision[];
@@ -22,9 +24,11 @@ const DecisionItem = ({
   decision: ClientDecision;
   animationDelay?: number;
 }) => {
-  const dueDate = new Date(decision.dueDate);
-  const daysLeft = differenceInDays(dueDate, new Date());
-  const isOverdue = isPast(dueDate);
+  const dueDate = /^\d{4}-\d{2}-\d{2}$/.test(decision.dueDate)
+    ? parseLocalDate(decision.dueDate)
+    : new Date(decision.dueDate);
+  const daysLeft = differenceInCalendarDays(dueDate, getTodayLocal());
+  const isOverdue = daysLeft < 0;
   const isUrgent = daysLeft <= 2 && !isOverdue;
 
   return (

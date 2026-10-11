@@ -9,6 +9,7 @@ import type {
   NcStatus,
 } from "@/hooks/useNonConformities";
 import { NC_CATEGORIES, formatBRL } from "./ncConstants";
+import { toLocalISODate } from "@/lib/localDate";
 
 interface Props {
   nonConformities: NonConformity[];
@@ -32,7 +33,7 @@ const statusLabels: Record<NcStatus, string> = {
 
 export function NcConsolidatedReport({ nonConformities }: Props) {
   const stats = useMemo(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toLocalISODate(new Date());
     const total = nonConformities.length;
     const open = nonConformities.filter((nc) => nc.status !== "closed");
     const closed = nonConformities.filter((nc) => nc.status === "closed");

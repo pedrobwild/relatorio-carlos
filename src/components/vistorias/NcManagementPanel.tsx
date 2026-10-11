@@ -37,6 +37,7 @@ import type {
   NcStatus,
 } from "@/hooks/useNonConformities";
 import { matchesSearch } from "@/lib/searchNormalize";
+import { toLocalISODate } from "@/lib/localDate";
 
 // ── Status/Severity configs ──
 
@@ -118,7 +119,7 @@ export function NcManagementPanel({
   const [localSearch, setLocalSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
 
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const today = useMemo(() => toLocalISODate(new Date()), []);
   const effectiveSearch = searchQuery || localSearch;
 
   // ── Compute urgent metrics ──

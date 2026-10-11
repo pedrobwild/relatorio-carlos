@@ -25,6 +25,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { queryKeys, invalidateActivityQueries } from "@/lib/queryKeys";
+import { toLocalISODate } from "@/lib/localDate";
 
 export type ScheduleAlertKind = "missing_start" | "missing_end";
 
@@ -54,13 +55,13 @@ const END_OF_DAY_HOUR = 18;
 const LOOKBACK_DAYS = 180;
 
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalISODate(new Date());
 }
 
 function isoDaysAgo(days: number): string {
   const d = new Date();
-  d.setUTCDate(d.getUTCDate() - days);
-  return d.toISOString().slice(0, 10);
+  d.setDate(d.getDate() - days);
+  return toLocalISODate(d);
 }
 
 /** YYYY-MM-DD → midnight UTC date */
@@ -87,10 +88,10 @@ function deriveAlerts(
   now: Date,
 ): ScheduleAlertActivity[] {
   const today = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()),
   );
   const localNowHour = now.getHours();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = toLocalISODate(now);
 
   const alerts: ScheduleAlertActivity[] = [];
 
