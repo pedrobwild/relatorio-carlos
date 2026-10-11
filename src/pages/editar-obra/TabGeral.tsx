@@ -48,6 +48,7 @@ import type { Project, Customer, Activity } from "./types";
 const SEM_GESTOR = "__sem_gestor__";
 import { ScheduleSyncAlert } from "./ScheduleSyncAlert";
 import { WeeklyRecalcPreviewDialog } from "./WeeklyRecalcPreviewDialog";
+import { PrazoContratualCard } from "./PrazoContratualCard";
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
   active:
@@ -71,6 +72,8 @@ interface TabGeralProps {
   onRecalculateWeekly?: () => void;
   onApplyBusinessDaysDuration?: (days: number) => string | null;
   isSaving?: boolean;
+  /** Pode editar o prazo contratual (Fase 1). */
+  canEditContract?: boolean;
 }
 
 export function TabGeral({
@@ -83,6 +86,7 @@ export function TabGeral({
   onRecalculateWeekly,
   onApplyBusinessDaysDuration,
   isSaving,
+  canEditContract = false,
 }: TabGeralProps) {
   const { data: staffUsers = [] } = useStaffUsers();
   const coordenadores = buildCoordenadorOptions(
@@ -572,6 +576,9 @@ export function TabGeral({
           </div>
         </CardContent>
       </Card>
+
+      {/* Prazo contratual (Fase 1) — somente equipe */}
+      <PrazoContratualCard projectId={project.id} canEdit={canEditContract} />
 
       {/* Financial */}
       <Card>

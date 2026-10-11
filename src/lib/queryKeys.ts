@@ -424,6 +424,18 @@ export const queryKeys = {
       ] as const,
   },
 
+  // ============================================================================
+  // Prazo contratual (Fase 1) — staff-only
+  // ============================================================================
+  contractDeadline: {
+    all: ["contract-deadline"] as const,
+    byProject: (projectId: string | undefined) =>
+      [...queryKeys.contractDeadline.all, "by-project", projectId] as const,
+    list: () => [...queryKeys.contractDeadline.all, "list"] as const,
+    amendments: (projectId: string | undefined) =>
+      [...queryKeys.contractDeadline.all, "amendments", projectId] as const,
+  },
+
 } as const;
 
 

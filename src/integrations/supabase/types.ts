@@ -548,6 +548,66 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_term_amendments: {
+        Row: {
+          business_days_added: number
+          created_at: string
+          created_by: string | null
+          description: string
+          event_date: string
+          evidence_urls: string[]
+          formalization_id: string | null
+          id: string
+          project_id: string
+          reason: Database["public"]["Enums"]["contract_amendment_reason"]
+          status: Database["public"]["Enums"]["contract_amendment_status"]
+          updated_at: string
+        }
+        Insert: {
+          business_days_added: number
+          created_at?: string
+          created_by?: string | null
+          description: string
+          event_date?: string
+          evidence_urls?: string[]
+          formalization_id?: string | null
+          id?: string
+          project_id: string
+          reason: Database["public"]["Enums"]["contract_amendment_reason"]
+          status?: Database["public"]["Enums"]["contract_amendment_status"]
+          updated_at?: string
+        }
+        Update: {
+          business_days_added?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          event_date?: string
+          evidence_urls?: string[]
+          formalization_id?: string | null
+          id?: string
+          project_id?: string
+          reason?: Database["public"]["Enums"]["contract_amendment_reason"]
+          status?: Database["public"]["Enums"]["contract_amendment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_term_amendments_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_term_amendments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       corrective_action_templates: {
         Row: {
           category: string
@@ -5826,6 +5886,13 @@ export type Database = {
           consultora_comercial: string | null
           contract_signing_date: string | null
           contract_value: number | null
+          contract_business_days: number | null
+          contract_start_date: string | null
+          contract_start_trigger: Database["public"]["Enums"]["contract_start_trigger"] | null
+          contract_terms_confirmed_at: string | null
+          contract_terms_confirmed_by: string | null
+          penalty_cap_pct: number | null
+          penalty_pct_per_day: number | null
           created_at: string
           created_by: string
           date_approval_3d: string | null
@@ -5879,6 +5946,13 @@ export type Database = {
           consultora_comercial?: string | null
           contract_signing_date?: string | null
           contract_value?: number | null
+          contract_business_days?: number | null
+          contract_start_date?: string | null
+          contract_start_trigger?: Database["public"]["Enums"]["contract_start_trigger"] | null
+          contract_terms_confirmed_at?: string | null
+          contract_terms_confirmed_by?: string | null
+          penalty_cap_pct?: number | null
+          penalty_pct_per_day?: number | null
           created_at?: string
           created_by: string
           date_approval_3d?: string | null
@@ -5932,6 +6006,13 @@ export type Database = {
           consultora_comercial?: string | null
           contract_signing_date?: string | null
           contract_value?: number | null
+          contract_business_days?: number | null
+          contract_start_date?: string | null
+          contract_start_trigger?: Database["public"]["Enums"]["contract_start_trigger"] | null
+          contract_terms_confirmed_at?: string | null
+          contract_terms_confirmed_by?: string | null
+          penalty_cap_pct?: number | null
+          penalty_pct_per_day?: number | null
           created_at?: string
           created_by?: string
           date_approval_3d?: string | null
@@ -7067,6 +7148,37 @@ export type Database = {
       }
     }
     Views: {
+      v_project_deadlines: {
+        Row: {
+          actual_end_date: string | null
+          amendment_business_days: number | null
+          amendments_pending: number | null
+          business_days_elapsed: number | null
+          business_days_late: number | null
+          business_days_remaining: number | null
+          contract_business_days: number | null
+          contract_deadline: string | null
+          contract_start_date: string | null
+          contract_start_trigger: Database["public"]["Enums"]["contract_start_trigger"] | null
+          contract_terms_confirmed: boolean | null
+          contract_terms_confirmed_at: string | null
+          contract_value: number | null
+          current_business_days: number | null
+          current_deadline: string | null
+          effective_start_date: string | null
+          is_project_phase: boolean | null
+          pct_prazo_consumido: number | null
+          penalty_accrued_pct: number | null
+          penalty_accrued_value: number | null
+          penalty_cap_pct: number | null
+          penalty_pct_per_day: number | null
+          project_id: string | null
+          project_name: string | null
+          reference_date: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
       files_cleanup_candidates: {
         Row: {
           bucket: string | null
@@ -7938,6 +8050,20 @@ export type Database = {
         | "approved"
         | "rejected"
         | "cancelled"
+      contract_amendment_reason:
+        | "cliente_decisao"
+        | "cliente_fornecimento"
+        | "condominio"
+        | "forca_maior"
+        | "projeto_terceiros"
+        | "outro"
+      contract_amendment_status: "rascunho" | "enviado" | "aceito" | "contestado"
+      contract_start_trigger:
+        | "inicio_oficial"
+        | "assinatura"
+        | "liberacao_condominio"
+        | "entrega_chaves"
+        | "outro"
       painel_etapa_enum:
         | "Projeto 3D"
         | "Projeto Executivo"
@@ -8211,6 +8337,22 @@ export const Constants = {
         "approved",
         "rejected",
         "cancelled",
+      ],
+      contract_amendment_reason: [
+        "cliente_decisao",
+        "cliente_fornecimento",
+        "condominio",
+        "forca_maior",
+        "projeto_terceiros",
+        "outro",
+      ],
+      contract_amendment_status: ["rascunho", "enviado", "aceito", "contestado"],
+      contract_start_trigger: [
+        "inicio_oficial",
+        "assinatura",
+        "liberacao_condominio",
+        "entrega_chaves",
+        "outro",
       ],
       painel_etapa_enum: [
         "Projeto 3D",

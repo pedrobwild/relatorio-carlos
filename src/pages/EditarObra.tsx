@@ -258,6 +258,7 @@ export default function EditarObra() {
                       canEdit ? data.applyBusinessDaysDuration : undefined
                     }
                     isSaving={data.saving}
+                    canEditContract={canEdit}
                   />
                 </TabsContent>
 

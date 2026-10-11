@@ -73,3 +73,11 @@ export {
   resetClientErrorThrottle,
 } from "./clientErrors.repository";
 export type { ClientErrorInput } from "./clientErrors.repository";
+
+export { contractDeadlineRepo } from "./contractDeadline.repository";
+export type {
+  ProjectDeadline,
+  ContractAmendment,
+  ContractStartTrigger,
+  ContractTermsInput,
+} from "./contractDeadline.repository";
