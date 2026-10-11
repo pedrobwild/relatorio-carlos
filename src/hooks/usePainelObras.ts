@@ -13,6 +13,8 @@ import {
   projectKeys,
 } from "./useProjectsQuery";
 import { useStaffUsers } from "./useStaffUsers";
+import { queryKeys } from "@/lib/queryKeys";
+import { toLocalISODate } from "@/lib/localDate";
 import type { ProjectWithCustomer } from "@/infra/repositories/projects.repository";
 
 export type PainelEtapa =
@@ -187,7 +189,13 @@ export type PainelObraPatch = Partial<{
 function patchToDbColumns(patch: PainelObraPatch): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if ("prazo" in patch) out.painel_prazo = patch.prazo;
-  if ("etapa" in patch) out.painel_etapa = patch.etapa;
+  if ("etapa" in patch) {
+    out.painel_etapa = patch.etapa;
+    // Mudou a etapa: o início dela é hoje (dia local), salvo valor explícito
+    // no mesmo patch. Gravado aqui porque o banco em produção não tem o
+    // trigger que faria isso — a tela mostrava "hoje" e o valor não ficava.
+    if (!("inicio_etapa" in patch)) out.painel_inicio_etapa = toLocalISODate(new Date());
+  }
   if ("inicio_etapa" in patch) out.painel_inicio_etapa = patch.inicio_etapa;
   if ("previsao_avanco" in patch)
     out.painel_previsao_avanco = patch.previsao_avanco;
@@ -325,13 +333,11 @@ export function usePainelObras() {
             if ("prazo" in patch) next.painel_prazo = patch.prazo;
             if ("etapa" in patch) {
               next.painel_etapa = patch.etapa;
-              // Espelha o trigger do banco: ao mudar a etapa, início da
-              // etapa é "hoje" — a menos que o caller tenha enviado um
-              // valor explícito no mesmo patch.
+              // Mesma regra de `patchToDbColumns`: ao mudar a etapa, o
+              // início da etapa é "hoje" — a menos que o caller tenha
+              // enviado um valor explícito no mesmo patch.
               if (!("inicio_etapa" in patch)) {
-                next.painel_inicio_etapa = new Date()
-                  .toISOString()
-                  .slice(0, 10);
+                next.painel_inicio_etapa = toLocalISODate(new Date());
               }
             }
             if ("inicio_etapa" in patch)
@@ -368,6 +374,10 @@ export function usePainelObras() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: projectKeys.lists() });
+      // "Entrega real", datas e responsável mudam o prazo contratual
+      // calculado (dia de referência, atraso, multa) e a tela Obras.
+      qc.invalidateQueries({ queryKey: queryKeys.contractDeadline.all });
+      qc.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
     },
   });
 

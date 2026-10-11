@@ -85,12 +85,22 @@ export default function Obras() {
   // Escopo: minhas obras (responsável) ou todas. Lembra a escolha.
   const mineCount = useMemo(() => rows.filter((r) => user?.id && r.responsibleId === user.id).length, [rows, user?.id]);
   const [scope, setScope] = useState<Scope | null>(() => {
-    const v = typeof window !== "undefined" ? window.localStorage.getItem(SCOPE_KEY) : null;
-    return v === "minhas" || v === "todas" ? v : null;
+    // localStorage pode estar bloqueado (modo privado): a tela não pode cair por isso.
+    try {
+      const v = typeof window !== "undefined" ? window.localStorage.getItem(SCOPE_KEY) : null;
+      return v === "minhas" || v === "todas" ? v : null;
+    } catch {
+      return null;
+    }
   });
   const effectiveScope: Scope = scope ?? (mineCount > 0 ? "minhas" : "todas");
   useEffect(() => {
-    if (scope) window.localStorage.setItem(SCOPE_KEY, scope);
+    if (!scope) return;
+    try {
+      window.localStorage.setItem(SCOPE_KEY, scope);
+    } catch {
+      /* sem armazenamento: só não lembra a escolha */
+    }
   }, [scope]);
 
   const visible = useMemo<ObraRow[]>(
@@ -98,6 +108,8 @@ export default function Obras() {
     [rows, effectiveScope, user?.id],
   );
   const sum = summarize(visible);
+  // Sem dados (carregando ou erro) os números do topo ficam em branco, não em zero.
+  const noData = isLoading || !!error;
   const hrefFor = (r: ObraRow) => `/gestao/semana?obra=${r.id}&semana=${monday}`;
 
   const setWeek = (v: "esta" | "proxima") => {
@@ -127,12 +139,12 @@ export default function Obras() {
       <dl className="mt-5 grid grid-cols-3 gap-2" aria-label="Resumo das obras">
         <div className="rounded-xl border border-border bg-card p-3">
           <dt className="text-xs font-medium text-muted-foreground">Obras ativas</dt>
-          <dd className="mt-0.5 text-lg font-semibold tabular-nums text-foreground sm:text-2xl">{isLoading ? "–" : sum.active}</dd>
+          <dd className="mt-0.5 text-lg font-semibold tabular-nums text-foreground sm:text-2xl">{noData ? "–" : sum.active}</dd>
         </div>
         <div className="rounded-xl border border-border bg-card p-3">
           <dt className="text-xs font-medium text-muted-foreground">No vermelho</dt>
           <dd className={cn("mt-0.5 text-lg font-semibold tabular-nums sm:text-2xl", sum.red > 0 ? "text-destructive" : "text-foreground")}>
-            {isLoading ? "–" : sum.red}
+            {noData ? "–" : sum.red}
           </dd>
         </div>
         <div className="rounded-xl border border-border bg-card p-3">
@@ -143,9 +155,9 @@ export default function Obras() {
               sum.penaltyTotal > 0 ? "text-destructive" : "text-foreground",
             )}
           >
-            {isLoading ? "–" : formatBRL(sum.penaltyTotal)}
+            {noData ? "–" : formatBRL(sum.penaltyTotal)}
           </dd>
-          {!isLoading && sum.penaltyUnknown > 0 && (
+          {!noData && sum.penaltyUnknown > 0 && (
             <dd className="mt-0.5 text-xs text-muted-foreground">
               +{sum.penaltyUnknown} {sum.penaltyUnknown === 1 ? "obra atrasada" : "obras atrasadas"} sem multa no contrato
             </dd>

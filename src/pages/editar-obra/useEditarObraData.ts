@@ -8,7 +8,7 @@ type PaymentUpdate = TablesUpdate<"project_payments">;
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectMembers, type ProjectRole } from "@/hooks/useProjectMembers";
-import { invalidateActivityQueries } from "@/lib/queryKeys";
+import { invalidateActivityQueries, invalidateContractDeadlineQueries } from "@/lib/queryKeys";
 import { shiftActivityDates, type ShiftMode } from "@/lib/shiftActivityDates";
 import { recalculateWeeklyActivities } from "@/lib/weeklySchedule";
 import { addBusinessDays } from "@/lib/businessDays";
@@ -419,6 +419,8 @@ export function useEditarObraData(projectId: string | undefined) {
         })
         .eq("id", project.id);
       if (error) throw error;
+      // Valor do contrato, entrega real e status mudam o prazo/multa calculados.
+      invalidateContractDeadlineQueries();
 
       const oldStart = persistedProjectDatesRef.current.start;
       const oldEnd = persistedProjectDatesRef.current.end;

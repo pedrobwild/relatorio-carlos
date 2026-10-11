@@ -15,7 +15,9 @@
  *   amarelo   folga 0–2, prazo consumido > avanço + 5 p.p. ou material
  *             faltando para atividade com limite em até 10 dias úteis
  *   verde     folga ≥ 3
- *   sem_prazo prazo contratual não cadastrado
+ *   sem_prazo prazo contratual não cadastrado (com etapa atrasada vira
+ *             amarelo: sem contrato não dá para medir folga, mas o atraso
+ *             não pode ficar escondido no fim da lista)
  *
  * Calendário: seg–sex + feriados nacionais e de SP (mesmo de businessDays.ts).
  * Dias não úteis específicos da obra ainda não entram aqui.
@@ -47,6 +49,18 @@ export const GREEN_MIN_SLACK = 3;
 export const MATERIAL_WINDOW_DAYS = 10;
 /** Diferença (p.p.) entre prazo consumido e avanço que acende amarelo. */
 export const CONSUMPTION_GAP_PP = 5;
+
+/**
+ * Obra em execução para a tela Obras: ativa e ainda não entregue.
+ * `projects.status` não muda sozinho na entrega (o Painel só grava a
+ * "Entrega real"), então obra entregue continuaria na lista acumulando
+ * folga negativa e multa projetada todos os dias.
+ */
+export function isObraEmExecucao(
+  d: Pick<ProjectDeadline, "project_id" | "status" | "actual_end_date">,
+): boolean {
+  return !!d.project_id && d.status === "active" && !d.actual_end_date;
+}
 
 // ---------------------------------------------------------------------------
 // Dias úteis em ISO (yyyy-mm-dd)
@@ -296,7 +310,7 @@ export function buildObraRow(input: BuildRowInput): ObraRow {
 
   // Risco ----------------------------------------------------------------
   let risk: ObraRisk;
-  if (!current) risk = critical.length > 0 ? "vermelho" : "sem_prazo";
+  if (!current) risk = critical.length > 0 ? "vermelho" : proj?.lateStage ? "amarelo" : "sem_prazo";
   else if ((slack != null && slack < 0) || critical.length > 0) risk = "vermelho";
   else if (
     (slack != null && slack < GREEN_MIN_SLACK) ||

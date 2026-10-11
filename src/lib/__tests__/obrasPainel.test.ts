@@ -4,6 +4,7 @@ import {
   businessDaysAfter,
   businessDiff,
   buildObraRow,
+  isObraEmExecucao,
   projectEnd,
   projectedPenalty,
   slackLabel,
@@ -187,6 +188,24 @@ describe("buildObraRow", () => {
     expect(r.risk).toBe("sem_prazo");
     expect(r.slack).toBeNull();
     expect(r.alerts.map((a) => a.kind)).toEqual(["sem_prazo"]);
+  });
+
+  it("sem prazo cadastrado mas com etapa atrasada: amarelo, à frente das obras tranquilas", () => {
+    const r = row({
+      deadline: deadline({ current_deadline: null, business_days_remaining: null }),
+      stages: [stage({ description: "Elétrica", planned_end: "2026-10-01" })],
+    });
+    expect(r.risk).toBe("amarelo");
+    expect(r.slack).toBeNull();
+    expect(r.penalty).toBeNull();
+    expect(r.alerts.map((a) => a.kind)).toEqual(["etapa_atrasada", "sem_prazo"]);
+  });
+
+  it("obra entregue não conta como em execução, mesmo com status ativo", () => {
+    expect(isObraEmExecucao(deadline())).toBe(true);
+    expect(isObraEmExecucao(deadline({ actual_end_date: "2026-08-27" }))).toBe(false);
+    expect(isObraEmExecucao(deadline({ status: "completed" }))).toBe(false);
+    expect(isObraEmExecucao(deadline({ project_id: null }))).toBe(false);
   });
 
   it("semana: etapas que caem nela, dias marcados e 'não planejada'", () => {

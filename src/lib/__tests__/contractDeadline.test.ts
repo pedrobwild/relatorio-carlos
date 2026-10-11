@@ -32,9 +32,15 @@ describe("parseDecimal", () => {
     expect(parseDecimal("1.234,5")).toBe(1234.5);
     expect(parseDecimal(" 10 ")).toBe(10);
   });
-  it("vazio ou inválido vira null", () => {
+  it("aceita o símbolo de % no fim", () => {
+    expect(parseDecimal("10%")).toBe(10);
+    expect(parseDecimal("0,5 %")).toBe(0.5);
+  });
+  it("vazio vira null; texto que não é número vira NaN (para a validação recusar)", () => {
     expect(parseDecimal("")).toBeNull();
-    expect(parseDecimal("abc")).toBeNull();
+    expect(parseDecimal("  ")).toBeNull();
+    expect(parseDecimal("abc")).toBeNaN();
+    expect(parseDecimal("1,2,3")).toBeNaN();
   });
 });
 
@@ -48,6 +54,15 @@ describe("validateContractTerms", () => {
     expect(validateContractTerms({ ...ok, contract_business_days: 0 })).toMatch(/maior que zero/);
     expect(validateContractTerms({ ...ok, contract_business_days: 1.5 })).toMatch(/inteiro/);
     expect(validateContractTerms({ ...ok, contract_start_date: null })).toMatch(/gatilho/);
+  });
+  it("rejeita prazo absurdo (ex.: valor do contrato colado no campo de dias)", () => {
+    expect(validateContractTerms({ ...ok, contract_business_days: 185000 })).toMatch(/acima de 1500/);
+    expect(validateContractTerms({ ...ok, contract_business_days: 1500 })).toBeNull();
+  });
+  it("rejeita multa ou teto que não são número, em vez de salvar como vazio", () => {
+    expect(validateContractTerms({ ...ok, penalty_pct_per_day: Number.NaN })).toMatch(/só números/);
+    expect(validateContractTerms({ ...ok, penalty_cap_pct: Number.NaN })).toMatch(/só números/);
+    expect(validateContractTerms({ ...ok, penalty_pct_per_day: 500 })).toMatch(/no máximo 100/);
   });
   it("rejeita multa negativa e teto fora de 0–100", () => {
     expect(validateContractTerms({ ...ok, penalty_pct_per_day: -1 })).toMatch(/negativa/);
