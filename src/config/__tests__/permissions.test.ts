@@ -138,6 +138,11 @@ describe("permissions", () => {
       { role: "customer", feature: "formalizations:create", expected: false },
       { role: "customer", feature: "journey:complete_todos", expected: true },
       { role: "customer", feature: "journey:edit_stages", expected: false },
+      // Compras são 100% internas: cliente nunca vê nada de compras,
+      // mas continua vendo as parcelas do próprio contrato.
+      { role: "customer", feature: "purchases:view", expected: false },
+      { role: "customer", feature: "purchases:create", expected: false },
+      { role: "customer", feature: "payments:view", expected: true },
 
       // Engineer permissions (currently equal scope to manager/admin)
       { role: "engineer", feature: "formalizations:create", expected: true },
