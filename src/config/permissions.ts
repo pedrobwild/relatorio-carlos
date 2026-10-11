@@ -78,7 +78,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "formalizations:sign",
     "formalizations:view",
     "schedule:view",
-    "purchases:view",
+    // Compras são 100% internas: cliente não vê pedidos, fornecedores nem
+    // pagamentos a fornecedor. "payments:view" é outra coisa (parcelas do
+    // contrato dele em project_payments) e continua liberado.
     "payments:view",
     "journey:complete_todos",
     "journey:view",

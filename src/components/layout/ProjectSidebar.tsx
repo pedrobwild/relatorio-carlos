@@ -163,6 +163,7 @@ export function ProjectSidebar() {
           icon: Package,
           path: paths.compras,
           disabledInProjectPhase: true,
+          staffOnly: true,
         },
         {
           label: L("vistorias"),
