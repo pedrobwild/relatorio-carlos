@@ -24,12 +24,13 @@ export function useProjectDeadline(projectId: string | undefined) {
   });
 }
 
-export function useActiveDeadlines() {
+/** Prazos contratuais de todas as obras em execução (usado no Painel). */
+export function useObraDeadlines() {
   return useQuery({
     queryKey: queryKeys.contractDeadline.list(),
     staleTime: 60_000,
     queryFn: async () => {
-      const res = await contractDeadlineRepo.listActive();
+      const res = await contractDeadlineRepo.listObras();
       if (res.error) throw res.error;
       return (res.data ?? []) as ProjectDeadline[];
     },

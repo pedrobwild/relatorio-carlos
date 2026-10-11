@@ -84,6 +84,12 @@ export interface PainelObra {
   progress_percentage: number | null;
   pending_count: number;
   overdue_count: number;
+
+  /**
+   * Prazo contratual (Fase 1, `v_project_deadlines`). Anexado no Painel;
+   * ausente/null = obra sem prazo cadastrado → regras caem na entrega oficial.
+   */
+  prazo_contratual?: import("@/infra/repositories/contractDeadline.repository").ProjectDeadline | null;
 }
 
 /**
