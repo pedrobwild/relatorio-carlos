@@ -427,6 +427,25 @@ export const queryKeys = {
   // ============================================================================
   // Prazo contratual (Fase 1) — staff-only
   // ============================================================================
+  // ============================================================================
+  // Camada de Operação (Fase 2) — staff-only, nunca exposta ao cliente
+  // ============================================================================
+  ops: {
+    all: ["ops"] as const,
+    activities: (projectId: string | undefined) =>
+      [...queryKeys.ops.all, "activities", projectId] as const,
+    assignments: (projectId: string | undefined, from: string, to: string) =>
+      [...queryKeys.ops.all, "assignments", projectId, from, to] as const,
+    day: (date: string, userId?: string | null) =>
+      [...queryKeys.ops.all, "day", date, userId ?? "all"] as const,
+    materials: (activityId: string | undefined) =>
+      [...queryKeys.ops.all, "materials", activityId] as const,
+    reviews: (activityId: string | undefined) =>
+      [...queryKeys.ops.all, "reviews", activityId] as const,
+    stageRollup: (projectId: string | undefined) =>
+      [...queryKeys.ops.all, "stage-rollup", projectId] as const,
+  },
+
   contractDeadline: {
     all: ["contract-deadline"] as const,
     byProject: (projectId: string | undefined) =>
