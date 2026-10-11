@@ -2,10 +2,11 @@
  * Hooks da camada de Operação (Fase 2) — staff-only.
  * Base para as telas Hoje (Fase 3) e Semana (Fase 4).
  */
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import {
   opsRepo,
+  type OpsDayAssignment,
   type OpsAssignmentOutcome,
   type OpsBlockReason,
   type OpsMaterialStatus,
@@ -80,16 +81,93 @@ export const useCreateOpsAssignment = () =>
     unwrap(await opsRepo.createAssignment(input)),
   );
 
-export const useSetAssignmentOutcome = () =>
-  useOpsMutation(
-    async (vars: {
-      id: string;
-      outcome: OpsAssignmentOutcome | null;
-      reason?: OpsBlockReason | null;
-      notes?: string | null;
-      photoPaths?: string[];
-    }) => unwrap(await opsRepo.setOutcome(vars.id, vars.outcome, vars)),
+export interface SetOutcomeVars {
+  id: string;
+  outcome: OpsAssignmentOutcome | null;
+  reason?: OpsBlockReason | null;
+  notes?: string | null;
+  photoPaths?: string[];
+}
+
+/** Aplica o Feito / Não feito numa lista do dia (usado no update otimista). */
+export function applyOutcome(list: OpsDayAssignment[] | undefined, vars: SetOutcomeVars, now: string) {
+  if (!list) return list;
+  return list.map((a) =>
+    a.id !== vars.id
+      ? a
+      : {
+          ...a,
+          outcome: vars.outcome,
+          not_done_reason: vars.outcome === "nao_feito" ? (vars.reason ?? null) : null,
+          notes: vars.notes !== undefined ? vars.notes : a.notes,
+          done_at: vars.outcome ? now : null,
+        },
   );
+}
+
+/**
+ * Feito / Não feito / desfazer. A tela responde na hora (otimista); se o
+ * banco recusar, volta ao estado anterior e o erro sobe para quem chamou.
+ */
+export function useSetAssignmentOutcome() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: SetOutcomeVars) => unwrap(await opsRepo.setOutcome(vars.id, vars.outcome, vars)),
+    onMutate: async (vars) => {
+      const dayKey = [...queryKeys.ops.all, "day"] as const;
+      await qc.cancelQueries({ queryKey: dayKey });
+      const previous = qc.getQueriesData<OpsDayAssignment[]>({ queryKey: dayKey });
+      const now = new Date().toISOString();
+      for (const [key, list] of previous) qc.setQueryData(key, applyOutcome(list, vars, now));
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      for (const [key, list] of (ctx?.previous ?? []) as [QueryKey, OpsDayAssignment[] | undefined][]) {
+        qc.setQueryData(key, list);
+      }
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.ops.all }),
+  });
+}
+
+/** Material faltando por atividade (uma consulta para o dia inteiro). */
+export function useOpsReadiness(activityIds: string[]) {
+  return useQuery({
+    queryKey: queryKeys.ops.readiness(activityIds),
+    enabled: activityIds.length > 0,
+    queryFn: async () => unwrap(await opsRepo.listReadiness(activityIds)) ?? [],
+  });
+}
+
+export function useOpsStages(projectId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.ops.stages(projectId),
+    enabled: !!projectId,
+    staleTime: 60_000,
+    queryFn: async () => (projectId ? unwrap(await opsRepo.listStages(projectId)) ?? [] : []),
+  });
+}
+
+/** Envia as fotos e acrescenta os caminhos na alocação. */
+export const useAddAssignmentPhotos = () =>
+  useOpsMutation(
+    async (vars: { assignment: Pick<OpsDayAssignment, "id" | "project_id" | "photo_paths">; files: File[] }) => {
+      const paths: string[] = [];
+      for (const file of vars.files) {
+        paths.push(unwrap(await opsRepo.uploadPhoto(vars.assignment.project_id, vars.assignment.id, file)));
+      }
+      return unwrap(await opsRepo.setPhotos(vars.assignment.id, [...(vars.assignment.photo_paths ?? []), ...paths]));
+    },
+  );
+
+export function useOpsPhotoUrls(paths: string[]) {
+  return useQuery({
+    queryKey: queryKeys.ops.photoUrls(paths),
+    enabled: paths.length > 0,
+    staleTime: 30 * 60_000,
+    queryFn: async () => unwrap(await opsRepo.getPhotoUrls(paths)) ?? [],
+  });
+}
 
 export const useCreateOpsMaterial = () =>
   useOpsMutation(async (input: Omit<TablesInsert<"ops_materials">, "project_id">) =>

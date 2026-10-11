@@ -76,7 +76,7 @@ const SIMPLE_MODE_GROUPS: NavGroup[] = [
     items: [
       { label: "Obras", icon: Building2, path: "/gestao/painel-obras" },
       { label: "Semana", icon: CalendarRange, path: "/gestao/lookahead" },
-      { label: "Hoje", icon: CalendarCheck, path: "/gestao/minha-semana" },
+      { label: "Hoje", icon: CalendarCheck, path: "/gestao/hoje" },
     ],
   },
 ];
@@ -111,6 +111,11 @@ export function GestaoSidebar() {
     {
       label: "Meu trabalho",
       items: [
+        {
+          label: "Hoje",
+          icon: CalendarCheck,
+          path: "/gestao/hoje",
+        },
         {
           label: "Minha semana",
           icon: Inbox,
