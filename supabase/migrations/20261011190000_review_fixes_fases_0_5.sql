@@ -128,8 +128,9 @@ BEGIN
 END $$;
 
 -- 3) Alocação: apagar usuário/fornecedor não pode travar no CHECK ------
--- O FK zera user_id/fornecedor_id; se era o único "quem faz", guardamos o
--- nome para o histórico continuar legível e o CHECK continuar valendo.
+-- O FK zera user_id/fornecedor_id; se era o único "quem faz", fica um nome
+-- no lugar (o da pessoa, se o perfil ainda existir; senão um texto fixo)
+-- para o CHECK continuar valendo e o histórico não ficar em branco.
 CREATE OR REPLACE FUNCTION public.ops_assignments_keep_who()
 RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
 BEGIN

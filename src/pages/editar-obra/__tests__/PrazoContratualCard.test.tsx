@@ -131,6 +131,14 @@ describe("PrazoContratualCard", () => {
     expect(mutate).not.toHaveBeenCalled();
   });
 
+  it("falha ao atualizar em segundo plano não bloqueia o que já estava na tela", () => {
+    deadline = { ...base };
+    query = { isLoading: false, isError: true };
+    render(<PrazoContratualCard projectId="p1" canEdit />);
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByLabelText("Dias úteis do contrato")).toBeEnabled();
+  });
+
   it("sem alterações: Salvar fica desabilitado", () => {
     deadline = { ...base };
     render(<PrazoContratualCard projectId="p1" canEdit />);

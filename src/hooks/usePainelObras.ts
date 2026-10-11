@@ -186,7 +186,11 @@ export type PainelObraPatch = Partial<{
 }>;
 
 /** Mapeamento patch lógico → colunas reais do `projects`. */
-function patchToDbColumns(patch: PainelObraPatch): Record<string, unknown> {
+export function patchToDbColumns(
+  patch: PainelObraPatch,
+  /** Etapa atual da obra (antes do patch), quando conhecida. */
+  currentEtapa?: PainelEtapa | null,
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if ("prazo" in patch) out.painel_prazo = patch.prazo;
   if ("etapa" in patch) {
@@ -194,7 +198,11 @@ function patchToDbColumns(patch: PainelObraPatch): Record<string, unknown> {
     // Mudou a etapa: o início dela é hoje (dia local), salvo valor explícito
     // no mesmo patch. Gravado aqui porque o banco em produção não tem o
     // trigger que faria isso — a tela mostrava "hoje" e o valor não ficava.
-    if (!("inicio_etapa" in patch)) out.painel_inicio_etapa = toLocalISODate(new Date());
+    // Só quando a etapa muda de fato: na edição em massa, obras que já
+    // estavam na etapa escolhida mantêm o início (e a contagem de semanas).
+    if (!("inicio_etapa" in patch) && patch.etapa !== currentEtapa) {
+      out.painel_inicio_etapa = toLocalISODate(new Date());
+    }
   }
   if ("inicio_etapa" in patch) out.painel_inicio_etapa = patch.inicio_etapa;
   if ("previsao_avanco" in patch)
@@ -308,7 +316,8 @@ export function usePainelObras() {
       id: string;
       patch: PainelObraPatch;
     }) => {
-      const dbPatch = patchToDbColumns(patch);
+      const currentEtapa = obras.find((o) => o.id === id)?.etapa;
+      const dbPatch = patchToDbColumns(patch, currentEtapa);
       if (Object.keys(dbPatch).length === 0) return { id, patch };
       const { error: updateErr } = await supabase
         .from("projects")
@@ -336,7 +345,8 @@ export function usePainelObras() {
               // Mesma regra de `patchToDbColumns`: ao mudar a etapa, o
               // início da etapa é "hoje" — a menos que o caller tenha
               // enviado um valor explícito no mesmo patch.
-              if (!("inicio_etapa" in patch)) {
+              const etapaAtual = (p as { painel_etapa?: PainelEtapa | null }).painel_etapa ?? null;
+              if (!("inicio_etapa" in patch) && patch.etapa !== etapaAtual) {
                 next.painel_inicio_etapa = toLocalISODate(new Date());
               }
             }
@@ -372,12 +382,15 @@ export function usePainelObras() {
       }
       toast.error("Erro ao salvar alteração");
     },
-    onSuccess: () => {
+    onSuccess: (_data, { patch }) => {
       qc.invalidateQueries({ queryKey: projectKeys.lists() });
-      // "Entrega real", datas e responsável mudam o prazo contratual
-      // calculado (dia de referência, atraso, multa) e a tela Obras.
-      qc.invalidateQueries({ queryKey: queryKeys.contractDeadline.all });
-      qc.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+      // A "Entrega real" é o dia de referência do prazo contratual (atraso,
+      // multa) e tira a obra da tela Obras. Os outros campos do Painel não
+      // entram nesse cálculo, então não refazem a consulta da carteira.
+      if ("entrega_real" in patch) {
+        qc.invalidateQueries({ queryKey: queryKeys.contractDeadline.all });
+        qc.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+      }
     },
   });
 

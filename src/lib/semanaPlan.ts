@@ -342,6 +342,12 @@ export interface WeekProposal {
   title: string;
   days: string[];
   who: Pick<OpsAssignment, "user_id" | "worker_name"> | null;
+  /**
+   * false = aparece na lista, mas desmarcada. Usado nas atividades antigas
+   * que voltam como lembrete: a pessoa escolhe retomar, em vez de ter de
+   * desmarcar (ou preencher "quem") toda semana para conseguir salvar.
+   */
+  preselect?: boolean;
 }
 
 /** Dias úteis da lista que caem dentro de [start, end]. */
@@ -416,6 +422,7 @@ export function proposeWeek(input: {
         kind: owed > 0 ? "sobrou" : "continua",
         days: workingDays.slice(0, Math.min(Math.max(1, owed), workingDays.length)),
         who,
+        preselect: false,
       });
       continue;
     }

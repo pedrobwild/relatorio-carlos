@@ -70,8 +70,10 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
   // Só libera edição depois de ler os termos atuais: com o prazo ainda
   // carregando (ou com erro) o formulário está vazio, e salvar apagaria o
   // prazo e a multa já cadastrados.
-  const ready = !isLoading && !isError && d != null;
-  const loadFailed = !isLoading && (isError || d == null);
+  // Erro numa atualização em segundo plano não bloqueia: os termos lidos antes
+  // continuam na tela.
+  const ready = !isLoading && d != null;
+  const loadFailed = !isLoading && d == null;
 
   const dirty =
     !!d &&

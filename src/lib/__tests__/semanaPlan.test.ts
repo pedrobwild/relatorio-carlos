@@ -252,8 +252,9 @@ describe("planejar semana", () => {
       act({ id: "a9", stage_id: "s2", assignments_total: 1, assignments_pending: 1, last_work_date: "2026-10-28" }),
     ];
     const p = proposeWeek({ stages, activities: acts, previous: [], current: [], workingDays: NEXT });
-    expect(p.find((x) => x.activityId === "a7")).toMatchObject({ kind: "sobrou", days: ["2026-10-20"], who: { user_id: "u1", worker_name: null } });
-    expect(p.find((x) => x.activityId === "a8")).toMatchObject({ kind: "continua", days: ["2026-10-20"] });
+    // Voltam como lembrete, desmarcadas: a pessoa escolhe retomar.
+    expect(p.find((x) => x.activityId === "a7")).toMatchObject({ kind: "sobrou", days: ["2026-10-20"], who: { user_id: "u1", worker_name: null }, preselect: false });
+    expect(p.find((x) => x.activityId === "a8")).toMatchObject({ kind: "continua", days: ["2026-10-20"], preselect: false });
     expect(p.some((x) => x.activityId === "a9")).toBe(false);
   });
 

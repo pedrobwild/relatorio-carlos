@@ -75,7 +75,7 @@ export function PlanWeekSheet({
       const next: Record<string, RowState> = {};
       for (const p of proposals) {
         const kept = touched.current.has(p.key) ? current[p.key] : undefined;
-        next[p.key] = kept ?? { selected: true, who: whoText(p.who, staffNameById), days: p.days };
+        next[p.key] = kept ?? { selected: p.preselect !== false, who: whoText(p.who, staffNameById), days: p.days };
       }
       return next;
     });

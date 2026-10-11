@@ -99,7 +99,7 @@ export function GestaoSidebar() {
   const { total: alertsTotal } = useScheduleAlertsSummary();
   const { prefs: alertPrefs } = useScheduleAlertPrefs();
   const showAlertsBadge = alertPrefs.showBadge && alertsTotal > 0;
-  const { isSimple, canToggle, setMode, isLoading: menuLoading } = useMenuMode();
+  const { isSimple, canToggle, setMode } = useMenuMode();
   const { isEnabled: isFlagOn } = useFeatureFlags();
   const novoPainel = isFlagOn("novoPainelObras");
 
@@ -298,9 +298,7 @@ export function GestaoSidebar() {
     },
   ];
 
-  // Enquanto papéis/flags carregam não dá para saber qual menu é o da pessoa:
-  // não mostra nenhum, em vez de piscar o menu completo para o gestor.
-  const groups = menuLoading ? [] : isSimple ? simpleModeGroups(novoPainel) : fullGroups;
+  const groups = isSimple ? simpleModeGroups(novoPainel) : fullGroups;
 
   const isActive = (item: NavItem) => {
     const currentPath = location.pathname;
@@ -340,7 +338,7 @@ export function GestaoSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border-subtle">
       <SidebarContent className="pt-3 px-1 gap-1">
         {/* Atalho rápido: alternar entre Obras e Projetos (só no menu completo) */}
-        {!isSimple && !menuLoading && (
+        {!isSimple && (
         <div className="px-2 pb-2">
           {collapsed ? (
             <div className="flex flex-col gap-1">

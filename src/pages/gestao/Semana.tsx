@@ -25,7 +25,6 @@ import {
 import { cn } from "@/lib/utils";
 import { shiftISODate, todayISO, longDayLabel } from "@/lib/hojeDia";
 import { deadlineHealth, DEADLINE_HEALTH_LABEL, type DeadlineHealth } from "@/lib/contractDeadline";
-import { isObraEmExecucao } from "@/lib/obrasPainel";
 import {
   buildWeekGrid,
   hasSaturday,
@@ -84,7 +83,7 @@ export default function Semana() {
   const obraOptions = useMemo(
     () =>
       obras
-        .filter((o) => o.project_id && (isObraEmExecucao(o) || o.project_id === obraParam))
+        .filter((o) => o.project_id && (o.status === "active" || o.project_id === obraParam))
         .map((o) => ({ id: o.project_id as string, name: o.project_name ?? "Obra" }))
         .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
     [obras, obraParam],
