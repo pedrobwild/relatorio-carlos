@@ -14,7 +14,7 @@ const h = vi.hoisted(() => {
   };
   const builder = (): Record<string, unknown> => {
     const b: Record<string, unknown> = {};
-    for (const m of ["select", "insert", "update", "delete", "eq", "gte", "lte", "order", "single"]) {
+    for (const m of ["select", "insert", "update", "delete", "eq", "in", "gte", "lte", "order", "single"]) {
       b[m] = (...args: unknown[]) => {
         state.calls.push({ method: m, args });
         return b;
@@ -23,13 +23,33 @@ const h = vi.hoisted(() => {
     b.then = (resolve: (v: unknown) => unknown) => resolve(state.result);
     return b;
   };
+  const storage = {
+    buckets: [] as string[],
+    uploads: [] as { path: string; contentType?: string }[],
+    uploadError: null as unknown,
+  };
   const mockSupabase = {
     from: (t: string) => {
       state.tables.push(t);
       return builder();
     },
+    storage: {
+      from: (bucket: string) => {
+        storage.buckets.push(bucket);
+        return {
+          upload: async (path: string, _file: unknown, opts?: { contentType?: string }) => {
+            storage.uploads.push({ path, contentType: opts?.contentType });
+            return { data: storage.uploadError ? null : { path }, error: storage.uploadError };
+          },
+          createSignedUrls: async (paths: string[]) => ({
+            data: paths.map((p) => ({ path: p, signedUrl: `https://signed/${p}` })),
+            error: null,
+          }),
+        };
+      },
+    },
   };
-  return { state, mockSupabase };
+  return { state, storage, mockSupabase };
 });
 
 vi.mock("../base.repository", async () => {
@@ -46,6 +66,9 @@ describe("opsRepo", () => {
     h.state.calls = [];
     h.state.tables = [];
     h.state.result = { data: [], error: null };
+    h.storage.buckets = [];
+    h.storage.uploads = [];
+    h.storage.uploadError = null;
   });
 
   it("listActivities lê a view com contadores, filtrando a obra e ordenando por etapa", async () => {
@@ -110,5 +133,54 @@ describe("opsRepo", () => {
     const res = await opsRepo.createActivity({ project_id: "p1", stage_id: "s1", title: "X" });
     expect(res.error).toBeTruthy();
     expect(res.error?.userError).toBeDefined();
+  });
+
+  it("listDay traz obra, etapa e prestador numa consulta só", async () => {
+    await opsRepo.listDay("2026-10-14");
+    const sel = String(find("select")[0].args[0]);
+    expect(sel).toContain("project:projects(id, name)");
+    expect(sel).toContain("stage:project_activities(description)");
+    expect(sel).toContain("fornecedor:fornecedores(nome)");
+  });
+
+  it("listReadiness: sem atividades não consulta; com atividades usa IN", async () => {
+    const empty = await opsRepo.listReadiness([]);
+    expect(empty.data).toEqual([]);
+    expect(h.state.tables).toEqual([]);
+    await opsRepo.listReadiness(["a1", "a2"]);
+    expect(h.state.tables).toEqual(["v_ops_activities"]);
+    expect(find("in")[0].args).toEqual(["id", ["a1", "a2"]]);
+  });
+
+  it("listStages lê as etapas do cronograma na ordem", async () => {
+    await opsRepo.listStages("p1");
+    expect(h.state.tables).toEqual(["project_activities"]);
+    expect(find("order")[0].args[0]).toBe("sort_order");
+  });
+
+  it("uploadPhoto grava no bucket privado com o project_id na frente do caminho", async () => {
+    const file = new File(["x"], "IMG 01.JPEG", { type: "image/jpeg" });
+    const res = await opsRepo.uploadPhoto("p1", "as1", file);
+    expect(h.storage.buckets).toEqual(["ops-photos"]);
+    expect(res.data).toMatch(/^p1\/as1\/\d+-[a-z0-9]+\.jpeg$/);
+    expect(h.storage.uploads[0].contentType).toBe("image/jpeg");
+  });
+
+  it("uploadPhoto devolve o erro do storage", async () => {
+    h.storage.uploadError = { message: "denied" };
+    const res = await opsRepo.uploadPhoto("p1", "as1", new File(["x"], "a.jpg"));
+    expect(res.data).toBeNull();
+    expect(res.error).toEqual({ message: "denied" });
+  });
+
+  it("setPhotos só mexe nas fotos", async () => {
+    h.state.result = { data: { id: "as1" }, error: null };
+    await opsRepo.setPhotos("as1", ["p1/as1/a.jpg"]);
+    expect(find("update")[0].args[0]).toEqual({ photo_paths: ["p1/as1/a.jpg"] });
+  });
+
+  it("getPhotoUrls assina os caminhos", async () => {
+    const res = await opsRepo.getPhotoUrls(["p1/as1/a.jpg"]);
+    expect(res.data).toEqual([{ path: "p1/as1/a.jpg", url: "https://signed/p1/as1/a.jpg" }]);
   });
 });

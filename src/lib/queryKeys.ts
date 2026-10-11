@@ -444,6 +444,12 @@ export const queryKeys = {
       [...queryKeys.ops.all, "reviews", activityId] as const,
     stageRollup: (projectId: string | undefined) =>
       [...queryKeys.ops.all, "stage-rollup", projectId] as const,
+    readiness: (activityIds: readonly string[]) =>
+      [...queryKeys.ops.all, "readiness", [...activityIds].sort().join(",")] as const,
+    stages: (projectId: string | undefined) =>
+      [...queryKeys.ops.all, "stages", projectId] as const,
+    photoUrls: (paths: readonly string[]) =>
+      [...queryKeys.ops.all, "photo-urls", paths.join(",")] as const,
   },
 
   contractDeadline: {

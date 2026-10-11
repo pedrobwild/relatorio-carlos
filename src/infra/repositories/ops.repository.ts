@@ -29,8 +29,28 @@ export type StageRollup = Database["public"]["Views"]["v_stage_rollup"]["Row"];
 
 /** Alocação do dia com o contexto mínimo para a tela Hoje. */
 export type OpsDayAssignment = OpsAssignment & {
-  activity: Pick<OpsActivity, "id" | "title" | "status" | "stage_id" | "project_id" | "is_critical"> | null;
+  activity:
+    | (Pick<OpsActivity, "id" | "title" | "status" | "stage_id" | "project_id" | "is_critical"> & {
+        stage: { description: string } | null;
+      })
+    | null;
+  project: { id: string; name: string } | null;
+  fornecedor: { nome: string } | null;
 };
+
+/** Etapa do cronograma do cliente (só o necessário para escolher onde pendurar). */
+export type OpsStageOption = { id: string; description: string; sort_order: number };
+
+/** Prontidão da atividade (vem da view): usado nos avisos de material. */
+export type OpsActivityReadiness = Pick<
+  OpsActivityView,
+  "id" | "materials_missing" | "materials_total" | "is_ready"
+>;
+
+export const OPS_PHOTOS_BUCKET = "ops-photos";
+
+const DAY_SELECT =
+  "*, activity:ops_activities(id, title, status, stage_id, project_id, is_critical, stage:project_activities(description)), project:projects(id, name), fornecedor:fornecedores(nome)";
 
 export const opsRepo = {
   // ---------------- atividades ----------------
@@ -82,10 +102,32 @@ export const opsRepo = {
     return executeListQuery<OpsDayAssignment>(async () => {
       let q = supabase
         .from("ops_assignments")
-        .select("*, activity:ops_activities(id, title, status, stage_id, project_id, is_critical)")
+        .select(DAY_SELECT)
         .eq("work_date", date);
       if (userId) q = q.eq("user_id", userId);
       return await q.order("created_at", { ascending: true });
+    });
+  },
+
+  /** Contadores de material das atividades do dia (uma consulta para todas). */
+  async listReadiness(activityIds: string[]) {
+    if (activityIds.length === 0) return { data: [] as OpsActivityReadiness[], error: null };
+    return executeListQuery<OpsActivityReadiness>(async () => {
+      return await supabase
+        .from("v_ops_activities")
+        .select("id, materials_missing, materials_total, is_ready")
+        .in("id", activityIds);
+    });
+  },
+
+  /** Etapas do cronograma da obra, na ordem do cronograma. */
+  async listStages(projectId: string) {
+    return executeListQuery<OpsStageOption>(async () => {
+      return await supabase
+        .from("project_activities")
+        .select("id, description, sort_order")
+        .eq("project_id", projectId)
+        .order("sort_order", { ascending: true });
     });
   },
 
@@ -118,6 +160,43 @@ export const opsRepo = {
     return executeQuery<OpsAssignment>(async () => {
       return await supabase.from("ops_assignments").update(patch).eq("id", id).select("*").single();
     });
+  },
+
+  /** Acrescenta fotos sem mexer no Feito / Não feito. */
+  async setPhotos(id: string, photoPaths: string[]) {
+    return executeQuery<OpsAssignment>(async () => {
+      return await supabase
+        .from("ops_assignments")
+        .update({ photo_paths: photoPaths })
+        .eq("id", id)
+        .select("*")
+        .single();
+    });
+  },
+
+  /**
+   * Envia uma foto de campo. O caminho começa pelo project_id porque é isso
+   * que a policy do bucket usa para checar o acesso à obra.
+   */
+  async uploadPhoto(projectId: string, assignmentId: string, file: File) {
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${projectId}/${assignmentId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage
+      .from(OPS_PHOTOS_BUCKET)
+      .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
+    if (error) return { data: null, error };
+    return { data: path, error: null };
+  },
+
+  /** URLs temporárias (1 h) para mostrar as fotos. */
+  async getPhotoUrls(paths: string[]) {
+    if (paths.length === 0) return { data: [] as { path: string; url: string }[], error: null };
+    const { data, error } = await supabase.storage.from(OPS_PHOTOS_BUCKET).createSignedUrls(paths, 3600);
+    if (error) return { data: null, error };
+    return {
+      data: (data ?? []).flatMap((d) => (d.signedUrl ? [{ path: d.path ?? "", url: d.signedUrl }] : [])),
+      error: null,
+    };
   },
 
   async deleteAssignment(id: string) {

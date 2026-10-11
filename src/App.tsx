@@ -82,6 +82,7 @@ const NaoConformidadesGlobal = lazy(
 const GestaoAtividades = lazy(() => import("./pages/GestaoAtividades"));
 const PainelObras = lazy(() => import("./pages/PainelObras"));
 const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
+const Hoje = lazy(() => import("./pages/gestao/Hoje"));
 const Lookahead = lazy(() => import("./pages/gestao/Lookahead"));
 const AvancoFisico = lazy(() => import("./pages/gestao/AvancoFisico"));
 const Custos = lazy(() => import("./pages/gestao/Custos"));
@@ -421,6 +422,16 @@ const AppContent = () => {
                       </AppShell>
                     </AssistantAccessGuard>
                   </AdminRoute>
+                }
+              />
+              <Route
+                path="/gestao/hoje"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<Hoje />)}
+                    </AppShell>
+                  </StaffRoute>
                 }
               />
               <Route
