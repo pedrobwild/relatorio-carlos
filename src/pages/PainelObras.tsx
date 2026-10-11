@@ -66,6 +66,18 @@ import {
 } from "@/components/gestao/painel/ManagementBand";
 import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
 import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
+import { PrazoContratualCell, prazoResumo } from "@/components/gestao/painel/PrazoContratualCell";
+import { useObraDeadlines } from "@/hooks/useContractDeadline";
+import {
+  attachDeadlines,
+  compareByFolga,
+  contractLateDays,
+  effectiveDeadline,
+  hasContractDeadline,
+  isPrazoEmRisco,
+  obraPrazoHealth,
+  sumAccruedPenalty,
+} from "@/lib/painelPrazo";
 import {
   PortfolioHealthMatrix,
   useHealthMatrixOpen,
@@ -243,6 +255,7 @@ function StickyTableScroller({
 
 type SortKey =
   | "entrega_proxima"
+  | "prazo_folga"
   | "inicio_oficial"
   | "entrega_oficial"
   | "inicio_real"
@@ -298,11 +311,15 @@ const computeDisplayStatus = (obra: {
   status: PainelStatus | null;
   entrega_oficial: string | null;
   entrega_real: string | null;
+  prazo_contratual?: PainelObra["prazo_contratual"];
 }): PainelStatus | null => {
-  const { status, entrega_oficial, entrega_real } = obra;
-  if (!entrega_oficial || entrega_real) return status;
+  const { status, entrega_real } = obra;
+  // Prazo contratual (quando existe) manda: só muda com aditivo aceito.
+  // Sem ele, mantém a entrega oficial (planned_end_date).
+  const prazo = effectiveDeadline(obra);
+  if (!prazo || entrega_real) return status;
   const hojeIso = format(new Date(), "yyyy-MM-dd");
-  if (entrega_oficial < hojeIso) return "Atrasado";
+  if (prazo < hojeIso) return "Atrasado";
   return status;
 };
 
@@ -317,10 +334,15 @@ const computeOverdueDays = (obra: {
   entrega_oficial: string | null;
   entrega_real: string | null;
   etapa: PainelEtapa | null;
+  prazo_contratual?: PainelObra["prazo_contratual"];
 }): number => {
-  if (!obra.entrega_oficial) return 0;
   if (obra.entrega_real) return 0;
   if (obra.etapa === "Finalizada") return 0;
+  // Com prazo contratual, o atraso vem do banco (dias úteis com feriados,
+  // dias não úteis da obra e aditivos aceitos).
+  const contrato = contractLateDays(obra);
+  if (contrato != null) return contrato;
+  if (!obra.entrega_oficial) return 0;
   const hojeIso = format(new Date(), "yyyy-MM-dd");
   if (obra.entrega_oficial >= hojeIso) return 0;
   const planned = parseValidIsoDate(obra.entrega_oficial);
@@ -523,7 +545,14 @@ function DateCell({
 export default function PainelObras() {
   const navigate = useNavigate();
   const { isStaff, isAdmin, loading: roleLoading } = useUserRole();
-  const { obras, isLoading, updateObra } = usePainelObras();
+  const { obras: obrasBase, isLoading, updateObra } = usePainelObras();
+  // Prazo contratual (Fase 1) anexado a cada obra. Sem prazo cadastrado (ou
+  // antes de carregar), as regras caem na entrega oficial — comportamento antigo.
+  const { data: deadlines } = useObraDeadlines();
+  const obras = useMemo(
+    () => attachDeadlines(obrasBase, deadlines),
+    [obrasBase, deadlines],
+  );
   const { data: allStaffUsers = [] } = useStaffUsers();
   const staffUsers = useMemo(
     () => filterCoordenadoresObra(allStaffUsers),
@@ -972,14 +1001,13 @@ export default function PainelObras() {
     );
     const riscoIds = new Set(
       inFase
-        .filter((o) => {
-          if (!o.entrega_oficial || o.entrega_real) return false;
-          return (
-            o.entrega_oficial >= todayIso && o.entrega_oficial <= sevenDaysIso
-          );
-        })
+        .filter((o) => isPrazoEmRisco(o, todayIso, sevenDaysIso))
         .map((o) => o.id),
     );
+    const multaAcumulada = sumAccruedPenalty(
+      inFase.filter((o) => atrasadasIds.has(o.id)),
+    );
+    const usaContrato = inFase.some(hasContractDeadline);
     const paralisadasIds = new Set(
       inFase.filter((o) => o.status === "Paralisada").map((o) => o.id),
     );
@@ -1020,15 +1048,22 @@ export default function PainelObras() {
         id: "atrasadas",
         label: "Atrasadas",
         value: atrasadasIds.size,
-        hint: "Entrega vencida sem entrega real",
+        hint:
+          multaAcumulada > 0
+            ? `Multa acumulada ${multaAcumulada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}`
+            : usaContrato
+              ? "Prazo contratual vencido sem entrega real"
+              : "Entrega vencida sem entrega real",
         tone: atrasadasIds.size > 0 ? "destructive" : "muted",
         icon: MANAGEMENT_TILE_ICONS.atrasadas,
       },
       {
         id: "risco",
-        label: "Risco 7d",
+        label: usaContrato ? "Prazo em risco" : "Risco 7d",
         value: riscoIds.size,
-        hint: "Entrega em ≤ 7 dias",
+        hint: usaContrato
+          ? "Folga ≤ 5 dias úteis ou 10% do prazo"
+          : "Entrega em ≤ 7 dias",
         tone: riscoIds.size > 0 ? "warning" : "muted",
         icon: MANAGEMENT_TILE_ICONS.risco,
       },
@@ -1131,6 +1166,10 @@ export default function PainelObras() {
     }
     if (sortKey) {
       rows = [...rows].sort((a, b) => {
+        if (sortKey === "prazo_folga") {
+          const c = compareByFolga(a, b);
+          return sortDir === "asc" ? c : -c;
+        }
         if (sortKey === "entrega_proxima") {
           // Entrega mais próxima: ordena por `entrega_oficial` asc, jogando
           // para o final obras já entregues (com `entrega_real`) e sem data.
@@ -2330,6 +2369,15 @@ export default function PainelObras() {
                               sortKey="entrega_oficial"
                             />
                           </TableHead>
+                          <TableHead
+                            data-testid="painel-obras-th-prazo"
+                            className="min-w-[132px] sm:min-w-[156px]"
+                          >
+                            <SortableHeader
+                              label="Prazo contratual"
+                              sortKey="prazo_folga"
+                            />
+                          </TableHead>
                           <TableHead className="min-w-[96px] sm:min-w-[120px] hidden xl:table-cell">
                             <SortableHeader
                               label="Início Real"
@@ -2403,9 +2451,9 @@ export default function PainelObras() {
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
 // 1) Cliente / Obra · 2) Criticidade · 3) Dados · 4) Status · 5) Etapa ·
 // 6) Progresso · 7) Avanço · 8) Custo · 9) Início Of. · 10) Entrega Of. ·
-// 11) Início Real · 12) Entrega Real · 13) Relacionamento · 14) Responsável ·
-// 15) Ações
-const PAINEL_COLUMN_COUNT = 15;
+// 11) Prazo contratual · 12) Início Real · 13) Entrega Real ·
+// 14) Relacionamento · 15) Responsável · 16) Ações
+const PAINEL_COLUMN_COUNT = 16;
 
 interface ObraRowProps {
   obra: PainelObra;
@@ -2452,6 +2500,7 @@ const TABLE_COLS: {
   { width: "min-w-[96px] sm:min-w-[120px]", align: "right", hide: "hidden xl:table-cell" }, // Custo (variação EAC)
   { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden xl:table-cell" }, // Início Of.
   { width: "min-w-[96px] sm:min-w-[120px]" }, // Entrega Of.
+  { width: "min-w-[132px] sm:min-w-[156px]" }, // Prazo contratual
   { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden xl:table-cell" }, // Início Real
   { width: "min-w-[96px] sm:min-w-[120px]", hide: "hidden 2xl:table-cell" }, // Entrega Real
   { width: "min-w-[120px] sm:min-w-[150px]", hide: "hidden lg:table-cell" }, // Relacionamento
@@ -3066,6 +3115,9 @@ function ObraRow({
             confirmTitle="Alterar entrega oficial?"
           />
         </TableCell>
+        <TableCell data-testid="painel-obras-cell-prazo">
+          <PrazoContratualCell obra={obra} />
+        </TableCell>
         <TableCell className="hidden xl:table-cell">
           <DateCell
             value={obra.inicio_real}
@@ -3646,9 +3698,14 @@ function KanbanView({
           .sort();
         agg.set(key, { num: null, str: names[0] ?? null });
       } else if (sortKey) {
-        const field = sortKey === "entrega_proxima" ? "entrega_oficial" : sortKey;
         const dates = items
-          .map((o) => o[field] ?? "")
+          .map((o) =>
+            sortKey === "entrega_proxima"
+              ? (o.entrega_oficial ?? "")
+              : sortKey === "prazo_folga"
+                ? (effectiveDeadline(o) ?? "")
+                : (o[sortKey] ?? ""),
+          )
           .filter(Boolean)
           .sort();
         agg.set(key, { num: null, str: dates[0] ?? null });
@@ -5071,10 +5128,17 @@ function MobilePainelView({
               : null;
             const meta = (
               <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                {o.entrega_oficial && (
+                {effectiveDeadline(o) && (
                   <span className="inline-flex items-center gap-1 tabular-nums">
                     <CalendarIcon className="h-3 w-3 opacity-60" />
-                    Entrega {fmtDate(o.entrega_oficial)}
+                    {hasContractDeadline(o) ? "Prazo" : "Entrega"}{" "}
+                    {fmtDate(effectiveDeadline(o))}
+                  </span>
+                )}
+                {!o.entrega_real && obraPrazoHealth(o) === "atencao" && (
+                  <span className="inline-flex items-center gap-1 font-semibold tabular-nums text-warning">
+                    <Clock className="h-3 w-3" />
+                    {prazoResumo(o.prazo_contratual, false)}
                   </span>
                 )}
                 {dias > 0 && (

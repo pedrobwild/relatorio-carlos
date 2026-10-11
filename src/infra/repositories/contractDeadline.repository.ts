@@ -33,12 +33,12 @@ export const contractDeadlineRepo = {
     });
   },
 
-  async listActive() {
+  /** Prazos de todas as obras em execução (ativas e concluídas). */
+  async listObras() {
     return executeListQuery<ProjectDeadline>(async () => {
       return await supabase
         .from("v_project_deadlines")
         .select("*")
-        .eq("status", "active")
         .eq("is_project_phase", false);
     });
   },
