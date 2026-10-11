@@ -66,7 +66,8 @@ export type FeatureFlagKey =
   | "enableBulkActions"
   | "enableInvitations"
   | "enableAdvancedFilters"
-  | "enableDocumentReviews";
+  | "enableDocumentReviews"
+  | "simpleModeGestor";
 
 /** Project member permission override */
 export interface ProjectMemberPermission {

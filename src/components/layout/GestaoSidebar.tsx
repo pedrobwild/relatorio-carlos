@@ -24,7 +24,8 @@ import {
   BookOpenCheck,
   ShieldCheck,
   FileSearch,
-
+  CalendarCheck,
+  SlidersHorizontal,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -46,6 +48,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { isAssistantAllowed } from "@/lib/assistantAccess";
 import { useScheduleAlertsSummary } from "@/hooks/useScheduleAlerts";
 import { useScheduleAlertPrefs } from "@/hooks/useScheduleAlertPrefs";
+import { useMenuMode } from "@/hooks/useMenuMode";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -62,6 +65,22 @@ interface NavGroup {
   items: NavItem[];
 }
 
+/**
+ * Modo simples (Fase 0 da reformulação): o gestor de obra vê só três
+ * entradas. "Semana" e "Hoje" apontam para as telas que já existem
+ * (Lookahead e Minha semana) até as telas novas de operação chegarem.
+ */
+const SIMPLE_MODE_GROUPS: NavGroup[] = [
+  {
+    label: "Obra",
+    items: [
+      { label: "Obras", icon: Building2, path: "/gestao/painel-obras" },
+      { label: "Semana", icon: CalendarRange, path: "/gestao/lookahead" },
+      { label: "Hoje", icon: CalendarCheck, path: "/gestao/minha-semana" },
+    ],
+  },
+];
+
 export function GestaoSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -73,6 +92,7 @@ export function GestaoSidebar() {
   const { total: alertsTotal } = useScheduleAlertsSummary();
   const { prefs: alertPrefs } = useScheduleAlertPrefs();
   const showAlertsBadge = alertPrefs.showBadge && alertsTotal > 0;
+  const { isSimple, canToggle, setMode } = useMenuMode();
 
   const currentFase =
     new URLSearchParams(location.search).get("fase") === "projetos"
@@ -87,7 +107,7 @@ export function GestaoSidebar() {
     navigate(`/gestao/painel-obras${qs ? `?${qs}` : ""}`);
   };
 
-  const groups: NavGroup[] = [
+  const fullGroups: NavGroup[] = [
     {
       label: "Meu trabalho",
       items: [
@@ -258,6 +278,8 @@ export function GestaoSidebar() {
     },
   ];
 
+  const groups = isSimple ? SIMPLE_MODE_GROUPS : fullGroups;
+
   const isActive = (item: NavItem) => {
     const currentPath = location.pathname;
     const currentSearch = location.search;
@@ -295,7 +317,8 @@ export function GestaoSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border-subtle">
       <SidebarContent className="pt-3 px-1 gap-1">
-        {/* Atalho rápido: alternar entre Obras e Projetos */}
+        {/* Atalho rápido: alternar entre Obras e Projetos (só no menu completo) */}
+        {!isSimple && (
         <div className="px-2 pb-2">
           {collapsed ? (
             <div className="flex flex-col gap-1">
@@ -361,6 +384,7 @@ export function GestaoSidebar() {
             </div>
           )}
         </div>
+        )}
 
         {groups.map((group) => {
           const visibleItems = group.items.filter(
@@ -440,6 +464,27 @@ export function GestaoSidebar() {
           );
         })}
       </SidebarContent>
+      {canToggle && (
+        <SidebarFooter className="px-2 pb-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size={collapsed ? "icon" : "sm"}
+            onClick={() => setMode(isSimple ? "full" : "simple")}
+            aria-label={
+              isSimple ? "Ver menu completo" : "Voltar ao menu simples"
+            }
+            aria-pressed={!isSimple}
+            className={cn(
+              "text-sidebar-foreground/70 hover:text-sidebar-foreground",
+              collapsed ? "h-8 w-8" : "h-8 w-full justify-start gap-2 text-[12px]",
+            )}
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+            {!collapsed && (isSimple ? "Ver menu completo" : "Menu simples")}
+          </Button>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }
