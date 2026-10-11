@@ -116,7 +116,10 @@ vi.mock("@/hooks/usePainelObras", async () => {
   };
 });
 
-vi.mock("@/hooks/useStaffUsers", () => ({
+// O Painel importa também `filterCoordenadoresObra` deste módulo; mantemos os
+// helpers puros reais e mockamos só o hook que bate no Supabase.
+vi.mock("@/hooks/useStaffUsers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/hooks/useStaffUsers")>()),
   useStaffUsers: () => ({ data: [], isLoading: false }),
 }));
 
