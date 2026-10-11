@@ -81,3 +81,19 @@ export type {
   ContractStartTrigger,
   ContractTermsInput,
 } from "./contractDeadline.repository";
+
+export { opsRepo } from "./ops.repository";
+export type {
+  OpsActivity,
+  OpsActivityView,
+  OpsActivityStatus,
+  OpsAssignment,
+  OpsAssignmentOutcome,
+  OpsBlockReason,
+  OpsDayAssignment,
+  OpsMaterial,
+  OpsMaterialStatus,
+  OpsReview,
+  OpsReviewResult,
+  StageRollup,
+} from "./ops.repository";

@@ -3350,6 +3350,308 @@ export type Database = {
           },
         ]
       }
+      ops_activities: {
+        Row: {
+          actual_cost: number | null
+          blocked_reason: Database["public"]["Enums"]["ops_block_reason"] | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          fornecedor_id: string | null
+          id: string
+          is_critical: boolean
+          late_finish: string | null
+          planned_cost: number | null
+          planned_end: string | null
+          planned_start: string | null
+          project_id: string
+          responsible_user_id: string | null
+          rework_of_id: string | null
+          sort_order: number
+          stage_id: string | null
+          status: Database["public"]["Enums"]["ops_activity_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual_cost?: number | null
+          blocked_reason?: Database["public"]["Enums"]["ops_block_reason"] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          is_critical?: boolean
+          late_finish?: string | null
+          planned_cost?: number | null
+          planned_end?: string | null
+          planned_start?: string | null
+          project_id: string
+          responsible_user_id?: string | null
+          rework_of_id?: string | null
+          sort_order?: number
+          stage_id?: string | null
+          status?: Database["public"]["Enums"]["ops_activity_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual_cost?: number | null
+          blocked_reason?: Database["public"]["Enums"]["ops_block_reason"] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          is_critical?: boolean
+          late_finish?: string | null
+          planned_cost?: number | null
+          planned_end?: string | null
+          planned_start?: string | null
+          project_id?: string
+          responsible_user_id?: string | null
+          rework_of_id?: string | null
+          sort_order?: number
+          stage_id?: string | null
+          status?: Database["public"]["Enums"]["ops_activity_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_activities_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_activities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_activities_rework_of_id_fkey"
+            columns: ["rework_of_id"]
+            isOneToOne: false
+            referencedRelation: "ops_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_activities_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "project_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ops_assignments: {
+        Row: {
+          activity_id: string
+          created_at: string
+          created_by: string | null
+          done_at: string | null
+          done_by: string | null
+          fornecedor_id: string | null
+          id: string
+          not_done_reason: Database["public"]["Enums"]["ops_block_reason"] | null
+          notes: string | null
+          outcome: Database["public"]["Enums"]["ops_assignment_outcome"] | null
+          photo_paths: string[]
+          project_id: string
+          updated_at: string
+          user_id: string | null
+          work_date: string
+          worker_name: string | null
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          not_done_reason?: Database["public"]["Enums"]["ops_block_reason"] | null
+          notes?: string | null
+          outcome?: Database["public"]["Enums"]["ops_assignment_outcome"] | null
+          photo_paths?: string[]
+          project_id?: string
+          updated_at?: string
+          user_id?: string | null
+          work_date: string
+          worker_name?: string | null
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          not_done_reason?: Database["public"]["Enums"]["ops_block_reason"] | null
+          notes?: string | null
+          outcome?: Database["public"]["Enums"]["ops_assignment_outcome"] | null
+          photo_paths?: string[]
+          project_id?: string
+          updated_at?: string
+          user_id?: string | null
+          work_date?: string
+          worker_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_assignments_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "ops_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_assignments_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ops_materials: {
+        Row: {
+          activity_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          needed_by: string | null
+          project_id: string
+          purchase_id: string | null
+          quantity: number | null
+          status: Database["public"]["Enums"]["ops_material_status"]
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          needed_by?: string | null
+          project_id?: string
+          purchase_id?: string | null
+          quantity?: number | null
+          status?: Database["public"]["Enums"]["ops_material_status"]
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          needed_by?: string | null
+          project_id?: string
+          purchase_id?: string | null
+          quantity?: number | null
+          status?: Database["public"]["Enums"]["ops_material_status"]
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_materials_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "ops_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_materials_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_materials_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "project_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ops_reviews: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          photo_paths: string[]
+          project_id: string
+          result: Database["public"]["Enums"]["ops_review_result"]
+          reviewed_by: string | null
+          rework_activity_id: string | null
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photo_paths?: string[]
+          project_id?: string
+          result: Database["public"]["Enums"]["ops_review_result"]
+          reviewed_by?: string | null
+          rework_activity_id?: string | null
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photo_paths?: string[]
+          project_id?: string
+          result?: Database["public"]["Enums"]["ops_review_result"]
+          reviewed_by?: string | null
+          rework_activity_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_reviews_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "ops_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ops_reviews_rework_activity_id_fkey"
+            columns: ["rework_activity_id"]
+            isOneToOne: false
+            referencedRelation: "ops_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamento_adjustments: {
         Row: {
           amount: number
@@ -7148,6 +7450,65 @@ export type Database = {
       }
     }
     Views: {
+      v_ops_activities: {
+        Row: {
+          actual_cost: number | null
+          assignments_done: number | null
+          assignments_not_done: number | null
+          assignments_pending: number | null
+          assignments_total: number | null
+          blocked_reason: Database["public"]["Enums"]["ops_block_reason"] | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          first_work_date: string | null
+          fornecedor_id: string | null
+          id: string | null
+          is_critical: boolean | null
+          is_ready: boolean | null
+          last_work_date: string | null
+          late_finish: string | null
+          materials_missing: number | null
+          materials_on_site: number | null
+          materials_total: number | null
+          next_pending_date: string | null
+          planned_cost: number | null
+          planned_end: string | null
+          planned_start: string | null
+          project_id: string | null
+          responsible_user_id: string | null
+          rework_of_id: string | null
+          sort_order: number | null
+          stage_id: string | null
+          stage_name: string | null
+          stage_sort_order: number | null
+          status: Database["public"]["Enums"]["ops_activity_status"] | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
+      v_stage_rollup: {
+        Row: {
+          activities_blocked: number | null
+          activities_done: number | null
+          activities_rework: number | null
+          activities_total: number | null
+          assignments_done: number | null
+          assignments_not_done: number | null
+          assignments_total: number | null
+          first_done_date: string | null
+          has_customer_block: boolean | null
+          last_done_date: string | null
+          materials_missing: number | null
+          pct_done: number | null
+          project_id: string | null
+          stage_id: string | null
+          stage_name: string | null
+          stage_sort_order: number | null
+        }
+        Relationships: []
+      }
       v_project_deadlines: {
         Row: {
           actual_end_date: string | null
@@ -8064,6 +8425,32 @@ export type Database = {
         | "liberacao_condominio"
         | "entrega_chaves"
         | "outro"
+      ops_activity_status:
+        | "planejada"
+        | "pronta"
+        | "em_execucao"
+        | "concluida"
+        | "aprovada"
+        | "refazer"
+        | "bloqueada"
+      ops_assignment_outcome:
+        | "feito"
+        | "nao_feito"
+      ops_block_reason:
+        | "material"
+        | "equipe"
+        | "cliente_decisao"
+        | "condominio"
+        | "projeto"
+        | "clima"
+        | "outro"
+      ops_material_status:
+        | "pendente"
+        | "comprado"
+        | "na_obra"
+      ops_review_result:
+        | "aprovado"
+        | "refazer"
       painel_etapa_enum:
         | "Projeto 3D"
         | "Projeto Executivo"
@@ -8353,6 +8740,37 @@ export const Constants = {
         "liberacao_condominio",
         "entrega_chaves",
         "outro",
+      ],
+      ops_activity_status: [
+        "planejada",
+        "pronta",
+        "em_execucao",
+        "concluida",
+        "aprovada",
+        "refazer",
+        "bloqueada",
+      ],
+      ops_assignment_outcome: [
+        "feito",
+        "nao_feito",
+      ],
+      ops_block_reason: [
+        "material",
+        "equipe",
+        "cliente_decisao",
+        "condominio",
+        "projeto",
+        "clima",
+        "outro",
+      ],
+      ops_material_status: [
+        "pendente",
+        "comprado",
+        "na_obra",
+      ],
+      ops_review_result: [
+        "aprovado",
+        "refazer",
       ],
       painel_etapa_enum: [
         "Projeto 3D",
