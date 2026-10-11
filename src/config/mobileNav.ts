@@ -4,6 +4,8 @@ import {
   DollarSign,
   AlertCircle,
   CheckSquare,
+  CalendarCheck,
+  CalendarRange,
   FolderOpen,
   ClipboardSignature,
   User,
@@ -45,6 +47,8 @@ export type MobileNavSlot = {
    * exact match. Only meaningful together with `end` on the obra hub slots.
    */
   matchReportHub?: boolean;
+  /** Outras rotas (prefixo) em que esta aba também fica acesa. */
+  alsoActiveOn?: readonly string[];
 };
 
 const HOME_CLIENT = "/minhas-obras";
@@ -158,6 +162,44 @@ export const STAFF_NAV: MobileNavSlot[] = [
     badge: "criticalPendencias",
   },
 ];
+
+/**
+ * Barra do celular no modo simples (gestor de obra): as mesmas três telas do
+ * menu lateral — Obras / Semana / Hoje. Sem isso, no celular (onde a tela
+ * Hoje é usada) o gestor só chegava nelas pelo menu hambúrguer.
+ *
+ * `obrasPath` segue a flag `novoPainelObras`: tela Obras nova ou o Painel.
+ */
+export const STAFF_OBRAS_NOVO = "/gestao/obras";
+export const STAFF_OBRAS_LEGADO = "/gestao/painel-obras";
+
+export function staffSimpleNav(obrasPath: string): MobileNavSlot[] {
+  return [
+    {
+      id: "obras-simples",
+      label: "Obras",
+      icon: Building2,
+      to: () => obrasPath,
+      // "Painel completo" e a própria obra continuam sendo "Obras".
+      alsoActiveOn: [STAFF_OBRAS_NOVO, STAFF_OBRAS_LEGADO, "/obra/"],
+      badge: "none",
+    },
+    {
+      id: "semana",
+      label: "Semana",
+      icon: CalendarRange,
+      to: () => "/gestao/semana",
+      badge: "none",
+    },
+    {
+      id: "hoje",
+      label: "Hoje",
+      icon: CalendarCheck,
+      to: () => "/gestao/hoje",
+      badge: "none",
+    },
+  ];
+}
 
 export const PROFILE_SLOT = {
   id: "perfil",

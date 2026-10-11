@@ -143,6 +143,9 @@ describe("permissions", () => {
       { role: "customer", feature: "purchases:view", expected: false },
       { role: "customer", feature: "purchases:create", expected: false },
       { role: "customer", feature: "payments:view", expected: true },
+      // Vistorias e não conformidades são internas (Fase 2b).
+      { role: "customer", feature: "inspections:view", expected: false },
+      { role: "customer", feature: "ncs:view", expected: false },
 
       // Engineer permissions (currently equal scope to manager/admin)
       { role: "engineer", feature: "formalizations:create", expected: true },

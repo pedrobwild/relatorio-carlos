@@ -284,11 +284,11 @@ const AppContent = () => {
               <Route
                 path="/gestao/arquivos"
                 element={
-                  <ProtectedRoute>
+                  <StaffRoute>
                     <AppShell variant="portfolio">
                       {withSuspense(<Arquivos />)}
                     </AppShell>
-                  </ProtectedRoute>
+                  </StaffRoute>
                 }
               />
               <Route
@@ -318,11 +318,11 @@ const AppContent = () => {
               <Route
                 path="/gestao/calendario-obras"
                 element={
-                  <ProtectedRoute>
+                  <StaffRoute>
                     <AppShell variant="portfolio">
                       {withSuspense(<CalendarioObras />)}
                     </AppShell>
-                  </ProtectedRoute>
+                  </StaffRoute>
                 }
               />
               <Route

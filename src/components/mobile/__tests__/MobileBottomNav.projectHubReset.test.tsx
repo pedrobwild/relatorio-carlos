@@ -38,6 +38,14 @@ vi.mock("@/hooks/useUserRole", () => ({
   useUserRole: () => ({ isStaff: navState.isStaff }),
 }));
 
+vi.mock("@/hooks/useMenuMode", () => ({
+  useMenuMode: () => ({ isSimple: false }),
+}));
+
+vi.mock("@/hooks/useFeatureFlags", () => ({
+  useFeatureFlags: () => ({ isEnabled: () => false }),
+}));
+
 vi.mock("../MobileProfileSheet", () => ({
   MobileProfileSheet: () => null,
 }));

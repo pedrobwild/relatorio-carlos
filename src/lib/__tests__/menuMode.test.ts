@@ -31,6 +31,9 @@ describe("menuMode · regras do modo simples (Fase 0)", () => {
 
     it("cliente nunca é 'campo'", () => {
       expect(isFieldOnlyRoles(["customer"])).toBe(false);
+      // …mas ser cliente de uma obra própria não tira o gestor do modo simples.
+      expect(isFieldOnlyRoles(["engineer", "customer"])).toBe(true);
+      expect(isFieldOnlyRoles(["admin", "customer"])).toBe(false);
     });
   });
 

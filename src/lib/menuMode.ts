@@ -27,10 +27,15 @@ export function menuModeStorageKey(userId: string | null | undefined): string {
   return `${MENU_MODE_STORAGE_PREFIX}${userId ?? "anon"}`;
 }
 
-/** true quando o usuário tem ≥1 papel e todos são de campo. */
+/**
+ * true quando o usuário tem ≥1 papel de equipe e todos são de campo.
+ * `customer` não conta: quem é gestor e também cliente de uma obra própria
+ * continua sendo gestor de obra para o menu.
+ */
 export function isFieldOnlyRoles(roles: readonly AppRole[]): boolean {
-  if (roles.length === 0) return false;
-  return roles.every((role) => FIELD_ROLES.includes(role));
+  const staffRoles = roles.filter((role) => role !== "customer");
+  if (staffRoles.length === 0) return false;
+  return staffRoles.every((role) => FIELD_ROLES.includes(role));
 }
 
 export interface ResolveMenuModeInput {
