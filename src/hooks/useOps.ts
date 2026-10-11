@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/
 import { queryKeys } from "@/lib/queryKeys";
 import {
   opsRepo,
+  type OpsAssignmentPlanPatch,
   type OpsDayAssignment,
   type OpsAssignmentOutcome,
   type OpsBlockReason,
@@ -184,3 +185,47 @@ export const useCreateOpsReview = () =>
     async (input: { activity_id: string; result: OpsReviewResult; notes?: string | null; photo_paths?: string[] }) =>
       unwrap(await opsRepo.createReview(input)),
   );
+
+// ---------------------------------------------------------------------------
+// Tela Semana (Fase 4)
+// ---------------------------------------------------------------------------
+
+export function useOpsActivityAssignments(activityId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.ops.activityAssignments(activityId),
+    enabled: !!activityId,
+    queryFn: async () => (activityId ? unwrap(await opsRepo.listAssignmentsByActivity(activityId)) ?? [] : []),
+  });
+}
+
+export function useOpsProjectMaterials(projectId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.ops.projectMaterials(projectId),
+    enabled: !!projectId,
+    queryFn: async () => (projectId ? unwrap(await opsRepo.listMaterialsByProject(projectId)) ?? [] : []),
+  });
+}
+
+export function useOpsReviews(activityId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.ops.reviews(activityId),
+    enabled: !!activityId,
+    queryFn: async () => (activityId ? unwrap(await opsRepo.listReviews(activityId)) ?? [] : []),
+  });
+}
+
+export const useCreateOpsAssignments = () =>
+  useOpsMutation(async (rows: Omit<TablesInsert<"ops_assignments">, "project_id">[]) =>
+    unwrap(await opsRepo.createAssignments(rows)),
+  );
+
+export const useUpdateAssignmentPlan = () =>
+  useOpsMutation(async ({ id, patch }: { id: string; patch: OpsAssignmentPlanPatch }) =>
+    unwrap(await opsRepo.updateAssignmentPlan(id, patch)),
+  );
+
+export const useDeleteOpsAssignment = () =>
+  useOpsMutation(async (id: string) => unwrap(await opsRepo.deleteAssignment(id)));
+
+export const useDeleteOpsMaterial = () =>
+  useOpsMutation(async (id: string) => unwrap(await opsRepo.deleteMaterial(id)));

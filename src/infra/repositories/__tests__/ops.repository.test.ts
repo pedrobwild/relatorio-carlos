@@ -183,4 +183,39 @@ describe("opsRepo", () => {
     const res = await opsRepo.getPhotoUrls(["p1/as1/a.jpg"]);
     expect(res.data).toEqual([{ path: "p1/as1/a.jpg", url: "https://signed/p1/as1/a.jpg" }]);
   });
+
+  it("createAssignments grava em lote sem project_id e não consulta se vazio", async () => {
+    const empty = await opsRepo.createAssignments([]);
+    expect(empty.data).toEqual([]);
+    expect(h.state.tables).toEqual([]);
+    await opsRepo.createAssignments([
+      { activity_id: "a", work_date: "2026-10-20", worker_name: "João" },
+      { activity_id: "a", work_date: "2026-10-21", worker_name: "João" },
+    ]);
+    expect(h.state.tables).toEqual(["ops_assignments"]);
+    const rows = find("insert")[0].args[0] as Record<string, unknown>[];
+    expect(rows).toHaveLength(2);
+    expect(rows.some((r) => "project_id" in r)).toBe(false);
+  });
+
+  it("updateAssignmentPlan muda só dia e quem", async () => {
+    h.state.result = { data: { id: "x" }, error: null };
+    await opsRepo.updateAssignmentPlan("x", { work_date: "2026-10-21", user_id: null, worker_name: "Ana" });
+    expect(find("update")[0].args[0]).toEqual({ work_date: "2026-10-21", user_id: null, worker_name: "Ana" });
+    expect(find("eq")[0].args).toEqual(["id", "x"]);
+  });
+
+  it("listStages traz as datas previstas da etapa", async () => {
+    await opsRepo.listStages("p1");
+    expect(String(find("select")[0].args[0])).toContain("planned_start, planned_end");
+  });
+
+  it("listAssignmentsByActivity e listMaterialsByProject filtram certo", async () => {
+    await opsRepo.listAssignmentsByActivity("a1");
+    expect(find("eq")[0].args).toEqual(["activity_id", "a1"]);
+    h.state.calls = [];
+    await opsRepo.listMaterialsByProject("p1");
+    expect(h.state.tables.at(-1)).toBe("ops_materials");
+    expect(find("eq")[0].args).toEqual(["project_id", "p1"]);
+  });
 });
