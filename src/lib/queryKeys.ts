@@ -456,6 +456,19 @@ export const queryKeys = {
       [...queryKeys.ops.all, "photo-urls", paths.join(",")] as const,
   },
 
+  /** Tela Obras (Fase 5): leituras de carteira, por lista de obras. */
+  obrasPanel: {
+    all: ["obras-panel"] as const,
+    stages: (projectIds: readonly string[]) =>
+      [...queryKeys.obrasPanel.all, "stages", [...projectIds].sort().join(",")] as const,
+    activities: (projectIds: readonly string[]) =>
+      [...queryKeys.obrasPanel.all, "activities", [...projectIds].sort().join(",")] as const,
+    materials: (projectIds: readonly string[]) =>
+      [...queryKeys.obrasPanel.all, "materials", [...projectIds].sort().join(",")] as const,
+    assignments: (projectIds: readonly string[], from: string, to: string) =>
+      [...queryKeys.obrasPanel.all, "assignments", [...projectIds].sort().join(","), from, to] as const,
+  },
+
   contractDeadline: {
     all: ["contract-deadline"] as const,
     byProject: (projectId: string | undefined) =>

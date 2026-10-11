@@ -67,7 +67,8 @@ export type FeatureFlagKey =
   | "enableInvitations"
   | "enableAdvancedFilters"
   | "enableDocumentReviews"
-  | "simpleModeGestor";
+  | "simpleModeGestor"
+  | "novoPainelObras";
 
 /** Project member permission override */
 export interface ProjectMemberPermission {
