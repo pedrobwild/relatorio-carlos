@@ -38,8 +38,22 @@ export type OpsDayAssignment = OpsAssignment & {
   fornecedor: { nome: string } | null;
 };
 
-/** Etapa do cronograma do cliente (só o necessário para escolher onde pendurar). */
-export type OpsStageOption = { id: string; description: string; sort_order: number };
+/** Etapa do cronograma do cliente (o necessário para pendurar e planejar). */
+export type OpsStageOption = {
+  id: string;
+  description: string;
+  sort_order: number;
+  planned_start: string;
+  planned_end: string;
+  actual_start: string | null;
+  actual_end: string | null;
+};
+
+/** Campos de uma alocação que a tela Semana pode mudar (dia e quem). */
+export type OpsAssignmentPlanPatch = Pick<
+  TablesUpdate<"ops_assignments">,
+  "work_date" | "user_id" | "worker_name" | "fornecedor_id" | "notes"
+>;
 
 /** Prontidão da atividade (vem da view): usado nos avisos de material. */
 export type OpsActivityReadiness = Pick<
@@ -125,7 +139,7 @@ export const opsRepo = {
     return executeListQuery<OpsStageOption>(async () => {
       return await supabase
         .from("project_activities")
-        .select("id, description, sort_order")
+        .select("id, description, sort_order, planned_start, planned_end, actual_start, actual_end")
         .eq("project_id", projectId)
         .order("sort_order", { ascending: true });
     });
@@ -157,6 +171,35 @@ export const opsRepo = {
     };
     if (opts.notes !== undefined) patch.notes = opts.notes;
     if (opts.photoPaths !== undefined) patch.photo_paths = opts.photoPaths;
+    return executeQuery<OpsAssignment>(async () => {
+      return await supabase.from("ops_assignments").update(patch).eq("id", id).select("*").single();
+    });
+  },
+
+  /** Todas as alocações de uma atividade (histórico na gaveta). */
+  async listAssignmentsByActivity(activityId: string) {
+    return executeListQuery<OpsAssignment>(async () => {
+      return await supabase
+        .from("ops_assignments")
+        .select("*")
+        .eq("activity_id", activityId)
+        .order("work_date", { ascending: true });
+    });
+  },
+
+  /** Planejamento em lote (Planejar semana). project_id vem do trigger. */
+  async createAssignments(rows: Omit<TablesInsert<"ops_assignments">, "project_id">[]) {
+    if (rows.length === 0) return { data: [] as OpsAssignment[], error: null };
+    return executeListQuery<OpsAssignment>(async () => {
+      return await supabase
+        .from("ops_assignments")
+        .insert(rows as TablesInsert<"ops_assignments">[])
+        .select("*");
+    });
+  },
+
+  /** Mover de dia / trocar quem faz. Não mexe em Feito / Não feito. */
+  async updateAssignmentPlan(id: string, patch: OpsAssignmentPlanPatch) {
     return executeQuery<OpsAssignment>(async () => {
       return await supabase.from("ops_assignments").update(patch).eq("id", id).select("*").single();
     });
@@ -214,6 +257,24 @@ export const opsRepo = {
         .select("*")
         .eq("activity_id", activityId)
         .order("needed_by", { ascending: true, nullsFirst: false });
+    });
+  },
+
+  /** Materiais de toda a obra (faixa de material da Semana). */
+  async listMaterialsByProject(projectId: string) {
+    return executeListQuery<OpsMaterial>(async () => {
+      return await supabase
+        .from("ops_materials")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("needed_by", { ascending: true, nullsFirst: false });
+    });
+  },
+
+  async deleteMaterial(id: string) {
+    return executeQuery<null>(async () => {
+      const { error } = await supabase.from("ops_materials").delete().eq("id", id);
+      return { data: null, error };
     });
   },
 

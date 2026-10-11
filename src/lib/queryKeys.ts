@@ -448,6 +448,10 @@ export const queryKeys = {
       [...queryKeys.ops.all, "readiness", [...activityIds].sort().join(",")] as const,
     stages: (projectId: string | undefined) =>
       [...queryKeys.ops.all, "stages", projectId] as const,
+    activityAssignments: (activityId: string | undefined) =>
+      [...queryKeys.ops.all, "activity-assignments", activityId] as const,
+    projectMaterials: (projectId: string | undefined) =>
+      [...queryKeys.ops.all, "project-materials", projectId] as const,
     photoUrls: (paths: readonly string[]) =>
       [...queryKeys.ops.all, "photo-urls", paths.join(",")] as const,
   },

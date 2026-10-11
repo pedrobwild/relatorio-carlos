@@ -76,7 +76,7 @@ describe("GestaoSidebar · modo simples", () => {
     ]);
     expect(links).toEqual([
       ["Obras", "/gestao/painel-obras"],
-      ["Semana", "/gestao/lookahead"],
+      ["Semana", "/gestao/semana"],
       ["Hoje", "/gestao/hoje"],
     ]);
     expect(screen.queryByRole("link", { name: /Fornecedores/ })).toBeNull();
@@ -112,7 +112,7 @@ describe("GestaoSidebar · modo simples", () => {
     renderSidebar();
 
     expect(screen.getByRole("link", { name: /Painel de Obras/ })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Semana" })).toBeNull();
+    expect(screen.getAllByRole("link", { name: /Fornecedores/ }).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /menu/i })).toBeNull();
   });
 });
