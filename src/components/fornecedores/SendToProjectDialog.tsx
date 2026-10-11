@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { invalidatePurchaseQueries } from "@/lib/queryKeys";
 import { ArrowRight } from "lucide-react";
+import { toLocalISODate } from "@/lib/localDate";
 
 interface PriceItem {
   id: string;
@@ -48,9 +49,7 @@ export function SendToProjectDialog({
   const [projectId, setProjectId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
-  const requiredByDate = new Date(Date.now() + 7 * 86400000)
-    .toISOString()
-    .slice(0, 10);
+  const requiredByDate = toLocalISODate(new Date(Date.now() + 7 * 86400000));
   const [requiredBy, setRequiredBy] = useState(requiredByDate);
 
   const { data: projects = [] } = useQuery({

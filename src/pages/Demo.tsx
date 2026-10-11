@@ -36,6 +36,7 @@ import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { format } from "date-fns";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { toLocalISODate } from "@/lib/localDate";
 
 // Demo data - Hub Brooklyn 502
 const demoReportData: ReportData = {
@@ -170,7 +171,7 @@ export default function Demo() {
       const element = reportRef.current;
       const opt = {
         margin: [10, 10, 10, 10],
-        filename: `Demo_Relatorio_Obra_${new Date().toISOString().split("T")[0]}.pdf`,
+        filename: `Demo_Relatorio_Obra_${toLocalISODate(new Date())}.pdf`,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },

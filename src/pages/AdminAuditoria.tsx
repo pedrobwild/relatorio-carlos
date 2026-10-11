@@ -17,6 +17,7 @@ import { AuditFiltersCard } from "@/components/audit/AuditFiltersCard";
 import { AuditTable } from "@/components/audit/AuditTable";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { toLocalISODate } from "@/lib/localDate";
 
 const PAGE_SIZE = 20;
 
@@ -56,7 +57,7 @@ export default function AdminAuditoria() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `auditoria_${new Date().toISOString().split("T")[0]}.csv`;
+    link.download = `auditoria_${toLocalISODate(new Date())}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };

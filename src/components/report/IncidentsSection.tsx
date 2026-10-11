@@ -18,6 +18,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { parseLocalDate } from "@/lib/dates";
 
 interface IncidentsSectionProps {
   incidents: Incident[];
@@ -25,7 +26,9 @@ interface IncidentsSectionProps {
 
 function safeFormatDate(dateStr: string, fmt: string): string {
   try {
-    const d = new Date(dateStr);
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
+      ? parseLocalDate(dateStr)
+      : new Date(dateStr);
     return isNaN(d.getTime())
       ? dateStr || "—"
       : format(d, fmt, { locale: ptBR });

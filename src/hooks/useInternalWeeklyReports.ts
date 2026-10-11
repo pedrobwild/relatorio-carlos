@@ -8,6 +8,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { internalWeeklyReportsRepo } from "@/infra/repositories/internalWeeklyReports.repository";
 import { invokeFunction } from "@/infra/edgeFunctions";
+import { toLocalISODate } from "@/lib/localDate";
+import { mondayOf } from "@/lib/semanaPlan";
 
 const KEY = ["internal-weekly-reports"] as const;
 
@@ -82,13 +84,7 @@ export function useDeleteInternalWeeklyReport() {
   });
 }
 
-/** Segunda-feira 00:00 UTC da semana informada (ou da semana atual). */
+/** Segunda-feira (calendário local) da semana informada (ou da semana atual). */
 export function getISOWeekStart(from: Date = new Date()): string {
-  const d = new Date(
-    Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()),
-  );
-  const dow = d.getUTCDay();
-  const delta = dow === 0 ? -6 : 1 - dow;
-  d.setUTCDate(d.getUTCDate() + delta);
-  return d.toISOString().slice(0, 10);
+  return mondayOf(toLocalISODate(from));
 }

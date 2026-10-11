@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useMemo, useEffect } from "react";
 import { queryKeys } from "@/lib/queryKeys";
 import { QUERY_TIMING } from "@/lib/queryClient";
+import { toLocalISODate } from "@/lib/localDate";
 
 export type PurchaseStatus =
   | "pending"
@@ -316,10 +317,10 @@ export function useProjectPurchases(
 
       // Auto-fill dates based on status
       if (status === "ordered" && !additionalData?.order_date) {
-        updates.order_date = new Date().toISOString().split("T")[0];
+        updates.order_date = toLocalISODate(new Date());
       }
       if (status === "delivered" && !additionalData?.actual_delivery_date) {
-        updates.actual_delivery_date = new Date().toISOString().split("T")[0];
+        updates.actual_delivery_date = toLocalISODate(new Date());
       }
 
       const { data, error } = await supabase

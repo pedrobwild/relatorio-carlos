@@ -20,6 +20,7 @@ import {
   useOfflineConflict,
   OfflineConflictError,
 } from "./useOfflineConflict";
+import { toLocalISODate } from "@/lib/localDate";
 
 
 
@@ -266,7 +267,7 @@ export function useEditorState({
   const addLookaheadTask = () => {
     const newTask: LookaheadTask = {
       id: `task-${Date.now()}`,
-      date: new Date().toISOString().split("T")[0],
+      date: toLocalISODate(new Date()),
       description: "",
       prerequisites: "",
       responsible: "",
@@ -309,7 +310,7 @@ export function useEditorState({
       severity: "baixa",
       actionPlan: "",
       owner: "",
-      dueDate: new Date().toISOString().split("T")[0],
+      dueDate: toLocalISODate(new Date()),
       status: "aberto",
     };
     setFormDataWithTracking((prev) => ({
@@ -340,7 +341,7 @@ export function useEditorState({
       id: `decision-${Date.now()}`,
       description: "",
       impactIfDelayed: "",
-      dueDate: new Date().toISOString().split("T")[0],
+      dueDate: toLocalISODate(new Date()),
       status: "pending",
     };
     setFormDataWithTracking((prev) => ({
@@ -374,12 +375,12 @@ export function useEditorState({
     const newIncident: Incident = {
       id: `incident-${Date.now()}`,
       occurrence: "",
-      occurrenceDate: new Date().toISOString().split("T")[0],
+      occurrenceDate: toLocalISODate(new Date()),
       cause: "",
       action: "",
       impact: "",
       status: "aberto",
-      expectedResolutionDate: new Date().toISOString().split("T")[0],
+      expectedResolutionDate: toLocalISODate(new Date()),
     };
     setFormDataWithTracking((prev) => ({
       ...prev,
@@ -414,7 +415,7 @@ export function useEditorState({
       url: "",
       caption: "",
       area: "",
-      date: new Date().toISOString().split("T")[0],
+      date: toLocalISODate(new Date()),
       category: "progresso",
     };
     setFormDataWithTracking((prev) => ({
@@ -494,7 +495,7 @@ export function useEditorState({
       url: URL.createObjectURL(file),
       caption: "",
       area: "",
-      date: new Date().toISOString().split("T")[0],
+      date: toLocalISODate(new Date()),
       category: "progresso",
     }));
     setFormDataWithTracking((prev) => ({

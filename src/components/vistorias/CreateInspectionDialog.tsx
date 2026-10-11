@@ -29,6 +29,7 @@ import {
   type InspectionType,
 } from "./inspectionConstants";
 import { SavedTemplatePicker } from "./SavedTemplatePicker";
+import { toLocalISODate } from "@/lib/localDate";
 
 interface Props {
   projectId: string;
@@ -45,7 +46,7 @@ export function CreateInspectionDialog({
   const [inspectionType, setInspectionType] =
     useState<InspectionType>("rotina");
   const [inspectionDate, setInspectionDate] = useState(
-    new Date().toISOString().split("T")[0],
+    toLocalISODate(new Date()),
   );
   const [activityId, setActivityId] = useState<string>("");
   const [inspectorUserId, setInspectorUserId] = useState<string>(

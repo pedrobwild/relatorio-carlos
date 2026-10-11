@@ -8,6 +8,7 @@ import type { ProjectTemplate } from "@/hooks/useProjectTemplates";
 import type { FormData } from "./types";
 import type { ScheduleActivity } from "./ScheduleCard";
 import { safeParseInt, trackBlock1CUsage } from "@/lib/block1cMonitor";
+import { toLocalISODate } from "@/lib/localDate";
 
 /** Collect non-fatal warnings during submit */
 interface SubmitWarning {
@@ -295,11 +296,11 @@ export function useNovaObraSubmit() {
             planned_start:
               act.plannedStart ||
               formData.planned_start_date ||
-              new Date().toISOString().split("T")[0],
+              toLocalISODate(new Date()),
             planned_end:
               act.plannedEnd ||
               formData.planned_end_date ||
-              new Date().toISOString().split("T")[0],
+              toLocalISODate(new Date()),
             weight: parseFloat(act.weight) || 0,
             sort_order: idx,
             created_by: user!.id,

@@ -74,6 +74,8 @@ import {
 } from "@/hooks/usePunchItems";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toLocalISODate } from "@/lib/localDate";
+import { parseLocalDate } from "@/lib/dates";
 
 
 
@@ -701,7 +703,7 @@ function InspecoesTab() {
                   )}
                   {r.inspection_date && (
                     <span>
-                      {new Date(r.inspection_date).toLocaleDateString("pt-BR")}
+                      {format(parseLocalDate(r.inspection_date), "dd/MM/yyyy")}
                     </span>
                   )}
                   {r.status && <span>· {r.status}</span>}
@@ -932,7 +934,7 @@ function PunchItemRow({
   const overdue =
     item.status === "aberto" &&
     item.due_date &&
-    item.due_date < new Date().toISOString().slice(0, 10);
+    item.due_date < toLocalISODate(new Date());
 
   return (
     <div className="flex flex-wrap items-start gap-3 rounded-md border border-border/60 bg-card p-3">

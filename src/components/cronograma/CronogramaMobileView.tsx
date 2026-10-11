@@ -36,6 +36,7 @@ import {
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
 import { type ProjectActivity } from "@/hooks/useProjectActivities";
 import { cn } from "@/lib/utils";
+import { toLocalISODate } from "@/lib/localDate";
 
 interface Props {
   activities: ProjectActivity[];
@@ -142,11 +143,11 @@ export function CronogramaMobileView({
 
   // "Today" reference — refreshed every 60s to handle day rollover
   const [, setTick] = useState(0);
-  const todayRef = useRef(new Date().toISOString().slice(0, 10));
+  const todayRef = useRef(toLocalISODate(new Date()));
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const now = new Date().toISOString().slice(0, 10);
+      const now = toLocalISODate(new Date());
       if (now !== todayRef.current) {
         todayRef.current = now;
         setTick((t) => t + 1);

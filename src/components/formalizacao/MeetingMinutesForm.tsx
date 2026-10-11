@@ -16,6 +16,8 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
+import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/dates";
 
 const schema = z.object({
   meetingDate: z.string().min(1, "Data é obrigatória"),
@@ -87,8 +89,9 @@ export function MeetingMinutesForm({
     if (values.sensitiveTopics.deadlines) sensitiveList.push("Prazos");
     if (values.sensitiveTopics.warranty) sensitiveList.push("Garantia");
 
-    const dateFormatted = new Date(values.meetingDate).toLocaleDateString(
-      "pt-BR",
+    const dateFormatted = format(
+      parseLocalDate(values.meetingDate),
+      "dd/MM/yyyy",
     );
     const title = `Ata de Reunião - ${dateFormatted}`;
     const summary = `Reunião realizada em ${dateFormatted} às ${values.meetingTime} com ${values.participants.length} participante(s).${sensitiveList.length > 0 ? ` Tópicos sensíveis: ${sensitiveList.join(", ")}.` : ""}`;

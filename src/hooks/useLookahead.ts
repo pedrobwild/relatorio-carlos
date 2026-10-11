@@ -11,6 +11,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { toLocalISODate } from "@/lib/localDate";
 
 export interface LookaheadActivity {
   id: string;
@@ -34,12 +35,12 @@ export interface LookaheadWeek {
   activities: LookaheadActivity[];
 }
 
-const TODAY_ISO = () => new Date().toISOString().slice(0, 10);
+const TODAY_ISO = () => toLocalISODate(new Date());
 
 function addDaysISO(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00`);
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return toLocalISODate(d);
 }
 
 /** Segunda-feira da semana ISO que contém `iso` (local). */

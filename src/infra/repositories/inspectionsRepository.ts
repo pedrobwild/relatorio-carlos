@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { toLocalISODate } from "@/lib/localDate";
 
 type InspectionRow = Database["public"]["Tables"]["inspections"]["Row"];
 export type Inspection = InspectionRow & {
@@ -96,8 +97,7 @@ export async function createInspectionWithItems(params: {
     p_project_id: params.project_id,
     p_activity_id: params.activity_id || undefined,
     p_inspector_id: params.inspector_user_id || undefined,
-    p_inspection_date:
-      params.inspection_date || new Date().toISOString().split("T")[0],
+    p_inspection_date: params.inspection_date || toLocalISODate(new Date()),
     p_notes: params.notes || undefined,
     p_items: JSON.parse(JSON.stringify(params.items)),
     p_inspection_type: params.inspection_type || "rotina",

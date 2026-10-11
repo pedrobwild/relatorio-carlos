@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { queryKeys } from "@/lib/queryKeys";
 import { countBusinessDaysInclusive } from "@/lib/businessDays";
+import { toLocalISODate } from "@/lib/localDate";
 
 export type InboxKind =
   | "atividade"
@@ -60,7 +61,7 @@ interface Buckets {
   proximas: InboxItem[];
 }
 
-const TODAY = () => new Date().toISOString().slice(0, 10);
+const TODAY = () => toLocalISODate(new Date());
 
 function parseISODate(iso: string): Date {
   return new Date(`${iso}T00:00:00`);
@@ -246,8 +247,8 @@ async function fetchMyScheduleAlerts(userId: string): Promise<InboxItem[]> {
   const nameMap = new Map(myProjects.map((p) => [p.id, p.name]));
   const today = TODAY();
   const lookback = new Date();
-  lookback.setUTCDate(lookback.getUTCDate() - 60);
-  const lookbackIso = lookback.toISOString().slice(0, 10);
+  lookback.setDate(lookback.getDate() - 60);
+  const lookbackIso = toLocalISODate(lookback);
   const { data, error } = await supabase
     .from("project_activities")
     .select(

@@ -48,6 +48,7 @@ import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { useCostSCurveWeekly, useCostSummary, useCostTotals } from "@/hooks/useCosts";
 import type { CostSummaryRow } from "@/infra/repositories/costs.repository";
 import { cn } from "@/lib/utils";
+import { toLocalISODate } from "@/lib/localDate";
 
 function formatBRL(value: number | null | undefined): string {
   const n = Number(value ?? 0);
@@ -182,7 +183,7 @@ export default function Custos() {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
-    const stamp = new Date().toISOString().slice(0, 10);
+    const stamp = toLocalISODate(new Date());
     downloadCsv(`custos-${safeName}-${stamp}.csv`, toCsv(rows));
   };
 

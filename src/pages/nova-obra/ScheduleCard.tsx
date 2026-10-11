@@ -37,6 +37,7 @@ import { addBusinessDays, isHoliday } from "@/lib/businessDays";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import type { FormData } from "./types";
+import { toLocalISODate } from "@/lib/localDate";
 
 interface ScheduleTemplateEntry {
   description: string;
@@ -656,7 +657,7 @@ export function ScheduleCard({
                     "contract_signing_date",
                     formData.contract_signing_date
                       ? ""
-                      : new Date().toISOString().split("T")[0],
+                      : toLocalISODate(new Date()),
                   )
                 }
                 className="h-4 w-4 rounded border-border"

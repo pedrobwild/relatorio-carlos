@@ -27,6 +27,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { INSPECTION_TYPES, type InspectionType } from "./inspectionConstants";
+import { toLocalISODate } from "@/lib/localDate";
 
 interface Props {
   projectId: string;
@@ -43,7 +44,7 @@ export function DuplicateInspectionDialog({
   duplicateFromInspectionId,
 }: Props) {
   const [inspectionDate, setInspectionDate] = useState(
-    new Date().toISOString().split("T")[0],
+    toLocalISODate(new Date()),
   );
   const [activityId, setActivityId] = useState<string>("");
   const [inspectionType, setInspectionType] =

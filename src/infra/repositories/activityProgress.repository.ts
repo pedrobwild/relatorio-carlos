@@ -6,6 +6,7 @@
  * Não usar em superfícies do cliente.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { toLocalISODate } from "@/lib/localDate";
 
 export interface ActivityProgressMeasurement {
   id: string;
@@ -98,7 +99,7 @@ export async function createMeasurement(
     activity_id: input.activity_id,
     project_id: input.project_id,
     progress_pct: input.progress_pct,
-    measured_on: input.measured_on ?? new Date().toISOString().slice(0, 10),
+    measured_on: input.measured_on ?? toLocalISODate(new Date()),
     notes: input.notes ?? null,
     measured_by: uid,
   };

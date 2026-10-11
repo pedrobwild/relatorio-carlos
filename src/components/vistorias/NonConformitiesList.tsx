@@ -36,6 +36,7 @@ import type {
 import type { NcFilter } from "./NcSummaryCards";
 import { NC_CATEGORIES } from "./ncConstants";
 import { matchesSearch } from "@/lib/searchNormalize";
+import { toLocalISODate } from "@/lib/localDate";
 
 const severityConfig: Record<NcSeverity, { label: string; className: string }> =
   {
@@ -100,7 +101,7 @@ export function NonConformitiesList({
   const [filterReincident, setFilterReincident] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("created_at");
 
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const today = useMemo(() => toLocalISODate(new Date()), []);
 
   const hasLocalFilters =
     !!filterStatus ||

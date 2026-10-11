@@ -111,6 +111,23 @@ export function addBusinessDays(date: Date, n: number): Date {
   return result;
 }
 
+/** Subtract N business days from a date (skips weekends and holidays).
+ *  Mirror of `addBusinessDays`: if the starting date is a non-business day,
+ *  it is first moved back to the previous business day before counting. */
+export function subtractBusinessDays(date: Date, n: number): Date {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  while (isNonBusinessDay(result)) {
+    result.setDate(result.getDate() - 1);
+  }
+  let subtracted = 0;
+  while (subtracted < n) {
+    result.setDate(result.getDate() - 1);
+    if (!isNonBusinessDay(result)) subtracted++;
+  }
+  return result;
+}
+
 /** Count business days between two dates (inclusive of both start and end). */
 export function countBusinessDaysInclusive(start: Date, end: Date): number {
   const s = new Date(start);

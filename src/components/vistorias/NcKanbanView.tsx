@@ -11,6 +11,7 @@ import type {
   NcSeverity,
   NcStatus,
 } from "@/hooks/useNonConformities";
+import { toLocalISODate } from "@/lib/localDate";
 
 const severityConfig: Record<
   NcSeverity,
@@ -89,7 +90,7 @@ export function NcKanbanView({
   onSelect,
   showProjectBadge,
 }: Props) {
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const today = useMemo(() => toLocalISODate(new Date()), []);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return nonConformities;

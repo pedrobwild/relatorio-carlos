@@ -7,7 +7,12 @@ import { ptBR } from "date-fns/locale";
 import { ProjectPayment } from "@/hooks/useProjectPayments";
 import { BoletoUploadButton } from "@/components/BoletoUploadButton";
 import { downloadBoleto } from "@/hooks/useBoletoUpload";
-import { getUrgency, getDaysLabel, formatCurrency } from "./helpers";
+import {
+  getUrgency,
+  getDaysLabel,
+  formatCurrency,
+  parseLocalDate,
+} from "./helpers";
 
 const formatDate = (date: Date | string) => {
   const d = typeof date === "string" ? new Date(date) : date;
@@ -67,7 +72,7 @@ export function DesktopPaymentCard({
                 <Calendar className="w-3.5 h-3.5" />
                 Vencimento:{" "}
                 {payment.due_date
-                  ? formatDate(payment.due_date)
+                  ? formatDate(parseLocalDate(payment.due_date))
                   : "Em definição"}
               </span>
             )}
@@ -178,7 +183,7 @@ export function MobilePaymentCard({
                 <span>
                   Vencimento:{" "}
                   {payment.due_date
-                    ? formatDate(payment.due_date)
+                    ? formatDate(parseLocalDate(payment.due_date))
                     : "Em definição"}
                 </span>
               </>
