@@ -49,6 +49,7 @@ import { isAssistantAllowed } from "@/lib/assistantAccess";
 import { useScheduleAlertsSummary } from "@/hooks/useScheduleAlerts";
 import { useScheduleAlertPrefs } from "@/hooks/useScheduleAlertPrefs";
 import { useMenuMode } from "@/hooks/useMenuMode";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -65,21 +66,27 @@ interface NavGroup {
   items: NavItem[];
 }
 
+/** Tela Obras nova (Fase 5) — atrás da flag `novoPainelObras`. */
+export const NOVO_PAINEL_PATH = "/gestao/obras";
+const LEGACY_PAINEL_PATH = "/gestao/painel-obras";
+
 /**
  * Modo simples (Fase 0 da reformulação): o gestor de obra vê só três
- * entradas. "Semana" e "Hoje" apontam para as telas que já existem
- * (Lookahead e Minha semana) até as telas novas de operação chegarem.
+ * entradas. "Obras" abre a tela nova (Fase 5) quando a flag
+ * `novoPainelObras` está ligada; senão, o Painel de Obras de sempre.
  */
-const SIMPLE_MODE_GROUPS: NavGroup[] = [
-  {
-    label: "Obra",
-    items: [
-      { label: "Obras", icon: Building2, path: "/gestao/painel-obras" },
-      { label: "Semana", icon: CalendarRange, path: "/gestao/semana" },
-      { label: "Hoje", icon: CalendarCheck, path: "/gestao/hoje" },
-    ],
-  },
-];
+function simpleModeGroups(novoPainel: boolean): NavGroup[] {
+  return [
+    {
+      label: "Obra",
+      items: [
+        { label: "Obras", icon: Building2, path: novoPainel ? NOVO_PAINEL_PATH : LEGACY_PAINEL_PATH },
+        { label: "Semana", icon: CalendarRange, path: "/gestao/semana" },
+        { label: "Hoje", icon: CalendarCheck, path: "/gestao/hoje" },
+      ],
+    },
+  ];
+}
 
 export function GestaoSidebar() {
   const { state } = useSidebar();
@@ -93,6 +100,8 @@ export function GestaoSidebar() {
   const { prefs: alertPrefs } = useScheduleAlertPrefs();
   const showAlertsBadge = alertPrefs.showBadge && alertsTotal > 0;
   const { isSimple, canToggle, setMode } = useMenuMode();
+  const { isEnabled: isFlagOn } = useFeatureFlags();
+  const novoPainel = isFlagOn("novoPainelObras");
 
   const currentFase =
     new URLSearchParams(location.search).get("fase") === "projetos"
@@ -111,6 +120,7 @@ export function GestaoSidebar() {
     {
       label: "Meu trabalho",
       items: [
+        ...(novoPainel ? [{ label: "Obras", icon: Building2, path: NOVO_PAINEL_PATH }] : []),
         {
           label: "Hoje",
           icon: CalendarCheck,
@@ -288,7 +298,7 @@ export function GestaoSidebar() {
     },
   ];
 
-  const groups = isSimple ? SIMPLE_MODE_GROUPS : fullGroups;
+  const groups = isSimple ? simpleModeGroups(novoPainel) : fullGroups;
 
   const isActive = (item: NavItem) => {
     const currentPath = location.pathname;

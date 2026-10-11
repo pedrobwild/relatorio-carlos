@@ -29,6 +29,7 @@ import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 import { AuthRedirect } from "@/components/AuthRedirect";
 import { AppShell } from "@/components/layout/AppShell";
+import { GestaoHomeRedirect } from "@/components/layout/GestaoHomeRedirect";
 import { VitrineCta } from "@/components/VitrineCta";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -84,6 +85,7 @@ const PainelObras = lazy(() => import("./pages/PainelObras"));
 const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const Hoje = lazy(() => import("./pages/gestao/Hoje"));
 const Semana = lazy(() => import("./pages/gestao/Semana"));
+const ObrasPainelNovo = lazy(() => import("./pages/gestao/Obras"));
 const Lookahead = lazy(() => import("./pages/gestao/Lookahead"));
 const AvancoFisico = lazy(() => import("./pages/gestao/AvancoFisico"));
 const Custos = lazy(() => import("./pages/gestao/Custos"));
@@ -243,7 +245,11 @@ const AppContent = () => {
               {/* /gestao foi unificada no Painel de Obras */}
               <Route
                 path="/gestao"
-                element={<Navigate to="/gestao/painel-obras" replace />}
+                element={
+                  <StaffRoute>
+                    <GestaoHomeRedirect />
+                  </StaffRoute>
+                }
               />
               <Route
                 path="/gestao/nova-obra"
@@ -537,6 +543,16 @@ const AppContent = () => {
                 }
               />
 
+              <Route
+                path="/gestao/obras"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<ObrasPainelNovo />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
               <Route
                 path="/gestao/painel-obras"
                 element={

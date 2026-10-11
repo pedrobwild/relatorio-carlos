@@ -11,7 +11,11 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { AppRole } from "@/hooks/useUserRole";
 
-const state: { roles: AppRole[]; flag: boolean } = { roles: ["gestor"], flag: true };
+const state: { roles: AppRole[]; flag: boolean; novoPainel: boolean } = {
+  roles: ["gestor"],
+  flag: true,
+  novoPainel: false,
+};
 
 vi.mock("@/hooks/useUserRole", () => ({
   useUserRole: () => ({
@@ -28,8 +32,9 @@ vi.mock("@/hooks/useAuth", () => ({
 
 vi.mock("@/hooks/useFeatureFlags", () => ({
   useFeatureFlags: () => ({
-    flags: { simpleModeGestor: state.flag },
-    isEnabled: (key: string) => (key === "simpleModeGestor" ? state.flag : false),
+    flags: { simpleModeGestor: state.flag, novoPainelObras: state.novoPainel },
+    isEnabled: (key: string) =>
+      key === "simpleModeGestor" ? state.flag : key === "novoPainelObras" ? state.novoPainel : false,
     isLoading: false,
   }),
 }));
@@ -64,6 +69,7 @@ describe("GestaoSidebar · modo simples", () => {
   beforeEach(() => {
     state.roles = ["gestor"];
     state.flag = true;
+    state.novoPainel = false;
     window.localStorage.clear();
   });
 
@@ -114,5 +120,21 @@ describe("GestaoSidebar · modo simples", () => {
     expect(screen.getByRole("link", { name: /Painel de Obras/ })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /Fornecedores/ }).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /menu/i })).toBeNull();
+  });
+
+  it("flag novoPainelObras ligada → Obras abre a tela nova (Fase 5)", () => {
+    state.novoPainel = true;
+    renderSidebar();
+
+    expect(screen.getByRole("link", { name: "Obras" })).toHaveAttribute("href", "/gestao/obras");
+  });
+
+  it("flag novoPainelObras ligada → menu completo ganha Obras e mantém o Painel de Obras", () => {
+    state.novoPainel = true;
+    state.roles = ["admin"];
+    renderSidebar();
+
+    expect(screen.getByRole("link", { name: "Obras" })).toHaveAttribute("href", "/gestao/obras");
+    expect(screen.getByRole("link", { name: /Painel de Obras/ })).toHaveAttribute("href", "/gestao/painel-obras");
   });
 });
