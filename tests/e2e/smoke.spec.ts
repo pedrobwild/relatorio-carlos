@@ -44,11 +44,14 @@ test.describe('Smoke Tests', () => {
   test('4. 404 page works', async ({ page }) => {
     await page.goto('/this-route-does-not-exist-12345');
     
-    // Should show 404 or redirect to home
-    const has404 = await page.locator('text=/não encontrada|not found|404/i').isVisible().catch(() => false);
-    const redirectedHome = page.url().includes('/auth') || page.url().endsWith('/');
-    
-    expect(has404 || redirectedHome).toBe(true);
+    // A página 404 é carregada sob demanda (lazy): espera ela aparecer em vez
+    // de olhar no mesmo instante. O seletor antigo casava dois elementos
+    // ("404" e o texto), o que estourava o modo estrito do Playwright — o
+    // erro era engolido pelo catch e o teste falhava com a página correta.
+    // Sem checar o texto da página: este teste roda contra o site publicado,
+    // que pode estar uma versão atrás do código.
+    await expect(page.getByRole('heading', { name: '404' })).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('a[href="/"]')).toBeVisible();
   });
 
   test('5. No JavaScript errors on home', async ({ page }) => {
