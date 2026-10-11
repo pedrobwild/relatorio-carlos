@@ -455,6 +455,8 @@ function AddCellButton({
   const create = useCreateOpsAssignment();
 
   const add = () => {
+    // Enter repetido (ou segurado) não pode marcar a mesma pessoa duas vezes.
+    if (create.isPending) return;
     const parsed = parseWho(who, staff);
     if (!parsed || !activity.id) {
       toast.error("Informe quem vai fazer.");
@@ -517,7 +519,7 @@ function NewActivityButton({ stageId, projectId, stageName }: { stageId: string;
   const create = useCreateOpsActivity();
   const add = () => {
     const t = title.trim();
-    if (!t) return;
+    if (!t || create.isPending) return;
     create.mutate(
       { project_id: projectId, stage_id: stageId, title: t },
       {

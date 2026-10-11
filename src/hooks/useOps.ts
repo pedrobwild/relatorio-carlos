@@ -2,7 +2,7 @@
  * Hooks da camada de Operação (Fase 2) — staff-only.
  * Base para as telas Hoje (Fase 3) e Semana (Fase 4).
  */
-import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import {
   opsRepo,
@@ -60,12 +60,22 @@ export function useOpsMaterials(activityId: string | undefined) {
   });
 }
 
-/** Qualquer escrita na operação invalida tudo de `ops` (contadores e rollup dependem entre si). */
+/**
+ * Qualquer escrita na operação invalida tudo de `ops` (contadores e rollup
+ * dependem entre si) e também a tela Obras, que lê as mesmas tabelas com
+ * outra chave — sem isso ela mostrava "semana não planejada" e alertas
+ * antigos logo depois de planejar/confirmar.
+ */
+export function invalidateOps(qc: QueryClient) {
+  void qc.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+  return qc.invalidateQueries({ queryKey: queryKeys.ops.all });
+}
+
 function useOpsMutation<TVars, TOut>(fn: (vars: TVars) => Promise<TOut>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.ops.all }),
+    onSuccess: () => invalidateOps(qc),
   });
 }
 
@@ -100,7 +110,8 @@ export function applyOutcome(list: OpsDayAssignment[] | undefined, vars: SetOutc
           ...a,
           outcome: vars.outcome,
           not_done_reason: vars.outcome === "nao_feito" ? (vars.reason ?? null) : null,
-          notes: vars.notes !== undefined ? vars.notes : a.notes,
+          // Desfazer limpa a observação do "Não feito" (igual ao repositório).
+          notes: vars.notes !== undefined ? vars.notes : vars.outcome === null ? null : a.notes,
           done_at: vars.outcome ? now : null,
         },
   );
@@ -127,7 +138,7 @@ export function useSetAssignmentOutcome() {
         qc.setQueryData(key, list);
       }
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.ops.all }),
+    onSettled: () => invalidateOps(qc),
   });
 }
 
@@ -166,6 +177,8 @@ export function useOpsPhotoUrls(paths: string[]) {
     queryKey: queryKeys.ops.photoUrls(paths),
     enabled: paths.length > 0,
     staleTime: 30 * 60_000,
+    // URL assinada expira em ~1h: não vai para o cache persistido (24h).
+    meta: { persist: false },
     queryFn: async () => unwrap(await opsRepo.getPhotoUrls(paths)) ?? [],
   });
 }

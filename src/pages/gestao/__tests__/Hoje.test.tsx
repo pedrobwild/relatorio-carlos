@@ -137,6 +137,13 @@ describe("Tela Hoje", () => {
     expect(screen.getByRole("heading", { name: "Obra Alphaville" })).toBeInTheDocument();
   });
 
+  it("filtro de obra sem nada no dia não esconde o trabalho das outras obras", () => {
+    h.items = [item({ id: "3", project_id: "p2", project: { id: "p2", name: "Obra Alphaville" } })];
+    renderAt("?obra=p1");
+    expect(screen.queryByText("Nada programado para este dia")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Obra Alphaville" })).toBeInTheDocument();
+  });
+
   it("dia futuro: mostra o planejado, mas não deixa confirmar", () => {
     renderAt(`?data=${shiftISODate(todayISO(), 1)}`);
     expect(screen.getByRole("heading", { level: 1, name: "Amanhã" })).toBeInTheDocument();

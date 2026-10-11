@@ -66,7 +66,11 @@ export default function Hoje() {
   );
 
   const allGroups = useMemo(() => groupByObra(items), [items]);
-  const groups = obraFilter ? allGroups.filter((g) => g.projectId === obraFilter) : allGroups;
+  // O filtro de obra acompanha a navegação entre dias. Num dia em que a obra
+  // filtrada não tem nada, o filtro é ignorado: senão a tela diria "Nada
+  // programado" escondendo o trabalho das outras obras, sem ter como limpar.
+  const activeFilter = obraFilter && allGroups.some((g) => g.projectId === obraFilter) ? obraFilter : null;
+  const groups = activeFilter ? allGroups.filter((g) => g.projectId === activeFilter) : allGroups;
   const counts = countDay(groups.flatMap((g) => g.items));
   const confirmable = canConfirmOn(date);
 
@@ -178,13 +182,13 @@ export default function Hoje() {
 
       {allGroups.length > 1 && (
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrar por obra">
-          <FilterChip active={!obraFilter} onClick={() => setParam("obra", null)} pending={countDay(items).pending}>
+          <FilterChip active={!activeFilter} onClick={() => setParam("obra", null)} pending={countDay(items).pending}>
             Todas
           </FilterChip>
           {allGroups.map((g) => (
             <FilterChip
               key={g.projectId}
-              active={obraFilter === g.projectId}
+              active={activeFilter === g.projectId}
               onClick={() => setParam("obra", g.projectId)}
               pending={g.pending}
             >

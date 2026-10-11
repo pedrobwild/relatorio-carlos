@@ -239,7 +239,16 @@ export function buildWeekGrid(input: {
     const open = !!act.status && !isOpsActivityClosed(act.status);
     const stagePlanned = !!st && overlaps(st.planned_start, st.planned_end, from, to);
     const ownPlanned = overlaps(act.planned_start, act.planned_end, from, to);
-    if (list.length === 0 && !(open && (stagePlanned || ownPlanned))) continue;
+    const neverScheduled = (act.assignments_total ?? 0) === 0;
+    // Aberta, sem nenhum dia marcado e que já devia ter começado: precisa
+    // aparecer para ganhar dia. É o caso de "+ Atividade" numa etapa cujo
+    // período do cronograma já passou e do retrabalho criado pelo "Refazer".
+    const start = act.planned_start ?? st?.planned_start ?? null;
+    const waitingForDay = open && neverScheduled && (!start || start <= to);
+    // Concluída sem dia nenhum não tem outra semana onde aparecer; sem isto
+    // não haveria como chegar no "Aprovar / Refazer".
+    const waitingForReview = act.status === "concluida" && neverScheduled;
+    if (list.length === 0 && !(open && (stagePlanned || ownPlanned)) && !waitingForDay && !waitingForReview) continue;
     const cells: Record<string, OpsAssignment[]> = {};
     for (const a of list) (cells[a.work_date] ??= []).push(a);
     sectionFor(stageId).rows.push({ activity: act, cells, limit: limitFor(act, st), inWeek: list.length });
@@ -393,6 +402,21 @@ export function proposeWeek(input: {
     }
     if (act.status === "em_execucao" && prev.length > 0) {
       out.push({ ...base, key: `continua:${act.id}`, kind: "continua", days: workingDays.slice(0, Math.min(prev.length, workingDays.length)), who: lastWho });
+      continue;
+    }
+    // Já teve dia marcado, mas não na semana passada (feriado, obra parada,
+    // semana que ninguém planejou): continua aberta, então volta para a lista
+    // em vez de sumir das sugestões.
+    if ((act.assignments_total ?? 0) > 0 && act.last_work_date && act.last_work_date < first) {
+      const owed = (act.assignments_not_done ?? 0) + (act.assignments_pending ?? 0);
+      const who = act.responsible_user_id ? { user_id: act.responsible_user_id, worker_name: null } : null;
+      out.push({
+        ...base,
+        key: `${owed > 0 ? "sobrou" : "continua"}:${act.id}`,
+        kind: owed > 0 ? "sobrou" : "continua",
+        days: workingDays.slice(0, Math.min(Math.max(1, owed), workingDays.length)),
+        who,
+      });
       continue;
     }
     if ((act.assignments_total ?? 0) === 0) {

@@ -23,13 +23,14 @@ export function AssignmentPhotos({ assignment }: Props) {
   const onCapture = async (photos: CapturedPhoto[]) => {
     try {
       await addPhotos.mutateAsync({ assignment, files: photos.map((p) => p.file) });
-      toast.success(photos.length === 1 ? "Foto salva" : `${photos.length} fotos salvas`);
-      setCapturing(false);
-    } catch {
+    } catch (err) {
+      // Não descarta as fotos: o botão as mantém para o "tente de novo".
       toast.error("Não foi possível salvar a foto. Tente de novo.");
-    } finally {
-      photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+      throw err;
     }
+    photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+    toast.success(photos.length === 1 ? "Foto salva" : `${photos.length} fotos salvas`);
+    setCapturing(false);
   };
 
   return (
