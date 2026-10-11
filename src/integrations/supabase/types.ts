@@ -7655,6 +7655,10 @@ export type Database = {
         Args: { p_template_id: string }
         Returns: undefined
       }
+      initial_role_from_app_metadata: {
+        Args: { _app_meta: Json }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       initialize_project_journey: {
         Args: { p_project_id: string }
         Returns: undefined
