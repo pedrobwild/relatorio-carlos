@@ -1,14 +1,5 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# Portal Bwild é interno. As páginas trazem meta robots noindex (index.html).
+# O rastreamento continua liberado de propósito: se for bloqueado aqui, o robô
+# não lê o noindex e páginas já indexadas ficam no índice.
 User-agent: *
 Allow: /
