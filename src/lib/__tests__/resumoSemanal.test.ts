@@ -239,6 +239,32 @@ describe("buildResumo · precisa de atenção", () => {
   });
 });
 
+describe("buildResumo · adoção só a partir do início da obra", () => {
+  it("semana que terminou antes do início da execução não é cobrada", () => {
+    const rows = [
+      row({ id: "n1", responsibleId: "ana", responsible: "Ana" }),
+      row({ id: "v1", responsibleId: "ana", responsible: "Ana" }),
+    ];
+    // n1 começou na quarta 30/09: as semanas de 14/09 e 21/09 não contam; a de 28/09 conta.
+    const startedOn = new Map<string, string | null>([["n1", "2026-09-30"], ["v1", null]]);
+    const closings: ResumoClosing[] = [
+      closing("n1", "2026-09-28", 2, 2),
+      closing("n1", "2026-10-05", 2, 2),
+      closing("v1", "2026-10-05", 2, 2),
+    ];
+    const r = buildResumo({ rows, today: TODAY, assignments: [], closings, startedOn });
+    const ana = r.adocao[0];
+    expect(ana.weeks.map((w) => [w.monday, w.due, w.closed])).toEqual([
+      ["2026-09-14", 1, 0],
+      ["2026-09-21", 1, 0],
+      ["2026-09-28", 2, 1],
+      ["2026-10-05", 2, 2],
+    ]);
+    // 3 fechadas de 6 cobradas (e não de 8).
+    expect(ana.closedRate).toBe(50);
+  });
+});
+
 describe("buildResumo · adoção por gestor", () => {
   const rows = [
     row({ id: "a1", responsibleId: "ana", responsible: "Ana" }),
@@ -273,7 +299,7 @@ describe("buildResumo · adoção por gestor", () => {
   it("contagens por semana, taxa das 4 semanas, semana corrente e PPC", () => {
     const ana = gestor("ana");
     expect(ana.n).toBe(2);
-    expect(ana.weeks).toEqual(weeks.map((monday) => ({ monday, planned: 2, closed: 2 })));
+    expect(ana.weeks).toEqual(weeks.map((monday) => ({ monday, due: 2, planned: 2, closed: 2 })));
     expect(ana.closedRate).toBe(100);
     expect(ana.plannedRate).toBe(100);
     expect(ana.plannedThisWeek).toBe(1);
@@ -282,7 +308,7 @@ describe("buildResumo · adoção por gestor", () => {
     const bruno = gestor("bruno");
     expect(bruno.obras).toBe(2);
     expect(bruno.n).toBe(1);
-    expect(bruno.weeks.at(-1)).toEqual({ monday: "2026-10-05", planned: 1, closed: 0 });
+    expect(bruno.weeks.at(-1)).toEqual({ monday: "2026-10-05", due: 1, planned: 1, closed: 0 });
     expect(bruno.closedRate).toBe(0);
     expect(bruno.plannedRate).toBe(25);
     expect(bruno.lastPpc).toBeNull();

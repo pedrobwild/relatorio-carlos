@@ -11,6 +11,8 @@
  * duas, a retomada só vincula — não sobe a foto de novo.
  */
 
+import { createIdbStorage, createMemoryStorage, IDB_STORES } from "./idb";
+
 export interface QueuedPhoto {
   id: string;
   /** Quem tirou: só a mesma conta envia (celular compartilhado na obra). */
@@ -51,7 +53,12 @@ export class PhotoQueueFullError extends Error {
 
 export interface PhotoQueueDeps {
   storage: PhotoQueueStorage;
-  /** Sobe o arquivo e devolve o caminho no bucket. */
+  /**
+   * Sobe o arquivo e devolve o caminho no bucket. TEM que ser idempotente
+   * por `item.id` (caminho derivado do id): se a resposta de um upload que
+   * deu certo se perder, a nova tentativa cai no MESMO arquivo em vez de
+   * criar uma cópia.
+   */
   upload: (item: QueuedPhoto) => Promise<string>;
   /** Acrescenta os caminhos na alocação. */
   link: (assignmentId: string, paths: string[]) => Promise<void>;
@@ -88,6 +95,14 @@ export interface PhotoQueue {
   process(): Promise<void>;
   retry(id: string): Promise<void>;
   discard(id: string): Promise<void>;
+  /** "Sair mesmo assim": apaga do aparelho tudo o que é desta conta. */
+  discardUser(userId: string): Promise<number>;
+  /**
+   * Fotos de OUTRAS contas guardadas há mais de `maxAgeMs` (celular
+   * compartilhado na obra): nunca vão ser enviadas por esta sessão e só
+   * ocupariam espaço. Devolve quantas apagou.
+   */
+  purgeOtherUsers(currentUserId: string, maxAgeMs: number): Promise<number>;
 }
 
 function defaultId(): string {
@@ -236,75 +251,43 @@ export function createPhotoQueue(deps: PhotoQueueDeps): PhotoQueue {
     async discard(id) {
       await remove(id);
     },
+
+    async discardUser(userId) {
+      // Lê o armazenamento (não só a memória): pode ter sido chamado antes
+      // de `load()` terminar.
+      const stored = await deps.storage.getAll();
+      const ids = new Set([...stored, ...items].filter((i) => i.userId === userId).map((i) => i.id));
+      for (const id of ids) await deps.storage.delete(id);
+      setItems(items.filter((i) => !ids.has(i.id)));
+      return ids.size;
+    },
+
+    async purgeOtherUsers(currentUserId, maxAgeMs) {
+      const limit = now() - maxAgeMs;
+      const stored = await deps.storage.getAll();
+      const ids = new Set(
+        [...stored, ...items]
+          .filter((i) => i.userId !== currentUserId && i.createdAt < limit)
+          .map((i) => i.id),
+      );
+      for (const id of ids) await deps.storage.delete(id);
+      if (ids.size > 0) setItems(items.filter((i) => !ids.has(i.id)));
+      return ids.size;
+    },
   };
 
   return queue;
 }
 
 // ---------------------------------------------------------------------------
-// IndexedDB (API nativa, sem dependência nova)
+// Armazenamento (IndexedDB compartilhado com a fila de Feito / Não feito)
 // ---------------------------------------------------------------------------
 
-const DB_NAME = "bwild-offline";
-const DB_VERSION = 1;
-const STORE = "ops-photos";
-
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    if (typeof indexedDB === "undefined") {
-      reject(new Error("IndexedDB indisponível"));
-      return;
-    }
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "id" });
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error ?? new Error("Falha ao abrir o IndexedDB"));
-  });
-}
-
-function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  return openDb().then(
-    (db) =>
-      new Promise<T>((resolve, reject) => {
-        const t = db.transaction(STORE, mode);
-        const req = run(t.objectStore(STORE));
-        t.oncomplete = () => {
-          db.close();
-          resolve(req.result);
-        };
-        t.onerror = () => {
-          db.close();
-          reject(t.error ?? req.error ?? new Error("Falha no IndexedDB"));
-        };
-        t.onabort = () => {
-          db.close();
-          reject(t.error ?? new Error("Transação abortada no IndexedDB"));
-        };
-      }),
-  );
-}
-
 export function createIndexedDbPhotoStorage(): PhotoQueueStorage {
-  return {
-    getAll: () => tx<QueuedPhoto[]>("readonly", (s) => s.getAll() as IDBRequest<QueuedPhoto[]>),
-    put: (item) => tx("readwrite", (s) => s.put(item)).then(() => undefined),
-    delete: (id) => tx("readwrite", (s) => s.delete(id)).then(() => undefined),
-  };
+  return createIdbStorage<QueuedPhoto>(IDB_STORES.photos);
 }
 
 /** Sem IndexedDB (aba privada antiga, teste): guarda só em memória. */
 export function createMemoryPhotoStorage(): PhotoQueueStorage {
-  const map = new Map<string, QueuedPhoto>();
-  return {
-    getAll: async () => [...map.values()],
-    put: async (item) => {
-      map.set(item.id, item);
-    },
-    delete: async (id) => {
-      map.delete(id);
-    },
-  };
+  return createMemoryStorage<QueuedPhoto>();
 }

@@ -63,9 +63,9 @@ function rateTone(rate: number | null): Tone {
 }
 
 /** Cor de uma semana do gestor: todas fechadas, algumas, nenhuma. */
-function weekTone(w: AdocaoSemana, n: number): Tone {
-  if (n === 0) return "muted";
-  if (w.closed >= n) return "success";
+function weekTone(w: AdocaoSemana): Tone {
+  if (w.due === 0) return "muted";
+  if (w.closed >= w.due) return "success";
   if (w.closed > 0) return "warning";
   return "destructive";
 }
@@ -150,21 +150,21 @@ function WeekStrip({ g, compact = false }: { g: AdocaoGestor; compact?: boolean 
   return (
     <ol className={cn("flex gap-1.5", compact ? "" : "flex-wrap")} aria-label="Semanas fechadas">
       {g.weeks.map((w) => {
-        const tone = weekTone(w, g.n);
+        const tone = weekTone(w);
         return (
           <li
             key={w.monday}
             className="flex min-w-[52px] flex-col items-center rounded-md border border-border bg-background px-1.5 py-1"
-            title={`Semana de ${weekShortLabel(w.monday)}: ${w.planned}/${g.n} planejadas, ${w.closed}/${g.n} fechadas`}
+            title={`Semana de ${weekShortLabel(w.monday)}: ${w.planned}/${w.due} planejadas, ${w.closed}/${w.due} fechadas`}
           >
             <span className="text-[11px] text-muted-foreground">{mondayShortLabel(w.monday)}</span>
             <span className={cn("mt-0.5 h-1.5 w-full rounded-full", WEEK_CELL[tone])} aria-hidden="true" />
             <span className="mt-0.5 text-xs tabular-nums text-foreground">
               <span className="sr-only">fechadas </span>
-              {w.closed}/{g.n}
+              {w.closed}/{w.due}
             </span>
             <span className="text-[11px] tabular-nums text-muted-foreground">
-              <span className="sr-only">planejadas </span>P {w.planned}/{g.n}
+              <span className="sr-only">planejadas </span>P {w.planned}/{w.due}
             </span>
           </li>
         );

@@ -91,6 +91,14 @@ const MATERIAL_WITH_PURCHASE_SELECT = `*, purchase:project_purchases!ops_materia
 
 export const OPS_PHOTOS_BUCKET = "ops-photos";
 
+/** O storage responde "já existe" (409 / Duplicate) quando o caminho já tem arquivo. */
+export function isAlreadyExistsError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { statusCode?: unknown; status?: unknown; error?: unknown; message?: unknown };
+  if (String(e.statusCode ?? "") === "409" || String(e.status ?? "") === "409") return true;
+  return /duplicate|already exists/i.test(`${String(e.error ?? "")} ${String(e.message ?? "")}`);
+}
+
 const DAY_SELECT =
   "*, activity:ops_activities(id, title, status, stage_id, project_id, is_critical, stage:project_activities(description)), project:projects(id, name), fornecedor:fornecedores(nome)";
 
@@ -272,14 +280,23 @@ export const opsRepo = {
   /**
    * Envia uma foto de campo. O caminho começa pelo project_id porque é isso
    * que a policy do bucket usa para checar o acesso à obra.
+   *
+   * `key` (id do item da fila offline, ou um id fixo por arquivo) torna o
+   * envio idempotente: o caminho é derivado dela, então uma nova tentativa
+   * depois de uma resposta perdida cai no MESMO arquivo. O bucket não tem
+   * policy de UPDATE para `ops-photos` (só SELECT/INSERT/DELETE), então
+   * `upsert: true` seria recusado; em vez disso, "já existe" (409) nesse
+   * caminho significa que a tentativa anterior chegou — vale como sucesso.
    */
-  async uploadPhoto(projectId: string, assignmentId: string, file: File) {
+  async uploadPhoto(projectId: string, assignmentId: string, file: File, key?: string) {
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `${projectId}/${assignmentId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const safeKey = key ? key.replace(/[^A-Za-z0-9_-]/g, "") : "";
+    const name = safeKey || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${projectId}/${assignmentId}/${name}.${ext}`;
     const { error } = await supabase.storage
       .from(OPS_PHOTOS_BUCKET)
       .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
-    if (error) return { data: null, error };
+    if (error && !(safeKey && isAlreadyExistsError(error))) return { data: null, error };
     return { data: path, error: null };
   },
 

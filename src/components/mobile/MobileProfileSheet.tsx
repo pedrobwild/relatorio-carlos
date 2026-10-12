@@ -15,16 +15,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { SignOutConfirmDialog } from "@/components/layout/SignOutConfirmDialog";
+import { useSignOutGuard } from "@/hooks/useSignOutGuard";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, type AppRole } from "@/hooks/useUserRole";
@@ -61,7 +53,6 @@ export function MobileProfileSheet({
   const { unreadCount } = useNotifications();
   const projectCtx = useProjectOptional();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [confirmSignOut, setConfirmSignOut] = useState(false);
 
   const primaryRoleLabel =
     roles.length > 0 ? (ROLE_LABELS[roles[0]] ?? roles[0]) : null;
@@ -74,7 +65,6 @@ export function MobileProfileSheet({
   const close = () => onOpenChange(false);
 
   const handleSignOut = async () => {
-    setConfirmSignOut(false);
     onOpenChange(false);
     try {
       await signOut();
@@ -82,6 +72,8 @@ export function MobileProfileSheet({
       navigate("/auth", { replace: true });
     }
   };
+  // Sempre confirma; com registros não enviados, avisa quantos e o que perde.
+  const signOutGuard = useSignOutGuard({ userId: user?.id, signOut: handleSignOut, alwaysConfirm: true });
 
   const items: Array<{
     id: string;
@@ -221,7 +213,7 @@ export function MobileProfileSheet({
 
             <button
               type="button"
-              onClick={() => setConfirmSignOut(true)}
+              onClick={signOutGuard.request}
               className={cn(
                 "flex items-center gap-3 w-full px-3 py-3 rounded-xl text-left mt-2",
                 "min-h-[52px] transition-all active:scale-[0.99]",
@@ -245,21 +237,7 @@ export function MobileProfileSheet({
         onOpenChange={setNotificationsOpen}
       />
 
-      <AlertDialog open={confirmSignOut} onOpenChange={setConfirmSignOut}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sair da sua conta?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Suas pendências continuam aqui. Você pode entrar de novo a
-              qualquer momento.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSignOut}>Sair</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <SignOutConfirmDialog {...signOutGuard.dialogProps} />
     </>
   );
 }

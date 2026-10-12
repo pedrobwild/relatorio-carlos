@@ -63,6 +63,11 @@ export interface FaseProjetoSectionProps {
   scheduleStart?: string | null;
   /** Aviso curto no topo da seção (ex.: por que a gaveta abriu a partir do Kanban). */
   notice?: string | null;
+  /**
+   * Etapa atual do card no Painel. Etapas antes dela contam como concluídas
+   * mesmo sem registro (obras de antes do fluxo por etapas).
+   */
+  painelEtapa?: string | null;
 }
 
 export function FaseProjetoSection({
@@ -72,6 +77,7 @@ export function FaseProjetoSection({
   officialStart,
   scheduleStart,
   notice,
+  painelEtapa,
 }: FaseProjetoSectionProps) {
   const stepsQ = useProjectPhaseSteps(projectId);
   const { mutateAsync } = useSaveProjectPhaseStep();
@@ -79,7 +85,7 @@ export function FaseProjetoSection({
   const [pending, setPending] = useState(0);
 
   const rows = stepsQ.data;
-  const state = useMemo(() => (rows ? phaseState(rows, todayISO()) : null), [rows]);
+  const state = useMemo(() => (rows ? phaseState(rows, todayISO(), painelEtapa) : null), [rows, painelEtapa]);
 
   /** Grava um campo de uma etapa. Devolve se deu certo (o aviso de erro é global). */
   const save = async (step: PhaseStepKey, patch: StepPatch, ok: string): Promise<boolean> => {
@@ -287,7 +293,9 @@ function StepItem({ step, index, staff, canEdit, busy, save, children }: StepIte
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium leading-snug text-foreground">{step.label}</p>
-          {step.done && step.doneAt ? (
+          {step.implied ? (
+            <p className="mt-0.5 text-xs text-muted-foreground">Concluída antes do registro por etapas</p>
+          ) : step.done && step.doneAt ? (
             <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
               Concluída em {dataBR(step.doneAt)}
               {responsibleName && ` · ${responsibleName}`}
@@ -307,7 +315,8 @@ function StepItem({ step, index, staff, canEdit, busy, save, children }: StepIte
         </div>
         {canEdit &&
           (step.done ? (
-            !reopening && (
+            !reopening &&
+            !step.implied && (
               <Button
                 type="button"
                 variant="ghost"

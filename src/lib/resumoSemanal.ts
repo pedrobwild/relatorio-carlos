@@ -140,6 +140,8 @@ export interface AtencaoItem {
 
 export interface AdocaoSemana {
   monday: string;
+  /** Obras cobradas nesta semana (em execução, não paralisadas, já iniciadas). */
+  due: number;
   planned: number;
   closed: number;
 }
@@ -181,6 +183,12 @@ export interface ResumoInput {
   /** Fechamentos das semanas da adoção (pode vir com sobra: é filtrado). */
   closings: readonly ResumoClosing[];
   today: string;
+  /**
+   * Dia em que cada obra começou a execução (início real; na falta, o
+   * previsto). Semana que terminou antes disso não é cobrada do gestor —
+   * a obra ainda estava em projeto. Obra sem data conta em todas.
+   */
+  startedOn?: ReadonlyMap<string, string | null>;
 }
 
 // ---------------------------------------------------------------------------
@@ -319,13 +327,23 @@ export function buildResumo(input: ResumoInput): ResumoSemanal {
   const adocao: AdocaoGestor[] = [...groups.values()].map((g) => {
     const counted = g.rows.filter((r) => !isPaused(r));
     const n = counted.length;
-    const weekStats = weeks.history.map((monday) => ({
-      monday,
-      planned: counted.filter((r) => isPlanned(r.id, monday)).length,
-      closed: counted.filter((r) => !!closingOf(r.id, monday)).length,
-    }));
+    /** A obra já estava em execução em algum dia daquela semana. */
+    const runningIn = (r: ObraRow, monday: string) => {
+      const start = input.startedOn?.get(r.id)?.slice(0, 10);
+      return !start || start <= shiftISODate(monday, 6);
+    };
+    const weekStats = weeks.history.map((monday) => {
+      const due = counted.filter((r) => runningIn(r, monday));
+      return {
+        monday,
+        due: due.length,
+        planned: due.filter((r) => isPlanned(r.id, monday)).length,
+        closed: due.filter((r) => !!closingOf(r.id, monday)).length,
+      };
+    });
     const totalClosed = weekStats.reduce((s, w) => s + w.closed, 0);
     const totalPlanned = weekStats.reduce((s, w) => s + w.planned, 0);
+    const totalDue = weekStats.reduce((s, w) => s + w.due, 0);
     const mine = g.rows.map((r) => closingOf(r.id, last)).filter((c): c is ResumoClosing => !!c);
     return {
       responsibleId: g.id,
@@ -333,8 +351,8 @@ export function buildResumo(input: ResumoInput): ResumoSemanal {
       obras: g.rows.length,
       n,
       weeks: weekStats,
-      closedRate: rateOf(totalClosed, n * weeks.history.length),
-      plannedRate: rateOf(totalPlanned, n * weeks.history.length),
+      closedRate: rateOf(totalClosed, totalDue),
+      plannedRate: rateOf(totalPlanned, totalDue),
       plannedThisWeek: counted.filter((r) => isPlanned(r.id, weeks.current)).length,
       lastPpc: ppcOf(
         mine.reduce((s, c) => s + Number(c.done ?? 0), 0),
@@ -374,7 +392,8 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 export function adocaoLine(g: AdocaoGestor, weeksCount = ADOCAO_SEMANAS): string {
   if (g.n === 0) return `${g.name}: ${plural(g.obras, "obra paralisada", "obras paralisadas")}`;
   const closed = g.weeks.reduce((s, w) => s + w.closed, 0);
-  const total = g.n * weeksCount;
+  // Obra × semana cobradas (semanas antes do início da obra não entram).
+  const total = g.weeks.length ? g.weeks.reduce((s, w) => s + w.due, 0) : g.n * weeksCount;
   const parts = [
     `fechou ${g.closedRate ?? 0}% das semanas (${closed}/${total})`,
     `esta semana ${g.plannedThisWeek}/${g.n} planejadas`,

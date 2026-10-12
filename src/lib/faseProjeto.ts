@@ -37,6 +37,36 @@ export const PHASE_STEPS: readonly PhaseStepDef[] = [
   { key: "aprovacao_condominio", label: "Aprovação do condomínio recebida", shortLabel: "Aprovação" },
 ] as const;
 
+/**
+ * Ordem das etapas do Painel (`painel_etapa_enum`, na ordem do banco) e a
+ * etapa do Painel de cada etapa da fase — espelho de
+ * `project_phase_step_painel_etapa` na migration da fase de projeto.
+ */
+export const PAINEL_ETAPA_ORDER = [
+  "Projeto 3D",
+  "Projeto Executivo",
+  "Executivo Aprovado",
+  "Medição",
+  "Executivo",
+  "Emissão RRT",
+  "Condomínio",
+  "Planejamento",
+  "Mobilização",
+  "Execução",
+  "Vistoria",
+  "Vistoria reprovada",
+  "Finalizada",
+] as const;
+
+export const PHASE_STEP_PAINEL_ETAPA: Record<PhaseStepKey, (typeof PAINEL_ETAPA_ORDER)[number]> = {
+  projeto_3d: "Projeto 3D",
+  projeto_executivo: "Projeto Executivo",
+  medicao_fina: "Medição",
+  emissao_art: "Emissão RRT",
+  solicitacao_aprovacao: "Condomínio",
+  aprovacao_condominio: "Condomínio",
+};
+
 /** Dias corridos (hoje incluído) em que um prazo já conta como "vence logo". */
 export const PHASE_DUE_SOON_DAYS = 3;
 
@@ -56,6 +86,11 @@ export interface PhaseStepState extends PhaseStepDef {
   /** Existe linha no banco para esta etapa (algo já foi registrado nela). */
   registered: boolean;
   done: boolean;
+  /**
+   * Concluída sem registro: a obra já está numa etapa do Painel depois desta
+   * (obras de antes do fluxo por etapas). Não tem data nem pode ser reaberta.
+   */
+  implied: boolean;
   /** Dia em que foi concluída (yyyy-mm-dd) ou null. */
   doneAt: string | null;
   /** Prazo combinado (yyyy-mm-dd) ou null. */
@@ -106,11 +141,19 @@ function daysBetween(from: string, to: string): number {
  * @param rows  linhas de `project_phase_steps` da obra (em qualquer ordem;
  *              etapa sem linha = ainda não registrada, em aberto).
  * @param today dia de referência (yyyy-mm-dd); padrão: hoje no aparelho.
+ * @param painelEtapa etapa atual do card no Painel. Etapa da fase sem
+ *              conclusão registrada mas que fica ANTES dessa posição conta
+ *              como concluída (mesma regra do gatilho do banco): uma obra que
+ *              já está em "Condomínio" não aparece "em Projeto 3D".
  */
 export function phaseState(
   rows: ReadonlyArray<PhaseStepRow> | null | undefined,
   today: string = todayISO(),
+  painelEtapa?: string | null,
 ): PhaseState {
+  const cardIndex = painelEtapa
+    ? PAINEL_ETAPA_ORDER.indexOf(painelEtapa as (typeof PAINEL_ETAPA_ORDER)[number])
+    : -1;
   const byStep = new Map<PhaseStepKey, PhaseStepRow>();
   for (const row of rows ?? []) {
     if (!byStep.has(row.step)) byStep.set(row.step, row);
@@ -124,7 +167,9 @@ export function phaseState(
     const row = byStep.get(def.key);
     const doneAt = cleanDate(row?.done_at);
     const dueDate = cleanDate(row?.due_date);
-    const done = doneAt !== null;
+    const implied =
+      doneAt === null && cardIndex >= 0 && PAINEL_ETAPA_ORDER.indexOf(PHASE_STEP_PAINEL_ETAPA[def.key]) < cardIndex;
+    const done = doneAt !== null || implied;
     const daysToDue = !done && dueDate ? daysBetween(today, dueDate) : null;
     const late = daysToDue !== null && daysToDue < 0;
     const isCurrent = !done && current === null;
@@ -133,6 +178,7 @@ export function phaseState(
       ...def,
       registered: !!row,
       done,
+      implied,
       doneAt,
       dueDate,
       responsibleUserId: row?.responsible_user_id ?? null,

@@ -673,6 +673,9 @@ export function invalidatePurchaseQueries() {
   });
   queryClient.invalidateQueries({ queryKey: ["purchases-by-creation"] });
   queryClient.invalidateQueries({ queryKey: ["fornecedor-purchases"] });
+  // Material da atividade: a situação vem da compra vinculada (calculada no banco).
+  queryClient.invalidateQueries({ queryKey: queryKeys.ops.all });
+  queryClient.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
 }
 
 export function invalidateFormalizacaoQueries(

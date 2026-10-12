@@ -50,6 +50,16 @@ export function useResumoSemanal() {
     queryFn: async () => unwrap(await obrasPanelRepo.listClosings(ids, weeks.history[0], weeks.last)),
   });
 
+  // Início da execução de cada obra (real; na falta, o previsto): semanas
+  // anteriores a ele não contam na adoção do gestor.
+  const startedOn = useMemo(
+    () => new Map(painel.rows.map((r) => {
+      const o = painel.obraById.get(r.id);
+      return [r.id, o?.inicio_real ?? o?.inicio_oficial ?? null] as const;
+    })),
+    [painel.rows, painel.obraById],
+  );
+
   const resumo = useMemo<ResumoSemanal>(
     () =>
       buildResumo({
@@ -57,8 +67,9 @@ export function useResumoSemanal() {
         assignments: assignmentsQ.data ?? [],
         closings: closingsQ.data ?? [],
         today,
+        startedOn,
       }),
-    [painel.rows, assignmentsQ.data, closingsQ.data, today],
+    [painel.rows, assignmentsQ.data, closingsQ.data, today, startedOn],
   );
 
   const historyError = assignmentsQ.error ?? closingsQ.error ?? null;

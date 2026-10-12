@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { onlineManager, useMutationState } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import {
+  getOutcomeOutbox,
   syncFailures,
   type PendingOutcome,
   type SetOutcomeVars,
@@ -28,10 +29,11 @@ export function useIsOnline(): boolean {
 export function usePendingOutcomes(): PendingOutcome[] {
   const states = useMutationState({
     filters: { mutationKey: queryKeys.ops.setOutcomeMutation, status: "pending" },
-    select: (m) => ({
-      vars: m.state.variables as SetOutcomeVars,
-      submittedAt: m.state.submittedAt,
-    }),
+    select: (m) => {
+      const vars = m.state.variables as SetOutcomeVars;
+      // Retomado depois de reabrir o app: vale a hora do toque, não a da retomada.
+      return { vars, submittedAt: vars?.queuedAt ?? m.state.submittedAt };
+    },
   });
   return useMemo(() => states.filter((p) => !!p.vars?.id), [states]);
 }
@@ -44,6 +46,21 @@ export function useSyncFailures(): readonly SyncFailure[] {
 export function useQueuedPhotos(): readonly QueuedPhoto[] {
   const q = getOpsPhotoQueue();
   return useSyncExternalStore(q.subscribe, q.getSnapshot, q.getSnapshot);
+}
+
+/**
+ * Quantos registros desta conta ainda não chegaram ao sistema neste aparelho
+ * (Feito / Não feito na caixa de saída + fotos guardadas, inclusive as
+ * recusadas). Usado no aviso de "Sair".
+ */
+export function usePendingWorkCount(userId: string | null | undefined): number {
+  const outbox = getOutcomeOutbox();
+  const entries = useSyncExternalStore(outbox.subscribe, outbox.getSnapshot, outbox.getSnapshot);
+  const photos = useQueuedPhotos();
+  return useMemo(() => {
+    if (!userId) return 0;
+    return entries.filter((e) => e.userId === userId).length + photos.filter((p) => p.userId === userId).length;
+  }, [entries, photos, userId]);
 }
 
 /** Enquanto a tela estiver aberta, o aviso global de rede fica quieto. */

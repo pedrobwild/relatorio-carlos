@@ -316,7 +316,7 @@ describe("ObraDrawer", () => {
 
   describe("obra em fase de projeto", () => {
     const emProjeto = (p: Partial<PainelObra> = {}) =>
-      obra({ id: "p", etapa: "Medição", is_project_phase: true, inicio_oficial: null, entrega_oficial: null, inicio_real: null, ...p });
+      obra({ id: "p", etapa: "Projeto 3D", is_project_phase: true, inicio_oficial: null, entrega_oficial: null, inicio_real: null, ...p });
 
     it("a seção 'Fase de projeto' entra no lugar do seletor livre de etapa; o resto do cadastro fica", () => {
       h.phaseSteps = [{ step: "projeto_3d", done_at: "2026-10-01", due_date: null, responsible_user_id: null, notes: null }];
@@ -333,6 +333,18 @@ describe("ObraDrawer", () => {
       expect(screen.getByRole("switch", { name: "Obra paralisada" })).toBeInTheDocument();
       expect(campo("Entrega real")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Ficha da obra" })).toBeInTheDocument();
+    });
+
+    it("obra de antes do fluxo por etapas, já em 'Condomínio': as etapas anteriores aparecem concluídas, sem 'Reabrir'", () => {
+      h.phaseSteps = [];
+      renderDrawer({ obra: emProjeto({ etapa: "Condomínio" }), row: null, canEditPhase: true });
+      const fase = screen.getByRole("region", { name: "Fase de projeto" });
+      expect(within(fase).getByText("4 de 6 concluídas")).toBeInTheDocument();
+      const tresD = within(fase).getByRole("group", { name: "Projeto 3D" });
+      expect(within(tresD).getByText("Concluída antes do registro por etapas")).toBeInTheDocument();
+      expect(within(tresD).queryByRole("button", { name: "Reabrir" })).toBeNull();
+      const pedido = within(fase).getByRole("group", { name: "Pedido de aprovação ao condomínio" });
+      expect(within(pedido).getByText("Etapa atual")).toBeInTheDocument();
     });
 
     it("obra em execução não mostra a seção", () => {

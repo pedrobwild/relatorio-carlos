@@ -56,7 +56,8 @@ export function getOpsPhotoQueue(): PhotoQueue {
     },
     upload: async (item: QueuedPhoto) => {
       const file = new File([item.blob], item.name, { type: item.type });
-      const res = await opsRepo.uploadPhoto(item.projectId, item.assignmentId, file);
+      // Caminho derivado do id do item: repetir não duplica o arquivo.
+      const res = await opsRepo.uploadPhoto(item.projectId, item.assignmentId, file, item.id);
       if (res.error) throw res.error;
       return res.data as string;
     },

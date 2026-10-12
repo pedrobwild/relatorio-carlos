@@ -359,6 +359,7 @@ export function ObraDrawer({
               officialStart={obra.inicio_apos_aprovacao ?? null}
               scheduleStart={obra.inicio_oficial}
               notice={phaseNotice}
+              painelEtapa={obra.etapa}
             />
           )}
 

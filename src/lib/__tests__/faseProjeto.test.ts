@@ -5,6 +5,7 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  PAINEL_ETAPA_ORDER,
   OFFICIAL_START_BUSINESS_DAYS,
   PHASE_DUE_SOON_DAYS,
   PHASE_STEPS,
@@ -241,5 +242,45 @@ describe("officialStartText", () => {
     expect(officialStartText(undefined)).toBeNull();
     expect(officialStartText("")).toBeNull();
     expect(officialStartText("16/10/2026")).toBeNull();
+  });
+});
+
+describe("phaseState com a etapa do Painel (obras de antes do fluxo por etapas)", () => {
+  it("obra em 'Condomínio' sem nada registrado: as quatro primeiras contam como concluídas e o pedido é a etapa atual", () => {
+    const s = phaseState([], "2026-10-12", "Condomínio");
+    expect(s.steps.map((x) => [x.key, x.done, x.implied])).toEqual([
+      ["projeto_3d", true, true],
+      ["projeto_executivo", true, true],
+      ["medicao_fina", true, true],
+      ["emissao_art", true, true],
+      ["solicitacao_aprovacao", false, false],
+      ["aprovacao_condominio", false, false],
+    ]);
+    expect(s.current?.key).toBe("solicitacao_aprovacao");
+    expect(s.doneCount).toBe(4);
+  });
+
+  it("conclusão registrada vale mais que a implícita (tem data e não é 'implícita')", () => {
+    const s = phaseState(
+      [{ step: "projeto_3d", done_at: "2026-09-01", due_date: null, responsible_user_id: null, notes: null }],
+      "2026-10-12",
+      "Medição",
+    );
+    expect(s.steps[0]).toMatchObject({ done: true, implied: false, doneAt: "2026-09-01" });
+    expect(s.steps[1]).toMatchObject({ done: true, implied: true, doneAt: null });
+    expect(s.current?.key).toBe("medicao_fina");
+  });
+
+  it("sem etapa no Painel, ou etapa desconhecida, nada é implícito", () => {
+    expect(phaseState([], "2026-10-12").current?.key).toBe("projeto_3d");
+    expect(phaseState([], "2026-10-12", null).current?.key).toBe("projeto_3d");
+    expect(phaseState([], "2026-10-12", "Outra coisa").current?.key).toBe("projeto_3d");
+  });
+
+  it("a ordem do Painel espelha o enum do banco", () => {
+    expect([...PAINEL_ETAPA_ORDER]).toEqual(Constants.public.Enums.painel_etapa_enum.slice().sort(
+      (a, b) => PAINEL_ETAPA_ORDER.indexOf(a as never) - PAINEL_ETAPA_ORDER.indexOf(b as never),
+    ));
+    expect(PAINEL_ETAPA_ORDER).toHaveLength(Constants.public.Enums.painel_etapa_enum.length);
   });
 });

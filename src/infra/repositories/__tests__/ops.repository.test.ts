@@ -167,6 +167,27 @@ describe("opsRepo", () => {
     expect(h.storage.uploads[0].contentType).toBe("image/jpeg");
   });
 
+  it("uploadPhoto com chave: caminho fixo (repetir cai no mesmo arquivo)", async () => {
+    const file = new File(["x"], "foto.jpg", { type: "image/jpeg" });
+    const first = await opsRepo.uploadPhoto("p1", "as1", file, "item-123");
+    const second = await opsRepo.uploadPhoto("p1", "as1", file, "item-123");
+    expect(first.data).toBe("p1/as1/item-123.jpg");
+    expect(second.data).toBe("p1/as1/item-123.jpg");
+    expect(h.storage.uploads.map((u) => u.path)).toEqual(["p1/as1/item-123.jpg", "p1/as1/item-123.jpg"]);
+  });
+
+  it("uploadPhoto com chave: 'já existe' (a tentativa anterior chegou) vale como sucesso", async () => {
+    h.storage.uploadError = { message: "The resource already exists", statusCode: "409", error: "Duplicate" };
+    const res = await opsRepo.uploadPhoto("p1", "as1", new File(["x"], "a.jpg"), "item-123");
+    expect(res).toEqual({ data: "p1/as1/item-123.jpg", error: null });
+  });
+
+  it("uploadPhoto sem chave: 'já existe' continua sendo erro", async () => {
+    h.storage.uploadError = { message: "The resource already exists", statusCode: "409", error: "Duplicate" };
+    const res = await opsRepo.uploadPhoto("p1", "as1", new File(["x"], "a.jpg"));
+    expect(res.data).toBeNull();
+  });
+
   it("uploadPhoto devolve o erro do storage", async () => {
     h.storage.uploadError = { message: "denied" };
     const res = await opsRepo.uploadPhoto("p1", "as1", new File(["x"], "a.jpg"));

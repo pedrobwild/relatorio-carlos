@@ -16,7 +16,7 @@ import {
   type OpsReviewResult,
 } from "@/infra/repositories/ops.repository";
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
-import { collapseQueuedOutcomes, invalidateOps, type SetOutcomeVars } from "@/lib/offline/opsOutcomeSync";
+import { enqueueOutcome, invalidateOps, type SetOutcomeVars } from "@/lib/offline/opsOutcomeSync";
 
 const unwrap = <T,>(res: { data: T | null; error: unknown }): T => {
   if (res.error) throw res.error;
@@ -115,7 +115,8 @@ export const useCreateOpsAssignment = () =>
  * mutação fica pausada — `mutateAsync` só resolve quando o banco confirmar.
  *
  * Último toque vale: antes de enfileirar, descarta o que ainda não saiu para
- * a mesma alocação.
+ * a mesma alocação. Cada toque fica guardado na caixa de saída do aparelho
+ * (por usuário, fora do cache das consultas) até o banco confirmar.
  */
 export function useSetAssignmentOutcome() {
   const qc = useQueryClient();
@@ -125,15 +126,17 @@ export function useSetAssignmentOutcome() {
   const { mutate: rawMutate, mutateAsync: rawMutateAsync } = m;
   const mutate = useCallback(
     (vars: SetOutcomeVars, opts?: Parameters<typeof rawMutate>[1]) => {
-      collapseQueuedOutcomes(qc, vars.id);
-      rawMutate(vars, opts);
+      enqueueOutcome(qc, vars, (full) => rawMutate(full, opts));
     },
     [qc, rawMutate],
   );
   const mutateAsync = useCallback(
     (vars: SetOutcomeVars, opts?: Parameters<typeof rawMutateAsync>[1]) => {
-      collapseQueuedOutcomes(qc, vars.id);
-      return rawMutateAsync(vars, opts);
+      let promise!: Promise<OpsAssignment>;
+      enqueueOutcome(qc, vars, (full) => {
+        promise = rawMutateAsync(full, opts);
+      });
+      return promise;
     },
     [qc, rawMutateAsync],
   );
@@ -158,13 +161,34 @@ export function useOpsStages(projectId: string | undefined) {
   });
 }
 
+/**
+ * Id fixo por arquivo: a mutação é repetida em falha de rede com o MESMO
+ * `File`, e o caminho no bucket sai deste id — repetir não duplica a foto.
+ */
+const photoUploadKeys = new WeakMap<File, string>();
+function photoUploadKey(file: File): string {
+  let key = photoUploadKeys.get(file);
+  if (!key) {
+    key =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    photoUploadKeys.set(file, key);
+  }
+  return key;
+}
+
 /** Envia as fotos e acrescenta os caminhos na alocação. */
 export const useAddAssignmentPhotos = () =>
   useOpsMutation(
     async (vars: { assignment: Pick<OpsDayAssignment, "id" | "project_id" | "photo_paths">; files: File[] }) => {
       const paths: string[] = [];
       for (const file of vars.files) {
-        paths.push(unwrap(await opsRepo.uploadPhoto(vars.assignment.project_id, vars.assignment.id, file)));
+        paths.push(
+          unwrap(
+            await opsRepo.uploadPhoto(vars.assignment.project_id, vars.assignment.id, file, photoUploadKey(file)),
+          ),
+        );
       }
       return unwrap(await opsRepo.setPhotos(vars.assignment.id, [...(vars.assignment.photo_paths ?? []), ...paths]));
     },

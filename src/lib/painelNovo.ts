@@ -153,7 +153,7 @@ export interface ProjetoFaseInput {
 
 export function buildProjetoRow(o: PainelObra, today: string, fase?: ProjetoFaseInput): ProjetoRow {
   const updated = o.ultima_atualizacao ? localDayOf(o.ultima_atualizacao) : null;
-  const phase = fase?.steps ? phaseState(fase.steps, today) : null;
+  const phase = fase?.steps ? phaseState(fase.steps, today, o.etapa) : null;
   const current = phase?.current ?? null;
   const stepResponsibleId = current?.responsibleUserId ?? null;
   return {

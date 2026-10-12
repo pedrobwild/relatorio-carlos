@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
@@ -7,6 +7,15 @@ import { queryKeys } from "@/lib/queryKeys";
 import { QUERY_TIMING } from "@/lib/queryClient";
 import { toLocalISODate } from "@/lib/localDate";
 import { purchasesRepo, type ProjectPurchaseRow } from "@/infra/repositories/purchases.repository";
+
+/**
+ * A situação do material da atividade (Semana, Hoje, Painel) é calculada pelo
+ * banco a partir da compra vinculada: mudou a compra, essas telas releem.
+ */
+function invalidateOpsAfterPurchaseChange(qc: QueryClient) {
+  qc.invalidateQueries({ queryKey: queryKeys.ops.all });
+  qc.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+}
 
 export type PurchaseStatus =
   | "pending"
@@ -242,6 +251,7 @@ export function useProjectPurchases(
       queryClient.invalidateQueries({
         queryKey: queryKeys.purchases.list(projectId),
       });
+      invalidateOpsAfterPurchaseChange(queryClient);
       toast.success("Item de compra adicionado");
     },
     onError: (error) => {
@@ -269,6 +279,7 @@ export function useProjectPurchases(
       queryClient.invalidateQueries({
         queryKey: queryKeys.purchases.list(projectId),
       });
+      invalidateOpsAfterPurchaseChange(queryClient);
       toast.success("Item de compra atualizado");
     },
     onError: (error) => {
@@ -290,6 +301,7 @@ export function useProjectPurchases(
       queryClient.invalidateQueries({
         queryKey: queryKeys.purchases.list(projectId),
       });
+      invalidateOpsAfterPurchaseChange(queryClient);
       toast.success("Item de compra removido");
     },
     onError: (error) => {
@@ -332,6 +344,7 @@ export function useProjectPurchases(
       queryClient.invalidateQueries({
         queryKey: queryKeys.purchases.list(projectId),
       });
+      invalidateOpsAfterPurchaseChange(queryClient);
       toast.success("Status atualizado");
     },
     onError: (error) => {

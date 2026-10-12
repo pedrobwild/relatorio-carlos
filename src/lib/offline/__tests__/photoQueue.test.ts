@@ -154,4 +154,50 @@ describe("fila de fotos", () => {
     await s.q.enqueue(target, [photo(), photo()]);
     await expect(s.q.enqueue(target, [photo()])).rejects.toThrow(/Muitas fotos/);
   });
+
+  it("resposta do upload perdida: a nova tentativa usa o mesmo item (mesmo caminho no bucket)", async () => {
+    const s = setup();
+    // O arquivo chegou ao bucket, mas a resposta se perdeu no caminho.
+    s.upload.mockRejectedValueOnce(netError);
+    s.setOnline(false);
+    await s.q.enqueue(target, [photo()]);
+    s.setOnline(true);
+    await s.q.process();
+    expect(s.q.getSnapshot()[0]).toMatchObject({ id: "id1", failed: false, uploadedPath: null });
+    await s.q.process();
+    expect(s.upload).toHaveBeenCalledTimes(2);
+    // Mesmo id nas duas tentativas → o caminho (derivado do id) é o mesmo.
+    expect(s.upload.mock.calls.map((c) => c[0].id)).toEqual(["id1", "id1"]);
+    expect(s.link).toHaveBeenCalledWith("a1", ["p1/a1/id1.jpg"]);
+  });
+
+  it("fotos de OUTRAS contas são apagadas do aparelho depois de 7 dias", async () => {
+    const day = 86_400_000;
+    let clock = Date.parse("2026-10-01T10:00:00Z");
+    const s = setup({ now: () => clock, currentUser: async () => "u1" });
+    s.setOnline(false);
+    await s.q.enqueue({ ...target, userId: "u2" }, [photo()]); // id1, de outra conta
+    clock += 6 * day;
+    await s.q.enqueue({ ...target, userId: "u2" }, [photo()]); // id2, de outra conta
+    await s.q.enqueue(target, [photo()]); // id3, minha
+    clock += 2 * day; // id1 com 8 dias, id2 com 2
+
+    expect(await s.q.purgeOtherUsers("u1", 7 * day)).toBe(1);
+    expect((await s.storage.getAll()).map((i) => i.id).sort()).toEqual(["id2", "id3"]);
+    expect(s.q.getSnapshot().map((i) => i.id)).toEqual(["id2", "id3"]);
+    // As minhas nunca entram na limpeza, por mais antigas que sejam.
+    clock += 30 * day;
+    expect(await s.q.purgeOtherUsers("u1", 7 * day)).toBe(1);
+    expect(s.q.getSnapshot().map((i) => i.id)).toEqual(["id3"]);
+  });
+
+  it("Sair mesmo assim: apaga as fotos desta conta, inclusive as recusadas", async () => {
+    const s = setup();
+    s.setOnline(false);
+    await s.q.enqueue(target, [photo(), photo()]);
+    await s.q.enqueue({ ...target, userId: "u2" }, [photo()]);
+    expect(await s.q.discardUser("u1")).toBe(2);
+    expect((await s.storage.getAll()).map((i) => i.userId)).toEqual(["u2"]);
+    expect(s.q.getSnapshot()).toHaveLength(1);
+  });
 });

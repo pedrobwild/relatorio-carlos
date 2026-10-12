@@ -137,16 +137,12 @@ export function createQueryPersister(): Persister | null {
           ...client,
           clientState: {
             ...client.clientState,
-            // Uma mutação pendente gravada no aparelho NÃO está rodando na
-            // próxima sessão — nem que estivesse no meio de uma tentativa
-            // quando o app foi fechado. Marcada como pausada, ela volta pela
-            // `resumePausedMutations()` ao restaurar; senão ficaria parada
-            // para sempre.
-            mutations: (client.clientState.mutations ?? []).map((m) =>
-              m.state.status === "pending" && !m.state.isPaused
-                ? { ...m, state: { ...m.state, isPaused: true } }
-                : m,
-            ),
+            // Mutações NÃO vão para este cache. O que não pode se perder (o
+            // Feito / Não feito da tela Hoje) tem armazenamento próprio — a
+            // caixa de saída em src/lib/offline/outcomeOutbox.ts —, porque
+            // este blob é descartável (24 h, versão nova, cota). Guardar aqui
+            // também faria o mesmo registro voltar por dois caminhos.
+            mutations: [],
             queries: client.clientState.queries.filter(
               (q) =>
                 (q.meta as { persist?: boolean } | undefined)?.persist !==
@@ -189,6 +185,12 @@ export function createQueryPersister(): Persister | null {
           );
           safeStorage.removeItem(STORAGE_KEY);
           return undefined;
+        }
+
+        // Mutações de uma versão anterior do app não são retomadas daqui (a
+        // fila de envio tem armazenamento próprio): evita envio em dobro.
+        if (Array.isArray(parsed.clientState.mutations) && parsed.clientState.mutations.length > 0) {
+          parsed = { ...parsed, clientState: { ...parsed.clientState, mutations: [] } };
         }
 
         // Check if cache is too old (more than 24 hours)

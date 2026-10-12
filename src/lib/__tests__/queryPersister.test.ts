@@ -82,7 +82,7 @@ describe("queryPersister", () => {
       expect(hasPersistedCache()).toBe(false);
     });
 
-    it("mutação pendente gravada volta como pausada (para ser retomada ao reabrir)", async () => {
+    it("mutação nenhuma vai para (ou volta de) este cache: a fila tem armazenamento próprio", async () => {
       const persister = createQueryPersister();
       const state = (status: string, isPaused: boolean) => ({
         status,
@@ -111,7 +111,14 @@ describe("queryPersister", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await persister!.persistClient(mockClient as any);
       const restored = await persister!.restoreClient();
-      expect(restored?.clientState.mutations.map((m) => m.state.isPaused)).toEqual([true, true]);
+      expect(restored?.clientState.mutations).toEqual([]);
+
+      // Blob gravado por uma versão anterior (com mutações): elas não voltam
+      // daqui — senão o mesmo registro sairia também pela caixa de saída.
+      const key = Object.keys(localStorage).find((k) => k.startsWith("bwild-query-cache-v"))!;
+      localStorage.setItem(key, JSON.stringify(mockClient));
+      const legacy = await persister!.restoreClient();
+      expect(legacy?.clientState.mutations).toEqual([]);
     });
   });
 

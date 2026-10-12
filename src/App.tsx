@@ -27,10 +27,10 @@ import {
 } from "@/lib/queryPersister";
 import {
   registerOpsOfflineDefaults,
-  shouldPersistMutation,
   syncOnlineManagerWithNavigator,
 } from "@/lib/offline/opsOutcomeSync";
 import { startOpsPhotoSync } from "@/lib/offline/opsPhotoSync";
+import { startOpsOfflineSession } from "@/lib/offline/opsOfflineSession";
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 import { AuthRedirect } from "@/components/AuthRedirect";
@@ -141,12 +141,13 @@ const persister = createQueryPersister();
 // Cache max age: 24 hours
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
-// Fila offline da tela Hoje. Precisa estar registrada ANTES de restaurar o
-// cache: é por `setMutationDefaults` que uma mutação guardada no aparelho
-// reencontra a sua `mutationFn` depois de recarregar.
+// Fila offline da tela Hoje. Os registros pendentes ficam na caixa de saída
+// do aparelho (não no cache das consultas) e são retomados, por usuário,
+// quando a sessão é conhecida — inclusive abrindo o app sem sinal.
 syncOnlineManagerWithNavigator();
 registerOpsOfflineDefaults(queryClient);
 startOpsPhotoSync(queryClient);
+startOpsOfflineSession(queryClient);
 
 // Wrapper component to provide project context + staff sidebar shell.
 // `resetKeys={[pathname]}` lets the boundary auto-recover on navigation: a
@@ -191,12 +192,11 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
           persister,
           maxAge: CACHE_MAX_AGE,
           buster: String(QUERY_CACHE_VERSION),
-          dehydrateOptions: { shouldDehydrateMutation: shouldPersistMutation },
+          // A fila do Feito / Não feito tem armazenamento próprio (caixa de
+          // saída); mutação nenhuma vai para este cache descartável.
+          dehydrateOptions: { shouldDehydrateMutation: () => false },
         }}
         onSuccess={() => {
-          // Retoma o que ficou na fila sem sinal (Feito / Não feito). Sem
-          // rede, as mutações continuam pausadas até o sinal voltar.
-          void queryClient.resumePausedMutations();
           if (import.meta.env.DEV) {
             // eslint-disable-next-line no-console
             console.info("[QueryPersist] Cache restored from localStorage");

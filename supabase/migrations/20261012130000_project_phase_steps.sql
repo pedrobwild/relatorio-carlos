@@ -23,7 +23,10 @@
 --      fase de projeto: etapa do Painel, datas de aprovação e — ao registrar a
 --      aprovação do condomínio — o início oficial (5 dias úteis depois) e o
 --      início do prazo contratual, sem nunca passar por cima de termos de
---      contrato já conferidos.
+--      contrato já conferidos nem de uma data de início digitada à mão.
+--      Concluir uma etapa só leva o card do Painel PARA A FRENTE: as 26 obras
+--      que já têm etapa no Painel e nenhuma linha aqui não voltam para
+--      "Projeto 3D" quando alguém registra a primeira conclusão.
 --   3. `move_project_to_phase_step`: "esta obra está NA etapa X" — conclui as
 --      anteriores e reabre X e as seguintes, numa transação.
 --   4. Quando a Jornada do cliente conclui Projeto 3D, Projeto Executivo ou
@@ -33,7 +36,10 @@
 -- "Executivo Aprovado": o fluxo novo não usa essa etapa do Painel, mas é a
 -- entrada nela que avisa o financeiro (trg_notify_executivo_aprovado: sino +
 -- e-mail). Para o aviso continuar saindo, concluir o Projeto executivo faz o
--- card PASSAR por "Executivo Aprovado" antes de seguir para a etapa atual.
+-- card PASSAR por "Executivo Aprovado" antes de seguir para a etapa atual —
+-- só quando o executivo ainda não estava aprovado (date_approval_exec vazia)
+-- e o card ainda não tinha chegado lá. Obra que passou por ali meses atrás
+-- não avisa o financeiro de novo.
 --
 -- RLS: a equipe com acesso à obra lê; grava quem pode editar a fase de
 -- projeto (mesmos papéis de 'projectPhase:edit' em src/config/permissions.ts).
@@ -176,12 +182,46 @@ BEGIN
 END;
 $$;
 
--- 6) Depois de gravar: mantém projects coerente -------------------------
+-- 6) Etapa do fluxo → etapa do Painel -----------------------------------
+-- Pedido e aprovação do condomínio ficam os dois em "Condomínio". Usada pelo
+-- gatilho e pela RPC abaixo (as duas SECURITY DEFINER), não pelas telas.
+CREATE OR REPLACE FUNCTION public.project_phase_step_painel_etapa(p_step public.project_phase_step)
+RETURNS public.painel_etapa_enum
+LANGUAGE sql
+IMMUTABLE
+SET search_path = public
+AS $$
+  SELECT (CASE p_step
+    WHEN 'projeto_3d'            THEN 'Projeto 3D'
+    WHEN 'projeto_executivo'     THEN 'Projeto Executivo'
+    WHEN 'medicao_fina'          THEN 'Medição'
+    WHEN 'emissao_art'           THEN 'Emissão RRT'
+    WHEN 'solicitacao_aprovacao' THEN 'Condomínio'
+    WHEN 'aprovacao_condominio'  THEN 'Condomínio'
+  END)::public.painel_etapa_enum;
+$$;
+
+REVOKE ALL ON FUNCTION public.project_phase_step_painel_etapa(public.project_phase_step) FROM PUBLIC, anon, authenticated;
+
+-- 7) Depois de gravar: mantém projects coerente -------------------------
 -- Só age enquanto a obra está em fase de projeto, e só quando uma CONCLUSÃO
 -- muda (marcar, reabrir, corrigir a data, apagar etapa concluída). Editar
 -- prazo, responsável ou observação não mexe em projects — a não ser na
 -- primeira vez em que algo é registrado numa obra ainda sem etapa no Painel,
 -- que passa a mostrar a etapa atual do fluxo.
+--
+-- Card do Painel:
+--   - concluir (ou corrigir a data de) uma etapa só AVANÇA o card. Conta como
+--     concluída a etapa com done_at, o 3D/executivo com date_approval_3d /
+--     date_approval_exec preenchida (obras de antes desta tabela) e toda
+--     etapa que fica antes da posição atual do card: a obra que está em
+--     "Condomínio" sem nenhuma linha aqui passou por 3D, executivo, medição e
+--     ART, mesmo que ninguém tenha registrado. O card nunca volta como efeito
+--     colateral de uma conclusão (nem o início da etapa é zerado);
+--   - reabrir (ou apagar) uma etapa concluída é um "voltar" explícito: se o
+--     card estava adiante, volta para a etapa reaberta — e só até ela, nunca
+--     para uma anterior que ninguém registrou;
+--   - a RPC move_project_to_phase_step posiciona o card por conta própria.
 CREATE OR REPLACE FUNCTION public.project_phase_steps_sync()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -198,6 +238,7 @@ DECLARE
   v_p          record;
   v_current    public.project_phase_step;
   v_etapa      public.painel_etapa_enum;
+  v_target     public.painel_etapa_enum;
   v_inicio     date;
   v_3d         date;
   v_exec       date;
@@ -206,7 +247,6 @@ DECLARE
   v_cstart     date;
   v_ctrigger   public.contract_start_trigger;
   v_rule       date;
-  v_free_terms boolean;
   v_passed     boolean := false;
 BEGIN
   IF TG_OP = 'DELETE' THEN
@@ -254,16 +294,19 @@ BEGIN
       v_exec := v_new_done;
     ELSIF v_step = 'aprovacao_condominio' THEN
       v_obra := v_new_done;
-      -- Termos conferidos com o contrato, ou outro gatilho de início
-      -- (assinatura, entrega das chaves…), nunca são sobrescritos.
-      v_free_terms := v_p.contract_terms_confirmed_at IS NULL
-                      AND (v_ctrigger IS NULL OR v_ctrigger = 'liberacao_condominio');
       IF v_new_done IS NOT NULL THEN
         -- c) Início oficial = 5 dias úteis depois da aprovação do condomínio
         --    (fins de semana, feriados de SP e dias não úteis da obra fora).
         v_rule     := public.add_business_days(v_pid, v_new_done, 5);
         v_official := v_rule;
-        IF v_free_terms THEN
+        -- Início do prazo contratual: só entra quando está vazio (e ninguém
+        -- escolheu outro gatilho) ou quando já veio desta regra. Termos
+        -- conferidos com o contrato, outro gatilho (assinatura, entrega das
+        -- chaves…) e uma data digitada à mão — o card do contrato grava o
+        -- gatilho vazio como NULL — nunca são sobrescritos.
+        IF v_p.contract_terms_confirmed_at IS NULL
+           AND (v_ctrigger = 'liberacao_condominio'
+                OR (v_ctrigger IS NULL AND v_cstart IS NULL)) THEN
           v_cstart   := v_rule;
           v_ctrigger := 'liberacao_condominio';
         END IF;
@@ -275,52 +318,73 @@ BEGIN
         IF v_official = v_rule THEN
           v_official := NULL;
         END IF;
-        IF v_free_terms AND v_cstart = v_rule THEN
+        IF v_p.contract_terms_confirmed_at IS NULL
+           AND v_ctrigger = 'liberacao_condominio'
+           AND v_cstart = v_rule THEN
           v_cstart := NULL;
         END IF;
       END IF;
     END IF;
-
-    -- Concluir o Projeto executivo passa pelo card "Executivo Aprovado": é
-    -- essa transição que dispara o aviso ao financeiro
-    -- (trg_notify_executivo_aprovado). Se o card já está lá, o aviso já saiu.
-    IF v_step = 'projeto_executivo' AND v_old_done IS NULL AND v_new_done IS NOT NULL
-       AND v_p.painel_etapa IS DISTINCT FROM 'Executivo Aprovado'::public.painel_etapa_enum THEN
-      UPDATE public.projects
-         SET painel_etapa = 'Executivo Aprovado',
-             painel_inicio_etapa = v_today
-       WHERE id = v_pid;
-      v_passed := true;
-    END IF;
   END IF;
 
-  -- a) Etapa atual = primeira, na ordem do fluxo, sem conclusão registrada.
-  IF v_changed OR v_p.painel_etapa IS NULL THEN
+  -- a) Etapa do Painel.
+  IF v_changed AND v_new_done IS NULL AND v_etapa IS NOT NULL THEN
+    -- Reabriu/apagou uma conclusão: volta para a etapa reaberta se o card
+    -- estava adiante dela; senão fica onde está.
+    v_target := public.project_phase_step_painel_etapa(v_step);
+    IF v_target < v_etapa THEN
+      v_etapa := v_target;
+    END IF;
+  ELSIF v_changed OR v_etapa IS NULL THEN
+    -- Etapa atual = primeira, na ordem do fluxo, que não conta como concluída
+    -- (ver o comentário acima da função).
     SELECT s.step INTO v_current
       FROM unnest(enum_range(NULL::public.project_phase_step)) AS s(step)
-     WHERE NOT EXISTS (
-             SELECT 1 FROM public.project_phase_steps r
-              WHERE r.project_id = v_pid AND r.step = s.step AND r.done_at IS NOT NULL
+     WHERE NOT (
+             (s.step = 'projeto_3d' AND v_3d IS NOT NULL)
+             OR (s.step = 'projeto_executivo' AND v_exec IS NOT NULL)
+             OR (v_etapa IS NOT NULL
+                 AND public.project_phase_step_painel_etapa(s.step) < v_etapa)
+             OR EXISTS (
+                  SELECT 1 FROM public.project_phase_steps r
+                   WHERE r.project_id = v_pid AND r.step = s.step AND r.done_at IS NOT NULL
+                )
            )
      ORDER BY s.step
      LIMIT 1;
 
-    IF v_current IS NULL THEN
-      -- As seis concluídas: a obra vai para o Planejamento. Se o card já foi
-      -- levado adiante à mão (Mobilização…), não volta.
-      IF v_etapa IS NULL OR v_etapa < 'Planejamento'::public.painel_etapa_enum THEN
-        v_etapa := 'Planejamento';
-      END IF;
-    ELSE
-      v_etapa := CASE v_current
-        WHEN 'projeto_3d'            THEN 'Projeto 3D'
-        WHEN 'projeto_executivo'     THEN 'Projeto Executivo'
-        WHEN 'medicao_fina'          THEN 'Medição'
-        WHEN 'emissao_art'           THEN 'Emissão RRT'
-        WHEN 'solicitacao_aprovacao' THEN 'Condomínio'
-        WHEN 'aprovacao_condominio'  THEN 'Condomínio'
-      END::public.painel_etapa_enum;
+    -- As seis concluídas: a obra vai para o Planejamento. Se o card já foi
+    -- levado adiante à mão (Mobilização…), não volta.
+    v_target := coalesce(public.project_phase_step_painel_etapa(v_current),
+                         'Planejamento'::public.painel_etapa_enum);
+    IF v_etapa IS NULL OR v_target > v_etapa THEN
+      v_etapa := v_target;
     END IF;
+  END IF;
+
+  -- Concluir o Projeto executivo passa pelo card "Executivo Aprovado": é
+  -- essa transição que dispara o aviso ao financeiro
+  -- (trg_notify_executivo_aprovado). Só quando o executivo ainda não estava
+  -- aprovado (date_approval_exec vazia antes desta gravação) e o card ainda
+  -- não tinha chegado em "Executivo Aprovado": obra que já passou por lá —
+  -- ou que está em "Condomínio" com o executivo aprovado há meses — não
+  -- avisa de novo. Vale também quando a linha do executivo chega junto com
+  -- outras numa instrução só (RPC, carga em lote): o gatilho da primeira
+  -- linha já vê o executivo concluído e é ele que passa pelo card, antes de
+  -- levá-lo adiante.
+  IF v_changed AND v_new_done IS NOT NULL
+     AND v_p.date_approval_exec IS NULL
+     AND (v_p.painel_etapa IS NULL
+          OR v_p.painel_etapa < 'Executivo Aprovado'::public.painel_etapa_enum)
+     AND (v_exec IS NOT NULL OR EXISTS (
+            SELECT 1 FROM public.project_phase_steps r
+             WHERE r.project_id = v_pid AND r.step = 'projeto_executivo' AND r.done_at IS NOT NULL
+          )) THEN
+    UPDATE public.projects
+       SET painel_etapa = 'Executivo Aprovado',
+           painel_inicio_etapa = v_today
+     WHERE id = v_pid;
+    v_passed := true;
   END IF;
 
   IF v_etapa IS DISTINCT FROM v_p.painel_etapa THEN
@@ -359,7 +423,7 @@ CREATE TRIGGER project_phase_steps_sync
   AFTER INSERT OR UPDATE OR DELETE ON public.project_phase_steps
   FOR EACH ROW EXECUTE FUNCTION public.project_phase_steps_sync();
 
--- 7) RLS ----------------------------------------------------------------
+-- 8) RLS ----------------------------------------------------------------
 ALTER TABLE public.project_phase_steps ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS project_phase_steps_staff_select ON public.project_phase_steps;
@@ -376,7 +440,7 @@ CREATE POLICY project_phase_steps_editors_all ON public.project_phase_steps
 REVOKE ALL ON public.project_phase_steps FROM anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_phase_steps TO authenticated;
 
--- 8) "Esta obra está na etapa X" ----------------------------------------
+-- 9) "Esta obra está na etapa X" ----------------------------------------
 -- Conclui as etapas anteriores (hoje, se ainda não tinham data) e reabre X e
 -- as seguintes. É o jeito de posicionar uma obra que nunca foi registrada e
 -- de voltar uma etapa quando algo foi marcado por engano.
@@ -464,14 +528,7 @@ BEGIN
   -- sincronização só age quando uma conclusão muda; numa obra que tinha uma
   -- etapa antiga digitada à mão e nenhuma conclusão a mudar, o card ficaria
   -- com o valor antigo.
-  v_etapa := CASE p_step
-    WHEN 'projeto_3d'            THEN 'Projeto 3D'
-    WHEN 'projeto_executivo'     THEN 'Projeto Executivo'
-    WHEN 'medicao_fina'          THEN 'Medição'
-    WHEN 'emissao_art'           THEN 'Emissão RRT'
-    WHEN 'solicitacao_aprovacao' THEN 'Condomínio'
-    WHEN 'aprovacao_condominio'  THEN 'Condomínio'
-  END::public.painel_etapa_enum;
+  v_etapa := public.project_phase_step_painel_etapa(p_step);
 
   UPDATE public.projects
      SET painel_etapa = v_etapa
@@ -486,7 +543,7 @@ GRANT EXECUTE ON FUNCTION public.move_project_to_phase_step(uuid, public.project
 COMMENT ON FUNCTION public.move_project_to_phase_step(uuid, public.project_phase_step) IS
   'Posiciona a obra numa etapa da fase de projeto: conclui as anteriores e reabre a etapa informada e as seguintes.';
 
--- 9) Jornada do cliente → etapa interna (só neste sentido) ---------------
+-- 10) Jornada do cliente → etapa interna (só neste sentido) ---------------
 -- Concluir "Projeto 3D", "Projeto Executivo" ou "Medição Técnica" na Jornada
 -- marca a etapa interna correspondente, se ainda estava em aberto. Nunca o
 -- contrário, e nunca para "Liberação da Obra": essa é concluída à força por
