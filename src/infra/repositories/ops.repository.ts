@@ -183,10 +183,11 @@ export const opsRepo = {
 
   async createAssignment(input: Omit<TablesInsert<"ops_assignments">, "project_id">) {
     return executeQuery<OpsAssignment>(async () => {
-      // project_id é preenchido pelo trigger a partir da atividade.
+      // project_id é preenchido pelo trigger a partir da atividade — o
+      // typegen marca a coluna como obrigatória por não conhecer o trigger.
       return await supabase
         .from("ops_assignments")
-        .insert(input)
+        .insert(input as TablesInsert<"ops_assignments">)
         .select("*")
         .single();
     });
@@ -350,9 +351,10 @@ export const opsRepo = {
 
   async createMaterial(input: Omit<TablesInsert<"ops_materials">, "project_id">) {
     return executeQuery<OpsMaterial>(async () => {
+      // project_id vem do trigger ops_materials_set_project_trg.
       return await supabase
         .from("ops_materials")
-        .insert(input)
+        .insert(input as TablesInsert<"ops_materials">)
         .select("*")
         .single();
     });
@@ -418,9 +420,10 @@ export const opsRepo = {
   /** Aprovado fecha a atividade; refazer (com observação) cria o retrabalho. */
   async createReview(input: { activity_id: string; result: OpsReviewResult; notes?: string | null; photo_paths?: string[] }) {
     return executeQuery<OpsReview>(async () => {
+      // project_id vem do trigger ops_reviews_set_project_trg.
       return await supabase
         .from("ops_reviews")
-        .insert(input)
+        .insert(input as TablesInsert<"ops_reviews">)
         .select("*")
         .single();
     });
