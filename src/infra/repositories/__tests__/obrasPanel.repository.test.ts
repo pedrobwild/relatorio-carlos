@@ -7,13 +7,15 @@ const h = vi.hoisted(() => {
   const state = {
     queries: [] as { table: string; calls: { method: string; args: unknown[] }[] }[],
     error: null as unknown,
+    /** Quando definido, simula uma tabela com este total de linhas (para paginação). */
+    total: null as number | null,
   };
   const mockSupabase = {
     from: (table: string) => {
       const q = { table, calls: [] as { method: string; args: unknown[] }[] };
       state.queries.push(q);
       const b: Record<string, unknown> = {};
-      for (const m of ["select", "in", "eq", "neq", "not", "gte", "lte", "order"]) {
+      for (const m of ["select", "in", "eq", "neq", "not", "gte", "lte", "order", "range"]) {
         b[m] = (...args: unknown[]) => {
           q.calls.push({ method: m, args });
           return b;
@@ -21,6 +23,11 @@ const h = vi.hoisted(() => {
       }
       b.then = (resolve: (v: unknown) => unknown) => {
         const ids = (q.calls.find((c) => c.method === "in")?.args[1] ?? []) as string[];
+        const range = q.calls.find((c) => c.method === "range")?.args as [number, number] | undefined;
+        if (state.total != null && range && !state.error) {
+          const n = Math.max(0, Math.min(range[1], state.total - 1) - range[0] + 1);
+          return resolve({ data: Array.from({ length: n }, (_, i) => ({ id: `r${range[0] + i}`, project_id: ids[0] })), error: null });
+        }
         return resolve({ data: state.error ? null : ids.map((id) => ({ project_id: id })), error: state.error });
       };
       return b;
@@ -34,7 +41,7 @@ vi.mock("../base.repository", async () => {
   return { ...actual, supabase: h.mockSupabase };
 });
 
-import { chunk, obrasPanelRepo, PORTFOLIO_CHUNK } from "../obrasPanel.repository";
+import { chunk, obrasPanelRepo, PAGE_SIZE, PORTFOLIO_CHUNK } from "../obrasPanel.repository";
 
 const call = (i: number, m: string) => h.state.queries[i].calls.find((c) => c.method === m)?.args;
 
@@ -42,6 +49,7 @@ describe("obrasPanelRepo", () => {
   beforeEach(() => {
     h.state.queries = [];
     h.state.error = null;
+    h.state.total = null;
   });
 
   it("sem obras não consulta nada", async () => {
@@ -78,6 +86,33 @@ describe("obrasPanelRepo", () => {
     expect(h.state.queries[0].table).toBe("ops_assignments");
     expect(call(0, "gte")).toEqual(["work_date", "2026-10-12"]);
     expect(call(0, "lte")).toEqual(["work_date", "2026-10-17"]);
+  });
+
+  it("dias marcados: lê todas as páginas quando passa de 1000 linhas (nada cortado em silêncio)", async () => {
+    h.state.total = PAGE_SIZE * 2 + 5;
+    const res = await obrasPanelRepo.listAssignments(["p1"], "2026-10-05", "2026-10-18");
+    expect(res.error).toBeNull();
+    expect(res.data).toHaveLength(PAGE_SIZE * 2 + 5);
+    expect(new Set(res.data.map((r) => r.id)).size).toBe(PAGE_SIZE * 2 + 5);
+    expect(h.state.queries).toHaveLength(3);
+    expect(call(0, "range")).toEqual([0, PAGE_SIZE - 1]);
+    expect(call(2, "range")).toEqual([PAGE_SIZE * 2, PAGE_SIZE * 3 - 1]);
+    // Ordem estável entre as páginas.
+    expect(call(0, "order")).toEqual(["id", { ascending: true }]);
+  });
+
+  it("dias marcados: total múltiplo exato de 1000 faz mais uma leitura (vazia) e para", async () => {
+    h.state.total = PAGE_SIZE;
+    const res = await obrasPanelRepo.listAssignments(["p1"], "2026-10-05", "2026-10-18");
+    expect(res.data).toHaveLength(PAGE_SIZE);
+    expect(h.state.queries).toHaveLength(2);
+  });
+
+  it("fechamentos: pela segunda-feira, dentro do intervalo", async () => {
+    await obrasPanelRepo.listClosings(["p1"], "2026-10-05", "2026-10-12");
+    expect(h.state.queries[0].table).toBe("ops_week_closings");
+    expect(call(0, "gte")).toEqual(["week_start", "2026-10-05"]);
+    expect(call(0, "lte")).toEqual(["week_start", "2026-10-12"]);
   });
 
   it("erro em qualquer lote vira erro do resultado", async () => {

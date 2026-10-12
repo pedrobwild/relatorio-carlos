@@ -105,10 +105,37 @@ function SlackCell({ row, end = false, dot = true }: { row: ObraRow; end?: boole
   );
 }
 
+/**
+ * Fechamento de semana (a coluna já se chama "Semana"): o PPC desta semana,
+ * se já fechou; senão, o da anterior — ou o aviso de que ela teve dia marcado
+ * e ninguém fechou.
+ */
+function ClosingLine({ week }: { week: ObraRow["week"] }) {
+  if (week.ppc != null) {
+    return <span className="mt-0.5 block text-xs text-muted-foreground tabular-nums">Fechada · PPC {week.ppc}%</span>;
+  }
+  if (week.previous?.ppc != null) {
+    return (
+      <span className="mt-0.5 block text-xs text-muted-foreground tabular-nums">
+        Anterior: PPC {week.previous.ppc}%
+      </span>
+    );
+  }
+  if (week.previous?.pending) {
+    return <span className="mt-0.5 block text-xs font-medium text-warning">Anterior sem fechar</span>;
+  }
+  return null;
+}
+
 function WeekCell({ row }: { row: ObraRow }) {
   const w = row.week;
   if (row.cadastro?.paused && w.planned === 0) {
-    return <span className="text-sm text-muted-foreground">Obra paralisada</span>;
+    return (
+      <div>
+        <span className="text-sm text-muted-foreground">Obra paralisada</span>
+        <ClosingLine week={w} />
+      </div>
+    );
   }
   if (w.unplanned) {
     return (
@@ -118,10 +145,18 @@ function WeekCell({ row }: { row: ObraRow }) {
           Não planejada
         </span>
         {w.stages.length > 0 && <span className="mt-0.5 block truncate text-xs">{stageList(w.stages)}</span>}
+        <ClosingLine week={w} />
       </div>
     );
   }
-  if (w.planned === 0 && w.stages.length === 0) return <span className="text-sm text-muted-foreground">—</span>;
+  if (w.planned === 0 && w.stages.length === 0) {
+    return (
+      <div>
+        <span className="text-sm text-muted-foreground">—</span>
+        <ClosingLine week={w} />
+      </div>
+    );
+  }
   return (
     <div className="min-w-0">
       <span className="block truncate text-sm text-foreground" title={w.stages.join(", ")}>
@@ -132,6 +167,7 @@ function WeekCell({ row }: { row: ObraRow }) {
         {w.done > 0 && ` · ${w.done} feito${w.done === 1 ? "" : "s"}`}
         {w.notDone > 0 && <span className="text-destructive">{` · ${w.notDone} não feito${w.notDone === 1 ? "" : "s"}`}</span>}
       </span>
+      <ClosingLine week={w} />
     </div>
   );
 }

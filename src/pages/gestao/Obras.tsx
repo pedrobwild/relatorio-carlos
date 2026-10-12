@@ -433,6 +433,14 @@ export default function Obras() {
                 </span>
               </>
             )}
+            {!isLoading && sum.unclosed > 0 && (
+              <>
+                {" · "}
+                <span className="font-medium text-foreground">
+                  {sum.unclosed} sem fechar a semana anterior
+                </span>
+              </>
+            )}
           </span>
           <button
             type="button"

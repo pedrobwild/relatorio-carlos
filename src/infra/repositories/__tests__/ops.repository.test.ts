@@ -14,7 +14,7 @@ const h = vi.hoisted(() => {
   };
   const builder = (): Record<string, unknown> => {
     const b: Record<string, unknown> = {};
-    for (const m of ["select", "insert", "update", "delete", "eq", "in", "gte", "lte", "order", "single"]) {
+    for (const m of ["select", "insert", "update", "upsert", "delete", "eq", "in", "gte", "lte", "order", "limit", "single"]) {
       b[m] = (...args: unknown[]) => {
         state.calls.push({ method: m, args });
         return b;
@@ -218,5 +218,35 @@ describe("opsRepo", () => {
     await opsRepo.listMaterialsByProject("p1");
     expect(h.state.tables.at(-1)).toBe("ops_materials");
     expect(find("eq")[0].args).toEqual(["project_id", "p1"]);
+  });
+
+  it("closeWeek manda só obra, semana e observação (os números são do banco) e atualiza se já existe", async () => {
+    h.state.result = { data: { id: "c1", planned: 5, done: 4 }, error: null };
+    const res = await opsRepo.closeWeek({ project_id: "p1", week_start: "2026-10-05", notes: "chuva" });
+    expect(h.state.tables.at(-1)).toBe("ops_week_closings");
+    expect(find("upsert")[0].args).toEqual([
+      { project_id: "p1", week_start: "2026-10-05", notes: "chuva" },
+      { onConflict: "project_id,week_start" },
+    ]);
+    expect(res.data).toMatchObject({ planned: 5, done: 4 });
+
+    h.state.calls = [];
+    await opsRepo.closeWeek({ project_id: "p1", week_start: "2026-10-05" });
+    expect((find("upsert")[0].args[0] as { notes: unknown }).notes).toBeNull();
+  });
+
+  it("listWeekClosings traz o fechamento da semana e os anteriores; reopenWeek apaga o fechamento", async () => {
+    await opsRepo.listWeekClosings("p1", "2026-10-05");
+    expect(h.state.tables.at(-1)).toBe("ops_week_closings");
+    expect(find("eq")[0].args).toEqual(["project_id", "p1"]);
+    // Parte da semana exibida: ela vem sempre, por mais antiga que seja.
+    expect(find("lte")[0].args).toEqual(["week_start", "2026-10-05"]);
+    expect(find("order")[0].args).toEqual(["week_start", { ascending: false }]);
+    expect(find("limit")[0].args).toEqual([6]);
+
+    h.state.calls = [];
+    await opsRepo.reopenWeek("c1");
+    expect(find("delete")).toHaveLength(1);
+    expect(find("eq")[0].args).toEqual(["id", "c1"]);
   });
 });

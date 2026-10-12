@@ -36,6 +36,11 @@ export type PortfolioAssignment = Pick<
   "id" | "project_id" | "activity_id" | "work_date" | "outcome"
 >;
 
+export type PortfolioClosing = Pick<
+  Tables<"ops_week_closings">,
+  "id" | "project_id" | "week_start" | "planned" | "done" | "not_done"
+>;
+
 /** Tamanho do lote de ids por consulta. */
 export const PORTFOLIO_CHUNK = 25;
 
@@ -56,6 +61,27 @@ async function inChunks<T>(
   const failed = parts.find((p) => p.error);
   if (failed) return { data: [], error: failed.error };
   return { data: parts.flatMap((p) => p.data ?? []), error: null };
+}
+
+/** Limite de linhas por resposta do PostgREST. */
+export const PAGE_SIZE = 1000;
+
+/**
+ * Lê todas as páginas de uma consulta. Sem isso, uma resposta com mais de
+ * 1000 linhas vem cortada em silêncio — e o Painel mostraria "não planejada"
+ * ou um PPC errado para as obras que ficaram de fora.
+ */
+async function allPages<T>(
+  page: (from: number, to: number) => Promise<{ data: T[] | null; error: unknown }>,
+): Promise<{ data: T[] | null; error: unknown }> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const res = await page(from, from + PAGE_SIZE - 1);
+    if (res.error) return { data: null, error: res.error };
+    const rows = res.data ?? [];
+    out.push(...rows);
+    if (rows.length < PAGE_SIZE) return { data: out, error: null };
+  }
 }
 
 export const obrasPanelRepo = {
@@ -98,16 +124,34 @@ export const obrasPanelRepo = {
     );
   },
 
-  /** Dias marcados na semana (para "Esta semana" e "semana planejada"). */
+  /** Dias marcados no intervalo (para "Esta semana", "semana planejada" e o PPC). */
   async listAssignments(projectIds: readonly string[], from: string, to: string) {
     return inChunks<PortfolioAssignment>(projectIds, (ids) =>
-      executeListQuery<PortfolioAssignment>(async () =>
+      allPages<PortfolioAssignment>((first, last) =>
+        executeListQuery<PortfolioAssignment>(async () =>
+          await supabase
+            .from("ops_assignments")
+            .select("id, project_id, activity_id, work_date, outcome")
+            .in("project_id", ids)
+            .gte("work_date", from)
+            .lte("work_date", to)
+            .order("id", { ascending: true })
+            .range(first, last),
+        ),
+      ),
+    );
+  },
+
+  /** Fechamentos de semana (PPC) com a segunda-feira dentro do intervalo. */
+  async listClosings(projectIds: readonly string[], from: string, to: string) {
+    return inChunks<PortfolioClosing>(projectIds, (ids) =>
+      executeListQuery<PortfolioClosing>(async () =>
         await supabase
-          .from("ops_assignments")
-          .select("id, project_id, activity_id, work_date, outcome")
+          .from("ops_week_closings")
+          .select("id, project_id, week_start, planned, done, not_done")
           .in("project_id", ids)
-          .gte("work_date", from)
-          .lte("work_date", to),
+          .gte("week_start", from)
+          .lte("week_start", to),
       ),
     );
   },

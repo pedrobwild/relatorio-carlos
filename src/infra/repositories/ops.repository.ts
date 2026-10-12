@@ -25,6 +25,7 @@ export type OpsActivityView = Database["public"]["Views"]["v_ops_activities"]["R
 export type OpsAssignment = Tables<"ops_assignments">;
 export type OpsMaterial = Tables<"ops_materials">;
 export type OpsReview = Tables<"ops_reviews">;
+export type OpsWeekClosing = Tables<"ops_week_closings">;
 export type StageRollup = Database["public"]["Views"]["v_stage_rollup"]["Row"];
 
 /** Alocação do dia com o contexto mínimo para a tela Hoje. */
@@ -316,6 +317,50 @@ export const opsRepo = {
         .insert(input)
         .select("*")
         .single();
+    });
+  },
+
+  // ---------------- fechamento de semana ----------------
+  /**
+   * Fechamento da semana `upTo` (segunda-feira) e os anteriores, do mais
+   * recente para o mais antigo. Parte da semana exibida para que ela sempre
+   * venha, por mais antiga que seja.
+   */
+  async listWeekClosings(projectId: string, upTo: string, limit = 6) {
+    return executeListQuery<OpsWeekClosing>(async () => {
+      return await supabase
+        .from("ops_week_closings")
+        .select("*")
+        .eq("project_id", projectId)
+        .lte("week_start", upTo)
+        .order("week_start", { ascending: false })
+        .limit(limit);
+    });
+  },
+
+  /**
+   * Fecha a semana (ou atualiza o fechamento). O app só informa a obra, a
+   * segunda-feira e a observação: os números do PPC são calculados pelo banco
+   * (trigger), que recusa fechar com dia sem confirmação.
+   */
+  async closeWeek(input: { project_id: string; week_start: string; notes?: string | null }) {
+    return executeQuery<OpsWeekClosing>(async () => {
+      return await supabase
+        .from("ops_week_closings")
+        .upsert(
+          { project_id: input.project_id, week_start: input.week_start, notes: input.notes ?? null },
+          { onConflict: "project_id,week_start" },
+        )
+        .select("*")
+        .single();
+    });
+  },
+
+  /** Reabre a semana: apaga o fechamento. */
+  async reopenWeek(id: string) {
+    return executeQuery<null>(async () => {
+      const { error } = await supabase.from("ops_week_closings").delete().eq("id", id);
+      return { data: null, error };
     });
   },
 

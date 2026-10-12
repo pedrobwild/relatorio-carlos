@@ -283,6 +283,32 @@ describe("ordem e resumo", () => {
     expect(out.map((r) => r.name)).toEqual(["verm-5", "verm-1", "amar", "verde", "semprazo"]);
   });
 
+  it("fechamento de semana: PPC desta semana, da anterior e quem não fechou", () => {
+    const semFechamento = row();
+    expect(semFechamento.week.ppc).toBeNull();
+    expect(semFechamento.week.previous).toEqual({ ppc: null, pending: false });
+
+    const fechada = row({ closing: { planned: 10, done: 8 }, previousClosing: { planned: 4, done: 3 }, previousPlanned: 4 });
+    expect(fechada.week.ppc).toBe(80);
+    expect(fechada.week.previous).toEqual({ ppc: 75, pending: false });
+
+    // Teve dia marcado na semana anterior e ninguém fechou: é o que a reunião cobra.
+    const pendente = row({ previousPlanned: 3 });
+    expect(pendente.week.previous).toEqual({ ppc: null, pending: true });
+    expect(summarize([semFechamento, fechada, pendente]).unclosed).toBe(1);
+  });
+
+  it("não cobra fechamento de semana que ainda não terminou, nem sem saber dos fechamentos", () => {
+    // Olhando a semana seguinte (19/10): a "anterior" é a de 12/10, em andamento na quarta 14/10.
+    const proxima = row({ week: { from: "2026-10-19", to: "2026-10-25" }, previousPlanned: 3 });
+    expect(proxima.week.previous?.pending).toBe(false);
+    // Domingo 18/10 ainda é a semana de 12/10: quem marcou sábado/domingo pode fechar depois.
+    expect(row({ week: { from: "2026-10-19", to: "2026-10-25" }, previousPlanned: 3, today: "2026-10-18" }).week.previous?.pending).toBe(false);
+    expect(row({ week: { from: "2026-10-19", to: "2026-10-25" }, previousPlanned: 3, today: "2026-10-19" }).week.previous?.pending).toBe(true);
+    // Fechamentos ainda não chegaram (ou a consulta falhou): não acusa ninguém.
+    expect(row({ previousPlanned: 3, closingsKnown: false }).week.previous?.pending).toBe(false);
+  });
+
   it("resume ativas, no vermelho e multa projetada total", () => {
     const a = { ...row(), risk: "vermelho", slack: -2, penalty: 1000 } as ObraRow;
     const b = { ...row(), risk: "vermelho", slack: -1, penalty: null } as ObraRow;

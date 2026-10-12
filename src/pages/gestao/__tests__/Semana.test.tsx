@@ -5,11 +5,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { shiftISODate } from "@/lib/hojeDia";
+import { shiftISODate, todayISO } from "@/lib/hojeDia";
 import { isHoliday } from "@/lib/businessDays";
-import { planningMonday } from "@/lib/semanaPlan";
+import { mondayOf, planningMonday } from "@/lib/semanaPlan";
 
 const MON = planningMonday();
+/** Semana passada: sempre começada e terminada, seja qual for o dia em que o teste roda. */
+const LAST = shiftISODate(mondayOf(todayISO()), -7);
 
 const h = vi.hoisted(() => ({
   createActivity: vi.fn(async () => ({ id: "novo" })),
@@ -18,6 +20,10 @@ const h = vi.hoisted(() => ({
   prev: [] as unknown[],
   stages: [] as unknown[],
   activities: [] as unknown[],
+  last: [] as unknown[],
+  closings: [] as unknown[],
+  closingsReady: true,
+  closeWeek: vi.fn(async () => ({ planned: 2, done: 2 })),
 }));
 
 vi.mock("@/hooks/useOps", () => {
@@ -25,7 +31,14 @@ vi.mock("@/hooks/useOps", () => {
   return {
     useOpsStages: () => ({ data: h.stages, isLoading: false }),
     useOpsActivities: () => ({ data: h.activities, isLoading: false }),
-    useOpsAssignments: (_p: string, from: string) => ({ data: from === MON ? h.week : h.prev, isLoading: false }),
+    useOpsAssignments: (_p: string, from: string) => ({
+      data: from === MON ? h.week : from === LAST && h.last.length > 0 ? h.last : h.prev,
+      isLoading: false,
+    }),
+    useOpsWeekClosings: () => (h.closingsReady ? { data: h.closings, isSuccess: true } : { data: undefined, isSuccess: false }),
+    useCloseOpsWeek: () => ({ ...m(), mutateAsync: h.closeWeek }),
+    useReopenOpsWeek: m,
+    useSetAssignmentOutcome: m,
     useOpsProjectMaterials: () => ({
       data: [
         { id: "m1", activity_id: "a1", description: "Massa corrida", status: "pendente", needed_by: null },
@@ -93,6 +106,10 @@ describe("Tela Semana", () => {
       assignment("w2", "a1", shiftISODate(MON, 3)), // depois do fim da etapa (MON+2) → ⚠
     ];
     h.prev = [];
+    h.last = [];
+    h.closings = [];
+    h.closingsReady = true;
+    h.closeWeek.mockClear();
   });
 
   it("sem obra escolhida, pede a obra", () => {
@@ -154,5 +171,83 @@ describe("Tela Semana", () => {
     expect(within(drawer).getByText("Passar conduíte")).toBeInTheDocument();
     expect(within(drawer).getByRole("button", { name: "Concluir" })).toBeInTheDocument();
     expect(within(drawer).getByText(/Material · 0 de 0 na obra/)).toBeInTheDocument();
+  });
+
+  describe("fechar semana e PPC", () => {
+    const lastWeek = () => [
+      assignment("l1", "a1", LAST, { outcome: "feito" }),
+      assignment("l2", "a1", shiftISODate(LAST, 1), { outcome: "feito" }),
+    ];
+
+    it("semana que ainda não começou só se planeja: sem 'Fechar semana'", () => {
+      h.last = lastWeek();
+      renderAt(`?obra=p1&semana=${shiftISODate(mondayOf(todayISO()), 7)}`);
+      expect(screen.getAllByRole("button", { name: /Planejar semana/ }).length).toBeGreaterThan(0);
+      expect(screen.queryByRole("button", { name: /Fechar semana/ })).toBeNull();
+    });
+
+    it("semana sem nenhum dia marcado não oferece fechamento", () => {
+      renderAt(`?obra=p1&semana=${LAST}`);
+      expect(screen.queryByRole("button", { name: /Fechar semana/ })).toBeNull();
+      expect(screen.queryByText(/ainda não foi fechada/)).toBeNull();
+    });
+
+    it("semana que terminou sem fechar avisa e fecha pela gaveta", async () => {
+      h.last = lastWeek();
+      renderAt(`?obra=p1&semana=${LAST}`);
+      const aviso = screen.getByText("Esta semana terminou e ainda não foi fechada.").closest("[role=status]") as HTMLElement;
+      fireEvent.click(within(aviso).getByRole("button", { name: "Fechar semana" }));
+      const sheet = screen.getByRole("dialog");
+      expect(within(sheet).getByText("100%")).toBeInTheDocument();
+      expect(within(sheet).getByText("2 de 2 dias feitos")).toBeInTheDocument();
+      fireEvent.click(within(sheet).getByRole("button", { name: "Fechar semana" }));
+      await vi.waitFor(() =>
+        expect(h.closeWeek).toHaveBeenCalledWith({ project_id: "p1", week_start: LAST, notes: null }),
+      );
+    });
+
+    it("semana em andamento: o botão do cabeçalho aparece quando há dia para confirmar", () => {
+      const THIS = mondayOf(todayISO());
+      // Segunda desta semana já aconteceu (ou é hoje) e ninguém confirmou.
+      h.last = [];
+      h.week = [assignment("t1", "a1", THIS)];
+      h.prev = [assignment("t1", "a1", THIS)];
+      renderAt(`?obra=p1&semana=${THIS}`);
+      expect(screen.getByRole("button", { name: /Fechar semana/ })).toBeInTheDocument();
+      expect(screen.queryByText(/ainda não foi fechada/)).toBeNull();
+    });
+
+    it("sem saber dos fechamentos (carregando ou consulta falhou) não oferece nem cobra fechar", () => {
+      h.last = lastWeek();
+      h.closingsReady = false;
+      renderAt(`?obra=p1&semana=${LAST}`);
+      expect(screen.queryByText(/ainda não foi fechada/)).toBeNull();
+      expect(screen.queryByRole("button", { name: /Fechar semana|Ver fechamento/ })).toBeNull();
+      // O resto da tela segue normal.
+      expect(screen.getByLabelText("Resumo da semana")).toBeInTheDocument();
+    });
+
+    it("semana fechada mostra o PPC registrado e abre o fechamento", () => {
+      h.last = lastWeek();
+      h.closings = [
+        { id: "c1", project_id: "p1", week_start: LAST, planned: 2, done: 2, not_done: 0, reasons: {}, notes: null, closed_by: "u1", closed_at: `${shiftISODate(LAST, 4)}T20:00:00Z` },
+      ];
+      renderAt(`?obra=p1&semana=${LAST}`);
+      expect(screen.getByText("Semana fechada · PPC 100%")).toBeInTheDocument();
+      expect(screen.getByText(/2 de 2 dias feitos/)).toBeInTheDocument();
+      expect(screen.queryByText(/mudaram depois/)).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: /Ver fechamento/ }));
+      expect(within(screen.getByRole("dialog")).getByText(/por Pedro Alves com PPC 100%/)).toBeInTheDocument();
+    });
+
+    it("fechamento desatualizado pede para atualizar", () => {
+      h.last = [...lastWeek(), assignment("l3", "a1", shiftISODate(LAST, 2), { outcome: "nao_feito", not_done_reason: "clima" })];
+      h.closings = [
+        { id: "c1", project_id: "p1", week_start: LAST, planned: 2, done: 2, not_done: 0, reasons: {}, notes: null, closed_by: null, closed_at: `${shiftISODate(LAST, 4)}T20:00:00Z` },
+      ];
+      renderAt(`?obra=p1&semana=${LAST}`);
+      expect(screen.getByText("Os dias mudaram depois do fechamento.")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Atualizar fechamento" })).toBeInTheDocument();
+    });
   });
 });

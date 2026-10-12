@@ -234,6 +234,25 @@ describe("Painel de Obras reformulado", () => {
       expect(h.lastWeek!.from).toBe(atual);
     });
 
+    it("fechamento de semana: PPC da semana anterior e quem não fechou", () => {
+      window.localStorage.setItem("bwild.obras.escopo", "todas");
+      h.rows = [
+        mk({ id: "a", name: "Ap. 1204 Vila Mariana", week: { ...base.week, previous: { ppc: 75, pending: false } } }),
+        mk({ id: "b", name: "Studio Pinheiros", week: { ...base.week, previous: { ppc: null, pending: true } } }),
+        mk({ id: "c", name: "Loft Itaim", week: { ...base.week, ppc: 80, previous: { ppc: 60, pending: false } } }),
+        mk({ id: "d", name: "Casa Perdizes" }),
+      ];
+      renderPage();
+      expect(within(screen.getByRole("row", { name: /Ap\. 1204/ })).getByText("Anterior: PPC 75%")).toBeInTheDocument();
+      expect(within(screen.getByRole("row", { name: /Studio Pinheiros/ })).getByText("Anterior sem fechar")).toBeInTheDocument();
+      // Semana já fechada: mostra o PPC dela, não o da anterior.
+      const fechada = screen.getByRole("row", { name: /Loft Itaim/ });
+      expect(within(fechada).getByText("Fechada · PPC 80%")).toBeInTheDocument();
+      expect(within(fechada).queryByText(/Anterior/)).toBeNull();
+      expect(within(screen.getByRole("row", { name: /Casa Perdizes/ })).queryByText(/PPC|sem fechar/)).toBeNull();
+      expect(screen.getByText("1 sem fechar a semana anterior")).toBeInTheDocument();
+    });
+
     it("estado vazio quando não há obra em execução", () => {
       h.rows = [];
       renderPage();
