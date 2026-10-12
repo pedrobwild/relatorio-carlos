@@ -196,6 +196,17 @@ describe("permissions", () => {
       { role: "gestor", feature: "projectPhase:edit", expected: true },
       { role: "cs", feature: "projectPhase:edit", expected: true },
       { role: "arquitetura", feature: "projectPhase:edit", expected: true },
+
+      // Resumo da semana (diretoria): só admin e manager.
+      { role: "admin", feature: "portfolio:resumo", expected: true },
+      { role: "manager", feature: "portfolio:resumo", expected: true },
+      { role: "gestor", feature: "portfolio:resumo", expected: false },
+      { role: "engineer", feature: "portfolio:resumo", expected: false },
+      { role: "arquitetura", feature: "portfolio:resumo", expected: false },
+      { role: "suprimentos", feature: "portfolio:resumo", expected: false },
+      { role: "financeiro", feature: "portfolio:resumo", expected: false },
+      { role: "cs", feature: "portfolio:resumo", expected: false },
+      { role: "customer", feature: "portfolio:resumo", expected: false },
     ];
 
     testCases.forEach(({ role, feature, expected }) => {

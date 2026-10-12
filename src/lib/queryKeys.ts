@@ -474,6 +474,11 @@ export const queryKeys = {
       [...queryKeys.obrasPanel.all, "assignments", [...projectIds].sort().join(","), from, to] as const,
     closings: (projectIds: readonly string[], from: string, to: string) =>
       [...queryKeys.obrasPanel.all, "closings", [...projectIds].sort().join(","), from, to] as const,
+    /** Resumo da semana (diretoria): alocações e fechamentos das últimas semanas. */
+    resumoAssignments: (projectIds: readonly string[], from: string, to: string) =>
+      [...queryKeys.obrasPanel.all, "resumo", "assignments", [...projectIds].sort().join(","), from, to] as const,
+    resumoClosings: (projectIds: readonly string[], from: string, to: string) =>
+      [...queryKeys.obrasPanel.all, "resumo", "closings", [...projectIds].sort().join(","), from, to] as const,
   },
 
   contractDeadline: {

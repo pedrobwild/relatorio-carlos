@@ -76,7 +76,10 @@ export type Feature =
   // conclusão e "a obra está na etapa X"). Mesmos papéis de
   // "journey:edit_stages" e da regra do banco (can_edit_project_phase):
   // financeiro e suprimentos veem, mas não conduzem a fase de projeto.
-  | "projectPhase:edit";
+  | "projectPhase:edit"
+  // Resumo da semana da carteira (diretoria): números de todas as obras e
+  // adoção do planejamento semanal por gestor
+  | "portfolio:resumo";
 
 /**
  * Permission matrix: role -> allowed features
@@ -205,6 +208,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "internal_notes:create",
     "ficha:edit",
     "projectPhase:edit",
+    "portfolio:resumo",
   ],
 
   admin: [
@@ -261,6 +265,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "ficha:edit",
     "projectPhase:edit",
     "internal_notes:moderate",
+    "portfolio:resumo",
   ],
 
   gestor: [

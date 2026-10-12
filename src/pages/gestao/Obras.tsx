@@ -23,7 +23,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Building2, Plus, Search } from "lucide-react";
+import { Building2, Newspaper, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
@@ -203,6 +203,7 @@ export default function Obras() {
   const { can } = useCan();
   const canEdit = can("projects:edit");
   const canEditPhase = can("projectPhase:edit");
+  const canResumo = can("portfolio:resumo");
   /** Escritório: vê busca, outras listas, visões e a gaveta. */
   const office = !isSimple;
   const [params, setParams] = useSearchParams();
@@ -422,13 +423,25 @@ export default function Obras() {
         title="Como estão as obras"
         description={office ? undefined : "Da mais arriscada para a mais tranquila. Toque numa obra para ver e planejar a semana dela."}
         actions={
-          office ? (
-            <Button asChild className="min-h-[44px]">
-              <Link to="/gestao/nova-obra">
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                Nova obra
-              </Link>
-            </Button>
+          office || canResumo ? (
+            <div className="flex flex-wrap gap-2">
+              {canResumo && (
+                <Button asChild variant="outline" className="min-h-[44px]">
+                  <Link to="/gestao/resumo">
+                    <Newspaper className="h-4 w-4" aria-hidden="true" />
+                    Resumo da semana
+                  </Link>
+                </Button>
+              )}
+              {office && (
+                <Button asChild className="min-h-[44px]">
+                  <Link to="/gestao/nova-obra">
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    Nova obra
+                  </Link>
+                </Button>
+              )}
+            </div>
           ) : undefined
         }
       />

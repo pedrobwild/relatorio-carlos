@@ -38,7 +38,7 @@ export type PortfolioAssignment = Pick<
 
 export type PortfolioClosing = Pick<
   Tables<"ops_week_closings">,
-  "id" | "project_id" | "week_start" | "planned" | "done" | "not_done"
+  "id" | "project_id" | "week_start" | "planned" | "done" | "not_done" | "reasons"
 >;
 
 /** Tamanho do lote de ids por consulta. */
@@ -142,13 +142,16 @@ export const obrasPanelRepo = {
     );
   },
 
-  /** Fechamentos de semana (PPC) com a segunda-feira dentro do intervalo. */
+  /**
+   * Fechamentos de semana (PPC) com a segunda-feira dentro do intervalo.
+   * `reasons` (motivos do não feito somados pelo banco) alimenta o Resumo da semana.
+   */
   async listClosings(projectIds: readonly string[], from: string, to: string) {
     return inChunks<PortfolioClosing>(projectIds, (ids) =>
       executeListQuery<PortfolioClosing>(async () =>
         await supabase
           .from("ops_week_closings")
-          .select("id, project_id, week_start, planned, done, not_done")
+          .select("id, project_id, week_start, planned, done, not_done, reasons")
           .in("project_id", ids)
           .gte("week_start", from)
           .lte("week_start", to),

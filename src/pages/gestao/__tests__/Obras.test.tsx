@@ -27,6 +27,7 @@ const h = vi.hoisted(() => ({
   simple: false,
   canEdit: true,
   canEditPhase: true,
+  canResumo: false,
   updateObra: vi.fn(),
   toastSuccess: vi.fn(),
   phaseStatus: "ok" as "ok" | "loading" | "error",
@@ -60,7 +61,10 @@ vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "eu" } }) }));
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => h.mobile }));
 vi.mock("@/hooks/useMenuMode", () => ({ useMenuMode: () => ({ isSimple: h.simple }) }));
 vi.mock("@/hooks/useCan", () => ({
-  useCan: () => ({ can: (feature: string) => (feature === "projectPhase:edit" ? h.canEditPhase : h.canEdit) }),
+  useCan: () => ({
+    can: (feature: string) =>
+      feature === "projectPhase:edit" ? h.canEditPhase : feature === "portfolio:resumo" ? h.canResumo : h.canEdit,
+  }),
 }));
 // A gaveta lê e grava as etapas da obra aberta (regras em FaseProjetoSection.test.tsx).
 vi.mock("@/hooks/useProjectPhase", () => ({
@@ -227,6 +231,15 @@ describe("Painel de Obras reformulado", () => {
   });
 
   describe("o que todos veem", () => {
+    it("link 'Resumo da semana' no topo só para quem tem a permissão", () => {
+      const { unmount } = renderPage();
+      expect(screen.queryByRole("link", { name: /Resumo da semana/ })).toBeNull();
+      unmount();
+      h.canResumo = true;
+      renderPage();
+      expect(screen.getByRole("link", { name: /Resumo da semana/ })).toHaveAttribute("href", "/gestao/resumo");
+    });
+
     it("mostra só três números no topo", () => {
       renderPage();
       const resumo = screen.getByLabelText("Resumo das obras");

@@ -86,6 +86,7 @@ const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const Hoje = lazy(() => import("./pages/gestao/Hoje"));
 const Semana = lazy(() => import("./pages/gestao/Semana"));
 const ObrasPainelNovo = lazy(() => import("./pages/gestao/Obras"));
+const ResumoSemanal = lazy(() => import("./pages/gestao/ResumoSemanal"));
 const Lookahead = lazy(() => import("./pages/gestao/Lookahead"));
 const AvancoFisico = lazy(() => import("./pages/gestao/AvancoFisico"));
 const Custos = lazy(() => import("./pages/gestao/Custos"));
@@ -543,6 +544,17 @@ const AppContent = () => {
                 }
               />
 
+              {/* Resumo da semana (diretoria): a página mostra "sem acesso" sem `portfolio:resumo`. */}
+              <Route
+                path="/gestao/resumo"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<ResumoSemanal />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
               <Route
                 path="/gestao/obras"
                 element={
