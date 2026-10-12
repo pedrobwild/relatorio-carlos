@@ -188,6 +188,18 @@ describe("resumos", () => {
     expect(s.onSite).toBe(1);
     expect(s.missing.map((x) => x.id)).toEqual(["3", "2"]);
   });
+  it("material a caminho: só o comprado com compra vinculada", () => {
+    const m = (id: string, status: OpsMaterial["status"], purchase_id: string | null): OpsMaterial => ({
+      id, activity_id: "a1", status, needed_by: null, description: `Mat ${id}`, created_at: "", created_by: null, project_id: "p1", purchase_id, quantity: null, unit: null, updated_at: "",
+    });
+    const s = weekMaterialSummary(
+      [m("1", "comprado", "c1"), m("2", "comprado", null), m("3", "pendente", "c2"), m("4", "na_obra", "c3")],
+      new Set(["a1"]),
+    );
+    expect(s.onTheWay).toBe(1);
+    expect(s.onSite).toBe(1);
+    expect(s.missing).toHaveLength(3);
+  });
 });
 
 describe("planejar semana", () => {

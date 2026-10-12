@@ -359,6 +359,9 @@ export default function Semana() {
                   <span className={cn("font-semibold", mat.missing.length > 0 ? "text-warning" : "text-success")}>
                     {mat.onSite} de {mat.total} na obra
                   </span>
+                  {mat.onTheWay > 0 && (
+                    <span className="block text-xs text-muted-foreground">{mat.onTheWay} a caminho (comprado)</span>
+                  )}
                   {mat.missing.length > 0 && (
                     <span className="block truncate text-xs text-muted-foreground">
                       Falta:{" "}

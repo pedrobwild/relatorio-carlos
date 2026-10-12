@@ -62,6 +62,33 @@ export type OpsActivityReadiness = Pick<
   "id" | "materials_missing" | "materials_total" | "is_ready"
 >;
 
+/**
+ * Resumo da compra (`project_purchases`) que atende um material: o que a
+ * gaveta da atividade mostra na linha da compra e no seletor "Vincular a uma
+ * compra". O nome do fornecedor vem do cadastro (`fornecedor.nome`) ou, sem
+ * cadastro, do texto livre `supplier_name` — como em Compras.
+ */
+export type OpsPurchaseSummary = Pick<
+  Tables<"project_purchases">,
+  | "id"
+  | "item_name"
+  | "quantity"
+  | "unit"
+  | "status"
+  | "delivery_location"
+  | "expected_delivery_date"
+  | "actual_delivery_date"
+  | "supplier_name"
+> & { fornecedor: { nome: string } | null };
+
+/** Material com a compra vinculada (null = sem vínculo, situação manual). */
+export type OpsMaterialWithPurchase = OpsMaterial & { purchase: OpsPurchaseSummary | null };
+
+const PURCHASE_SUMMARY_COLUMNS =
+  "id, item_name, quantity, unit, status, delivery_location, expected_delivery_date, actual_delivery_date, supplier_name, fornecedor:fornecedores(nome)";
+
+const MATERIAL_WITH_PURCHASE_SELECT = `*, purchase:project_purchases!ops_materials_purchase_id_fkey(${PURCHASE_SUMMARY_COLUMNS})`;
+
 export const OPS_PHOTOS_BUCKET = "ops-photos";
 
 const DAY_SELECT =
@@ -254,11 +281,12 @@ export const opsRepo = {
   },
 
   // ---------------- materiais ----------------
+  /** Materiais da atividade, cada um com o resumo da compra vinculada. */
   async listMaterials(activityId: string) {
-    return executeListQuery<OpsMaterial>(async () => {
+    return executeListQuery<OpsMaterialWithPurchase>(async () => {
       return await supabase
         .from("ops_materials")
-        .select("*")
+        .select(MATERIAL_WITH_PURCHASE_SELECT)
         .eq("activity_id", activityId)
         .order("needed_by", { ascending: true, nullsFirst: false });
     });
@@ -295,6 +323,46 @@ export const opsRepo = {
   async setMaterialStatus(id: string, status: OpsMaterialStatus) {
     return executeQuery<OpsMaterial>(async () => {
       return await supabase.from("ops_materials").update({ status }).eq("id", id).select("*").single();
+    });
+  },
+
+  /**
+   * Liga o material a uma compra da mesma obra. A situação passa a ser a da
+   * compra — quem calcula é o banco (gatilho); o retorno já vem com ela. Compra
+   * de outra obra é recusada pelo banco ("A compra vinculada é de outra obra").
+   */
+  async linkMaterialToPurchase(materialId: string, purchaseId: string) {
+    return executeQuery<OpsMaterial>(async () => {
+      return await supabase
+        .from("ops_materials")
+        .update({ purchase_id: purchaseId })
+        .eq("id", materialId)
+        .select("*")
+        .single();
+    });
+  },
+
+  /** Desfaz o vínculo: fica a última situação, que volta a ser manual. */
+  async unlinkMaterialFromPurchase(materialId: string) {
+    return executeQuery<OpsMaterial>(async () => {
+      return await supabase
+        .from("ops_materials")
+        .update({ purchase_id: null })
+        .eq("id", materialId)
+        .select("*")
+        .single();
+    });
+  },
+
+  /** Compras da obra que podem atender um material: não canceladas, mais novas primeiro. */
+  async listLinkablePurchases(projectId: string) {
+    return executeListQuery<OpsPurchaseSummary>(async () => {
+      return await supabase
+        .from("project_purchases")
+        .select(PURCHASE_SUMMARY_COLUMNS)
+        .eq("project_id", projectId)
+        .neq("status", "cancelled")
+        .order("created_at", { ascending: false });
     });
   },
 

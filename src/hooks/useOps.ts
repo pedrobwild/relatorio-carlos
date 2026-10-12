@@ -3,7 +3,9 @@
  * Base para as telas Hoje (Fase 3) e Semana (Fase 4).
  */
 import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+import { invalidatePurchaseQueries, queryKeys } from "@/lib/queryKeys";
+import { useAuth } from "@/hooks/useAuth";
+import { purchasesRepo, type CreatePurchaseInput } from "@/infra/repositories/purchases.repository";
 import {
   opsRepo,
   type OpsAssignmentPlanPatch,
@@ -192,6 +194,63 @@ export const useSetMaterialStatus = () =>
   useOpsMutation(async ({ id, status }: { id: string; status: OpsMaterialStatus }) =>
     unwrap(await opsRepo.setMaterialStatus(id, status)),
   );
+
+// ---------------------------------------------------------------------------
+// Material ligado à compra
+// ---------------------------------------------------------------------------
+// Com compra vinculada a situação do material é calculada pelo banco: depois
+// de vincular/desvincular a tela relê (invalidateOps), nada é "adivinhado".
+
+/** Compras da obra que podem atender um material (só busca com o seletor aberto). */
+export function useOpsLinkablePurchases(projectId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.ops.linkablePurchases(projectId),
+    enabled: !!projectId && enabled,
+    queryFn: async () => (projectId ? unwrap(await opsRepo.listLinkablePurchases(projectId)) ?? [] : []),
+  });
+}
+
+export const useLinkMaterialToPurchase = () =>
+  useOpsMutation(async ({ materialId, purchaseId }: { materialId: string; purchaseId: string }) =>
+    unwrap(await opsRepo.linkMaterialToPurchase(materialId, purchaseId)),
+  );
+
+export const useUnlinkMaterialFromPurchase = () =>
+  useOpsMutation(async (materialId: string) => unwrap(await opsRepo.unlinkMaterialFromPurchase(materialId)));
+
+/** A compra foi criada, mas o vínculo com o material falhou. */
+export class PurchaseCreatedButNotLinkedError extends Error {
+  constructor(
+    public readonly purchaseId: string,
+    public readonly linkError: unknown,
+  ) {
+    super("A compra foi criada, mas não foi possível vinculá-la ao material.");
+    this.name = "PurchaseCreatedButNotLinkedError";
+  }
+}
+
+/**
+ * "Pedir compra": cria a solicitação pelo mesmo caminho da tela Compras
+ * (`purchasesRepo.create`) e liga o material a ela. Relê a operação e todas
+ * as telas de compras.
+ */
+export function useRequestPurchaseForMaterial() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ materialId, purchase }: { materialId: string; purchase: CreatePurchaseInput }) => {
+      if (!user?.id) throw new Error("Usuário não autenticado");
+      const created = unwrap(await purchasesRepo.create(purchase, user.id));
+      const linked = await opsRepo.linkMaterialToPurchase(materialId, created.id);
+      if (linked.error) throw new PurchaseCreatedButNotLinkedError(created.id, linked.error);
+      return { purchase: created, material: linked.data };
+    },
+    onSettled: () => {
+      invalidatePurchaseQueries();
+      return invalidateOps(qc);
+    },
+  });
+}
 
 export const useCreateOpsReview = () =>
   useOpsMutation(

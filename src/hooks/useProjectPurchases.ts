@@ -6,6 +6,7 @@ import { useMemo, useEffect } from "react";
 import { queryKeys } from "@/lib/queryKeys";
 import { QUERY_TIMING } from "@/lib/queryClient";
 import { toLocalISODate } from "@/lib/localDate";
+import { purchasesRepo, type ProjectPurchaseRow } from "@/infra/repositories/purchases.repository";
 
 export type PurchaseStatus =
   | "pending"
@@ -231,17 +232,11 @@ export function useProjectPurchases(
     mutationFn: async (input: PurchaseInput) => {
       if (!user?.id) throw new Error("Usuário não autenticado");
 
-      const { data, error } = await supabase
-        .from("project_purchases")
-        .insert({
-          ...input,
-          created_by: user.id,
-        })
-        .select()
-        .single();
+      // Mesmo caminho do "Pedir compra" da Semana (purchasesRepo.create).
+      const { data, error } = await purchasesRepo.create(input, user.id);
 
       if (error) throw error;
-      return data;
+      return data as ProjectPurchaseRow;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

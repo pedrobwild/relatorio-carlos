@@ -14,7 +14,7 @@ const h = vi.hoisted(() => {
   };
   const builder = (): Record<string, unknown> => {
     const b: Record<string, unknown> = {};
-    for (const m of ["select", "insert", "update", "upsert", "delete", "eq", "in", "gte", "lte", "order", "limit", "single"]) {
+    for (const m of ["select", "insert", "update", "upsert", "delete", "eq", "neq", "in", "gte", "lte", "order", "limit", "single"]) {
       b[m] = (...args: unknown[]) => {
         state.calls.push({ method: m, args });
         return b;
@@ -248,5 +248,52 @@ describe("opsRepo", () => {
     await opsRepo.reopenWeek("c1");
     expect(find("delete")).toHaveLength(1);
     expect(find("eq")[0].args).toEqual(["id", "c1"]);
+  });
+
+  // ---------------- material ligado à compra ----------------
+  it("listMaterials traz o resumo da compra vinculada (pela FK do material) e o fornecedor", async () => {
+    await opsRepo.listMaterials("a1");
+    expect(h.state.tables).toEqual(["ops_materials"]);
+    const sel = String(find("select")[0].args[0]);
+    expect(sel).toContain("purchase:project_purchases!ops_materials_purchase_id_fkey(");
+    for (const col of ["id", "item_name", "quantity", "unit", "status", "delivery_location", "expected_delivery_date", "actual_delivery_date"]) {
+      expect(sel).toContain(col);
+    }
+    expect(sel).toContain("fornecedor:fornecedores(nome)");
+    expect(find("eq")[0].args).toEqual(["activity_id", "a1"]);
+  });
+
+  it("linkMaterialToPurchase grava só o purchase_id (a situação é do banco)", async () => {
+    h.state.result = { data: { id: "m1", purchase_id: "c1", status: "comprado" }, error: null };
+    const res = await opsRepo.linkMaterialToPurchase("m1", "c1");
+    expect(h.state.tables).toEqual(["ops_materials"]);
+    expect(find("update")[0].args[0]).toEqual({ purchase_id: "c1" });
+    expect(find("eq")[0].args).toEqual(["id", "m1"]);
+    expect(find("single")).toHaveLength(1);
+    expect(res.data?.status).toBe("comprado");
+  });
+
+  it("linkMaterialToPurchase devolve a recusa do banco (compra de outra obra)", async () => {
+    h.state.result = { data: null, error: { code: "23514", message: "A compra vinculada é de outra obra", details: "", hint: "" } };
+    const res = await opsRepo.linkMaterialToPurchase("m1", "c9");
+    expect(res.data).toBeNull();
+    expect(res.error?.code).toBe("23514");
+    expect(res.error?.message).toBe("A compra vinculada é de outra obra");
+  });
+
+  it("unlinkMaterialFromPurchase zera o vínculo sem mexer na situação", async () => {
+    h.state.result = { data: { id: "m1", purchase_id: null }, error: null };
+    await opsRepo.unlinkMaterialFromPurchase("m1");
+    expect(find("update")[0].args[0]).toEqual({ purchase_id: null });
+    expect(find("eq")[0].args).toEqual(["id", "m1"]);
+  });
+
+  it("listLinkablePurchases: compras da obra, sem as canceladas, mais novas primeiro", async () => {
+    await opsRepo.listLinkablePurchases("p1");
+    expect(h.state.tables).toEqual(["project_purchases"]);
+    expect(find("eq")[0].args).toEqual(["project_id", "p1"]);
+    expect(find("neq")[0].args).toEqual(["status", "cancelled"]);
+    expect(find("order")[0].args).toEqual(["created_at", { ascending: false }]);
+    expect(String(find("select")[0].args[0])).toContain("expected_delivery_date");
   });
 });

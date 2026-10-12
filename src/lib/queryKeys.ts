@@ -456,6 +456,9 @@ export const queryKeys = {
       [...queryKeys.ops.all, "photo-urls", paths.join(",")] as const,
     weekClosings: (projectId: string | undefined, upTo: string) =>
       [...queryKeys.ops.all, "week-closings", projectId, upTo] as const,
+    /** Compras da obra que podem atender um material (seletor da gaveta). */
+    linkablePurchases: (projectId: string | undefined) =>
+      [...queryKeys.ops.all, "linkable-purchases", projectId] as const,
   },
 
   /** Tela Obras (Fase 5): leituras de carteira, por lista de obras. */

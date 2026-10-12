@@ -58,6 +58,11 @@ vi.mock("@/hooks/useOps", () => {
     useCreateOpsMaterial: m,
     useSetMaterialStatus: m,
     useDeleteOpsMaterial: m,
+    useLinkMaterialToPurchase: m,
+    useUnlinkMaterialFromPurchase: m,
+    useRequestPurchaseForMaterial: m,
+    useOpsLinkablePurchases: () => ({ data: [], isLoading: false, isError: false }),
+    PurchaseCreatedButNotLinkedError: class extends Error {},
   };
 });
 vi.mock("@/hooks/useStudioInfo", () => ({

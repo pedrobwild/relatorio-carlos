@@ -273,6 +273,8 @@ export function buildWeekGrid(input: {
 export interface WeekMaterialSummary {
   total: number;
   onSite: number;
+  /** Dos que faltam: com compra vinculada já comprada (situação vinda de Compras). */
+  onTheWay: number;
   missing: { id: string; description: string; neededBy: string | null }[];
 }
 
@@ -286,7 +288,8 @@ export function weekMaterialSummary(
     .filter((m) => m.status !== "na_obra")
     .sort((a, b) => (a.needed_by ?? "9999").localeCompare(b.needed_by ?? "9999"))
     .map((m) => ({ id: m.id, description: m.description, neededBy: m.needed_by }));
-  return { total: relevant.length, onSite: relevant.length - missing.length, missing };
+  const onTheWay = relevant.filter((m) => m.purchase_id != null && m.status === "comprado").length;
+  return { total: relevant.length, onSite: relevant.length - missing.length, onTheWay, missing };
 }
 
 export interface WeekCounts {
