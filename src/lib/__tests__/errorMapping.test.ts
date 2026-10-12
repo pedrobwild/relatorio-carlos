@@ -143,10 +143,67 @@ describe("mapError", () => {
       expect(r.userMessage).not.toMatch(/constraint|relation|ops_week/);
     });
 
-    it("texto de regra só vale para 23514: outros códigos não vazam mensagem do servidor", () => {
+    it("fase de projeto: as recusas do banco chegam em português como foram escritas", () => {
+      for (const message of [
+        "A data de conclusão não pode ser no futuro",
+        "Esta obra já saiu da fase de projeto: as etapas de projeto não podem mais ser alteradas",
+        "Informe em que etapa a obra está",
+      ]) {
+        const r = mapError({ code: "23514", message, details: null, hint: null });
+        expect(r.kind).toBe("validation");
+        expect(r.userMessage).toBe(message);
+      }
+    });
+
+    it("texto de regra só vale para os nossos códigos: os demais não vazam mensagem do servidor", () => {
       expect(mapError({ code: "42P01", message: "Mensagem qualquer do servidor" }).userMessage).not.toBe(
         "Mensagem qualquer do servidor",
       );
+    });
+  });
+
+  describe("recusa de permissão das nossas RPCs (42501)", () => {
+    it("mensagem em português da RPC chega como foi escrita, como 'forbidden'", () => {
+      for (const message of ["Sem permissão para alterar a fase de projeto", "Sem acesso a esta obra"]) {
+        const r = mapError({ code: "42501", message, details: null, hint: null });
+        expect(r.kind).toBe("forbidden");
+        expect(r.userMessage).toBe(message);
+        expect(r.suggestedAction).toBe("contact_support");
+      }
+    });
+
+    it("mesma coisa depois de passar pelo repositório (erro clonado, com userError)", () => {
+      const original = { code: "42501", message: "Sem acesso a esta obra", details: null, hint: null };
+      const cloned = Object.assign({}, original, { userError: mapError(original) });
+      expect(mapError(cloned).userMessage).toBe("Sem acesso a esta obra");
+    });
+
+    it("42501 nativo do Postgres continua genérico (nada de nome de tabela ou policy na tela)", () => {
+      const nativos = [
+        "permission denied for table project_phase_steps",
+        "permission denied for function move_project_to_phase_step",
+        'new row violates row-level security policy for table "project_phase_steps"',
+        "must be owner of table projects",
+      ];
+      for (const message of nativos) {
+        const r = mapError({ code: "42501", message });
+        expect(r.kind).toBe("forbidden");
+        expect(r.userMessage).not.toMatch(/project_phase_steps|move_project|policy|owner|table/i);
+      }
+    });
+
+    it("42501 sem texto ou com texto longo demais não vira mensagem de tela", () => {
+      expect(mapError({ code: "42501", message: "" }).userMessage).not.toBe("");
+      const longo = "x".repeat(201);
+      expect(mapError({ code: "42501", message: longo }).userMessage).not.toBe(longo);
+    });
+  });
+
+  describe("não encontrado das nossas RPCs (P0002)", () => {
+    it("'Obra não encontrada' vira a mensagem padrão de item não encontrado", () => {
+      const r = mapError({ code: "P0002", message: "Obra não encontrada", details: null, hint: null });
+      expect(r.kind).toBe("not_found");
+      expect(r.userMessage).toBe("Não encontramos esse item. Talvez tenha sido movido ou removido.");
     });
   });
 

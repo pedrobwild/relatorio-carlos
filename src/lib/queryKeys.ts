@@ -456,6 +456,15 @@ export const queryKeys = {
       [...queryKeys.ops.all, "photo-urls", paths.join(",")] as const,
     weekClosings: (projectId: string | undefined, upTo: string) =>
       [...queryKeys.ops.all, "week-closings", projectId, upTo] as const,
+    /** Compras da obra que podem atender um material (seletor da gaveta). */
+    linkablePurchases: (projectId: string | undefined) =>
+      [...queryKeys.ops.all, "linkable-purchases", projectId] as const,
+    /**
+     * Chave de MUTAÇÃO do Feito / Não feito. Fixa (sem parâmetros) porque é
+     * por ela que a mutação guardada sem sinal reencontra a sua `mutationFn`
+     * (`setMutationDefaults`) depois de recarregar o app.
+     */
+    setOutcomeMutation: ["ops", "mutation", "set-outcome"] as const,
   },
 
   /** Tela Obras (Fase 5): leituras de carteira, por lista de obras. */
@@ -471,6 +480,11 @@ export const queryKeys = {
       [...queryKeys.obrasPanel.all, "assignments", [...projectIds].sort().join(","), from, to] as const,
     closings: (projectIds: readonly string[], from: string, to: string) =>
       [...queryKeys.obrasPanel.all, "closings", [...projectIds].sort().join(","), from, to] as const,
+    /** Resumo da semana (diretoria): alocações e fechamentos das últimas semanas. */
+    resumoAssignments: (projectIds: readonly string[], from: string, to: string) =>
+      [...queryKeys.obrasPanel.all, "resumo", "assignments", [...projectIds].sort().join(","), from, to] as const,
+    resumoClosings: (projectIds: readonly string[], from: string, to: string) =>
+      [...queryKeys.obrasPanel.all, "resumo", "closings", [...projectIds].sort().join(","), from, to] as const,
   },
 
   contractDeadline: {
@@ -480,6 +494,27 @@ export const queryKeys = {
     list: () => [...queryKeys.contractDeadline.all, "list"] as const,
     amendments: (projectId: string | undefined) =>
       [...queryKeys.contractDeadline.all, "amendments", projectId] as const,
+  },
+
+  /** Ficha da obra (project_studio_info): endereço, chaves, condomínio, contatos. */
+  studioInfo: {
+    all: ["studio-info"] as const,
+    byProject: (projectId: string | undefined) =>
+      [...queryKeys.studioInfo.all, "by-project", projectId] as const,
+  },
+
+  /**
+   * Fase de projeto (project_phase_steps): as seis etapas antes da obra.
+   * `steps` = uma obra; `portfolio` = várias obras de uma vez (carteira).
+   */
+  projectPhase: {
+    all: ["project-phase"] as const,
+    steps: (projectId: string | undefined) =>
+      [...queryKeys.projectPhase.all, "steps", projectId] as const,
+    /** Prefixo de todas as leituras de carteira — para invalidar de uma vez. */
+    portfolios: () => [...queryKeys.projectPhase.all, "portfolio"] as const,
+    portfolio: (projectIds: readonly string[]) =>
+      [...queryKeys.projectPhase.portfolios(), [...projectIds].sort().join(",")] as const,
   },
 
 } as const;
@@ -588,6 +623,35 @@ export function invalidateContractDeadlineQueries() {
 }
 
 /**
+ * Fase de projeto: chamar depois de gravar uma etapa ou mover a obra de
+ * etapa. Além das etapas (da obra e da carteira), o gatilho do banco muda em
+ * `projects` a etapa do Painel, as datas de aprovação, o início oficial e o
+ * início do prazo contratual — então as listas de obras, o detalhe da obra e
+ * o prazo contratual também precisam ser relidos.
+ *
+ * Aceita o client por parâmetro para os hooks usarem o do contexto
+ * (`useQueryClient`); sem ele, usa o client global como os outros helpers.
+ */
+export function invalidateProjectPhaseQueries(
+  projectId?: string,
+  client: Pick<typeof queryClient, "invalidateQueries"> = queryClient,
+) {
+  if (projectId) {
+    client.invalidateQueries({ queryKey: queryKeys.projectPhase.steps(projectId) });
+    client.invalidateQueries({ queryKey: queryKeys.projectPhase.portfolios() });
+    client.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+  } else {
+    client.invalidateQueries({ queryKey: queryKeys.projectPhase.all });
+    client.invalidateQueries({ queryKey: queryKeys.projects.details() });
+  }
+  // Painel de Obras / portfólio: etapa, datas e início oficial de cada obra.
+  client.invalidateQueries({ queryKey: queryKeys.projects.lists() });
+  // Prazo contratual (v_project_deadlines) e tela Obras.
+  client.invalidateQueries({ queryKey: queryKeys.contractDeadline.all });
+  client.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+}
+
+/**
  * Invalidate formalization queries after changes
  */
 /**
@@ -609,6 +673,9 @@ export function invalidatePurchaseQueries() {
   });
   queryClient.invalidateQueries({ queryKey: ["purchases-by-creation"] });
   queryClient.invalidateQueries({ queryKey: ["fornecedor-purchases"] });
+  // Material da atividade: a situação vem da compra vinculada (calculada no banco).
+  queryClient.invalidateQueries({ queryKey: queryKeys.ops.all });
+  queryClient.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
 }
 
 export function invalidateFormalizacaoQueries(

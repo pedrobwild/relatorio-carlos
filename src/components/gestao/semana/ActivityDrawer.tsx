@@ -1,10 +1,23 @@
 /**
  * Gaveta da atividade (Semana): tudo de uma atividade sem sair da grade.
- * Situação, data-limite e crítica · dias e quem fez · material · revisão
+ * Situação, data-limite e crítica · dias e quem fez · material (ligado à
+ * compra: com vínculo a situação vem de Compras) · revisão
  * (aprovar / refazer) · custo previsto × real (só leitura: escritório preenche).
  */
 import { useEffect, useState } from "react";
-import { Ban, CheckCircle2, Flame, PackageCheck, RotateCcw, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Ban,
+  CheckCircle2,
+  Flame,
+  Link2,
+  PackageCheck,
+  RotateCcw,
+  Search,
+  ShoppingCart,
+  Trash2,
+  Unlink,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,20 +30,36 @@ import { cn } from "@/lib/utils";
 import { longDayLabel } from "@/lib/hojeDia";
 import { OPS_MATERIAL_LABEL, OPS_REASON_LABEL, OPS_STATUS_LABEL } from "@/lib/opsLabels";
 import { shortWho } from "@/lib/semanaPlan";
+import {
+  buildPurchaseRequestFromMaterial,
+  filterPurchasesByText,
+  isPurchaseCancelled,
+  isPurchaseLate,
+  purchaseDeliveryText,
+  purchaseStatusLabel,
+  purchaseSupplierName,
+} from "@/lib/opsMaterialPurchase";
+import { useCan } from "@/hooks/useCan";
 import type {
   OpsActivityView,
   OpsBlockReason,
-  OpsMaterial,
   OpsMaterialStatus,
+  OpsMaterialWithPurchase,
+  OpsPurchaseSummary,
 } from "@/infra/repositories/ops.repository";
 import {
+  PurchaseCreatedButNotLinkedError,
   useCreateOpsMaterial,
   useCreateOpsReview,
   useDeleteOpsMaterial,
+  useLinkMaterialToPurchase,
   useOpsActivityAssignments,
+  useOpsLinkablePurchases,
   useOpsMaterials,
   useOpsReviews,
+  useRequestPurchaseForMaterial,
   useSetMaterialStatus,
+  useUnlinkMaterialFromPurchase,
   useUpdateOpsActivity,
 } from "@/hooks/useOps";
 
@@ -283,7 +312,13 @@ export function ActivityDrawer({ activity, open, onOpenChange, staffNameById }: 
         </section>
 
         {/* Material */}
-        <MaterialsSection activityId={id} materials={materials} />
+        <MaterialsSection
+          activityId={id}
+          projectId={activity.project_id}
+          stageId={activity.stage_id}
+          activityTitle={activity.title}
+          materials={materials}
+        />
 
         {/* Custo */}
         <section aria-labelledby="act-custo" className="space-y-2">
@@ -330,20 +365,38 @@ export function ActivityDrawer({ activity, open, onOpenChange, staffNameById }: 
   );
 }
 
-function MaterialsSection({
-  activityId,
-  materials,
-}: {
+/** Mensagem da recusa do banco quando ela é para o usuário ler (CHECK 23514). */
+function refusalMessage(err: unknown, fallback: string): string {
+  const e = err as { code?: string; message?: string } | null;
+  return e?.code === "23514" && e.message ? e.message : fallback;
+}
+
+interface MaterialsSectionProps {
   activityId: string;
-  materials: OpsMaterial[];
-}) {
+  /** Obra da atividade (as compras listadas e a pedida são dela). */
+  projectId: string | null | undefined;
+  /** Etapa do cronograma da atividade — vai em `activity_id` da compra pedida. */
+  stageId: string | null | undefined;
+  activityTitle?: string | null;
+  materials: OpsMaterialWithPurchase[];
+}
+
+export function MaterialsSection({ activityId, projectId, stageId, activityTitle, materials }: MaterialsSectionProps) {
   const [desc, setDesc] = useState("");
   const [qty, setQty] = useState("");
   const [unit, setUnit] = useState("");
   const [needed, setNeeded] = useState("");
+  const [pickerFor, setPickerFor] = useState<OpsMaterialWithPurchase | null>(null);
+  /** Material sem "precisa até" esperando a data para virar pedido de compra. */
+  const [askDateFor, setAskDateFor] = useState<string | null>(null);
+  const [askDate, setAskDate] = useState("");
   const create = useCreateOpsMaterial();
   const setStatus = useSetMaterialStatus();
   const remove = useDeleteOpsMaterial();
+  const unlink = useUnlinkMaterialFromPurchase();
+  const requestPurchase = useRequestPurchaseForMaterial();
+  const { can } = useCan();
+  const canRequestPurchase = can("purchases:create") && !!projectId;
 
   const add = () => {
     const d = desc.trim();
@@ -367,6 +420,29 @@ function MaterialsSection({
     );
   };
 
+  const doRequestPurchase = (m: OpsMaterialWithPurchase, requiredBy: string) => {
+    if (!projectId) return;
+    requestPurchase.mutate(
+      {
+        materialId: m.id,
+        purchase: buildPurchaseRequestFromMaterial(m, { projectId, stageId, activityTitle, requiredBy }),
+      },
+      {
+        onSuccess: () => {
+          setAskDateFor(null);
+          setAskDate("");
+          toast.success("Compra pedida", { description: "Suprimentos já vê a solicitação em Compras." });
+        },
+        onError: (err) =>
+          toast.error(
+            err instanceof PurchaseCreatedButNotLinkedError
+              ? `${err.message} Use "Vincular a uma compra".`
+              : "Não foi possível pedir a compra.",
+          ),
+      },
+    );
+  };
+
   const onSite = materials.filter((m) => m.status === "na_obra").length;
 
   return (
@@ -377,56 +453,161 @@ function MaterialsSection({
       </h3>
       {materials.length > 0 && (
         <ul className="space-y-2">
-          {materials.map((m) => (
-            <li key={m.id} className="rounded-lg border border-border p-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="text-sm">
-                  <p className="font-medium">{m.description}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {[m.quantity != null ? `${m.quantity.toLocaleString("pt-BR")} ${m.unit ?? ""}`.trim() : null,
-                      m.needed_by ? `até ${longDayLabel(m.needed_by)}` : null]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 shrink-0 text-muted-foreground"
-                  aria-label={`Remover ${m.description}`}
-                  onClick={() => remove.mutate(m.id, { onError: () => toast.error("Não foi possível remover.") })}
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </div>
-              <div role="radiogroup" aria-label={`Situação de ${m.description}`} className="mt-2 grid grid-cols-3 gap-1">
-                {MAT_STATUSES.map((s) => (
-                  <button
-                    key={s}
+          {materials.map((m) => {
+            const linked = !!m.purchase_id;
+            return (
+              <li key={m.id} className="rounded-lg border border-border p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 text-sm">
+                    <p className="font-medium">{m.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {[m.quantity != null ? `${m.quantity.toLocaleString("pt-BR")} ${m.unit ?? ""}`.trim() : null,
+                        m.needed_by ? `até ${longDayLabel(m.needed_by)}` : null]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                  <Button
                     type="button"
-                    role="radio"
-                    aria-checked={m.status === s}
-                    onClick={() =>
-                      m.status !== s &&
-                      setStatus.mutate({ id: m.id, status: s }, { onError: () => toast.error("Não foi possível salvar.") })
-                    }
-                    className={cn(
-                      "min-h-[36px] rounded-md border px-2 text-xs font-medium transition-colors",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      m.status === s
-                        ? s === "na_obra"
-                          ? "border-success/50 bg-success/10 text-success"
-                          : "border-primary bg-primary/10 text-foreground"
-                        : "border-border bg-card text-muted-foreground hover:bg-muted",
-                    )}
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 shrink-0 text-muted-foreground"
+                    aria-label={`Remover ${m.description}`}
+                    onClick={() => remove.mutate(m.id, { onError: () => toast.error("Não foi possível remover.") })}
                   >
-                    {OPS_MATERIAL_LABEL[s]}
-                  </button>
-                ))}
-              </div>
-            </li>
-          ))}
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </div>
+
+                {linked ? (
+                  <div className="mt-2 space-y-2">
+                    {m.purchase ? (
+                      <PurchaseLine purchase={m.purchase} neededBy={m.needed_by} />
+                    ) : (
+                      // Vínculo existe mas a compra não veio (sem acesso a ela).
+                      <p className="text-xs text-muted-foreground">Vinculado a uma compra</p>
+                    )}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="flex items-center gap-2 text-xs" aria-label={`Situação de ${m.description}`}>
+                        <span
+                          className={cn(
+                            "rounded-md border px-2 py-1 font-medium",
+                            m.status === "na_obra"
+                              ? "border-success/50 bg-success/10 text-success"
+                              : "border-primary bg-primary/10 text-foreground",
+                          )}
+                        >
+                          {OPS_MATERIAL_LABEL[m.status]}
+                        </span>
+                        <span className="text-muted-foreground">Vem da compra</span>
+                      </p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="min-h-[36px] text-muted-foreground"
+                        disabled={unlink.isPending}
+                        onClick={() =>
+                          unlink.mutate(m.id, {
+                            onSuccess: () => toast.success("Compra desvinculada — a situação volta a ser manual"),
+                            onError: () => toast.error("Não foi possível desvincular."),
+                          })
+                        }
+                      >
+                        <Unlink className="h-3.5 w-3.5" aria-hidden="true" />
+                        Desvincular
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div role="radiogroup" aria-label={`Situação de ${m.description}`} className="mt-2 grid grid-cols-3 gap-1">
+                      {MAT_STATUSES.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          role="radio"
+                          aria-checked={m.status === s}
+                          onClick={() =>
+                            m.status !== s &&
+                            setStatus.mutate({ id: m.id, status: s }, { onError: () => toast.error("Não foi possível salvar.") })
+                          }
+                          className={cn(
+                            "min-h-[36px] rounded-md border px-2 text-xs font-medium transition-colors",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            m.status === s
+                              ? s === "na_obra"
+                                ? "border-success/50 bg-success/10 text-success"
+                                : "border-primary bg-primary/10 text-foreground"
+                              : "border-border bg-card text-muted-foreground hover:bg-muted",
+                          )}
+                        >
+                          {OPS_MATERIAL_LABEL[s]}
+                        </button>
+                      ))}
+                    </div>
+                    <div className={cn("mt-2 grid gap-2", canRequestPurchase ? "grid-cols-2" : "grid-cols-1")}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="min-h-[40px]"
+                        disabled={!projectId}
+                        onClick={() => setPickerFor(m)}
+                      >
+                        <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        Vincular a uma compra
+                      </Button>
+                      {canRequestPurchase && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="min-h-[40px]"
+                          disabled={requestPurchase.isPending}
+                          onClick={() => {
+                            if (m.needed_by) doRequestPurchase(m, m.needed_by);
+                            else {
+                              setAskDateFor((cur) => (cur === m.id ? null : m.id));
+                              setAskDate("");
+                            }
+                          }}
+                        >
+                          <ShoppingCart className="h-3.5 w-3.5" aria-hidden="true" />
+                          Pedir compra
+                        </Button>
+                      )}
+                    </div>
+                    {canRequestPurchase && askDateFor === m.id && (
+                      <div className="mt-2 space-y-2 rounded-md border border-border bg-muted/40 p-2">
+                        <Label htmlFor={`pedir-${m.id}`} className="text-xs">
+                          Precisa estar na obra até
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id={`pedir-${m.id}`}
+                            type="date"
+                            value={askDate}
+                            onChange={(e) => setAskDate(e.target.value)}
+                            className="min-h-[40px] flex-1"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="min-h-[40px]"
+                            disabled={!askDate || requestPurchase.isPending}
+                            onClick={() => doRequestPurchase(m, askDate)}
+                          >
+                            Confirmar pedido
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
       <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
@@ -447,6 +628,149 @@ function MaterialsSection({
           Adicionar material
         </Button>
       </div>
+
+      <PurchasePicker
+        projectId={projectId}
+        material={pickerFor}
+        onOpenChange={(o) => !o && setPickerFor(null)}
+      />
     </section>
+  );
+}
+
+/** Linha da compra vinculada: situação · entrega, fornecedor e avisos. */
+function PurchaseLine({ purchase, neededBy }: { purchase: OpsPurchaseSummary; neededBy: string | null }) {
+  const delivery = purchaseDeliveryText(purchase);
+  const supplier = purchaseSupplierName(purchase);
+  const late = isPurchaseLate(purchase, neededBy);
+  const cancelled = isPurchaseCancelled(purchase);
+  return (
+    <div className="space-y-1 rounded-md bg-muted/50 px-2 py-1.5 text-xs" data-testid="purchase-line">
+      <p className="flex items-center gap-1.5">
+        <ShoppingCart className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <span className="font-medium">{purchaseStatusLabel(purchase.status)}</span>
+        {delivery && <span className="text-muted-foreground">· {delivery}</span>}
+      </p>
+      {supplier && <p className="truncate pl-5 text-muted-foreground">{supplier}</p>}
+      {cancelled && (
+        <p className="flex items-center gap-1.5 font-medium text-destructive">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          Compra cancelada
+        </p>
+      )}
+      {late && (
+        <p className="flex items-center gap-1.5 font-medium text-warning">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          Chega depois do dia em que é necessário
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Seletor "Vincular a uma compra": compras da obra (não canceladas), com busca. */
+function PurchasePicker({
+  projectId,
+  material,
+  onOpenChange,
+}: {
+  projectId: string | null | undefined;
+  material: OpsMaterialWithPurchase | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const open = !!material;
+  const [q, setQ] = useState("");
+  const { data: purchases = [], isLoading, isError } = useOpsLinkablePurchases(projectId ?? undefined, open);
+  const link = useLinkMaterialToPurchase();
+
+  useEffect(() => {
+    if (open) setQ("");
+  }, [open, material?.id]);
+
+  const list = filterPurchasesByText(purchases, q);
+
+  const pick = (purchaseId: string) => {
+    if (!material) return;
+    link.mutate(
+      { materialId: material.id, purchaseId },
+      {
+        onSuccess: () => {
+          toast.success("Material vinculado à compra");
+          onOpenChange(false);
+        },
+        onError: (err) => toast.error(refusalMessage(err, "Não foi possível vincular.")),
+      },
+    );
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="flex max-h-[85vh] flex-col gap-3 sm:mx-auto sm:max-w-md sm:rounded-t-xl">
+        <SheetHeader className="space-y-1 pr-6 text-left">
+          <SheetTitle>Vincular a uma compra</SheetTitle>
+          <SheetDescription>
+            {material?.description}
+            {material?.needed_by ? ` · precisa até ${longDayLabel(material.needed_by)}` : ""}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Input
+            aria-label="Buscar compra"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar por item ou fornecedor"
+            className="min-h-[44px] pl-9"
+          />
+        </div>
+        <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
+          {isLoading ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">Carregando compras…</p>
+          ) : isError ? (
+            <p className="py-6 text-center text-sm text-destructive">Não foi possível carregar as compras.</p>
+          ) : list.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {purchases.length === 0 ? "Nenhuma compra nesta obra." : "Nenhuma compra encontrada."}
+            </p>
+          ) : (
+            <ul className="space-y-2" aria-label="Compras da obra">
+              {list.map((p) => {
+                const delivery = purchaseDeliveryText(p);
+                const late = material ? isPurchaseLate(p, material.needed_by) : false;
+                const supplier = purchaseSupplierName(p);
+                return (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      disabled={link.isPending}
+                      onClick={() => pick(p.id)}
+                      className="w-full rounded-lg border border-border bg-card p-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                    >
+                      <span className="block font-medium">{p.item_name}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {[
+                          `${Number(p.quantity).toLocaleString("pt-BR")} ${p.unit ?? ""}`.trim(),
+                          purchaseStatusLabel(p.status),
+                          delivery,
+                          supplier,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                      {late && (
+                        <span className="mt-1 flex items-center gap-1 text-xs font-medium text-warning">
+                          <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                          Chega depois do dia em que é necessário
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -10,7 +10,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CalendarRange, ChevronLeft, ChevronRight, ClipboardCheck, PackageCheck, Sparkles, Timer, CalendarCheck2 } from "lucide-react";
+import { CalendarRange, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, PackageCheck, Sparkles, Timer, CalendarCheck2 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ActivityDrawer } from "@/components/gestao/semana/ActivityDrawer";
 import { PlanWeekSheet } from "@/components/gestao/semana/PlanWeekSheet";
 import { CloseWeekSheet } from "@/components/gestao/semana/CloseWeekSheet";
+import { FichaObraSheet } from "@/components/gestao/ficha/FichaObraSheet";
 
 const LAST_OBRA_KEY = "bwild.semana.obra";
 
@@ -174,6 +175,7 @@ export default function Semana() {
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const drawerActivity = activities.find((a) => a.id === drawerId) ?? null;
   const [planOpen, setPlanOpen] = useState(false);
+  const [fichaOpen, setFichaOpen] = useState(false);
 
   // Fechamento da semana e PPC: só para semana que já começou.
   const today = todayISO();
@@ -203,6 +205,10 @@ export default function Semana() {
         actions={
           projectId ? (
             <>
+              <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => setFichaOpen(true)}>
+                <ClipboardList className="h-4 w-4" aria-hidden="true" />
+                Ficha da obra
+              </Button>
               {canCloseWeek && (
                 <Button
                   type="button"
@@ -274,6 +280,9 @@ export default function Semana() {
           </Button>
         </nav>
       </div>
+
+      {/* Fora do `loading`: a ficha abre mesmo enquanto a semana carrega. */}
+      <FichaObraSheet open={fichaOpen} onOpenChange={setFichaOpen} projectId={projectId} projectName={obraName} />
 
       {!projectId ? (
         <div className="mt-6">
@@ -350,6 +359,9 @@ export default function Semana() {
                   <span className={cn("font-semibold", mat.missing.length > 0 ? "text-warning" : "text-success")}>
                     {mat.onSite} de {mat.total} na obra
                   </span>
+                  {mat.onTheWay > 0 && (
+                    <span className="block text-xs text-muted-foreground">{mat.onTheWay} a caminho (comprado)</span>
+                  )}
                   {mat.missing.length > 0 && (
                     <span className="block truncate text-xs text-muted-foreground">
                       Falta:{" "}

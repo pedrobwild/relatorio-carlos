@@ -22,6 +22,12 @@ export function registerOfflineCacheSW() {
     .register("/sw-cache.js", { scope: "/" })
     .then((reg) => {
       console.info("[SW] Offline cache registered", reg.scope);
+      // Os arquivos de build desta carga vieram ANTES de o SW controlar a
+      // página. Sem isto, a primeira visita não deixaria o app abrível sem
+      // sinal (o SW guarda só os que ainda não tem).
+      return navigator.serviceWorker.ready.then((ready) => {
+        ready.active?.postMessage({ type: "bwild-cache-assets", urls: loadedBuildAssets() });
+      });
     })
     .catch((err) => {
       console.warn("[SW] Registration failed:", err);
@@ -48,5 +54,20 @@ export function clearOfflineApiCache(): void {
       });
   } catch {
     /* ignore */
+  }
+}
+
+/** Arquivos de build (/assets/) já carregados nesta página. */
+export function loadedBuildAssets(): string[] {
+  if (typeof window === "undefined" || typeof performance === "undefined") return [];
+  try {
+    const origin = window.location.origin;
+    const urls = performance
+      .getEntriesByType("resource")
+      .map((e) => e.name)
+      .filter((u) => u.startsWith(`${origin}/assets/`));
+    return [...new Set(urls)];
+  } catch {
+    return [];
   }
 }

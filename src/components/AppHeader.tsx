@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SignOutConfirmDialog } from "@/components/layout/SignOutConfirmDialog";
+import { useSignOutGuard } from "@/hooks/useSignOutGuard";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 
 interface AppHeaderProps {
@@ -34,6 +36,8 @@ export function AppHeader({
       navigate("/auth", { replace: true });
     }
   };
+  // Com registros ainda não enviados neste aparelho, pergunta antes de sair.
+  const signOutGuard = useSignOutGuard({ userId: user?.id, signOut: handleSignOut });
 
   return (
     <header className="sticky top-0 z-header bg-background/95 backdrop-blur border-b border-border-subtle pt-safe">
@@ -95,7 +99,7 @@ export function AppHeader({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleSignOut}
+                  onClick={signOutGuard.request}
                   aria-label="Sair"
                   className="h-10 sm:h-9"
                 >
@@ -119,6 +123,7 @@ export function AppHeader({
           </div>
         </div>
       </div>
+      <SignOutConfirmDialog {...signOutGuard.dialogProps} />
     </header>
   );
 }

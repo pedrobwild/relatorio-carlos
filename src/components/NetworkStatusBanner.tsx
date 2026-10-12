@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { WifiOff, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { networkBannerSuppression } from "@/lib/offline/syncStatus";
 
 /**
  * Global banner that appears when the user goes offline or network is unstable.
@@ -33,7 +34,15 @@ export function NetworkStatusBanner() {
     };
   }, []);
 
-  const showBanner = isOffline || wasOffline;
+  // A tela Hoje tem a própria linha de estado (com a contagem do que falta
+  // enviar); lá este aviso só repetiria a mesma coisa.
+  const suppressed = useSyncExternalStore(
+    networkBannerSuppression.subscribe,
+    networkBannerSuppression.isSuppressed,
+    () => false,
+  );
+
+  const showBanner = !suppressed && (isOffline || wasOffline);
 
   return (
     <AnimatePresence>

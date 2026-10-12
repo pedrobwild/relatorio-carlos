@@ -7,7 +7,7 @@
  */
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CalendarCheck, ChevronLeft, ChevronRight, Plus, RefreshCw } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ChevronRight, ClipboardList, CloudOff, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
@@ -17,7 +17,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
-import { useOpsDay, useOpsReadiness, useSetAssignmentOutcome } from "@/hooks/useOps";
+import { useOpsDay, useOpsReadiness, usePrefetchOpsDays, useSetAssignmentOutcome } from "@/hooks/useOps";
+import { useStudioInfo } from "@/hooks/useStudioInfo";
+import {
+  useIsOnline,
+  usePendingOutcomes,
+  useQueuedPhotos,
+  useSuppressNetworkBanner,
+  useSyncFailures,
+  useSyncStatus,
+} from "@/hooks/useOpsOffline";
+import { applyPendingOutcomes, syncFailures } from "@/lib/offline/opsOutcomeSync";
+import { getOpsPhotoQueue } from "@/lib/offline/opsPhotoSync";
 import {
   canConfirmOn,
   countDay,
@@ -29,11 +40,15 @@ import {
   shiftISODate,
   todayISO,
   whoLabel,
+  type ObraDayGroup,
 } from "@/lib/hojeDia";
+import { workWindowToday } from "@/lib/fichaObra";
 import type { OpsBlockReason, OpsDayAssignment } from "@/infra/repositories/ops.repository";
 import { AssignmentCard } from "@/components/gestao/hoje/AssignmentCard";
 import { NaoFeitoSheet } from "@/components/gestao/hoje/NaoFeitoSheet";
 import { AddToDaySheet } from "@/components/gestao/hoje/AddToDaySheet";
+import { FichaObraSheet } from "@/components/gestao/ficha/FichaObraSheet";
+import { OfflineSyncBar, type SyncProblem } from "@/components/gestao/hoje/OfflineSyncBar";
 
 export default function Hoje() {
   const [params, setParams] = useSearchParams();
@@ -54,7 +69,23 @@ export default function Hoje() {
   const { data: staff = [] } = useStaffUsers();
   const staffNameById = useMemo(() => new Map(staff.map((s) => [s.id, s.nome])), [staff]);
 
-  const { data: items = [], isLoading, isError, refetch, isFetching } = useOpsDay(date);
+  const online = useIsOnline();
+  useSuppressNetworkBanner();
+  const { data: serverItems, isPending, isError, refetch, isFetching, fetchStatus } = useOpsDay(date);
+  usePrefetchOpsDays([shiftISODate(date, -1), shiftISODate(date, 1)], online);
+
+  // O dia como a pessoa o deixou: servidor + o que ainda está na fila.
+  const pendingOutcomes = usePendingOutcomes();
+  const items = useMemo(
+    () => applyPendingOutcomes(serverItems, pendingOutcomes) ?? [],
+    [serverItems, pendingOutcomes],
+  );
+  const pendingIds = useMemo(() => new Set(pendingOutcomes.map((p) => p.vars.id)), [pendingOutcomes]);
+  const noData = serverItems === undefined;
+  /** Sem sinal e este dia nunca foi aberto neste aparelho. */
+  const offlineNoData = noData && isPending && fetchStatus === "paused";
+  // Inclui o instante em que o cache do aparelho ainda está sendo restaurado.
+  const isLoading = noData && isPending && !offlineNoData;
   const activityIds = useMemo(
     () => [...new Set(items.map((i) => i.activity_id))],
     [items],
@@ -74,43 +105,65 @@ export default function Hoje() {
   const counts = countDay(groups.flatMap((g) => g.items));
   const confirmable = canConfirmOn(date);
 
+  // Fotos guardadas no aparelho (só as desta conta).
+  const queuedPhotos = useQueuedPhotos();
+  const myPhotos = useMemo(() => queuedPhotos.filter((q) => q.userId === userId), [queuedPhotos, userId]);
+  const failures = useSyncFailures();
+  const pendingCount = pendingIds.size + myPhotos.filter((q) => !q.failed).length;
+  const syncStatus = useSyncStatus(pendingCount);
+
+  const titleById = useMemo(
+    () => new Map((serverItems ?? []).map((a) => [a.id, a.activity?.title ?? "Atividade"])),
+    [serverItems],
+  );
+  const problems: SyncProblem[] = [
+    ...failures.map((f) => ({
+      key: `o-${f.key}`,
+      title: `"${f.action}" de ${f.label}`,
+      message: `${f.message} A tela voltou ao que está salvo.`,
+      onDismiss: () => syncFailures.dismiss(f.key),
+      dismissLabel: "Ok",
+    })),
+    ...myPhotos
+      .filter((q) => q.failed)
+      .map((q) => ({
+        key: `f-${q.id}`,
+        title: `foto de ${titleById.get(q.assignmentId) ?? "atividade"}`,
+        message: q.error ?? "O servidor recusou a foto.",
+        onRetry: () => void getOpsPhotoQueue().retry(q.id),
+        onDismiss: () => void getOpsPhotoQueue().discard(q.id),
+        dismissLabel: "Descartar",
+      })),
+  ];
+
   const setOutcome = useSetAssignmentOutcome();
   const [notDoneFor, setNotDoneFor] = useState<OpsDayAssignment | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [fichaFor, setFichaFor] = useState<{ id: string; name: string } | null>(null);
+
+  // A confirmação vale na hora (a tela aplica a fila por cima dos dados). Sem
+  // sinal, fica guardada e sai sozinha quando a conexão voltar; se o banco
+  // recusar, o aviso vem da própria fila (ver opsOutcomeSync).
+  const offlineNote = online ? undefined : "Sem sinal: fica guardado e é enviado quando a conexão voltar.";
+  const titleOf = (a: OpsDayAssignment) => a.activity?.title ?? "Atividade";
 
   const markDone = (a: OpsDayAssignment) => {
-    setOutcome.mutate(
-      { id: a.id, outcome: "feito" },
-      {
-        onSuccess: () =>
-          toast.success("Marcado como feito", {
-            action: { label: "Desfazer", onClick: () => setOutcome.mutate({ id: a.id, outcome: null }) },
-          }),
-        onError: () => toast.error("Não foi possível salvar. Confira a conexão e tente de novo."),
-      },
-    );
+    setOutcome.mutate({ id: a.id, outcome: "feito", label: titleOf(a) });
+    toast.success("Marcado como feito", {
+      description: offlineNote,
+      action: { label: "Desfazer", onClick: () => setOutcome.mutate({ id: a.id, outcome: null, label: titleOf(a) }) },
+    });
   };
 
   const confirmNotDone = (reason: OpsBlockReason, notes: string | null) => {
     if (!notDoneFor) return;
     const a = notDoneFor;
-    setOutcome.mutate(
-      { id: a.id, outcome: "nao_feito", reason, notes },
-      {
-        onSuccess: () => {
-          setNotDoneFor(null);
-          toast.success("Registrado como não feito");
-        },
-        onError: () => toast.error("Não foi possível salvar. Confira a conexão e tente de novo."),
-      },
-    );
+    setOutcome.mutate({ id: a.id, outcome: "nao_feito", reason, notes, label: titleOf(a) });
+    setNotDoneFor(null);
+    toast.success("Registrado como não feito", { description: offlineNote });
   };
 
-  const undo = (a: OpsDayAssignment) =>
-    setOutcome.mutate(
-      { id: a.id, outcome: null },
-      { onError: () => toast.error("Não foi possível desfazer. Tente de novo.") },
-    );
+  const undo = (a: OpsDayAssignment) => setOutcome.mutate({ id: a.id, outcome: null, label: titleOf(a) });
 
   return (
     <PageContainer>
@@ -164,11 +217,13 @@ export default function Hoje() {
           className="ml-auto h-11 w-11"
           onClick={() => refetch()}
           aria-label="Atualizar"
-          disabled={isFetching}
+          disabled={isFetching || !online}
         >
           <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} aria-hidden="true" />
         </Button>
       </nav>
+
+      <OfflineSyncBar status={syncStatus} problems={problems} />
 
       {counts.total > 0 && (
         <div className="mt-4">
@@ -205,7 +260,13 @@ export default function Hoje() {
               <Skeleton key={i} className="h-36 w-full rounded-xl" />
             ))}
           </div>
-        ) : isError ? (
+        ) : offlineNoData ? (
+          <EmptyState
+            icon={CloudOff}
+            title="Sem sinal, e este dia ainda não foi aberto neste aparelho"
+            description="Quando a conexão voltar, ele carrega sozinho. Dica: abra o dia antes de entrar na obra."
+          />
+        ) : isError && noData ? (
           <EmptyState
             icon={RefreshCw}
             title="Não foi possível carregar o dia"
@@ -222,14 +283,11 @@ export default function Hoje() {
         ) : (
           groups.map((g) => (
             <section key={g.projectId} aria-labelledby={`obra-${g.projectId}`}>
-              <header className="mb-3 flex items-baseline justify-between gap-2">
-                <h2 id={`obra-${g.projectId}`} className="truncate text-base font-semibold text-foreground">
-                  {g.projectName}
-                </h2>
-                <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
-                  {g.done + g.notDone} de {g.total}
-                </span>
-              </header>
+              <ObraGroupHeader
+                group={g}
+                date={date}
+                onOpenFicha={() => setFichaFor({ id: g.projectId, name: g.projectName })}
+              />
               <div className="grid gap-3 sm:grid-cols-2">
                 {g.items.map((a) => (
                   <AssignmentCard
@@ -239,7 +297,7 @@ export default function Hoje() {
                     doneByName={a.done_by ? staffNameById.get(a.done_by) ?? null : null}
                     materialsMissing={missingByActivity.get(a.activity_id) ?? 0}
                     canConfirm={confirmable}
-                    busy={setOutcome.isPending && setOutcome.variables?.id === a.id}
+                    syncPending={pendingIds.has(a.id)}
                     onDone={() => markDone(a)}
                     onNotDone={() => setNotDoneFor(a)}
                     onUndo={() => undo(a)}
@@ -255,7 +313,6 @@ export default function Hoje() {
         open={!!notDoneFor}
         onOpenChange={(o) => !o && setNotDoneFor(null)}
         activityTitle={notDoneFor?.activity?.title ?? ""}
-        saving={setOutcome.isPending}
         onConfirm={confirmNotDone}
       />
       <AddToDaySheet
@@ -265,7 +322,64 @@ export default function Hoje() {
         userId={userId}
         defaultProjectId={obraFilter}
       />
+      <FichaObraSheet
+        open={!!fichaFor}
+        onOpenChange={(o) => !o && setFichaFor(null)}
+        projectId={fichaFor?.id}
+        projectName={fichaFor?.name}
+      />
     </PageContainer>
+  );
+}
+
+/**
+ * Cabeçalho da obra no dia: nome, horário que o condomínio permite e o
+ * atalho para a ficha (endereço, chaves, senha, contatos).
+ */
+function ObraGroupHeader({
+  group,
+  date,
+  onOpenFicha,
+}: {
+  group: ObraDayGroup;
+  /** Dia que a tela está mostrando (não necessariamente hoje). */
+  date: string;
+  onOpenFicha: () => void;
+}) {
+  // Complemento da tela: enquanto a ficha não chega (ou se a consulta falhar),
+  // o cabeçalho só não mostra o horário. O dia nunca espera por ela.
+  const { data: info } = useStudioInfo(group.projectId);
+  const workWindow = workWindowToday(info, date);
+
+  return (
+    <header className="mb-3 flex items-start justify-between gap-2">
+      <div className="min-w-0">
+        <h2 id={`obra-${group.projectId}`} className="truncate text-base font-semibold text-foreground">
+          {group.projectName}
+        </h2>
+        {workWindow && (
+          <p className={cn("text-sm", workWindow.kind === "proibido" ? "font-medium text-warning" : "text-muted-foreground")}>
+            {workWindow.text}
+          </p>
+        )}
+      </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <span className="text-sm tabular-nums text-muted-foreground">
+          {group.done + group.notDone} de {group.total}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-[40px]"
+          onClick={onOpenFicha}
+          aria-label={`Ficha da obra ${group.projectName}`}
+        >
+          <ClipboardList className="h-4 w-4" aria-hidden="true" />
+          Ficha
+        </Button>
+      </div>
+    </header>
   );
 }
 

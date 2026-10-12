@@ -113,6 +113,8 @@ describe("obrasPanelRepo", () => {
     expect(h.state.queries[0].table).toBe("ops_week_closings");
     expect(call(0, "gte")).toEqual(["week_start", "2026-10-05"]);
     expect(call(0, "lte")).toEqual(["week_start", "2026-10-12"]);
+    // Motivos do não feito: usados pelo Resumo da semana.
+    expect(String(call(0, "select")?.[0])).toContain("reasons");
   });
 
   it("erro em qualquer lote vira erro do resultado", async () => {

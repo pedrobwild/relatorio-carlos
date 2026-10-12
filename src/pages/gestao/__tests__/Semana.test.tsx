@@ -58,8 +58,24 @@ vi.mock("@/hooks/useOps", () => {
     useCreateOpsMaterial: m,
     useSetMaterialStatus: m,
     useDeleteOpsMaterial: m,
+    useLinkMaterialToPurchase: m,
+    useUnlinkMaterialFromPurchase: m,
+    useRequestPurchaseForMaterial: m,
+    useOpsLinkablePurchases: () => ({ data: [], isLoading: false, isError: false }),
+    PurchaseCreatedButNotLinkedError: class extends Error {},
   };
 });
+vi.mock("@/hooks/useStudioInfo", () => ({
+  useStudioInfo: (projectId: string) => ({
+    data: { project_id: projectId, key_location: "Na portaria" },
+    isLoading: false,
+    isError: false,
+    isFetching: false,
+    refetch: vi.fn(),
+  }),
+  useUpdateStudioInfo: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock("@/hooks/useCan", () => ({ useCan: () => ({ can: () => true }) }));
 vi.mock("@/hooks/useStaffUsers", () => ({
   useStaffUsers: () => ({ data: [{ id: "u1", nome: "Pedro Alves", email: "", perfil: "gestor" }] }),
 }));
@@ -115,6 +131,18 @@ describe("Tela Semana", () => {
   it("sem obra escolhida, pede a obra", () => {
     renderAt();
     expect(screen.getByRole("heading", { name: "Escolha a obra" })).toBeInTheDocument();
+  });
+
+  it("Ficha da obra: abre a ficha da obra escolhida; sem obra, não há botão", () => {
+    const { unmount } = renderAt();
+    expect(screen.queryByRole("button", { name: "Ficha da obra" })).toBeNull();
+    unmount();
+
+    renderAt("?obra=p1");
+    fireEvent.click(screen.getByRole("button", { name: "Ficha da obra" }));
+    const dialog = screen.getByRole("dialog", { name: "Ficha da obra" });
+    expect(within(dialog).getByText("Apto 142")).toBeInTheDocument();
+    expect(within(dialog).getByText("Na portaria")).toBeInTheDocument();
   });
 
   it("lembra a última obra deste aparelho", () => {

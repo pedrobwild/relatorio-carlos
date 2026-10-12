@@ -12,6 +12,9 @@
  * - Escritório: busca, as listas Projetos e Concluídas, as visões Board e
  *   Kanban, e a gaveta da obra, onde fica tudo o que é digitado (responsável,
  *   etapa, relacionamento, obra paralisada, entrega real e demais datas).
+ *   Em Projetos, cada obra mostra em que etapa da fase de projeto está, com
+ *   quem e se o prazo da etapa venceu; arrastar no Kanban posiciona a obra
+ *   numa etapa.
  *
  * Abre em /gestao/painel-obras (e em /gestao/obras). O painel antigo continua
  * em /gestao/painel-obras?painel=antigo.
@@ -20,7 +23,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Building2, Plus, Search } from "lucide-react";
+import { Building2, Newspaper, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
@@ -35,21 +38,33 @@ import { useMenuMode } from "@/hooks/useMenuMode";
 import { useObrasPainel } from "@/hooks/useObrasPainel";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 import type { PainelEtapa, PainelObraPatch } from "@/hooks/usePainelObras";
+import { phaseStepLabel } from "@/lib/faseProjeto";
 import { planningMonday, weekLabel, weekRange } from "@/lib/semanaPlan";
 import { shiftISODate } from "@/lib/hojeDia";
 import { ddmm, formatBRL, GREEN_MIN_SLACK, slackLabel, summarize, type ObraRow } from "@/lib/obrasPainel";
 import {
+  aprovacaoRegistrada,
+  etapaOfKey,
+  FASE_DESCONHECIDA,
+  FASE_PRONTA,
+  FASE_SEM_REGISTRO,
   groupByEtapa,
+  groupByFase,
+  isPhaseStepKey,
   KANBAN_ETAPAS,
   LISTA_LABEL,
   listaFromParams,
   PROJETO_PARADO_DIAS,
+  projetoRegistrado,
+  projetoResponsavel,
+  projetosResumoText,
   searchConcluidas,
   searchObraRows,
   searchProjetos,
   staleLabel,
   VISAO_LABEL,
   visaoFromParams,
+  type EtapaKey,
   type KanbanCardData,
   type PainelLista,
   type PainelVisao,
@@ -136,23 +151,50 @@ function cardFromObra(r: ObraRow): KanbanCardData {
   };
 }
 
-/** Cartão do Kanban a partir de uma obra em fase de projeto. */
+/**
+ * Cartão do Kanban a partir de uma obra em fase de projeto: a etiqueta é a
+ * situação da etapa atual e a linha de baixo, o prazo dela. Obra sem etapa
+ * registrada (ou com as etapas ainda desconhecidas) mostra há quanto tempo
+ * está sem atualização, como antes.
+ */
 function cardFromProjeto(r: ProjetoRow): KanbanCardData {
+  const registered = projetoRegistrado(r);
   const parado = r.staleDays != null && r.staleDays >= PROJETO_PARADO_DIAS;
+  const pronta = r.verdict?.verdict === "pronta";
+  const headline = !registered
+    ? r.staleDays == null
+      ? "Sem registro de atualização"
+      : `Atualizado ${staleLabel(r.staleDays).toLowerCase()}`
+    : pronta
+      ? r.officialStart
+        ? `Início oficial ${ddmm(r.officialStart)}/${r.officialStart.slice(0, 4)}`
+        : ""
+      : r.dueDate
+        ? `Prazo ${ddmm(r.dueDate)}/${r.dueDate.slice(2, 4)}`
+        : "";
   return {
     id: r.id,
     name: r.name,
     customer: r.customer,
-    responsible: r.responsible,
+    responsible: projetoResponsavel(r),
     etapa: r.etapa,
     risk: null,
-    headline: r.staleDays == null ? "Sem registro de atualização" : `Atualizado ${staleLabel(r.staleDays).toLowerCase()}`,
-    headlineTone: parado ? "warning" : "muted",
+    headline,
+    headlineTone: !registered && parado ? "warning" : "muted",
     alert: null,
     paused: r.paused,
     relationship: r.relationship,
+    fase: r.verdict,
+    // Com a aprovação do condomínio já registrada, mudar de etapa reabriria a
+    // aprovação e o início oficial: só pela gaveta. Sem as etapas, não há de
+    // onde mover.
+    locked: !r.phase || aprovacaoRegistrada(r),
   };
 }
+
+/** Por que a gaveta abriu ao soltar um cartão em "Pronta para iniciar". */
+const AVISO_PRONTA =
+  "Arrastar para “Pronta para iniciar” não grava nada. Conclua as etapas aqui e informe o dia em que a aprovação do condomínio chegou: é essa data que define o início oficial da obra.";
 
 export default function Obras() {
   const { user } = useAuth();
@@ -160,6 +202,8 @@ export default function Obras() {
   const { isSimple } = useMenuMode();
   const { can } = useCan();
   const canEdit = can("projects:edit");
+  const canEditPhase = can("projectPhase:edit");
+  const canResumo = can("portfolio:resumo");
   /** Escritório: vê busca, outras listas, visões e a gaveta. */
   const office = !isSimple;
   const [params, setParams] = useSearchParams();
@@ -184,14 +228,16 @@ export default function Obras() {
   const visao: PainelVisao = office && lista !== "concluidas" ? visaoFromParams(params) : "lista";
 
   const data = useObrasPainel(week);
-  const { rows, projetos, concluidas, isLoading, error, refetch } = data;
+  const { rows, projetos, concluidas, isLoading, error, refetch, phaseStatus } = data;
   const { data: staff = [] } = useStaffUsers();
 
-  // Escopo: minhas obras (responsável) ou todas. Lembra a escolha.
-  const mine = <T extends { responsibleId: string | null }>(list: readonly T[]) =>
-    list.filter((r) => !!user?.id && r.responsibleId === user.id);
+  // Escopo: minhas obras (responsável) ou todas. Lembra a escolha. Em Projetos,
+  // também é "minha" a obra cuja etapa atual está comigo.
+  type Owned = { responsibleId: string | null; stepResponsibleId?: string | null };
+  const mine = <T extends Owned>(list: readonly T[]) =>
+    list.filter((r) => !!user?.id && (r.responsibleId === user.id || r.stepResponsibleId === user.id));
   const current = lista === "execucao" ? rows : lista === "projetos" ? projetos : concluidas;
-  const mineCount = mine<{ responsibleId: string | null }>(current).length;
+  const mineCount = mine<Owned>(current).length;
   const [scope, setScope] = useState<Scope | null>(() => {
     // localStorage pode estar bloqueado (modo privado): a tela não pode cair por isso.
     try {
@@ -210,8 +256,7 @@ export default function Obras() {
       /* sem armazenamento: só não lembra a escolha */
     }
   }, [scope]);
-  const scoped = <T extends { responsibleId: string | null }>(list: readonly T[]) =>
-    effectiveScope === "minhas" ? mine(list) : [...list];
+  const scoped = <T extends Owned>(list: readonly T[]) => (effectiveScope === "minhas" ? mine(list) : [...list]);
 
   const scopedRows = useMemo(() => scoped(rows), [rows, effectiveScope, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   // Os três números do topo são sempre das obras em execução, sem a busca, e
@@ -227,10 +272,10 @@ export default function Obras() {
   const noData = isLoading || !!error;
 
   const visibleRows = useMemo(() => searchObraRows(scopedRows, query), [scopedRows, query]);
-  const visibleProjetos = useMemo(
-    () => searchProjetos(scoped(projetos), query),
-    [projetos, query, effectiveScope, user?.id], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const scopedProjetos = useMemo(() => scoped(projetos), [projetos, effectiveScope, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const visibleProjetos = useMemo(() => searchProjetos(scopedProjetos, query), [scopedProjetos, query]);
+  // Linha acima da lista de Projetos: como a dos três números, não muda com a busca.
+  const projetosResumo = useMemo(() => projetosResumoText(scopedProjetos), [scopedProjetos]);
   const visibleConcluidas = useMemo(
     () => searchConcluidas(scoped(concluidas), query),
     [concluidas, query, effectiveScope, user?.id], // eslint-disable-line react-hooks/exhaustive-deps
@@ -243,12 +288,36 @@ export default function Obras() {
   // Gaveta da obra (só escritório): ?obra=<id>.
   const openId = office ? params.get("obra") : null;
   const openObra = (id: string) => patchParams({ obra: id });
+  /** Obra cuja gaveta abriu por soltar o cartão em "Pronta para iniciar". */
+  const [prontaAviso, setProntaAviso] = useState<string | null>(null);
   const openRow = openId ? rows.find((r) => r.id === openId) ?? null : null;
 
   const patchObra = (id: string, patch: PainelObraPatch) => data.updateObra(id, patch);
   const moveEtapa = (id: string, etapa: PainelEtapa | null) => {
     patchObra(id, { etapa })
       .then(() => toast.success(etapa ? `Etapa: ${etapa}` : "Etapa removida"))
+      .catch(() => {
+        /* o aviso de erro vem de quem grava */
+      });
+  };
+
+  /**
+   * Soltou um cartão de projeto numa coluna. Numa das seis etapas: "a obra
+   * está nesta etapa" (o banco conclui as anteriores e reabre as seguintes).
+   * Em "Pronta para iniciar" nada é gravado: a data da aprovação do
+   * condomínio define o início oficial e não pode sair "hoje" por um arrasto;
+   * a gaveta abre para a pessoa informar o dia certo.
+   */
+  const moveFase = (id: string, key: string) => {
+    if (key === FASE_PRONTA) {
+      setProntaAviso(id);
+      openObra(id);
+      return;
+    }
+    if (!isPhaseStepKey(key)) return;
+    data
+      .moveToPhaseStep(id, key)
+      .then(() => toast.success(`Etapa: ${phaseStepLabel(key)}`))
       .catch(() => {
         /* o aviso de erro vem de quem grava */
       });
@@ -264,7 +333,7 @@ export default function Obras() {
   };
   const emptyDescription: Record<PainelLista, string> = {
     execucao: "Quando uma obra começa, ela aparece aqui com prazo, folga e o que acontece na semana.",
-    projetos: "Obras que ainda estão em projeto aparecem aqui, da mais parada para a mais recente.",
+    projetos: "Obras que ainda estão em projeto aparecem aqui, com a etapa em que estão, o prazo e quem responde por ela.",
     concluidas: "Com a entrega real registrada, a obra passa para esta lista com o resultado contra o contrato.",
   };
 
@@ -277,24 +346,48 @@ export default function Obras() {
       );
     }
 
-    if (visao === "kanban") {
-      const cards = lista === "execucao" ? visibleRows.map(cardFromObra) : visibleProjetos.map(cardFromProjeto);
-      return (
-        <EtapaKanban
-          groups={groupByEtapa(cards, (c) => c.etapa, KANBAN_ETAPAS[lista])}
-          onOpen={openObra}
-          onMove={canEdit ? moveEtapa : undefined}
-        />
-      );
-    }
-
     if (lista === "projetos") {
+      if (visao === "kanban") {
+        return (
+          <EtapaKanban
+            label="Obras por etapa da fase de projeto"
+            groups={groupByFase(visibleProjetos, { always: true }).map((g) => ({
+              key: g.key,
+              label: g.label,
+              items: g.items.map(cardFromProjeto),
+              // "Sem etapa registrada" e "Etapas não carregadas" não são destino.
+              droppable: g.key !== FASE_SEM_REGISTRO && g.key !== FASE_DESCONHECIDA,
+            }))}
+            onOpen={openObra}
+            onMove={canEditPhase ? moveFase : undefined}
+          />
+        );
+      }
       const list = (items: ProjetoRow[]) =>
         isMobile ? <ProjetosCards rows={items} onOpen={openObra} /> : <ProjetosTable rows={items} onOpen={openObra} />;
       if (visao === "board") {
-        return <EtapaBoard groups={groupByEtapa(visibleProjetos, (r) => r.etapa)} renderGroup={(items) => list(items)} />;
+        return (
+          <EtapaBoard
+            groups={groupByFase(visibleProjetos)}
+            summary={(items) => {
+              const late = items.filter((r) => r.verdict?.verdict === "atrasada").length;
+              return late > 0 ? `${late} ${late === 1 ? "atrasada" : "atrasadas"}` : null;
+            }}
+            renderGroup={(items) => list(items)}
+          />
+        );
       }
       return list(visibleProjetos);
+    }
+
+    if (visao === "kanban") {
+      return (
+        <EtapaKanban
+          groups={groupByEtapa(visibleRows.map(cardFromObra), (c) => c.etapa, KANBAN_ETAPAS.execucao)}
+          onOpen={openObra}
+          onMove={canEdit ? (id, key) => moveEtapa(id, etapaOfKey(key as EtapaKey)) : undefined}
+        />
+      );
     }
 
     const onOpen = office ? (r: ObraRow) => openObra(r.id) : undefined;
@@ -330,13 +423,25 @@ export default function Obras() {
         title="Como estão as obras"
         description={office ? undefined : "Da mais arriscada para a mais tranquila. Toque numa obra para ver e planejar a semana dela."}
         actions={
-          office ? (
-            <Button asChild className="min-h-[44px]">
-              <Link to="/gestao/nova-obra">
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                Nova obra
-              </Link>
-            </Button>
+          office || canResumo ? (
+            <div className="flex flex-wrap gap-2">
+              {canResumo && (
+                <Button asChild variant="outline" className="min-h-[44px]">
+                  <Link to="/gestao/resumo">
+                    <Newspaper className="h-4 w-4" aria-hidden="true" />
+                    Resumo da semana
+                  </Link>
+                </Button>
+              )}
+              {office && (
+                <Button asChild className="min-h-[44px]">
+                  <Link to="/gestao/nova-obra">
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    Nova obra
+                  </Link>
+                </Button>
+              )}
+            </div>
           ) : undefined
         }
       />
@@ -453,6 +558,24 @@ export default function Obras() {
         </p>
       )}
 
+      {lista === "projetos" && !isLoading && !error && projetos.length > 0 && (projetosResumo || phaseStatus === "error") && (
+        <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground" aria-live="polite">
+          {projetosResumo && <span className="font-medium text-foreground">{projetosResumo}</span>}
+          {phaseStatus === "error" && (
+            <>
+              <span>Não deu para carregar as etapas da fase de projeto.</span>
+              <button
+                type="button"
+                onClick={data.refetchPhase}
+                className="rounded-sm font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Tentar de novo
+              </button>
+            </>
+          )}
+        </p>
+      )}
+
       <div className="mt-4">
         {isLoading ? (
           <div className="space-y-2" aria-busy="true" aria-label="Carregando obras">
@@ -473,7 +596,11 @@ export default function Obras() {
           <EmptyState
             icon={Search}
             title={`Nada encontrado para "${query.trim()}"`}
-            description="A busca olha o nome da obra, o cliente e o responsável."
+            description={
+              lista === "projetos"
+                ? "A busca olha o nome da obra, o cliente, a etapa e o responsável."
+                : "A busca olha o nome da obra, o cliente e o responsável."
+            }
             action={{ label: "Limpar busca", onClick: () => setQuery("") }}
           />
         ) : visibleCount === 0 ? (
@@ -514,7 +641,9 @@ export default function Obras() {
         <ObraDrawer
           open={!!openId}
           onOpenChange={(o) => {
-            if (!o) patchParams({ obra: null });
+            if (o) return;
+            setProntaAviso(null);
+            patchParams({ obra: null });
           }}
           obra={openId ? data.obraById.get(openId) ?? null : null}
           row={openRow}
@@ -522,6 +651,8 @@ export default function Obras() {
           concluida={openId ? concluidas.find((c) => c.id === openId) ?? null : null}
           staff={staff}
           canEdit={canEdit}
+          canEditPhase={canEditPhase}
+          phaseNotice={openId && prontaAviso === openId ? AVISO_PRONTA : null}
           onPatch={patchObra}
           weekHref={openRow ? weekHref(openRow) : undefined}
         />

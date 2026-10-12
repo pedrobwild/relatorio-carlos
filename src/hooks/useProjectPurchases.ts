@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
@@ -6,6 +6,16 @@ import { useMemo, useEffect } from "react";
 import { queryKeys } from "@/lib/queryKeys";
 import { QUERY_TIMING } from "@/lib/queryClient";
 import { toLocalISODate } from "@/lib/localDate";
+import { purchasesRepo, type ProjectPurchaseRow } from "@/infra/repositories/purchases.repository";
+
+/**
+ * A situação do material da atividade (Semana, Hoje, Painel) é calculada pelo
+ * banco a partir da compra vinculada: mudou a compra, essas telas releem.
+ */
+function invalidateOpsAfterPurchaseChange(qc: QueryClient) {
+  qc.invalidateQueries({ queryKey: queryKeys.ops.all });
+  qc.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+}
 
 export type PurchaseStatus =
   | "pending"
@@ -231,22 +241,17 @@ export function useProjectPurchases(
     mutationFn: async (input: PurchaseInput) => {
       if (!user?.id) throw new Error("Usuário não autenticado");
 
-      const { data, error } = await supabase
-        .from("project_purchases")
-        .insert({
-          ...input,
-          created_by: user.id,
-        })
-        .select()
-        .single();
+      // Mesmo caminho do "Pedir compra" da Semana (purchasesRepo.create).
+      const { data, error } = await purchasesRepo.create(input, user.id);
 
       if (error) throw error;
-      return data;
+      return data as ProjectPurchaseRow;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.purchases.list(projectId),
       });
+      invalidateOpsAfterPurchaseChange(queryClient);
       toast.success("Item de compra adicionado");
     },
     onError: (error) => {
@@ -274,6 +279,7 @@ export function useProjectPurchases(
       queryClient.invalidateQueries({
         queryKey: queryKeys.purchases.list(projectId),
       });
+      invalidateOpsAfterPurchaseChange(queryClient);
       toast.success("Item de compra atualizado");
     },
     onError: (error) => {
@@ -295,6 +301,7 @@ export function useProjectPurchases(
       queryClient.invalidateQueries({
         queryKey: queryKeys.purchases.list(projectId),
       });
+      invalidateOpsAfterPurchaseChange(queryClient);
       toast.success("Item de compra removido");
     },
     onError: (error) => {
@@ -337,6 +344,7 @@ export function useProjectPurchases(
       queryClient.invalidateQueries({
         queryKey: queryKeys.purchases.list(projectId),
       });
+      invalidateOpsAfterPurchaseChange(queryClient);
       toast.success("Status atualizado");
     },
     onError: (error) => {

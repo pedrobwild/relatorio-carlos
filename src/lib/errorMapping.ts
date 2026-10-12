@@ -240,6 +240,28 @@ function ownRuleMessage(error: unknown, code: string | undefined): string | null
 }
 
 /**
+ * Recusa de permissão escrita por nós numa RPC (RAISE EXCEPTION ... ERRCODE
+ * 42501): "Sem permissão para alterar a fase de projeto", "Sem acesso a esta
+ * obra". O 42501 nativo do Postgres (sempre em inglês: "permission denied for
+ * table…", "new row violates row-level security policy…") não passa por aqui
+ * e segue com a mensagem genérica.
+ */
+function ownPermissionMessage(error: unknown, code: string | undefined): string | null {
+  if (code !== "42501" || typeof error !== "object" || error === null) return null;
+  const message = (error as { message?: unknown }).message;
+  if (typeof message !== "string") return null;
+  const text = message.trim();
+  if (
+    !text ||
+    text.length > 200 ||
+    /permission denied|must be (the )?owner|row[\s-]level|violates|policy|relation\b|\b(table|schema|function|sequence|view|column)\b/i.test(text)
+  ) {
+    return null;
+  }
+  return text;
+}
+
+/**
  * Mapeia um erro arbitrário em um UserError com mensagem humana.
  */
 export function mapError(error: unknown): UserError {
@@ -320,6 +342,30 @@ export function mapError(error: unknown): UserError {
     };
   }
 
+  // Recusa de permissão das nossas RPCs (42501 com texto em português).
+  const ownForbidden = ownPermissionMessage(error, code);
+  if (ownForbidden) {
+    return {
+      kind: "forbidden",
+      userMessage: ownForbidden,
+      technicalDetails: text,
+      suggestedAction: "contact_support",
+      code,
+    };
+  }
+
+  // P0002 (no_data_found) das nossas RPCs: "Obra não encontrada". O texto do
+  // servidor não vai para a tela; a mensagem padrão já diz o que houve.
+  if (code === "P0002") {
+    return {
+      kind: "not_found",
+      userMessage:
+        "Não encontramos esse item. Talvez tenha sido movido ou removido.",
+      technicalDetails: text,
+      code,
+    };
+  }
+
   for (const rule of PATTERNS) {
     if (rule.pattern.test(text)) {
       return {
@@ -330,6 +376,18 @@ export function mapError(error: unknown): UserError {
         code,
       };
     }
+  }
+
+  // 42501 (insufficient_privilege) que não casou com nenhum padrão acima
+  // continua sendo falta de permissão — não "algo não saiu como esperado".
+  if (code === "42501") {
+    return {
+      kind: "forbidden",
+      userMessage: "Você não tem permissão para esta ação.",
+      technicalDetails: text,
+      suggestedAction: "contact_support",
+      code,
+    };
   }
 
   return {

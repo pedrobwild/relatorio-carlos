@@ -375,6 +375,14 @@ export const queryClient = new QueryClient({
       }
       mutationRetryState.delete(mutationId);
 
+      // Fila offline (Feito / Não feito da tela Hoje): quem enviou já avisa
+      // com o contexto ("Feito" de qual atividade). Aqui só cuidamos da sessão.
+      const meta = mutation.options.meta as { offlineQueue?: boolean } | undefined;
+      if (meta?.offlineQueue && !isAuthError(error)) {
+        console.error("Mutation error (fila offline):", error);
+        return;
+      }
+
       handleError(error, "Mutation error");
     },
     onSuccess: (_data, _variables, _context, mutation) => {

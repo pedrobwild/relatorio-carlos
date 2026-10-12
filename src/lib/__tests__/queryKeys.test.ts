@@ -3,7 +3,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { queryKeys } from "../queryKeys";
+import { QueryClient } from "@tanstack/react-query";
+import { invalidateProjectPhaseQueries, queryKeys } from "../queryKeys";
 
 describe("queryKeys", () => {
   describe("projects", () => {
@@ -246,5 +247,87 @@ describe("queryKeys", () => {
       expect(projectKey[2]).toBe("project-1");
       expect(otherProjectKey[2]).toBe("project-2");
     });
+  });
+});
+
+describe("queryKeys.studioInfo (ficha da obra)", () => {
+  it("uma chave por obra, debaixo da base", () => {
+    expect(queryKeys.studioInfo.all).toEqual(["studio-info"]);
+    expect(queryKeys.studioInfo.byProject("p1")).toEqual(["studio-info", "by-project", "p1"]);
+    expect(queryKeys.studioInfo.byProject("p1")).not.toEqual(queryKeys.studioInfo.byProject("p2"));
+  });
+});
+
+describe("queryKeys.projectPhase (fase de projeto)", () => {
+  it("etapas por obra e carteira, debaixo da mesma base", () => {
+    expect(queryKeys.projectPhase.all).toEqual(["project-phase"]);
+    expect(queryKeys.projectPhase.steps("p1")).toEqual(["project-phase", "steps", "p1"]);
+    expect(queryKeys.projectPhase.steps("p1")).not.toEqual(queryKeys.projectPhase.steps("p2"));
+    expect(queryKeys.projectPhase.portfolios()).toEqual(["project-phase", "portfolio"]);
+  });
+
+  it("carteira: a mesma lista de obras em outra ordem dá a mesma chave", () => {
+    expect(queryKeys.projectPhase.portfolio(["b", "a", "c"])).toEqual(["project-phase", "portfolio", "a,b,c"]);
+    expect(queryKeys.projectPhase.portfolio(["c", "a", "b"])).toEqual(queryKeys.projectPhase.portfolio(["a", "b", "c"]));
+    expect(queryKeys.projectPhase.portfolio(["a"])).not.toEqual(queryKeys.projectPhase.portfolio(["a", "b"]));
+  });
+
+  it("carteira não altera a lista recebida", () => {
+    const ids = ["b", "a"];
+    queryKeys.projectPhase.portfolio(ids);
+    expect(ids).toEqual(["b", "a"]);
+  });
+});
+
+describe("invalidateProjectPhaseQueries", () => {
+  function seeded() {
+    const client = new QueryClient();
+    const keys = {
+      stepsP1: queryKeys.projectPhase.steps("p1"),
+      stepsP2: queryKeys.projectPhase.steps("p2"),
+      portfolio: queryKeys.projectPhase.portfolio(["p1", "p2"]),
+      projectList: queryKeys.projects.list({ status: "active" }),
+      detailP1: queryKeys.projects.detail("p1"),
+      detailP2: queryKeys.projects.detail("p2"),
+      deadlineList: queryKeys.contractDeadline.list(),
+      deadlineP1: queryKeys.contractDeadline.byProject("p1"),
+      obrasStages: queryKeys.obrasPanel.stages(["p1"]),
+      studioP1: queryKeys.studioInfo.byProject("p1"),
+      journeyP1: queryKeys.journey.all,
+    };
+    for (const key of Object.values(keys)) client.setQueryData(key, {});
+    const invalidated = (key: readonly unknown[]) => client.getQueryState(key)?.isInvalidated;
+    return { client, keys, invalidated };
+  }
+
+  it("de uma obra: relê as etapas dela, a carteira, as listas de obras e o prazo contratual", () => {
+    const { client, keys, invalidated } = seeded();
+    invalidateProjectPhaseQueries("p1", client);
+
+    expect(invalidated(keys.stepsP1)).toBe(true);
+    expect(invalidated(keys.portfolio)).toBe(true);
+    // O gatilho do banco muda painel_etapa, datas e início do contrato em projects.
+    expect(invalidated(keys.projectList)).toBe(true);
+    expect(invalidated(keys.detailP1)).toBe(true);
+    expect(invalidated(keys.deadlineList)).toBe(true);
+    expect(invalidated(keys.deadlineP1)).toBe(true);
+    expect(invalidated(keys.obrasStages)).toBe(true);
+
+    // O que não depende da fase de projeto desta obra fica quieto.
+    expect(invalidated(keys.stepsP2)).toBe(false);
+    expect(invalidated(keys.detailP2)).toBe(false);
+    expect(invalidated(keys.studioP1)).toBe(false);
+    expect(invalidated(keys.journeyP1)).toBe(false);
+  });
+
+  it("sem obra: relê a fase de projeto de todas", () => {
+    const { client, keys, invalidated } = seeded();
+    invalidateProjectPhaseQueries(undefined, client);
+    expect(invalidated(keys.stepsP1)).toBe(true);
+    expect(invalidated(keys.stepsP2)).toBe(true);
+    expect(invalidated(keys.portfolio)).toBe(true);
+    expect(invalidated(keys.detailP2)).toBe(true);
+    expect(invalidated(keys.projectList)).toBe(true);
+    expect(invalidated(keys.studioP1)).toBe(false);
   });
 });

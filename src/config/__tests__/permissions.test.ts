@@ -174,6 +174,39 @@ describe("permissions", () => {
       { role: "cs", feature: "internal_notes:moderate", expected: false },
       { role: "gestor", feature: "internal_notes:moderate", expected: true },
       { role: "admin", feature: "internal_notes:moderate", expected: true },
+      // Ficha da obra — toda a equipe edita (espelha a RLS de
+      // project_studio_info); cliente nunca.
+      { role: "customer", feature: "ficha:edit", expected: false },
+      { role: "gestor", feature: "ficha:edit", expected: true },
+      { role: "engineer", feature: "ficha:edit", expected: true },
+      { role: "manager", feature: "ficha:edit", expected: true },
+      { role: "admin", feature: "ficha:edit", expected: true },
+      { role: "cs", feature: "ficha:edit", expected: true },
+      { role: "arquitetura", feature: "ficha:edit", expected: true },
+      { role: "suprimentos", feature: "ficha:edit", expected: true },
+      { role: "financeiro", feature: "ficha:edit", expected: true },
+      // Fase de projeto — mesmos papéis de journey:edit_stages (e da regra do
+      // banco, can_edit_project_phase); financeiro/suprimentos só leem.
+      { role: "customer", feature: "projectPhase:edit", expected: false },
+      { role: "financeiro", feature: "projectPhase:edit", expected: false },
+      { role: "suprimentos", feature: "projectPhase:edit", expected: false },
+      { role: "admin", feature: "projectPhase:edit", expected: true },
+      { role: "manager", feature: "projectPhase:edit", expected: true },
+      { role: "engineer", feature: "projectPhase:edit", expected: true },
+      { role: "gestor", feature: "projectPhase:edit", expected: true },
+      { role: "cs", feature: "projectPhase:edit", expected: true },
+      { role: "arquitetura", feature: "projectPhase:edit", expected: true },
+
+      // Resumo da semana (diretoria): só admin e manager.
+      { role: "admin", feature: "portfolio:resumo", expected: true },
+      { role: "manager", feature: "portfolio:resumo", expected: true },
+      { role: "gestor", feature: "portfolio:resumo", expected: false },
+      { role: "engineer", feature: "portfolio:resumo", expected: false },
+      { role: "arquitetura", feature: "portfolio:resumo", expected: false },
+      { role: "suprimentos", feature: "portfolio:resumo", expected: false },
+      { role: "financeiro", feature: "portfolio:resumo", expected: false },
+      { role: "cs", feature: "portfolio:resumo", expected: false },
+      { role: "customer", feature: "portfolio:resumo", expected: false },
     ];
 
     testCases.forEach(({ role, feature, expected }) => {

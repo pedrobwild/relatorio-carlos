@@ -2,18 +2,21 @@
  * Hooks da camada de Operação (Fase 2) — staff-only.
  * Base para as telas Hoje (Fase 3) e Semana (Fase 4).
  */
-import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+import { useCallback, useEffect } from "react";
+import { queryOptions, useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from "@tanstack/react-query";
+import { invalidatePurchaseQueries, queryKeys } from "@/lib/queryKeys";
+import { useAuth } from "@/hooks/useAuth";
+import { purchasesRepo, type CreatePurchaseInput } from "@/infra/repositories/purchases.repository";
 import {
   opsRepo,
+  type OpsAssignment,
   type OpsAssignmentPlanPatch,
   type OpsDayAssignment,
-  type OpsAssignmentOutcome,
-  type OpsBlockReason,
   type OpsMaterialStatus,
   type OpsReviewResult,
 } from "@/infra/repositories/ops.repository";
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { enqueueOutcome, invalidateOps, type SetOutcomeVars } from "@/lib/offline/opsOutcomeSync";
 
 const unwrap = <T,>(res: { data: T | null; error: unknown }): T => {
   if (res.error) throw res.error;
@@ -36,12 +39,29 @@ export function useOpsAssignments(projectId: string | undefined, from: string, t
   });
 }
 
-/** Alocações de um dia — base da tela Hoje. */
-export function useOpsDay(date: string, userId?: string | null) {
-  return useQuery({
+/** Opções da leitura de um dia (também usadas para buscar ontem/amanhã antes). */
+export const opsDayQueryOptions = (date: string, userId?: string | null) =>
+  queryOptions({
     queryKey: queryKeys.ops.day(date, userId),
     queryFn: async () => unwrap(await opsRepo.listDay(date, userId)) ?? [],
   });
+
+/** Alocações de um dia — base da tela Hoje. */
+export function useOpsDay(date: string, userId?: string | null) {
+  return useQuery(opsDayQueryOptions(date, userId));
+}
+
+/**
+ * Busca antes (com sinal) os dias vizinhos, para que ontem e amanhã também
+ * estejam no aparelho quando a pessoa entrar no apartamento sem sinal.
+ */
+export function usePrefetchOpsDays(dates: readonly string[], enabled: boolean) {
+  const qc = useQueryClient();
+  const key = dates.join(",");
+  useEffect(() => {
+    if (!enabled || !key) return;
+    for (const d of key.split(",")) void qc.prefetchQuery(opsDayQueryOptions(d));
+  }, [qc, key, enabled]);
 }
 
 export function useStageRollup(projectId: string | undefined) {
@@ -60,16 +80,9 @@ export function useOpsMaterials(activityId: string | undefined) {
   });
 }
 
-/**
- * Qualquer escrita na operação invalida tudo de `ops` (contadores e rollup
- * dependem entre si) e também a tela Obras, que lê as mesmas tabelas com
- * outra chave — sem isso ela mostrava "semana não planejada" e alertas
- * antigos logo depois de planejar/confirmar.
- */
-export function invalidateOps(qc: QueryClient) {
-  void qc.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
-  return qc.invalidateQueries({ queryKey: queryKeys.ops.all });
-}
+// Fila offline do Feito / Não feito (ver src/lib/offline/opsOutcomeSync.ts).
+export { applyOutcome, invalidateOps } from "@/lib/offline/opsOutcomeSync";
+export type { SetOutcomeVars } from "@/lib/offline/opsOutcomeSync";
 
 function useOpsMutation<TVars, TOut>(fn: (vars: TVars) => Promise<TOut>) {
   const qc = useQueryClient();
@@ -92,54 +105,42 @@ export const useCreateOpsAssignment = () =>
     unwrap(await opsRepo.createAssignment(input)),
   );
 
-export interface SetOutcomeVars {
-  id: string;
-  outcome: OpsAssignmentOutcome | null;
-  reason?: OpsBlockReason | null;
-  notes?: string | null;
-  photoPaths?: string[];
-}
-
-/** Aplica o Feito / Não feito numa lista do dia (usado no update otimista). */
-export function applyOutcome(list: OpsDayAssignment[] | undefined, vars: SetOutcomeVars, now: string) {
-  if (!list) return list;
-  return list.map((a) =>
-    a.id !== vars.id
-      ? a
-      : {
-          ...a,
-          outcome: vars.outcome,
-          not_done_reason: vars.outcome === "nao_feito" ? (vars.reason ?? null) : null,
-          // Desfazer limpa a observação do "Não feito" (igual ao repositório).
-          notes: vars.notes !== undefined ? vars.notes : vars.outcome === null ? null : a.notes,
-          done_at: vars.outcome ? now : null,
-        },
-  );
-}
-
 /**
- * Feito / Não feito / desfazer. A tela responde na hora (otimista); se o
- * banco recusar, volta ao estado anterior e o erro sobe para quem chamou.
+ * Feito / Não feito / desfazer — funciona sem sinal.
+ *
+ * Tudo (envio, repetição, aviso de recusa) vem de `setMutationDefaults` pela
+ * chave fixa: é o mesmo caminho de uma mutação que ficou guardada no aparelho
+ * e é retomada depois de recarregar. A tela mostra o resultado na hora
+ * aplicando a fila por cima dos dados (`usePendingOutcomes`). Sem rede, a
+ * mutação fica pausada — `mutateAsync` só resolve quando o banco confirmar.
+ *
+ * Último toque vale: antes de enfileirar, descarta o que ainda não saiu para
+ * a mesma alocação. Cada toque fica guardado na caixa de saída do aparelho
+ * (por usuário, fora do cache das consultas) até o banco confirmar.
  */
 export function useSetAssignmentOutcome() {
   const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (vars: SetOutcomeVars) => unwrap(await opsRepo.setOutcome(vars.id, vars.outcome, vars)),
-    onMutate: async (vars) => {
-      const dayKey = [...queryKeys.ops.all, "day"] as const;
-      await qc.cancelQueries({ queryKey: dayKey });
-      const previous = qc.getQueriesData<OpsDayAssignment[]>({ queryKey: dayKey });
-      const now = new Date().toISOString();
-      for (const [key, list] of previous) qc.setQueryData(key, applyOutcome(list, vars, now));
-      return { previous };
-    },
-    onError: (_err, _vars, ctx) => {
-      for (const [key, list] of (ctx?.previous ?? []) as [QueryKey, OpsDayAssignment[] | undefined][]) {
-        qc.setQueryData(key, list);
-      }
-    },
-    onSettled: () => invalidateOps(qc),
+  const m = useMutation<OpsAssignment, unknown, SetOutcomeVars>({
+    mutationKey: queryKeys.ops.setOutcomeMutation,
   });
+  const { mutate: rawMutate, mutateAsync: rawMutateAsync } = m;
+  const mutate = useCallback(
+    (vars: SetOutcomeVars, opts?: Parameters<typeof rawMutate>[1]) => {
+      enqueueOutcome(qc, vars, (full) => rawMutate(full, opts));
+    },
+    [qc, rawMutate],
+  );
+  const mutateAsync = useCallback(
+    (vars: SetOutcomeVars, opts?: Parameters<typeof rawMutateAsync>[1]) => {
+      let promise!: Promise<OpsAssignment>;
+      enqueueOutcome(qc, vars, (full) => {
+        promise = rawMutateAsync(full, opts);
+      });
+      return promise;
+    },
+    [qc, rawMutateAsync],
+  );
+  return { ...m, mutate, mutateAsync };
 }
 
 /** Material faltando por atividade (uma consulta para o dia inteiro). */
@@ -160,13 +161,34 @@ export function useOpsStages(projectId: string | undefined) {
   });
 }
 
+/**
+ * Id fixo por arquivo: a mutação é repetida em falha de rede com o MESMO
+ * `File`, e o caminho no bucket sai deste id — repetir não duplica a foto.
+ */
+const photoUploadKeys = new WeakMap<File, string>();
+function photoUploadKey(file: File): string {
+  let key = photoUploadKeys.get(file);
+  if (!key) {
+    key =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    photoUploadKeys.set(file, key);
+  }
+  return key;
+}
+
 /** Envia as fotos e acrescenta os caminhos na alocação. */
 export const useAddAssignmentPhotos = () =>
   useOpsMutation(
     async (vars: { assignment: Pick<OpsDayAssignment, "id" | "project_id" | "photo_paths">; files: File[] }) => {
       const paths: string[] = [];
       for (const file of vars.files) {
-        paths.push(unwrap(await opsRepo.uploadPhoto(vars.assignment.project_id, vars.assignment.id, file)));
+        paths.push(
+          unwrap(
+            await opsRepo.uploadPhoto(vars.assignment.project_id, vars.assignment.id, file, photoUploadKey(file)),
+          ),
+        );
       }
       return unwrap(await opsRepo.setPhotos(vars.assignment.id, [...(vars.assignment.photo_paths ?? []), ...paths]));
     },
@@ -192,6 +214,63 @@ export const useSetMaterialStatus = () =>
   useOpsMutation(async ({ id, status }: { id: string; status: OpsMaterialStatus }) =>
     unwrap(await opsRepo.setMaterialStatus(id, status)),
   );
+
+// ---------------------------------------------------------------------------
+// Material ligado à compra
+// ---------------------------------------------------------------------------
+// Com compra vinculada a situação do material é calculada pelo banco: depois
+// de vincular/desvincular a tela relê (invalidateOps), nada é "adivinhado".
+
+/** Compras da obra que podem atender um material (só busca com o seletor aberto). */
+export function useOpsLinkablePurchases(projectId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.ops.linkablePurchases(projectId),
+    enabled: !!projectId && enabled,
+    queryFn: async () => (projectId ? unwrap(await opsRepo.listLinkablePurchases(projectId)) ?? [] : []),
+  });
+}
+
+export const useLinkMaterialToPurchase = () =>
+  useOpsMutation(async ({ materialId, purchaseId }: { materialId: string; purchaseId: string }) =>
+    unwrap(await opsRepo.linkMaterialToPurchase(materialId, purchaseId)),
+  );
+
+export const useUnlinkMaterialFromPurchase = () =>
+  useOpsMutation(async (materialId: string) => unwrap(await opsRepo.unlinkMaterialFromPurchase(materialId)));
+
+/** A compra foi criada, mas o vínculo com o material falhou. */
+export class PurchaseCreatedButNotLinkedError extends Error {
+  constructor(
+    public readonly purchaseId: string,
+    public readonly linkError: unknown,
+  ) {
+    super("A compra foi criada, mas não foi possível vinculá-la ao material.");
+    this.name = "PurchaseCreatedButNotLinkedError";
+  }
+}
+
+/**
+ * "Pedir compra": cria a solicitação pelo mesmo caminho da tela Compras
+ * (`purchasesRepo.create`) e liga o material a ela. Relê a operação e todas
+ * as telas de compras.
+ */
+export function useRequestPurchaseForMaterial() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ materialId, purchase }: { materialId: string; purchase: CreatePurchaseInput }) => {
+      if (!user?.id) throw new Error("Usuário não autenticado");
+      const created = unwrap(await purchasesRepo.create(purchase, user.id));
+      const linked = await opsRepo.linkMaterialToPurchase(materialId, created.id);
+      if (linked.error) throw new PurchaseCreatedButNotLinkedError(created.id, linked.error);
+      return { purchase: created, material: linked.data };
+    },
+    onSettled: () => {
+      invalidatePurchaseQueries();
+      return invalidateOps(qc);
+    },
+  });
+}
 
 export const useCreateOpsReview = () =>
   useOpsMutation(

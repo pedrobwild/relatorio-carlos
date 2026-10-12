@@ -62,7 +62,42 @@ export type OpsActivityReadiness = Pick<
   "id" | "materials_missing" | "materials_total" | "is_ready"
 >;
 
+/**
+ * Resumo da compra (`project_purchases`) que atende um material: o que a
+ * gaveta da atividade mostra na linha da compra e no seletor "Vincular a uma
+ * compra". O nome do fornecedor vem do cadastro (`fornecedor.nome`) ou, sem
+ * cadastro, do texto livre `supplier_name` — como em Compras.
+ */
+export type OpsPurchaseSummary = Pick<
+  Tables<"project_purchases">,
+  | "id"
+  | "item_name"
+  | "quantity"
+  | "unit"
+  | "status"
+  | "delivery_location"
+  | "expected_delivery_date"
+  | "actual_delivery_date"
+  | "supplier_name"
+> & { fornecedor: { nome: string } | null };
+
+/** Material com a compra vinculada (null = sem vínculo, situação manual). */
+export type OpsMaterialWithPurchase = OpsMaterial & { purchase: OpsPurchaseSummary | null };
+
+const PURCHASE_SUMMARY_COLUMNS =
+  "id, item_name, quantity, unit, status, delivery_location, expected_delivery_date, actual_delivery_date, supplier_name, fornecedor:fornecedores(nome)";
+
+const MATERIAL_WITH_PURCHASE_SELECT = `*, purchase:project_purchases!ops_materials_purchase_id_fkey(${PURCHASE_SUMMARY_COLUMNS})`;
+
 export const OPS_PHOTOS_BUCKET = "ops-photos";
+
+/** O storage responde "já existe" (409 / Duplicate) quando o caminho já tem arquivo. */
+export function isAlreadyExistsError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { statusCode?: unknown; status?: unknown; error?: unknown; message?: unknown };
+  if (String(e.statusCode ?? "") === "409" || String(e.status ?? "") === "409") return true;
+  return /duplicate|already exists/i.test(`${String(e.error ?? "")} ${String(e.message ?? "")}`);
+}
 
 const DAY_SELECT =
   "*, activity:ops_activities(id, title, status, stage_id, project_id, is_critical, stage:project_activities(description)), project:projects(id, name), fornecedor:fornecedores(nome)";
@@ -222,16 +257,46 @@ export const opsRepo = {
   },
 
   /**
+   * Acrescenta fotos lendo o que está NO BANCO agora (não o que a tela tinha).
+   * Usado no envio das fotos tiradas sem sinal: horas depois, a lista que o
+   * aparelho conhecia pode estar velha e sobrescrevê-la apagaria fotos que
+   * outra pessoa enviou nesse meio-tempo.
+   */
+  async appendPhotos(id: string, newPaths: string[]) {
+    return executeQuery<OpsAssignment>(async () => {
+      const current = await supabase.from("ops_assignments").select("photo_paths").eq("id", id).single();
+      if (current.error) return { data: null, error: current.error };
+      const existing = (current.data?.photo_paths ?? []) as string[];
+      const merged = [...existing, ...newPaths.filter((p) => !existing.includes(p))];
+      return await supabase
+        .from("ops_assignments")
+        .update({ photo_paths: merged })
+        .eq("id", id)
+        .select("*")
+        .single();
+    });
+  },
+
+  /**
    * Envia uma foto de campo. O caminho começa pelo project_id porque é isso
    * que a policy do bucket usa para checar o acesso à obra.
+   *
+   * `key` (id do item da fila offline, ou um id fixo por arquivo) torna o
+   * envio idempotente: o caminho é derivado dela, então uma nova tentativa
+   * depois de uma resposta perdida cai no MESMO arquivo. O bucket não tem
+   * policy de UPDATE para `ops-photos` (só SELECT/INSERT/DELETE), então
+   * `upsert: true` seria recusado; em vez disso, "já existe" (409) nesse
+   * caminho significa que a tentativa anterior chegou — vale como sucesso.
    */
-  async uploadPhoto(projectId: string, assignmentId: string, file: File) {
+  async uploadPhoto(projectId: string, assignmentId: string, file: File, key?: string) {
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `${projectId}/${assignmentId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const safeKey = key ? key.replace(/[^A-Za-z0-9_-]/g, "") : "";
+    const name = safeKey || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${projectId}/${assignmentId}/${name}.${ext}`;
     const { error } = await supabase.storage
       .from(OPS_PHOTOS_BUCKET)
       .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
-    if (error) return { data: null, error };
+    if (error && !(safeKey && isAlreadyExistsError(error))) return { data: null, error };
     return { data: path, error: null };
   },
 
@@ -254,11 +319,12 @@ export const opsRepo = {
   },
 
   // ---------------- materiais ----------------
+  /** Materiais da atividade, cada um com o resumo da compra vinculada. */
   async listMaterials(activityId: string) {
-    return executeListQuery<OpsMaterial>(async () => {
+    return executeListQuery<OpsMaterialWithPurchase>(async () => {
       return await supabase
         .from("ops_materials")
-        .select("*")
+        .select(MATERIAL_WITH_PURCHASE_SELECT)
         .eq("activity_id", activityId)
         .order("needed_by", { ascending: true, nullsFirst: false });
     });
@@ -295,6 +361,46 @@ export const opsRepo = {
   async setMaterialStatus(id: string, status: OpsMaterialStatus) {
     return executeQuery<OpsMaterial>(async () => {
       return await supabase.from("ops_materials").update({ status }).eq("id", id).select("*").single();
+    });
+  },
+
+  /**
+   * Liga o material a uma compra da mesma obra. A situação passa a ser a da
+   * compra — quem calcula é o banco (gatilho); o retorno já vem com ela. Compra
+   * de outra obra é recusada pelo banco ("A compra vinculada é de outra obra").
+   */
+  async linkMaterialToPurchase(materialId: string, purchaseId: string) {
+    return executeQuery<OpsMaterial>(async () => {
+      return await supabase
+        .from("ops_materials")
+        .update({ purchase_id: purchaseId })
+        .eq("id", materialId)
+        .select("*")
+        .single();
+    });
+  },
+
+  /** Desfaz o vínculo: fica a última situação, que volta a ser manual. */
+  async unlinkMaterialFromPurchase(materialId: string) {
+    return executeQuery<OpsMaterial>(async () => {
+      return await supabase
+        .from("ops_materials")
+        .update({ purchase_id: null })
+        .eq("id", materialId)
+        .select("*")
+        .single();
+    });
+  },
+
+  /** Compras da obra que podem atender um material: não canceladas, mais novas primeiro. */
+  async listLinkablePurchases(projectId: string) {
+    return executeListQuery<OpsPurchaseSummary>(async () => {
+      return await supabase
+        .from("project_purchases")
+        .select(PURCHASE_SUMMARY_COLUMNS)
+        .eq("project_id", projectId)
+        .neq("status", "cancelled")
+        .order("created_at", { ascending: false });
     });
   },
 

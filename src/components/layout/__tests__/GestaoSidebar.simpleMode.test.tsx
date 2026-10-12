@@ -127,6 +127,20 @@ describe("GestaoSidebar · modo simples", () => {
     expect(screen.queryByRole("button", { name: /menu/i })).toBeNull();
   });
 
+  it("Resumo da semana aparece no menu completo só para quem tem a permissão (admin/manager)", () => {
+    state.roles = ["admin"];
+    const { unmount } = renderSidebar();
+    expect(screen.getByRole("link", { name: /Resumo da semana/ })).toHaveAttribute("href", "/gestao/resumo");
+    unmount();
+
+    // Gestor no menu completo (flag desligada) não vê o resumo da diretoria.
+    state.roles = ["gestor"];
+    state.flag = false;
+    renderSidebar();
+    expect(screen.getByRole("link", { name: /Painel de Obras/ })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Resumo da semana/ })).toBeNull();
+  });
+
   it("flag desligada → gestor vê o menu completo (rollback sem deploy)", () => {
     state.flag = false;
     renderSidebar();

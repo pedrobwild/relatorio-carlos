@@ -26,6 +26,7 @@ import {
   FileSearch,
   CalendarCheck,
   SlidersHorizontal,
+  Newspaper,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,8 @@ import { useScheduleAlertsSummary } from "@/hooks/useScheduleAlerts";
 import { useScheduleAlertPrefs } from "@/hooks/useScheduleAlertPrefs";
 import { useMenuMode } from "@/hooks/useMenuMode";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useCan } from "@/hooks/useCan";
+import type { Feature } from "@/config/permissions";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -59,6 +62,8 @@ interface NavItem {
   matchPaths?: string[];
   adminOnly?: boolean;
   assistantOnly?: boolean;
+  /** Só aparece para quem tem esta permissão (`permissions.ts`). */
+  feature?: Feature;
 }
 
 interface NavGroup {
@@ -94,6 +99,7 @@ export function GestaoSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+  const { can } = useCan();
   const { user } = useAuth();
   const canUseAssistant = isAssistantAllowed(user?.email);
   const { total: alertsTotal } = useScheduleAlertsSummary();
@@ -180,6 +186,12 @@ export function GestaoSidebar() {
     {
       label: "Obras",
       items: [
+        {
+          label: "Resumo da semana",
+          icon: Newspaper,
+          path: "/gestao/resumo",
+          feature: "portfolio:resumo",
+        },
         {
           label: "Painel de Obras",
           icon: Table2,
@@ -419,7 +431,8 @@ export function GestaoSidebar() {
           const visibleItems = group.items.filter(
             (item) =>
               (!item.adminOnly || isAdmin) &&
-              (!item.assistantOnly || canUseAssistant),
+              (!item.assistantOnly || canUseAssistant) &&
+              (!item.feature || can(item.feature)),
           );
           if (visibleItems.length === 0) return null;
 

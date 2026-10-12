@@ -5,10 +5,15 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { EtapaGroup } from "@/lib/painelNovo";
+/** Um grupo do board: etapa do Painel (em execução) ou etapa da fase de projeto. */
+export interface BoardGroup<T> {
+  key: string;
+  label: string;
+  items: T[];
+}
 
 interface Props<T> {
-  groups: readonly EtapaGroup<T>[];
+  groups: readonly BoardGroup<T>[];
   /** Conteúdo do grupo. `first` = primeiro grupo aberto (mostra o cabeçalho da tabela). */
   renderGroup: (items: T[], first: boolean) => ReactNode;
   /** Resumo curto ao lado da contagem (ex.: "2 no vermelho"). */

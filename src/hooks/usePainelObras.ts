@@ -81,6 +81,13 @@ export interface PainelObra {
   ultima_atualizacao: string;
   /** True quando a obra ainda está em fase de projeto (sem execução em campo). */
   is_project_phase: boolean;
+  /**
+   * Início oficial pela regra da empresa (`projects.date_official_start`):
+   * 5 dias úteis depois da aprovação do condomínio. Calculado pelo banco ao
+   * registrar a aprovação na fase de projeto; não confundir com
+   * `inicio_oficial`, que é o início previsto do cronograma.
+   */
+  inicio_apos_aprovacao?: string | null;
 
   // Métricas (do summary)
   progress_percentage: number | null;
@@ -272,6 +279,7 @@ export function usePainelObras() {
         painel_external_budget_id?: string | null;
         painel_responsavel_id?: string | null;
         painel_ultima_atualizacao?: string;
+        date_official_start?: string | null;
       };
       const responsavelId = asNullableString(raw.painel_responsavel_id);
       const progress = asFiniteNumber(s?.progress_percentage);
@@ -300,6 +308,7 @@ export function usePainelObras() {
           asNullableString(p.updated_at) ??
           new Date(0).toISOString(),
         is_project_phase: !!p.is_project_phase,
+        inicio_apos_aprovacao: asDateString(raw.date_official_start),
         progress_percentage:
           progress != null ? Math.round(Math.max(0, Math.min(100, progress))) : null,
         pending_count: asCount(s?.pending_count),

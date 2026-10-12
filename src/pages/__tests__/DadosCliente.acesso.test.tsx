@@ -195,3 +195,141 @@ describe("DadosCliente · Acesso à obra (persistência)", () => {
     expect(payload.electronic_lock_password).toBeNull();
   });
 });
+
+describe("DadosCliente · Ficha da obra (campos novos)", () => {
+  beforeEach(() => {
+    for (const k of Object.keys(studioStore)) delete studioStore[k];
+    upsertSpy.mockClear();
+  });
+
+  const campo = (id: string) =>
+    document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement;
+
+  async function abrirInfo() {
+    const infoTab = await screen.findByRole("tab", {
+      name: /Informações do Projeto/i,
+    });
+    await userEvent.click(infoTab);
+    await screen.findByLabelText(/Local da chave/i);
+  }
+
+  it("grava quem recebeu as chaves, portaria, administradora e como pedir a liberação", async () => {
+    renderPage();
+
+    const quem = await screen.findByLabelText(/Quem recebeu as chaves/i);
+    fireEvent.change(quem, { target: { value: "  Thiago  " } });
+
+    await abrirInfo();
+    fireEvent.change(campo("con-name"), { target: { value: "Portaria 24h" } });
+    fireEvent.change(campo("con-phone"), {
+      target: { value: "(11) 3333-4444" },
+    });
+    fireEvent.change(campo("adm-name"), { target: { value: "Lello" } });
+    fireEvent.change(campo("adm-email"), {
+      target: { value: "atendimento@lello.com.br" },
+    });
+    fireEvent.change(campo("adm-phone"), {
+      target: { value: "(11) 3000-1000" },
+    });
+    fireEvent.change(
+      screen.getByLabelText(/Como pedir a liberação da equipe/i),
+      { target: { value: "Enviar nome e RG.\n2 dias úteis antes.\n" } },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Salvar/i }));
+    await waitFor(() => expect(upsertSpy).toHaveBeenCalledTimes(1));
+
+    const payload = upsertSpy.mock.calls[0][0];
+    expect(payload).toMatchObject({
+      project_id: PROJECT_ID,
+      keys_received_by: "Thiago",
+      concierge_name: "Portaria 24h",
+      concierge_phone: "(11) 3333-4444",
+      property_admin_name: "Lello",
+      property_admin_email: "atendimento@lello.com.br",
+      property_admin_phone: "(11) 3000-1000",
+      access_release_process: "Enviar nome e RG.\n2 dias úteis antes.",
+    });
+
+    // ── Remonta: recarrega do "banco" ──
+    cleanup();
+    renderPage();
+    expect(
+      (
+        (await screen.findByLabelText(
+          /Quem recebeu as chaves/i,
+        )) as HTMLInputElement
+      ).value,
+    ).toBe("Thiago");
+    await abrirInfo();
+    expect(campo("con-phone").value).toBe("(11) 3333-4444");
+    expect(campo("adm-name").value).toBe("Lello");
+    expect(
+      (
+        screen.getByLabelText(
+          /Como pedir a liberação da equipe/i,
+        ) as HTMLTextAreaElement
+      ).value,
+    ).toBe("Enviar nome e RG.\n2 dias úteis antes.");
+  });
+
+  it("telefone da portaria inválido bloqueia o salvar", async () => {
+    renderPage();
+    await abrirInfo();
+    fireEvent.change(campo("con-phone"), { target: { value: "3333-4444" } });
+    expect(screen.getByRole("button", { name: /Salvar/i })).toBeDisabled();
+    expect(upsertSpy).not.toHaveBeenCalled();
+  });
+
+  it("banco ainda sem as colunas novas: salvar o resto continua funcionando", async () => {
+    // Linha carregada sem as colunas da ficha = migration ainda não aplicada.
+    studioStore[PROJECT_ID] = {
+      project_id: PROJECT_ID,
+      key_location: "antigo",
+    };
+    renderPage();
+    await abrirInfo();
+    fireEvent.change(screen.getByLabelText(/Local da chave/i), {
+      target: { value: "Com o zelador" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Salvar/i }));
+    await waitFor(() => expect(upsertSpy).toHaveBeenCalledTimes(1));
+
+    const payload = upsertSpy.mock.calls[0][0];
+    expect(payload.key_location).toBe("Com o zelador");
+    for (const col of [
+      "keys_received_by",
+      "concierge_name",
+      "concierge_phone",
+      "property_admin_name",
+      "property_admin_email",
+      "property_admin_phone",
+      "access_release_process",
+    ]) {
+      expect(payload).not.toHaveProperty(col);
+    }
+  });
+
+  it("banco já com as colunas novas: apagar um campo grava null", async () => {
+    studioStore[PROJECT_ID] = {
+      project_id: PROJECT_ID,
+      keys_received_by: "Thiago",
+      concierge_name: null,
+      concierge_phone: null,
+      property_admin_name: null,
+      property_admin_email: null,
+      property_admin_phone: null,
+      access_release_process: "Avisar a portaria.",
+    };
+    renderPage();
+    const quem = await screen.findByLabelText(/Quem recebeu as chaves/i);
+    fireEvent.change(quem, { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: /Salvar/i }));
+    await waitFor(() => expect(upsertSpy).toHaveBeenCalledTimes(1));
+
+    const payload = upsertSpy.mock.calls[0][0];
+    expect(payload.keys_received_by).toBeNull();
+    expect(payload.concierge_phone).toBeNull();
+    expect(payload.access_release_process).toBe("Avisar a portaria.");
+  });
+});

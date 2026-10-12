@@ -8,8 +8,37 @@ import { MemoryRouter } from "react-router-dom";
 import type { PainelObra } from "@/hooks/usePainelObras";
 import type { ObraRow } from "@/lib/obrasPainel";
 
-const h = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+const h = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  studioProjectId: null as string | null,
+  phaseProjectId: null as string | null,
+  phaseSteps: [] as unknown[],
+  savePhase: vi.fn(),
+}));
 vi.mock("sonner", () => ({ toast: { success: h.success, error: h.error } }));
+vi.mock("@/hooks/useStudioInfo", () => ({
+  useStudioInfo: (projectId: string) => {
+    h.studioProjectId = projectId;
+    return {
+      data: { project_id: projectId, key_location: "Com o zelador" },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    };
+  },
+  useUpdateStudioInfo: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock("@/hooks/useCan", () => ({ useCan: () => ({ can: () => true }) }));
+// Fase de projeto: as regras da seção estão em FaseProjetoSection.test.tsx.
+vi.mock("@/hooks/useProjectPhase", () => ({
+  useProjectPhaseSteps: (projectId: string) => {
+    h.phaseProjectId = projectId;
+    return { data: h.phaseSteps, isError: false, isLoading: false, isFetching: false, refetch: vi.fn() };
+  },
+  useSaveProjectPhaseStep: () => ({ mutateAsync: h.savePhase, isPending: false }),
+}));
 // Hoje fixo (quarta, 14/10/2026) para as regras de "data futura".
 vi.mock("@/lib/hojeDia", async (orig) => ({
   ...(await orig<typeof import("@/lib/hojeDia")>()),
@@ -17,6 +46,7 @@ vi.mock("@/lib/hojeDia", async (orig) => ({
 }));
 
 import { ObraDrawer, validateObraDate, type ObraDrawerProps } from "../ObraDrawer";
+import { buildProjetoRow } from "@/lib/painelNovo";
 
 const obra = (p: Partial<PainelObra> = {}): PainelObra =>
   ({
@@ -120,6 +150,9 @@ describe("ObraDrawer", () => {
     onPatch.mockReset().mockResolvedValue(undefined);
     h.success.mockReset();
     h.error.mockReset();
+    h.phaseProjectId = null;
+    h.phaseSteps = [];
+    h.savePhase.mockReset().mockResolvedValue({});
   });
 
   it("situação é só leitura: entrega, folga, término projetado, multa e os outros avisos", () => {
@@ -146,8 +179,25 @@ describe("ObraDrawer", () => {
     expect(href(/Cadastro e prazo do contrato/)).toBe("/gestao/obra/a");
   });
 
+  it("'Ficha da obra' abre a ficha desta obra por cima da gaveta", () => {
+    renderDrawer();
+    const atalhos = screen.getByRole("navigation", { name: "Atalhos da obra" });
+    expect(screen.queryByRole("dialog", { name: "Ficha da obra" })).toBeNull();
+    fireEvent.click(within(atalhos).getByRole("button", { name: "Ficha da obra" }));
+    const ficha = screen.getByRole("dialog", { name: "Ficha da obra" });
+    expect(h.studioProjectId).toBe("a");
+    expect(within(ficha).getByText("Ap. 1204 Vila Mariana")).toBeInTheDocument();
+    expect(within(ficha).getByText("Com o zelador")).toBeInTheDocument();
+  });
+
   it("obra fora da execução não oferece 'Planejar a semana'", () => {
-    renderDrawer({ row: null, projeto: { id: "a", name: "x", customer: null, responsibleId: null, responsible: null, etapa: "Projeto 3D", staleDays: 20, daysInEtapa: 3, relationship: null, paused: false } });
+    renderDrawer({
+      row: null,
+      projeto: buildProjetoRow(
+        obra({ etapa: "Projeto 3D", ultima_atualizacao: "2026-09-24T12:00:00Z", inicio_etapa: "2026-10-11", is_project_phase: true }),
+        "2026-10-14",
+      ),
+    });
     expect(screen.queryByRole("link", { name: /Planejar a semana/ })).toBeNull();
     expect(screen.getByText("Em fase de projeto")).toBeInTheDocument();
     expect(within(screen.getByRole("region", { name: "Situação do projeto" })).getByText("Há 20 dias")).toBeInTheDocument();
@@ -262,5 +312,77 @@ describe("ObraDrawer", () => {
   it("obra não encontrada", () => {
     renderDrawer({ obra: null, row: null });
     expect(screen.getByText("Obra não encontrada")).toBeInTheDocument();
+  });
+
+  describe("obra em fase de projeto", () => {
+    const emProjeto = (p: Partial<PainelObra> = {}) =>
+      obra({ id: "p", etapa: "Projeto 3D", is_project_phase: true, inicio_oficial: null, entrega_oficial: null, inicio_real: null, ...p });
+
+    it("a seção 'Fase de projeto' entra no lugar do seletor livre de etapa; o resto do cadastro fica", () => {
+      h.phaseSteps = [{ step: "projeto_3d", done_at: "2026-10-01", due_date: null, responsible_user_id: null, notes: null }];
+      renderDrawer({ obra: emProjeto(), row: null, canEditPhase: true });
+      const fase = screen.getByRole("region", { name: "Fase de projeto" });
+      expect(h.phaseProjectId).toBe("p");
+      expect(within(fase).getAllByRole("group")).toHaveLength(6);
+      expect(within(fase).getByText("1 de 6 concluídas")).toBeInTheDocument();
+      expect(screen.queryByRole("combobox", { name: "Etapa" })).toBeNull();
+      // Relacionamento, paralisada, responsável, datas e a ficha continuam.
+      const cadastro = screen.getByRole("region", { name: "Cadastro da obra" });
+      expect(within(cadastro).getByRole("combobox", { name: "Responsável" })).toBeInTheDocument();
+      expect(within(cadastro).getByRole("combobox", { name: "Relacionamento com o cliente" })).toBeInTheDocument();
+      expect(screen.getByRole("switch", { name: "Obra paralisada" })).toBeInTheDocument();
+      expect(campo("Entrega real")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Ficha da obra" })).toBeInTheDocument();
+    });
+
+    it("obra de antes do fluxo por etapas, já em 'Condomínio': as etapas anteriores aparecem concluídas, sem 'Reabrir'", () => {
+      h.phaseSteps = [];
+      renderDrawer({ obra: emProjeto({ etapa: "Condomínio" }), row: null, canEditPhase: true });
+      const fase = screen.getByRole("region", { name: "Fase de projeto" });
+      expect(within(fase).getByText("4 de 6 concluídas")).toBeInTheDocument();
+      const tresD = within(fase).getByRole("group", { name: "Projeto 3D" });
+      expect(within(tresD).getByText("Concluída antes do registro por etapas")).toBeInTheDocument();
+      expect(within(tresD).queryByRole("button", { name: "Reabrir" })).toBeNull();
+      const pedido = within(fase).getByRole("group", { name: "Pedido de aprovação ao condomínio" });
+      expect(within(pedido).getByText("Etapa atual")).toBeInTheDocument();
+    });
+
+    it("obra em execução não mostra a seção", () => {
+      renderDrawer();
+      expect(screen.queryByRole("region", { name: "Fase de projeto" })).toBeNull();
+      expect(screen.getByRole("combobox", { name: "Etapa" })).toBeInTheDocument();
+      expect(h.phaseProjectId).toBeNull();
+    });
+
+    it("concluir uma etapa grava em project_phase_steps, não no cadastro da obra", async () => {
+      renderDrawer({ obra: emProjeto(), row: null, canEditPhase: true });
+      const etapa = screen.getByRole("group", { name: "Projeto 3D" });
+      fireEvent.click(within(etapa).getByRole("button", { name: "Concluir" }));
+      fireEvent.click(within(etapa).getByRole("button", { name: "Confirmar conclusão" }));
+      await waitFor(() => expect(h.savePhase).toHaveBeenCalledWith({ project_id: "p", step: "projeto_3d", done_at: "2026-10-14" }));
+      expect(onPatch).not.toHaveBeenCalled();
+    });
+
+    it("sem 'projectPhase:edit' a seção é só leitura, mesmo podendo editar o cadastro", () => {
+      renderDrawer({ obra: emProjeto(), row: null, canEdit: true, canEditPhase: false });
+      const fase = screen.getByRole("region", { name: "Fase de projeto" });
+      expect(within(fase).queryByRole("button")).toBeNull();
+      expect(within(fase).getByText("Você não tem permissão para alterar a fase de projeto.")).toBeInTheDocument();
+      expect(screen.getByRole("switch", { name: "Obra paralisada" })).not.toBeDisabled();
+    });
+
+    it("mostra o início oficial e o aviso que veio do Kanban", () => {
+      h.phaseSteps = [{ step: "aprovacao_condominio", done_at: "2026-10-07", due_date: null, responsible_user_id: null, notes: null }];
+      renderDrawer({
+        obra: emProjeto({ inicio_apos_aprovacao: "2026-10-15", inicio_oficial: "2026-11-02" }),
+        row: null,
+        canEditPhase: true,
+        phaseNotice: "Informe o dia em que a aprovação chegou.",
+      });
+      const fase = screen.getByRole("region", { name: "Fase de projeto" });
+      expect(within(fase).getByText("Início oficial: 15/10/2026 (5 dias úteis após a aprovação)")).toBeInTheDocument();
+      expect(within(fase).getByRole("status")).toHaveTextContent("Informe o dia em que a aprovação chegou.");
+      expect(within(fase).getByRole("link", { name: "Ajuste o cronograma" })).toHaveAttribute("href", "/obra/p/cronograma");
+    });
   });
 });

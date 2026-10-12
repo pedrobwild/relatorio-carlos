@@ -61,5 +61,8 @@ export function useStaffUsers() {
       return (data || []) as StaffUser[];
     },
     staleTime: 5 * 60 * 1000,
+    // Fica no cache do aparelho por 24 h (= maxAge do persister): a tela Hoje
+    // aberta sem sinal ainda mostra quem é quem.
+    gcTime: 24 * 60 * 60 * 1000,
   });
 }

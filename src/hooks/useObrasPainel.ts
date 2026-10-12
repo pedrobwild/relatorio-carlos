@@ -4,18 +4,31 @@
  * responsável, avanço, cadastro digitado), cronograma e camada de Operação.
  * Devolve as linhas em execução já calculadas e ordenadas por risco, mais as
  * listas de projetos (fase de projeto) e de obras concluídas.
+ *
+ * As etapas da fase de projeto (`project_phase_steps`) são um complemento:
+ * não entram em `isLoading` nem em `error`. Enquanto não chegam — ou se a
+ * leitura falhar — a lista de Projetos sai com o que tem e cada linha fica
+ * com `phase: null` ("não se sabe"), nunca "sem etapa registrada".
  */
-import { useMemo } from "react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useCallback, useMemo, useRef } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { obrasPanelRepo } from "@/infra/repositories/obrasPanel.repository";
 import { useObraDeadlines } from "@/hooks/useContractDeadline";
 import { usePainelObras, type PainelObra } from "@/hooks/usePainelObras";
 import {
+  useMoveProjectToPhaseStep,
+  useProjectPhasePortfolio,
+  type ProjectPhasePortfolio,
+} from "@/hooks/useProjectPhase";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import type { ProjectPhaseStep, ProjectPhaseStepKey } from "@/infra/repositories/projectPhase.repository";
+import {
   buildConcluidaRow,
   buildProjetoRow,
   cadastroOf,
   isObraConcluida,
+  moveStepsLocally,
   sortConcluidas,
   sortProjetos,
   type ConcluidaRow,
@@ -39,6 +52,25 @@ const keepSameRange =
   (from: string, to: string) =>
   <T,>(previous: T | undefined, previousQuery: { queryKey: readonly unknown[] } | undefined): T | undefined =>
     previousQuery?.queryKey.at(-2) === from && previousQuery.queryKey.at(-1) === to ? previous : undefined;
+
+/** Etapas da fase de projeto: chegaram, ainda carregando, ou a leitura falhou. */
+export type PhaseStepsStatus = "ok" | "loading" | "error";
+
+/** Linha provisória de uma etapa ainda sem registro (só para a tela mudar na hora). */
+const blankStep =
+  (projectId: string) =>
+  (step: ProjectPhaseStepKey): ProjectPhaseStep => ({
+    id: `local-${projectId}-${step}`,
+    project_id: projectId,
+    step,
+    done_at: null,
+    due_date: null,
+    responsible_user_id: null,
+    notes: null,
+    updated_by: null,
+    created_at: "",
+    updated_at: "",
+  });
 
 /** Mensagem em português para a tela; nunca o erro cru do Postgres. */
 function friendlyError(error: unknown): string {
@@ -146,11 +178,69 @@ export function useObrasPainel(week: { from: string; to: string }) {
     [deadlinesQ.data],
   );
 
-  /** Obras em fase de projeto: a mais parada primeiro. */
+  // Fase de projeto: etapas de todas as obras em projeto, numa leitura só.
+  const phaseIds = useMemo(
+    () => painel.obras.filter((o) => o.is_project_phase).map((o) => o.id).sort(),
+    [painel.obras],
+  );
+  const phaseKey = phaseIds.join(",");
+  const phaseQ = useProjectPhasePortfolio(phaseIds);
+  const { data: staff } = useStaffUsers();
+  // A lista de obras em projeto está na chave da consulta. Quando uma obra
+  // entra ou sai, a chave muda e os dados somem até a nova leitura chegar:
+  // nesse intervalo vale o último resultado, só para as obras que ele cobria.
+  const lastPhase = useRef<{ key: string; ids: ReadonlySet<string>; data: ProjectPhasePortfolio } | null>(null);
+  if (phaseQ.data && (lastPhase.current?.data !== phaseQ.data || lastPhase.current.key !== phaseKey)) {
+    lastPhase.current = { key: phaseKey, ids: new Set(phaseIds), data: phaseQ.data };
+  }
+  const phaseStatus: PhaseStepsStatus =
+    phaseIds.length === 0 || phaseQ.data ? "ok" : phaseQ.isError ? "error" : "loading";
+
+  /** Obras em fase de projeto: etapa atrasada primeiro (ver `sortProjetos`). */
   const projetos = useMemo<ProjetoRow[]>(() => {
     const today = todayISO();
-    return sortProjetos(painel.obras.filter((o) => o.is_project_phase).map((o) => buildProjetoRow(o, today)));
-  }, [painel.obras]);
+    const staffNames = new Map((staff ?? []).map((u) => [u.id, u.nome]));
+    const previous = phaseQ.isError ? null : lastPhase.current;
+    /** undefined = não se sabe (carregando, ou a leitura falhou). */
+    const stepsOf = (id: string) => {
+      if (phaseQ.data) return phaseQ.data[id] ?? [];
+      return previous?.ids.has(id) ? (previous.data[id] ?? []) : undefined;
+    };
+    return sortProjetos(
+      painel.obras
+        .filter((o) => o.is_project_phase)
+        .map((o) => buildProjetoRow(o, today, { steps: stepsOf(o.id), staffNames })),
+    );
+  }, [painel.obras, phaseQ.data, phaseQ.isError, staff]);
+
+  // "Esta obra está na etapa X" (arrastar no Kanban). Mesmo cuidado de
+  // `updateObra`: a tela muda na hora e volta ao que era se o banco recusar.
+  const qc = useQueryClient();
+  const { mutateAsync: movePhase } = useMoveProjectToPhaseStep();
+  const moveToPhaseStep = useCallback(
+    async (projectId: string, step: ProjectPhaseStepKey) => {
+      const prefix = queryKeys.projectPhase.portfolios();
+      await qc.cancelQueries({ queryKey: prefix });
+      const snapshots = qc.getQueriesData<ProjectPhasePortfolio>({ queryKey: prefix });
+      const today = todayISO();
+      for (const [key, prev] of snapshots) {
+        if (!prev) continue;
+        qc.setQueryData<ProjectPhasePortfolio>(key, {
+          ...prev,
+          [projectId]: moveStepsLocally(prev[projectId] ?? [], step, today, blankStep(projectId)),
+        });
+      }
+      try {
+        return await movePhase({ projectId, step });
+      } catch (err) {
+        for (const [key, prev] of snapshots) qc.setQueryData(key, prev);
+        // Relê do banco: a leitura cancelada acima não pode ficar pela metade.
+        void qc.invalidateQueries({ queryKey: prefix });
+        throw err; // o aviso de erro é o global das mutações
+      }
+    },
+    [qc, movePhase],
+  );
 
   /** Obras entregues: a mais recente primeiro. */
   const concluidas = useMemo<ConcluidaRow[]>(
@@ -173,6 +263,12 @@ export function useObrasPainel(week: { from: string; to: string }) {
     deadlineById,
     updateObra: painel.updateObra,
     isUpdating: painel.isUpdating,
+    /** Etapas da fase de projeto: "ok", "loading" ou "error" (não bloqueia o Painel). */
+    phaseStatus,
+    refetchPhase: () => {
+      void phaseQ.refetch();
+    },
+    moveToPhaseStep,
     isLoading,
     error: error ? friendlyError(error) : painel.error,
     refetch: () => {
@@ -183,6 +279,7 @@ export function useObrasPainel(week: { from: string; to: string }) {
       void materialsQ.refetch();
       void assignmentsQ.refetch();
       void closingsQ.refetch();
+      void phaseQ.refetch();
     },
   };
 }

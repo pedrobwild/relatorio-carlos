@@ -81,6 +81,45 @@ describe("queryPersister", () => {
       await persister!.removeClient();
       expect(hasPersistedCache()).toBe(false);
     });
+
+    it("mutação nenhuma vai para (ou volta de) este cache: a fila tem armazenamento próprio", async () => {
+      const persister = createQueryPersister();
+      const state = (status: string, isPaused: boolean) => ({
+        status,
+        isPaused,
+        variables: { id: "x" },
+        context: undefined,
+        data: undefined,
+        error: null,
+        failureCount: 1,
+        failureReason: null,
+        submittedAt: 1,
+      });
+      const mockClient = {
+        timestamp: Date.now(),
+        buster: "1",
+        clientState: {
+          queries: [],
+          mutations: [
+            // Estava no meio de uma tentativa quando o app foi fechado.
+            { mutationKey: ["ops", "mutation", "set-outcome"], state: state("pending", false) },
+            { mutationKey: ["ops", "mutation", "set-outcome"], state: state("pending", true) },
+          ],
+        },
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await persister!.persistClient(mockClient as any);
+      const restored = await persister!.restoreClient();
+      expect(restored?.clientState.mutations).toEqual([]);
+
+      // Blob gravado por uma versão anterior (com mutações): elas não voltam
+      // daqui — senão o mesmo registro sairia também pela caixa de saída.
+      const key = Object.keys(localStorage).find((k) => k.startsWith("bwild-query-cache-v"))!;
+      localStorage.setItem(key, JSON.stringify(mockClient));
+      const legacy = await persister!.restoreClient();
+      expect(legacy?.clientState.mutations).toEqual([]);
+    });
   });
 
   describe("clearPersistedCache", () => {

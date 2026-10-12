@@ -67,7 +67,19 @@ export type Feature =
   // Observações internas da obra (staff-only; cliente nunca vê)
   | "internal_notes:view"
   | "internal_notes:create"
-  | "internal_notes:moderate";
+  | "internal_notes:moderate"
+  // Ficha da obra (endereço, chaves, condomínio, contatos do prédio).
+  // Toda a equipe edita — mesma regra do banco (RLS: staff com acesso à
+  // obra) e da tela "Dados do Cliente". Cliente nunca vê nem edita.
+  | "ficha:edit"
+  // Fase de projeto (as seis etapas antes da obra: responsável, prazo,
+  // conclusão e "a obra está na etapa X"). Mesmos papéis de
+  // "journey:edit_stages" e da regra do banco (can_edit_project_phase):
+  // financeiro e suprimentos veem, mas não conduzem a fase de projeto.
+  | "projectPhase:edit"
+  // Resumo da semana da carteira (diretoria): números de todas as obras e
+  // adoção do planejamento semanal por gestor
+  | "portfolio:resumo";
 
 /**
  * Permission matrix: role -> allowed features
@@ -140,6 +152,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "assessor:use",
     "internal_notes:view",
     "internal_notes:create",
+    "ficha:edit",
+    "projectPhase:edit",
   ],
 
   manager: [
@@ -192,6 +206,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "assessor:use",
     "internal_notes:view",
     "internal_notes:create",
+    "ficha:edit",
+    "projectPhase:edit",
+    "portfolio:resumo",
   ],
 
   admin: [
@@ -245,7 +262,10 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "assessor:use",
     "internal_notes:view",
     "internal_notes:create",
+    "ficha:edit",
+    "projectPhase:edit",
     "internal_notes:moderate",
+    "portfolio:resumo",
   ],
 
   gestor: [
@@ -298,6 +318,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "assessor:use",
     "internal_notes:view",
     "internal_notes:create",
+    "ficha:edit",
+    "projectPhase:edit",
     "internal_notes:moderate",
   ],
 
@@ -316,6 +338,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "ncs:view",
     "internal_notes:view",
     "internal_notes:create",
+    "ficha:edit",
   ],
 
   financeiro: [
@@ -334,6 +357,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "ncs:view",
     "internal_notes:view",
     "internal_notes:create",
+    "ficha:edit",
   ],
 
   cs: [
@@ -386,6 +410,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "assessor:use",
     "internal_notes:view",
     "internal_notes:create",
+    "ficha:edit",
+    "projectPhase:edit",
   ],
 
   arquitetura: [
@@ -438,6 +464,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "assessor:use",
     "internal_notes:view",
     "internal_notes:create",
+    "ficha:edit",
+    "projectPhase:edit",
   ],
 };
 

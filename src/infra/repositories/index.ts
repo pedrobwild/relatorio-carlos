@@ -93,7 +93,22 @@ export type {
   OpsDayAssignment,
   OpsMaterial,
   OpsMaterialStatus,
+  OpsMaterialWithPurchase,
+  OpsPurchaseSummary,
   OpsReview,
   OpsReviewResult,
   StageRollup,
 } from "./ops.repository";
+
+export { purchasesRepo } from "./purchases.repository";
+export type { CreatePurchaseInput, ProjectPurchaseRow } from "./purchases.repository";
+
+export { studioInfoRepo } from "./studioInfo.repository";
+export type { StudioInfo, StudioInfoPatch } from "./studioInfo.repository";
+
+export { projectPhaseRepo } from "./projectPhase.repository";
+export type {
+  ProjectPhaseStep,
+  ProjectPhaseStepKey,
+  SaveProjectPhaseStepInput,
+} from "./projectPhase.repository";

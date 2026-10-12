@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { SignOutConfirmDialog } from "@/components/layout/SignOutConfirmDialog";
+import { useSignOutGuard } from "@/hooks/useSignOutGuard";
 
 /**
  * Compact user menu — avatar icon that opens a dropdown with:
@@ -39,8 +41,6 @@ export function UserMenu() {
   const primaryRoleLabel =
     roles.length > 0 ? ROLE_LABELS[roles[0]] || roles[0] : null;
 
-  if (!isAuthenticated) return null;
-
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -49,10 +49,15 @@ export function UserMenu() {
       navigate("/auth", { replace: true });
     }
   };
+  // Com registros ainda não enviados neste aparelho, pergunta antes de sair.
+  const signOutGuard = useSignOutGuard({ userId: user?.id, signOut: handleSignOut });
+
+  if (!isAuthenticated) return null;
 
   const homePath = isStaff ? "/gestao" : "/minhas-obras";
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
@@ -95,11 +100,13 @@ export function UserMenu() {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem onClick={signOutGuard.request}>
           <LogOut className="mr-2 h-4 w-4" />
           Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <SignOutConfirmDialog {...signOutGuard.dialogProps} />
+    </>
   );
 }

@@ -25,6 +25,12 @@ import {
   createQueryPersister,
   QUERY_CACHE_VERSION,
 } from "@/lib/queryPersister";
+import {
+  registerOpsOfflineDefaults,
+  syncOnlineManagerWithNavigator,
+} from "@/lib/offline/opsOutcomeSync";
+import { startOpsPhotoSync } from "@/lib/offline/opsPhotoSync";
+import { startOpsOfflineSession } from "@/lib/offline/opsOfflineSession";
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 import { AuthRedirect } from "@/components/AuthRedirect";
@@ -86,6 +92,7 @@ const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const Hoje = lazy(() => import("./pages/gestao/Hoje"));
 const Semana = lazy(() => import("./pages/gestao/Semana"));
 const ObrasPainelNovo = lazy(() => import("./pages/gestao/Obras"));
+const ResumoSemanal = lazy(() => import("./pages/gestao/ResumoSemanal"));
 const Lookahead = lazy(() => import("./pages/gestao/Lookahead"));
 const AvancoFisico = lazy(() => import("./pages/gestao/AvancoFisico"));
 const Custos = lazy(() => import("./pages/gestao/Custos"));
@@ -134,6 +141,14 @@ const persister = createQueryPersister();
 // Cache max age: 24 hours
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
+// Fila offline da tela Hoje. Os registros pendentes ficam na caixa de saída
+// do aparelho (não no cache das consultas) e são retomados, por usuário,
+// quando a sessão é conhecida — inclusive abrindo o app sem sinal.
+syncOnlineManagerWithNavigator();
+registerOpsOfflineDefaults(queryClient);
+startOpsPhotoSync(queryClient);
+startOpsOfflineSession(queryClient);
+
 // Wrapper component to provide project context + staff sidebar shell.
 // `resetKeys={[pathname]}` lets the boundary auto-recover on navigation: a
 // transient render crash while switching obras/abas clears itself on the next
@@ -177,6 +192,9 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
           persister,
           maxAge: CACHE_MAX_AGE,
           buster: String(QUERY_CACHE_VERSION),
+          // A fila do Feito / Não feito tem armazenamento próprio (caixa de
+          // saída); mutação nenhuma vai para este cache descartável.
+          dehydrateOptions: { shouldDehydrateMutation: () => false },
         }}
         onSuccess={() => {
           if (import.meta.env.DEV) {
@@ -543,6 +561,17 @@ const AppContent = () => {
                 }
               />
 
+              {/* Resumo da semana (diretoria): a página mostra "sem acesso" sem `portfolio:resumo`. */}
+              <Route
+                path="/gestao/resumo"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<ResumoSemanal />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
               <Route
                 path="/gestao/obras"
                 element={
