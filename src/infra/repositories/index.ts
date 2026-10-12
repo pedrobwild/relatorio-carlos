@@ -100,3 +100,10 @@ export type {
 
 export { studioInfoRepo } from "./studioInfo.repository";
 export type { StudioInfo, StudioInfoPatch } from "./studioInfo.repository";
+
+export { projectPhaseRepo } from "./projectPhase.repository";
+export type {
+  ProjectPhaseStep,
+  ProjectPhaseStepKey,
+  SaveProjectPhaseStepInput,
+} from "./projectPhase.repository";

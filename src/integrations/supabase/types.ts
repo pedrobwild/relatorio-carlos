@@ -5677,6 +5677,60 @@ export type Database = {
           },
         ]
       }
+      project_phase_steps: {
+        Row: {
+          created_at: string
+          done_at: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          responsible_user_id: string | null
+          step: Database["public"]["Enums"]["project_phase_step"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          done_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          responsible_user_id?: string | null
+          step: Database["public"]["Enums"]["project_phase_step"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          done_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          responsible_user_id?: string | null
+          step?: Database["public"]["Enums"]["project_phase_step"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_phase_steps_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_phase_steps_responsible_user_id_fkey"
+            columns: ["responsible_user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_planned_dates_resync_runs: {
         Row: {
           changed_ids: string[]
@@ -7881,6 +7935,7 @@ export type Database = {
       }
       can_edit_atividades: { Args: { p_obra_id: string }; Returns: boolean }
       can_edit_cronograma: { Args: { p_obra_id: string }; Returns: boolean }
+      can_edit_project_phase: { Args: { _user_id: string }; Returns: boolean }
       can_manage_project: {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
@@ -8242,6 +8297,13 @@ export type Database = {
         }
         Returns: string
       }
+      move_project_to_phase_step: {
+        Args: {
+          p_project_id: string
+          p_step: Database["public"]["Enums"]["project_phase_step"]
+        }
+        Returns: undefined
+      }
       my_profile_role: { Args: never; Returns: string }
       pii_projects_backfill: { Args: never; Returns: Json }
       pii_projects_drop_legacy_columns: { Args: never; Returns: Json }
@@ -8548,6 +8610,13 @@ export type Database = {
         | "decision"
         | "invoice"
         | "extra_purchase"
+      project_phase_step:
+        | "projeto_3d"
+        | "projeto_executivo"
+        | "medicao_fina"
+        | "emissao_art"
+        | "solicitacao_aprovacao"
+        | "aprovacao_condominio"
       project_role: "owner" | "engineer" | "viewer" | "customer"
       review_comment_status: "open" | "resolved"
       review_status: "draft" | "in_review" | "approved" | "archived"
@@ -8871,6 +8940,14 @@ export const Constants = {
         "decision",
         "invoice",
         "extra_purchase",
+      ],
+      project_phase_step: [
+        "projeto_3d",
+        "projeto_executivo",
+        "medicao_fina",
+        "emissao_art",
+        "solicitacao_aprovacao",
+        "aprovacao_condominio",
       ],
       project_role: ["owner", "engineer", "viewer", "customer"],
       review_comment_status: ["open", "resolved"],

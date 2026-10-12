@@ -1,7 +1,9 @@
 /**
  * Painel de Obras reformulado: resumo do topo, ordem por risco, "minhas",
  * semana, e — para o escritório — busca, listas Projetos/Concluídas, visões
- * Board/Kanban e a gaveta da obra.
+ * Board/Kanban e a gaveta da obra. Em Projetos: etapa da fase de projeto,
+ * situação do prazo, resumo acima da lista, colunas por etapa e o que
+ * acontece ao soltar um cartão.
  * Os dados vêm mockados já calculados; as regras estão em obrasPainel.test.ts
  * e painelNovo.test.ts.
  */
@@ -9,7 +11,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import type { ObraRow } from "@/lib/obrasPainel";
-import type { ConcluidaRow, ProjetoRow } from "@/lib/painelNovo";
+import { buildProjetoRow, type ConcluidaRow, type ProjetoRow } from "@/lib/painelNovo";
+import { PHASE_STEPS, type PhaseStepRow } from "@/lib/faseProjeto";
 import type { PainelObra } from "@/hooks/usePainelObras";
 
 const h = vi.hoisted(() => ({
@@ -23,8 +26,14 @@ const h = vi.hoisted(() => ({
   mobile: false,
   simple: false,
   canEdit: true,
+  canEditPhase: true,
   updateObra: vi.fn(),
   toastSuccess: vi.fn(),
+  phaseStatus: "ok" as "ok" | "loading" | "error",
+  refetchPhase: vi.fn(),
+  moveToPhaseStep: vi.fn(),
+  phaseSteps: [] as unknown[],
+  savePhase: vi.fn(),
 }));
 
 vi.mock("@/hooks/useObrasPainel", () => ({
@@ -38,6 +47,9 @@ vi.mock("@/hooks/useObrasPainel", () => ({
       deadlineById: new Map(),
       updateObra: h.updateObra,
       isUpdating: false,
+      phaseStatus: h.phaseStatus,
+      refetchPhase: h.refetchPhase,
+      moveToPhaseStep: h.moveToPhaseStep,
       isLoading: h.loading,
       error: h.error,
       refetch: vi.fn(),
@@ -47,7 +59,14 @@ vi.mock("@/hooks/useObrasPainel", () => ({
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "eu" } }) }));
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => h.mobile }));
 vi.mock("@/hooks/useMenuMode", () => ({ useMenuMode: () => ({ isSimple: h.simple }) }));
-vi.mock("@/hooks/useCan", () => ({ useCan: () => ({ can: () => h.canEdit }) }));
+vi.mock("@/hooks/useCan", () => ({
+  useCan: () => ({ can: (feature: string) => (feature === "projectPhase:edit" ? h.canEditPhase : h.canEdit) }),
+}));
+// A gaveta lê e grava as etapas da obra aberta (regras em FaseProjetoSection.test.tsx).
+vi.mock("@/hooks/useProjectPhase", () => ({
+  useProjectPhaseSteps: () => ({ data: h.phaseSteps, isError: false, isLoading: false, isFetching: false, refetch: vi.fn() }),
+  useSaveProjectPhaseStep: () => ({ mutateAsync: h.savePhase, isPending: false }),
+}));
 vi.mock("@/hooks/useStaffUsers", async (orig) => ({
   ...(await orig<typeof import("@/hooks/useStaffUsers")>()),
   useStaffUsers: () => ({ data: [] }),
@@ -94,19 +113,37 @@ const cadastro = (p: Partial<PainelObra>): PainelObra =>
     ...p,
   }) as PainelObra;
 
-const projeto = (p: Partial<ProjetoRow>): ProjetoRow => ({
-  id: "p",
-  name: "Loft Itaim",
-  customer: "Bruno",
-  responsibleId: null,
-  responsible: null,
-  etapa: "Projeto 3D",
-  staleDays: 20,
-  daysInEtapa: 8,
-  relationship: null,
-  paused: false,
-  ...p,
-});
+/** Hoje das linhas de projeto (as regras de data estão em painelNovo.test.ts). */
+const HOJE = "2026-10-14";
+
+/** As `n` primeiras etapas concluídas e a seguinte com o que for passado. */
+function etapas(n: number, atual: Partial<PhaseStepRow> | null = null): PhaseStepRow[] {
+  const base = { due_date: null, responsible_user_id: null, notes: null };
+  const rows: PhaseStepRow[] = PHASE_STEPS.slice(0, n).map((s) => ({ ...base, step: s.key, done_at: "2026-10-01" }));
+  if (atual && n < PHASE_STEPS.length) rows.push({ ...base, step: PHASE_STEPS[n].key, done_at: null, ...atual });
+  return rows;
+}
+
+/**
+ * Linha de uma obra em fase de projeto, calculada como o hook faz.
+ * `steps`: linhas de project_phase_steps; [] = nada registrado; null = não se sabe.
+ */
+const projeto = (p: Partial<PainelObra> = {}, steps: PhaseStepRow[] | null = []): ProjetoRow =>
+  buildProjetoRow(
+    cadastro({
+      id: "p",
+      nome: "Loft Itaim",
+      customer_name: "Bruno",
+      etapa: "Projeto 3D",
+      inicio_etapa: "2026-10-06",
+      // Meio-dia UTC: mesmo dia de calendário em São Paulo e em UTC.
+      ultima_atualizacao: "2026-09-24T12:00:00Z",
+      is_project_phase: true,
+      ...p,
+    }),
+    HOJE,
+    { steps, staffNames: new Map([["u1", "Bruna"], ["eu", "Eu Mesma"]]) },
+  );
 
 const concluida = (p: Partial<ConcluidaRow>): ConcluidaRow => ({
   id: "c",
@@ -145,8 +182,14 @@ describe("Painel de Obras reformulado", () => {
     h.mobile = false;
     h.simple = false;
     h.canEdit = true;
+    h.canEditPhase = true;
     h.updateObra.mockReset().mockResolvedValue(undefined);
     h.toastSuccess.mockReset();
+    h.phaseStatus = "ok";
+    h.refetchPhase.mockReset();
+    h.moveToPhaseStep.mockReset().mockResolvedValue(undefined);
+    h.phaseSteps = [];
+    h.savePhase.mockReset().mockResolvedValue({});
     h.rows = [
       mk({
         id: "a",
@@ -174,7 +217,7 @@ describe("Painel de Obras reformulado", () => {
         week: { stages: ["Pintura"], planned: 0, done: 0, notDone: 0, unplanned: true },
       }),
     ];
-    h.projetos = [projeto({})];
+    h.projetos = [projeto()];
     h.concluidas = [concluida({})];
     h.obras = new Map([
       ["a", cadastro({})],
@@ -336,13 +379,13 @@ describe("Painel de Obras reformulado", () => {
       expect(screen.getByRole("row", { name: /Ap\. 1204/ })).toBeInTheDocument();
     });
 
-    it("Projetos: há quanto tempo está parado; sem a linha da semana", () => {
+    it("Projetos sem etapa registrada: etapa antiga e há quanto tempo está parado; sem a linha da semana", () => {
       renderPage();
       fireEvent.click(screen.getByRole("radio", { name: "Projetos (1)" }));
       expect(onde()).toContain("fase=projetos");
       const linha = screen.getByRole("row", { name: /Loft Itaim/ });
       expect(within(linha).getByText("Projeto 3D")).toBeInTheDocument();
-      expect(within(linha).getByText("Há 20 dias")).toBeInTheDocument();
+      expect(within(linha).getByText("Etapas não registradas · há 20 dias sem atualização")).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Ver a semana seguinte" })).toBeNull();
     });
 
@@ -404,6 +447,252 @@ describe("Painel de Obras reformulado", () => {
 
       fireEvent.keyDown(cartao, { key: "Enter" });
       expect(onde()).toContain("obra=a");
+    });
+
+    describe("Projetos: fase de projeto", () => {
+      const dataTransfer = () => {
+        const store = new Map<string, string>();
+        return {
+          setData: (k: string, v: string) => store.set(k, v),
+          getData: (k: string) => store.get(k) ?? "",
+          effectAllowed: "",
+          dropEffect: "",
+        };
+      };
+      /** Arrasta o cartão para a coluna; devolve se a coluna aceitou o arrasto. */
+      const arrastar = (cartao: RegExp, coluna: string) => {
+        const dt = dataTransfer();
+        fireEvent.dragStart(screen.getByRole("button", { name: cartao }), { dataTransfer: dt });
+        const aceita = !fireEvent.dragOver(screen.getByRole("region", { name: coluna }), { dataTransfer: dt });
+        fireEvent.drop(screen.getByRole("region", { name: coluna }), { dataTransfer: dt });
+        return aceita;
+      };
+
+      beforeEach(() => {
+        h.projetos = [
+          projeto({ id: "p", nome: "Loft Itaim" }, etapas(2, { due_date: "2026-10-10", responsible_user_id: "u1" })),
+          projeto({ id: "q", nome: "Studio Lapa", customer_name: "Ana" }, etapas(1, { due_date: "2026-10-15" })),
+          projeto({ id: "r", nome: "Ap. Moema", customer_name: null, etapa: null }, []),
+          projeto({ id: "s", nome: "Casa Perdizes", customer_name: null, inicio_apos_aprovacao: "2026-10-21" }, etapas(6)),
+        ];
+        for (const r of h.projetos as ProjetoRow[]) {
+          h.obras.set(r.id, cadastro({ id: r.id, nome: r.name, etapa: r.etapa, is_project_phase: true, inicio_apos_aprovacao: r.officialStart }));
+        }
+      });
+
+      it("linha: etapa atual com o avanço, situação em texto, prazo e responsável da etapa", () => {
+        renderPage("?fase=projetos");
+        const linha = screen.getByRole("row", { name: /Loft Itaim/ });
+        expect(within(linha).getByText("Medição fina in loco")).toBeInTheDocument();
+        expect(within(linha).getByText("2 de 6 concluídas")).toBeInTheDocument();
+        expect(within(linha).getByText("Atrasada há 4 dias")).toBeInTheDocument();
+        expect(within(linha).getByText("10/10/26")).toBeInTheDocument();
+        expect(within(linha).getByText("Bruna")).toBeInTheDocument();
+        const pronta = screen.getByRole("row", { name: /Casa Perdizes/ });
+        expect(within(pronta).getByText("Pronta para iniciar")).toBeInTheDocument();
+        expect(within(pronta).getByText("Início oficial: 21/10/2026 (5 dias úteis após a aprovação)")).toBeInTheDocument();
+      });
+
+      it("resumo acima da lista, que não muda com a busca", () => {
+        renderPage("?fase=projetos");
+        const resumo = "1 com etapa atrasada · 1 vence em até 3 dias · 1 sem prazo";
+        expect(screen.getByText(resumo)).toBeInTheDocument();
+        fireEvent.change(screen.getByRole("searchbox"), { target: { value: "medicao" } });
+        expect(screen.getAllByRole("row")).toHaveLength(2); // cabeçalho + Loft Itaim (pela etapa atual)
+        expect(screen.getByRole("row", { name: /Loft Itaim/ })).toBeInTheDocument();
+        expect(screen.getByText(resumo)).toBeInTheDocument();
+        // O resumo é da lista de Projetos; não aparece em execução.
+        fireEvent.click(screen.getByRole("radio", { name: "Em execução (2)" }));
+        expect(screen.queryByText(resumo)).toBeNull();
+      });
+
+      it("a busca acha pelo responsável da etapa", () => {
+        renderPage("?fase=projetos");
+        fireEvent.change(screen.getByRole("searchbox"), { target: { value: "bruna" } });
+        expect(screen.getByRole("row", { name: /Loft Itaim/ })).toBeInTheDocument();
+        expect(screen.queryByRole("row", { name: /Studio Lapa/ })).toBeNull();
+      });
+
+      it("'Minhas' inclui a obra cuja etapa atual está comigo", () => {
+        window.localStorage.clear();
+        h.projetos = [
+          projeto({ id: "p", nome: "Loft Itaim" }, etapas(2, { responsible_user_id: "eu" })),
+          projeto({ id: "q", nome: "Studio Lapa" }, etapas(1, { responsible_user_id: "u1" })),
+        ];
+        renderPage("?fase=projetos");
+        expect(screen.getByRole("radio", { name: "Minhas (1)" })).toHaveAttribute("aria-checked", "true");
+        expect(screen.getByRole("row", { name: /Loft Itaim/ })).toBeInTheDocument();
+        expect(screen.queryByRole("row", { name: /Studio Lapa/ })).toBeNull();
+      });
+
+      it("etapas ainda carregando: a lista aparece, neutra, sem resumo e sem acusar ninguém", () => {
+        h.phaseStatus = "loading";
+        h.projetos = [projeto({ id: "p" }, null), projeto({ id: "r", nome: "Ap. Moema", etapa: null }, null)];
+        renderPage("?fase=projetos");
+        const tabela = screen.getByRole("table");
+        expect(within(tabela).getAllByRole("row")).toHaveLength(3);
+        expect(tabela).not.toHaveTextContent(/Sem prazo|Etapas não registradas|concluídas/);
+        expect(screen.queryByText(/sem prazo|com etapa atrasada/)).toBeNull();
+        expect(screen.queryByText("Não deu para carregar as etapas da fase de projeto.")).toBeNull();
+        expect(within(screen.getByRole("row", { name: /Loft Itaim/ })).getByText("Projeto 3D")).toBeInTheDocument();
+      });
+
+      it("leitura das etapas falhou: a lista continua, com o aviso e 'Tentar de novo'", () => {
+        h.phaseStatus = "error";
+        h.projetos = [projeto({ id: "p" }, null)];
+        renderPage("?fase=projetos");
+        expect(screen.getByRole("row", { name: /Loft Itaim/ })).toBeInTheDocument();
+        expect(screen.getByRole("table")).not.toHaveTextContent(/Sem prazo|Etapas não registradas/);
+        expect(screen.getByText("Não deu para carregar as etapas da fase de projeto.")).toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+        expect(h.refetchPhase).toHaveBeenCalled();
+        // O Painel inteiro não entra em erro por causa disso.
+        expect(screen.queryByText("Não deu para carregar as obras")).toBeNull();
+        expect(within(screen.getByLabelText("Resumo das obras")).getByText("Obras ativas").nextSibling).toHaveTextContent("2");
+      });
+
+      it("Board: 'Sem etapa registrada' primeiro, depois as etapas na ordem e 'Pronta para iniciar'", () => {
+        renderPage("?fase=projetos&view=board");
+        const grupos = screen.getAllByRole("button", { expanded: true }).map((b) => b.textContent);
+        expect(grupos).toHaveLength(4);
+        expect(grupos[0]).toMatch(/^Sem etapa registrada\s*1$/);
+        expect(grupos[1]).toMatch(/^Projeto executivo\s*1$/);
+        expect(grupos[2]).toMatch(/^Medição fina in loco\s*1.*1 atrasada$/);
+        expect(grupos[3]).toMatch(/^Pronta para iniciar\s*1$/);
+        expect(within(screen.getByRole("region", { name: "Medição fina in loco" })).getByText("Loft Itaim")).toBeInTheDocument();
+      });
+
+      it("Kanban: as seis etapas e 'Pronta para iniciar' sempre; 'Sem etapa registrada' só quando tem obra", () => {
+        renderPage("?fase=projetos&view=kanban");
+        const colunas = within(screen.getByRole("group", { name: "Obras por etapa da fase de projeto" }))
+          .getAllByRole("region")
+          .map((c) => c.getAttribute("aria-label"));
+        expect(colunas).toEqual([
+          "Sem etapa registrada: 1",
+          "Projeto 3D: 0",
+          "Projeto executivo: 1",
+          "Medição fina in loco: 1",
+          "Emissão da ART/RRT: 0",
+          "Pedido de aprovação ao condomínio: 0",
+          "Aprovação do condomínio recebida: 0",
+          "Pronta para iniciar: 1",
+        ]);
+        const cartao = within(screen.getByRole("region", { name: "Medição fina in loco: 1" })).getByRole("button", { name: /Loft Itaim/ });
+        expect(within(cartao).getByText("Atrasada há 4 dias")).toBeInTheDocument();
+        expect(cartao).toHaveTextContent("Prazo 10/10/26");
+        expect(cartao).toHaveTextContent("Bruna");
+        expect(screen.getByRole("button", { name: /Casa Perdizes/ })).toHaveTextContent("Início oficial 21/10/2026");
+      });
+
+      it("Kanban sem obra sem registro: a coluna 'Sem etapa registrada' some", () => {
+        h.projetos = (h.projetos as ProjetoRow[]).filter((r) => r.id !== "r");
+        renderPage("?fase=projetos&view=kanban");
+        expect(screen.queryByRole("region", { name: /Sem etapa registrada/ })).toBeNull();
+        expect(screen.getAllByRole("region")).toHaveLength(7);
+      });
+
+      it("Kanban: soltar numa coluna de etapa posiciona a obra nela (e não mexe na etapa antiga do Painel)", async () => {
+        renderPage("?fase=projetos&view=kanban");
+        expect(arrastar(/Loft Itaim/, "Emissão da ART/RRT: 0")).toBe(true);
+        expect(h.moveToPhaseStep).toHaveBeenCalledWith("p", "emissao_art");
+        expect(h.updateObra).not.toHaveBeenCalled();
+        await waitFor(() => expect(h.toastSuccess).toHaveBeenCalledWith("Etapa: Emissão da ART/RRT"));
+        expect(onde()).not.toContain("obra=");
+      });
+
+      it("Kanban: obra sem etapa registrada pode ser posicionada; a coluna dela não é destino", () => {
+        renderPage("?fase=projetos&view=kanban");
+        expect(arrastar(/Ap\. Moema/, "Projeto 3D: 0")).toBe(true);
+        expect(h.moveToPhaseStep).toHaveBeenCalledWith("r", "projeto_3d");
+        h.moveToPhaseStep.mockClear();
+        expect(arrastar(/Loft Itaim/, "Sem etapa registrada: 1")).toBe(false);
+        expect(h.moveToPhaseStep).not.toHaveBeenCalled();
+      });
+
+      it("Kanban: soltar em 'Pronta para iniciar' NÃO grava nada — abre a gaveta e diz por quê", () => {
+        renderPage("?fase=projetos&view=kanban");
+        expect(arrastar(/Loft Itaim/, "Pronta para iniciar: 1")).toBe(true);
+        expect(h.moveToPhaseStep).not.toHaveBeenCalled();
+        expect(h.updateObra).not.toHaveBeenCalled();
+        expect(h.savePhase).not.toHaveBeenCalled();
+        expect(h.toastSuccess).not.toHaveBeenCalled();
+
+        expect(onde()).toContain("obra=p");
+        const gaveta = screen.getByRole("dialog");
+        expect(within(gaveta).getByRole("heading", { name: "Loft Itaim" })).toBeInTheDocument();
+        const fase = within(gaveta).getByRole("region", { name: "Fase de projeto" });
+        expect(within(fase).getByRole("status")).toHaveTextContent(/não grava nada.*dia em que a aprovação do condomínio chegou/);
+        expect(within(fase).getByRole("group", { name: "Aprovação do condomínio recebida" })).toBeInTheDocument();
+      });
+
+      it("o aviso de 'Pronta para iniciar' é só daquela vez: abrir a obra de outro jeito não o repete", async () => {
+        renderPage("?fase=projetos&view=kanban");
+        arrastar(/Loft Itaim/, "Pronta para iniciar: 1");
+        fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+        await waitFor(() => expect(onde()).not.toContain("obra="));
+        fireEvent.click(screen.getByRole("button", { name: /Loft Itaim/ }));
+        expect(onde()).toContain("obra=p");
+        expect(within(screen.getByRole("region", { name: "Fase de projeto" })).queryByRole("status")).toBeNull();
+      });
+
+      it("Kanban: obra com a aprovação do condomínio registrada não arrasta (reabrir é pela gaveta)", () => {
+        renderPage("?fase=projetos&view=kanban");
+        expect(screen.getByRole("button", { name: /Casa Perdizes/ })).toHaveAttribute("draggable", "false");
+        expect(screen.getByRole("button", { name: /Loft Itaim/ })).toHaveAttribute("draggable", "true");
+        arrastar(/Casa Perdizes/, "Projeto 3D: 0");
+        expect(h.moveToPhaseStep).not.toHaveBeenCalled();
+      });
+
+      it("Kanban sem 'projectPhase:edit': cartões não arrastam, mesmo podendo editar o cadastro", () => {
+        h.canEditPhase = false;
+        renderPage("?fase=projetos&view=kanban");
+        for (const c of within(screen.getByRole("group", { name: "Obras por etapa da fase de projeto" })).getAllByRole("button")) {
+          expect(c).toHaveAttribute("draggable", "false");
+        }
+        expect(arrastar(/Loft Itaim/, "Emissão da ART/RRT: 0")).toBe(false);
+        expect(h.moveToPhaseStep).not.toHaveBeenCalled();
+      });
+
+      it("Kanban com as etapas desconhecidas: cartões numa coluna neutra, sem arrastar", () => {
+        h.phaseStatus = "loading";
+        h.projetos = [projeto({ id: "p" }, null)];
+        renderPage("?fase=projetos&view=kanban");
+        const coluna = screen.getByRole("region", { name: "Etapas não carregadas: 1" });
+        expect(within(coluna).getByRole("button", { name: /Loft Itaim/ })).toHaveAttribute("draggable", "false");
+        expect(screen.queryByRole("region", { name: /Sem etapa registrada/ })).toBeNull();
+        expect(coluna).not.toHaveTextContent(/Sem prazo/);
+      });
+
+      it("o Kanban em execução continua mudando a etapa do Painel", () => {
+        renderPage("?view=kanban");
+        arrastar(/Ap\. 1204/, "Vistoria: 0");
+        expect(h.updateObra).toHaveBeenCalledWith("a", { etapa: "Vistoria" });
+        expect(h.moveToPhaseStep).not.toHaveBeenCalled();
+      });
+
+      it("gaveta de obra em projeto: a seção 'Fase de projeto' no lugar do seletor de etapa", async () => {
+        h.phaseSteps = etapas(2, { due_date: "2026-10-10" });
+        renderPage("?fase=projetos&obra=p");
+        const gaveta = screen.getByRole("dialog");
+        const fase = within(gaveta).getByRole("region", { name: "Fase de projeto" });
+        expect(within(fase).getAllByRole("group")).toHaveLength(6);
+        expect(within(gaveta).queryByRole("combobox", { name: "Etapa" })).toBeNull();
+        expect(within(gaveta).queryByRole("status")).toBeNull();
+
+        const atual = within(fase).getByRole("group", { name: "Medição fina in loco" });
+        fireEvent.click(within(atual).getByRole("button", { name: "Concluir" }));
+        fireEvent.change(within(atual).getByLabelText("Data de conclusão"), { target: { value: "2026-10-09" } });
+        fireEvent.click(within(atual).getByRole("button", { name: "Confirmar conclusão" }));
+        await waitFor(() => expect(h.savePhase).toHaveBeenCalledWith({ project_id: "p", step: "medicao_fina", done_at: "2026-10-09" }));
+      });
+
+      it("gaveta sem 'projectPhase:edit': fase de projeto só leitura", () => {
+        h.canEditPhase = false;
+        renderPage("?fase=projetos&obra=p");
+        const fase = within(screen.getByRole("dialog")).getByRole("region", { name: "Fase de projeto" });
+        expect(within(fase).queryByRole("button")).toBeNull();
+        expect(within(fase).getByText("Você não tem permissão para alterar a fase de projeto.")).toBeInTheDocument();
+      });
     });
 
     it("os números do topo não mudam ao trocar de lista", () => {

@@ -489,6 +489,20 @@ export const queryKeys = {
       [...queryKeys.studioInfo.all, "by-project", projectId] as const,
   },
 
+  /**
+   * Fase de projeto (project_phase_steps): as seis etapas antes da obra.
+   * `steps` = uma obra; `portfolio` = várias obras de uma vez (carteira).
+   */
+  projectPhase: {
+    all: ["project-phase"] as const,
+    steps: (projectId: string | undefined) =>
+      [...queryKeys.projectPhase.all, "steps", projectId] as const,
+    /** Prefixo de todas as leituras de carteira — para invalidar de uma vez. */
+    portfolios: () => [...queryKeys.projectPhase.all, "portfolio"] as const,
+    portfolio: (projectIds: readonly string[]) =>
+      [...queryKeys.projectPhase.portfolios(), [...projectIds].sort().join(",")] as const,
+  },
+
 } as const;
 
 
@@ -592,6 +606,35 @@ export function invalidateActivityQueries(
 export function invalidateContractDeadlineQueries() {
   queryClient.invalidateQueries({ queryKey: queryKeys.contractDeadline.all });
   queryClient.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+}
+
+/**
+ * Fase de projeto: chamar depois de gravar uma etapa ou mover a obra de
+ * etapa. Além das etapas (da obra e da carteira), o gatilho do banco muda em
+ * `projects` a etapa do Painel, as datas de aprovação, o início oficial e o
+ * início do prazo contratual — então as listas de obras, o detalhe da obra e
+ * o prazo contratual também precisam ser relidos.
+ *
+ * Aceita o client por parâmetro para os hooks usarem o do contexto
+ * (`useQueryClient`); sem ele, usa o client global como os outros helpers.
+ */
+export function invalidateProjectPhaseQueries(
+  projectId?: string,
+  client: Pick<typeof queryClient, "invalidateQueries"> = queryClient,
+) {
+  if (projectId) {
+    client.invalidateQueries({ queryKey: queryKeys.projectPhase.steps(projectId) });
+    client.invalidateQueries({ queryKey: queryKeys.projectPhase.portfolios() });
+    client.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+  } else {
+    client.invalidateQueries({ queryKey: queryKeys.projectPhase.all });
+    client.invalidateQueries({ queryKey: queryKeys.projects.details() });
+  }
+  // Painel de Obras / portfólio: etapa, datas e início oficial de cada obra.
+  client.invalidateQueries({ queryKey: queryKeys.projects.lists() });
+  // Prazo contratual (v_project_deadlines) e tela Obras.
+  client.invalidateQueries({ queryKey: queryKeys.contractDeadline.all });
+  client.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
 }
 
 /**

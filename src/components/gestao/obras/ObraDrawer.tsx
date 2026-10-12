@@ -5,6 +5,9 @@
  * da linha: responsável, etapa, relacionamento com o cliente, "obra
  * paralisada" e as datas (entrega real incluída). A situação da obra (cor,
  * folga, multa) é só leitura — é calculada, nunca digitada.
+ *
+ * Obra em fase de projeto: no lugar do seletor livre de etapa entra a seção
+ * "Fase de projeto" (as seis etapas, com responsável, prazo e conclusão).
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -41,6 +44,7 @@ import {
 import { buildCoordenadorOptions, type StaffUser } from "@/hooks/useStaffUsers";
 import { RISK_DOT, slackTone } from "@/components/gestao/obras/ObrasList";
 import { FichaObraSheet } from "@/components/gestao/ficha/FichaObraSheet";
+import { FaseProjetoSection } from "@/components/gestao/obras/FaseProjetoSection";
 
 const NONE = "__none__";
 const ddmmaa = (iso: string) => `${ddmm(iso)}/${iso.slice(2, 4)}`;
@@ -82,6 +86,10 @@ export interface ObraDrawerProps {
   concluida?: ConcluidaRow | null;
   staff: readonly StaffUser[];
   canEdit: boolean;
+  /** Pode alterar a fase de projeto ('projectPhase:edit'). Sem isto, a seção é só leitura. */
+  canEditPhase?: boolean;
+  /** Aviso curto no topo da seção "Fase de projeto" (ex.: por que a gaveta abriu a partir do Kanban). */
+  phaseNotice?: string | null;
   /** Grava no cadastro da obra. Rejeita em caso de erro (o aviso de erro já é dado por quem grava). */
   onPatch: (id: string, patch: PainelObraPatch) => Promise<unknown>;
   weekHref?: string;
@@ -132,6 +140,8 @@ export function ObraDrawer({
   concluida,
   staff,
   canEdit,
+  canEditPhase = false,
+  phaseNotice,
   onPatch,
   weekHref,
 }: ObraDrawerProps) {
@@ -340,6 +350,18 @@ export function ObraDrawer({
             </Button>
           </nav>
 
+          {/* Fase de projeto: as seis etapas, no lugar do seletor de etapa */}
+          {obra.is_project_phase && (
+            <FaseProjetoSection
+              projectId={obra.id}
+              staff={staff}
+              canEdit={canEditPhase}
+              officialStart={obra.inicio_apos_aprovacao ?? null}
+              scheduleStart={obra.inicio_oficial}
+              notice={phaseNotice}
+            />
+          )}
+
           {/* Cadastro digitado */}
           <section aria-label="Cadastro da obra" className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground">Cadastro</h3>
@@ -367,31 +389,34 @@ export function ObraDrawer({
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="obra-etapa">Etapa</Label>
-              <Select
-                value={obra.etapa ?? NONE}
-                disabled={disabled}
-                onValueChange={(v) => void save({ etapa: v === NONE ? null : (v as PainelEtapa) }, "Etapa salva")}
-              >
-                <SelectTrigger id="obra-etapa">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>Sem etapa</SelectItem>
-                  {ETAPA_OPTIONS.map((e) => (
-                    <SelectItem key={e} value={e}>
-                      {e}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {obra.etapa === "Finalizada" && !obra.entrega_real && (
-                <p className="text-xs text-warning">
-                  Etapa finalizada sem entrega real. Informe a data abaixo para a obra sair da lista em execução.
-                </p>
-              )}
-            </div>
+            {/* Em fase de projeto a etapa vem das seis etapas acima, não deste seletor. */}
+            {!obra.is_project_phase && (
+              <div className="space-y-1.5">
+                <Label htmlFor="obra-etapa">Etapa</Label>
+                <Select
+                  value={obra.etapa ?? NONE}
+                  disabled={disabled}
+                  onValueChange={(v) => void save({ etapa: v === NONE ? null : (v as PainelEtapa) }, "Etapa salva")}
+                >
+                  <SelectTrigger id="obra-etapa">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Sem etapa</SelectItem>
+                    {ETAPA_OPTIONS.map((e) => (
+                      <SelectItem key={e} value={e}>
+                        {e}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {obra.etapa === "Finalizada" && !obra.entrega_real && (
+                  <p className="text-xs text-warning">
+                    Etapa finalizada sem entrega real. Informe a data abaixo para a obra sair da lista em execução.
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label htmlFor="obra-relacionamento">Relacionamento com o cliente</Label>

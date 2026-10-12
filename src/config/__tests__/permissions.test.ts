@@ -185,6 +185,17 @@ describe("permissions", () => {
       { role: "arquitetura", feature: "ficha:edit", expected: true },
       { role: "suprimentos", feature: "ficha:edit", expected: true },
       { role: "financeiro", feature: "ficha:edit", expected: true },
+      // Fase de projeto — mesmos papéis de journey:edit_stages (e da regra do
+      // banco, can_edit_project_phase); financeiro/suprimentos só leem.
+      { role: "customer", feature: "projectPhase:edit", expected: false },
+      { role: "financeiro", feature: "projectPhase:edit", expected: false },
+      { role: "suprimentos", feature: "projectPhase:edit", expected: false },
+      { role: "admin", feature: "projectPhase:edit", expected: true },
+      { role: "manager", feature: "projectPhase:edit", expected: true },
+      { role: "engineer", feature: "projectPhase:edit", expected: true },
+      { role: "gestor", feature: "projectPhase:edit", expected: true },
+      { role: "cs", feature: "projectPhase:edit", expected: true },
+      { role: "arquitetura", feature: "projectPhase:edit", expected: true },
     ];
 
     testCases.forEach(({ role, feature, expected }) => {

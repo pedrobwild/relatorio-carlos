@@ -1,22 +1,30 @@
 /**
  * Painel de Obras: as duas listas que não são "em execução".
  *
- * - Projetos: obras em fase de projeto. Não há prazo nem cronograma de
- *   execução, então o que a lista mostra é há quanto tempo cada uma está
- *   sem atualização (a mais parada primeiro).
+ * - Projetos: obras em fase de projeto. Cada linha mostra em que etapa a obra
+ *   está (das seis da fase de projeto), a situação do prazo dessa etapa, o
+ *   prazo e quem responde por ela. Obra sem etapa registrada mostra a etapa
+ *   antiga do Painel e há quanto tempo está sem atualização. Quando as etapas
+ *   não chegaram (ou a leitura falhou), a linha fica neutra: não afirma "sem
+ *   prazo" nem "etapas não registradas".
  * - Concluídas: obras entregues, com o resultado contra o contrato.
  */
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ddmm, formatBRL } from "@/lib/obrasPainel";
+import { officialStartText } from "@/lib/faseProjeto";
 import {
+  ETAPAS_NAO_REGISTRADAS,
   PROJETO_PARADO_DIAS,
+  projetoEtapaInfo,
+  projetoResponsavel,
   resultadoLabel,
-  staleLabel,
+  staleHint,
   type ConcluidaRow,
   type ProjetoRow,
 } from "@/lib/painelNovo";
 import { ObraFlags } from "@/components/gestao/obras/ObrasList";
+import { FaseChip } from "@/components/gestao/obras/FaseChip";
 
 const ddmmaa = (iso: string) => `${ddmm(iso)}/${iso.slice(2, 4)}`;
 
@@ -40,9 +48,28 @@ function Dash({ label }: { label: string }) {
 // Projetos
 // ---------------------------------------------------------------------------
 
-function staleTone(days: number | null): string {
-  if (days == null) return "text-muted-foreground";
-  return days >= PROJETO_PARADO_DIAS ? "font-medium text-warning" : "text-foreground";
+const ETAPAS_NAO_CARREGADAS = "Etapas não carregadas";
+const PROJETOS_LABEL = "Obras em fase de projeto: etapa atrasada primeiro, depois as que vencem logo";
+
+/** Segunda linha da etapa: avanço, início oficial ou há quanto tempo está parada. */
+function etapaDetail(r: ProjetoRow): { text: string; warn: boolean } {
+  const info = projetoEtapaInfo(r);
+  if (info.registered) {
+    const start = r.verdict?.verdict === "pronta" ? officialStartText(r.officialStart) : null;
+    return { text: start ?? info.progress ?? "", warn: false };
+  }
+  const stale = staleHint(r.staleDays);
+  const warn = r.staleDays != null && r.staleDays >= PROJETO_PARADO_DIAS;
+  // Obra com a etapa antiga do Painel: deixa claro que as etapas novas não
+  // foram registradas (só quando se sabe disso).
+  const unregistered = r.phase && info.title !== ETAPAS_NAO_REGISTRADAS;
+  return { text: unregistered ? `${ETAPAS_NAO_REGISTRADAS} · ${stale.toLowerCase()}` : stale, warn };
+}
+
+/** Texto do traço na coluna "Prazo" (para leitor de tela e dica). */
+function semPrazoLabel(r: ProjetoRow): string {
+  if (!r.phase) return ETAPAS_NAO_CARREGADAS;
+  return r.verdict?.verdict === "pronta" ? "Todas as etapas concluídas" : "Sem prazo";
 }
 
 interface ProjetosProps {
@@ -54,53 +81,68 @@ export function ProjetosTable({ rows, onOpen }: ProjetosProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <table className="w-full table-fixed border-collapse text-left">
-        <caption className="sr-only">Obras em fase de projeto, da mais parada para a mais recente</caption>
+        <caption className="sr-only">{PROJETOS_LABEL}</caption>
         <colgroup>
-          <col className="w-[32%]" />
-          <col className="w-[18%]" />
-          <col className="w-[20%]" />
-          <col className="w-[13%]" />
+          <col className="w-[26%]" />
+          <col className="w-[26%]" />
+          <col className="w-[19%]" />
+          <col className="w-[10%]" />
           <col />
           <col className="w-10" />
         </colgroup>
         <thead className={thead}>
           <tr>
             <th scope="col" className="px-4 py-3">Projeto</th>
-            <th scope="col" className={th}>Responsável</th>
             <th scope="col" className={th}>Etapa</th>
-            <th scope="col" className={th}>Na etapa</th>
-            <th scope="col" className={th}>Última atualização</th>
+            <th scope="col" className={th}>Situação</th>
+            <th scope="col" className={th}>Prazo</th>
+            <th scope="col" className={th}>Responsável</th>
             <th scope="col" className="px-2 py-3"><span className="sr-only">Abrir</span></th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className={rowClass} onClick={() => onOpen(r.id)}>
-              <th scope="row" className="px-4 py-3 font-normal">
-                <button
-                  type="button"
-                  className={nameButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpen(r.id);
-                  }}
-                >
-                  <span className="block truncate font-medium text-foreground">{r.name}</span>
-                  {r.customer && <span className="block truncate text-xs text-muted-foreground">{r.customer}</span>}
-                </button>
-                <ObraFlags cadastro={r} />
-              </th>
-              <td className="truncate px-3 py-3 text-sm text-foreground">{r.responsible ?? <Dash label="Sem responsável" />}</td>
-              <td className="truncate px-3 py-3 text-sm text-foreground">{r.etapa ?? <Dash label="Sem etapa" />}</td>
-              <td className="px-3 py-3 text-sm tabular-nums text-foreground">
-                {r.daysInEtapa == null ? <Dash label="Início da etapa não registrado" /> : `${r.daysInEtapa} ${r.daysInEtapa === 1 ? "dia" : "dias"}`}
-              </td>
-              <td className={cn("px-3 py-3 text-sm tabular-nums", staleTone(r.staleDays))}>{staleLabel(r.staleDays)}</td>
-              <td className="px-2 py-3 text-muted-foreground">
-                <ChevronRight className="mt-0.5 h-4 w-4" aria-hidden="true" />
-              </td>
-            </tr>
-          ))}
+          {rows.map((r) => {
+            const info = projetoEtapaInfo(r);
+            const detail = etapaDetail(r);
+            return (
+              <tr key={r.id} className={rowClass} onClick={() => onOpen(r.id)}>
+                <th scope="row" className="px-4 py-3 font-normal">
+                  <button
+                    type="button"
+                    className={nameButton}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpen(r.id);
+                    }}
+                  >
+                    <span className="block truncate font-medium text-foreground">{r.name}</span>
+                    {r.customer && <span className="block truncate text-xs text-muted-foreground">{r.customer}</span>}
+                  </button>
+                  <ObraFlags cadastro={r} />
+                </th>
+                <td className="px-3 py-3 text-sm text-foreground">
+                  <span className="block truncate">{info.title ?? <Dash label={ETAPAS_NAO_CARREGADAS} />}</span>
+                  {detail.text && (
+                    <span className={cn("block text-xs tabular-nums", detail.warn ? "font-medium text-warning" : "text-muted-foreground")}>
+                      {detail.text}
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-3 text-sm">
+                  {r.verdict ? <FaseChip verdict={r.verdict} /> : <Dash label={ETAPAS_NAO_CARREGADAS} />}
+                </td>
+                <td className="px-3 py-3 text-sm tabular-nums text-foreground">
+                  {r.dueDate ? ddmmaa(r.dueDate) : <Dash label={semPrazoLabel(r)} />}
+                </td>
+                <td className="truncate px-3 py-3 text-sm text-foreground">
+                  {projetoResponsavel(r) ?? <Dash label="Sem responsável" />}
+                </td>
+                <td className="px-2 py-3 text-muted-foreground">
+                  <ChevronRight className="mt-0.5 h-4 w-4" aria-hidden="true" />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -109,25 +151,38 @@ export function ProjetosTable({ rows, onOpen }: ProjetosProps) {
 
 export function ProjetosCards({ rows, onOpen }: ProjetosProps) {
   return (
-    <ul className="space-y-2" aria-label="Obras em fase de projeto, da mais parada para a mais recente">
-      {rows.map((r) => (
-        <li key={r.id}>
-          <button type="button" className={cardClass} onClick={() => onOpen(r.id)}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <span className="block truncate font-medium text-foreground">{r.name}</span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {[r.responsible ?? "Sem responsável", r.etapa ?? "Sem etapa"].join(" · ")}
-                </span>
-                <ObraFlags cadastro={r} />
+    <ul className="space-y-2" aria-label={PROJETOS_LABEL}>
+      {rows.map((r) => {
+        const info = projetoEtapaInfo(r);
+        const detail = etapaDetail(r);
+        const etapa = [info.title, info.registered ? info.progress : null].filter(Boolean).join(" · ");
+        return (
+          <li key={r.id}>
+            <button type="button" className={cardClass} onClick={() => onOpen(r.id)}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="block truncate font-medium text-foreground">{r.name}</span>
+                  {r.customer && <span className="block truncate text-xs text-muted-foreground">{r.customer}</span>}
+                </div>
+                {r.verdict && <FaseChip verdict={r.verdict} className="mt-0.5 shrink-0" />}
               </div>
-              <span className={cn("shrink-0 text-right text-sm tabular-nums", staleTone(r.staleDays))}>
-                {staleLabel(r.staleDays)}
+              {etapa && <span className="mt-1.5 block text-sm text-foreground">{etapa}</span>}
+              {/* Com etapas registradas o avanço já está na linha de cima; aqui só o início oficial. */}
+              {detail.text && detail.text !== info.progress && (
+                <span className={cn("block text-xs tabular-nums", detail.warn ? "font-medium text-warning" : "text-muted-foreground")}>
+                  {detail.text}
+                </span>
+              )}
+              <span className="mt-1 block truncate text-xs text-muted-foreground">
+                {[r.dueDate ? `Prazo ${ddmmaa(r.dueDate)}` : null, projetoResponsavel(r) ?? "Sem responsável"]
+                  .filter(Boolean)
+                  .join(" · ")}
               </span>
-            </div>
-          </button>
-        </li>
-      ))}
+              <ObraFlags cadastro={r} />
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
 }
