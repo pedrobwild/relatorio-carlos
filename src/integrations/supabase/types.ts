@@ -3652,6 +3652,53 @@ export type Database = {
           },
         ]
       }
+      ops_week_closings: {
+        Row: {
+          closed_at: string
+          closed_by: string | null
+          done: number
+          id: string
+          not_done: number
+          notes: string | null
+          planned: number
+          project_id: string
+          reasons: Json
+          week_start: string
+        }
+        Insert: {
+          closed_at?: string
+          closed_by?: string | null
+          done?: number
+          id?: string
+          not_done?: number
+          notes?: string | null
+          planned?: number
+          project_id: string
+          reasons?: Json
+          week_start: string
+        }
+        Update: {
+          closed_at?: string
+          closed_by?: string | null
+          done?: number
+          id?: string
+          not_done?: number
+          notes?: string | null
+          planned?: number
+          project_id?: string
+          reasons?: Json
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_week_closings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamento_adjustments: {
         Row: {
           amount: number

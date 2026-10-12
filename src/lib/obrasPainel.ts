@@ -26,10 +26,12 @@
  */
 import { isNonBusinessDay } from "@/lib/businessDays";
 import { parseISODate, shiftISODate } from "@/lib/hojeDia";
+import { ppcOf, weekIsOver } from "@/lib/semanaFechamento";
 import type { ProjectDeadline } from "@/infra/repositories/contractDeadline.repository";
 import type {
   PortfolioActivity,
   PortfolioAssignment,
+  PortfolioClosing,
   PortfolioMaterial,
   PortfolioStage,
 } from "@/infra/repositories/obrasPanel.repository";
@@ -181,6 +183,13 @@ export interface ObraWeek {
   notDone: number;
   /** Há algo previsto mas ninguém marcou dia: "não planejada" (cinza). */
   unplanned: boolean;
+  /** PPC registrado no fechamento desta semana (null/ausente = semana não fechada). */
+  ppc?: number | null;
+  /**
+   * Semana anterior: o PPC registrado no fechamento, ou `pending` quando teve
+   * dia marcado e ninguém fechou (é o que a reunião de segunda cobra).
+   */
+  previous?: { ppc: number | null; pending: boolean };
 }
 
 /**
@@ -230,6 +239,17 @@ export interface BuildRowInput {
   weekAssignments: readonly PortfolioAssignment[];
   week: { from: string; to: string };
   today: string;
+  /** Fechamento desta semana, se já foi fechada. */
+  closing?: Pick<PortfolioClosing, "planned" | "done"> | null;
+  /** Fechamento da semana anterior. */
+  previousClosing?: Pick<PortfolioClosing, "planned" | "done"> | null;
+  /** Dias marcados na semana anterior (para saber se havia o que fechar). */
+  previousPlanned?: number;
+  /**
+   * false = os fechamentos ainda não chegaram (ou a consulta falhou). Sem
+   * saber, o Painel não acusa ninguém de não ter fechado a semana.
+   */
+  closingsKnown?: boolean;
 }
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -367,7 +387,24 @@ export function buildObraRow(input: BuildRowInput): ObraRow {
     penalty,
     progress,
     consumed,
-    week: { stages: stageNames, planned, done, notDone, unplanned },
+    week: {
+      stages: stageNames,
+      planned,
+      done,
+      notDone,
+      unplanned,
+      ppc: input.closing ? ppcOf(input.closing.done, input.closing.planned) : null,
+      previous: {
+        ppc: input.previousClosing ? ppcOf(input.previousClosing.done, input.previousClosing.planned) : null,
+        // Só cobra o fechamento de semana que já terminou: olhando a semana
+        // seguinte (ou no fim de semana), a "anterior" ainda está em andamento.
+        pending:
+          input.closingsKnown !== false &&
+          !input.previousClosing &&
+          (input.previousPlanned ?? 0) > 0 &&
+          weekIsOver(shiftISODate(week.from, -7), today),
+      },
+    },
     alerts,
     risk,
     cadastro: input.cadastro,
@@ -391,6 +428,8 @@ export interface PortfolioSummary {
   red: number;
   yellow: number;
   unplanned: number;
+  /** Obras que tiveram dia marcado na semana anterior e não fecharam a semana. */
+  unclosed: number;
   noDeadline: number;
   /** Soma das multas projetadas conhecidas. */
   penaltyTotal: number;
@@ -404,6 +443,7 @@ export function summarize(rows: readonly ObraRow[]): PortfolioSummary {
     red: rows.filter((r) => r.risk === "vermelho").length,
     yellow: rows.filter((r) => r.risk === "amarelo").length,
     unplanned: rows.filter((r) => r.week.unplanned).length,
+    unclosed: rows.filter((r) => r.week.previous?.pending).length,
     noDeadline: rows.filter((r) => r.risk === "sem_prazo" || !r.deadline).length,
     penaltyTotal: rows.reduce((s, r) => s + (r.penalty ?? 0), 0),
     penaltyUnknown: rows.filter((r) => r.slack != null && r.slack < 0 && r.penalty == null).length,

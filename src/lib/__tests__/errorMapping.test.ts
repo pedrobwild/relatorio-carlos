@@ -127,6 +127,27 @@ describe("mapError", () => {
     it("detects check_violation (23514)", () => {
       expect(mapError({ code: "23514" }).kind).toBe("validation");
     });
+
+    it("regra de negócio do banco (RAISE ... 23514 em português) chega como foi escrita", () => {
+      const r = mapError({ code: "23514", message: "Ainda há 2 dia(s) sem confirmação nesta semana", details: null, hint: null });
+      expect(r.kind).toBe("validation");
+      expect(r.userMessage).toBe("Ainda há 2 dia(s) sem confirmação nesta semana");
+    });
+
+    it("23514 nativo do Postgres continua com a mensagem genérica (nada de nome de constraint na tela)", () => {
+      const r = mapError({
+        code: "23514",
+        message: 'new row for relation "ops_week_closings" violates check constraint "ops_week_closings_monday_chk"',
+      });
+      expect(r.kind).toBe("validation");
+      expect(r.userMessage).not.toMatch(/constraint|relation|ops_week/);
+    });
+
+    it("texto de regra só vale para 23514: outros códigos não vazam mensagem do servidor", () => {
+      expect(mapError({ code: "42P01", message: "Mensagem qualquer do servidor" }).userMessage).not.toBe(
+        "Mensagem qualquer do servidor",
+      );
+    });
   });
 
   describe("not_found / storage", () => {

@@ -242,3 +242,23 @@ export const useDeleteOpsAssignment = () =>
 
 export const useDeleteOpsMaterial = () =>
   useOpsMutation(async (id: string) => unwrap(await opsRepo.deleteMaterial(id)));
+
+// ---------------------------------------------------------------------------
+// Fechamento de semana e PPC (Fase 6)
+// ---------------------------------------------------------------------------
+
+/** Fechamento da semana `monday` e os anteriores (mais recente primeiro). */
+export function useOpsWeekClosings(projectId: string | undefined, monday: string) {
+  return useQuery({
+    queryKey: queryKeys.ops.weekClosings(projectId, monday),
+    enabled: !!projectId,
+    queryFn: async () => (projectId ? unwrap(await opsRepo.listWeekClosings(projectId, monday)) ?? [] : []),
+  });
+}
+
+export const useCloseOpsWeek = () =>
+  useOpsMutation(async (input: { project_id: string; week_start: string; notes?: string | null }) =>
+    unwrap(await opsRepo.closeWeek(input)),
+  );
+
+export const useReopenOpsWeek = () => useOpsMutation(async (id: string) => unwrap(await opsRepo.reopenWeek(id)));

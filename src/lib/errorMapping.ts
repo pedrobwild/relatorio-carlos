@@ -229,6 +229,16 @@ function serializeError(error: unknown): {
   return { text: String(error) };
 }
 
+/** Texto do RAISE EXCEPTION das nossas funções (23514), quando é para humanos. */
+function ownRuleMessage(error: unknown, code: string | undefined): string | null {
+  if (code !== "23514" || typeof error !== "object" || error === null) return null;
+  const message = (error as { message?: unknown }).message;
+  if (typeof message !== "string") return null;
+  const text = message.trim();
+  if (!text || text.length > 200 || /violates|constraint|relation\b/i.test(text)) return null;
+  return text;
+}
+
 /**
  * Mapeia um erro arbitrário em um UserError com mensagem humana.
  */
@@ -293,6 +303,21 @@ export function mapError(error: unknown): UserError {
         code,
       };
     }
+  }
+
+  // Regra de negócio escrita por nós no banco (RAISE EXCEPTION ... ERRCODE
+  // 23514): o texto já é em português e diz o que fazer ("Ainda há 2 dias sem
+  // confirmação nesta semana"). O 23514 nativo do Postgres ("violates check
+  // constraint") continua com a mensagem genérica.
+  const ownRule = ownRuleMessage(error, code);
+  if (ownRule) {
+    return {
+      kind: "validation",
+      userMessage: ownRule,
+      technicalDetails: text,
+      suggestedAction: "check_data",
+      code,
+    };
   }
 
   for (const rule of PATTERNS) {

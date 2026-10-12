@@ -10,7 +10,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CalendarRange, ChevronLeft, ChevronRight, PackageCheck, Sparkles, Timer, CalendarCheck2 } from "lucide-react";
+import { CalendarRange, ChevronLeft, ChevronRight, ClipboardCheck, PackageCheck, Sparkles, Timer, CalendarCheck2 } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,15 @@ import {
   weekRange,
   whoSuggestions,
 } from "@/lib/semanaPlan";
+import {
+  closingIsStale,
+  doneOfPlannedLabel,
+  ppcLabel,
+  ppcOf,
+  weekClosingState,
+  weekHasStarted,
+  weekIsOver,
+} from "@/lib/semanaFechamento";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 import { useObraDeadlines, useProjectDeadline } from "@/hooks/useContractDeadline";
 import {
@@ -46,12 +55,14 @@ import {
   useOpsAssignments,
   useOpsProjectMaterials,
   useOpsStages,
+  useOpsWeekClosings,
 } from "@/hooks/useOps";
 import type { OpsAssignment } from "@/infra/repositories/ops.repository";
 import { MobileWeekList, WeekGrid } from "@/components/gestao/semana/WeekGrid";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ActivityDrawer } from "@/components/gestao/semana/ActivityDrawer";
 import { PlanWeekSheet } from "@/components/gestao/semana/PlanWeekSheet";
+import { CloseWeekSheet } from "@/components/gestao/semana/CloseWeekSheet";
 
 const LAST_OBRA_KEY = "bwild.semana.obra";
 
@@ -121,6 +132,9 @@ export default function Semana() {
   const { data: prevAsg = [], isLoading: prevLoading } = useOpsAssignments(projectId, prev.from, prev.to);
   const { data: materials = [] } = useOpsProjectMaterials(projectId);
   const { data: deadline } = useProjectDeadline(projectId);
+  // Complemento da tela: não entra em `loading`. Enquanto não chega (ou se a
+  // consulta falhar), a tela não oferece nem cobra o fechamento.
+  const { data: closings = [], isSuccess: closingsReady } = useOpsWeekClosings(projectId, monday);
   // A semana anterior entra nas sugestões ("sobrou"): espera ela chegar para
   // não abrir o "Planejar semana" com uma lista que muda depois.
   const loading = !!projectId && (stagesLoading || actsLoading || asgLoading || prevLoading);
@@ -161,6 +175,22 @@ export default function Semana() {
   const drawerActivity = activities.find((a) => a.id === drawerId) ?? null;
   const [planOpen, setPlanOpen] = useState(false);
 
+  // Fechamento da semana e PPC: só para semana que já começou.
+  const today = todayISO();
+  const [closeOpen, setCloseOpen] = useState(false);
+  const closing = useMemo(() => closings.find((c) => c.week_start === monday) ?? null, [closings, monday]);
+  const closeState = useMemo(() => weekClosingState(weekAsg, monday, today), [weekAsg, monday, today]);
+  const closingStale = closing ? closingIsStale(closing, closeState) : false;
+  /** Semana que já terminou sem fechamento: o aviso (com o botão) aparece na faixa. */
+  const overdueClosing = closingsReady && !closing && closeState.planned > 0 && weekIsOver(monday, today);
+  // Botão do cabeçalho: quando há fechamento para ver, ou algo para confirmar /
+  // fechar numa semana em andamento. Semana só com dias para frente não mostra.
+  const canCloseWeek =
+    !!projectId &&
+    closingsReady &&
+    weekHasStarted(monday, today) &&
+    (!!closing || (!overdueClosing && (closeState.canClose || closeState.pending.length > 0)));
+
   const weekTitle =
     monday === thisMonday ? "Esta semana" : monday === shiftISODate(thisMonday, 7) ? "Próxima semana" : monday === shiftISODate(thisMonday, -7) ? "Semana passada" : "Semana";
 
@@ -172,15 +202,29 @@ export default function Semana() {
         description="O que acontece em cada dia e quem faz. Toque numa atividade para ver material, dias e revisão."
         actions={
           projectId ? (
-            <Button type="button" className="min-h-[44px]" onClick={() => setPlanOpen(true)} disabled={loading}>
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Planejar semana
-              {proposals.length > 0 && (
-                <span className="ml-1 rounded-full bg-primary-foreground px-1.5 text-xs font-semibold text-primary tabular-nums">
-                  {proposals.length}
-                </span>
+            <>
+              {canCloseWeek && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-[44px]"
+                  onClick={() => setCloseOpen(true)}
+                  disabled={loading}
+                >
+                  <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+                  {closing ? "Ver fechamento" : "Fechar semana"}
+                </Button>
               )}
-            </Button>
+              <Button type="button" className="min-h-[44px]" onClick={() => setPlanOpen(true)} disabled={loading}>
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                Planejar semana
+                {proposals.length > 0 && (
+                  <span className="ml-1 rounded-full bg-primary-foreground px-1.5 text-xs font-semibold text-primary tabular-nums">
+                    {proposals.length}
+                  </span>
+                )}
+              </Button>
+            </>
           ) : undefined
         }
       />
@@ -246,6 +290,35 @@ export default function Semana() {
         </div>
       ) : (
         <>
+          {(closing || overdueClosing) && (
+            <div
+              role="status"
+              className={cn(
+                "mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border px-4 py-3 text-sm",
+                closing && !closingStale ? "border-border bg-muted/40" : "border-warning/40 bg-warning/10",
+              )}
+            >
+              <p className="text-foreground">
+                {closing ? (
+                  <>
+                    <span className="font-semibold">
+                      Semana fechada · PPC {ppcLabel(ppcOf(closing.done, closing.planned))}
+                    </span>
+                    <span className="text-muted-foreground"> · {doneOfPlannedLabel(closing.done, closing.planned)}</span>
+                    {closingStale && <span className="block">Os dias mudaram depois do fechamento.</span>}
+                  </>
+                ) : (
+                  <span className="font-semibold">Esta semana terminou e ainda não foi fechada.</span>
+                )}
+              </p>
+              {(closingStale || overdueClosing) && (
+                <Button type="button" variant="outline" className="min-h-[40px]" onClick={() => setCloseOpen(true)}>
+                  {closing ? "Atualizar fechamento" : "Fechar semana"}
+                </Button>
+              )}
+            </div>
+          )}
+
           <dl
             className="-mx-4 mt-5 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0"
             aria-label="Resumo da semana"
@@ -319,7 +392,7 @@ export default function Semana() {
                   staffNameById,
                   suggestions,
                   lastWhoByActivity,
-                  today: todayISO(),
+                  today,
                   projectId,
                   onOpenActivity: setDrawerId,
                 };
@@ -344,6 +417,19 @@ export default function Semana() {
             open={!!drawerActivity}
             onOpenChange={(o) => !o && setDrawerId(null)}
             staffNameById={staffNameById}
+          />
+          <CloseWeekSheet
+            open={closeOpen}
+            onOpenChange={setCloseOpen}
+            projectId={projectId}
+            monday={monday}
+            weekText={`Semana de ${weekLabel(monday)}`}
+            today={today}
+            assignments={weekAsg}
+            activities={activities}
+            staffNameById={staffNameById}
+            closing={closing}
+            history={closings}
           />
           <PlanWeekSheet
             open={planOpen}

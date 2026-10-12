@@ -23,12 +23,22 @@ import {
 } from "@/lib/painelNovo";
 import { buildObraRow, groupBy, isObraEmExecucao, sortByRisk, type ObraRow } from "@/lib/obrasPainel";
 import { mapError } from "@/lib/errorMapping";
-import { todayISO } from "@/lib/hojeDia";
+import { shiftISODate, todayISO } from "@/lib/hojeDia";
 
 const unwrap = <T,>(res: { data: T[] | null; error: unknown }): T[] => {
   if (res.error) throw res.error;
   return res.data ?? [];
 };
+
+/**
+ * Mantém os dados anteriores só quando o intervalo de datas é o mesmo (a
+ * lista de obras mudou). Ao trocar de semana não serve: os dias da semana
+ * antiga apareceriam como se fossem da nova.
+ */
+const keepSameRange =
+  (from: string, to: string) =>
+  <T,>(previous: T | undefined, previousQuery: { queryKey: readonly unknown[] } | undefined): T | undefined =>
+    previousQuery?.queryKey.at(-2) === from && previousQuery.queryKey.at(-1) === to ? previous : undefined;
 
 /** Mensagem em português para a tela; nunca o erro cru do Postgres. */
 function friendlyError(error: unknown): string {
@@ -72,12 +82,23 @@ export function useObrasPainel(week: { from: string; to: string }) {
     placeholderData: keepPreviousData,
     queryFn: async () => unwrap(await obrasPanelRepo.listOpenMaterials(ids)),
   });
+  // A semana anterior vem junto: o Painel mostra o PPC dela e quem não fechou.
+  const prevFrom = shiftISODate(week.from, -7);
   const assignmentsQ = useQuery({
-    queryKey: queryKeys.obrasPanel.assignments(ids, week.from, week.to),
+    queryKey: queryKeys.obrasPanel.assignments(ids, prevFrom, week.to),
     enabled,
     staleTime: 60_000,
-    placeholderData: keepPreviousData,
-    queryFn: async () => unwrap(await obrasPanelRepo.listAssignments(ids, week.from, week.to)),
+    placeholderData: keepSameRange(prevFrom, week.to),
+    queryFn: async () => unwrap(await obrasPanelRepo.listAssignments(ids, prevFrom, week.to)),
+  });
+  // Complemento da tela: não entra em `isLoading` nem em `error`. Se a consulta
+  // falhar (ex.: tabela ainda não criada no banco), o Painel segue sem o PPC.
+  const closingsQ = useQuery({
+    queryKey: queryKeys.obrasPanel.closings(ids, prevFrom, week.from),
+    enabled,
+    staleTime: 60_000,
+    placeholderData: keepSameRange(prevFrom, week.from),
+    queryFn: async () => unwrap(await obrasPanelRepo.listClosings(ids, prevFrom, week.from)),
   });
 
   const rows = useMemo<ObraRow[]>(() => {
@@ -86,7 +107,11 @@ export function useObrasPainel(week: { from: string; to: string }) {
     const stages = groupBy(stagesQ.data ?? []);
     const acts = groupBy(activitiesQ.data ?? []);
     const mats = groupBy(materialsQ.data ?? []);
-    const asg = groupBy(assignmentsQ.data ?? []);
+    const allAsg = assignmentsQ.data ?? [];
+    const asg = groupBy(allAsg.filter((a) => a.work_date >= week.from));
+    const prevAsg = groupBy(allAsg.filter((a) => a.work_date < week.from));
+    const closings = groupBy(closingsQ.data ?? []);
+    const closingsKnown = closingsQ.isSuccess;
     return sortByRisk(
       active.map((d) => {
         const id = d.project_id as string;
@@ -103,12 +128,16 @@ export function useObrasPainel(week: { from: string; to: string }) {
           activities: acts.get(id) ?? [],
           materials: mats.get(id) ?? [],
           weekAssignments: asg.get(id) ?? [],
+          closing: closings.get(id)?.find((c) => c.week_start === week.from) ?? null,
+          previousClosing: closings.get(id)?.find((c) => c.week_start === prevFrom) ?? null,
+          previousPlanned: prevAsg.get(id)?.length ?? 0,
+          closingsKnown,
           week,
           today,
         });
       }),
     );
-  }, [active, painel.obras, stagesQ.data, activitiesQ.data, materialsQ.data, assignmentsQ.data, week]);
+  }, [active, painel.obras, stagesQ.data, activitiesQ.data, materialsQ.data, assignmentsQ.data, closingsQ.data, closingsQ.isSuccess, week, prevFrom]);
 
   /** Cadastro de cada obra (para a gaveta e para as outras listas). */
   const obraById = useMemo(() => new Map<string, PainelObra>(painel.obras.map((o) => [o.id, o])), [painel.obras]);
@@ -153,6 +182,7 @@ export function useObrasPainel(week: { from: string; to: string }) {
       void activitiesQ.refetch();
       void materialsQ.refetch();
       void assignmentsQ.refetch();
+      void closingsQ.refetch();
     },
   };
 }
