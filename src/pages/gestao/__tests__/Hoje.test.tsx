@@ -6,12 +6,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { OpsDayAssignment } from "@/infra/repositories/ops.repository";
-import { todayISO, shiftISODate } from "@/lib/hojeDia";
+import { todayISO, shiftISODate, parseISODate } from "@/lib/hojeDia";
 
 const h = vi.hoisted(() => ({
   items: [] as unknown[],
   mutate: vi.fn(),
   readiness: [] as { id: string; materials_missing: number }[],
+  /** Ficha por obra (project_studio_info). `error: true` simula a consulta falhando. */
+  studio: {} as Record<string, { data?: unknown; isError?: boolean }>,
 }));
 
 vi.mock("@/hooks/useOps", () => ({
@@ -25,6 +27,18 @@ vi.mock("@/hooks/useOps", () => ({
   useCreateOpsActivity: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useCreateOpsAssignment: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
+vi.mock("@/hooks/useStudioInfo", () => ({
+  useStudioInfo: (projectId: string) => ({
+    data: null,
+    isLoading: false,
+    isError: false,
+    isFetching: false,
+    refetch: vi.fn(),
+    ...(h.studio[projectId] ?? {}),
+  }),
+  useUpdateStudioInfo: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock("@/hooks/useCan", () => ({ useCan: () => ({ can: () => true }) }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u-me" } }) }));
 vi.mock("@/hooks/useStaffUsers", () => ({
   useStaffUsers: () => ({ data: [{ id: "u-me", nome: "Pedro", email: "p@x", perfil: "gestor" }] }),
@@ -70,6 +84,7 @@ describe("Tela Hoje", () => {
   beforeEach(() => {
     h.mutate.mockReset();
     h.readiness = [];
+    h.studio = {};
     h.items = [
       item({ id: "1" }),
       item({ id: "2", outcome: "feito", done_by: "u-me", done_at: new Date().toISOString() }),
@@ -149,6 +164,65 @@ describe("Tela Hoje", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Amanhã" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Marcar como feito/ })).toBeNull();
     expect(screen.getAllByText("Planejado. A confirmação abre no dia.").length).toBe(2);
+  });
+
+  describe("ficha da obra", () => {
+    const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+    const dayOf = (iso: string) => DAYS[parseISODate(iso).getDay()];
+    const amanha = shiftISODate(todayISO(), 1);
+    const WEEKDAY = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+    it("cada obra tem o botão Ficha, que abre a ficha daquela obra", () => {
+      h.studio = { p2: { data: { project_id: "p2", key_location: "Com o zelador" } } };
+      renderAt();
+      expect(screen.getByRole("button", { name: "Ficha da obra Obra Moema" })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Ficha da obra Obra Alphaville" }));
+      const dialog = screen.getByRole("dialog", { name: "Ficha da obra" });
+      expect(within(dialog).getByText("Obra Alphaville")).toBeInTheDocument();
+      expect(within(dialog).getByText("Com o zelador")).toBeInTheDocument();
+    });
+
+    it("mostra o horário que o condomínio permite hoje, por obra", () => {
+      h.studio = {
+        // Moema: hoje pode. Alphaville: só amanhã.
+        p1: { data: { allowed_work_days: [dayOf(todayISO())], allowed_work_start_time: "09:00", allowed_work_end_time: "17:00" } },
+        p2: { data: { allowed_work_days: [dayOf(amanha)], allowed_work_start_time: "08:00", allowed_work_end_time: "12:30" } },
+      };
+      renderAt();
+      const moema = screen.getByRole("heading", { name: "Obra Moema" }).closest("header") as HTMLElement;
+      expect(within(moema).getByText("Hoje: 9h às 17h")).toBeInTheDocument();
+      const alpha = screen.getByRole("heading", { name: "Obra Alphaville" }).closest("header") as HTMLElement;
+      expect(within(alpha).getByText("Condomínio não permite obra hoje")).toBeInTheDocument();
+    });
+
+    it("em outro dia, fala do dia que está na tela (não de hoje)", () => {
+      h.studio = {
+        p1: { data: { allowed_work_days: [dayOf(amanha)], allowed_work_start_time: "09:00", allowed_work_end_time: "17:00" } },
+      };
+      h.items = [item({ id: "1", work_date: amanha })];
+      renderAt(`?data=${amanha}`);
+      const nome = WEEKDAY[parseISODate(amanha).getDay()];
+      expect(screen.getByText(`${nome}: 9h às 17h`)).toBeInTheDocument();
+      expect(screen.queryByText(/^Hoje:/)).toBeNull();
+    });
+
+    it("sem dias e horários na ficha, não afirma nada", () => {
+      renderAt();
+      expect(screen.queryByText(/^Hoje:/)).toBeNull();
+      expect(screen.queryByText(/Condomínio não permite/)).toBeNull();
+    });
+
+    it("se a ficha não carregar, o dia continua funcionando", () => {
+      h.studio = { p1: { data: undefined, isError: true }, p2: { data: undefined, isError: true } };
+      renderAt();
+      expect(screen.getByRole("heading", { name: "Obra Moema" })).toBeInTheDocument();
+      expect(screen.getByText("1 de 3 confirmados")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Marcar como feito: Atividade 1" }));
+      expect(h.mutate).toHaveBeenCalledWith({ id: "1", outcome: "feito" }, expect.any(Object));
+      // A ficha abre e explica o erro, em vez de parecer vazia.
+      fireEvent.click(screen.getByRole("button", { name: "Ficha da obra Obra Moema" }));
+      expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível carregar a ficha desta obra.");
+    });
   });
 
   it("dia vazio convida a programar", () => {

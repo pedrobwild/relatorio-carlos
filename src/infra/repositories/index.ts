@@ -97,3 +97,6 @@ export type {
   OpsReviewResult,
   StageRollup,
 } from "./ops.repository";
+
+export { studioInfoRepo } from "./studioInfo.repository";
+export type { StudioInfo, StudioInfoPatch } from "./studioInfo.repository";

@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -35,6 +36,8 @@ import {
   Users,
   Clock,
   KeyRound,
+  DoorOpen,
+  Briefcase,
 } from "lucide-react";
 import { ProjectInfoDoc } from "@/components/project/ProjectInfoDoc";
 import { useCepLookup, formatCep } from "@/hooks/useCepLookup";
@@ -45,7 +48,7 @@ import {
 } from "@/components/mobile";
 import { cn } from "@/lib/utils";
 
-// ── Validações dos contatos (gerente predial e síndico) ──────────────
+// ── Validações dos contatos (gerente predial, síndico, portaria e administradora) ──────────────
 // Email RFC 5322 simplificado; telefone BR aceita 10 ou 11 dígitos
 // (com ou sem máscara). Nome exige pelo menos 2 caracteres não vazios.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -82,6 +85,11 @@ interface ContactErrors {
   syndic_name?: string;
   syndic_email?: string;
   syndic_phone?: string;
+  concierge_name?: string;
+  concierge_phone?: string;
+  property_admin_name?: string;
+  property_admin_email?: string;
+  property_admin_phone?: string;
 }
 
 // ── Campo de contato padronizado (label + input + erro inline) ──
@@ -163,18 +171,25 @@ interface StudioData {
   tamanho_imovel_m2: number | null;
   tipo_de_locacao: string | null;
   data_recebimento_chaves: string | null;
+  keys_received_by: string | null;
   building_manager_name: string | null;
   building_manager_email: string | null;
   building_manager_phone: string | null;
   syndic_name: string | null;
   syndic_email: string | null;
   syndic_phone: string | null;
+  concierge_name: string | null;
+  concierge_phone: string | null;
+  property_admin_name: string | null;
+  property_admin_email: string | null;
+  property_admin_phone: string | null;
   allowed_work_days: string[] | null;
   allowed_work_start_time: string | null;
   allowed_work_end_time: string | null;
   key_location: string | null;
   electronic_lock_password: string | null;
   provider_access_instructions: string | null;
+  access_release_process: string | null;
 }
 
 interface ProjectBasic {
@@ -186,6 +201,17 @@ interface DadosClienteProps {
   projectId?: string;
   embedded?: boolean;
 }
+
+// Colunas da "Ficha da obra" (migration 20261012120000_ficha_obra).
+const FICHA_COLUMNS = [
+  "keys_received_by",
+  "concierge_name",
+  "concierge_phone",
+  "property_admin_name",
+  "property_admin_email",
+  "property_admin_phone",
+  "access_release_process",
+] as const;
 
 const WEEK_DAYS: { value: string; label: string; short: string }[] = [
   { value: "mon", label: "Segunda", short: "Seg" },
@@ -209,6 +235,10 @@ export default function DadosCliente({
   const [studio, setStudio] = useState<StudioData | null>(null);
   const [project, setProject] = useState<ProjectBasic | null>(null);
   const { lookup: lookupCep, loading: cepLoading } = useCepLookup();
+  // A linha carregada já tem as colunas da ficha? Enquanto a migration não
+  // estiver aplicada no banco, o salvar não envia essas colunas vazias —
+  // senão o upsert inteiro seria recusado e nada mais salvaria nesta tela.
+  const fichaColumnsInDb = useRef(false);
 
   useEffect(() => {
     if (!projectId) {
@@ -244,12 +274,21 @@ export default function DadosCliente({
       ]);
       if (isCancelled()) return;
 
+      fichaColumnsInDb.current =
+        !!studioRes.data && FICHA_COLUMNS[0] in studioRes.data;
       if (studioRes.data) {
         const raw = studioRes.data as StudioData;
         setStudio({
           ...raw,
           key_location: raw.key_location ?? null,
           electronic_lock_password: raw.electronic_lock_password ?? null,
+          keys_received_by: raw.keys_received_by ?? null,
+          concierge_name: raw.concierge_name ?? null,
+          concierge_phone: raw.concierge_phone ?? null,
+          property_admin_name: raw.property_admin_name ?? null,
+          property_admin_email: raw.property_admin_email ?? null,
+          property_admin_phone: raw.property_admin_phone ?? null,
+          access_release_process: raw.access_release_process ?? null,
           provider_access_instructions: sanitizeInlineRichText(
             raw.provider_access_instructions,
           ),
@@ -266,18 +305,25 @@ export default function DadosCliente({
           tamanho_imovel_m2: null,
           tipo_de_locacao: null,
           data_recebimento_chaves: null,
+          keys_received_by: null,
           building_manager_name: null,
           building_manager_email: null,
           building_manager_phone: null,
           syndic_name: null,
           syndic_email: null,
           syndic_phone: null,
+          concierge_name: null,
+          concierge_phone: null,
+          property_admin_name: null,
+          property_admin_email: null,
+          property_admin_phone: null,
           allowed_work_days: null,
           allowed_work_start_time: null,
           allowed_work_end_time: null,
           key_location: null,
           electronic_lock_password: null,
           provider_access_instructions: null,
+          access_release_process: null,
         });
       }
       if (projectRes.data) setProject(projectRes.data);
@@ -302,6 +348,16 @@ export default function DadosCliente({
       validateContactEmail(studio?.syndic_email ?? null) ?? undefined,
     syndic_phone:
       validateContactPhone(studio?.syndic_phone ?? null) ?? undefined,
+    concierge_name:
+      validateContactName(studio?.concierge_name ?? null) ?? undefined,
+    concierge_phone:
+      validateContactPhone(studio?.concierge_phone ?? null) ?? undefined,
+    property_admin_name:
+      validateContactName(studio?.property_admin_name ?? null) ?? undefined,
+    property_admin_email:
+      validateContactEmail(studio?.property_admin_email ?? null) ?? undefined,
+    property_admin_phone:
+      validateContactPhone(studio?.property_admin_phone ?? null) ?? undefined,
   };
   const hasContactErrors = Object.values(contactErrors).some(Boolean);
 
@@ -336,7 +392,7 @@ export default function DadosCliente({
       ? `${Math.floor(workWindowMinutes / 60)}h${workWindowMinutes % 60 ? ` ${workWindowMinutes % 60}min` : ""}`
       : "";
 
-  // ── Validação do editor "Como liberar prestadores" ──
+  // ── Validação do editor "Acesso no dia" (provider_access_instructions) ──
   const PROVIDER_ACCESS_MAX = 4000;
   const providerAccessHtml = sanitizeInlineRichText(
     studio?.provider_access_instructions,
@@ -403,41 +459,55 @@ export default function DadosCliente({
     setSaving(true);
     try {
       if (studio) {
+        const payload: Record<string, unknown> = {
+          project_id: projectId,
+          nome_do_empreendimento: studio.nome_do_empreendimento,
+          endereco_completo: studio.endereco_completo,
+          bairro: studio.bairro,
+          cidade: studio.cidade,
+          cep: studio.cep,
+          complemento: studio.complemento,
+          tamanho_imovel_m2: studio.tamanho_imovel_m2,
+          tipo_de_locacao: studio.tipo_de_locacao,
+          data_recebimento_chaves: studio.data_recebimento_chaves,
+          keys_received_by: studio.keys_received_by?.trim()
+            ? studio.keys_received_by.trim()
+            : null,
+          building_manager_name: studio.building_manager_name,
+          building_manager_email: studio.building_manager_email,
+          building_manager_phone: studio.building_manager_phone,
+          syndic_name: studio.syndic_name,
+          syndic_email: studio.syndic_email,
+          syndic_phone: studio.syndic_phone,
+          concierge_name: studio.concierge_name,
+          concierge_phone: studio.concierge_phone,
+          property_admin_name: studio.property_admin_name,
+          property_admin_email: studio.property_admin_email,
+          property_admin_phone: studio.property_admin_phone,
+          allowed_work_days: studio.allowed_work_days,
+          allowed_work_start_time: studio.allowed_work_start_time,
+          allowed_work_end_time: studio.allowed_work_end_time,
+          key_location: studio.key_location?.trim()
+            ? studio.key_location.trim()
+            : null,
+          electronic_lock_password: studio.electronic_lock_password?.trim()
+            ? studio.electronic_lock_password.trim()
+            : null,
+          provider_access_instructions: providerAccessFilled
+            ? providerAccessHtml
+            : null,
+          access_release_process: studio.access_release_process?.trim()
+            ? studio.access_release_process.trim()
+            : null,
+        };
+        if (!fichaColumnsInDb.current) {
+          for (const col of FICHA_COLUMNS) {
+            if (payload[col] == null) delete payload[col];
+          }
+        }
         const { error: studioErr } = await supabase
           .from("project_studio_info")
-          .upsert(
-            {
-              project_id: projectId,
-              nome_do_empreendimento: studio.nome_do_empreendimento,
-              endereco_completo: studio.endereco_completo,
-              bairro: studio.bairro,
-              cidade: studio.cidade,
-              cep: studio.cep,
-              complemento: studio.complemento,
-              tamanho_imovel_m2: studio.tamanho_imovel_m2,
-              tipo_de_locacao: studio.tipo_de_locacao,
-              data_recebimento_chaves: studio.data_recebimento_chaves,
-              building_manager_name: studio.building_manager_name,
-              building_manager_email: studio.building_manager_email,
-              building_manager_phone: studio.building_manager_phone,
-              syndic_name: studio.syndic_name,
-              syndic_email: studio.syndic_email,
-              syndic_phone: studio.syndic_phone,
-              allowed_work_days: studio.allowed_work_days,
-              allowed_work_start_time: studio.allowed_work_start_time,
-              allowed_work_end_time: studio.allowed_work_end_time,
-              key_location: studio.key_location?.trim()
-                ? studio.key_location.trim()
-                : null,
-              electronic_lock_password: studio.electronic_lock_password?.trim()
-                ? studio.electronic_lock_password.trim()
-                : null,
-              provider_access_instructions: providerAccessFilled
-                ? providerAccessHtml
-                : null,
-            } as any,
-            { onConflict: "project_id" },
-          );
+          .upsert(payload as any, { onConflict: "project_id" });
         if (studioErr) throw studioErr;
       }
 
@@ -716,6 +786,20 @@ export default function DadosCliente({
                     }
                   />
                 </div>
+                <div>
+                  <Label htmlFor="keys-received-by">
+                    Quem recebeu as chaves
+                  </Label>
+                  <Input
+                    id="keys-received-by"
+                    value={studio?.keys_received_by || ""}
+                    onChange={(e) =>
+                      updateStudio("keys_received_by", e.target.value || null)
+                    }
+                    placeholder="Nome de quem da Bwild recebeu"
+                    maxLength={120}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -820,6 +904,92 @@ export default function DadosCliente({
               </CardContent>
             </Card>
 
+            {/* Contato portaria */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <DoorOpen className="h-5 w-5 text-muted-foreground" />
+                  Contato portaria
+                </CardTitle>
+                <CardDescription>
+                  Quem atende na portaria do condomínio.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2">
+                  <ContactField
+                    id="con-name"
+                    label="Nome"
+                    value={studio?.concierge_name || ""}
+                    onChange={(v) => updateStudio("concierge_name", v || null)}
+                    placeholder="Nome ou turno (ex.: Portaria 24h)"
+                    error={contactErrors.concierge_name}
+                    autoComplete="off"
+                  />
+                  <ContactField
+                    id="con-phone"
+                    label="Telefone"
+                    type="tel"
+                    value={studio?.concierge_phone || ""}
+                    onChange={(v) => updateStudio("concierge_phone", v || null)}
+                    placeholder="(11) 99999-9999"
+                    error={contactErrors.concierge_phone}
+                    autoComplete="off"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contato administradora */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Briefcase className="h-5 w-5 text-muted-foreground" />
+                  Contato administradora
+                </CardTitle>
+                <CardDescription>Administradora do condomínio.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2">
+                  <ContactField
+                    id="adm-name"
+                    label="Nome"
+                    value={studio?.property_admin_name || ""}
+                    onChange={(v) =>
+                      updateStudio("property_admin_name", v || null)
+                    }
+                    placeholder="Empresa ou contato"
+                    error={contactErrors.property_admin_name}
+                    autoComplete="organization"
+                  />
+                  <ContactField
+                    id="adm-email"
+                    label="E-mail"
+                    type="email"
+                    value={studio?.property_admin_email || ""}
+                    onChange={(v) =>
+                      updateStudio("property_admin_email", v || null)
+                    }
+                    placeholder="nome@dominio.com"
+                    error={contactErrors.property_admin_email}
+                    autoComplete="off"
+                  />
+                  <ContactField
+                    id="adm-phone"
+                    label="Telefone"
+                    type="tel"
+                    value={studio?.property_admin_phone || ""}
+                    onChange={(v) =>
+                      updateStudio("property_admin_phone", v || null)
+                    }
+                    placeholder="(11) 99999-9999"
+                    error={contactErrors.property_admin_phone}
+                    autoComplete="off"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Acesso à obra */}
             <Card>
               <CardHeader className="pb-3">
@@ -908,17 +1078,42 @@ export default function DadosCliente({
                 </div>
                 <div className="space-y-1.5">
                   <Label
+                    htmlFor="access-release-process"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    Como pedir a liberação da equipe
+                  </Label>
+                  <Textarea
+                    id="access-release-process"
+                    value={studio?.access_release_process || ""}
+                    onChange={(e) =>
+                      updateStudio(
+                        "access_release_process",
+                        e.target.value || null,
+                      )
+                    }
+                    placeholder="Para quem enviar, com quantos dias de antecedência e quais documentos. Ex.: e-mail para a administradora com nome e RG de cada um, 2 dias úteis antes."
+                    rows={4}
+                    maxLength={4000}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    O passo a passo para o condomínio autorizar a entrada da
+                    nossa equipe.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label
                     htmlFor="provider-access"
                     className="text-xs font-medium text-muted-foreground"
                   >
-                    Como liberar prestadores
+                    Acesso no dia
                   </Label>
                   <InlineRichEditor
                     value={studio?.provider_access_instructions || ""}
                     onChange={(html) =>
                       updateStudio("provider_access_instructions", html || null)
                     }
-                    placeholder="Descreva o procedimento: aviso prévio à portaria, lista de nomes, documentos exigidos…"
+                    placeholder="Como a equipe e os prestadores entram no dia: identificar-se na portaria, elevador de serviço, onde estacionar…"
                     minHeight="140px"
                     className={providerAccessError ? "border-destructive" : ""}
                   />
@@ -930,8 +1125,8 @@ export default function DadosCliente({
                     ) : (
                       <p className="text-xs text-muted-foreground">
                         Use negrito, itálico e listas para destacar etapas. Ex.:
-                        1) Avisar portaria · 2) Enviar lista de nomes · 3)
-                        Documentos exigidos.
+                        1) Identificar-se na portaria · 2) Elevador de serviço ·
+                        3) Retirar a chave.
                       </p>
                     )}
                     <span

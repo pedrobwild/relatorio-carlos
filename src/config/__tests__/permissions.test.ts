@@ -174,6 +174,17 @@ describe("permissions", () => {
       { role: "cs", feature: "internal_notes:moderate", expected: false },
       { role: "gestor", feature: "internal_notes:moderate", expected: true },
       { role: "admin", feature: "internal_notes:moderate", expected: true },
+      // Ficha da obra — toda a equipe edita (espelha a RLS de
+      // project_studio_info); cliente nunca.
+      { role: "customer", feature: "ficha:edit", expected: false },
+      { role: "gestor", feature: "ficha:edit", expected: true },
+      { role: "engineer", feature: "ficha:edit", expected: true },
+      { role: "manager", feature: "ficha:edit", expected: true },
+      { role: "admin", feature: "ficha:edit", expected: true },
+      { role: "cs", feature: "ficha:edit", expected: true },
+      { role: "arquitetura", feature: "ficha:edit", expected: true },
+      { role: "suprimentos", feature: "ficha:edit", expected: true },
+      { role: "financeiro", feature: "ficha:edit", expected: true },
     ];
 
     testCases.forEach(({ role, feature, expected }) => {

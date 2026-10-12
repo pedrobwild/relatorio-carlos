@@ -8,7 +8,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarRange, ExternalLink, FileSignature, GanttChartSquare } from "lucide-react";
+import { CalendarRange, ClipboardList, ExternalLink, FileSignature, GanttChartSquare } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ import {
 } from "@/hooks/usePainelObras";
 import { buildCoordenadorOptions, type StaffUser } from "@/hooks/useStaffUsers";
 import { RISK_DOT, slackTone } from "@/components/gestao/obras/ObrasList";
+import { FichaObraSheet } from "@/components/gestao/ficha/FichaObraSheet";
 
 const NONE = "__none__";
 const ddmmaa = (iso: string) => `${ddmm(iso)}/${iso.slice(2, 4)}`;
@@ -150,6 +151,7 @@ export function ObraDrawer({
   const [saving, setSaving] = useState(false);
   /** O diálogo fechou porque a pessoa confirmou (e não porque cancelou). */
   const confirmed = useRef(false);
+  const [fichaOpen, setFichaOpen] = useState(false);
 
   // Os campos de data seguem o cadastro (inclusive depois de gravar ou de um erro).
   const obraId = obra?.id;
@@ -162,6 +164,11 @@ export function ObraDrawer({
       entrega_real: entrega_real ?? "",
     });
   }, [obraId, inicio_oficial, entrega_oficial, inicio_real, entrega_real, open]);
+
+  // A ficha fecha junto com a gaveta e não reabre sozinha em outra obra.
+  useEffect(() => {
+    setFichaOpen(false);
+  }, [open, obraId]);
 
   if (!obra) {
     return (
@@ -316,6 +323,15 @@ export function ObraDrawer({
                 Cronograma
               </Link>
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="col-span-2 min-h-[44px]"
+              onClick={() => setFichaOpen(true)}
+            >
+              <ClipboardList className="h-4 w-4" aria-hidden="true" />
+              Ficha da obra
+            </Button>
             <Button asChild variant="ghost" className="col-span-2 min-h-[44px] justify-start text-muted-foreground">
               <Link to={`/gestao/obra/${obra.id}`}>
                 <FileSignature className="h-4 w-4" aria-hidden="true" />
@@ -455,6 +471,9 @@ export function ObraDrawer({
           </section>
         </SheetContent>
       </Sheet>
+
+      {/* Endereço, chaves, senha, condomínio e contatos do prédio. */}
+      <FichaObraSheet open={fichaOpen && open} onOpenChange={setFichaOpen} projectId={obra.id} projectName={obra.nome} />
 
       <AlertDialog
         open={!!confirm}

@@ -7,7 +7,7 @@
  */
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CalendarCheck, ChevronLeft, ChevronRight, Plus, RefreshCw } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ChevronRight, ClipboardList, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 import { useOpsDay, useOpsReadiness, useSetAssignmentOutcome } from "@/hooks/useOps";
+import { useStudioInfo } from "@/hooks/useStudioInfo";
 import {
   canConfirmOn,
   countDay,
@@ -29,11 +30,14 @@ import {
   shiftISODate,
   todayISO,
   whoLabel,
+  type ObraDayGroup,
 } from "@/lib/hojeDia";
+import { workWindowToday } from "@/lib/fichaObra";
 import type { OpsBlockReason, OpsDayAssignment } from "@/infra/repositories/ops.repository";
 import { AssignmentCard } from "@/components/gestao/hoje/AssignmentCard";
 import { NaoFeitoSheet } from "@/components/gestao/hoje/NaoFeitoSheet";
 import { AddToDaySheet } from "@/components/gestao/hoje/AddToDaySheet";
+import { FichaObraSheet } from "@/components/gestao/ficha/FichaObraSheet";
 
 export default function Hoje() {
   const [params, setParams] = useSearchParams();
@@ -77,6 +81,7 @@ export default function Hoje() {
   const setOutcome = useSetAssignmentOutcome();
   const [notDoneFor, setNotDoneFor] = useState<OpsDayAssignment | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [fichaFor, setFichaFor] = useState<{ id: string; name: string } | null>(null);
 
   const markDone = (a: OpsDayAssignment) => {
     setOutcome.mutate(
@@ -222,14 +227,11 @@ export default function Hoje() {
         ) : (
           groups.map((g) => (
             <section key={g.projectId} aria-labelledby={`obra-${g.projectId}`}>
-              <header className="mb-3 flex items-baseline justify-between gap-2">
-                <h2 id={`obra-${g.projectId}`} className="truncate text-base font-semibold text-foreground">
-                  {g.projectName}
-                </h2>
-                <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
-                  {g.done + g.notDone} de {g.total}
-                </span>
-              </header>
+              <ObraGroupHeader
+                group={g}
+                date={date}
+                onOpenFicha={() => setFichaFor({ id: g.projectId, name: g.projectName })}
+              />
               <div className="grid gap-3 sm:grid-cols-2">
                 {g.items.map((a) => (
                   <AssignmentCard
@@ -265,7 +267,64 @@ export default function Hoje() {
         userId={userId}
         defaultProjectId={obraFilter}
       />
+      <FichaObraSheet
+        open={!!fichaFor}
+        onOpenChange={(o) => !o && setFichaFor(null)}
+        projectId={fichaFor?.id}
+        projectName={fichaFor?.name}
+      />
     </PageContainer>
+  );
+}
+
+/**
+ * Cabeçalho da obra no dia: nome, horário que o condomínio permite e o
+ * atalho para a ficha (endereço, chaves, senha, contatos).
+ */
+function ObraGroupHeader({
+  group,
+  date,
+  onOpenFicha,
+}: {
+  group: ObraDayGroup;
+  /** Dia que a tela está mostrando (não necessariamente hoje). */
+  date: string;
+  onOpenFicha: () => void;
+}) {
+  // Complemento da tela: enquanto a ficha não chega (ou se a consulta falhar),
+  // o cabeçalho só não mostra o horário. O dia nunca espera por ela.
+  const { data: info } = useStudioInfo(group.projectId);
+  const workWindow = workWindowToday(info, date);
+
+  return (
+    <header className="mb-3 flex items-start justify-between gap-2">
+      <div className="min-w-0">
+        <h2 id={`obra-${group.projectId}`} className="truncate text-base font-semibold text-foreground">
+          {group.projectName}
+        </h2>
+        {workWindow && (
+          <p className={cn("text-sm", workWindow.kind === "proibido" ? "font-medium text-warning" : "text-muted-foreground")}>
+            {workWindow.text}
+          </p>
+        )}
+      </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <span className="text-sm tabular-nums text-muted-foreground">
+          {group.done + group.notDone} de {group.total}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-[40px]"
+          onClick={onOpenFicha}
+          aria-label={`Ficha da obra ${group.projectName}`}
+        >
+          <ClipboardList className="h-4 w-4" aria-hidden="true" />
+          Ficha
+        </Button>
+      </div>
+    </header>
   );
 }
 

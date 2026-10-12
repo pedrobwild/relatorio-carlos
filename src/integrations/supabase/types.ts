@@ -5972,6 +5972,7 @@ export type Database = {
       }
       project_studio_info: {
         Row: {
+          access_release_process: string | null
           allowed_work_days: string[] | null
           allowed_work_end_time: string | null
           allowed_work_start_time: string | null
@@ -5982,13 +5983,19 @@ export type Database = {
           cep: string | null
           cidade: string | null
           complemento: string | null
+          concierge_name: string | null
+          concierge_phone: string | null
           created_at: string
           data_recebimento_chaves: string | null
           electronic_lock_password: string | null
           endereco_completo: string | null
           key_location: string | null
+          keys_received_by: string | null
           nome_do_empreendimento: string | null
           project_id: string
+          property_admin_email: string | null
+          property_admin_name: string | null
+          property_admin_phone: string | null
           provider_access_instructions: string | null
           syndic_email: string | null
           syndic_name: string | null
@@ -5998,6 +6005,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_release_process?: string | null
           allowed_work_days?: string[] | null
           allowed_work_end_time?: string | null
           allowed_work_start_time?: string | null
@@ -6008,13 +6016,19 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
+          concierge_name?: string | null
+          concierge_phone?: string | null
           created_at?: string
           data_recebimento_chaves?: string | null
           electronic_lock_password?: string | null
           endereco_completo?: string | null
           key_location?: string | null
+          keys_received_by?: string | null
           nome_do_empreendimento?: string | null
           project_id: string
+          property_admin_email?: string | null
+          property_admin_name?: string | null
+          property_admin_phone?: string | null
           provider_access_instructions?: string | null
           syndic_email?: string | null
           syndic_name?: string | null
@@ -6024,6 +6038,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_release_process?: string | null
           allowed_work_days?: string[] | null
           allowed_work_end_time?: string | null
           allowed_work_start_time?: string | null
@@ -6034,13 +6049,19 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           complemento?: string | null
+          concierge_name?: string | null
+          concierge_phone?: string | null
           created_at?: string
           data_recebimento_chaves?: string | null
           electronic_lock_password?: string | null
           endereco_completo?: string | null
           key_location?: string | null
+          keys_received_by?: string | null
           nome_do_empreendimento?: string | null
           project_id?: string
+          property_admin_email?: string | null
+          property_admin_name?: string | null
+          property_admin_phone?: string | null
           provider_access_instructions?: string | null
           syndic_email?: string | null
           syndic_name?: string | null

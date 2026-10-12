@@ -248,3 +248,11 @@ describe("queryKeys", () => {
     });
   });
 });
+
+describe("queryKeys.studioInfo (ficha da obra)", () => {
+  it("uma chave por obra, debaixo da base", () => {
+    expect(queryKeys.studioInfo.all).toEqual(["studio-info"]);
+    expect(queryKeys.studioInfo.byProject("p1")).toEqual(["studio-info", "by-project", "p1"]);
+    expect(queryKeys.studioInfo.byProject("p1")).not.toEqual(queryKeys.studioInfo.byProject("p2"));
+  });
+});

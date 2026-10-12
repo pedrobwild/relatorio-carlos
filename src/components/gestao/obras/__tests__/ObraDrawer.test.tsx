@@ -8,8 +8,22 @@ import { MemoryRouter } from "react-router-dom";
 import type { PainelObra } from "@/hooks/usePainelObras";
 import type { ObraRow } from "@/lib/obrasPainel";
 
-const h = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+const h = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), studioProjectId: null as string | null }));
 vi.mock("sonner", () => ({ toast: { success: h.success, error: h.error } }));
+vi.mock("@/hooks/useStudioInfo", () => ({
+  useStudioInfo: (projectId: string) => {
+    h.studioProjectId = projectId;
+    return {
+      data: { project_id: projectId, key_location: "Com o zelador" },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    };
+  },
+  useUpdateStudioInfo: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock("@/hooks/useCan", () => ({ useCan: () => ({ can: () => true }) }));
 // Hoje fixo (quarta, 14/10/2026) para as regras de "data futura".
 vi.mock("@/lib/hojeDia", async (orig) => ({
   ...(await orig<typeof import("@/lib/hojeDia")>()),
@@ -144,6 +158,17 @@ describe("ObraDrawer", () => {
     expect(href(/Abrir obra/)).toBe("/obra/a");
     expect(href(/Cronograma/)).toBe("/obra/a/cronograma");
     expect(href(/Cadastro e prazo do contrato/)).toBe("/gestao/obra/a");
+  });
+
+  it("'Ficha da obra' abre a ficha desta obra por cima da gaveta", () => {
+    renderDrawer();
+    const atalhos = screen.getByRole("navigation", { name: "Atalhos da obra" });
+    expect(screen.queryByRole("dialog", { name: "Ficha da obra" })).toBeNull();
+    fireEvent.click(within(atalhos).getByRole("button", { name: "Ficha da obra" }));
+    const ficha = screen.getByRole("dialog", { name: "Ficha da obra" });
+    expect(h.studioProjectId).toBe("a");
+    expect(within(ficha).getByText("Ap. 1204 Vila Mariana")).toBeInTheDocument();
+    expect(within(ficha).getByText("Com o zelador")).toBeInTheDocument();
   });
 
   it("obra fora da execução não oferece 'Planejar a semana'", () => {

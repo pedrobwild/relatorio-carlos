@@ -482,6 +482,13 @@ export const queryKeys = {
       [...queryKeys.contractDeadline.all, "amendments", projectId] as const,
   },
 
+  /** Ficha da obra (project_studio_info): endereço, chaves, condomínio, contatos. */
+  studioInfo: {
+    all: ["studio-info"] as const,
+    byProject: (projectId: string | undefined) =>
+      [...queryKeys.studioInfo.all, "by-project", projectId] as const,
+  },
+
 } as const;
 
 
