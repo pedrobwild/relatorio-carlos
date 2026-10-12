@@ -2,7 +2,7 @@
  * Card de uma alocação do dia. Feito com um toque; Não feito abre a gaveta
  * de motivo. Botões grandes (48 px) porque é usado em pé, na obra, no celular.
  */
-import { AlertTriangle, Check, Flame, RotateCcw, X } from "lucide-react";
+import { AlertTriangle, Check, CloudUpload, Flame, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,8 @@ interface Props {
   materialsMissing?: number;
   canConfirm: boolean;
   busy?: boolean;
+  /** Marcado sem sinal (ou ainda indo): a confirmação não chegou ao banco. */
+  syncPending?: boolean;
   onDone: () => void;
   onNotDone: () => void;
   onUndo: () => void;
@@ -30,6 +32,7 @@ export function AssignmentCard({
   materialsMissing = 0,
   canConfirm,
   busy,
+  syncPending = false,
   onDone,
   onNotDone,
   onUndo,
@@ -43,6 +46,7 @@ export function AssignmentCard({
     <article
       aria-label={title}
       data-state={state}
+      data-sync={syncPending ? "pending" : undefined}
       className={cn(
         "rounded-xl border bg-card p-4 shadow-sm transition-colors",
         state === "feito" && "border-success/40 bg-success/5",
@@ -58,6 +62,12 @@ export function AssignmentCard({
           </Badge>
         )}
         <span className="truncate">{stage}</span>
+        {syncPending && (
+          <Badge variant="outline" className="ml-auto gap-1 border-warning/50 text-foreground">
+            <CloudUpload className="h-3 w-3 text-warning" aria-hidden="true" />
+            Aguardando envio
+          </Badge>
+        )}
       </div>
 
       <h3 className="mt-1 text-base font-semibold leading-snug text-foreground">{title}</h3>

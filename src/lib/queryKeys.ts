@@ -459,6 +459,12 @@ export const queryKeys = {
     /** Compras da obra que podem atender um material (seletor da gaveta). */
     linkablePurchases: (projectId: string | undefined) =>
       [...queryKeys.ops.all, "linkable-purchases", projectId] as const,
+    /**
+     * Chave de MUTAÇÃO do Feito / Não feito. Fixa (sem parâmetros) porque é
+     * por ela que a mutação guardada sem sinal reencontra a sua `mutationFn`
+     * (`setMutationDefaults`) depois de recarregar o app.
+     */
+    setOutcomeMutation: ["ops", "mutation", "set-outcome"] as const,
   },
 
   /** Tela Obras (Fase 5): leituras de carteira, por lista de obras. */

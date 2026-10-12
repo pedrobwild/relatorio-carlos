@@ -377,6 +377,57 @@ export function recoverSession(): Promise<SessionRecoveryOutcome> {
   return ensureFreshSession({ force: true });
 }
 
+/** Margem mínima de validade do token para mandar uma gravação da fila offline. */
+const WRITE_MARGIN_MS = 30_000;
+
+/**
+ * A sessão está boa para ENVIAR uma gravação guardada sem sinal?
+ *
+ * Por que não basta deixar o supabase-js resolver: com o access token vencido
+ * e a renovação falhando por falta de rede, o cliente manda a requisição com a
+ * chave anônima em vez do token do usuário. Num UPDATE isso não dá 401 — a RLS
+ * simplesmente não acha a linha, e o registro feito na obra seria descartado
+ * como "erro". Então, antes de enviar, conferimos:
+ *  - "recovered": token válido (ou renovado agora) → pode enviar;
+ *  - "unknown": não deu para confirmar (sem rede, auth fora) → espera, NÃO é
+ *    sessão morta e NÃO desloga ninguém;
+ *  - "rejected": não há sessão / o servidor recusou o refresh token.
+ */
+export async function checkSessionForWrite(): Promise<{
+  outcome: SessionRecoveryOutcome;
+  userId: string | null;
+}> {
+  const read = (async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) return { outcome: "unknown" as const, userId: null };
+    const session = data?.session ?? null;
+    if (!session) return { outcome: "rejected" as const, userId: null };
+    const userId = session.user?.id ?? null;
+    const expiresAtMs = session.expires_at ? session.expires_at * 1000 : 0;
+    if (expiresAtMs && expiresAtMs - Date.now() > WRITE_MARGIN_MS) {
+      return { outcome: "recovered" as const, userId };
+    }
+    const outcome = await ensureFreshSession({ force: true });
+    return { outcome, userId };
+  })();
+
+  return new Promise((resolve) => {
+    const timer = setTimeout(
+      () => resolve({ outcome: "unknown", userId: null }),
+      CHECK_TIMEOUT_MS,
+    );
+    read
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        resolve({ outcome: "unknown", userId: null });
+      });
+  });
+}
+
 /**
  * Liga o ciclo de vida do browser à verificação de sessão.
  *

@@ -249,6 +249,27 @@ export const opsRepo = {
   },
 
   /**
+   * Acrescenta fotos lendo o que está NO BANCO agora (não o que a tela tinha).
+   * Usado no envio das fotos tiradas sem sinal: horas depois, a lista que o
+   * aparelho conhecia pode estar velha e sobrescrevê-la apagaria fotos que
+   * outra pessoa enviou nesse meio-tempo.
+   */
+  async appendPhotos(id: string, newPaths: string[]) {
+    return executeQuery<OpsAssignment>(async () => {
+      const current = await supabase.from("ops_assignments").select("photo_paths").eq("id", id).single();
+      if (current.error) return { data: null, error: current.error };
+      const existing = (current.data?.photo_paths ?? []) as string[];
+      const merged = [...existing, ...newPaths.filter((p) => !existing.includes(p))];
+      return await supabase
+        .from("ops_assignments")
+        .update({ photo_paths: merged })
+        .eq("id", id)
+        .select("*")
+        .single();
+    });
+  },
+
+  /**
    * Envia uma foto de campo. O caminho começa pelo project_id porque é isso
    * que a policy do bucket usa para checar o acesso à obra.
    */

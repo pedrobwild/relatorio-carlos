@@ -25,6 +25,12 @@ import {
   createQueryPersister,
   QUERY_CACHE_VERSION,
 } from "@/lib/queryPersister";
+import {
+  registerOpsOfflineDefaults,
+  shouldPersistMutation,
+  syncOnlineManagerWithNavigator,
+} from "@/lib/offline/opsOutcomeSync";
+import { startOpsPhotoSync } from "@/lib/offline/opsPhotoSync";
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 import { AuthRedirect } from "@/components/AuthRedirect";
@@ -135,6 +141,13 @@ const persister = createQueryPersister();
 // Cache max age: 24 hours
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
+// Fila offline da tela Hoje. Precisa estar registrada ANTES de restaurar o
+// cache: é por `setMutationDefaults` que uma mutação guardada no aparelho
+// reencontra a sua `mutationFn` depois de recarregar.
+syncOnlineManagerWithNavigator();
+registerOpsOfflineDefaults(queryClient);
+startOpsPhotoSync(queryClient);
+
 // Wrapper component to provide project context + staff sidebar shell.
 // `resetKeys={[pathname]}` lets the boundary auto-recover on navigation: a
 // transient render crash while switching obras/abas clears itself on the next
@@ -178,8 +191,12 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
           persister,
           maxAge: CACHE_MAX_AGE,
           buster: String(QUERY_CACHE_VERSION),
+          dehydrateOptions: { shouldDehydrateMutation: shouldPersistMutation },
         }}
         onSuccess={() => {
+          // Retoma o que ficou na fila sem sinal (Feito / Não feito). Sem
+          // rede, as mutações continuam pausadas até o sinal voltar.
+          void queryClient.resumePausedMutations();
           if (import.meta.env.DEV) {
             // eslint-disable-next-line no-console
             console.info("[QueryPersist] Cache restored from localStorage");

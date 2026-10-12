@@ -81,6 +81,38 @@ describe("queryPersister", () => {
       await persister!.removeClient();
       expect(hasPersistedCache()).toBe(false);
     });
+
+    it("mutação pendente gravada volta como pausada (para ser retomada ao reabrir)", async () => {
+      const persister = createQueryPersister();
+      const state = (status: string, isPaused: boolean) => ({
+        status,
+        isPaused,
+        variables: { id: "x" },
+        context: undefined,
+        data: undefined,
+        error: null,
+        failureCount: 1,
+        failureReason: null,
+        submittedAt: 1,
+      });
+      const mockClient = {
+        timestamp: Date.now(),
+        buster: "1",
+        clientState: {
+          queries: [],
+          mutations: [
+            // Estava no meio de uma tentativa quando o app foi fechado.
+            { mutationKey: ["ops", "mutation", "set-outcome"], state: state("pending", false) },
+            { mutationKey: ["ops", "mutation", "set-outcome"], state: state("pending", true) },
+          ],
+        },
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await persister!.persistClient(mockClient as any);
+      const restored = await persister!.restoreClient();
+      expect(restored?.clientState.mutations.map((m) => m.state.isPaused)).toEqual([true, true]);
+    });
   });
 
   describe("clearPersistedCache", () => {

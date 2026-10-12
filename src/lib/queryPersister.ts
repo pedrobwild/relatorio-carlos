@@ -137,6 +137,16 @@ export function createQueryPersister(): Persister | null {
           ...client,
           clientState: {
             ...client.clientState,
+            // Uma mutação pendente gravada no aparelho NÃO está rodando na
+            // próxima sessão — nem que estivesse no meio de uma tentativa
+            // quando o app foi fechado. Marcada como pausada, ela volta pela
+            // `resumePausedMutations()` ao restaurar; senão ficaria parada
+            // para sempre.
+            mutations: (client.clientState.mutations ?? []).map((m) =>
+              m.state.status === "pending" && !m.state.isPaused
+                ? { ...m, state: { ...m.state, isPaused: true } }
+                : m,
+            ),
             queries: client.clientState.queries.filter(
               (q) =>
                 (q.meta as { persist?: boolean } | undefined)?.persist !==
