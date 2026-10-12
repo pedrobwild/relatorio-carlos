@@ -15,6 +15,8 @@
  *   amarelo   folga 0–2, prazo consumido > avanço + 5 p.p. ou material
  *             faltando para atividade com limite em até 10 dias úteis
  *   verde     folga ≥ 3
+ *             (obra com prazo mas sem cronograma nunca é verde: sem etapas
+ *             não dá para projetar o término — fica em atenção)
  *   sem_prazo prazo contratual não cadastrado (com etapa atrasada vira
  *             amarelo: sem contrato não dá para medir folga, mas o atraso
  *             não pode ficar escondido no fim da lista)
@@ -31,6 +33,7 @@ import type {
   PortfolioMaterial,
   PortfolioStage,
 } from "@/infra/repositories/obrasPanel.repository";
+import type { PainelEtapa, PainelRelacionamento } from "@/hooks/usePainelObras";
 
 export type ObraRisk = "vermelho" | "amarelo" | "verde" | "sem_prazo";
 
@@ -51,15 +54,17 @@ export const MATERIAL_WINDOW_DAYS = 10;
 export const CONSUMPTION_GAP_PP = 5;
 
 /**
- * Obra em execução para a tela Obras: ativa e ainda não entregue.
+ * Obra em execução para a tela Obras: ativa (ou pausada) e ainda não entregue.
  * `projects.status` não muda sozinho na entrega (o Painel só grava a
  * "Entrega real"), então obra entregue continuaria na lista acumulando
  * folga negativa e multa projetada todos os dias.
+ * Pausada continua na lista (com a marca "Paralisada"): o prazo do contrato
+ * segue correndo. Cancelada sai do Painel.
  */
 export function isObraEmExecucao(
   d: Pick<ProjectDeadline, "project_id" | "status" | "actual_end_date">,
 ): boolean {
-  return !!d.project_id && d.status === "active" && !d.actual_end_date;
+  return !!d.project_id && (d.status === "active" || d.status === "paused") && !d.actual_end_date;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,6 +157,7 @@ export function projectedPenalty(
 // ---------------------------------------------------------------------------
 
 export type AlertKind =
+  | "finalizada_sem_entrega"
   | "critica_nao_feita"
   | "multa"
   | "etapa_atrasada"
@@ -177,6 +183,18 @@ export interface ObraWeek {
   unplanned: boolean;
 }
 
+/**
+ * Cadastro que o escritório mantém à mão. São os únicos campos digitados da
+ * tela; a situação (cor) nunca sai daqui — é sempre calculada.
+ */
+export interface ObraCadastro {
+  etapa: PainelEtapa | null;
+  /** Clima com o cliente. null = não informado. */
+  relationship: PainelRelacionamento | null;
+  /** Obra paralisada: a única marcação manual de situação que sobrou. */
+  paused: boolean;
+}
+
 export interface ObraRow {
   id: string;
   name: string;
@@ -194,6 +212,8 @@ export interface ObraRow {
   week: ObraWeek;
   alerts: ObraAlert[];
   risk: ObraRisk;
+  /** Etapa, relacionamento e "paralisada" (ausente em quem monta a linha sem cadastro). */
+  cadastro?: ObraCadastro;
 }
 
 export interface BuildRowInput {
@@ -203,6 +223,7 @@ export interface BuildRowInput {
   responsibleId?: string | null;
   responsible?: string | null;
   progress?: number | null;
+  cadastro?: ObraCadastro;
   stages: readonly PortfolioStage[];
   activities: readonly PortfolioActivity[];
   materials: readonly PortfolioMaterial[];
@@ -256,10 +277,22 @@ export function buildObraRow(input: BuildRowInput): ObraRow {
   const done = weekAssignments.filter((a) => a.outcome === "feito").length;
   const notDone = weekAssignments.filter((a) => a.outcome === "nao_feito").length;
   const openActivities = activities.filter((a) => a.status !== "bloqueada");
-  const unplanned = planned === 0 && (stageNames.length > 0 || openActivities.length > 0);
+  // Obra paralisada não é cobrada por "semana não planejada".
+  const paused = input.cadastro?.paused === true;
+  const unplanned = !paused && planned === 0 && (stageNames.length > 0 || openActivities.length > 0);
 
   // Alertas --------------------------------------------------------------
   const alerts: ObraAlert[] = [];
+  // Etapa "Finalizada" sem entrega real: para o contrato a obra não foi
+  // entregue, então folga e multa seguem correndo. Vem primeiro porque é o
+  // que resolve a linha (registrar a data).
+  if (input.cadastro?.etapa === "Finalizada") {
+    alerts.push({
+      kind: "finalizada_sem_entrega",
+      tone: "warning",
+      text: "Etapa finalizada: falta registrar a entrega real",
+    });
+  }
   const stageEnd = new Map(stages.map((s) => [s.id, s.planned_end]));
   const critical = activities.filter((a) => a.is_critical && Number(a.assignments_not_done ?? 0) > 0);
   if (critical.length > 0) {
@@ -306,7 +339,7 @@ export function buildObraRow(input: BuildRowInput): ObraRow {
   }
   const consumptionGap = alerts.some((a) => a.kind === "consumo");
   if (!current) alerts.push({ kind: "sem_prazo", tone: "muted", text: "Prazo do contrato não cadastrado" });
-  else if (!proj) alerts.push({ kind: "sem_cronograma", tone: "muted", text: "Sem cronograma" });
+  else if (!proj) alerts.push({ kind: "sem_cronograma", tone: "warning", text: "Sem cronograma: não dá para projetar o término" });
 
   // Risco ----------------------------------------------------------------
   let risk: ObraRisk;
@@ -316,6 +349,7 @@ export function buildObraRow(input: BuildRowInput): ObraRow {
     (slack != null && slack < GREEN_MIN_SLACK) ||
     consumptionGap ||
     urgent.length > 0 ||
+    !proj ||
     (slack == null && d.business_days_remaining != null && d.business_days_remaining < GREEN_MIN_SLACK)
   )
     risk = "amarelo";
@@ -336,6 +370,7 @@ export function buildObraRow(input: BuildRowInput): ObraRow {
     week: { stages: stageNames, planned, done, notDone, unplanned },
     alerts,
     risk,
+    cadastro: input.cadastro,
   };
 }
 

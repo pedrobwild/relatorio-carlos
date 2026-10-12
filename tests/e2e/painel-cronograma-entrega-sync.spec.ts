@@ -1,4 +1,5 @@
 import { test, expect, type Page } from './fixtures/auth';
+import { PAINEL_ANTIGO } from './helpers/painelAntigo';
 
 /**
  * Verifica que a `entrega_oficial` mostrada no Painel de Obras coincide com
@@ -23,7 +24,7 @@ const VIEWPORTS = [
 
 /** Painel: lê o ISO da entrega oficial diretamente do data-attribute. */
 async function getEntregaPainel(page: Page, projectId: string): Promise<string | null> {
-  await page.goto('/gestao/painel-obras');
+  await page.goto(PAINEL_ANTIGO);
   await page.waitForLoadState('networkidle');
   const row = page.locator(`[data-testid="painel-obras-row"]`).filter({
     has: page.locator(`a[href*="/obra/${projectId}"], [href*="${projectId}"]`),

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { PAINEL_ANTIGO } from './helpers/painelAntigo';
 
 /**
  * E2E — em viewports < 768px, /gestao/painel-obras deve esconder a tabela
@@ -15,7 +16,7 @@ const MOBILE_BREAKPOINTS = [
 ] as const;
 
 async function gotoPainel(page: Page) {
-  await page.goto('/gestao/painel-obras');
+  await page.goto(PAINEL_ANTIGO);
   await page.waitForLoadState('networkidle').catch(() => undefined);
 }
 

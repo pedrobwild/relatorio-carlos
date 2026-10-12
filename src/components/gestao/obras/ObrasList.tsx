@@ -1,7 +1,10 @@
 /**
- * Tela Obras (Fase 5): lista das obras ordenada por risco.
+ * Painel de Obras: lista das obras em execução ordenada por risco.
  * Computador = tabela de 6 colunas; celular = um cartão por obra.
- * Tocar na obra abre a Semana daquela obra.
+ *
+ * Com `onOpen` (escritório), tocar na obra abre a gaveta e a célula "Semana"
+ * leva à Semana daquela obra. Sem `onOpen` (gestor no modo simples), tocar na
+ * obra leva direto à Semana.
  */
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
@@ -12,9 +15,12 @@ import {
   RISK_LABEL,
   slackLabel,
   type ObraAlert,
+  type ObraCadastro,
   type ObraRisk,
   type ObraRow,
 } from "@/lib/obrasPainel";
+import { relationshipFlag } from "@/lib/painelNovo";
+import type { PainelRelacionamento } from "@/hooks/usePainelObras";
 
 export const RISK_DOT: Record<ObraRisk, string> = {
   vermelho: "bg-destructive",
@@ -24,7 +30,7 @@ export const RISK_DOT: Record<ObraRisk, string> = {
 };
 
 /** Cor do número da folga: só pela folga (o ponto mostra o risco geral). */
-function slackTone(slack: number | null): string {
+export function slackTone(slack: number | null): string {
   if (slack == null) return "text-muted-foreground";
   if (slack < 0) return "text-destructive";
   if (slack < GREEN_MIN_SLACK) return "text-warning";
@@ -39,11 +45,46 @@ const ALERT_TONE: Record<ObraAlert["tone"], string> = {
 
 export interface ObrasListProps {
   rows: readonly ObraRow[];
-  /** Para onde a obra leva (a Semana daquela obra). */
-  hrefFor: (row: ObraRow) => string;
+  /** Endereço da Semana daquela obra. */
+  weekHref: (row: ObraRow) => string;
+  /** Abre a gaveta da obra. Sem isto, tocar na obra leva à Semana. */
+  onOpen?: (row: ObraRow) => void;
+  /** Esconde o cabeçalho da tabela (grupos do Board depois do primeiro). */
+  headless?: boolean;
 }
 
-function SlackCell({ row, end = false }: { row: ObraRow; end?: boolean }) {
+const RELATIONSHIP_TONE: Record<Exclude<PainelRelacionamento, "Normal">, string> = {
+  Atrito: "border-warning/30 bg-warning/10 text-warning",
+  Insatisfeito: "border-destructive/20 bg-destructive/10 text-destructive",
+  Crítico: "border-destructive/20 bg-destructive/10 text-destructive",
+};
+
+/** Marcações digitadas que merecem aparecer: obra paralisada e cliente em atrito. */
+export function ObraFlags({ cadastro }: { cadastro?: Pick<ObraCadastro, "paused" | "relationship"> }) {
+  const rel = relationshipFlag(cadastro?.relationship);
+  if (!cadastro?.paused && !rel) return null;
+  return (
+    <span className="mt-1 flex flex-wrap gap-1">
+      {cadastro?.paused && (
+        <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+          Paralisada
+        </span>
+      )}
+      {rel && (
+        <span className={cn("rounded-full border px-2 py-0.5 text-xs font-medium", RELATIONSHIP_TONE[rel])}>
+          Cliente: {rel.toLowerCase()}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** Segunda linha do nome: cliente e etapa. */
+function subtitleOf(row: ObraRow): string {
+  return [row.customer, row.cadastro?.etapa].filter(Boolean).join(" · ");
+}
+
+function SlackCell({ row, end = false, dot = true }: { row: ObraRow; end?: boolean; dot?: boolean }) {
   const title =
     row.projectedEnd && row.deadline
       ? `Término projetado ${ddmm(row.projectedEnd)} · entrega ${ddmm(row.deadline)} (dias úteis)`
@@ -51,11 +92,11 @@ function SlackCell({ row, end = false }: { row: ObraRow; end?: boolean }) {
   return (
     <div title={title}>
       <span className={cn("flex items-center gap-2", end && "justify-end")}>
-        <span aria-hidden="true" className={cn("h-2.5 w-2.5 shrink-0 rounded-full", RISK_DOT[row.risk])} />
+        {dot && <span aria-hidden="true" className={cn("h-2.5 w-2.5 shrink-0 rounded-full", RISK_DOT[row.risk])} />}
         <span className={cn("whitespace-nowrap font-semibold tabular-nums", slackTone(row.slack))}>
           {row.slack == null ? (row.risk === "sem_prazo" ? "Sem prazo" : "—") : slackLabel(row.slack)}
         </span>
-        <span className="sr-only">{RISK_LABEL[row.risk]}</span>
+        {dot && <span className="sr-only">{RISK_LABEL[row.risk]}</span>}
       </span>
       {row.projectedEnd && row.slack != null && (
         <span className="mt-0.5 block text-xs text-muted-foreground">termina {ddmm(row.projectedEnd)}</span>
@@ -66,6 +107,9 @@ function SlackCell({ row, end = false }: { row: ObraRow; end?: boolean }) {
 
 function WeekCell({ row }: { row: ObraRow }) {
   const w = row.week;
+  if (row.cadastro?.paused && w.planned === 0) {
+    return <span className="text-sm text-muted-foreground">Obra paralisada</span>;
+  }
   if (w.unplanned) {
     return (
       <div className="text-muted-foreground">
@@ -97,8 +141,10 @@ function stageList(stages: readonly string[]): string {
   return `${stages.slice(0, 2).join(", ")} +${stages.length - 2}`;
 }
 
-function AlertCell({ alerts, max = 2 }: { alerts: readonly ObraAlert[]; max?: number }) {
+/** Até duas linhas: dois avisos, ou o mais importante e "+N avisos". */
+function AlertCell({ alerts }: { alerts: readonly ObraAlert[] }) {
   if (alerts.length === 0) return <span className="text-sm text-muted-foreground">—</span>;
+  const max = alerts.length > 2 ? 1 : 2;
   const shown = alerts.slice(0, max);
   const rest = alerts.length - shown.length;
   return (
@@ -117,22 +163,30 @@ function AlertCell({ alerts, max = 2 }: { alerts: readonly ObraAlert[]; max?: nu
   );
 }
 
-export function ObrasTable({ rows, hrefFor }: ObrasListProps) {
+export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasListProps) {
   const navigate = useNavigate();
+  const open = (r: ObraRow) => (onOpen ? onOpen(r) : navigate(weekHref(r)));
+  const nameClass = "block w-full rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <table className="w-full table-fixed border-collapse text-left">
-        <caption className="sr-only">Obras ativas, da mais arriscada para a mais tranquila</caption>
+        <caption className="sr-only">Obras em execução, da mais arriscada para a mais tranquila</caption>
         <colgroup>
-          <col className="w-[24%]" />
-          <col className="w-[13%]" />
-          <col className="w-[9%]" />
-          <col className="w-[11%]" />
-          <col className="w-[19%]" />
+          <col className="w-[23%]" />
+          <col className="w-[14%]" />
+          <col className="w-[8%]" />
+          <col className="w-[10%]" />
+          <col className="w-[18%]" />
           <col />
           <col className="w-10" />
         </colgroup>
-        <thead className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <thead
+          className={cn(
+            headless
+              ? "sr-only"
+              : "border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground",
+          )}
+        >
           <tr>
             <th scope="col" className="px-4 py-3">Obra</th>
             <th scope="col" className="px-3 py-3">Responsável</th>
@@ -144,66 +198,101 @@ export function ObrasTable({ rows, hrefFor }: ObrasListProps) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr
-              key={r.id}
-              className={cn(
-                "cursor-pointer border-b border-border align-top transition-colors last:border-b-0 hover:bg-muted/50",
-                r.week.unplanned && "bg-muted/20",
-              )}
-              onClick={() => navigate(hrefFor(r))}
-            >
-              <th scope="row" className="px-4 py-3 font-normal">
-                <Link
-                  to={hrefFor(r)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <span className="block truncate font-medium text-foreground">{r.name}</span>
-                  {r.customer && <span className="block truncate text-xs text-muted-foreground">{r.customer}</span>}
-                </Link>
-              </th>
-              <td className="truncate px-3 py-3 text-sm text-foreground">
-                {r.responsible ?? (
-                  <span className="text-muted-foreground" title="Sem responsável">
-                    —<span className="sr-only">Sem responsável</span>
-                  </span>
+          {rows.map((r) => {
+            const subtitle = subtitleOf(r);
+            const nameInner = (
+              <>
+                <span className="block truncate font-medium text-foreground">{r.name}</span>
+                {subtitle && <span className="block truncate text-xs text-muted-foreground">{subtitle}</span>}
+              </>
+            );
+            return (
+              <tr
+                key={r.id}
+                className={cn(
+                  "cursor-pointer border-b border-border align-top transition-colors last:border-b-0 hover:bg-muted/50",
+                  r.week.unplanned && "bg-muted/20",
                 )}
-              </td>
-              <td className="px-3 py-3 text-sm tabular-nums text-foreground">{r.deadline ? ddmm(r.deadline) : "—"}</td>
-              <td className="px-3 py-3 text-sm">
-                <SlackCell row={r} />
-              </td>
-              <td className="px-3 py-3">
-                <WeekCell row={r} />
-              </td>
-              <td className="px-3 py-3">
-                <AlertCell alerts={r.alerts} />
-              </td>
-              <td className="px-2 py-3 text-muted-foreground">
-                <ChevronRight className="mt-0.5 h-4 w-4" aria-hidden="true" />
-              </td>
-            </tr>
-          ))}
+                onClick={() => open(r)}
+              >
+                <th scope="row" className="py-3 pl-4 pr-3 font-normal">
+                  <span className="flex items-start gap-2.5">
+                  <span aria-hidden="true" className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", RISK_DOT[r.risk])} />
+                  <span className="min-w-0 flex-1">
+                  <span className="sr-only">{RISK_LABEL[r.risk]}. </span>
+                  {onOpen ? (
+                    <button
+                      type="button"
+                      className={nameClass}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpen(r);
+                      }}
+                    >
+                      {nameInner}
+                    </button>
+                  ) : (
+                    <Link to={weekHref(r)} onClick={(e) => e.stopPropagation()} className={nameClass}>
+                      {nameInner}
+                    </Link>
+                  )}
+                  <ObraFlags cadastro={r.cadastro} />
+                  </span>
+                  </span>
+                </th>
+                <td className="truncate px-3 py-3 text-sm text-foreground">
+                  {r.responsible ?? (
+                    <span className="text-muted-foreground" title="Sem responsável">
+                      —<span className="sr-only">Sem responsável</span>
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-3 text-sm tabular-nums text-foreground">{r.deadline ? ddmm(r.deadline) : "—"}</td>
+                <td className="px-3 py-3 text-sm">
+                  <SlackCell row={r} dot={false} />
+                </td>
+                <td className="px-3 py-3">
+                  {onOpen ? (
+                    <Link
+                      to={weekHref(r)}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`Semana de ${r.name}`}
+                      title="Abrir a semana desta obra"
+                      className="-m-1 block rounded-md p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <WeekCell row={r} />
+                    </Link>
+                  ) : (
+                    <WeekCell row={r} />
+                  )}
+                </td>
+                <td className="px-3 py-3">
+                  <AlertCell alerts={r.alerts} />
+                </td>
+                <td className="px-2 py-3 text-muted-foreground">
+                  <ChevronRight className="mt-0.5 h-4 w-4" aria-hidden="true" />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
 }
 
-export function ObrasCards({ rows, hrefFor }: ObrasListProps) {
+export function ObrasCards({ rows, weekHref, onOpen }: ObrasListProps) {
+  const cardClass = (r: ObraRow) =>
+    cn(
+      "block w-full rounded-xl border border-border bg-card p-3 text-left transition-colors",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-muted/60",
+      r.week.unplanned && "bg-muted/30",
+    );
   return (
-    <ul className="space-y-2" aria-label="Obras ativas, da mais arriscada para a mais tranquila">
-      {rows.map((r) => (
-        <li key={r.id}>
-          <Link
-            to={hrefFor(r)}
-            className={cn(
-              "block w-full rounded-xl border border-border bg-card p-3 text-left transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-muted/60",
-              r.week.unplanned && "bg-muted/30",
-            )}
-          >
+    <ul className="space-y-2" aria-label="Obras em execução, da mais arriscada para a mais tranquila">
+      {rows.map((r) => {
+        const body = (
+          <>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <span className="block truncate font-medium text-foreground">{r.name}</span>
@@ -211,6 +300,7 @@ export function ObrasCards({ rows, hrefFor }: ObrasListProps) {
                   {r.responsible ?? "Sem responsável"}
                   {r.deadline && ` · entrega ${ddmm(r.deadline)}`}
                 </span>
+                <ObraFlags cadastro={r.cadastro} />
               </div>
               <div className="shrink-0 text-right text-sm">
                 <SlackCell row={r} end />
@@ -224,9 +314,22 @@ export function ObrasCards({ rows, hrefFor }: ObrasListProps) {
                 <AlertCell alerts={r.alerts} />
               </div>
             )}
-          </Link>
-        </li>
-      ))}
+          </>
+        );
+        return (
+          <li key={r.id}>
+            {onOpen ? (
+              <button type="button" className={cardClass(r)} onClick={() => onOpen(r)}>
+                {body}
+              </button>
+            ) : (
+              <Link to={weekHref(r)} className={cardClass(r)}>
+                {body}
+              </Link>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

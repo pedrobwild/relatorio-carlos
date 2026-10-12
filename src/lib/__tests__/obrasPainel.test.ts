@@ -201,10 +201,49 @@ describe("buildObraRow", () => {
     expect(r.alerts.map((a) => a.kind)).toEqual(["etapa_atrasada", "sem_prazo"]);
   });
 
+  it("com prazo mas sem cronograma nunca é verde: não dá para projetar o término", () => {
+    const r = row({ stages: [], progress: 50 });
+    expect(r.projectedEnd).toBeNull();
+    expect(r.slack).toBeNull();
+    expect(r.risk).toBe("amarelo");
+    expect(r.alerts).toContainEqual({
+      kind: "sem_cronograma",
+      tone: "warning",
+      text: "Sem cronograma: não dá para projetar o término",
+    });
+  });
+
+  it("obra paralisada não cobra semana planejada e leva o cadastro na linha", () => {
+    const stages = [stage({ description: "Elétrica", planned_start: "2026-10-05", planned_end: "2026-10-14" })];
+    expect(row({ stages }).week.unplanned).toBe(true);
+    const parada = row({ stages, cadastro: { etapa: "Execução", relationship: "Atrito", paused: true } });
+    expect(parada.week.unplanned).toBe(false);
+    expect(parada.cadastro).toEqual({ etapa: "Execução", relationship: "Atrito", paused: true });
+  });
+
+  it("etapa 'Finalizada' sem entrega real: o primeiro aviso é registrar a entrega", () => {
+    const r = row({
+      deadline: deadline({ current_deadline: "2026-10-01" }),
+      stages: [stage({ planned_end: "2026-10-09", actual_end: "2026-10-09" })],
+      cadastro: { etapa: "Finalizada", relationship: null, paused: false },
+    });
+    expect(r.alerts[0]).toEqual({
+      kind: "finalizada_sem_entrega",
+      tone: "warning",
+      text: "Etapa finalizada: falta registrar a entrega real",
+    });
+    expect(row({ cadastro: { etapa: "Vistoria", relationship: null, paused: false } }).alerts.map((a) => a.kind)).not.toContain(
+      "finalizada_sem_entrega",
+    );
+  });
+
   it("obra entregue não conta como em execução, mesmo com status ativo", () => {
     expect(isObraEmExecucao(deadline())).toBe(true);
     expect(isObraEmExecucao(deadline({ actual_end_date: "2026-08-27" }))).toBe(false);
     expect(isObraEmExecucao(deadline({ status: "completed" }))).toBe(false);
+    // Pausada segue na lista (o prazo continua correndo); cancelada sai.
+    expect(isObraEmExecucao(deadline({ status: "paused" }))).toBe(true);
+    expect(isObraEmExecucao(deadline({ status: "cancelled" }))).toBe(false);
     expect(isObraEmExecucao(deadline({ project_id: null }))).toBe(false);
   });
 

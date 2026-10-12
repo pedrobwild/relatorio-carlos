@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { PAINEL_ANTIGO } from './helpers/painelAntigo';
 
 /**
  * Smoke suite for /gestao/painel-obras.
@@ -22,7 +23,7 @@ import { test, expect, type Page } from '@playwright/test';
 const STICKY_WIDTH = 240;
 
 async function gotoPainel(page: Page) {
-  await page.goto('/gestao/painel-obras');
+  await page.goto(PAINEL_ANTIGO);
   await page.waitForLoadState('networkidle');
 }
 

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { PAINEL_ANTIGO } from './helpers/painelAntigo';
 
 /**
  * E2E — acessibilidade dos controles do cabeçalho e ações por linha
@@ -22,7 +23,7 @@ import { test, expect, type Page } from '@playwright/test';
 const DESKTOP = { width: 1280, height: 720 };
 
 async function gotoPainel(page: Page) {
-  await page.goto('/gestao/painel-obras');
+  await page.goto(PAINEL_ANTIGO);
   await page.waitForLoadState('networkidle').catch(() => undefined);
 }
 

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from './fixtures/auth';
+import { PAINEL_ANTIGO } from './helpers/painelAntigo';
 
 /**
  * Cenários de regressão extras para a sincronia entre `entrega_oficial`
@@ -17,7 +18,7 @@ const VIEWPORTS = [
 ] as const;
 
 async function getEntregaPainel(page: Page, _projectId: string): Promise<string | null> {
-  await page.goto('/gestao/painel-obras');
+  await page.goto(PAINEL_ANTIGO);
   await page.waitForLoadState('networkidle');
   const cell = page
     .locator('[data-testid="painel-obras-cell-entrega-oficial"]')

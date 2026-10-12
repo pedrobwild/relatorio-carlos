@@ -51,8 +51,24 @@ export function SavedViewsBar() {
   const [renameValue, setRenameValue] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<SavedView | null>(null);
 
-  const currentQuery = location.search.replace(/^\?/, "");
-  const isViewActive = (view: SavedView) => view.query === currentQuery;
+  // `painel=antigo` mantém a pessoa no painel antigo; não faz parte da visão
+  // salva (as já gravadas não têm) e precisa sobreviver à troca de visão.
+  const currentParams = new URLSearchParams(location.search);
+  const noPainelAntigo = currentParams.get("painel") === "antigo";
+  currentParams.delete("painel");
+  const currentQuery = currentParams.toString();
+  const queryOf = (view: SavedView) => {
+    const params = new URLSearchParams(view.query);
+    params.delete("painel");
+    return params;
+  };
+  const isViewActive = (view: SavedView) => queryOf(view).toString() === currentQuery;
+  const searchFor = (view: SavedView) => {
+    const params = queryOf(view);
+    if (noPainelAntigo) params.set("painel", "antigo");
+    const qs = params.toString();
+    return qs ? `?${qs}` : "";
+  };
 
   const openSaveDialog = () => {
     setNewName("");
@@ -103,7 +119,7 @@ export function SavedViewsBar() {
                 onClick={() =>
                   navigate({
                     pathname: location.pathname,
-                    search: view.query ? `?${view.query}` : "",
+                    search: searchFor(view),
                   })
                 }
                 aria-pressed={active}

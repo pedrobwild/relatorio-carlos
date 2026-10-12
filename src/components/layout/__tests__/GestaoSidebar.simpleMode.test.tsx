@@ -6,15 +6,16 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { AppRole } from "@/hooks/useUserRole";
 
-const state: { roles: AppRole[]; flag: boolean; novoPainel: boolean } = {
+const state: { roles: AppRole[]; flag: boolean; novoPainel: boolean; reformulado: boolean } = {
   roles: ["gestor"],
   flag: true,
   novoPainel: false,
+  reformulado: false,
 };
 
 vi.mock("@/hooks/useUserRole", () => ({
@@ -32,9 +33,15 @@ vi.mock("@/hooks/useAuth", () => ({
 
 vi.mock("@/hooks/useFeatureFlags", () => ({
   useFeatureFlags: () => ({
-    flags: { simpleModeGestor: state.flag, novoPainelObras: state.novoPainel },
+    flags: { simpleModeGestor: state.flag, novoPainelObras: state.novoPainel, painelReformulado: state.reformulado },
     isEnabled: (key: string) =>
-      key === "simpleModeGestor" ? state.flag : key === "novoPainelObras" ? state.novoPainel : false,
+      key === "simpleModeGestor"
+        ? state.flag
+        : key === "novoPainelObras"
+          ? state.novoPainel
+          : key === "painelReformulado"
+            ? state.reformulado
+            : false,
     isLoading: false,
   }),
 }));
@@ -53,14 +60,20 @@ vi.mock("@/lib/assistantAccess", () => ({
 
 import { GestaoSidebar } from "../GestaoSidebar";
 
-function renderSidebar() {
+function Onde() {
+  const l = useLocation();
+  return <output data-testid="onde">{l.pathname + l.search}</output>;
+}
+
+function renderSidebar(entry = "/gestao/painel-obras") {
   return render(
-    <MemoryRouter initialEntries={["/gestao/painel-obras"]}>
+    <MemoryRouter initialEntries={[entry]}>
       <SidebarProvider>
         <TooltipProvider>
           <GestaoSidebar />
         </TooltipProvider>
       </SidebarProvider>
+      <Onde />
     </MemoryRouter>,
   );
 }
@@ -70,6 +83,7 @@ describe("GestaoSidebar · modo simples", () => {
     state.roles = ["gestor"];
     state.flag = true;
     state.novoPainel = false;
+    state.reformulado = false;
     window.localStorage.clear();
   });
 
@@ -136,5 +150,33 @@ describe("GestaoSidebar · modo simples", () => {
 
     expect(screen.getByRole("link", { name: "Obras" })).toHaveAttribute("href", "/gestao/obras");
     expect(screen.getByRole("link", { name: /Painel de Obras/ })).toHaveAttribute("href", "/gestao/painel-obras");
+  });
+
+  it("painel reformulado ligado → menu completo fica só com o Painel de Obras (é a mesma tela)", () => {
+    state.novoPainel = true;
+    state.reformulado = true;
+    state.roles = ["admin"];
+    renderSidebar();
+
+    expect(screen.queryByRole("link", { name: "Obras" })).toBeNull();
+    expect(screen.getByRole("link", { name: /Painel de Obras/ })).toHaveAttribute("href", "/gestao/painel-obras");
+  });
+
+  it("painel reformulado: trocar para Projetos sai de Concluídas e fecha a gaveta", () => {
+    state.reformulado = true;
+    state.roles = ["admin"];
+    renderSidebar("/gestao/painel-obras?aba=concluidas&obra=x&view=board");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Projetos" }));
+    expect(screen.getByTestId("onde").textContent).toBe("/gestao/painel-obras?view=board&fase=projetos");
+  });
+
+  it("painel antigo: trocar de fase mantém os outros filtros (lá fase e aba são independentes)", () => {
+    state.reformulado = true;
+    state.roles = ["admin"];
+    renderSidebar("/gestao/painel-obras?painel=antigo&aba=concluidas");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Projetos" }));
+    expect(screen.getByTestId("onde").textContent).toBe("/gestao/painel-obras?painel=antigo&aba=concluidas&fase=projetos");
   });
 });
