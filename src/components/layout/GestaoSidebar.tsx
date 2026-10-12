@@ -102,6 +102,9 @@ export function GestaoSidebar() {
   const { isSimple, canToggle, setMode } = useMenuMode();
   const { isEnabled: isFlagOn } = useFeatureFlags();
   const novoPainel = isFlagOn("novoPainelObras");
+  // Com o Painel reformulado, "Painel de Obras" já é a tela nova: o atalho
+  // "Obras" do menu completo seria a mesma tela duas vezes.
+  const painelReformulado = isFlagOn("painelReformulado");
 
   const currentFase =
     new URLSearchParams(location.search).get("fase") === "projetos"
@@ -112,6 +115,12 @@ export function GestaoSidebar() {
     const params = new URLSearchParams(location.search);
     if (fase === "projetos") params.set("fase", "projetos");
     else params.delete("fase");
+    // No Painel reformulado, Obras / Projetos / Concluídas são uma lista só:
+    // trocar de fase sai de Concluídas e fecha a gaveta da obra aberta.
+    if (painelReformulado && params.get("painel") !== "antigo") {
+      params.delete("aba");
+      params.delete("obra");
+    }
     const qs = params.toString();
     navigate(`/gestao/painel-obras${qs ? `?${qs}` : ""}`);
   };
@@ -120,7 +129,7 @@ export function GestaoSidebar() {
     {
       label: "Meu trabalho",
       items: [
-        ...(novoPainel ? [{ label: "Obras", icon: Building2, path: NOVO_PAINEL_PATH }] : []),
+        ...(novoPainel && !painelReformulado ? [{ label: "Obras", icon: Building2, path: NOVO_PAINEL_PATH }] : []),
         {
           label: "Hoje",
           icon: CalendarCheck,

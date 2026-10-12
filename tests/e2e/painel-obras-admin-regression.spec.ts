@@ -1,4 +1,5 @@
 import { test, expect, loginAs } from './fixtures/auth';
+import { PAINEL_ANTIGO } from './helpers/painelAntigo';
 
 /**
  * Regressão: /gestao/painel-obras deve abrir sem crash ("Algo deu errado")
@@ -48,7 +49,7 @@ for (const vp of VIEWPORTS) {
       try {
         await loginAs(page, ADMIN_EMAIL, ADMIN_PASSWORD);
 
-        await page.goto('/gestao/painel-obras');
+        await page.goto(PAINEL_ANTIGO);
         await page.waitForLoadState('networkidle').catch(() => undefined);
 
         // ErrorBoundary NÃO pode ter disparado.

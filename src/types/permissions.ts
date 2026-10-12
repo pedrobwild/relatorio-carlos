@@ -68,7 +68,8 @@ export type FeatureFlagKey =
   | "enableAdvancedFilters"
   | "enableDocumentReviews"
   | "simpleModeGestor"
-  | "novoPainelObras";
+  | "novoPainelObras"
+  | "painelReformulado";
 
 /** Project member permission override */
 export interface ProjectMemberPermission {

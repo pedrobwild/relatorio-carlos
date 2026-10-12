@@ -1,15 +1,26 @@
 /**
- * useObrasPainel — Fase 5. Junta, para todas as obras ativas:
+ * useObrasPainel — dados do Painel de Obras. Junta, para todas as obras ativas:
  * prazo contratual (v_project_deadlines), dados do painel (nome, cliente,
- * responsável, avanço), cronograma e camada de Operação. Devolve as linhas
- * já calculadas e ordenadas por risco.
+ * responsável, avanço, cadastro digitado), cronograma e camada de Operação.
+ * Devolve as linhas em execução já calculadas e ordenadas por risco, mais as
+ * listas de projetos (fase de projeto) e de obras concluídas.
  */
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { obrasPanelRepo } from "@/infra/repositories/obrasPanel.repository";
 import { useObraDeadlines } from "@/hooks/useContractDeadline";
-import { usePainelObras } from "@/hooks/usePainelObras";
+import { usePainelObras, type PainelObra } from "@/hooks/usePainelObras";
+import {
+  buildConcluidaRow,
+  buildProjetoRow,
+  cadastroOf,
+  isObraConcluida,
+  sortConcluidas,
+  sortProjetos,
+  type ConcluidaRow,
+  type ProjetoRow,
+} from "@/lib/painelNovo";
 import { buildObraRow, groupBy, isObraEmExecucao, sortByRisk, type ObraRow } from "@/lib/obrasPainel";
 import { mapError } from "@/lib/errorMapping";
 import { todayISO } from "@/lib/hojeDia";
@@ -35,29 +46,37 @@ export function useObrasPainel(week: { from: string; to: string }) {
   );
   const ids = useMemo(() => active.map((d) => d.project_id as string).sort(), [active]);
   const enabled = ids.length > 0;
+  // As quatro consultas abaixo têm a lista de obras na chave. Quando uma obra
+  // entra ou sai (ex.: entrega real registrada na gaveta), a chave muda;
+  // `keepPreviousData` mantém a tela com os dados anteriores até os novos
+  // chegarem, em vez de voltar ao esqueleto e fechar a gaveta.
 
   const stagesQ = useQuery({
     queryKey: queryKeys.obrasPanel.stages(ids),
     enabled,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
     queryFn: async () => unwrap(await obrasPanelRepo.listStages(ids)),
   });
   const activitiesQ = useQuery({
     queryKey: queryKeys.obrasPanel.activities(ids),
     enabled,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
     queryFn: async () => unwrap(await obrasPanelRepo.listActivities(ids)),
   });
   const materialsQ = useQuery({
     queryKey: queryKeys.obrasPanel.materials(ids),
     enabled,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
     queryFn: async () => unwrap(await obrasPanelRepo.listOpenMaterials(ids)),
   });
   const assignmentsQ = useQuery({
     queryKey: queryKeys.obrasPanel.assignments(ids, week.from, week.to),
     enabled,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
     queryFn: async () => unwrap(await obrasPanelRepo.listAssignments(ids, week.from, week.to)),
   });
 
@@ -79,6 +98,7 @@ export function useObrasPainel(week: { from: string; to: string }) {
           responsibleId: o?.responsavel_id ?? null,
           responsible: o?.responsavel_nome ?? o?.engineer_name ?? null,
           progress: o?.progress_percentage ?? null,
+          cadastro: { ...cadastroOf(o), paused: cadastroOf(o).paused || d.status === "paused" },
           stages: stages.get(id) ?? [],
           activities: acts.get(id) ?? [],
           materials: mats.get(id) ?? [],
@@ -90,6 +110,25 @@ export function useObrasPainel(week: { from: string; to: string }) {
     );
   }, [active, painel.obras, stagesQ.data, activitiesQ.data, materialsQ.data, assignmentsQ.data, week]);
 
+  /** Cadastro de cada obra (para a gaveta e para as outras listas). */
+  const obraById = useMemo(() => new Map<string, PainelObra>(painel.obras.map((o) => [o.id, o])), [painel.obras]);
+  const deadlineById = useMemo(
+    () => new Map((deadlinesQ.data ?? []).filter((d) => d.project_id).map((d) => [d.project_id as string, d])),
+    [deadlinesQ.data],
+  );
+
+  /** Obras em fase de projeto: a mais parada primeiro. */
+  const projetos = useMemo<ProjetoRow[]>(() => {
+    const today = todayISO();
+    return sortProjetos(painel.obras.filter((o) => o.is_project_phase).map((o) => buildProjetoRow(o, today)));
+  }, [painel.obras]);
+
+  /** Obras entregues: a mais recente primeiro. */
+  const concluidas = useMemo<ConcluidaRow[]>(
+    () => sortConcluidas((deadlinesQ.data ?? []).filter(isObraConcluida).map((d) => buildConcluidaRow(d, obraById.get(d.project_id as string)))),
+    [deadlinesQ.data, obraById],
+  );
+
   const isLoading =
     deadlinesQ.isLoading ||
     painel.isLoading ||
@@ -99,6 +138,12 @@ export function useObrasPainel(week: { from: string; to: string }) {
 
   return {
     rows,
+    projetos,
+    concluidas,
+    obraById,
+    deadlineById,
+    updateObra: painel.updateObra,
+    isUpdating: painel.isUpdating,
     isLoading,
     error: error ? friendlyError(error) : painel.error,
     refetch: () => {

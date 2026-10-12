@@ -1,4 +1,5 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
+import { PAINEL_ANTIGO } from './helpers/painelAntigo';
 
 /**
  * Visual snapshot tests para /gestao/painel-obras.
@@ -42,7 +43,7 @@ async function emptyBackend(page: Page) {
 }
 
 async function gotoPainel(page: Page, opts: { waitNetworkIdle?: boolean } = {}) {
-  await page.goto('/gestao/painel-obras');
+  await page.goto(PAINEL_ANTIGO);
   if (opts.waitNetworkIdle) {
     await page.waitForLoadState('networkidle').catch(() => undefined);
   }

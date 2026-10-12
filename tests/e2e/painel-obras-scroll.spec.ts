@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { PAINEL_ANTIGO } from './helpers/painelAntigo';
 
 /**
  * E2E — integridade de scroll do Painel de Obras em múltiplos breakpoints.
@@ -26,7 +27,7 @@ const BREAKPOINTS = [
 ] as const;
 
 async function gotoPainel(page: Page) {
-  await page.goto('/gestao/painel-obras');
+  await page.goto(PAINEL_ANTIGO);
   await page.waitForLoadState('networkidle').catch(() => undefined);
 }
 
