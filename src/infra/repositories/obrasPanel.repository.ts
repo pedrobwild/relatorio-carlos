@@ -11,7 +11,7 @@ import type { Database, Tables } from "@/integrations/supabase/types";
 type Enums = Database["public"]["Enums"];
 
 export type PortfolioStage = Pick<
-  Tables<"project_activities">,
+  Tables<"internal_schedule_items">,
   "id" | "project_id" | "description" | "sort_order" | "planned_start" | "planned_end" | "actual_start" | "actual_end"
 >;
 
@@ -85,12 +85,16 @@ async function allPages<T>(
 }
 
 export const obrasPanelRepo = {
-  /** Etapas do cronograma (datas previstas e reais) das obras. */
+  /**
+   * Etapas do cronograma INTERNO (datas previstas e reais) das obras — é o
+   * que a equipe executa. A entrega do cronograma do cliente chega pelo
+   * cadastro da obra (projects.planned_end_date).
+   */
   async listStages(projectIds: readonly string[]) {
     return inChunks<PortfolioStage>(projectIds, (ids) =>
       executeListQuery<PortfolioStage>(async () =>
         await supabase
-          .from("project_activities")
+          .from("internal_schedule_items")
           .select("id, project_id, description, sort_order, planned_start, planned_end, actual_start, actual_end")
           .in("project_id", ids)
           .order("sort_order", { ascending: true }),

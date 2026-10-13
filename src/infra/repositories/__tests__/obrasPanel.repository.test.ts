@@ -62,7 +62,7 @@ describe("obrasPanelRepo", () => {
     const ids = Array.from({ length: PORTFOLIO_CHUNK + 3 }, (_, i) => `p${i}`);
     const res = await obrasPanelRepo.listStages([...ids, "p0"]);
     expect(h.state.queries).toHaveLength(2);
-    expect(h.state.queries.every((q) => q.table === "project_activities")).toBe(true);
+    expect(h.state.queries.every((q) => q.table === "internal_schedule_items")).toBe(true);
     expect((call(0, "in")![1] as string[]).length).toBe(PORTFOLIO_CHUNK);
     expect((call(1, "in")![1] as string[]).length).toBe(3);
     expect(res.data).toHaveLength(ids.length);

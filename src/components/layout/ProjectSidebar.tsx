@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, GanttChartSquare, DollarSign, FolderOpen, ClipboardSignature, AlertCircle, FileText, Box, Ruler, Map, Package, ClipboardCheck, ChevronDown, LucideIcon, Building2, UserCircle, ListChecks, Receipt, Bot } from "lucide-react";
+import { LayoutDashboard, GanttChartSquare, DollarSign, FolderOpen, ClipboardSignature, AlertCircle, FileText, Box, Ruler, Map, Package, ClipboardCheck, ChevronDown, LucideIcon, Building2, UserCircle, ListChecks, Receipt, Bot, ListTree } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -120,6 +120,15 @@ export function ProjectSidebar() {
           feature: "schedule:view",
           // Liberado na fase de projeto: a equipe precisa subir o cronograma
           // ANTES de iniciar a obra (start_project_execution exige atividades).
+        },
+        {
+          // Cronograma de trabalho da equipe (internal_schedule_items). O
+          // cliente nunca vê: staffOnly + feature, e a rota é StaffRoute.
+          label: L("cronogramaInterno"),
+          icon: ListTree,
+          path: paths.cronogramaInterno,
+          staffOnly: true,
+          feature: "internalSchedule:view",
         },
       ],
     },

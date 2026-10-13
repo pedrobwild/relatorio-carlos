@@ -60,6 +60,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { EmptyState } from "@/components/ui/states";
 import { ActivityDetailDialog } from "@/components/calendar/ActivityDetailDialog";
 import { BreakActivityDialog } from "@/components/calendar/BreakActivityDialog";
+import { finishTodayChange, startTodayChange } from "@/lib/internalScheduleActions";
 import { CalendarMonthGrid } from "@/components/calendar/CalendarMonthGrid";
 import { CalendarDayAgenda } from "@/components/calendar/CalendarDayAgenda";
 import { CalendarRangeTimeline } from "@/components/calendar/CalendarRangeTimeline";
@@ -369,8 +370,8 @@ export default function CalendarioObras() {
   // possui pelo menos um child visível neste recorte, ocultamos a mãe e
   // mostramos apenas os children (que são mais granulares).
   // - Demais papéis (defesa em profundidade — esta página é restrita a staff)
-  // veem apenas as mães e nunca os children, preservando a visão informativa
-  // compartilhada com o cliente.
+  // veem apenas as mães e nunca os children. Tudo aqui é do cronograma
+  // interno: o cliente não vê nada desta tela.
   const visibleByProject = useMemo(() => {
     return visibleByProjectRaw.map((g) => {
       if (canBreak) {
@@ -529,19 +530,15 @@ export default function CalendarioObras() {
     return c;
   }, [filteredActivities, today]);
 
+  // Cada lado (interno / cliente) calculado da própria linha: quem já tem a
+  // data não é sobrescrito (ver internalScheduleActions).
   const handleStart = async (a: WeekActivity) => {
-    await updateDates(a.id, { actual_start: format(today, "yyyy-MM-dd") });
+    await updateDates(a.id, startTodayChange(format(today, "yyyy-MM-dd")));
   };
   const handleFinish = async (a: WeekActivity) => {
-    const updates: {
-      actual_start?: string | null;
-      actual_end?: string | null;
-    } = {
-      actual_end: format(today, "yyyy-MM-dd"),
-    };
-    if (!a.actual_start) updates.actual_start = a.planned_start;
-    await updateDates(a.id, updates);
+    await updateDates(a.id, finishTodayChange(format(today, "yyyy-MM-dd"), "planned_start"));
   };
+  // "Resetar" é a pessoa pedindo para apagar as duas datas: vai explícito.
   const handleReset = async (a: WeekActivity) => {
     await updateDates(a.id, { actual_start: null, actual_end: null });
   };
@@ -1102,7 +1099,7 @@ export default function CalendarioObras() {
           activities={filteredActivities}
           onActivityClick={setSelectedActivity}
           projectsWithOverduePrevious={projectsWithOverduePrev}
-          onReplanSchedule={(pid) => navigate(`/obra/${pid}/cronograma`)}
+          onReplanSchedule={(pid) => navigate(`/obra/${pid}/cronograma-interno`)}
           purchasesByDay={
             projectFilter === "all"
               ? purchasesByDay
@@ -1215,7 +1212,7 @@ export default function CalendarioObras() {
           onStart={handleStart}
           onFinish={handleFinish}
           onReset={handleReset}
-          onOpenSchedule={(pid) => navigate(`/obra/${pid}/cronograma`)}
+          onOpenSchedule={(pid) => navigate(`/obra/${pid}/cronograma-interno`)}
           projectFilter={projectFilter}
         />
       )}

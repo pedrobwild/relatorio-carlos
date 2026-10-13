@@ -31,6 +31,26 @@ vi.mock("@/hooks/useStudioInfo", () => ({
   useUpdateStudioInfo: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock("@/hooks/useCan", () => ({ useCan: () => ({ can: () => true }) }));
+// Cronograma interno: "editado pela equipe" com 2 itens de datas diferentes do cliente.
+const internal = vi.hoisted(() => ({ customizedAt: "2026-10-10T15:00:00Z" as string | null }));
+vi.mock("@/hooks/useInternalSchedule", () => ({
+  useInternalScheduleState: () => ({ data: { customized_at: internal.customizedAt }, isSuccess: true }),
+  useInternalSchedule: (_id: string, opts: { enabled?: boolean } = {}) =>
+    opts.enabled === false
+      ? { items: [], clientActivities: [], clientLoaded: false }
+      : {
+          clientLoaded: true,
+          clientActivities: [
+            { id: "c1", planned_start: "2026-11-02", planned_end: "2026-11-06" },
+            { id: "c2", planned_start: "2026-11-09", planned_end: "2026-11-13" },
+          ],
+          items: [
+            { client_activity_id: "c1", planned_start: "2026-11-02", planned_end: "2026-11-10" },
+            { client_activity_id: "c2", planned_start: "2026-11-10", planned_end: "2026-11-13" },
+            { client_activity_id: null, planned_start: "2026-11-02", planned_end: "2026-11-03" },
+          ],
+        },
+}));
 // Fase de projeto: as regras da seção estão em FaseProjetoSection.test.tsx.
 vi.mock("@/hooks/useProjectPhase", () => ({
   useProjectPhaseSteps: (projectId: string) => {
@@ -175,8 +195,33 @@ describe("ObraDrawer", () => {
     const href = (nome: RegExp) => within(atalhos).getByRole("link", { name: nome }).getAttribute("href");
     expect(href(/Planejar a semana/)).toBe("/gestao/semana?obra=a&semana=2026-10-12");
     expect(href(/Abrir obra/)).toBe("/obra/a");
-    expect(href(/Cronograma/)).toBe("/obra/a/cronograma");
+    expect(href(/Cronograma do cliente/)).toBe("/obra/a/cronograma");
+    expect(href(/Cronograma interno/)).toBe("/obra/a/cronograma-interno");
     expect(href(/Cadastro e prazo do contrato/)).toBe("/gestao/obra/a");
+  });
+
+  it("mostra o fim do cronograma interno ao lado do do cliente quando diferem", () => {
+    renderDrawer({ row: { ...row, internalPlannedEnd: "2026-12-04" } });
+    const aviso = screen.getByTestId("drawer-internal-vs-client");
+    expect(aviso).toHaveTextContent("Fim no cronograma interno 04/12/26");
+    expect(aviso).toHaveTextContent("Cronograma do cliente 27/11/26");
+    // Editado pela equipe: quantos itens diferem do cliente.
+    expect(within(aviso).getByTestId("drawer-internal-diffs")).toHaveTextContent("2 diferenças com o cliente");
+  });
+
+  it("acompanhando o cliente (não editado): sem contagem de diferenças", () => {
+    internal.customizedAt = null;
+    renderDrawer({ row: { ...row, internalPlannedEnd: "2026-12-04" } });
+    expect(screen.getByTestId("drawer-internal-vs-client")).toBeInTheDocument();
+    expect(screen.queryByTestId("drawer-internal-diffs")).toBeNull();
+    internal.customizedAt = "2026-10-10T15:00:00Z";
+  });
+
+  it("não repete as datas quando interno e cliente terminam no mesmo dia (ou sem interno)", () => {
+    renderDrawer({ row: { ...row, internalPlannedEnd: "2026-11-27" } });
+    expect(screen.queryByTestId("drawer-internal-vs-client")).toBeNull();
+    renderDrawer({ row: { ...row, internalPlannedEnd: null } });
+    expect(screen.queryByTestId("drawer-internal-vs-client")).toBeNull();
   });
 
   it("'Ficha da obra' abre a ficha desta obra por cima da gaveta", () => {

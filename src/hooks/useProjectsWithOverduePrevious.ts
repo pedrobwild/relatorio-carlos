@@ -1,7 +1,8 @@
 /**
- * useProjectsWithOverduePrevious — para cada obra com pelo menos UMA atividade
- * anterior à semana visível ainda NÃO concluída, retorna o `project_id` e a
- * data (planned_end) MAIS RECENTE entre essas pendências.
+ * useProjectsWithOverduePrevious — para cada obra com pelo menos UM item do
+ * CRONOGRAMA INTERNO anterior à semana visível ainda NÃO concluído, retorna o
+ * `project_id` e a data (planned_end) MAIS RECENTE entre essas pendências.
+ * Usado no Calendário de obras (staff-only).
  *
  * Regra de negócio:
  *  - "anterior à semana" = `planned_end < weekStart`
@@ -13,22 +14,18 @@
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toLocalISODate } from "@/lib/localDate";
+import { queryKeys } from "@/lib/queryKeys";
+import { internalScheduleRepo } from "@/infra/repositories/internalSchedule.repository";
 
 async function fetchAllOpenPastActivities(): Promise<
   Array<{ project_id: string; planned_end: string }>
 > {
   const today = toLocalISODate(new Date());
-  const { data, error } = await supabase
-    .from("project_activities")
-    .select("project_id, planned_end")
-    .lt("planned_end", today)
-    .is("actual_end", null);
-
-  if (error) throw error;
-  return (data ?? []) as Array<{ project_id: string; planned_end: string }>;
+  const res = await internalScheduleRepo.listOpenEndingBefore(today);
+  if (res.error) throw res.error;
+  return res.data.map((r) => ({ project_id: r.project_id, planned_end: r.planned_end }));
 }
 
 export interface OverduePreviousInfo {
@@ -47,7 +44,7 @@ export function useProjectsWithOverduePrevious(weekStart: string) {
   const today = toLocalISODate(new Date());
 
   const query = useQuery({
-    queryKey: ["projects-overdue-previous", today],
+    queryKey: queryKeys.internalSchedule.overduePrevious(today),
     queryFn: fetchAllOpenPastActivities,
     enabled: !!user,
     staleTime: 5 * 60_000,

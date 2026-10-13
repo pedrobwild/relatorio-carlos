@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import type { WeekActivity } from "@/hooks/useWeekActivities";
+import { changedDetailFields, type ActivityDetailValues } from "./activityDetailDiff";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 
 /** Valor sentinela para representar "sem responsável" no Select (Radix não aceita value=""). */
@@ -116,11 +117,18 @@ export function ActivityDetailDialog({
 
   const { data: staffUsers = [], isLoading: loadingStaff } = useStaffUsers();
 
+  // Valores com que o diálogo abriu: só o que mudar em relação a eles é gravado.
+  const opened = useRef<ActivityDetailValues>({ actual_start: null, actual_end: null, responsible_user_id: null });
   useEffect(() => {
     if (activity) {
       setActualStart(toDate(activity.actual_start));
       setActualEnd(toDate(activity.actual_end));
       setResponsibleUserId(activity.responsible_user_id ?? null);
+      opened.current = {
+        actual_start: activity.actual_start ?? null,
+        actual_end: activity.actual_end ?? null,
+        responsible_user_id: activity.responsible_user_id ?? null,
+      };
     }
   }, [activity]);
 
@@ -136,11 +144,12 @@ export function ActivityDetailDialog({
     (responsibleUserId ?? null) !== (activity.responsible_user_id ?? null);
 
   const handleSave = async () => {
-    await onSave(activity.id, {
+    const updates = changedDetailFields(opened.current, {
       actual_start: fromDate(actualStart),
       actual_end: fromDate(actualEnd),
       responsible_user_id: responsibleUserId,
     });
+    if (Object.keys(updates).length > 0) await onSave(activity.id, updates);
     setConfirmSaveOpen(false);
     onOpenChange(false);
   };
@@ -414,8 +423,8 @@ export function ActivityDetailDialog({
                   {subActivities.length === 0 ? (
                     <p className="text-xs text-muted-foreground">
                       Quebre esta atividade em micro-etapas para detalhar o que
-                      acontece em cada dia. O cliente continuará vendo apenas
-                      esta atividade-mãe.
+                      acontece em cada dia. As micro-etapas ficam só no
+                      cronograma interno: o cliente não vê.
                     </p>
                   ) : (
                     <ul className="space-y-1.5">
@@ -467,9 +476,8 @@ export function ActivityDetailDialog({
             {activity.parent_activity_id && (
               <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
                 <Layers className="inline h-3.5 w-3.5 mr-1" />
-                Esta é uma <strong>micro-etapa interna</strong>. Visível apenas
-                para Admin e Engenheiro no Calendário; clientes veem só a
-                atividade-mãe.
+                Esta é uma <strong>micro-etapa do cronograma interno</strong>.
+                No Calendário, só Admin e Engenheiro veem; o cliente não vê.
               </div>
             )}
 

@@ -1,18 +1,28 @@
 /**
- * useWeekActivities — fetches all project_activities scheduled for a given week
- * across every project the current user has access to.
+ * useWeekActivities — itens do CRONOGRAMA INTERNO (internal_schedule_items)
+ * programados para um intervalo, em todas as obras que o usuário acessa.
+ * Base do Calendário de obras (staff-only).
  *
- * "Scheduled for the week" = activity whose [planned_start, planned_end] interval
- * intersects the week range. Uses TanStack Query for caching + optimistic updates
- * when the user marks actual start / actual end.
+ * "Programado no intervalo" = previsto cruzando o intervalo OU início real
+ * dentro dele. Micro-etapas são itens filhos do cronograma interno: criar,
+ * remover e marcar datas aqui nunca muda o cronograma do cliente.
  */
 
 import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
-import { invalidateActivityQueries } from "@/lib/queryKeys";
+import { invalidateInternalScheduleQueries, queryKeys } from "@/lib/queryKeys";
+import {
+  internalScheduleRepo,
+  type InternalScheduleItemWithCustomer,
+} from "@/infra/repositories/internalSchedule.repository";
+import {
+  internalScheduleErrorMessage,
+  resolveMirrorChange,
+  updateInternalMirroringClient,
+  type MirrorChange,
+} from "@/hooks/useInternalSchedule";
 
 export interface WeekActivity {
   id: string;
@@ -29,17 +39,21 @@ export interface WeekActivity {
   planned_end: string;
   actual_start: string | null;
   actual_end: string | null;
+  /** Cronograma interno não tem linha de base: sempre null (mantido pelo formato). */
   baseline_start: string | null;
   baseline_end: string | null;
   baseline_saved_at: string | null;
   weight: number;
+  /** Ordem no cronograma interno. */
+  sort_order: number;
+  /** Atividade do cronograma do cliente de onde o item veio (null = só interno). */
+  client_activity_id: string | null;
   created_at: string;
   updated_at: string;
   /**
-   * Se preenchido, indica que esta atividade é uma micro-etapa (sub-atividade)
-   * de outra atividade-mãe. Usado para que apenas Admin/Engineer enxerguem o
-   * detalhamento interno no Calendário, enquanto clientes veem apenas a
-   * atividade-mãe (mais informativa).
+   * Se preenchido, o item é uma micro-etapa (`parent_id` do cronograma
+   * interno). No Calendário, só Admin/Engenheiro veem o detalhamento; os
+   * demais veem o item-mãe.
    */
   parent_activity_id: string | null;
   /** ID do membro da equipe (Staff) responsável por esta atividade/micro-etapa. */
@@ -66,71 +80,14 @@ export interface SubActivityInput {
   fornecedor_id?: string | null;
 }
 
-interface FetchArgs {
-  weekStart: string; // YYYY-MM-DD
-  weekEnd: string; // YYYY-MM-DD
-}
-
-async function fetchWeekActivities({
-  weekStart,
-  weekEnd,
-}: FetchArgs): Promise<WeekActivity[]> {
-  // Interval intersection: planned_start <= weekEnd AND planned_end >= weekStart
-  const { data, error } = await supabase
-    .from("project_activities")
-    .select(
-      `
-      id,
-      project_id,
-      description,
-      detailed_description,
-      etapa,
-      planned_start,
-      planned_end,
-      actual_start,
-      actual_end,
-      baseline_start,
-      baseline_end,
-      baseline_saved_at,
-      weight,
-      created_at,
-      updated_at,
-      parent_activity_id,
-      responsible_user_id,
-      fornecedor_id,
-      projects:project_id (
-        name,
-        status,
-        project_customers!project_customers_project_id_fkey (
-          customer_name
-        )
-      ),
-      responsible:responsible_user_id ( id, nome ),
-      fornecedor:fornecedor_id ( id, nome )
-    `,
-    )
-    // Trazemos atividades cujo intervalo PLANEJADO intersecta a semana
-    // OU cujo `actual_start` (data real de início) cai dentro da semana.
-    // O segundo caso é essencial para o filtro "obras em andamento nesta
-    // semana" da Semana · Timeline: uma atividade pode ter sido iniciada
-    // dentro da semana mesmo que seu planejamento original esteja fora do
-    // recorte (ex.: começou atrasada). Comparações usam `YYYY-MM-DD` puro
-    // (colunas `date` no Postgres) — sem fuso horário envolvido.
-    .or(
-      `and(planned_start.lte.${weekEnd},planned_end.gte.${weekStart}),and(actual_start.gte.${weekStart},actual_start.lte.${weekEnd})`,
-    )
-    .order("planned_start", { ascending: true });
-
-  if (error) throw error;
-
-  return (data ?? []).map((row: any) => ({
+export function toWeekActivity(row: InternalScheduleItemWithCustomer): WeekActivity {
+  return {
     id: row.id,
     project_id: row.project_id,
-    project_name: row.projects?.name ?? "Obra sem nome",
+    project_name: row.project?.name ?? "Obra sem nome",
     // Nome do contratante vem de project_customers (fonte única).
-    client_name:
-      row.projects?.project_customers?.[0]?.customer_name ?? null,
-    project_status: row.projects?.status ?? null,
+    client_name: row.project?.project_customers?.[0]?.customer_name ?? null,
+    project_status: row.project?.status ?? null,
     description: row.description,
     detailed_description: row.detailed_description ?? null,
     etapa: row.etapa,
@@ -138,24 +95,35 @@ async function fetchWeekActivities({
     planned_end: row.planned_end,
     actual_start: row.actual_start,
     actual_end: row.actual_end,
-    baseline_start: row.baseline_start ?? null,
-    baseline_end: row.baseline_end ?? null,
-    baseline_saved_at: row.baseline_saved_at ?? null,
-    weight: row.weight,
+    baseline_start: null,
+    baseline_end: null,
+    baseline_saved_at: null,
+    weight: Number(row.weight),
+    sort_order: row.sort_order,
+    client_activity_id: row.client_activity_id ?? null,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    parent_activity_id: row.parent_activity_id ?? null,
+    parent_activity_id: row.parent_id ?? null,
     responsible_user_id: row.responsible_user_id ?? null,
     responsible_name: row.responsible?.nome ?? null,
     fornecedor_id: row.fornecedor_id ?? null,
     fornecedor_nome: row.fornecedor?.nome ?? null,
-  }));
+  };
+}
+
+async function fetchWeekActivities(weekStart: string, weekEnd: string): Promise<WeekActivity[]> {
+  // Previsto cruzando o intervalo OU início real dentro dele: o segundo caso
+  // mantém no filtro "obras em andamento nesta semana" o item que começou
+  // atrasado. Colunas `date`: comparação de yyyy-mm-dd, sem fuso.
+  const res = await internalScheduleRepo.listInRange(weekStart, weekEnd);
+  if (res.error) throw res.error;
+  return res.data.map(toWeekActivity);
 }
 
 export function useWeekActivities(weekStart: string, weekEnd: string) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const queryKey = ["week-activities", weekStart, weekEnd] as const;
+  const queryKey = queryKeys.internalSchedule.range(weekStart, weekEnd);
 
   const {
     data: activities = [],
@@ -164,28 +132,41 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     refetch,
   } = useQuery({
     queryKey,
-    queryFn: () => fetchWeekActivities({ weekStart, weekEnd }),
+    queryFn: () => fetchWeekActivities(weekStart, weekEnd),
     enabled: !!user && !!weekStart && !!weekEnd,
     staleTime: 30_000,
   });
 
+  /**
+   * Datas reais / responsável. `updates` traz só o que a pessoa mexeu; um
+   * valor pode ser calculado da linha (ex.: "Concluir" sem início usa o
+   * início previsto da PRÓPRIA linha). Item de primeiro nível ligado ao
+   * cliente grava também na atividade do cliente (como o Calendário sempre
+   * fez), com os padrões calculados da linha do cliente. Micro-etapa: só interno.
+   */
   const updateDates = useMutation({
     mutationFn: async ({
       activityId,
       updates,
     }: {
       activityId: string;
-      updates: {
-        actual_start?: string | null;
-        actual_end?: string | null;
-        responsible_user_id?: string | null;
-      };
+      updates: MirrorChange;
     }) => {
-      const { error: err } = await supabase
-        .from("project_activities")
-        .update(updates)
-        .eq("id", activityId);
-      if (err) throw err;
+      const a = activities.find((x) => x.id === activityId);
+      if (!a) throw new Error("Atividade não encontrada no calendário. Recarregue a página.");
+      await updateInternalMirroringClient(
+        {
+          id: a.id,
+          project_id: a.project_id,
+          parent_id: a.parent_activity_id,
+          client_activity_id: a.client_activity_id,
+          actual_start: a.actual_start,
+          actual_end: a.actual_end,
+          planned_start: a.planned_start,
+          responsible_user_id: a.responsible_user_id,
+        },
+        updates,
+      );
       return { activityId, updates };
     },
     onMutate: async ({ activityId, updates }) => {
@@ -194,29 +175,25 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
       if (prev) {
         queryClient.setQueryData<WeekActivity[]>(
           queryKey,
-          prev.map((a) => (a.id === activityId ? { ...a, ...updates } : a)),
+          prev.map((a) => (a.id === activityId ? { ...a, ...resolveMirrorChange(updates, a) } : a)),
         );
       }
       return { prev };
     },
-    onError: (_e, _v, ctx) => {
+    onError: (e, _v, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(queryKey, ctx.prev);
-      toast.error("Erro ao salvar atividade");
+      toast.error(internalScheduleErrorMessage(e) || "Erro ao salvar atividade");
     },
-    onSuccess: (_, vars) => {
-      const projectId = activities.find(
-        (a) => a.id === vars.activityId,
-      )?.project_id;
-      if (projectId) invalidateActivityQueries(projectId);
+    onSuccess: () => {
+      invalidateInternalScheduleQueries(queryClient);
       toast.success("Atividade atualizada");
     },
   });
 
   /**
-   * Cria N micro-etapas (sub-atividades) vinculadas a uma atividade-mãe.
-   * Estratégia: enfileira inserts via supabase. Em caso de erro, desfaz nada
-   * (RLS protege contra cross-project) e exibe toast. As novas atividades
-   * recebem `parent_activity_id` e herdam `etapa` da mãe quando ausente.
+   * Cria N micro-etapas no cronograma INTERNO, penduradas no item-mãe
+   * (`parent_id`). Herdam etapa, responsável e prestador da mãe quando a
+   * linha não escolhe outro. O cronograma do cliente não muda.
    */
   const breakIntoSubActivities = useMutation({
     mutationFn: async ({
@@ -227,21 +204,11 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
       subs: SubActivityInput[];
     }) => {
       if (!user) throw new Error("Sessão expirada");
-      // Pega o sort_order da mãe para inserir os children logo após (incremento decimal-like via +1, +2...)
-      const { data: parentRow, error: pErr } = await supabase
-        .from("project_activities")
-        .select("sort_order, etapa, weight")
-        .eq("id", parent.id)
-        .single();
-      if (pErr) throw pErr;
-
-      const baseSortOrder = (parentRow?.sort_order ?? 0) + 1;
-      // Distribui o peso da mãe igualmente entre as micro-etapas para que o
-      // progresso ponderado total siga somando ~100%. Mantemos a mãe como
-      // agregadora visual (cliente segue vendo só ela), mas tecnicamente o
-      // peso fica nos children. A mãe permanece com weight original; o
-      // sistema de progresso continua funcionando porque as views de cliente
-      // filtram por parent_activity_id IS NULL.
+      if (parent.parent_activity_id) {
+        throw new Error("Micro-etapa não pode ser dividida de novo (máximo de 2 níveis).");
+      }
+      const baseSortOrder = (parent.sort_order ?? 0) + 1;
+      // Divide o peso da mãe igualmente entre as micro-etapas.
       const childWeight =
         subs.length > 0
           ? Math.max(0.01, Number((parent.weight / subs.length).toFixed(2)))
@@ -249,62 +216,47 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
 
       const rows = subs.map((s, idx) => ({
         project_id: parent.project_id,
-        parent_activity_id: parent.id,
+        parent_id: parent.id,
         description: s.description.trim(),
         planned_start: s.planned_start,
         planned_end: s.planned_end,
-        weight: childWeight,
+        weight: Math.min(100, childWeight),
         sort_order: baseSortOrder + idx,
-        created_by: user.id,
-        etapa: parentRow?.etapa ?? null,
+        etapa: parent.etapa ?? null,
         predecessor_ids: [],
-        // Se o usuário não definir um responsável para a micro-etapa,
-        // herda da atividade-mãe (quando existir).
         responsible_user_id:
           s.responsible_user_id !== undefined
             ? s.responsible_user_id
             : (parent.responsible_user_id ?? null),
-        // Mesma lógica para o prestador (fornecedor): herda da mãe quando
-        // o usuário não escolhe explicitamente uma opção na linha.
         fornecedor_id:
           s.fornecedor_id !== undefined
             ? s.fornecedor_id
             : (parent.fornecedor_id ?? null),
       }));
 
-      const { error: insErr } = await supabase
-        .from("project_activities")
-        .insert(rows);
-      if (insErr) throw insErr;
+      const res = await internalScheduleRepo.createMany(rows);
+      if (res.error) throw res.error;
       return { parentId: parent.id, count: subs.length };
     },
-    onError: (err: any) => {
-      toast.error(err?.message ?? "Erro ao criar micro-etapas");
+    onError: (err: unknown) => {
+      toast.error(internalScheduleErrorMessage(err) || "Erro ao criar micro-etapas");
     },
-    onSuccess: (res, vars) => {
-      invalidateActivityQueries(vars.parent.project_id);
-      queryClient.invalidateQueries({ queryKey: ["week-activities"] });
+    onSuccess: (res) => {
+      invalidateInternalScheduleQueries(queryClient);
       toast.success(`${res.count} micro-etapa(s) criada(s)`);
     },
   });
 
-  /**
-   * Remove TODAS as micro-etapas de uma atividade-mãe (mescla de volta).
-   */
+  /** Remove TODAS as micro-etapas de um item-mãe (mescla de volta). */
   const mergeSubActivities = useMutation({
     mutationFn: async (parentId: string) => {
-      const { error: err } = await supabase
-        .from("project_activities")
-        .delete()
-        .eq("parent_activity_id", parentId);
-      if (err) throw err;
+      const res = await internalScheduleRepo.removeChildren(parentId);
+      if (res.error) throw res.error;
       return parentId;
     },
     onError: () => toast.error("Erro ao mesclar micro-etapas"),
-    onSuccess: (parentId) => {
-      const projectId = activities.find((a) => a.id === parentId)?.project_id;
-      if (projectId) invalidateActivityQueries(projectId);
-      queryClient.invalidateQueries({ queryKey: ["week-activities"] });
+    onSuccess: () => {
+      invalidateInternalScheduleQueries(queryClient);
       toast.success("Micro-etapas removidas");
     },
   });
@@ -312,18 +264,13 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
   /** Remove UMA micro-etapa específica (não a mãe). */
   const removeSubActivity = useMutation({
     mutationFn: async (subId: string) => {
-      const { error: err } = await supabase
-        .from("project_activities")
-        .delete()
-        .eq("id", subId);
-      if (err) throw err;
+      const res = await internalScheduleRepo.remove(subId);
+      if (res.error) throw res.error;
       return subId;
     },
     onError: () => toast.error("Erro ao remover micro-etapa"),
-    onSuccess: (subId) => {
-      const projectId = activities.find((a) => a.id === subId)?.project_id;
-      if (projectId) invalidateActivityQueries(projectId);
-      queryClient.invalidateQueries({ queryKey: ["week-activities"] });
+    onSuccess: () => {
+      invalidateInternalScheduleQueries(queryClient);
       toast.success("Micro-etapa removida");
     },
   });
@@ -374,14 +321,8 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     isLoading,
     error: error ? (error as Error).message : null,
     refetch,
-    updateDates: (
-      activityId: string,
-      updates: {
-        actual_start?: string | null;
-        actual_end?: string | null;
-        responsible_user_id?: string | null;
-      },
-    ) => updateDates.mutateAsync({ activityId, updates }),
+    updateDates: (activityId: string, updates: MirrorChange) =>
+      updateDates.mutateAsync({ activityId, updates }),
     isUpdating: updateDates.isPending,
     breakIntoSubActivities: (parent: WeekActivity, subs: SubActivityInput[]) =>
       breakIntoSubActivities.mutateAsync({ parent, subs }),

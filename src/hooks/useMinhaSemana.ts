@@ -19,6 +19,7 @@
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { internalScheduleRepo } from "@/infra/repositories/internalSchedule.repository";
 import { useAuth } from "./useAuth";
 import { queryKeys } from "@/lib/queryKeys";
 import { countBusinessDaysInclusive } from "@/lib/businessDays";
@@ -103,18 +104,15 @@ function sortItems(items: InboxItem[]): InboxItem[] {
 
 // ---------- Queries individuais ----------
 
+/**
+ * Itens do CRONOGRAMA INTERNO em aberto sob minha responsabilidade. O
+ * responsável é da equipe (cronograma interno); o cronograma do cliente não
+ * entra aqui.
+ */
 async function fetchMyActivities(userId: string): Promise<InboxItem[]> {
-  const { data, error } = await supabase
-    .from("project_activities")
-    .select(
-      "id, description, planned_start, planned_end, actual_start, actual_end, project_id, projects:project_id(id, name)",
-    )
-    .eq("responsible_user_id", userId)
-    .is("actual_end", null)
-    .order("planned_end", { ascending: true })
-    .limit(200);
-  if (error) throw error;
-  return (data ?? []).map((row) => {
+  const res = await internalScheduleRepo.listOpenByResponsible(userId, 200);
+  if (res.error) throw res.error;
+  return res.data.map((row) => {
     const due = row.planned_end ?? row.planned_start ?? null;
     return {
       id: `atv-${row.id}`,
@@ -124,9 +122,8 @@ async function fetchMyActivities(userId: string): Promise<InboxItem[]> {
       daysOverdue: calcOverdue(due),
       businessDaysUntil: calcBusinessDaysUntil(due),
       projectId: row.project_id,
-      projectName:
-        (row.projects as { name?: string } | null)?.name ?? "Sem obra",
-      href: `/obra/${row.project_id}/cronograma`,
+      projectName: row.project?.name ?? "Sem obra",
+      href: `/obra/${row.project_id}/cronograma-interno`,
       hint: row.actual_start ? "Em andamento" : "Não iniciada",
     };
   });

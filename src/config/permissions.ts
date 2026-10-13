@@ -21,6 +21,12 @@ export type Feature =
   | "schedule:save_baseline"
   | "schedule:import"
   | "schedule:view"
+  // Cronograma interno (staff-only; o cliente nunca vê). Ver e editar: toda
+  // a equipe com acesso à obra — mesma regra do banco para
+  // internal_schedule_items (e a mesma da tabela do cliente), para que
+  // suprimentos/financeiro sigam usando Calendário e Lookahead como antes.
+  | "internalSchedule:view"
+  | "internalSchedule:edit"
   // Purchases
   | "purchases:create"
   | "purchases:edit"
@@ -113,9 +119,11 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "formalizations:delete",
     "formalizations:view",
     "schedule:edit",
+    "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
     "schedule:view",
+    "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
     "purchases:delete",
@@ -167,9 +175,11 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "formalizations:delete",
     "formalizations:view",
     "schedule:edit",
+    "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
     "schedule:view",
+    "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
     "purchases:delete",
@@ -222,9 +232,11 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "formalizations:delete",
     "formalizations:view",
     "schedule:edit",
+    "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
     "schedule:view",
+    "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
     "purchases:delete",
@@ -279,9 +291,11 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "formalizations:delete",
     "formalizations:view",
     "schedule:edit",
+    "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
     "schedule:view",
+    "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
     "purchases:delete",
@@ -327,6 +341,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     // Focused on purchases and supply chain
     "documents:view",
     "schedule:view",
+    "internalSchedule:view",
+    "internalSchedule:edit",
     "purchases:create",
     "purchases:edit",
     "purchases:view",
@@ -346,6 +362,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "documents:view",
     "formalizations:view",
     "schedule:view",
+    "internalSchedule:view",
+    "internalSchedule:edit",
     "purchases:view",
     "payments:upload_boleto",
     "payments:mark_paid",
@@ -371,9 +389,11 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "formalizations:delete",
     "formalizations:view",
     "schedule:edit",
+    "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
     "schedule:view",
+    "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
     "purchases:delete",
@@ -425,9 +445,11 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "formalizations:delete",
     "formalizations:view",
     "schedule:edit",
+    "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
     "schedule:view",
+    "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
     "purchases:delete",

@@ -100,6 +100,16 @@ export type {
   StageRollup,
 } from "./ops.repository";
 
+export { internalScheduleRepo } from "./internalSchedule.repository";
+export type {
+  InternalScheduleItem,
+  InternalScheduleItemWithRefs,
+  InternalScheduleItemWithProject,
+  InternalScheduleInsert,
+  InternalSchedulePatch,
+  ClientActivityDates,
+} from "./internalSchedule.repository";
+
 export { purchasesRepo } from "./purchases.repository";
 export type { CreatePurchaseInput, ProjectPurchaseRow } from "./purchases.repository";
 

@@ -15,6 +15,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { internalScheduleRepo } from "@/infra/repositories/internalSchedule.repository";
 import { queryKeys } from "@/lib/queryKeys";
 import { subtractBusinessDays } from "@/lib/businessDays";
 import { toLocalISODate } from "@/lib/localDate";
@@ -108,14 +109,10 @@ export function usePainelExcecoes(): ExcecaoBuckets {
     queryFn: async () => {
       const today = todayIso();
       const to = daysFromNowIso(14);
-      const { data, error } = await supabase
-        .from("project_activities")
-        .select("project_id, planned_start, responsible_user_id")
-        .is("responsible_user_id", null)
-        .gte("planned_start", today)
-        .lte("planned_start", to);
-      if (error) throw error;
-      return (data ?? []).map((r) => r.project_id).filter(Boolean) as string[];
+      // Responsável é da equipe: olha o cronograma INTERNO.
+      const res = await internalScheduleRepo.listUnassignedStarting(today, to);
+      if (res.error) throw res.error;
+      return res.data.map((r) => r.project_id).filter(Boolean) as string[];
     },
   });
 

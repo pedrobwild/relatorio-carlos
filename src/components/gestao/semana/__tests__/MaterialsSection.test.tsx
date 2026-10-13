@@ -6,7 +6,11 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within, fireEvent } from "@testing-library/react";
-import type { OpsMaterialWithPurchase, OpsPurchaseSummary } from "@/infra/repositories/ops.repository";
+import type {
+  OpsActivityView,
+  OpsMaterialWithPurchase,
+  OpsPurchaseSummary,
+} from "@/infra/repositories/ops.repository";
 
 const h = vi.hoisted(() => ({
   link: vi.fn(),
@@ -16,6 +20,7 @@ const h = vi.hoisted(() => ({
   can: vi.fn((_f: string) => true),
   purchases: [] as unknown[],
   linkableArgs: [] as unknown[][],
+  drawerMaterials: [] as unknown[],
   success: vi.fn(),
   error: vi.fn(),
 }));
@@ -34,7 +39,7 @@ vi.mock("@/hooks/useOps", () => {
     useUnlinkMaterialFromPurchase: m(h.unlink),
     useRequestPurchaseForMaterial: m(h.request),
     useOpsActivityAssignments: () => ({ data: [] }),
-    useOpsMaterials: () => ({ data: [] }),
+    useOpsMaterials: () => ({ data: h.drawerMaterials }),
     useOpsReviews: () => ({ data: [] }),
     useOpsLinkablePurchases: (...args: unknown[]) => {
       h.linkableArgs.push(args);
@@ -45,7 +50,7 @@ vi.mock("@/hooks/useOps", () => {
 vi.mock("@/hooks/useCan", () => ({ useCan: () => ({ can: h.can, loading: false }) }));
 vi.mock("sonner", () => ({ toast: { success: h.success, error: h.error } }));
 
-import { MaterialsSection } from "../ActivityDrawer";
+import { ActivityDrawer, MaterialsSection } from "../ActivityDrawer";
 
 const purchase = (over: Partial<OpsPurchaseSummary> = {}): OpsPurchaseSummary => ({
   id: "c1",
@@ -80,7 +85,7 @@ const material = (over: Partial<OpsMaterialWithPurchase> = {}): OpsMaterialWithP
 
 function renderSection(materials: OpsMaterialWithPurchase[]) {
   return render(
-    <MaterialsSection activityId="a1" projectId="p1" stageId="st1" activityTitle="Massa na sala" materials={materials} />,
+    <MaterialsSection activityId="a1" projectId="p1" clientActivityId="st1" activityTitle="Massa na sala" materials={materials} />,
   );
 }
 
@@ -205,5 +210,36 @@ describe("MaterialsSection — material ligado à compra", () => {
     });
     fireEvent.click(confirm);
     expect(h.request.mock.calls[0][0].purchase.required_by_date).toBe("2026-10-22");
+  });
+});
+
+describe("Pedir compra — a compra aponta para o cronograma do CLIENTE", () => {
+  beforeEach(() => {
+    h.request.mockReset();
+    h.can.mockImplementation(() => true);
+    h.purchases = [];
+  });
+
+  it("etapa só interna (sem atividade do cliente): activity_id null", () => {
+    render(<MaterialsSection activityId="a1" projectId="p1" clientActivityId={null} materials={[material()]} />);
+    fireEvent.click(screen.getByRole("button", { name: /Pedir compra/ }));
+    expect(h.request.mock.calls[0][0].purchase.activity_id).toBeNull();
+  });
+
+  it("gaveta da Semana usa stage_client_activity_id, nunca o id do item interno", () => {
+    h.drawerMaterials = [material()];
+    const activity = {
+      id: "a1",
+      project_id: "p1",
+      title: "Massa na sala",
+      status: "planejada",
+      stage_id: "item-interno-1",
+      stage_name: "Pintura",
+      stage_client_activity_id: "cli-1",
+    } as unknown as OpsActivityView;
+    render(<ActivityDrawer activity={activity} open onOpenChange={vi.fn()} staffNameById={new Map()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Pedir compra/ }));
+    expect(h.request.mock.calls[0][0].purchase.activity_id).toBe("cli-1");
+    h.drawerMaterials = [];
   });
 });

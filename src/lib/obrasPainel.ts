@@ -212,7 +212,14 @@ export interface ObraRow {
   responsible: string | null;
   /** Entrega vigente (contrato + aditivos aceitos). */
   deadline: string | null;
+  /** Término projetado a partir do cronograma INTERNO (o que a equipe executa). */
   projectedEnd: string | null;
+  /**
+   * Maior fim previsto do cronograma interno (sem projeção de atraso). A
+   * gaveta compara com a entrega prevista do cronograma do cliente.
+   * Ausente em quem monta a linha sem etapas.
+   */
+  internalPlannedEnd?: string | null;
   /** Dias úteis de folga (null = sem prazo ou sem cronograma). */
   slack: number | null;
   penalty: number | null;
@@ -383,6 +390,10 @@ export function buildObraRow(input: BuildRowInput): ObraRow {
     responsible: input.responsible ?? null,
     deadline: current,
     projectedEnd: proj?.projectedEnd ?? null,
+    internalPlannedEnd: stages.reduce<string | null>(
+      (acc, st) => (st.planned_end && (!acc || st.planned_end > acc) ? st.planned_end : acc),
+      null,
+    ),
     slack,
     penalty,
     progress,

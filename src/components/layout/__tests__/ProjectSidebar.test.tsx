@@ -12,6 +12,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const projectState: { is_project_phase: boolean } = { is_project_phase: true };
+const roleState: { isStaff: boolean; roles: string[] } = { isStaff: true, roles: ["engineer"] };
 
 vi.mock("@/contexts/ProjectContext", () => ({
   useProject: () => ({
@@ -27,11 +28,16 @@ vi.mock("@/hooks/usePendencias", () => ({
 }));
 
 vi.mock("@/hooks/useUserRole", () => ({
-  useUserRole: () => ({ isStaff: true, roles: ["engineer"], loading: false }),
+  useUserRole: () => ({ ...roleState, loading: false }),
 }));
 
 vi.mock("@/hooks/useCan", () => ({
-  useCan: () => ({ can: () => true, loading: false }),
+  // Cliente: só o que a matriz de permissões dá a ele (schedule:view sim,
+  // internalSchedule:view não). Staff: tudo.
+  useCan: () => ({
+    can: (f: string) => roleState.isStaff || f === "schedule:view",
+    loading: false,
+  }),
 }));
 
 import { ProjectSidebar } from "../ProjectSidebar";
@@ -58,12 +64,14 @@ function renderSidebar() {
 describe("ProjectSidebar · fase de projeto", () => {
   beforeEach(() => {
     projectState.is_project_phase = true;
+    roleState.isStaff = true;
+    roleState.roles = ["engineer"];
   });
 
   it("libera o Cronograma para a equipe na fase de projeto", () => {
     renderSidebar();
 
-    const cronograma = screen.getByRole("link", { name: "Cronograma" });
+    const cronograma = screen.getByRole("link", { name: "Cronograma do cliente" });
     expect(cronograma).toHaveAttribute("href", "/obra/p1/cronograma");
   });
 
@@ -79,7 +87,7 @@ describe("ProjectSidebar · fase de projeto", () => {
     projectState.is_project_phase = false;
     renderSidebar();
 
-    expect(screen.getByRole("link", { name: "Cronograma" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Cronograma do cliente" })).toHaveAttribute(
       "href",
       "/obra/p1/cronograma",
     );
@@ -87,5 +95,39 @@ describe("ProjectSidebar · fase de projeto", () => {
       "href",
       "/obra/p1/relatorio",
     );
+  });
+});
+
+describe("ProjectSidebar · cronograma do cliente x interno", () => {
+  beforeEach(() => {
+    projectState.is_project_phase = false;
+  });
+
+  it("staff vê 'Cronograma do cliente' e 'Cronograma interno'", () => {
+    roleState.isStaff = true;
+    roleState.roles = ["engineer"];
+    renderSidebar();
+
+    expect(screen.getByRole("link", { name: "Cronograma do cliente" })).toHaveAttribute(
+      "href",
+      "/obra/p1/cronograma",
+    );
+    expect(screen.getByRole("link", { name: "Cronograma interno" })).toHaveAttribute(
+      "href",
+      "/obra/p1/cronograma-interno",
+    );
+  });
+
+  it("cliente continua vendo o mesmo rótulo e nunca o cronograma interno", () => {
+    roleState.isStaff = false;
+    roleState.roles = ["customer"];
+    renderSidebar();
+
+    expect(screen.getByRole("link", { name: "Evolução da Obra" })).toHaveAttribute(
+      "href",
+      "/obra/p1/cronograma",
+    );
+    expect(screen.queryByText(/Cronograma do cliente/)).toBeNull();
+    expect(screen.queryByText(/Cronograma interno/)).toBeNull();
   });
 });

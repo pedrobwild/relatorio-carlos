@@ -1,16 +1,17 @@
 /**
- * useLookahead — janela de 14 ou 21 dias com todas as atividades de
- * cronograma que começam a partir de hoje nas obras acessíveis ao usuário
- * (RLS aplica o escopo automaticamente).
+ * useLookahead — janela de 14 ou 21 dias com os itens do CRONOGRAMA INTERNO
+ * (`internal_schedule_items`, staff-only) que começam a partir de hoje nas
+ * obras acessíveis ao usuário (RLS aplica o escopo automaticamente). É o
+ * plano de trabalho da equipe: o cronograma do cliente não entra aqui.
  *
- * Enriquecemos cada linha com o nome da obra e o nome do responsável para
- * evitar N+1 no componente. Agrupamos por semana ISO (segunda-feira como
+ * Cada linha já vem com o nome da obra e do responsável (embed na mesma
+ * consulta, sem N+1). Agrupamos por semana ISO (segunda-feira como
  * ponto de partida) para o cockpit exibir "Semana de DD/MM".
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { internalScheduleRepo } from "@/infra/repositories/internalSchedule.repository";
 import { toLocalISODate } from "@/lib/localDate";
 
 export interface LookaheadActivity {
@@ -24,6 +25,10 @@ export interface LookaheadActivity {
   actual_end: string | null;
   responsible_user_id: string | null;
   responsible_name: string | null;
+  /** Atividade do cronograma do cliente de onde o item veio (null = só interno). */
+  client_activity_id: string | null;
+  /** Item-mãe (micro-etapa) ou null (item de primeiro nível). */
+  parent_id: string | null;
   weekKey: string; // segunda-feira ISO YYYY-MM-DD
   isOverdue: boolean;
   hasResponsible: boolean;
@@ -61,43 +66,14 @@ async function fetchLookahead(
   const start = TODAY_ISO();
   const end = addDaysISO(start, windowDays);
 
-  const { data, error } = await supabase
-    .from("project_activities")
-    .select(
-      "id, project_id, description, planned_start, planned_end, actual_start, actual_end, responsible_user_id, projects:project_id(id, name)",
-    )
-    .gte("planned_start", start)
-    .lte("planned_start", end)
-    .is("actual_end", null)
-    .order("planned_start", { ascending: true })
-    .limit(500);
-
-  if (error) throw error;
-
-  const rows = data ?? [];
-
-  const responsibleIds = Array.from(
-    new Set(
-      rows
-        .map((r) => r.responsible_user_id)
-        .filter((id): id is string => !!id),
-    ),
-  );
-
-  const nameByUser = new Map<string, string>();
-  if (responsibleIds.length > 0) {
-    const { data: profs } = await supabase
-      .from("users_profile")
-      .select("id, nome")
-      .in("id", responsibleIds);
-    (profs ?? []).forEach((p) => nameByUser.set(p.id, p.nome));
-  }
+  const res = await internalScheduleRepo.listStartingBetween(start, end, 500);
+  if (res.error) throw res.error;
+  const rows = res.data;
 
   const today = TODAY_ISO();
 
   return rows.map((row) => {
-    const projectName =
-      (row.projects as { name?: string } | null)?.name ?? "Sem obra";
+    const projectName = row.project?.name ?? "Sem obra";
     const planned_start = row.planned_start as string;
     return {
       id: row.id,
@@ -109,9 +85,9 @@ async function fetchLookahead(
       actual_start: row.actual_start,
       actual_end: row.actual_end,
       responsible_user_id: row.responsible_user_id,
-      responsible_name: row.responsible_user_id
-        ? (nameByUser.get(row.responsible_user_id) ?? null)
-        : null,
+      responsible_name: row.responsible?.nome ?? null,
+      client_activity_id: row.client_activity_id ?? null,
+      parent_id: row.parent_id ?? null,
       weekKey: mondayOf(planned_start),
       isOverdue: planned_start < today && !row.actual_start,
       hasResponsible: !!row.responsible_user_id,

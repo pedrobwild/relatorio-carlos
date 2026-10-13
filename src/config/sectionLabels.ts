@@ -11,6 +11,7 @@ export const SECTION_LABELS: Record<string, string> = {
   jornada: "Jornada",
   painel: "Painel",
   cronograma: "Cronograma",
+  "cronograma-interno": "Cronograma interno",
   compras: "Compras",
   documentos: "Documentos",
   contrato: "Contrato",

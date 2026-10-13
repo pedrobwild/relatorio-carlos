@@ -125,6 +125,7 @@ const Formalizacoes = lazy(() => import("./pages/Formalizacoes"));
 const FormalizacaoNova = lazy(() => import("./pages/FormalizacaoNova"));
 const FormalizacaoDetalhe = lazy(() => import("./pages/FormalizacaoDetalhe"));
 const Cronograma = lazy(() => import("./pages/Cronograma"));
+const CronogramaInterno = lazy(() => import("./pages/CronogramaInterno"));
 const Compras = lazy(() => import("./pages/Compras"));
 const Vistorias = lazy(() => import("./pages/Vistorias"));
 const NaoConformidades = lazy(() => import("./pages/NaoConformidades"));
@@ -804,6 +805,16 @@ const AppContent = () => {
                   <ProtectedRoute>
                     <ProjectPage>{withSuspense(<Cronograma />)}</ProjectPage>
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/obra/:projectId/cronograma-interno"
+                element={
+                  <StaffRoute>
+                    <ProjectPage>
+                      {withSuspense(<CronogramaInterno />)}
+                    </ProjectPage>
+                  </StaffRoute>
                 }
               />
               <Route

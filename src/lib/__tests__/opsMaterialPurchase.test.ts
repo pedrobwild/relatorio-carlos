@@ -135,10 +135,10 @@ describe("linha da compra", () => {
 });
 
 describe("Pedir compra a partir do material", () => {
-  it("leva item, quantidade, unidade, data necessária, obra e etapa do cronograma", () => {
+  it("leva item, quantidade, unidade, data necessária, obra e a atividade do cliente da etapa", () => {
     const input = buildPurchaseRequestFromMaterial(
       { description: "  Massa corrida ", quantity: 3, unit: "lata" },
-      { projectId: "p1", stageId: "st1", activityTitle: "Massa na sala", requiredBy: "2026-10-20" },
+      { projectId: "p1", clientActivityId: "st1", activityTitle: "Massa na sala", requiredBy: "2026-10-20" },
     );
     expect(input).toEqual({
       project_id: "p1",
@@ -158,7 +158,7 @@ describe("Pedir compra a partir do material", () => {
   it("sem quantidade/unidade/etapa usa os padrões de Compras", () => {
     const input = buildPurchaseRequestFromMaterial(
       { description: "Cola", quantity: null, unit: "  " },
-      { projectId: "p1", stageId: null, requiredBy: "2026-10-20" },
+      { projectId: "p1", clientActivityId: null, requiredBy: "2026-10-20" },
     );
     expect(input.quantity).toBe(1);
     expect(input.unit).toBe("un");
