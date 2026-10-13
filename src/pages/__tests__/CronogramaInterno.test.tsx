@@ -22,6 +22,8 @@ const h = vi.hoisted(() => ({
   reorder: vi.fn(),
   copyFromClient: vi.fn(),
   countOpsActivities: vi.fn(),
+  getState: vi.fn(),
+  customizedAt: "2026-10-20T15:00:00Z" as string | null,
 }));
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
@@ -49,6 +51,7 @@ vi.mock("@/infra/repositories/internalSchedule.repository", () => ({
     reorder: h.reorder,
     copyFromClient: h.copyFromClient,
     countOpsActivities: h.countOpsActivities,
+    getState: h.getState,
   },
 }));
 
@@ -156,6 +159,8 @@ beforeEach(() => {
   h.reorder.mockImplementation(() => ok(null));
   h.copyFromClient.mockImplementation(() => ok(2));
   h.countOpsActivities.mockImplementation(() => ok(h.opsCount));
+  h.customizedAt = "2026-10-20T15:00:00Z";
+  h.getState.mockImplementation(() => ok({ project_id: "p1", customized_at: h.customizedAt, customized_by: "u1" }));
 });
 
 describe("Cronograma interno", () => {
@@ -237,6 +242,24 @@ describe("Cronograma interno", () => {
     expect(inicio.value).toBe("2026-11-02");
   });
 
+  it("editado pela equipe: data da edição e quantas atividades diferem do cliente", async () => {
+    renderPage();
+    const estado = await screen.findByTestId("internal-state");
+    expect(estado).toHaveTextContent("Editado pela equipe em 20/10");
+    // Só i2 (ligado ao cliente) tem datas diferentes; i3 é só interno.
+    await waitFor(() => expect(estado).toHaveTextContent("1 atividade com datas diferentes do cliente"));
+    expect(screen.getByRole("button", { name: /Copiar de novo do cronograma do cliente/ })).toBeInTheDocument();
+  });
+
+  it("acompanhando o cliente: aviso discreto e sem 'Copiar de novo'", async () => {
+    h.customizedAt = null;
+    renderPage();
+    expect(await screen.findByTestId("internal-state")).toHaveTextContent(
+      "Acompanhando o cronograma do cliente: muda sozinho até alguém da equipe editar aqui",
+    );
+    expect(screen.queryByRole("button", { name: /Copiar de novo/ })).toBeNull();
+  });
+
   it("obra sem cronograma interno: copia do cliente sem substituir", async () => {
     h.items = [];
     renderPage();
@@ -252,6 +275,8 @@ describe("Cronograma interno", () => {
     const dialog = await screen.findByRole("alertdialog");
     expect(dialog).toHaveTextContent("será apagado e trocado por uma cópia nova");
     expect(dialog).toHaveTextContent("As atividades da Semana passam para o item novo");
+    expect(dialog).toHaveTextContent("as que estavam em itens só internos ficam sem etapa");
+    expect(dialog).toHaveTextContent("volta a acompanhar o do cliente");
 
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));
     await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());

@@ -36,6 +36,7 @@ import {
   useInternalSchedule,
   useInternalScheduleMutations,
   useInternalScheduleOpsRefs,
+  useInternalScheduleState,
 } from "@/hooks/useInternalSchedule";
 import type {
   InternalScheduleItemWithRefs,
@@ -43,6 +44,8 @@ import type {
 } from "@/infra/repositories/internalSchedule.repository";
 import {
   buildTree,
+  countClientDifferences,
+  ddmmFromTimestamp,
   daysLabel,
   ddmm,
   deliverySummary,
@@ -90,6 +93,7 @@ export default function CronogramaInterno() {
   const canEdit = can("internalSchedule:edit");
   const { items, clientActivities, clientLoaded, isLoading, error, refetch } = useInternalSchedule(projectId);
   const { create, update, remove, reorder, copyFromClient } = useInternalScheduleMutations(projectId);
+  const stateQ = useInternalScheduleState(projectId);
   const { data: staff = [] } = useStaffUsers();
   const { data: prestadores = [] } = useFornecedoresPrestadores();
 
@@ -105,6 +109,7 @@ export default function CronogramaInterno() {
     [clientActivities],
   );
   const summary = useMemo(() => deliverySummary(items, clientActivities), [items, clientActivities]);
+  const differences = useMemo(() => countClientDifferences(items, clientById), [items, clientById]);
   const etapas = useMemo(
     () => [...new Set(items.map((i) => i.etapa?.trim()).filter((e): e is string => !!e))],
     [items],
@@ -222,6 +227,7 @@ export default function CronogramaInterno() {
   }
 
   const empty = items.length === 0;
+  const following = stateQ.isSuccess && !stateQ.data?.customized_at;
 
   return (
     <PageContainer maxWidth="xl" className="space-y-4 py-4">
@@ -233,16 +239,19 @@ export default function CronogramaInterno() {
               <Plus className="h-4 w-4" aria-hidden="true" />
               Adicionar item
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-[44px] gap-1.5"
-              onClick={() => setConfirmReplace(true)}
-              disabled={copyFromClient.isPending}
-            >
-              <RefreshCw className="h-4 w-4" aria-hidden="true" />
-              Copiar de novo do cronograma do cliente
-            </Button>
+            {/* Acompanhando o cliente já é a cópia dele: só faz sentido recopiar depois de editado. */}
+            {!following && (
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-[44px] gap-1.5"
+                onClick={() => setConfirmReplace(true)}
+                disabled={copyFromClient.isPending}
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                Copiar de novo do cronograma do cliente
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -251,6 +260,32 @@ export default function CronogramaInterno() {
         <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           Somente leitura: seu perfil pode ver o cronograma interno, mas não alterar.
         </p>
+      )}
+
+      {/* Acompanha o cliente × editado pela equipe */}
+      {!empty && stateQ.isSuccess && (
+        stateQ.data?.customized_at ? (
+          <p
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+            data-testid="internal-state"
+          >
+            <span>Editado pela equipe em {ddmmFromTimestamp(stateQ.data.customized_at)}</span>
+            {clientLoaded && (
+              <>
+                <span className="text-muted-foreground">·</span>
+                <span className={cn(differences > 0 ? "font-medium text-warning" : "text-muted-foreground")}>
+                  {differences === 0
+                    ? "Mesmas datas do cliente"
+                    : `${differences} ${differences === 1 ? "atividade com datas diferentes" : "atividades com datas diferentes"} do cliente`}
+                </span>
+              </>
+            )}
+          </p>
+        ) : (
+          <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground" data-testid="internal-state">
+            Acompanhando o cronograma do cliente: muda sozinho até alguém da equipe editar aqui.
+          </p>
+        )
       )}
 
       {/* Entrega interna × cliente */}
@@ -425,6 +460,10 @@ export default function CronogramaInterno() {
                 <p>
                   Datas, micro-etapas, responsáveis e observações feitos aqui se perdem. As atividades da Semana passam
                   para o item novo da mesma atividade do cliente; as que estavam em itens só internos ficam sem etapa.
+                </p>
+                <p>
+                  Depois disso o cronograma interno volta a acompanhar o do cliente: muda sozinho a cada alteração do
+                  cliente, até alguém da equipe editar aqui de novo.
                 </p>
                 {clientLoaded && clientActivities.length === 0 && (
                   <p className="font-medium text-warning">O cronograma do cliente está vazio: nada será substituído.</p>

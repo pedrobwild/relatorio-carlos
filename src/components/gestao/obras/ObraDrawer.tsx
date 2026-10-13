@@ -45,6 +45,7 @@ import { buildCoordenadorOptions, type StaffUser } from "@/hooks/useStaffUsers";
 import { RISK_DOT, slackTone } from "@/components/gestao/obras/ObrasList";
 import { FichaObraSheet } from "@/components/gestao/ficha/FichaObraSheet";
 import { FaseProjetoSection } from "@/components/gestao/obras/FaseProjetoSection";
+import { InternalScheduleDiffHint } from "@/components/gestao/obras/InternalScheduleDiffHint";
 
 const NONE = "__none__";
 const ddmmaa = (iso: string) => `${ddmm(iso)}/${iso.slice(2, 4)}`;
@@ -279,6 +280,7 @@ export function ObraDrawer({
                   Fim no cronograma interno <strong>{ddmmaa(row.internalPlannedEnd)}</strong>
                   <span className="mx-1.5 text-muted-foreground">·</span>
                   Cronograma do cliente <strong>{ddmmaa(obra.entrega_oficial)}</strong>
+                  <InternalScheduleDiffHint projectId={obra.id} />
                 </p>
               )}
               {row.alerts.some((a) => a.kind !== "multa") && (

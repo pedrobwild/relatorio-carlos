@@ -42,9 +42,10 @@ import type { LookaheadActivity } from "@/hooks/useLookahead";
 import {
   internalScheduleErrorMessage,
   updateInternalMirroringClient,
-  type ClientMirrorPatch,
+  type MirrorChange,
 } from "@/hooks/useInternalSchedule";
 import { useActivityMeasurements } from "@/hooks/useActivityProgress";
+import { finishTodayChange, startTodayChange } from "@/lib/internalScheduleActions";
 import { RegistrarAvancoDialog } from "@/components/gestao/avanco/RegistrarAvancoDialog";
 
 const UNASSIGNED = "__unassigned__";
@@ -76,16 +77,16 @@ export function LookaheadRow({ activity, windowDays }: Props) {
   const datesMutation = useMutation({
     // Item de primeiro nível ligado ao cliente: grava também na atividade do
     // cliente (como o Lookahead sempre fez). Micro-etapa / só interno: só interno.
-    mutationFn: async (patch: ClientMirrorPatch) => updateInternalMirroringClient(activity, patch),
+    mutationFn: async (change: MirrorChange) => updateInternalMirroringClient(activity, change),
     onError: (err) => {
       toast.error(internalScheduleErrorMessage(err) || "Não foi possível salvar a data.");
     },
     onSettled: () => invalidateInternalScheduleQueries(queryClient),
   });
   const isUpdating = datesMutation.isPending;
-  const updateActivity = async (patch: ClientMirrorPatch) => {
+  const updateActivity = async (change: MirrorChange) => {
     try {
-      await datesMutation.mutateAsync(patch);
+      await datesMutation.mutateAsync(change);
       return true;
     } catch {
       return false;
@@ -138,18 +139,17 @@ export function LookaheadRow({ activity, windowDays }: Props) {
 
   const handleStart = async () => {
     if (activity.actual_start) return;
-    const ok = await updateActivity({
-      actual_start: toLocalISODate(new Date()),
-    });
+    const today = toLocalISODate(new Date());
+    // "Iniciar" só marca o início de quem ainda não começou — em cada linha.
+    const ok = await updateActivity(startTodayChange(today));
     if (ok) toast.success("Atividade marcada como iniciada.");
   };
 
   const handleComplete = async () => {
     const today = toLocalISODate(new Date());
-    const ok = await updateActivity({
-      actual_start: activity.actual_start ?? today,
-      actual_end: today,
-    });
+    // Mantém o início que a linha já tem (o do cliente para o cliente, o do
+    // interno para o interno); sem início, hoje.
+    const ok = await updateActivity(finishTodayChange(today, "today"));
     if (ok) toast.success("Atividade concluída.");
   };
 

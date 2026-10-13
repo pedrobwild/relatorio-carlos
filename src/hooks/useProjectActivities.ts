@@ -10,7 +10,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
-import { queryKeys, invalidateActivityQueries } from "@/lib/queryKeys";
+import { queryKeys, invalidateActivityQueries, invalidateInternalScheduleQueries } from "@/lib/queryKeys";
 import { QUERY_TIMING } from "@/lib/queryClient";
 import { describeSaveError } from "@/lib/saveErrors";
 
@@ -167,6 +167,9 @@ export function useProjectActivities(projectId: string | undefined) {
       if (projectId) {
         invalidateActivityQueries(projectId);
       }
+      // Enquanto a equipe não editou o cronograma interno, o banco o recopia
+      // a cada salvamento do cliente: as telas internas precisam reler.
+      invalidateInternalScheduleQueries(queryClient);
     },
     onError: () => {
       // Error toast handled by caller

@@ -315,7 +315,9 @@ export function ActivityDrawer({ activity, open, onOpenChange, staffNameById }: 
         <MaterialsSection
           activityId={id}
           projectId={activity.project_id}
-          stageId={activity.stage_id}
+          // A compra aponta para o cronograma do cliente: a atividade do
+          // cliente da etapa (item interno), nunca o id do item interno.
+          clientActivityId={activity.stage_client_activity_id}
           activityTitle={activity.title}
           materials={materials}
         />
@@ -375,13 +377,16 @@ interface MaterialsSectionProps {
   activityId: string;
   /** Obra da atividade (as compras listadas e a pedida são dela). */
   projectId: string | null | undefined;
-  /** Etapa do cronograma da atividade — vai em `activity_id` da compra pedida. */
-  stageId: string | null | undefined;
+  /**
+   * Atividade do cronograma do CLIENTE ligada à etapa (item interno) da
+   * atividade — vai em `activity_id` da compra pedida. null = etapa só interna.
+   */
+  clientActivityId: string | null | undefined;
   activityTitle?: string | null;
   materials: OpsMaterialWithPurchase[];
 }
 
-export function MaterialsSection({ activityId, projectId, stageId, activityTitle, materials }: MaterialsSectionProps) {
+export function MaterialsSection({ activityId, projectId, clientActivityId, activityTitle, materials }: MaterialsSectionProps) {
   const [desc, setDesc] = useState("");
   const [qty, setQty] = useState("");
   const [unit, setUnit] = useState("");
@@ -425,7 +430,7 @@ export function MaterialsSection({ activityId, projectId, stageId, activityTitle
     requestPurchase.mutate(
       {
         materialId: m.id,
-        purchase: buildPurchaseRequestFromMaterial(m, { projectId, stageId, activityTitle, requiredBy }),
+        purchase: buildPurchaseRequestFromMaterial(m, { projectId, clientActivityId, activityTitle, requiredBy }),
       },
       {
         onSuccess: () => {

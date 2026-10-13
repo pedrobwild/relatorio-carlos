@@ -31,15 +31,23 @@ export type ClientActivityDates = {
   parent_activity_id: string | null;
 };
 
+/** `client_activity_id` só é preenchido pela cópia do cliente (RPC), nunca pela tela. */
 export type InternalScheduleInsert = Omit<
   TablesInsert<"internal_schedule_items">,
-  "id" | "created_at" | "updated_at" | "created_by" | "updated_by"
+  "id" | "created_at" | "updated_at" | "created_by" | "updated_by" | "client_activity_id"
 >;
 
 export type InternalSchedulePatch = Omit<
   TablesUpdate<"internal_schedule_items">,
-  "id" | "project_id" | "created_at" | "updated_at" | "created_by" | "updated_by"
+  "id" | "project_id" | "created_at" | "updated_at" | "created_by" | "updated_by" | "client_activity_id"
 >;
+
+/**
+ * Situação do cronograma interno da obra. `customized_at` null = acompanha o
+ * cronograma do cliente (o banco recopia a cada salvamento do cliente);
+ * preenchido = a equipe editou e ele não muda mais sozinho.
+ */
+export type InternalScheduleState = Tables<"internal_schedule_state">;
 
 /** Item com o nome da obra (leituras de carteira: calendário, lookahead…). */
 export type InternalScheduleItemWithProject = InternalScheduleItem & {
@@ -77,6 +85,17 @@ export const internalScheduleRepo = {
         data: InternalScheduleItemWithRefs[] | null;
         error: PostgrestError | null;
       };
+    });
+  },
+
+  /** Situação da obra (acompanha o cliente / editado pela equipe). null = sem registro. */
+  async getState(projectId: string): Promise<RepositoryResult<InternalScheduleState>> {
+    return executeQuery<InternalScheduleState>(async () => {
+      return await supabase
+        .from("internal_schedule_state")
+        .select("project_id, customized_at, customized_by")
+        .eq("project_id", projectId)
+        .maybeSingle();
     });
   },
 
@@ -119,6 +138,26 @@ export const internalScheduleRepo = {
         .update(patch)
         .eq("id", id)
         .select("*")
+        .single();
+    });
+  },
+
+  /**
+   * Estado atual da atividade do CLIENTE (lido na hora, antes de espelhar):
+   * os padrões das ações do Calendário/Lookahead (ex.: "Concluir" mantém o
+   * início que já existe) saem da linha do cliente, não do item interno.
+   */
+  async getClientActivityState(clientActivityId: string) {
+    return executeQuery<{
+      actual_start: string | null;
+      actual_end: string | null;
+      planned_start: string;
+      responsible_user_id: string | null;
+    }>(async () => {
+      return await supabase
+        .from("project_activities")
+        .select("actual_start, actual_end, planned_start, responsible_user_id")
+        .eq("id", clientActivityId)
         .single();
     });
   },

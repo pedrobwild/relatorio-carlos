@@ -8,6 +8,7 @@ import {
   daysBetween,
   daysLabel,
   compareWithClient,
+  countClientDifferences,
   deliverySummary,
   groupByEtapa,
   moveWithinSiblings,
@@ -180,5 +181,24 @@ describe("Painel: fim previsto do cronograma interno na linha", () => {
       today: "2026-11-02",
     });
     expect(row.internalPlannedEnd).toBe("2026-11-25");
+  });
+});
+
+describe("countClientDifferences", () => {
+  it("conta só itens ligados ao cliente com datas diferentes", () => {
+    const client = new Map([
+      ["c1", { id: "c1", planned_start: "2026-11-02", planned_end: "2026-11-06" }],
+      ["c2", { id: "c2", planned_start: "2026-11-09", planned_end: "2026-11-13" }],
+    ]);
+    expect(
+      countClientDifferences(
+        [
+          item({ id: "a", client_activity_id: "c1" }),
+          item({ id: "b", client_activity_id: "c2", planned_start: "2026-11-09", planned_end: "2026-11-16" }),
+          item({ id: "c", planned_end: "2026-12-01" }),
+        ],
+        client,
+      ),
+    ).toBe(1);
   });
 });

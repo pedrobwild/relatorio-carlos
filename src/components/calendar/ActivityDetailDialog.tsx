@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import type { WeekActivity } from "@/hooks/useWeekActivities";
+import { changedDetailFields, type ActivityDetailValues } from "./activityDetailDiff";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 
 /** Valor sentinela para representar "sem responsável" no Select (Radix não aceita value=""). */
@@ -116,11 +117,18 @@ export function ActivityDetailDialog({
 
   const { data: staffUsers = [], isLoading: loadingStaff } = useStaffUsers();
 
+  // Valores com que o diálogo abriu: só o que mudar em relação a eles é gravado.
+  const opened = useRef<ActivityDetailValues>({ actual_start: null, actual_end: null, responsible_user_id: null });
   useEffect(() => {
     if (activity) {
       setActualStart(toDate(activity.actual_start));
       setActualEnd(toDate(activity.actual_end));
       setResponsibleUserId(activity.responsible_user_id ?? null);
+      opened.current = {
+        actual_start: activity.actual_start ?? null,
+        actual_end: activity.actual_end ?? null,
+        responsible_user_id: activity.responsible_user_id ?? null,
+      };
     }
   }, [activity]);
 
@@ -136,11 +144,12 @@ export function ActivityDetailDialog({
     (responsibleUserId ?? null) !== (activity.responsible_user_id ?? null);
 
   const handleSave = async () => {
-    await onSave(activity.id, {
+    const updates = changedDetailFields(opened.current, {
       actual_start: fromDate(actualStart),
       actual_end: fromDate(actualEnd),
       responsible_user_id: responsibleUserId,
     });
+    if (Object.keys(updates).length > 0) await onSave(activity.id, updates);
     setConfirmSaveOpen(false);
     onOpenChange(false);
   };

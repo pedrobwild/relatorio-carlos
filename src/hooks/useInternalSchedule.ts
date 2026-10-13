@@ -29,50 +29,105 @@ export function internalScheduleErrorMessage(error: unknown): string {
 }
 
 /** Campos que o Calendário e o Lookahead também gravam no cronograma do cliente. */
-export type ClientMirrorPatch = Partial<
-  Pick<InternalSchedulePatch, "actual_start" | "actual_end" | "responsible_user_id">
->;
+export type MirrorField = "actual_start" | "actual_end" | "responsible_user_id";
+
+/** O que a ação precisa saber da linha (interna ou do cliente) para os padrões. */
+export interface MirrorRow {
+  actual_start: string | null;
+  actual_end: string | null;
+  planned_start: string;
+  responsible_user_id: string | null;
+}
+
+/**
+ * Valor de um campo numa ação: fixo (o que a pessoa escolheu) ou calculado
+ * a partir da linha em que vai ser gravado. `undefined` = não gravar o campo.
+ */
+export type MirrorValue = string | null | ((row: MirrorRow) => string | null | undefined);
+
+/** Só os campos que a pessoa mexeu nesta ação. */
+export type MirrorChange = Partial<Record<MirrorField, MirrorValue>>;
+
+export type ClientMirrorPatch = Partial<Pick<InternalSchedulePatch, MirrorField>>;
+
+/** Aplica a ação a uma linha: só os campos tocados, padrões calculados dela. */
+export function resolveMirrorChange(change: MirrorChange, row: MirrorRow): ClientMirrorPatch {
+  const out: ClientMirrorPatch = {};
+  for (const field of ["actual_start", "actual_end", "responsible_user_id"] as const) {
+    if (!(field in change)) continue;
+    const v = change[field];
+    const value = typeof v === "function" ? v(row) : v;
+    if (value !== undefined) out[field] = value;
+  }
+  return out;
+}
 
 export const CLIENT_NOT_UPDATED_MESSAGE =
   "Salvo no cronograma interno, mas o cronograma do cliente não foi atualizado. Atualize pelo Cronograma do cliente.";
 
 /**
- * Grava no item interno e, se o item é de primeiro nível e veio de uma
- * atividade do cliente, grava os MESMOS valores na atividade do cliente —
- * é como o Calendário e o Lookahead sempre preencheram o cronograma do
- * cliente. Micro-etapa e item só interno gravam só no interno.
+ * Grava a ação no item interno e, se o item é de primeiro nível e veio de
+ * uma atividade do cliente, também na atividade do cliente — é como o
+ * Calendário e o Lookahead sempre preencheram o cronograma do cliente.
  *
- * Falha no interno: lança (nada foi gravado). Falha só no cliente: avisa e
- * mantém o interno (devolve `clientUpdated: false`). Não usar na tela
- * Cronograma interno: lá as datas do cliente não mudam.
+ * Cada lado recebe só os campos que a pessoa mexeu; os padrões (ex.:
+ * "Concluir" usa o início que já existe ou hoje) são calculados da PRÓPRIA
+ * linha: do item interno para o interno, e de uma leitura na hora da
+ * atividade do cliente para o cliente. Assim o cliente recebe exatamente o
+ * que recebia antes, mesmo quando o interno está diferente.
+ *
+ * Micro-etapa e item só interno gravam só no interno. Falha no interno:
+ * lança (nada foi gravado). Falha no cliente: avisa e mantém o interno.
+ * Não usar na tela Cronograma interno: lá as datas do cliente não mudam.
  */
 export async function updateInternalMirroringClient(
-  item: { id: string; project_id: string; parent_id: string | null; client_activity_id: string | null },
-  patch: ClientMirrorPatch,
-): Promise<{ clientUpdated: boolean | null }> {
-  const res = await internalScheduleRepo.update(item.id, patch);
-  if (res.error) throw res.error;
-  if (!item.client_activity_id || item.parent_id) return { clientUpdated: null };
-  const client = await internalScheduleRepo.mirrorToClientActivity(item.client_activity_id, patch);
+  item: MirrorRow & { id: string; project_id: string; parent_id: string | null; client_activity_id: string | null },
+  change: MirrorChange,
+): Promise<{ clientUpdated: boolean | null; internalPatch: ClientMirrorPatch }> {
+  const internalPatch = resolveMirrorChange(change, item);
+  if (Object.keys(internalPatch).length > 0) {
+    const res = await internalScheduleRepo.update(item.id, internalPatch);
+    if (res.error) throw res.error;
+  }
+  if (!item.client_activity_id || item.parent_id) return { clientUpdated: null, internalPatch };
+
+  const state = await internalScheduleRepo.getClientActivityState(item.client_activity_id);
+  if (state.error || !state.data) {
+    toast.error(CLIENT_NOT_UPDATED_MESSAGE);
+    return { clientUpdated: false, internalPatch };
+  }
+  const clientPatch = resolveMirrorChange(change, state.data);
+  if (Object.keys(clientPatch).length === 0) return { clientUpdated: true, internalPatch };
+  const client = await internalScheduleRepo.mirrorToClientActivity(item.client_activity_id, clientPatch);
   if (client.error) {
     toast.error(CLIENT_NOT_UPDATED_MESSAGE);
-    return { clientUpdated: false };
+    return { clientUpdated: false, internalPatch };
   }
   // Mesmas invalidações do cliente de antes (lista de atividades + Painel).
   invalidateActivityQueries(item.project_id);
-  return { clientUpdated: true };
+  return { clientUpdated: true, internalPatch };
+}
+
+/** Acompanha o cliente (customized_at null) ou foi editado pela equipe. */
+export function useInternalScheduleState(projectId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.internalSchedule.state(projectId),
+    enabled: enabled && !!projectId,
+    queryFn: async () => (projectId ? unwrap(await internalScheduleRepo.getState(projectId)) : null),
+  });
 }
 
 /** Itens do cronograma interno da obra + datas do cliente para comparar. */
-export function useInternalSchedule(projectId: string | undefined) {
+export function useInternalSchedule(projectId: string | undefined, opts: { enabled?: boolean } = {}) {
+  const on = opts.enabled ?? true;
   const itemsQ = useQuery({
     queryKey: queryKeys.internalSchedule.byProject(projectId),
-    enabled: !!projectId,
+    enabled: on && !!projectId,
     queryFn: async () => (projectId ? unwrap(await internalScheduleRepo.listByProject(projectId)) : []),
   });
   const clientQ = useQuery({
     queryKey: queryKeys.internalSchedule.clientDates(projectId),
-    enabled: !!projectId,
+    enabled: on && !!projectId,
     staleTime: 60_000,
     queryFn: async () => (projectId ? unwrap(await internalScheduleRepo.listClientDates(projectId)) : []),
   });

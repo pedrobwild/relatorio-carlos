@@ -19,7 +19,9 @@ import {
 } from "@/infra/repositories/internalSchedule.repository";
 import {
   internalScheduleErrorMessage,
+  resolveMirrorChange,
   updateInternalMirroringClient,
+  type MirrorChange,
 } from "@/hooks/useInternalSchedule";
 
 export interface WeekActivity {
@@ -135,32 +137,33 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     staleTime: 30_000,
   });
 
+  /**
+   * Datas reais / responsável. `updates` traz só o que a pessoa mexeu; um
+   * valor pode ser calculado da linha (ex.: "Concluir" sem início usa o
+   * início previsto da PRÓPRIA linha). Item de primeiro nível ligado ao
+   * cliente grava também na atividade do cliente (como o Calendário sempre
+   * fez), com os padrões calculados da linha do cliente. Micro-etapa: só interno.
+   */
   const updateDates = useMutation({
     mutationFn: async ({
       activityId,
       updates,
     }: {
       activityId: string;
-      updates: {
-        actual_start?: string | null;
-        actual_end?: string | null;
-        responsible_user_id?: string | null;
-      };
+      updates: MirrorChange;
     }) => {
       const a = activities.find((x) => x.id === activityId);
-      if (!a) {
-        const res = await internalScheduleRepo.update(activityId, updates);
-        if (res.error) throw res.error;
-        return { activityId, updates };
-      }
-      // Item de primeiro nível ligado ao cliente: grava também na atividade
-      // do cliente (como o Calendário sempre fez). Micro-etapa: só interno.
+      if (!a) throw new Error("Atividade não encontrada no calendário. Recarregue a página.");
       await updateInternalMirroringClient(
         {
           id: a.id,
           project_id: a.project_id,
           parent_id: a.parent_activity_id,
           client_activity_id: a.client_activity_id,
+          actual_start: a.actual_start,
+          actual_end: a.actual_end,
+          planned_start: a.planned_start,
+          responsible_user_id: a.responsible_user_id,
         },
         updates,
       );
@@ -172,7 +175,7 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
       if (prev) {
         queryClient.setQueryData<WeekActivity[]>(
           queryKey,
-          prev.map((a) => (a.id === activityId ? { ...a, ...updates } : a)),
+          prev.map((a) => (a.id === activityId ? { ...a, ...resolveMirrorChange(updates, a) } : a)),
         );
       }
       return { prev };
@@ -318,14 +321,8 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     isLoading,
     error: error ? (error as Error).message : null,
     refetch,
-    updateDates: (
-      activityId: string,
-      updates: {
-        actual_start?: string | null;
-        actual_end?: string | null;
-        responsible_user_id?: string | null;
-      },
-    ) => updateDates.mutateAsync({ activityId, updates }),
+    updateDates: (activityId: string, updates: MirrorChange) =>
+      updateDates.mutateAsync({ activityId, updates }),
     isUpdating: updateDates.isPending,
     breakIntoSubActivities: (parent: WeekActivity, subs: SubActivityInput[]) =>
       breakIntoSubActivities.mutateAsync({ parent, subs }),

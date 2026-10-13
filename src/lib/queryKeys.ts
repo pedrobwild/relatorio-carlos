@@ -476,6 +476,9 @@ export const queryKeys = {
     all: ["internal-schedule"] as const,
     byProject: (projectId: string | undefined) =>
       [...queryKeys.internalSchedule.all, "by-project", projectId] as const,
+    /** Acompanha o cliente / editado pela equipe (internal_schedule_state). */
+    state: (projectId: string | undefined) =>
+      [...queryKeys.internalSchedule.all, "state", projectId] as const,
     /** Datas do cronograma do cliente, só para comparar (não é o cronograma do cliente em si). */
     clientDates: (projectId: string | undefined) =>
       [...queryKeys.internalSchedule.all, "client-dates", projectId] as const,

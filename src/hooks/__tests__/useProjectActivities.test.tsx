@@ -7,9 +7,10 @@ import {
   type SaveActivitiesResult,
 } from "../useProjectActivities";
 
-const { rpc, from } = vi.hoisted(() => ({
+const { rpc, from, invalidateInternal } = vi.hoisted(() => ({
   rpc: vi.fn(),
   from: vi.fn(),
+  invalidateInternal: vi.fn(),
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -31,6 +32,7 @@ vi.mock("../useAuth", () => ({
 vi.mock("@/lib/queryKeys", () => ({
   queryKeys: { activities: { list: (id?: string) => ["activities", id] } },
   invalidateActivityQueries: vi.fn(),
+  invalidateInternalScheduleQueries: invalidateInternal,
 }));
 
 function createWrapper() {
@@ -77,6 +79,16 @@ describe("useProjectActivities", () => {
         p_rows: [expect.objectContaining({ id: activity.id })],
       }),
     );
+  });
+
+  it("depois de salvar o cronograma do cliente, relê o cronograma interno (o banco pode ter recopiado)", async () => {
+    const { result } = renderHook(() => useProjectActivities("project-1"), {
+      wrapper: createWrapper(),
+    });
+    await act(async () => {
+      await result.current.saveActivities([activity]);
+    });
+    expect(invalidateInternal).toHaveBeenCalledTimes(1);
   });
 
   it("não executa fallback destrutivo quando a RPC falha", async () => {

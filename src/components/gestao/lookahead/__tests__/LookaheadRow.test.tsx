@@ -12,6 +12,7 @@ import { MemoryRouter } from "react-router-dom";
 const h = vi.hoisted(() => ({
   update: vi.fn(),
   mirror: vi.fn(),
+  clientState: vi.fn(),
   invalidateActivityQueries: vi.fn(),
   toastError: vi.fn(),
 }));
@@ -23,7 +24,7 @@ vi.mock("@/components/gestao/avanco/RegistrarAvancoDialog", () => ({
   RegistrarAvancoDialog: ({ activityId }: { activityId: string }) => <div data-testid="avanco">{activityId}</div>,
 }));
 vi.mock("@/infra/repositories/internalSchedule.repository", () => ({
-  internalScheduleRepo: { update: h.update, mirrorToClientActivity: h.mirror },
+  internalScheduleRepo: { update: h.update, mirrorToClientActivity: h.mirror, getClientActivityState: h.clientState },
 }));
 vi.mock("@/lib/queryKeys", async (orig) => ({
   ...(await orig<typeof import("@/lib/queryKeys")>()),
@@ -70,6 +71,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.update.mockResolvedValue({ data: {}, error: null });
   h.mirror.mockResolvedValue({ data: null, error: null });
+  h.clientState.mockResolvedValue({
+    data: { actual_start: null, actual_end: null, planned_start: "2026-11-02", responsible_user_id: null },
+    error: null,
+  });
 });
 
 describe("LookaheadRow", () => {
@@ -82,11 +87,45 @@ describe("LookaheadRow", () => {
     expect(h.invalidateActivityQueries).toHaveBeenCalledWith("p1");
   });
 
-  it("Concluir grava início e término nos dois", async () => {
+  it("Concluir mantém o início que o CLIENTE já tem; o interno usa o dele", async () => {
+    h.clientState.mockResolvedValue({
+      data: { actual_start: "2026-10-30", actual_end: null, planned_start: "2026-10-28", responsible_user_id: null },
+      error: null,
+    });
     renderRow(activity({ actual_start: "2026-11-02" }));
     fireEvent.click(screen.getByRole("button", { name: "Concluir atividade" }));
-    await waitFor(() => expect(h.mirror).toHaveBeenCalledWith("c1", { actual_start: "2026-11-02", actual_end: DAY }));
-    expect(h.update).toHaveBeenCalledWith("i1", { actual_start: "2026-11-02", actual_end: DAY });
+    await waitFor(() => expect(h.mirror).toHaveBeenCalledWith("c1", { actual_end: DAY }));
+    expect(h.update).toHaveBeenCalledWith("i1", { actual_end: DAY });
+  });
+
+  it("Concluir com o cliente ainda sem início: cliente recebe início e término de hoje (como antes)", async () => {
+    renderRow(activity({ actual_start: "2026-11-02" }));
+    fireEvent.click(screen.getByRole("button", { name: "Concluir atividade" }));
+    await waitFor(() => expect(h.mirror).toHaveBeenCalledWith("c1", { actual_start: DAY, actual_end: DAY }));
+  });
+
+  it("Concluir não mexe no cliente que já está concluído", async () => {
+    h.clientState.mockResolvedValue({
+      data: { actual_start: "2026-10-30", actual_end: "2026-11-01", planned_start: "2026-10-28", responsible_user_id: null },
+      error: null,
+    });
+    renderRow(activity({ actual_start: "2026-11-02" }));
+    fireEvent.click(screen.getByRole("button", { name: "Concluir atividade" }));
+    await waitFor(() => expect(h.update).toHaveBeenCalledWith("i1", { actual_end: DAY }));
+    await waitFor(() => expect(h.clientState).toHaveBeenCalledWith("c1"));
+    expect(h.mirror).not.toHaveBeenCalled();
+  });
+
+  it("Iniciar não sobrescreve o início que o cliente já tem", async () => {
+    h.clientState.mockResolvedValue({
+      data: { actual_start: "2026-10-30", actual_end: null, planned_start: "2026-10-28", responsible_user_id: null },
+      error: null,
+    });
+    renderRow(activity());
+    fireEvent.click(screen.getByRole("button", { name: "Marcar atividade como iniciada" }));
+    await waitFor(() => expect(h.update).toHaveBeenCalledWith("i1", { actual_start: DAY }));
+    await waitFor(() => expect(h.clientState).toHaveBeenCalledWith("c1"));
+    expect(h.mirror).not.toHaveBeenCalled();
   });
 
   it("micro-etapa e item só interno gravam só no interno", async () => {

@@ -32,7 +32,7 @@ function act(over: Partial<OpsActivityView> & { id: string }): OpsActivityView {
     blocked_reason: null, created_at: null, created_by: null, description: null, first_work_date: null, fornecedor_id: null,
     is_critical: false, is_ready: false, last_work_date: null, late_finish: null, materials_missing: 0, materials_on_site: 0,
     materials_total: 0, next_pending_date: null, planned_cost: null, planned_end: null, planned_start: null, project_id: "p1",
-    responsible_user_id: null, rework_of_id: null, sort_order: 0, stage_id: "s1", stage_name: "Elétrica", stage_sort_order: 1,
+    responsible_user_id: null, rework_of_id: null, sort_order: 0, stage_id: "s1", stage_name: "Elétrica", stage_sort_order: 1, stage_client_activity_id: null,
     status: "planejada", title: `Atividade ${over.id}`, updated_at: null,
     ...over,
   };

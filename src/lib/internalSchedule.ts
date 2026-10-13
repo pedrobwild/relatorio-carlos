@@ -6,7 +6,7 @@
  * entrega e reordenação. Datas são sempre `yyyy-mm-dd` (colunas `date`):
  * comparar strings basta, sem `new Date('yyyy-mm-dd')` (que cai em UTC).
  */
-import { parseISODate } from "@/lib/hojeDia";
+import { parseISODate, toISODate } from "@/lib/hojeDia";
 
 /** O mínimo de um item interno que estas regras precisam. */
 export interface ScheduleItemLike {
@@ -221,4 +221,17 @@ export function validateItemDates(v: {
     return "O término real não pode ser antes do início real.";
   }
   return null;
+}
+
+/** Quantos itens ligados ao cliente têm datas previstas diferentes das do cliente. */
+export function countClientDifferences(
+  items: ReadonlyArray<Pick<ScheduleItemLike, "client_activity_id" | "planned_start" | "planned_end">>,
+  clientById: ReadonlyMap<string, ClientDatesLike>,
+): number {
+  return items.reduce((n, it) => (compareWithClient(it, clientById).kind === "diferente" ? n + 1 : n), 0);
+}
+
+/** "dd/mm" no fuso local a partir de um timestamp (timestamptz do banco). */
+export function ddmmFromTimestamp(ts: string): string {
+  return ddmm(toISODate(new Date(ts)));
 }

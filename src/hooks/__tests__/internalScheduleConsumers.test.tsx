@@ -49,6 +49,7 @@ const h = vi.hoisted(() => {
       copyFromClient: vi.fn(),
       countOpsActivities: vi.fn(),
       mirrorToClientActivity: vi.fn(),
+      getClientActivityState: vi.fn(),
     },
     toastError: vi.fn(),
   };
@@ -69,6 +70,7 @@ import { useCurrentStages } from "../useCurrentStages";
 import { CLIENT_NOT_UPDATED_MESSAGE, useInternalScheduleMutations } from "../useInternalSchedule";
 import { queryKeys } from "@/lib/queryKeys";
 import { todayISO, shiftISODate } from "@/lib/hojeDia";
+import { startTodayChange } from "@/lib/internalScheduleActions";
 
 const ok = <T,>(data: T) => Promise.resolve({ data, error: null });
 
@@ -172,24 +174,62 @@ describe("Calendário de obras (useWeekActivities)", () => {
   });
 
   describe("datas reais e responsável: item do cliente grava também no cliente", () => {
+    const clientRow = { actual_start: "2026-10-30", actual_end: null, planned_start: "2026-10-28", responsible_user_id: "uc" };
     const load = async () => {
       h.repo.listInRange.mockImplementation(() =>
         ok([
-          row({ id: "top", client_activity_id: "c1" }),
+          // Interno sem início real; o cliente já tem início (30/10).
+          row({ id: "top", client_activity_id: "c1", planned_start: "2026-11-02" }),
           row({ id: "micro", parent_id: "top", client_activity_id: "c1m" }),
           row({ id: "solo", client_activity_id: null }),
         ]),
       );
       h.repo.update.mockImplementation(() => ok({}));
       h.repo.mirrorToClientActivity.mockImplementation(() => ok(null));
+      h.repo.getClientActivityState.mockImplementation(() => ok(clientRow));
       const hook = renderHook(() => useWeekActivities("2026-11-02", "2026-11-08"), { wrapper });
       await waitFor(() => expect(hook.result.current.activities).toHaveLength(3));
       return hook.result;
     };
 
-    it("item de primeiro nível ligado: mesmos valores no interno e no cliente", async () => {
+    it("só o término mudou: o cliente recebe só o término e mantém o início dele", async () => {
       const result = await load();
-      const patch = { actual_start: "2026-11-03", actual_end: "2026-11-05", responsible_user_id: "u2" };
+      await act(async () => {
+        await result.current.updateDates("top", { actual_end: "2026-11-05" });
+      });
+      expect(h.repo.update).toHaveBeenCalledWith("top", { actual_end: "2026-11-05" });
+      expect(h.repo.getClientActivityState).toHaveBeenCalledWith("c1");
+      expect(h.repo.mirrorToClientActivity).toHaveBeenCalledWith("c1", { actual_end: "2026-11-05" });
+    });
+
+    it("'Concluir' sem início: cada lado usa o início previsto/real da PRÓPRIA linha", async () => {
+      const result = await load();
+      await act(async () => {
+        await result.current.updateDates("top", {
+          actual_end: "2026-11-05",
+          actual_start: (r) => (r.actual_start ? undefined : r.planned_start),
+        });
+      });
+      // Interno sem início → previsto do interno.
+      expect(h.repo.update).toHaveBeenCalledWith("top", { actual_end: "2026-11-05", actual_start: "2026-11-02" });
+      // Cliente já iniciado → só o término; o início do cliente fica.
+      expect(h.repo.mirrorToClientActivity).toHaveBeenCalledWith("c1", { actual_end: "2026-11-05" });
+    });
+
+    it("'Iniciou hoje' com o cliente já iniciado: só o interno recebe o início", async () => {
+      const result = await load();
+      await act(async () => {
+        await result.current.updateDates("top", startTodayChange("2026-11-05"));
+      });
+      expect(h.repo.update).toHaveBeenCalledWith("top", { actual_start: "2026-11-05" });
+      expect(h.repo.getClientActivityState).toHaveBeenCalledWith("c1");
+      // O cliente já tinha 30/10: nada é gravado nele.
+      expect(h.repo.mirrorToClientActivity).not.toHaveBeenCalled();
+    });
+
+    it("responsável e datas escolhidos pela pessoa vão iguais para os dois", async () => {
+      const result = await load();
+      const patch = { actual_start: "2026-11-03", responsible_user_id: "u2" };
       await act(async () => {
         await result.current.updateDates("top", patch);
       });
@@ -204,6 +244,7 @@ describe("Calendário de obras (useWeekActivities)", () => {
         await result.current.updateDates("solo", { actual_end: "2026-11-04" });
       });
       expect(h.repo.update).toHaveBeenCalledTimes(2);
+      expect(h.repo.getClientActivityState).not.toHaveBeenCalled();
       expect(h.repo.mirrorToClientActivity).not.toHaveBeenCalled();
     });
 
@@ -226,7 +267,9 @@ describe("Calendário de obras (useWeekActivities)", () => {
     h.repo.update.mockImplementation(() => ok({}));
     h.repo.removeChildren.mockImplementation(() => ok(null));
     h.repo.remove.mockImplementation(() => ok(null));
+    h.repo.listInRange.mockImplementation(() => ok([row({ id: "a" })]));
     const { result } = renderHook(() => useWeekActivities("2026-11-02", "2026-11-08"), { wrapper });
+    await waitFor(() => expect(result.current.activities).toHaveLength(1));
     await act(async () => {
       await result.current.updateDates("a", { actual_start: "2026-11-03" });
       await result.current.mergeSubActivities("a");

@@ -2141,6 +2141,46 @@ export type Database = {
           },
         ]
       }
+      internal_schedule_state: {
+        Row: {
+          customized_at: string | null
+          customized_by: string | null
+          project_id: string
+        }
+        Insert: {
+          customized_at?: string | null
+          customized_by?: string | null
+          project_id: string
+        }
+        Update: {
+          customized_at?: string | null
+          customized_by?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_schedule_state_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "internal_schedule_state_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_schedule_state_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "v_project_deadlines"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       internal_weekly_reports: {
         Row: {
           created_at: string
@@ -8551,6 +8591,7 @@ export type Database = {
           responsible_user_id: string | null
           rework_of_id: string | null
           sort_order: number | null
+          stage_client_activity_id: string | null
           stage_id: string | null
           stage_name: string | null
           stage_sort_order: number | null
@@ -8718,10 +8759,6 @@ export type Database = {
       }
       can_edit_atividades: { Args: { p_obra_id: string }; Returns: boolean }
       can_edit_cronograma: { Args: { p_obra_id: string }; Returns: boolean }
-      can_edit_internal_schedule: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
       can_edit_project_phase: { Args: { _user_id: string }; Returns: boolean }
       can_manage_project: {
         Args: { _project_id: string; _user_id: string }

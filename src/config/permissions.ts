@@ -21,9 +21,10 @@ export type Feature =
   | "schedule:save_baseline"
   | "schedule:import"
   | "schedule:view"
-  // Cronograma interno (staff-only; o cliente nunca vê). Ver: toda a equipe.
-  // Editar: mesmos papéis de "schedule:edit" e da regra do banco
-  // (can_edit_internal_schedule).
+  // Cronograma interno (staff-only; o cliente nunca vê). Ver e editar: toda
+  // a equipe com acesso à obra — mesma regra do banco para
+  // internal_schedule_items (e a mesma da tabela do cliente), para que
+  // suprimentos/financeiro sigam usando Calendário e Lookahead como antes.
   | "internalSchedule:view"
   | "internalSchedule:edit"
   // Purchases
@@ -341,6 +342,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "documents:view",
     "schedule:view",
     "internalSchedule:view",
+    "internalSchedule:edit",
     "purchases:create",
     "purchases:edit",
     "purchases:view",
@@ -361,6 +363,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "formalizations:view",
     "schedule:view",
     "internalSchedule:view",
+    "internalSchedule:edit",
     "purchases:view",
     "payments:upload_boleto",
     "payments:mark_paid",

@@ -109,18 +109,27 @@ export interface MaterialForPurchaseRequest {
  * padrões de uma solicitação nova na tela Compras (`emptyPurchase`): produto,
  * prazo de 7 dias, quantidade 1 e unidade "un" quando o material não diz. A
  * situação fica a padrão do banco ("Pendente"), como no formulário de Compras.
- * `activity_id` é a etapa do CRONOGRAMA (não a atividade da Semana).
+ * `activity_id` da compra aponta para o cronograma do CLIENTE
+ * (`project_activities`): é a atividade do cliente de onde veio o item do
+ * cronograma interno em que a atividade da Semana está pendurada
+ * (`v_ops_activities.stage_client_activity_id`). Item só interno → null.
  * `requiredBy` é a "Data Necessária na Obra" da compra = `needed_by` do
  * material (ou a data que o gestor informar, se o material não tiver).
  */
 export function buildPurchaseRequestFromMaterial(
   material: MaterialForPurchaseRequest,
-  ctx: { projectId: string; stageId: string | null | undefined; activityTitle?: string | null; requiredBy: string },
+  ctx: {
+    projectId: string;
+    /** Atividade do cronograma do cliente da etapa (nunca o id do item interno). */
+    clientActivityId: string | null | undefined;
+    activityTitle?: string | null;
+    requiredBy: string;
+  },
 ): CreatePurchaseInput {
   const qty = material.quantity != null && material.quantity > 0 ? material.quantity : 1;
   return {
     project_id: ctx.projectId,
-    activity_id: ctx.stageId ?? null,
+    activity_id: ctx.clientActivityId ?? null,
     item_name: material.description.trim(),
     quantity: qty,
     unit: material.unit?.trim() || "un",
