@@ -20,7 +20,24 @@ const h = vi.hoisted(() => ({
   failures: [] as { key: string; assignmentId: string; label: string; action: string; message: string; at: number }[],
   photos: [] as unknown[],
   suppress: vi.fn(),
+  /** Etapas do cronograma para "começou? terminou?". */
+  etapas: [] as unknown[],
+  responder: vi.fn(),
 }));
+
+vi.mock("@/hooks/useEtapasHoje", async () => {
+  const { etapasParaConfirmar } = await vi.importActual<typeof import("@/lib/etapasHoje")>("@/lib/etapasHoje");
+  return {
+    useEtapasHoje: (today: string) => ({
+      groups: etapasParaConfirmar(h.etapas as never, today),
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+      responder: h.responder,
+      isSaving: false,
+    }),
+  };
+});
 
 vi.mock("@/hooks/useOps", () => ({
   useOpsDay: () => ({
@@ -120,6 +137,8 @@ describe("Tela Hoje", () => {
     h.failures = [];
     h.photos = [];
     h.dayState = { isPending: false, fetchStatus: "idle" };
+    h.etapas = [];
+    h.responder.mockReset().mockReturnValue(vi.fn());
     h.items = [
       item({ id: "1" }),
       item({ id: "2", outcome: "feito", done_by: "u-me", done_at: new Date().toISOString() }),
@@ -349,5 +368,69 @@ describe("Tela Hoje", () => {
       expect(within(list).getByText('Não enviado: "Feito" de Atividade 1')).toBeInTheDocument();
       expect(within(list).getByText(/Você não tem permissão/)).toBeInTheDocument();
     });
+  });
+});
+
+describe("Tela Hoje: etapas do cronograma (começou? terminou?)", () => {
+  const etapa = (over: Record<string, unknown>) => ({
+    id: "e1",
+    project_id: "p1",
+    parent_id: null,
+    client_activity_id: null,
+    description: "Gesso",
+    planned_start: todayISO(),
+    planned_end: shiftISODate(todayISO(), 5),
+    actual_start: null,
+    actual_end: null,
+    responsible_user_id: null,
+    sort_order: 1,
+    project: { name: "Obra Moema", status: "active" },
+    ...over,
+  });
+
+  beforeEach(() => {
+    h.items = [];
+    h.online = true;
+    h.pending = [];
+    h.failures = [];
+    h.photos = [];
+    h.dayState = { isPending: false, fetchStatus: "idle" };
+    h.responder.mockReset().mockReturnValue(vi.fn());
+  });
+
+  it("começa hoje: um botão 'Começou' grava o início de hoje", () => {
+    h.etapas = [etapa({})];
+    renderAt();
+    const sec = screen.getByRole("region", { name: /começou\? terminou\?/ });
+    expect(within(sec).getByText("Gesso")).toBeInTheDocument();
+    fireEvent.click(within(sec).getByRole("button", { name: "Começou" }));
+    expect(h.responder).toHaveBeenCalledWith(expect.objectContaining({ id: "e1" }), { actual_start: todayISO() });
+  });
+
+  it("deveria ter começado antes: oferece a data prevista ou hoje", () => {
+    const antes = shiftISODate(todayISO(), -7);
+    h.etapas = [etapa({ planned_start: antes })];
+    renderAt();
+    const dd = `${antes.slice(8, 10)}/${antes.slice(5, 7)}`;
+    fireEvent.click(screen.getByRole("button", { name: `Começou em ${dd}` }));
+    expect(h.responder).toHaveBeenCalledWith(expect.objectContaining({ id: "e1" }), { actual_start: antes });
+    expect(screen.getByRole("button", { name: "Começou hoje" })).toBeInTheDocument();
+  });
+
+  it("em andamento: 'Terminou hoje' grava o término", () => {
+    h.etapas = [etapa({ actual_start: shiftISODate(todayISO(), -2) })];
+    renderAt();
+    fireEvent.click(screen.getByRole("button", { name: "Terminou hoje" }));
+    expect(h.responder).toHaveBeenCalledWith(expect.objectContaining({ id: "e1" }), { actual_end: todayISO() });
+  });
+
+  it("não aparece em outro dia nem sem sinal", () => {
+    h.etapas = [etapa({})];
+    const { unmount } = renderAt(`?data=${shiftISODate(todayISO(), -1)}`);
+    expect(screen.queryByRole("region", { name: /começou\? terminou\?/ })).toBeNull();
+    unmount();
+    h.online = false;
+    renderAt();
+    expect(screen.queryByRole("region", { name: /começou\? terminou\?/ })).toBeNull();
   });
 });

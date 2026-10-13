@@ -261,26 +261,29 @@ describe("Painel de Obras reformulado", () => {
       expect(window.localStorage.getItem("bwild.obras.escopo")).toBe("todas");
     });
 
-    it("linha da obra: responsável, folga, semana e os avisos (dois, e quantos faltam)", () => {
+    it("linha da obra: responsável, entrega em palavras e uma ação em 'O que fazer'", () => {
       renderPage();
       const linha = screen.getByRole("row", { name: /Ap\. 1204/ });
       expect(within(linha).getByText("Mariana Costa · Carlos")).toBeInTheDocument();
-      expect(within(linha).getByText("−4 dias")).toBeInTheDocument();
-      expect(within(linha).getByText(/1 não feito/)).toBeInTheDocument();
-      expect(within(linha).getByText("R$ 3.600 de multa se nada mudar")).toBeInTheDocument();
-      expect(within(linha).getByText("+2 avisos")).toBeInTheDocument();
+      expect(within(linha).getByText("27/11")).toBeInTheDocument();
+      expect(within(linha).getByText("atrasa 4 dias")).toBeInTheDocument();
+      // Sem cronograma, a ação é montar o cronograma; o material vem antes.
+      expect(within(linha).getByText("Comprar Disjuntores (até qua)")).toBeInTheDocument();
+      expect(within(linha).getByText("+1 pendência")).toBeInTheDocument();
       expect(within(linha).getByText("Cliente: atrito")).toBeInTheDocument();
+      // Sem siglas.
+      expect(linha.textContent).not.toMatch(/PPC|folga/i);
     });
 
-    it("obra sem nada marcado na semana avisa 'Semana sem dia marcado'", () => {
+    it("obra sem nada marcado na semana: 'Planejar esta semana'", () => {
       window.localStorage.setItem("bwild.obras.escopo", "todas");
       renderPage();
       const linha = screen.getByRole("row", { name: /Studio Pinheiros/ });
-      expect(within(linha).getByText("Semana sem dia marcado")).toBeInTheDocument();
+      expect(within(linha).getByText("Planejar esta semana (nenhum dia marcado)")).toBeInTheDocument();
       expect(screen.getByText("1 obra sem semana planejada")).toBeInTheDocument();
     });
 
-    it("etapa atual, o que deveria estar acontecendo e a próxima semana vêm do cronograma interno", () => {
+    it("onde está, agora, semana que vem e o que fazer vêm do cronograma interno", () => {
       // Datas relativas a hoje (a tela usa a data de hoje na linha do tempo).
       const hoje = todayISO();
       const dia = (n: number) => shiftISODate(hoje, n);
@@ -297,41 +300,34 @@ describe("Painel de Obras reformulado", () => {
       h.rows = [mk({ id: "a", name: "Ap. 1204 Vila Mariana", andamento, nextWeekPlanned: 0 })];
       renderPage();
       const linha = screen.getByRole("row", { name: /Ap\. 1204/ });
-      // Etapa atual = a primeira aberta que já deveria ter começado.
-      expect(within(linha).getByText("Hidráulica", { selector: "span.font-medium" })).toBeInTheDocument();
-      expect(within(linha).getByText(/Etapa 2 de 4/)).toBeInTheDocument();
+      // Onde está: a primeira etapa aberta que já deveria ter começado.
+      expect(within(linha).getAllByText("Hidráulica")[0]).toBeInTheDocument();
+      expect(within(linha).getByText("2/4")).toBeInTheDocument();
       expect(within(linha).getByRole("img", { name: "1 de 4 etapas concluídas" })).toBeInTheDocument();
-      // Agora: a atrasada e a que não começou.
-      expect(within(linha).getByText("Gesso")).toBeInTheDocument();
-      expect(within(linha).getByText("não começou")).toBeInTheDocument();
-      // Próxima semana: nada novo começa, mas Gesso e Hidráulica continuam — e ninguém marcou dia.
-      expect(within(linha).getByText("Nada novo começa")).toBeInTheDocument();
-      expect(within(linha).getByText(/Continua: Hidráulica, Gesso/)).toBeInTheDocument();
-      expect(within(linha).getByText("Ainda sem dia marcado")).toBeInTheDocument();
+      // Agora: a mais urgente primeiro, e quantas mais.
+      expect(within(linha).getByText(/^\d+ dias? atrasada$/)).toBeInTheDocument();
+      expect(within(linha).getByText(/\+1 outra/)).toBeInTheDocument();
+      // Semana que vem: nada novo começa, mas a obra continua.
+      expect(within(linha).getByText(/^continua/)).toBeInTheDocument();
+      // O que fazer: cobrar a etapa atrasada.
+      expect(within(linha).getByText(/^Cobrar Hidráulica \(\d+ dias? atrasada\)$/)).toBeInTheDocument();
     });
 
-    it("a semana seguinte vira coluna: sem o botão de trocar de semana", () => {
+    it("a semana que vem é coluna: sem o botão de trocar de semana", () => {
       renderPage();
-      expect(screen.getByRole("columnheader", { name: "Próxima semana" })).toBeInTheDocument();
+      expect(screen.getByRole("columnheader", { name: "Semana que vem" })).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Ver a semana seguinte" })).toBeNull();
     });
 
-    it("fechamento de semana: PPC da semana anterior e quem não fechou", () => {
+    it("semana passada sem fechar vira 'Fechar a semana passada'", () => {
       window.localStorage.setItem("bwild.obras.escopo", "todas");
       h.rows = [
         mk({ id: "a", name: "Ap. 1204 Vila Mariana", week: { ...base.week, previous: { ppc: 75, pending: false } } }),
         mk({ id: "b", name: "Studio Pinheiros", week: { ...base.week, previous: { ppc: null, pending: true } } }),
-        mk({ id: "c", name: "Loft Itaim", week: { ...base.week, ppc: 80, previous: { ppc: 60, pending: false } } }),
-        mk({ id: "d", name: "Casa Perdizes" }),
       ];
       renderPage();
-      expect(within(screen.getByRole("row", { name: /Ap\. 1204/ })).getByText(/PPC anterior 75%/)).toBeInTheDocument();
-      expect(within(screen.getByRole("row", { name: /Studio Pinheiros/ })).getByText(/anterior sem fechar/)).toBeInTheDocument();
-      // Semana já fechada: mostra o PPC dela, não o da anterior.
-      const fechada = screen.getByRole("row", { name: /Loft Itaim/ });
-      expect(within(fechada).getByText(/· PPC 80%/)).toBeInTheDocument();
-      expect(within(fechada).queryByText(/anterior/)).toBeNull();
-      expect(within(screen.getByRole("row", { name: /Casa Perdizes/ })).queryByText(/PPC|sem fechar/)).toBeNull();
+      expect(within(screen.getByRole("row", { name: /Studio Pinheiros/ })).getByText("Fechar a semana passada")).toBeInTheDocument();
+      expect(within(screen.getByRole("row", { name: /Ap\. 1204/ })).queryByText("Fechar a semana passada")).toBeNull();
       expect(screen.getByText("1 sem fechar a semana anterior")).toBeInTheDocument();
     });
 
@@ -753,9 +749,7 @@ describe("Painel de Obras reformulado", () => {
     it("clicar na obra abre a gaveta; a Semana continua a um clique na linha", () => {
       renderPage();
       const linha = screen.getByRole("row", { name: /Ap\. 1204/ });
-      expect(within(linha).getByRole("link", { name: "Semana de Ap. 1204 Vila Mariana" }).getAttribute("href")).toContain(
-        "/gestao/semana?obra=a",
-      );
+      expect(within(linha).getByTitle("Abrir a semana desta obra").getAttribute("href")).toContain("/gestao/semana?obra=a");
       fireEvent.click(within(linha).getByRole("button", { name: /Ap\. 1204/ }));
       expect(onde()).toContain("obra=a");
       const gaveta = screen.getByRole("dialog");

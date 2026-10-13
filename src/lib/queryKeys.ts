@@ -494,6 +494,9 @@ export const queryKeys = {
     /** Obras com item anterior em aberto (Calendário). */
     overduePrevious: (today: string) =>
       [...queryKeys.internalSchedule.all, "overdue-previous", today] as const,
+    /** Etapas para confirmar "começou / terminou" no Hoje. */
+    confirmarHoje: (today: string) =>
+      [...queryKeys.internalSchedule.all, "confirmar-hoje", today] as const,
     /** Etapa atual de cada obra (lista de obras). */
     currentStages: (projectIds: readonly string[]) =>
       [...queryKeys.internalSchedule.all, "current-stages", [...projectIds].sort().join(",")] as const,

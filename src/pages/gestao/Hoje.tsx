@@ -2,7 +2,8 @@
  * Hoje — Fase 3 da reformulação do processo core.
  *
  * O que estava programado para o dia em cada obra, com confirmação em um
- * toque: Feito / Não feito (com motivo) / foto opcional. Pensada para o
+ * toque: Feito / Não feito (com motivo) / foto opcional. No dia de hoje,
+ * também pergunta das etapas do cronograma: começou? terminou? Pensada para o
  * celular, na obra. Interna: o cliente nunca vê esta tela nem estes dados.
  */
 import { useMemo, useState } from "react";
@@ -49,6 +50,7 @@ import { NaoFeitoSheet } from "@/components/gestao/hoje/NaoFeitoSheet";
 import { AddToDaySheet } from "@/components/gestao/hoje/AddToDaySheet";
 import { FichaObraSheet } from "@/components/gestao/ficha/FichaObraSheet";
 import { OfflineSyncBar, type SyncProblem } from "@/components/gestao/hoje/OfflineSyncBar";
+import { EtapasParaConfirmar } from "@/components/gestao/hoje/EtapasParaConfirmar";
 
 export default function Hoje() {
   const [params, setParams] = useSearchParams();
@@ -253,7 +255,7 @@ export default function Hoje() {
         </div>
       )}
 
-      <div className="mt-6 space-y-8 pb-24">
+      <div className={cn("mt-6 space-y-8", !(isToday && online) && "pb-24")}>
         {isLoading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((i) => (
@@ -308,6 +310,13 @@ export default function Hoje() {
           ))
         )}
       </div>
+
+      {/* Começou? Terminou? Só no dia de hoje e com sinal: grava a data real da etapa. */}
+      {isToday && online && (
+        <div className="pb-24">
+          <EtapasParaConfirmar today={date} projectIds={activeFilter ? [activeFilter] : null} />
+        </div>
+      )}
 
       <NaoFeitoSheet
         open={!!notDoneFor}

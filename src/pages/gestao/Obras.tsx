@@ -613,12 +613,10 @@ export default function Obras() {
       {!isLoading && lista === "execucao" && visao !== "kanban" && visibleRows.length > 0 && (
         <div className="mt-3 space-y-1.5">
         <EtapaLegend />
-        <p className="text-xs text-muted-foreground">
-          Etapa, "deveria estar acontecendo" e "próxima semana" vêm do cronograma interno da obra: uma etapa só conta
-          como começada ou concluída com a data real lançada. Folga = dias úteis entre o término projetado (fim do cronograma + atraso da etapa mais atrasada) e a entrega do
-          contrato. O ponto mostra a situação da obra: vermelho = atrasando ou crítica não feita · amarelo = folga curta,
-          material faltando ou prazo correndo mais rápido que o avanço · verde = tranquila. "Não planejada" = nada marcado
-          na semana.
+        <p className="max-w-3xl text-xs text-muted-foreground">
+          Tudo aqui sai do cronograma da obra. Uma etapa só conta como começada ou concluída quando alguém lança isso no
+          Hoje. A bolinha ao lado do nome é a situação da obra: vermelho = vai atrasar a entrega, amarelo = precisa de
+          atenção, verde = em dia. "Sobram N dias" conta só dias úteis até a entrega do contrato.
         </p>
         </div>
       )}
