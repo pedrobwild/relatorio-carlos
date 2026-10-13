@@ -43,6 +43,8 @@ import {
 } from "@/hooks/usePainelObras";
 import { buildCoordenadorOptions, type StaffUser } from "@/hooks/useStaffUsers";
 import { RISK_DOT, slackTone } from "@/components/gestao/obras/ObrasList";
+import { ITEM_DOT, StageTimeline } from "@/components/gestao/obras/ObraAndamentoCells";
+import { itemStateLabel } from "@/lib/obraAndamento";
 import { FichaObraSheet } from "@/components/gestao/ficha/FichaObraSheet";
 import { FaseProjetoSection } from "@/components/gestao/obras/FaseProjetoSection";
 import { InternalScheduleDiffHint } from "@/components/gestao/obras/InternalScheduleDiffHint";
@@ -299,6 +301,43 @@ export function ObraDrawer({
                   ))}
                 </ul>
               )}
+            </section>
+          )}
+          {row?.andamento && row.andamento.etapas.length > 0 && (
+            <section aria-label="Etapas do cronograma interno" className="space-y-2">
+              <h3 className="text-sm font-semibold text-foreground">
+                Etapas{" "}
+                <span className="font-normal text-muted-foreground">
+                  · {row.andamento.concluidas} de {row.andamento.etapas.length} concluídas
+                </span>
+              </h3>
+              <StageTimeline andamento={row.andamento} />
+              <ol className="divide-y divide-border rounded-lg border border-border">
+                {row.andamento.etapas.map((e) => (
+                  <li
+                    key={e.id}
+                    className={cn(
+                      "flex items-baseline gap-2 px-3 py-2 text-sm",
+                      row.andamento?.atual?.id === e.id && "bg-muted/50",
+                    )}
+                  >
+                    <span aria-hidden="true" className={cn("h-2 w-2 shrink-0 rounded-full", ITEM_DOT[e.state])} />
+                    <span className="min-w-0 flex-1">
+                      <span className={cn("block truncate", e.state === "concluida" ? "text-muted-foreground" : "text-foreground")}>
+                        {e.name}
+                      </span>
+                      <span
+                        className={cn(
+                          "block text-xs tabular-nums",
+                          e.state === "atrasada" ? "text-destructive" : e.state === "sem_inicio" ? "text-warning" : "text-muted-foreground",
+                        )}
+                      >
+                        {ddmm(e.start)}–{ddmm(e.end)} · {itemStateLabel(e)}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
             </section>
           )}
           {concluida && (

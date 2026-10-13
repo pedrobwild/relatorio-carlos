@@ -171,8 +171,8 @@ describe("Painel: fim previsto do cronograma interno na linha", () => {
     const row = buildObraRow({
       deadline: { project_id: "p1", current_deadline: "2026-12-01" } as never,
       stages: [
-        { id: "s1", project_id: "p1", description: "A", sort_order: 1, planned_start: "2026-11-01", planned_end: "2026-11-20", actual_start: null, actual_end: null },
-        { id: "s2", project_id: "p1", description: "B", sort_order: 2, planned_start: "2026-11-01", planned_end: "2026-11-25", actual_start: null, actual_end: null },
+        { id: "s1", project_id: "p1", parent_id: null, description: "A", sort_order: 1, planned_start: "2026-11-01", planned_end: "2026-11-20", actual_start: null, actual_end: null },
+        { id: "s2", project_id: "p1", parent_id: null, description: "B", sort_order: 2, planned_start: "2026-11-01", planned_end: "2026-11-25", actual_start: null, actual_end: null },
       ],
       activities: [],
       materials: [],

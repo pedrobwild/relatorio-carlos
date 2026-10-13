@@ -37,6 +37,8 @@ import {
 import { buildObraRow, groupBy, isObraEmExecucao, sortByRisk, type ObraRow } from "@/lib/obrasPainel";
 import { mapError } from "@/lib/errorMapping";
 import { shiftISODate, todayISO } from "@/lib/hojeDia";
+import { mondayOf } from "@/lib/semanaPlan";
+import { buildAndamento } from "@/lib/obraAndamento";
 
 const unwrap = <T,>(res: { data: T[] | null; error: unknown }): T[] => {
   if (res.error) throw res.error;
@@ -133,8 +135,21 @@ export function useObrasPainel(week: { from: string; to: string }) {
     queryFn: async () => unwrap(await obrasPanelRepo.listClosings(ids, prevFrom, week.from)),
   });
 
+  // Semana que vem (a partir de hoje, não da semana escolhida na tela): o
+  // Painel mostra o que começa nela e se alguém já marcou dia.
+  const nextFrom = shiftISODate(mondayOf(todayISO()), 7);
+  const nextTo = shiftISODate(nextFrom, 6);
+  const nextAssignmentsQ = useQuery({
+    queryKey: queryKeys.obrasPanel.assignments(ids, nextFrom, nextTo),
+    enabled,
+    staleTime: 60_000,
+    placeholderData: keepSameRange(nextFrom, nextTo),
+    queryFn: async () => unwrap(await obrasPanelRepo.listAssignments(ids, nextFrom, nextTo)),
+  });
+
   const rows = useMemo<ObraRow[]>(() => {
     const today = todayISO();
+    const nextAsg = nextAssignmentsQ.data ? groupBy(nextAssignmentsQ.data) : null;
     const info = new Map(painel.obras.map((o) => [o.id, o]));
     const stages = groupBy(stagesQ.data ?? []);
     const acts = groupBy(activitiesQ.data ?? []);
@@ -148,7 +163,7 @@ export function useObrasPainel(week: { from: string; to: string }) {
       active.map((d) => {
         const id = d.project_id as string;
         const o = info.get(id);
-        return buildObraRow({
+        const row = buildObraRow({
           deadline: d,
           name: o?.nome ?? d.project_name,
           customer: o?.customer_name ?? null,
@@ -167,9 +182,14 @@ export function useObrasPainel(week: { from: string; to: string }) {
           week,
           today,
         });
+        return {
+          ...row,
+          andamento: buildAndamento(stages.get(id) ?? [], today, { from: nextFrom, to: nextTo }),
+          nextWeekPlanned: nextAsg ? (nextAsg.get(id)?.length ?? 0) : undefined,
+        };
       }),
     );
-  }, [active, painel.obras, stagesQ.data, activitiesQ.data, materialsQ.data, assignmentsQ.data, closingsQ.data, closingsQ.isSuccess, week, prevFrom]);
+  }, [active, painel.obras, stagesQ.data, activitiesQ.data, materialsQ.data, assignmentsQ.data, closingsQ.data, closingsQ.isSuccess, nextAssignmentsQ.data, week, prevFrom, nextFrom, nextTo]);
 
   /** Cadastro de cada obra (para a gaveta e para as outras listas). */
   const obraById = useMemo(() => new Map<string, PainelObra>(painel.obras.map((o) => [o.id, o])), [painel.obras]);
@@ -278,6 +298,7 @@ export function useObrasPainel(week: { from: string; to: string }) {
       void activitiesQ.refetch();
       void materialsQ.refetch();
       void assignmentsQ.refetch();
+      void nextAssignmentsQ.refetch();
       void closingsQ.refetch();
       void phaseQ.refetch();
     },

@@ -70,7 +70,7 @@ import {
   type PainelVisao,
   type ProjetoRow,
 } from "@/lib/painelNovo";
-import { ObrasCards, ObrasTable } from "@/components/gestao/obras/ObrasList";
+import { EtapaLegend, ObrasCards, ObrasTable } from "@/components/gestao/obras/ObrasList";
 import {
   ConcluidasCards,
   ConcluidasTable,
@@ -547,14 +547,6 @@ export default function Obras() {
               </>
             )}
           </span>
-          <button
-            type="button"
-            aria-pressed={weekChoice === "proxima"}
-            onClick={() => patchParams({ semana: weekChoice === "proxima" ? null : "proxima" })}
-            className="rounded-sm font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {weekChoice === "proxima" ? "Voltar à semana anterior" : "Ver a semana seguinte"}
-          </button>
         </p>
       )}
 
@@ -619,12 +611,16 @@ export default function Obras() {
       </div>
 
       {!isLoading && lista === "execucao" && visao !== "kanban" && visibleRows.length > 0 && (
-        <p className="mt-3 text-xs text-muted-foreground">
-          Folga = dias úteis entre o término projetado (fim do cronograma + atraso da etapa mais atrasada) e a entrega do
+        <div className="mt-3 space-y-1.5">
+        <EtapaLegend />
+        <p className="text-xs text-muted-foreground">
+          Etapa, "deveria estar acontecendo" e "próxima semana" vêm do cronograma interno da obra: uma etapa só conta
+          como começada ou concluída com a data real lançada. Folga = dias úteis entre o término projetado (fim do cronograma + atraso da etapa mais atrasada) e a entrega do
           contrato. O ponto mostra a situação da obra: vermelho = atrasando ou crítica não feita · amarelo = folga curta,
           material faltando ou prazo correndo mais rápido que o avanço · verde = tranquila. "Não planejada" = nada marcado
           na semana.
         </p>
+        </div>
       )}
 
       <p className="mt-6 text-xs text-muted-foreground">

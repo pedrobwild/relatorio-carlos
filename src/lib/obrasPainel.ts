@@ -36,6 +36,7 @@ import type {
   PortfolioStage,
 } from "@/infra/repositories/obrasPanel.repository";
 import type { PainelEtapa, PainelRelacionamento } from "@/hooks/usePainelObras";
+import type { ObraAndamento } from "@/lib/obraAndamento";
 
 export type ObraRisk = "vermelho" | "amarelo" | "verde" | "sem_prazo";
 
@@ -230,6 +231,14 @@ export interface ObraRow {
   risk: ObraRisk;
   /** Etapa, relacionamento e "paralisada" (ausente em quem monta a linha sem cadastro). */
   cadastro?: ObraCadastro;
+  /**
+   * Andamento pelo cronograma interno: etapa atual, o que deveria estar
+   * acontecendo hoje e o que começa na semana que vem (ver `obraAndamento.ts`).
+   * Ausente em quem monta a linha sem ele.
+   */
+  andamento?: ObraAndamento;
+  /** Dias marcados (alocações) na semana que vem. Ausente = não se sabe. */
+  nextWeekPlanned?: number;
 }
 
 export interface BuildRowInput {
