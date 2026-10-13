@@ -12,7 +12,7 @@ type Enums = Database["public"]["Enums"];
 
 export type PortfolioStage = Pick<
   Tables<"internal_schedule_items">,
-  "id" | "project_id" | "description" | "sort_order" | "planned_start" | "planned_end" | "actual_start" | "actual_end"
+  "id" | "project_id" | "parent_id" | "description" | "sort_order" | "planned_start" | "planned_end" | "actual_start" | "actual_end"
 >;
 
 export type PortfolioActivity = {
@@ -95,7 +95,7 @@ export const obrasPanelRepo = {
       executeListQuery<PortfolioStage>(async () =>
         await supabase
           .from("internal_schedule_items")
-          .select("id, project_id, description, sort_order, planned_start, planned_end, actual_start, actual_end")
+          .select("id, project_id, parent_id, description, sort_order, planned_start, planned_end, actual_start, actual_end")
           .in("project_id", ids)
           .order("sort_order", { ascending: true }),
       ),

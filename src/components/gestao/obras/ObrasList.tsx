@@ -1,6 +1,10 @@
 /**
  * Painel de Obras: lista das obras em execução ordenada por risco.
- * Computador = tabela de 6 colunas; celular = um cartão por obra.
+ * Computador = tabela; celular = um cartão por obra.
+ *
+ * Cada linha responde: em que etapa a obra está (pelo cronograma interno),
+ * o que deveria estar acontecendo agora, o que vem na semana que vem, a
+ * entrega e a folga, e o aviso mais importante.
  *
  * Com `onOpen` (escritório), tocar na obra abre a gaveta e a célula "Semana"
  * leva à Semana daquela obra. Sem `onOpen` (gestor no modo simples), tocar na
@@ -20,6 +24,7 @@ import {
   type ObraRow,
 } from "@/lib/obrasPainel";
 import { relationshipFlag } from "@/lib/painelNovo";
+import { AgoraCell, EtapaCell, ITEM_DOT, ITEM_LEGEND, ProximaSemanaCell } from "@/components/gestao/obras/ObraAndamentoCells";
 import type { PainelRelacionamento } from "@/hooks/usePainelObras";
 
 export const RISK_DOT: Record<ObraRisk, string> = {
@@ -79,9 +84,27 @@ export function ObraFlags({ cadastro }: { cadastro?: Pick<ObraCadastro, "paused"
   );
 }
 
-/** Segunda linha do nome: cliente e etapa. */
+/** Segunda linha do nome: cliente e responsável (a etapa tem coluna própria). */
 function subtitleOf(row: ObraRow): string {
-  return [row.customer, row.cadastro?.etapa].filter(Boolean).join(" · ");
+  return [row.customer, row.responsible ?? "sem responsável"].filter(Boolean).join(" · ");
+}
+
+/** Legenda das cores das etapas (abaixo da tabela). */
+export function EtapaLegend({ className }: { className?: string }) {
+  return (
+    <p className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground", className)}>
+      {ITEM_LEGEND.map((l) => (
+        <span key={l.state} className="inline-flex items-center gap-1.5">
+          <span aria-hidden="true" className={cn("h-2 w-2 rounded-full", ITEM_DOT[l.state])} />
+          {l.label}
+        </span>
+      ))}
+      <span className="inline-flex items-center gap-1.5">
+        <span aria-hidden="true" className="h-3 w-0.5 bg-foreground" />
+        hoje
+      </span>
+    </p>
+  );
 }
 
 function SlackCell({ row, end = false, dot = true }: { row: ObraRow; end?: boolean; dot?: boolean }) {
@@ -103,78 +126,6 @@ function SlackCell({ row, end = false, dot = true }: { row: ObraRow; end?: boole
       )}
     </div>
   );
-}
-
-/**
- * Fechamento de semana (a coluna já se chama "Semana"): o PPC desta semana,
- * se já fechou; senão, o da anterior — ou o aviso de que ela teve dia marcado
- * e ninguém fechou.
- */
-function ClosingLine({ week }: { week: ObraRow["week"] }) {
-  if (week.ppc != null) {
-    return <span className="mt-0.5 block text-xs text-muted-foreground tabular-nums">Fechada · PPC {week.ppc}%</span>;
-  }
-  if (week.previous?.ppc != null) {
-    return (
-      <span className="mt-0.5 block text-xs text-muted-foreground tabular-nums">
-        Anterior: PPC {week.previous.ppc}%
-      </span>
-    );
-  }
-  if (week.previous?.pending) {
-    return <span className="mt-0.5 block text-xs font-medium text-warning">Anterior sem fechar</span>;
-  }
-  return null;
-}
-
-function WeekCell({ row }: { row: ObraRow }) {
-  const w = row.week;
-  if (row.cadastro?.paused && w.planned === 0) {
-    return (
-      <div>
-        <span className="text-sm text-muted-foreground">Obra paralisada</span>
-        <ClosingLine week={w} />
-      </div>
-    );
-  }
-  if (w.unplanned) {
-    return (
-      <div className="text-muted-foreground">
-        <span className="flex items-center gap-1.5 text-sm">
-          <span aria-hidden="true" className="h-2 w-2 rounded-full bg-muted-foreground/40" />
-          Não planejada
-        </span>
-        {w.stages.length > 0 && <span className="mt-0.5 block truncate text-xs">{stageList(w.stages)}</span>}
-        <ClosingLine week={w} />
-      </div>
-    );
-  }
-  if (w.planned === 0 && w.stages.length === 0) {
-    return (
-      <div>
-        <span className="text-sm text-muted-foreground">—</span>
-        <ClosingLine week={w} />
-      </div>
-    );
-  }
-  return (
-    <div className="min-w-0">
-      <span className="block truncate text-sm text-foreground" title={w.stages.join(", ")}>
-        {w.stages.length > 0 ? stageList(w.stages) : "Atividades da equipe"}
-      </span>
-      <span className="mt-0.5 block text-xs text-muted-foreground tabular-nums">
-        {w.planned} {w.planned === 1 ? "dia marcado" : "dias marcados"}
-        {w.done > 0 && ` · ${w.done} feito${w.done === 1 ? "" : "s"}`}
-        {w.notDone > 0 && <span className="text-destructive">{` · ${w.notDone} não feito${w.notDone === 1 ? "" : "s"}`}</span>}
-      </span>
-      <ClosingLine week={w} />
-    </div>
-  );
-}
-
-function stageList(stages: readonly string[]): string {
-  if (stages.length <= 2) return stages.join(", ");
-  return `${stages.slice(0, 2).join(", ")} +${stages.length - 2}`;
 }
 
 /** Até duas linhas: dois avisos, ou o mais importante e "+N avisos". */
@@ -208,11 +159,11 @@ export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasLi
       <table className="w-full table-fixed border-collapse text-left">
         <caption className="sr-only">Obras em execução, da mais arriscada para a mais tranquila</caption>
         <colgroup>
-          <col className="w-[23%]" />
-          <col className="w-[14%]" />
-          <col className="w-[8%]" />
-          <col className="w-[10%]" />
-          <col className="w-[18%]" />
+          <col className="w-[19%]" />
+          <col className="w-[17%]" />
+          <col className="w-[22%]" />
+          <col className="w-[17%]" />
+          <col className="w-[9%]" />
           <col />
           <col className="w-10" />
         </colgroup>
@@ -225,10 +176,10 @@ export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasLi
         >
           <tr>
             <th scope="col" className="px-4 py-3">Obra</th>
-            <th scope="col" className="px-3 py-3">Responsável</th>
-            <th scope="col" className="px-3 py-3">Entrega</th>
-            <th scope="col" className="px-3 py-3">Folga</th>
-            <th scope="col" className="px-3 py-3">Semana</th>
+            <th scope="col" className="px-3 py-3">Etapa</th>
+            <th scope="col" className="px-3 py-3">Deveria estar acontecendo</th>
+            <th scope="col" className="px-3 py-3">Próxima semana</th>
+            <th scope="col" className="px-3 py-3">Entrega · folga</th>
             <th scope="col" className="px-3 py-3">Alerta</th>
             <th scope="col" className="px-2 py-3"><span className="sr-only">Abrir</span></th>
           </tr>
@@ -276,16 +227,8 @@ export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasLi
                   </span>
                   </span>
                 </th>
-                <td className="truncate px-3 py-3 text-sm text-foreground">
-                  {r.responsible ?? (
-                    <span className="text-muted-foreground" title="Sem responsável">
-                      —<span className="sr-only">Sem responsável</span>
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-3 text-sm tabular-nums text-foreground">{r.deadline ? ddmm(r.deadline) : "—"}</td>
-                <td className="px-3 py-3 text-sm">
-                  <SlackCell row={r} dot={false} />
+                <td className="px-3 py-3">
+                  <EtapaCell row={r} />
                 </td>
                 <td className="px-3 py-3">
                   {onOpen ? (
@@ -296,11 +239,18 @@ export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasLi
                       title="Abrir a semana desta obra"
                       className="-m-1 block rounded-md p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <WeekCell row={r} />
+                      <AgoraCell row={r} />
                     </Link>
                   ) : (
-                    <WeekCell row={r} />
+                    <AgoraCell row={r} />
                   )}
+                </td>
+                <td className="px-3 py-3">
+                  <ProximaSemanaCell row={r} />
+                </td>
+                <td className="px-3 py-3 text-sm">
+                  <span className="block tabular-nums text-foreground">{r.deadline ? ddmm(r.deadline) : "—"}</span>
+                  <SlackCell row={r} dot={false} />
                 </td>
                 <td className="px-3 py-3">
                   <AlertCell alerts={r.alerts} />
@@ -342,8 +292,18 @@ export function ObrasCards({ rows, weekHref, onOpen }: ObrasListProps) {
                 <SlackCell row={r} end />
               </div>
             </div>
-            <div className="mt-2 border-t border-border pt-2">
-              <WeekCell row={r} />
+            <div className="mt-2 space-y-2 border-t border-border pt-2">
+              <EtapaCell row={r} />
+              <div>
+                <span className="mb-0.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Agora</span>
+                <AgoraCell row={r} max={2} />
+              </div>
+              <div>
+                <span className="mb-0.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Próxima semana
+                </span>
+                <ProximaSemanaCell row={r} max={2} />
+              </div>
             </div>
             {r.alerts.length > 0 && (
               <div className="mt-2">
