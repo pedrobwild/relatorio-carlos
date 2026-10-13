@@ -2,9 +2,9 @@
  * Painel de Obras: lista das obras em execução ordenada por risco.
  * Computador = tabela; celular = um cartão por obra.
  *
- * Cada linha responde: em que etapa a obra está (pelo cronograma interno),
- * o que deveria estar acontecendo agora, o que vem na semana que vem, a
- * entrega e a folga, e o aviso mais importante.
+ * Cada linha responde, em uma linha por pergunta e sem siglas: onde a obra
+ * está (pelo cronograma interno), o que deveria estar acontecendo agora, o
+ * que vem na semana que vem, a entrega e o que fazer agora.
  *
  * Com `onOpen` (escritório), tocar na obra abre a gaveta e a célula "Semana"
  * leva à Semana daquela obra. Sem `onOpen` (gestor no modo simples), tocar na
@@ -17,14 +17,13 @@ import {
   ddmm,
   GREEN_MIN_SLACK,
   RISK_LABEL,
-  slackLabel,
-  type ObraAlert,
   type ObraCadastro,
   type ObraRisk,
   type ObraRow,
 } from "@/lib/obrasPainel";
 import { relationshipFlag } from "@/lib/painelNovo";
-import { AgoraCell, EtapaCell, ITEM_DOT, ITEM_LEGEND, ProximaSemanaCell } from "@/components/gestao/obras/ObraAndamentoCells";
+import { AgoraCell, EtapaCell, ITEM_LEGEND, PassoCell, ProximaSemanaCell } from "@/components/gestao/obras/ObraAndamentoCells";
+import { folgaTexto } from "@/lib/proximoPasso";
 import type { PainelRelacionamento } from "@/hooks/usePainelObras";
 
 export const RISK_DOT: Record<ObraRisk, string> = {
@@ -41,12 +40,6 @@ export function slackTone(slack: number | null): string {
   if (slack < GREEN_MIN_SLACK) return "text-warning";
   return "text-success";
 }
-
-const ALERT_TONE: Record<ObraAlert["tone"], string> = {
-  destructive: "text-destructive",
-  warning: "text-warning",
-  muted: "text-muted-foreground",
-};
 
 export interface ObrasListProps {
   rows: readonly ObraRow[];
@@ -89,13 +82,13 @@ function subtitleOf(row: ObraRow): string {
   return [row.customer, row.responsible ?? "sem responsável"].filter(Boolean).join(" · ");
 }
 
-/** Legenda das cores das etapas (abaixo da tabela). */
+/** Legenda das cores (abaixo da tabela). */
 export function EtapaLegend({ className }: { className?: string }) {
   return (
     <p className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground", className)}>
       {ITEM_LEGEND.map((l) => (
-        <span key={l.state} className="inline-flex items-center gap-1.5">
-          <span aria-hidden="true" className={cn("h-2 w-2 rounded-full", ITEM_DOT[l.state])} />
+        <span key={l.label} className="inline-flex items-center gap-1.5">
+          <span aria-hidden="true" className={cn("h-2 w-2 rounded-full", l.dot)} />
           {l.label}
         </span>
       ))}
@@ -107,46 +100,22 @@ export function EtapaLegend({ className }: { className?: string }) {
   );
 }
 
-function SlackCell({ row, end = false, dot = true }: { row: ObraRow; end?: boolean; dot?: boolean }) {
+/** Entrega do contrato e quanto sobra (ou falta), em palavras. */
+function EntregaCell({ row, end = false }: { row: ObraRow; end?: boolean }) {
+  const folga = folgaTexto(row.slack);
   const title =
     row.projectedEnd && row.deadline
-      ? `Término projetado ${ddmm(row.projectedEnd)} · entrega ${ddmm(row.deadline)} (dias úteis)`
+      ? `Pelo cronograma termina ${ddmm(row.projectedEnd)}; o contrato pede ${ddmm(row.deadline)} (contando só dias úteis)`
       : undefined;
   return (
-    <div title={title}>
-      <span className={cn("flex items-center gap-2", end && "justify-end")}>
-        {dot && <span aria-hidden="true" className={cn("h-2.5 w-2.5 shrink-0 rounded-full", RISK_DOT[row.risk])} />}
-        <span className={cn("whitespace-nowrap font-semibold tabular-nums", slackTone(row.slack))}>
-          {row.slack == null ? (row.risk === "sem_prazo" ? "Sem prazo" : "—") : slackLabel(row.slack)}
-        </span>
-        {dot && <span className="sr-only">{RISK_LABEL[row.risk]}</span>}
+    <div title={title} className={cn("text-sm", end && "text-right")}>
+      <span className="block tabular-nums text-foreground">
+        {row.deadline ? ddmm(row.deadline) : <span className="text-muted-foreground">Sem prazo</span>}
       </span>
-      {row.projectedEnd && row.slack != null && (
-        <span className="mt-0.5 block text-xs text-muted-foreground">termina {ddmm(row.projectedEnd)}</span>
+      {folga && (
+        <span className={cn("block whitespace-nowrap text-xs font-medium tabular-nums", slackTone(row.slack))}>{folga}</span>
       )}
     </div>
-  );
-}
-
-/** Até duas linhas: dois avisos, ou o mais importante e "+N avisos". */
-function AlertCell({ alerts }: { alerts: readonly ObraAlert[] }) {
-  if (alerts.length === 0) return <span className="text-sm text-muted-foreground">—</span>;
-  const max = alerts.length > 2 ? 1 : 2;
-  const shown = alerts.slice(0, max);
-  const rest = alerts.length - shown.length;
-  return (
-    <ul className="space-y-0.5 text-sm">
-      {shown.map((a) => (
-        <li key={a.kind} className={cn("leading-snug", ALERT_TONE[a.tone], a.tone !== "muted" && "font-medium")}>
-          {a.text}
-        </li>
-      ))}
-      {rest > 0 && (
-        <li className="text-xs text-muted-foreground" title={alerts.slice(max).map((a) => a.text).join(" · ")}>
-          +{rest} {rest === 1 ? "aviso" : "avisos"}
-        </li>
-      )}
-    </ul>
   );
 }
 
@@ -159,11 +128,11 @@ export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasLi
       <table className="w-full table-fixed border-collapse text-left">
         <caption className="sr-only">Obras em execução, da mais arriscada para a mais tranquila</caption>
         <colgroup>
-          <col className="w-[19%]" />
+          <col className="w-[21%]" />
           <col className="w-[17%]" />
-          <col className="w-[22%]" />
-          <col className="w-[17%]" />
-          <col className="w-[9%]" />
+          <col className="w-[15%]" />
+          <col className="w-[14%]" />
+          <col className="w-[10%]" />
           <col />
           <col className="w-10" />
         </colgroup>
@@ -176,11 +145,11 @@ export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasLi
         >
           <tr>
             <th scope="col" className="px-4 py-3">Obra</th>
-            <th scope="col" className="px-3 py-3">Etapa</th>
-            <th scope="col" className="px-3 py-3">Deveria estar acontecendo</th>
-            <th scope="col" className="px-3 py-3">Próxima semana</th>
-            <th scope="col" className="px-3 py-3">Entrega · folga</th>
-            <th scope="col" className="px-3 py-3">Alerta</th>
+            <th scope="col" className="px-3 py-3">Onde está</th>
+            <th scope="col" className="px-3 py-3">Agora</th>
+            <th scope="col" className="px-3 py-3">Semana que vem</th>
+            <th scope="col" className="px-3 py-3">Entrega</th>
+            <th scope="col" className="px-3 py-3">O que fazer</th>
             <th scope="col" className="px-2 py-3"><span className="sr-only">Abrir</span></th>
           </tr>
         </thead>
@@ -196,64 +165,55 @@ export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasLi
             return (
               <tr
                 key={r.id}
-                className={cn(
-                  "cursor-pointer border-b border-border align-top transition-colors last:border-b-0 hover:bg-muted/50",
-                  r.week.unplanned && "bg-muted/20",
-                )}
+                className="cursor-pointer border-b border-border align-top transition-colors last:border-b-0 hover:bg-muted/50"
                 onClick={() => open(r)}
               >
                 <th scope="row" className="py-3 pl-4 pr-3 font-normal">
                   <span className="flex items-start gap-2.5">
-                  <span aria-hidden="true" className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", RISK_DOT[r.risk])} />
-                  <span className="min-w-0 flex-1">
-                  <span className="sr-only">{RISK_LABEL[r.risk]}. </span>
-                  {onOpen ? (
-                    <button
-                      type="button"
-                      className={nameClass}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpen(r);
-                      }}
-                    >
-                      {nameInner}
-                    </button>
-                  ) : (
-                    <Link to={weekHref(r)} onClick={(e) => e.stopPropagation()} className={nameClass}>
-                      {nameInner}
-                    </Link>
-                  )}
-                  <ObraFlags cadastro={r.cadastro} />
-                  </span>
+                    <span aria-hidden="true" className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", RISK_DOT[r.risk])} />
+                    <span className="min-w-0 flex-1">
+                      <span className="sr-only">{RISK_LABEL[r.risk]}. </span>
+                      {onOpen ? (
+                        <button
+                          type="button"
+                          className={nameClass}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpen(r);
+                          }}
+                        >
+                          {nameInner}
+                        </button>
+                      ) : (
+                        <Link to={weekHref(r)} onClick={(e) => e.stopPropagation()} className={nameClass}>
+                          {nameInner}
+                        </Link>
+                      )}
+                      <ObraFlags cadastro={r.cadastro} />
+                    </span>
                   </span>
                 </th>
                 <td className="px-3 py-3">
                   <EtapaCell row={r} />
                 </td>
                 <td className="px-3 py-3">
-                  {onOpen ? (
-                    <Link
-                      to={weekHref(r)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`Semana de ${r.name}`}
-                      title="Abrir a semana desta obra"
-                      className="-m-1 block rounded-md p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <AgoraCell row={r} />
-                    </Link>
-                  ) : (
-                    <AgoraCell row={r} />
-                  )}
+                  <AgoraCell row={r} />
                 </td>
                 <td className="px-3 py-3">
                   <ProximaSemanaCell row={r} />
                 </td>
-                <td className="px-3 py-3 text-sm">
-                  <span className="block tabular-nums text-foreground">{r.deadline ? ddmm(r.deadline) : "—"}</span>
-                  <SlackCell row={r} dot={false} />
+                <td className="px-3 py-3">
+                  <EntregaCell row={r} />
                 </td>
                 <td className="px-3 py-3">
-                  <AlertCell alerts={r.alerts} />
+                  <Link
+                    to={weekHref(r)}
+                    onClick={(e) => e.stopPropagation()}
+                    title="Abrir a semana desta obra"
+                    className="-m-1 block rounded-md p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <PassoCell row={r} />
+                  </Link>
                 </td>
                 <td className="px-2 py-3 text-muted-foreground">
                   <ChevronRight className="mt-0.5 h-4 w-4" aria-hidden="true" />
@@ -268,58 +228,58 @@ export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasLi
 }
 
 export function ObrasCards({ rows, weekHref, onOpen }: ObrasListProps) {
-  const cardClass = (r: ObraRow) =>
-    cn(
-      "block w-full rounded-xl border border-border bg-card p-3 text-left transition-colors",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-muted/60",
-      r.week.unplanned && "bg-muted/30",
-    );
+  const cardClass = cn(
+    "block w-full rounded-xl border border-border bg-card p-3 text-left transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-muted/60",
+  );
   return (
     <ul className="space-y-2" aria-label="Obras em execução, da mais arriscada para a mais tranquila">
       {rows.map((r) => {
         const body = (
           <>
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <span className="block truncate font-medium text-foreground">{r.name}</span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {r.responsible ?? "Sem responsável"}
-                  {r.deadline && ` · entrega ${ddmm(r.deadline)}`}
-                </span>
-                <ObraFlags cadastro={r.cadastro} />
+              <div className="flex min-w-0 items-start gap-2">
+                <span aria-hidden="true" className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", RISK_DOT[r.risk])} />
+                <div className="min-w-0">
+                  <span className="sr-only">{RISK_LABEL[r.risk]}. </span>
+                  <span className="block truncate font-medium text-foreground">{r.name}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{subtitleOf(r)}</span>
+                  <ObraFlags cadastro={r.cadastro} />
+                </div>
               </div>
-              <div className="shrink-0 text-right text-sm">
-                <SlackCell row={r} end />
-              </div>
+              <EntregaCell row={r} end />
             </div>
-            <div className="mt-2 space-y-2 border-t border-border pt-2">
+            <div className="mt-2 border-t border-border pt-2">
               <EtapaCell row={r} />
-              <div>
-                <span className="mb-0.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Agora</span>
-                <AgoraCell row={r} max={2} />
-              </div>
-              <div>
-                <span className="mb-0.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Próxima semana
-                </span>
-                <ProximaSemanaCell row={r} max={2} />
-              </div>
             </div>
-            {r.alerts.length > 0 && (
-              <div className="mt-2">
-                <AlertCell alerts={r.alerts} />
+            <dl className="mt-2 grid grid-cols-2 gap-3">
+              <div className="min-w-0">
+                <dt className="text-xs text-muted-foreground">Agora</dt>
+                <dd>
+                  <AgoraCell row={r} />
+                </dd>
               </div>
-            )}
+              <div className="min-w-0">
+                <dt className="text-xs text-muted-foreground">Semana que vem</dt>
+                <dd>
+                  <ProximaSemanaCell row={r} />
+                </dd>
+              </div>
+            </dl>
+            <div className="mt-2 rounded-lg bg-muted/50 px-2.5 py-2">
+              <span className="block text-xs text-muted-foreground">O que fazer</span>
+              <PassoCell row={r} />
+            </div>
           </>
         );
         return (
           <li key={r.id}>
             {onOpen ? (
-              <button type="button" className={cardClass(r)} onClick={() => onOpen(r)}>
+              <button type="button" className={cardClass} onClick={() => onOpen(r)}>
                 {body}
               </button>
             ) : (
-              <Link to={weekHref(r)} className={cardClass(r)}>
+              <Link to={weekHref(r)} className={cardClass}>
                 {body}
               </Link>
             )}
