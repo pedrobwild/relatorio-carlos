@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { QUERY_TIMING } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
+import { todayISO } from "@/lib/hojeDia";
+import { internalScheduleRepo } from "@/infra/repositories/internalSchedule.repository";
 
 export interface CurrentStageInfo {
   description: string;
@@ -8,27 +10,23 @@ export interface CurrentStageInfo {
 }
 
 /**
- * Fetches the current schedule stage for all projects in a single query.
- * Returns a map of projectId -> CurrentStageInfo
+ * Etapa atual de cada obra, numa consulta só, a partir do CRONOGRAMA INTERNO
+ * (lista de obras da equipe).
+ * Devolve projectId -> CurrentStageInfo.
  */
 export function useCurrentStages(projectIds: string[]) {
   return useQuery({
-    queryKey: ["current-stages", [...projectIds].sort().join(",")],
+    queryKey: queryKeys.internalSchedule.currentStages(projectIds),
     queryFn: async (): Promise<Map<string, CurrentStageInfo>> => {
       if (projectIds.length === 0) return new Map();
 
-      const { data, error } = await supabase
-        .from("project_activities")
-        .select(
-          "project_id, description, planned_start, actual_end, sort_order",
-        )
-        .in("project_id", projectIds)
-        .order("sort_order", { ascending: true });
-
-      if (error) throw error;
+      const res = await internalScheduleRepo.listByProjects(projectIds);
+      if (res.error) throw res.error;
+      const data = res.data;
 
       const map = new Map<string, CurrentStageInfo>();
-      const today = new Date().toISOString().slice(0, 10);
+      // Dia local (não UTC): à noite em São Paulo, toISOString já é amanhã.
+      const today = todayISO();
 
       // Group by project
       const byProject = new Map<string, typeof data>();

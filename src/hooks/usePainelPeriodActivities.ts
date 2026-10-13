@@ -7,14 +7,19 @@
  *     não foram concluídas (`actual_end IS NULL`) — usadas para sinalizar
  *     "etapa anterior não foi finalizada".
  *
- * Usa duas queries simples na tabela `project_activities` (RLS já garante o
- * recorte por projetos acessíveis). Cache curto, casa com o restante do
- * painel (30s).
+ * Lê o CRONOGRAMA INTERNO (`internal_schedule_items`, staff-only) — o Painel
+ * olha para o que a equipe vai executar, não para o cronograma do cliente.
+ * Duas queries simples (RLS garante o recorte por obras acessíveis). Cache
+ * curto, casa com o restante do painel (30s).
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { queryKeys } from "@/lib/queryKeys";
+import {
+  internalScheduleRepo,
+  type InternalScheduleItemWithProject,
+} from "@/infra/repositories/internalSchedule.repository";
 
 export interface PeriodActivity {
   id: string;
@@ -34,20 +39,7 @@ export interface PeriodProjectBucket {
   overduePrior: PeriodActivity[];
 }
 
-const SELECT = `
-  id,
-  project_id,
-  description,
-  etapa,
-  planned_start,
-  planned_end,
-  actual_start,
-  actual_end,
-  parent_activity_id,
-  responsible:responsible_user_id ( nome )
-` as const;
-
-function mapRow(row: any): PeriodActivity {
+function mapRow(row: InternalScheduleItemWithProject): PeriodActivity {
   return {
     id: row.id,
     project_id: row.project_id,
@@ -57,7 +49,7 @@ function mapRow(row: any): PeriodActivity {
     planned_end: row.planned_end,
     actual_start: row.actual_start ?? null,
     actual_end: row.actual_end ?? null,
-    parent_activity_id: row.parent_activity_id ?? null,
+    parent_activity_id: row.parent_id ?? null,
     responsible_name: row.responsible?.nome ?? null,
   };
 }
@@ -69,7 +61,7 @@ export function usePainelPeriodActivities(
   const { user } = useAuth();
   const enabled = !!user && !!from && !!to;
 
-  const queryKey = ["painel-period-activities", from, to] as const;
+  const queryKey = queryKeys.internalSchedule.period(from, to);
 
   const query = useQuery({
     queryKey,
@@ -79,21 +71,12 @@ export function usePainelPeriodActivities(
       if (!from || !to) return [];
       // Atividades com janela planejada sobrepondo [from, to]
       // OU planejadas antes de `from` mas ainda em aberto (overdue prior).
-      const { data: scheduled, error: e1 } = await supabase
-        .from("project_activities")
-        .select(SELECT)
-        .lte("planned_start", to)
-        .gte("planned_end", from)
-        .order("planned_start", { ascending: true });
-      if (e1) throw e1;
-
-      const { data: overdue, error: e2 } = await supabase
-        .from("project_activities")
-        .select(SELECT)
-        .lt("planned_end", from)
-        .is("actual_end", null)
-        .order("planned_end", { ascending: true });
-      if (e2) throw e2;
+      const scheduledRes = await internalScheduleRepo.listOverlapping(from, to);
+      if (scheduledRes.error) throw scheduledRes.error;
+      const overdueRes = await internalScheduleRepo.listOpenEndingBefore(from);
+      if (overdueRes.error) throw overdueRes.error;
+      const scheduled = scheduledRes.data;
+      const overdue = overdueRes.data;
 
       const seen = new Set<string>();
       const out: PeriodActivity[] = [];

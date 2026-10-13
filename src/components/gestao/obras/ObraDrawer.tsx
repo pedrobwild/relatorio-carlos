@@ -11,7 +11,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarRange, ClipboardList, ExternalLink, FileSignature, GanttChartSquare } from "lucide-react";
+import { CalendarRange, ClipboardList, ExternalLink, FileSignature, GanttChartSquare, ListTree } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -265,6 +265,22 @@ export function ObraDrawer({
                   {row.penalty == null ? "—" : formatBRL(row.penalty)}
                 </Fact>
               </dl>
+              {/* Cronograma interno × cliente: só quando as entregas diferem. */}
+              {row.internalPlannedEnd && obra.entrega_oficial && row.internalPlannedEnd !== obra.entrega_oficial && (
+                <p
+                  className={cn(
+                    "rounded-md border px-3 py-2 text-sm tabular-nums",
+                    row.internalPlannedEnd > obra.entrega_oficial
+                      ? "border-destructive/30 bg-destructive/5 text-destructive"
+                      : "border-border bg-muted/40 text-foreground",
+                  )}
+                  data-testid="drawer-internal-vs-client"
+                >
+                  Fim no cronograma interno <strong>{ddmmaa(row.internalPlannedEnd)}</strong>
+                  <span className="mx-1.5 text-muted-foreground">·</span>
+                  Cronograma do cliente <strong>{ddmmaa(obra.entrega_oficial)}</strong>
+                </p>
+              )}
               {row.alerts.some((a) => a.kind !== "multa") && (
                 <ul className="space-y-1 text-sm">
                   {row.alerts.filter((a) => a.kind !== "multa").map((a) => (
@@ -330,7 +346,13 @@ export function ObraDrawer({
             <Button asChild variant="outline" className="min-h-[44px]">
               <Link to={`/obra/${obra.id}/cronograma`}>
                 <GanttChartSquare className="h-4 w-4" aria-hidden="true" />
-                Cronograma
+                Cronograma do cliente
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="col-span-2 min-h-[44px]">
+              <Link to={`/obra/${obra.id}/cronograma-interno`}>
+                <ListTree className="h-4 w-4" aria-hidden="true" />
+                Cronograma interno
               </Link>
             </Button>
             <Button

@@ -10,8 +10,9 @@
  *  - O intervalo de uma micro-etapa não pode cobrir dias não úteis
  *    (fins de semana, feriados nacionais/SP, ou dias customizados marcados
  *    como folga/feriado específico para a obra).
- *  - O cliente continua vendo apenas a atividade-mãe (a UI do calendário
- *    para Admin/Engineer mostra os children no lugar da mãe).
+ *  - As micro-etapas são itens do CRONOGRAMA INTERNO (internal_schedule_items,
+ *    `parent_id` = item-mãe): o cliente não vê. A UI do calendário para
+ *    Admin/Engineer mostra os children no lugar da mãe.
  */
 
 import { useEffect, useMemo, useState } from "react";

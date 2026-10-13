@@ -140,7 +140,7 @@ describe("opsRepo", () => {
     await opsRepo.listDay("2026-10-14");
     const sel = String(find("select")[0].args[0]);
     expect(sel).toContain("project:projects(id, name)");
-    expect(sel).toContain("stage:project_activities(description)");
+    expect(sel).toContain("stage:internal_schedule_items(description)");
     expect(sel).toContain("fornecedor:fornecedores(nome)");
   });
 
@@ -153,9 +153,9 @@ describe("opsRepo", () => {
     expect(find("in")[0].args).toEqual(["id", ["a1", "a2"]]);
   });
 
-  it("listStages lê as etapas do cronograma na ordem", async () => {
+  it("listStages lê as etapas do cronograma interno na ordem", async () => {
     await opsRepo.listStages("p1");
-    expect(h.state.tables).toEqual(["project_activities"]);
+    expect(h.state.tables).toEqual(["internal_schedule_items"]);
     expect(find("order")[0].args[0]).toBe("sort_order");
   });
 

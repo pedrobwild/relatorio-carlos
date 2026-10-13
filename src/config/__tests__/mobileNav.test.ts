@@ -25,6 +25,7 @@ const emptyPaths = {
   formalizacoes: "/formalizacoes",
   formalizacoesNova: "/formalizacoes/nova",
   cronograma: "/cronograma",
+  cronogramaInterno: "/cronograma-interno",
   compras: "/compras",
   comprasProdutos: "/compras/produtos",
   comprasPrestadores: "/compras/prestadores",
@@ -47,6 +48,7 @@ const projectPaths = (id: string) => ({
   documentos: `/obra/${id}/documentos`,
   formalizacoes: `/obra/${id}/formalizacoes`,
   cronograma: `/obra/${id}/cronograma`,
+  cronogramaInterno: `/obra/${id}/cronograma-interno`,
   atividades: `/obra/${id}/atividades`,
 });
 

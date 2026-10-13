@@ -467,6 +467,35 @@ export const queryKeys = {
     setOutcomeMutation: ["ops", "mutation", "set-outcome"] as const,
   },
 
+  /**
+   * Cronograma INTERNO (internal_schedule_items) — staff-only. Tudo o que lê
+   * o cronograma interno fica sob este prefixo, para uma gravação reler todas
+   * as telas de uma vez (ver `invalidateInternalScheduleQueries`).
+   */
+  internalSchedule: {
+    all: ["internal-schedule"] as const,
+    byProject: (projectId: string | undefined) =>
+      [...queryKeys.internalSchedule.all, "by-project", projectId] as const,
+    /** Datas do cronograma do cliente, só para comparar (não é o cronograma do cliente em si). */
+    clientDates: (projectId: string | undefined) =>
+      [...queryKeys.internalSchedule.all, "client-dates", projectId] as const,
+    /** Quantas atividades da Semana estão penduradas nos itens (aviso ao apagar). */
+    opsRefs: (itemIds: readonly string[]) =>
+      [...queryKeys.internalSchedule.all, "ops-refs", [...itemIds].sort().join(",")] as const,
+    /** Calendário de obras. */
+    range: (from: string, to: string) =>
+      [...queryKeys.internalSchedule.all, "range", from, to] as const,
+    /** Filtro de período do Painel. */
+    period: (from: string | null, to: string | null) =>
+      [...queryKeys.internalSchedule.all, "period", from, to] as const,
+    /** Obras com item anterior em aberto (Calendário). */
+    overduePrevious: (today: string) =>
+      [...queryKeys.internalSchedule.all, "overdue-previous", today] as const,
+    /** Etapa atual de cada obra (lista de obras). */
+    currentStages: (projectIds: readonly string[]) =>
+      [...queryKeys.internalSchedule.all, "current-stages", [...projectIds].sort().join(",")] as const,
+  },
+
   /** Tela Obras (Fase 5): leituras de carteira, por lista de obras. */
   obrasPanel: {
     all: ["obras-panel"] as const,
@@ -610,6 +639,25 @@ export function invalidateActivityQueries(
   }
   // As datas das etapas alimentam a folga da tela Obras.
   queryClient.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+}
+
+/**
+ * Cronograma interno: chamar depois de gravar em `internal_schedule_items`
+ * (ou copiar do cliente). Relê o cronograma interno e tudo o que depende
+ * dele: Semana / Hoje (etapas da operação), Painel (término projetado,
+ * alertas de etapa e material), Lookahead, Minha semana e as exceções do
+ * Painel (item sem responsável). Nunca toca nas chaves do cronograma do
+ * cliente.
+ */
+export function invalidateInternalScheduleQueries(
+  client: Pick<typeof queryClient, "invalidateQueries"> = queryClient,
+) {
+  client.invalidateQueries({ queryKey: queryKeys.internalSchedule.all });
+  client.invalidateQueries({ queryKey: queryKeys.ops.all });
+  client.invalidateQueries({ queryKey: queryKeys.obrasPanel.all });
+  client.invalidateQueries({ queryKey: queryKeys.lookahead.all });
+  client.invalidateQueries({ queryKey: queryKeys.minhaSemana.all });
+  client.invalidateQueries({ queryKey: queryKeys.painelExcecoes.atividadesSemResponsavel() });
 }
 
 /**

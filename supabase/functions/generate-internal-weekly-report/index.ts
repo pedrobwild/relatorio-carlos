@@ -260,8 +260,11 @@ async function buildPayload(
   }
 
   // ==== Lookahead próxima semana ====
+  // Relatório interno: lê o CRONOGRAMA INTERNO (internal_schedule_items), que
+  // é o plano de trabalho da equipe (responsáveis, datas puxadas,
+  // micro-etapas). O cronograma do cliente fica para o relatório do cliente.
   const { data: lookahead } = await supabase
-    .from("project_activities")
+    .from("internal_schedule_items")
     .select("id, description, planned_start, planned_end, responsible_user_id, weight")
     .eq("project_id", projectId)
     .lte("planned_start", nextWeekEnd)

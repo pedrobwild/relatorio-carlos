@@ -20,7 +20,10 @@ export const navigationLabels: NavLabels = {
     projeto3D: { staff: "Projeto 3D", client: "Projeto 3D" },
     executivo: { staff: "Executivo", client: "Plantas e Detalhes" },
     documentos: { staff: "Documentos", client: "Documentos" },
-    cronograma: { staff: "Cronograma", client: "Evolução da Obra" },
+    // Staff: "do cliente" separa do cronograma interno. O cliente segue vendo o mesmo rótulo.
+    cronograma: { staff: "Cronograma do cliente", client: "Evolução da Obra" },
+    // Só staff (o item fica escondido para o cliente).
+    cronogramaInterno: { staff: "Cronograma interno", client: "Cronograma interno" },
     compras: { staff: "Compras", client: "Compras" },
     vistorias: { staff: "Vistorias e NC", client: "Vistorias" },
     pendencias: { staff: "Pendências", client: "O que preciso fazer" },
@@ -48,7 +51,8 @@ export const navigationLabels: NavLabels = {
     pendencias: { staff: "Pendências", client: "O que preciso fazer" },
     documentos: { staff: "Documentos", client: "Documentos" },
     formalizacoes: { staff: "Formalizações", client: "Aprovações" },
-    cronograma: { staff: "Cronograma", client: "Evolução da Obra" },
+    cronograma: { staff: "Cronograma do cliente", client: "Evolução da Obra" },
+    "cronograma-interno": { staff: "Cronograma interno", client: "Cronograma interno" },
     compras: { staff: "Compras", client: "Compras" },
     vistorias: { staff: "Vistorias e NC", client: "Vistorias" },
     jornada: { staff: "Jornada", client: "Minha Jornada" },

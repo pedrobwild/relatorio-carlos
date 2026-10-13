@@ -1,10 +1,13 @@
 /**
- * LookaheadRow — linha de atividade na janela lookahead.
+ * LookaheadRow — linha de um item do CRONOGRAMA INTERNO na janela lookahead.
  *
- * Ações rápidas inline (staff):
+ * Ações rápidas inline (staff), gravadas no cronograma interno — e, quando o
+ * item é de primeiro nível e veio do cliente, também na atividade do cliente
+ * (é assim que o cronograma do cliente sempre foi preenchido daqui):
  *   - Atribuir responsável (Select com staff users) — atualização otimista.
- *   - Registrar avanço (Iniciar / Concluir) — usa `updateActivity` do hook
- *     `useProjectActivities` para setar `actual_start`/`actual_end`.
+ *   - Iniciar / Concluir — grava `actual_start`/`actual_end` do item interno.
+ *   - Avanço físico — a medição é da atividade do cliente de onde o item veio
+ *     (`client_activity_id`); item só interno não tem o botão.
  *
  * Toque mínimo 44px em botões/gatilhos. Cores semânticas para atraso/sem
  * responsável.
@@ -33,11 +36,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import { queryKeys } from "@/lib/queryKeys";
+import { invalidateInternalScheduleQueries, queryKeys } from "@/lib/queryKeys";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 import type { LookaheadActivity } from "@/hooks/useLookahead";
-import { useProjectActivities } from "@/hooks/useProjectActivities";
+import {
+  internalScheduleErrorMessage,
+  updateInternalMirroringClient,
+  type ClientMirrorPatch,
+} from "@/hooks/useInternalSchedule";
 import { useActivityMeasurements } from "@/hooks/useActivityProgress";
 import { RegistrarAvancoDialog } from "@/components/gestao/avanco/RegistrarAvancoDialog";
 
@@ -59,24 +65,37 @@ export function LookaheadRow({ activity, windowDays }: Props) {
   const { data: staff = [] } = useStaffUsers();
   const [assignOpen, setAssignOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
+  // Avanço físico é medido na atividade do cliente de onde o item veio.
+  const progressActivityId = activity.client_activity_id;
   const { data: measurements = [] } = useActivityMeasurements(
-    progressOpen ? activity.id : undefined,
+    progressOpen && progressActivityId ? progressActivityId : undefined,
   );
   const latestPct = measurements[0]?.progress_pct ?? null;
 
-  // Reusa mutation existente para actual_start/actual_end.
-  const { updateActivity, isUpdating } = useProjectActivities(
-    activity.project_id,
-  );
+  // Início / término real do item interno.
+  const datesMutation = useMutation({
+    // Item de primeiro nível ligado ao cliente: grava também na atividade do
+    // cliente (como o Lookahead sempre fez). Micro-etapa / só interno: só interno.
+    mutationFn: async (patch: ClientMirrorPatch) => updateInternalMirroringClient(activity, patch),
+    onError: (err) => {
+      toast.error(internalScheduleErrorMessage(err) || "Não foi possível salvar a data.");
+    },
+    onSettled: () => invalidateInternalScheduleQueries(queryClient),
+  });
+  const isUpdating = datesMutation.isPending;
+  const updateActivity = async (patch: ClientMirrorPatch) => {
+    try {
+      await datesMutation.mutateAsync(patch);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   // Atribuição de responsável — atualização otimista sobre o cache do lookahead.
   const assignMutation = useMutation({
     mutationFn: async (userId: string | null) => {
-      const { error } = await supabase
-        .from("project_activities")
-        .update({ responsible_user_id: userId })
-        .eq("id", activity.id);
-      if (error) throw error;
+      await updateInternalMirroringClient(activity, { responsible_user_id: userId });
       return userId;
     },
     onMutate: async (userId) => {
@@ -106,10 +125,7 @@ export function LookaheadRow({ activity, windowDays }: Props) {
     },
     onSuccess: () => {
       toast.success("Responsável atualizado.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.lookahead.all });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.activities.list(activity.project_id),
-      });
+      invalidateInternalScheduleQueries(queryClient);
     },
   });
 
@@ -122,25 +138,19 @@ export function LookaheadRow({ activity, windowDays }: Props) {
 
   const handleStart = async () => {
     if (activity.actual_start) return;
-    const ok = await updateActivity(activity.id, {
+    const ok = await updateActivity({
       actual_start: toLocalISODate(new Date()),
     });
-    if (ok) {
-      toast.success("Atividade marcada como iniciada.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.lookahead.all });
-    }
+    if (ok) toast.success("Atividade marcada como iniciada.");
   };
 
   const handleComplete = async () => {
     const today = toLocalISODate(new Date());
-    const ok = await updateActivity(activity.id, {
+    const ok = await updateActivity({
       actual_start: activity.actual_start ?? today,
       actual_end: today,
     });
-    if (ok) {
-      toast.success("Atividade concluída.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.lookahead.all });
-    }
+    if (ok) toast.success("Atividade concluída.");
   };
 
   const overdue = activity.isOverdue;
@@ -160,7 +170,7 @@ export function LookaheadRow({ activity, windowDays }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-1.5 mb-1">
           <Link
-            to={`/obra/${activity.project_id}/cronograma`}
+            to={`/obra/${activity.project_id}/cronograma-interno`}
             className="text-[11px] font-medium text-foreground/80 bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded truncate max-w-[220px]"
             title={activity.project_name}
           >
@@ -253,35 +263,39 @@ export function LookaheadRow({ activity, windowDays }: Props) {
           </Button>
         )}
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setProgressOpen(true)}
-          className="h-11 gap-1.5"
-          aria-label="Registrar avanço físico"
-        >
-          <TrendingUp className="h-4 w-4" aria-hidden />
-          <span className="hidden sm:inline">Avanço</span>
-        </Button>
+        {progressActivityId && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setProgressOpen(true)}
+            className="h-11 gap-1.5"
+            aria-label="Registrar avanço físico"
+          >
+            <TrendingUp className="h-4 w-4" aria-hidden />
+            <span className="hidden sm:inline">Avanço</span>
+          </Button>
+        )}
 
         <Link
-          to={`/obra/${activity.project_id}/cronograma`}
-          aria-label="Abrir cronograma da obra"
+          to={`/obra/${activity.project_id}/cronograma-interno`}
+          aria-label="Abrir cronograma interno da obra"
           className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-border-subtle text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors"
         >
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>
 
+      {progressActivityId && (
       <RegistrarAvancoDialog
         open={progressOpen}
         onOpenChange={setProgressOpen}
-        activityId={activity.id}
+        activityId={progressActivityId}
         projectId={activity.project_id}
         activityDescription={activity.description}
         currentProgress={latestPct}
       />
+      )}
     </div>
   );
 }

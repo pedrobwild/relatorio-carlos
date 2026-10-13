@@ -22,6 +22,7 @@ export function useProjectNavigation() {
       formalizacoes: getProjectPath("/formalizacoes"),
       formalizacoesNova: getProjectPath("/formalizacoes/nova"),
       cronograma: getProjectPath("/cronograma"),
+      cronogramaInterno: getProjectPath("/cronograma-interno"),
       compras: getProjectPath("/compras"),
       comprasProdutos: getProjectPath("/compras/produtos"),
       comprasPrestadores: getProjectPath("/compras/prestadores"),

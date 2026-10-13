@@ -175,8 +175,23 @@ describe("ObraDrawer", () => {
     const href = (nome: RegExp) => within(atalhos).getByRole("link", { name: nome }).getAttribute("href");
     expect(href(/Planejar a semana/)).toBe("/gestao/semana?obra=a&semana=2026-10-12");
     expect(href(/Abrir obra/)).toBe("/obra/a");
-    expect(href(/Cronograma/)).toBe("/obra/a/cronograma");
+    expect(href(/Cronograma do cliente/)).toBe("/obra/a/cronograma");
+    expect(href(/Cronograma interno/)).toBe("/obra/a/cronograma-interno");
     expect(href(/Cadastro e prazo do contrato/)).toBe("/gestao/obra/a");
+  });
+
+  it("mostra o fim do cronograma interno ao lado do do cliente quando diferem", () => {
+    renderDrawer({ row: { ...row, internalPlannedEnd: "2026-12-04" } });
+    const aviso = screen.getByTestId("drawer-internal-vs-client");
+    expect(aviso).toHaveTextContent("Fim no cronograma interno 04/12/26");
+    expect(aviso).toHaveTextContent("Cronograma do cliente 27/11/26");
+  });
+
+  it("não repete as datas quando interno e cliente terminam no mesmo dia (ou sem interno)", () => {
+    renderDrawer({ row: { ...row, internalPlannedEnd: "2026-11-27" } });
+    expect(screen.queryByTestId("drawer-internal-vs-client")).toBeNull();
+    renderDrawer({ row: { ...row, internalPlannedEnd: null } });
+    expect(screen.queryByTestId("drawer-internal-vs-client")).toBeNull();
   });
 
   it("'Ficha da obra' abre a ficha desta obra por cima da gaveta", () => {

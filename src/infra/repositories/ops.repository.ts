@@ -2,7 +2,8 @@
  * Camada de Operação — Fase 2 da reformulação do processo core.
  *
  * O que a equipe faz no dia a dia, separado da camada do cliente:
- *   - atividades (`ops_activities`) penduradas nas etapas (`project_activities`)
+ *   - atividades (`ops_activities`) penduradas nos itens do cronograma interno
+ *     (`internal_schedule_items`) — nunca no cronograma do cliente
  *   - alocações por dia com Feito / Não feito (`ops_assignments`)
  *   - materiais que precisam estar na obra (`ops_materials`)
  *   - revisão aprovado / refazer (`ops_reviews`)
@@ -39,7 +40,7 @@ export type OpsDayAssignment = OpsAssignment & {
   fornecedor: { nome: string } | null;
 };
 
-/** Etapa do cronograma do cliente (o necessário para pendurar e planejar). */
+/** Item do cronograma interno (o necessário para pendurar e planejar). */
 export type OpsStageOption = {
   id: string;
   description: string;
@@ -100,7 +101,7 @@ export function isAlreadyExistsError(error: unknown): boolean {
 }
 
 const DAY_SELECT =
-  "*, activity:ops_activities(id, title, status, stage_id, project_id, is_critical, stage:project_activities(description)), project:projects(id, name), fornecedor:fornecedores(nome)";
+  "*, activity:ops_activities(id, title, status, stage_id, project_id, is_critical, stage:internal_schedule_items(description)), project:projects(id, name), fornecedor:fornecedores(nome)";
 
 export const opsRepo = {
   // ---------------- atividades ----------------
@@ -170,11 +171,11 @@ export const opsRepo = {
     });
   },
 
-  /** Etapas do cronograma da obra, na ordem do cronograma. */
+  /** Etapas do cronograma INTERNO da obra, na ordem do cronograma. */
   async listStages(projectId: string) {
     return executeListQuery<OpsStageOption>(async () => {
       return await supabase
-        .from("project_activities")
+        .from("internal_schedule_items")
         .select("id, description, sort_order, planned_start, planned_end, actual_start, actual_end")
         .eq("project_id", projectId)
         .order("sort_order", { ascending: true });

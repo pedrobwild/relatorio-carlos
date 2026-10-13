@@ -414,8 +414,8 @@ export function ActivityDetailDialog({
                   {subActivities.length === 0 ? (
                     <p className="text-xs text-muted-foreground">
                       Quebre esta atividade em micro-etapas para detalhar o que
-                      acontece em cada dia. O cliente continuará vendo apenas
-                      esta atividade-mãe.
+                      acontece em cada dia. As micro-etapas ficam só no
+                      cronograma interno: o cliente não vê.
                     </p>
                   ) : (
                     <ul className="space-y-1.5">
@@ -467,9 +467,8 @@ export function ActivityDetailDialog({
             {activity.parent_activity_id && (
               <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
                 <Layers className="inline h-3.5 w-3.5 mr-1" />
-                Esta é uma <strong>micro-etapa interna</strong>. Visível apenas
-                para Admin e Engenheiro no Calendário; clientes veem só a
-                atividade-mãe.
+                Esta é uma <strong>micro-etapa do cronograma interno</strong>.
+                No Calendário, só Admin e Engenheiro veem; o cliente não vê.
               </div>
             )}
 

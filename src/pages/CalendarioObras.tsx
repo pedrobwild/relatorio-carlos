@@ -369,8 +369,8 @@ export default function CalendarioObras() {
   // possui pelo menos um child visível neste recorte, ocultamos a mãe e
   // mostramos apenas os children (que são mais granulares).
   // - Demais papéis (defesa em profundidade — esta página é restrita a staff)
-  // veem apenas as mães e nunca os children, preservando a visão informativa
-  // compartilhada com o cliente.
+  // veem apenas as mães e nunca os children. Tudo aqui é do cronograma
+  // interno: o cliente não vê nada desta tela.
   const visibleByProject = useMemo(() => {
     return visibleByProjectRaw.map((g) => {
       if (canBreak) {
@@ -1102,7 +1102,7 @@ export default function CalendarioObras() {
           activities={filteredActivities}
           onActivityClick={setSelectedActivity}
           projectsWithOverduePrevious={projectsWithOverduePrev}
-          onReplanSchedule={(pid) => navigate(`/obra/${pid}/cronograma`)}
+          onReplanSchedule={(pid) => navigate(`/obra/${pid}/cronograma-interno`)}
           purchasesByDay={
             projectFilter === "all"
               ? purchasesByDay
@@ -1215,7 +1215,7 @@ export default function CalendarioObras() {
           onStart={handleStart}
           onFinish={handleFinish}
           onReset={handleReset}
-          onOpenSchedule={(pid) => navigate(`/obra/${pid}/cronograma`)}
+          onOpenSchedule={(pid) => navigate(`/obra/${pid}/cronograma-interno`)}
           projectFilter={projectFilter}
         />
       )}

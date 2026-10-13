@@ -2012,6 +2012,135 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_schedule_items: {
+        Row: {
+          actual_end: string | null
+          actual_start: string | null
+          client_activity_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          detailed_description: string | null
+          etapa: string | null
+          fornecedor_id: string | null
+          id: string
+          notes: string | null
+          parent_id: string | null
+          planned_end: string
+          planned_start: string
+          predecessor_ids: string[]
+          project_id: string
+          responsible_user_id: string | null
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+          weight: number
+        }
+        Insert: {
+          actual_end?: string | null
+          actual_start?: string | null
+          client_activity_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          detailed_description?: string | null
+          etapa?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          notes?: string | null
+          parent_id?: string | null
+          planned_end: string
+          planned_start: string
+          predecessor_ids?: string[]
+          project_id: string
+          responsible_user_id?: string | null
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+          weight?: number
+        }
+        Update: {
+          actual_end?: string | null
+          actual_start?: string | null
+          client_activity_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          detailed_description?: string | null
+          etapa?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          notes?: string | null
+          parent_id?: string | null
+          planned_end?: string
+          planned_start?: string
+          predecessor_ids?: string[]
+          project_id?: string
+          responsible_user_id?: string | null
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_schedule_items_client_activity_id_fkey"
+            columns: ["client_activity_id"]
+            isOneToOne: false
+            referencedRelation: "project_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_schedule_items_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_schedule_items_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "internal_schedule_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_schedule_items_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "v_stage_rollup"
+            referencedColumns: ["stage_id"]
+          },
+          {
+            foreignKeyName: "internal_schedule_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "internal_schedule_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_schedule_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_deadlines"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "internal_schedule_items_responsible_user_id_fkey"
+            columns: ["responsible_user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       internal_weekly_reports: {
         Row: {
           created_at: string
@@ -3650,7 +3779,7 @@ export type Database = {
             foreignKeyName: "ops_activities_stage_id_fkey"
             columns: ["stage_id"]
             isOneToOne: false
-            referencedRelation: "project_activities"
+            referencedRelation: "internal_schedule_items"
             referencedColumns: ["id"]
           },
           {
@@ -8476,7 +8605,7 @@ export type Database = {
             foreignKeyName: "ops_activities_stage_id_fkey"
             columns: ["stage_id"]
             isOneToOne: false
-            referencedRelation: "project_activities"
+            referencedRelation: "internal_schedule_items"
             referencedColumns: ["id"]
           },
           {
@@ -8542,21 +8671,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "project_activities_project_id_fkey"
+            foreignKeyName: "internal_schedule_items_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "project_dashboard_summary"
             referencedColumns: ["project_id"]
           },
           {
-            foreignKeyName: "project_activities_project_id_fkey"
+            foreignKeyName: "internal_schedule_items_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_activities_project_id_fkey"
+            foreignKeyName: "internal_schedule_items_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "v_project_deadlines"
@@ -8589,6 +8718,10 @@ export type Database = {
       }
       can_edit_atividades: { Args: { p_obra_id: string }; Returns: boolean }
       can_edit_cronograma: { Args: { p_obra_id: string }; Returns: boolean }
+      can_edit_internal_schedule: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       can_edit_project_phase: { Args: { _user_id: string }; Returns: boolean }
       can_manage_project: {
         Args: { _project_id: string; _user_id: string }
@@ -8613,6 +8746,10 @@ export type Database = {
       compute_formalization_hash: {
         Args: { p_formalization_id: string }
         Returns: string
+      }
+      copy_client_schedule_to_internal: {
+        Args: { p_project_id: string; p_replace?: boolean }
+        Returns: number
       }
       count_business_days: {
         Args: { p_from: string; p_project_id: string; p_to: string }

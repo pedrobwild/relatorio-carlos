@@ -70,6 +70,6 @@ describe("useObraBreadcrumbs", () => {
       label: "Apto 101 – Bloco A",
       href: "/obra/abc123",
     });
-    expect(result.current[2].label).toBe("Cronograma");
+    expect(result.current[2].label).toBe("Cronograma do cliente");
   });
 });
