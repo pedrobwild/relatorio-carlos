@@ -749,7 +749,8 @@ describe("Painel de Obras reformulado", () => {
     it("clicar na obra abre a gaveta; a Semana continua a um clique na linha", () => {
       renderPage();
       const linha = screen.getByRole("row", { name: /Ap\. 1204/ });
-      expect(within(linha).getByTitle("Abrir a semana desta obra").getAttribute("href")).toContain("/gestao/semana?obra=a");
+      // "O que fazer" leva aonde a ação se resolve (aqui, comprar material: a semana da obra).
+      expect(within(linha).getByTitle("Abrir a semana").getAttribute("href")).toContain("/gestao/semana?obra=a");
       fireEvent.click(within(linha).getByRole("button", { name: /Ap\. 1204/ }));
       expect(onde()).toContain("obra=a");
       const gaveta = screen.getByRole("dialog");

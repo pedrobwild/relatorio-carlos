@@ -21,8 +21,13 @@ export interface ProximoPasso {
   /** Frase curta, no imperativo: "Cobrar a elétrica (4 dias atrasada)". */
   texto: string;
   tom: PassoTom;
-  /** Onde resolver: a semana da obra, o cronograma ou a gaveta. */
-  onde: "semana" | "cronograma" | "obra";
+  /**
+   * Onde resolver: o Hoje (começou? terminou?), a Semana da obra, o
+   * cronograma interno ou o cadastro da obra.
+   */
+  onde: "hoje" | "semana" | "cronograma" | "obra";
+  /** Para `onde: "semana"`: qual semana abrir (padrão: esta). */
+  semana?: "anterior" | "proxima";
   /** Quantas outras pendências a obra tem (além desta). */
   outras: number;
 }
@@ -46,7 +51,7 @@ export function pendencias(row: ObraRow): Omit<ProximoPasso, "outras">[] {
     out.push({
       texto: `Cobrar ${i.name} (${dias(i.lateDays)} atrasada)${mais}`,
       tom: "vermelho",
-      onde: "cronograma",
+      onde: "hoje",
     });
   }
 
@@ -62,7 +67,7 @@ export function pendencias(row: ObraRow): Omit<ProximoPasso, "outras">[] {
   if (semInicio.length > 0) {
     const i = semInicio[0];
     const mais = semInicio.length > 1 ? ` +${semInicio.length - 1}` : "";
-    out.push({ texto: `Confirmar se ${i.name} começou${mais}`, tom: "amarelo", onde: "semana" });
+    out.push({ texto: `Confirmar se ${i.name} começou${mais}`, tom: "amarelo", onde: "hoje" });
   }
 
   const material = row.alerts.find((x) => x.kind === "material");
@@ -78,12 +83,12 @@ export function pendencias(row: ObraRow): Omit<ProximoPasso, "outras">[] {
     out.push({ texto: "Planejar esta semana (nenhum dia marcado)", tom: "amarelo", onde: "semana" });
   }
   if (row.week.previous?.pending) {
-    out.push({ texto: "Fechar a semana passada", tom: "amarelo", onde: "semana" });
+    out.push({ texto: "Fechar a semana passada", tom: "amarelo", onde: "semana", semana: "anterior" });
   }
 
   const temSemanaQueVem = (a?.proximaSemana.length ?? 0) > 0 || (a?.continuaProximaSemana.length ?? 0) > 0;
   if (!paused && temSemanaQueVem && row.nextWeekPlanned === 0) {
-    out.push({ texto: "Planejar a semana que vem", tom: "neutro", onde: "semana" });
+    out.push({ texto: "Planejar a semana que vem", tom: "neutro", onde: "semana", semana: "proxima" });
   }
 
   if (!a || a.fase === "sem_cronograma") {
