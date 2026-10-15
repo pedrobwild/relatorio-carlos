@@ -33,16 +33,16 @@ const loginSchema = z.object({
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const prefillEmail = searchParams.get("email") ?? "";
-  const prefillPassword = searchParams.get("password") ?? "";
+  // Links antigos de demo traziam a senha na URL — não fazemos mais login por ela.
+  const hasPasswordParam = searchParams.has("password");
   const redirectParamRaw = searchParams.get("redirect") ?? "";
   // Only allow same-origin, absolute internal paths (starts with "/", not "//")
   const redirectPath =
     redirectParamRaw.startsWith("/") && !redirectParamRaw.startsWith("//")
       ? redirectParamRaw
       : "";
-  const isDemoPrefill = !!prefillEmail && !!prefillPassword;
   const [email, setEmail] = useState(prefillEmail);
-  const [password, setPassword] = useState(prefillPassword);
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -53,7 +53,6 @@ export default function Auth() {
     password?: string;
   }>({});
   const hasRedirectedRef = useRef(false);
-  const autoSubmittedRef = useRef(false);
   const navigate = useNavigate();
   const { toast: _toast } = useToast();
 
@@ -97,6 +96,11 @@ export default function Auth() {
   };
 
   useEffect(() => {
+    if (hasPasswordParam) {
+      window.location.replace("https://bewild.com.br/#workflow");
+      return;
+    }
+
     let isMounted = true;
     let sessionCheckTimeout: number | null = null;
 
@@ -170,7 +174,7 @@ export default function Auth() {
       }
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, hasPasswordParam]);
 
   function validate(): boolean {
     const result = loginSchema.safeParse({ email, password });
@@ -252,24 +256,13 @@ export default function Auth() {
     }
   };
 
-  // Auto-submit when landing with prefilled credentials (magic-link style)
-  useEffect(() => {
-    if (checkingSession) return;
-    if (!isDemoPrefill) return;
-    if (autoSubmittedRef.current) return;
-    if (loading) return;
-    autoSubmittedRef.current = true;
-    void handleLogin({ preventDefault: () => {} } as React.FormEvent);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checkingSession, isDemoPrefill]);
-
   const handlePasswordKeyEvent = (e: React.KeyboardEvent) => {
     if (typeof e.getModifierState === "function") {
       setCapsLockOn(e.getModifierState("CapsLock"));
     }
   };
 
-  if (checkingSession) {
+  if (checkingSession || hasPasswordParam) {
     return (
       <div className="min-h-[100dvh] bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -311,22 +304,6 @@ export default function Auth() {
             Bwild<span className="text-[#366478]">.</span>
           </div>
         </div>
-
-        {isDemoPrefill && (
-          <div
-            role="status"
-            className="flex items-start gap-2.5 rounded-lg border border-emerald-400/30 bg-emerald-500/10 p-3.5 mb-6 w-full"
-          >
-            <ShieldCheck className="h-4 w-4 text-emerald-300 shrink-0 mt-0.5" />
-            <div className="text-sm text-emerald-100">
-              <p className="font-medium">Acesso à obra demo pré-preenchido</p>
-              <p className="text-xs text-emerald-200/80 mt-0.5">
-                Basta clicar em <strong>Entrar</strong> para visualizar o
-                orçamento na obra demo.
-              </p>
-            </div>
-          </div>
-        )}
 
         {formError && (
           <div
