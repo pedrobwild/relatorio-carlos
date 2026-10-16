@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useStaffUsers } from "@/hooks/useStaffUsers";
 import { useOpsDay, useOpsReadiness, usePrefetchOpsDays, useSetAssignmentOutcome } from "@/hooks/useOps";
+import { useOpsScreenViewed } from "@/hooks/useOpsScreenViewed";
+import { trackAmplitude } from "@/lib/amplitude";
 import { useStudioInfo } from "@/hooks/useStudioInfo";
 import {
   useIsOnline,
@@ -53,6 +55,7 @@ import { OfflineSyncBar, type SyncProblem } from "@/components/gestao/hoje/Offli
 import { EtapasParaConfirmar } from "@/components/gestao/hoje/EtapasParaConfirmar";
 
 export default function Hoje() {
+  useOpsScreenViewed("hoje");
   const [params, setParams] = useSearchParams();
   const date = normalizeDateParam(params.get("data"));
   const obraFilter = params.get("obra");
@@ -151,6 +154,7 @@ export default function Hoje() {
 
   const markDone = (a: OpsDayAssignment) => {
     setOutcome.mutate({ id: a.id, outcome: "feito", label: titleOf(a) });
+    trackAmplitude("ops_day_confirmed", { outcome: "feito", screen: "hoje", offline: !online });
     toast.success("Marcado como feito", {
       description: offlineNote,
       action: { label: "Desfazer", onClick: () => setOutcome.mutate({ id: a.id, outcome: null, label: titleOf(a) }) },
@@ -161,6 +165,7 @@ export default function Hoje() {
     if (!notDoneFor) return;
     const a = notDoneFor;
     setOutcome.mutate({ id: a.id, outcome: "nao_feito", reason, notes, label: titleOf(a) });
+    trackAmplitude("ops_day_confirmed", { outcome: "nao_feito", reason, screen: "hoje", offline: !online });
     setNotDoneFor(null);
     toast.success("Registrado como não feito", { description: offlineNote });
   };

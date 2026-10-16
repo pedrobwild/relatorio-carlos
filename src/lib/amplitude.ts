@@ -31,7 +31,15 @@ export type AmplitudeEvent =
   // Cronograma export
   | "cronograma_pdf_exported"
   // Instrumentação do link customer ↔ project por e-mail
-  | "Customer Link Ensure";
+  | "Customer Link Ensure"
+  // Adoção da camada de operação (Painel de Obras, Semana, Hoje). Sem PII:
+  // só tela, contagens, desfecho e motivo.
+  | "ops_screen_viewed"
+  | "ops_week_planned"
+  | "ops_week_closed"
+  | "ops_day_confirmed"
+  | "ops_amendment_drafted"
+  | "ops_report_draft_copied";
 
 
 export type AmplitudeProps = Record<

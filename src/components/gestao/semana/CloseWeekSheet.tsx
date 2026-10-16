@@ -6,7 +6,7 @@
  * Não feito já fica salvo (igual à tela Hoje); "Fechar semana" só registra o
  * retrato, que é calculado no banco.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,15 +29,21 @@ import {
   weekClosingState,
 } from "@/lib/semanaFechamento";
 import { useCloseOpsWeek, useReopenOpsWeek, useSetAssignmentOutcome } from "@/hooks/useOps";
+import { trackAmplitude } from "@/lib/amplitude";
+import type { ReportActivity } from "@/lib/semanaRelatorio";
+import { WeekAmendmentsSection } from "./WeekAmendmentsSection";
+import { WeekReportDraftSection } from "./WeekReportDraftSection";
 import type {
-  OpsActivityView,
   OpsAssignment,
   OpsAssignmentOutcome,
   OpsBlockReason,
+  OpsStageOption,
   OpsWeekClosing,
 } from "@/infra/repositories/ops.repository";
 
 const REASONS = Object.keys(OPS_REASON_LABEL) as OpsBlockReason[];
+const NONE_ASG: ReadonlyArray<OpsAssignment> = [];
+const NONE_STAGES: ReadonlyArray<OpsStageOption> = [];
 
 interface Props {
   open: boolean;
@@ -49,7 +55,11 @@ interface Props {
   today: string;
   /** Alocações da semana (seg–dom). */
   assignments: ReadonlyArray<OpsAssignment>;
-  activities: ReadonlyArray<Pick<OpsActivityView, "id" | "title" | "stage_name">>;
+  activities: ReadonlyArray<ReportActivity>;
+  /** Dias marcados na semana seguinte (seg–dom), para o texto do relatório. */
+  nextAssignments?: ReadonlyArray<OpsAssignment>;
+  /** Etapas do cronograma interno, para o texto do relatório quando a semana seguinte não foi planejada. */
+  stages?: ReadonlyArray<OpsStageOption>;
   staffNameById: ReadonlyMap<string, string>;
   /** Fechamento já gravado desta semana, se houver. */
   closing: OpsWeekClosing | null;
@@ -69,6 +79,8 @@ export function CloseWeekSheet({
   staffNameById,
   closing,
   history,
+  nextAssignments = NONE_ASG,
+  stages = NONE_STAGES,
 }: Props) {
   const setOutcome = useSetAssignmentOutcome();
   const closeWeek = useCloseOpsWeek();
@@ -110,6 +122,7 @@ export function CloseWeekSheet({
   const state = useMemo(() => weekClosingState(effective, monday, today), [effective, monday, today]);
   const reasons = useMemo(() => reasonCounts(state.notDoneItems), [state.notDoneItems]);
   const activityById = useMemo(() => new Map(activities.map((a) => [a.id, a])), [activities]);
+  const titleOf = useCallback((id: string) => activityById.get(id)?.title ?? "Atividade", [activityById]);
   const stale = closing ? closingIsStale(closing, state) : false;
   const previous = history.filter((c) => c.week_start < monday).slice(0, 4);
 
@@ -130,6 +143,7 @@ export function CloseWeekSheet({
     setInFlight((n) => n + 1);
     try {
       await setOutcome.mutateAsync({ id: a.id, outcome, reason });
+      trackAmplitude("ops_day_confirmed", { outcome, reason, screen: "fechar_semana" });
       return true;
     } catch {
       // O aviso de erro vem de quem grava.
@@ -160,7 +174,15 @@ export function CloseWeekSheet({
   const confirm = async () => {
     try {
       const saved = await closeWeek.mutateAsync({ project_id: projectId, week_start: monday, notes: notes.trim() || null });
-      toast.success(`Semana fechada · PPC ${ppcLabel(ppcOf(saved.done, saved.planned))}`);
+      const ppc = ppcOf(saved.done, saved.planned);
+      trackAmplitude("ops_week_closed", {
+        ppc,
+        planned: saved.planned,
+        done: saved.done,
+        not_done: saved.not_done,
+        update: !!closing,
+      });
+      toast.success(`Semana fechada · PPC ${ppcLabel(ppc)}`);
       onOpenChange(false);
     } catch {
       // O aviso de erro vem de quem grava.
@@ -332,6 +354,26 @@ export function CloseWeekSheet({
                 })}
               </ul>
             </section>
+          )}
+
+          {state.notDoneItems.length > 0 && (
+            <WeekAmendmentsSection
+              projectId={projectId}
+              monday={monday}
+              notDoneItems={state.notDoneItems}
+              titleOf={titleOf}
+            />
+          )}
+
+          {state.planned > 0 && state.pending.length === 0 && (
+            <WeekReportDraftSection
+              projectId={projectId}
+              monday={monday}
+              assignments={effective}
+              nextAssignments={nextAssignments}
+              activities={activities}
+              stages={stages}
+            />
           )}
 
           {state.planned > 0 && (

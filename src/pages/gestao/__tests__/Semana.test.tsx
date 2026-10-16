@@ -80,6 +80,8 @@ vi.mock("@/hooks/useStaffUsers", () => ({
   useStaffUsers: () => ({ data: [{ id: "u1", nome: "Pedro Alves", email: "", perfil: "gestor" }] }),
 }));
 vi.mock("@/hooks/useContractDeadline", () => ({
+  useContractAmendments: () => ({ data: [] }),
+  useCreateAmendmentDraft: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useObraDeadlines: () => ({ data: [{ project_id: "p1", project_name: "Apto 142", status: "active" }], isLoading: false }),
   useProjectDeadline: () => ({
     data: { current_deadline: "2026-12-18", business_days_remaining: 40, business_days_late: 0, current_business_days: 60 },

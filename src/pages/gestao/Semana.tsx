@@ -63,6 +63,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ActivityDrawer } from "@/components/gestao/semana/ActivityDrawer";
 import { PlanWeekSheet } from "@/components/gestao/semana/PlanWeekSheet";
 import { CloseWeekSheet } from "@/components/gestao/semana/CloseWeekSheet";
+import { useOpsScreenViewed } from "@/hooks/useOpsScreenViewed";
 import { FichaObraSheet } from "@/components/gestao/ficha/FichaObraSheet";
 
 const LAST_OBRA_KEY = "bwild.semana.obra";
@@ -75,6 +76,7 @@ const HEALTH_TONE: Record<DeadlineHealth, string> = {
 };
 
 export default function Semana() {
+  useOpsScreenViewed("semana");
   const [params, setParams] = useSearchParams();
   const monday = normalizeWeekParam(params.get("semana"));
   const thisMonday = mondayOf(todayISO());
@@ -131,6 +133,10 @@ export default function Semana() {
   const { data: activities = [], isLoading: actsLoading } = useOpsActivities(projectId);
   const { data: weekAsg = [], isLoading: asgLoading } = useOpsAssignments(projectId, from, to);
   const { data: prevAsg = [], isLoading: prevLoading } = useOpsAssignments(projectId, prev.from, prev.to);
+  const [closeOpen, setCloseOpen] = useState(false);
+  // Semana seguinte: só para o texto do relatório no fechamento (busca ao abrir a folha).
+  const nextWeek = weekRange(shiftISODate(monday, 7));
+  const { data: nextAsg = [] } = useOpsAssignments(closeOpen ? projectId : undefined, nextWeek.from, nextWeek.to);
   const { data: materials = [] } = useOpsProjectMaterials(projectId);
   const { data: deadline } = useProjectDeadline(projectId);
   // Complemento da tela: não entra em `loading`. Enquanto não chega (ou se a
@@ -179,7 +185,6 @@ export default function Semana() {
 
   // Fechamento da semana e PPC: só para semana que já começou.
   const today = todayISO();
-  const [closeOpen, setCloseOpen] = useState(false);
   const closing = useMemo(() => closings.find((c) => c.week_start === monday) ?? null, [closings, monday]);
   const closeState = useMemo(() => weekClosingState(weekAsg, monday, today), [weekAsg, monday, today]);
   const closingStale = closing ? closingIsStale(closing, closeState) : false;
@@ -442,6 +447,8 @@ export default function Semana() {
             staffNameById={staffNameById}
             closing={closing}
             history={closings}
+            nextAssignments={nextAsg}
+            stages={stages}
           />
           <PlanWeekSheet
             open={planOpen}

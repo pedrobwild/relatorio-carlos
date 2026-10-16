@@ -22,6 +22,7 @@
  * Interna (StaffRoute + RLS). O cliente não vê folga nem multa.
  */
 import { useEffect, useMemo, useState } from "react";
+import { useOpsScreenViewed } from "@/hooks/useOpsScreenViewed";
 import { Link, useSearchParams } from "react-router-dom";
 import { Building2, Newspaper, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -197,6 +198,7 @@ const AVISO_PRONTA =
   "Arrastar para “Pronta para iniciar” não grava nada. Conclua as etapas aqui e informe o dia em que a aprovação do condomínio chegou: é essa data que define o início oficial da obra.";
 
 export default function Obras() {
+  useOpsScreenViewed("obras");
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { isSimple } = useMenuMode();

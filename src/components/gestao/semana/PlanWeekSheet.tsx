@@ -21,6 +21,7 @@ import {
   type WeekProposal,
 } from "@/lib/semanaPlan";
 import { useCreateOpsActivity, useCreateOpsAssignments } from "@/hooks/useOps";
+import { trackAmplitude } from "@/lib/amplitude";
 import { WhoInput } from "./WhoInput";
 
 interface RowState {
@@ -99,6 +100,7 @@ export function PlanWeekSheet({
     if (invalid.length > 0 || chosen.length === 0) return;
     setSaving(true);
     let created = 0;
+    let dayCount = 0;
     try {
       for (const p of chosen) {
         const st = rows[p.key];
@@ -118,7 +120,9 @@ export function PlanWeekSheet({
         }
         await createAssignments.mutateAsync(sortedDays.map((d) => ({ activity_id: activityId as string, work_date: d, ...who })));
         created += 1;
+        dayCount += sortedDays.length;
       }
+      trackAmplitude("ops_week_planned", { activities: created, days: dayCount, proposals: proposals.length });
       toast.success(created === 1 ? "1 atividade marcada na semana" : `${created} atividades marcadas na semana`);
       onOpenChange(false);
     } catch {
