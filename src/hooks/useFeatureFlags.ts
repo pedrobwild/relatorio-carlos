@@ -24,6 +24,9 @@ export const FLAG_DEFAULTS: Partial<Record<FeatureFlagKey, boolean>> = {
   // Painel de Obras reformulado em /gestao/painel-obras. Desligar a linha no
   // banco devolve o painel antigo para todos, sem publicar.
   painelReformulado: true,
+  // Tela "O que fazer" como entrada da gestão (/gestao) e 1º item do menu.
+  // Desligar a linha no banco volta a entrada para o Painel de Obras.
+  telaOQueFazer: true,
 };
 
 async function fetchFlags(): Promise<Record<string, boolean>> {

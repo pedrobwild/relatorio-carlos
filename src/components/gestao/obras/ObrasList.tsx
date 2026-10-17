@@ -23,7 +23,9 @@ import {
 } from "@/lib/obrasPainel";
 import { relationshipFlag } from "@/lib/painelNovo";
 import { AgoraCell, EtapaCell, ITEM_LEGEND, PassoCell, ProximaSemanaCell } from "@/components/gestao/obras/ObraAndamentoCells";
-import { folgaTexto } from "@/lib/proximoPasso";
+import { folgaTexto, proximoPasso } from "@/lib/proximoPasso";
+import { hrefDoPasso } from "@/lib/oQueFazer";
+import { planningMonday } from "@/lib/semanaPlan";
 import type { PainelRelacionamento } from "@/hooks/usePainelObras";
 
 export const RISK_DOT: Record<ObraRisk, string> = {
@@ -121,6 +123,7 @@ function EntregaCell({ row, end = false }: { row: ObraRow; end?: boolean }) {
 
 export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasListProps) {
   const navigate = useNavigate();
+  const monday = planningMonday();
   const open = (r: ObraRow) => (onOpen ? onOpen(r) : navigate(weekHref(r)));
   const nameClass = "block w-full rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
   return (
@@ -207,9 +210,9 @@ export function ObrasTable({ rows, weekHref, onOpen, headless = false }: ObrasLi
                 </td>
                 <td className="px-3 py-3">
                   <Link
-                    to={weekHref(r)}
+                    to={hrefDoPasso(r.id, proximoPasso(r), monday).href}
                     onClick={(e) => e.stopPropagation()}
-                    title="Abrir a semana desta obra"
+                    title={hrefDoPasso(r.id, proximoPasso(r), monday).acao}
                     className="-m-1 block rounded-md p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <PassoCell row={r} />

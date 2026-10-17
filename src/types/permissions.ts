@@ -69,7 +69,8 @@ export type FeatureFlagKey =
   | "enableDocumentReviews"
   | "simpleModeGestor"
   | "novoPainelObras"
-  | "painelReformulado";
+  | "painelReformulado"
+  | "telaOQueFazer";
 
 /** Project member permission override */
 export interface ProjectMemberPermission {

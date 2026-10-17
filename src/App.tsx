@@ -90,6 +90,7 @@ const GestaoAtividades = lazy(() => import("./pages/GestaoAtividades"));
 const PainelObras = lazy(() => import("./pages/gestao/PainelObrasEntry"));
 const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const Hoje = lazy(() => import("./pages/gestao/Hoje"));
+const OQueFazer = lazy(() => import("./pages/gestao/OQueFazer"));
 const Semana = lazy(() => import("./pages/gestao/Semana"));
 const ObrasPainelNovo = lazy(() => import("./pages/gestao/Obras"));
 const ResumoSemanal = lazy(() => import("./pages/gestao/ResumoSemanal"));
@@ -456,6 +457,16 @@ const AppContent = () => {
                   <StaffRoute>
                     <AppShell variant="portfolio">
                       {withSuspense(<Semana />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+              <Route
+                path="/gestao/o-que-fazer"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<OQueFazer />)}
                     </AppShell>
                   </StaffRoute>
                 }

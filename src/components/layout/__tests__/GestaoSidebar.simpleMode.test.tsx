@@ -11,11 +11,12 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { AppRole } from "@/hooks/useUserRole";
 
-const state: { roles: AppRole[]; flag: boolean; novoPainel: boolean; reformulado: boolean } = {
+const state: { roles: AppRole[]; flag: boolean; novoPainel: boolean; reformulado: boolean; oQueFazer: boolean } = {
   roles: ["gestor"],
   flag: true,
   novoPainel: false,
   reformulado: false,
+  oQueFazer: false,
 };
 
 vi.mock("@/hooks/useUserRole", () => ({
@@ -41,7 +42,9 @@ vi.mock("@/hooks/useFeatureFlags", () => ({
           ? state.novoPainel
           : key === "painelReformulado"
             ? state.reformulado
-            : false,
+            : key === "telaOQueFazer"
+              ? state.oQueFazer
+              : false,
     isLoading: false,
   }),
 }));
@@ -101,6 +104,19 @@ describe("GestaoSidebar · modo simples", () => {
     ]);
     expect(screen.queryByRole("link", { name: /Fornecedores/ })).toBeNull();
     expect(screen.queryByRole("tablist", { name: /Obras e Projetos/ })).toBeNull();
+  });
+
+  it("com a tela 'O que fazer' ligada, ela é o 1º item do menu simples e do completo", () => {
+    state.oQueFazer = true;
+    try {
+      renderSidebar();
+      const first = screen.getAllByRole("link")[0];
+      expect([first.textContent?.trim(), first.getAttribute("href")]).toEqual(["O que fazer", "/gestao/o-que-fazer"]);
+      fireEvent.click(screen.getByRole("button", { name: "Ver menu completo" }));
+      expect(screen.getByRole("link", { name: /O que fazer/ })).toHaveAttribute("href", "/gestao/o-que-fazer");
+    } finally {
+      state.oQueFazer = false;
+    }
   });
 
   it("gestor consegue abrir o menu completo e a escolha persiste", () => {

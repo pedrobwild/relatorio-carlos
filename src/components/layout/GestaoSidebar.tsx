@@ -27,6 +27,7 @@ import {
   CalendarCheck,
   SlidersHorizontal,
   Newspaper,
+  ListChecks,
   LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -80,11 +81,14 @@ const LEGACY_PAINEL_PATH = "/gestao/painel-obras";
  * entradas. "Obras" abre a tela nova (Fase 5) quando a flag
  * `novoPainelObras` está ligada; senão, o Painel de Obras de sempre.
  */
-function simpleModeGroups(novoPainel: boolean): NavGroup[] {
+const O_QUE_FAZER_PATH = "/gestao/o-que-fazer";
+
+function simpleModeGroups(novoPainel: boolean, oQueFazer: boolean): NavGroup[] {
   return [
     {
       label: "Obra",
       items: [
+        ...(oQueFazer ? [{ label: "O que fazer", icon: ListChecks, path: O_QUE_FAZER_PATH }] : []),
         { label: "Obras", icon: Building2, path: novoPainel ? NOVO_PAINEL_PATH : LEGACY_PAINEL_PATH },
         { label: "Semana", icon: CalendarRange, path: "/gestao/semana" },
         { label: "Hoje", icon: CalendarCheck, path: "/gestao/hoje" },
@@ -111,6 +115,7 @@ export function GestaoSidebar() {
   // Com o Painel reformulado, "Painel de Obras" já é a tela nova: o atalho
   // "Obras" do menu completo seria a mesma tela duas vezes.
   const painelReformulado = isFlagOn("painelReformulado");
+  const oQueFazer = isFlagOn("telaOQueFazer");
 
   const currentFase =
     new URLSearchParams(location.search).get("fase") === "projetos"
@@ -135,6 +140,7 @@ export function GestaoSidebar() {
     {
       label: "Meu trabalho",
       items: [
+        ...(oQueFazer ? [{ label: "O que fazer", icon: ListChecks, path: O_QUE_FAZER_PATH }] : []),
         ...(novoPainel && !painelReformulado ? [{ label: "Obras", icon: Building2, path: NOVO_PAINEL_PATH }] : []),
         {
           label: "Hoje",
@@ -319,7 +325,7 @@ export function GestaoSidebar() {
     },
   ];
 
-  const groups = isSimple ? simpleModeGroups(novoPainel) : fullGroups;
+  const groups = isSimple ? simpleModeGroups(novoPainel, oQueFazer) : fullGroups;
 
   const isActive = (item: NavItem) => {
     const currentPath = location.pathname;
