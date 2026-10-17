@@ -11,12 +11,18 @@ const h = vi.hoisted(() => ({
   closeWeek: vi.fn(),
   reopenWeek: vi.fn(),
   success: vi.fn(),
+  createDraft: vi.fn(),
+  amendments: [] as Array<Record<string, unknown>>,
 }));
 
 vi.mock("@/hooks/useOps", () => ({
   useSetAssignmentOutcome: () => ({ mutateAsync: h.setOutcome, isPending: false }),
   useCloseOpsWeek: () => ({ mutateAsync: h.closeWeek, isPending: false }),
   useReopenOpsWeek: () => ({ mutateAsync: h.reopenWeek, isPending: false }),
+}));
+vi.mock("@/hooks/useContractDeadline", () => ({
+  useContractAmendments: () => ({ data: h.amendments }),
+  useCreateAmendmentDraft: () => ({ mutateAsync: h.createDraft, isPending: false }),
 }));
 vi.mock("sonner", () => ({ toast: { success: h.success, error: vi.fn() } }));
 
@@ -89,6 +95,8 @@ describe("CloseWeekSheet", () => {
     h.closeWeek.mockReset().mockResolvedValue({ planned: 4, done: 3 });
     h.reopenWeek.mockReset().mockResolvedValue(null);
     h.success.mockReset();
+    h.createDraft.mockReset().mockResolvedValue({ business_days_added: 1 });
+    h.amendments = [];
     onOpenChange.mockReset();
   });
 
@@ -238,5 +246,99 @@ describe("CloseWeekSheet", () => {
       closing: closingRow(),
     });
     expect(within(ppc()).getByText(/Os dias mudaram depois do fechamento/)).toBeInTheDocument();
+  });
+
+  describe("aditivo em 2 toques", () => {
+    it("agrupa os não feitos pelo motivo e registra o rascunho com motivo, dias, descrição e fotos", async () => {
+      renderSheet({
+        assignments: [
+          asg("d1", "2026-10-05", { outcome: "nao_feito", not_done_reason: "cliente_decisao", photo_paths: ["p1/d1/a.jpg"] }),
+          asg("d2", "2026-10-06", { outcome: "nao_feito", not_done_reason: "cliente_decisao" }),
+          asg("d3", "2026-10-07", { outcome: "feito" }),
+        ],
+      });
+      expect(screen.getByRole("heading", { name: "Algum desses atrasos não foi nosso?" })).toBeInTheDocument();
+      expect(screen.getByText("Aguardando decisão do cliente · 2 dias")).toBeInTheDocument();
+
+      // Toque 1
+      fireEvent.click(screen.getByRole("button", { name: "Não foi nosso: Aguardando decisão do cliente" }));
+      expect(screen.getByText("A foto do dia entra como evidência.")).toBeInTheDocument();
+      // Toque 2
+      fireEvent.click(screen.getByRole("button", { name: "Registrar rascunho" }));
+      await waitFor(() => expect(h.createDraft).toHaveBeenCalledTimes(1));
+      expect(h.createDraft).toHaveBeenCalledWith({
+        project_id: "p1",
+        reason: "cliente_decisao",
+        business_days_added: 2,
+        description:
+          "Semana de 05/10 a 09/10: 2 dias sem execução (05/10, 06/10) em Passar conduíte — Aguardando decisão do cliente.",
+        event_date: "2026-10-05",
+        evidence_urls: ["p1/d1/a.jpg"],
+        photo: null,
+      });
+    });
+
+    it("dá para ajustar os dias antes de registrar", async () => {
+      renderSheet({
+        assignments: [asg("d1", "2026-10-05", { outcome: "nao_feito", not_done_reason: "condominio" })],
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Não foi nosso: Condomínio" }));
+      expect(screen.getByRole("button", { name: "Menos um dia" })).toBeDisabled();
+      fireEvent.click(screen.getByRole("button", { name: "Mais um dia" }));
+      fireEvent.click(screen.getByRole("button", { name: "Registrar rascunho" }));
+      await waitFor(() => expect(h.createDraft).toHaveBeenCalled());
+      expect(h.createDraft.mock.calls[0][0]).toMatchObject({ reason: "condominio", business_days_added: 2 });
+    });
+
+    it("'Faltou equipe' não vira aditivo", () => {
+      renderSheet({
+        assignments: [asg("d1", "2026-10-05", { outcome: "nao_feito", not_done_reason: "equipe" })],
+      });
+      expect(screen.queryByRole("heading", { name: "Algum desses atrasos não foi nosso?" })).not.toBeInTheDocument();
+    });
+
+    it("mostra o aditivo já registrado na semana e não oferece registrar de novo", () => {
+      h.amendments = [
+        { id: "x1", reason: "condominio", business_days_added: 1, status: "rascunho", event_date: "2026-10-05" },
+        { id: "x2", reason: "condominio", business_days_added: 3, status: "aceito", event_date: "2026-09-01" },
+      ];
+      renderSheet({
+        assignments: [asg("d1", "2026-10-05", { outcome: "nao_feito", not_done_reason: "condominio" })],
+      });
+      const list = screen.getByRole("list", { name: "Aditivos desta semana" });
+      expect(within(list).getByText(/Condomínio · \+1 dia útil/)).toBeInTheDocument();
+      expect(within(list).queryByText(/\+3/)).not.toBeInTheDocument();
+      expect(screen.getByText("Já registrado nesta semana")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Não foi nosso/ })).not.toBeInTheDocument();
+    });
+  });
+
+  describe("texto para o relatório do cliente", () => {
+    it("só aparece com todos os dias confirmados", () => {
+      renderSheet();
+      expect(screen.queryByRole("heading", { name: "Texto para o relatório do cliente" })).not.toBeInTheDocument();
+    });
+
+    it("monta por etapa, sem nomes, e copia", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.assign(navigator, { clipboard: { writeText } });
+      renderSheet({
+        assignments: [asg("d1", "2026-10-05", { outcome: "feito" }), asg("d2", "2026-10-06", { outcome: "feito" })],
+        nextAssignments: [asg("n1", "2026-10-13", { activity_id: "a2" })],
+        activities: [
+          { id: "a1", title: "Passar conduíte", stage_name: "Elétrica", status: "concluida" },
+          { id: "a2", title: "Massa corrida", stage_name: "Pintura" },
+        ],
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Ver texto" }));
+      const text = document.getElementById("fechar-relatorio-texto")?.textContent ?? "";
+      expect(text).toContain("• Elétrica: Passar conduíte (concluída)");
+      expect(text).toContain("Próxima semana (12/10 a 16/10)");
+      expect(text).toContain("• Pintura: Massa corrida");
+      expect(text).not.toContain("João");
+      fireEvent.click(screen.getByRole("button", { name: "Copiar texto" }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringContaining("O que foi feito")));
+      expect(screen.getByRole("link", { name: "Abrir relatórios da obra" })).toHaveAttribute("href", "/obra/p1?tab=relatorios");
+    });
   });
 });

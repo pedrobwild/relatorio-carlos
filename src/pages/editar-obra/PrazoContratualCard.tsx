@@ -28,6 +28,7 @@ import {
   validateContractTerms,
 } from "@/lib/contractDeadline";
 import { cn } from "@/lib/utils";
+import { AditivosPrazoList } from "./AditivosPrazoList";
 
 interface Props {
   projectId: string;
@@ -202,6 +203,8 @@ export function PrazoContratualCard({ projectId, canEdit }: Props) {
             {d?.amendments_pending} aditivo(s) em rascunho ou aguardando o cliente; só contam depois de aceitos.
           </p>
         )}
+
+        <AditivosPrazoList projectId={projectId} canEdit={canEdit} />
 
         {/* Termos */}
         <div className="grid gap-4 sm:grid-cols-2">

@@ -10,7 +10,11 @@ const refetch = vi.fn();
 vi.mock("@/hooks/useContractDeadline", () => ({
   useProjectDeadline: () => ({ data: deadline, ...query, isFetching: false, refetch }),
   useUpdateContractTerms: () => ({ mutate, isPending: false }),
+  useContractAmendments: () => ({ data: [], isLoading: false, isError: false }),
+  useUpdateAmendmentStatus: () => ({ mutate: vi.fn(), isPending: false }),
+  useDeleteAmendmentDraft: () => ({ mutate: vi.fn(), isPending: false }),
 }));
+vi.mock("@/hooks/useOps", () => ({ useOpsPhotoUrls: () => ({ data: [], isLoading: false, isError: false }) }));
 const toast = vi.fn();
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast }) }));
 
