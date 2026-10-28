@@ -54,13 +54,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "activity_progress_measurements_activity_id_fkey"
-            columns: ["activity_id"]
-            isOneToOne: false
-            referencedRelation: "v_stage_rollup"
-            referencedColumns: ["stage_id"]
-          },
-          {
             foreignKeyName: "activity_progress_measurements_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -1930,13 +1923,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "project_activities"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inspections_activity_id_fkey"
-            columns: ["activity_id"]
-            isOneToOne: false
-            referencedRelation: "v_stage_rollup"
-            referencedColumns: ["stage_id"]
           },
           {
             foreignKeyName: "inspections_project_id_fkey"
@@ -5089,13 +5075,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_activities_parent_activity_id_fkey"
-            columns: ["parent_activity_id"]
-            isOneToOne: false
-            referencedRelation: "v_stage_rollup"
-            referencedColumns: ["stage_id"]
-          },
-          {
             foreignKeyName: "project_activities_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -6613,13 +6592,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "project_activities"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_purchases_activity_id_fkey"
-            columns: ["activity_id"]
-            isOneToOne: false
-            referencedRelation: "v_stage_rollup"
-            referencedColumns: ["stage_id"]
           },
           {
             foreignKeyName: "project_purchases_fornecedor_id_fkey"
@@ -8601,6 +8573,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "internal_schedule_items_client_activity_id_fkey"
+            columns: ["stage_client_activity_id"]
+            isOneToOne: false
+            referencedRelation: "project_activities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ops_activities_fornecedor_id_fkey"
             columns: ["fornecedor_id"]
             isOneToOne: false
@@ -8736,6 +8715,14 @@ export type Database = {
       }
     }
     Functions: {
+      _copy_client_schedule_to_internal: {
+        Args: {
+          p_only_if_following?: boolean
+          p_project_id: string
+          p_replace?: boolean
+        }
+        Returns: number
+      }
       add_business_days: {
         Args: { p_n: number; p_project_id: string; p_start: string }
         Returns: string
