@@ -18,6 +18,8 @@ import authBg from "@/assets/auth-bg.png";
 import bwildLogo from "@/assets/bwild-logo-transparent.png";
 import { z } from "zod";
 import { logError, logInfo, logWarn } from "@/lib/errorLogger";
+import { initialRecoveryError } from "@/lib/passwordRecoveryRedirect";
+import { describeUpdatePasswordError } from "@/lib/passwordErrors";
 
 const schema = z
   .object({
@@ -112,11 +114,7 @@ export default function RedefinirSenha() {
       setTimeout(() => navigate("/auth", { replace: true }), 1800);
     } catch (err: any) {
       logError(err, { context: "redefinir-senha" });
-      setFormError(
-        err?.message?.includes("expired")
-          ? "O link expirou. Solicite um novo link de recuperação."
-          : "Não foi possível atualizar a senha. Tente novamente.",
-      );
+      setFormError(describeUpdatePasswordError(err));
     } finally {
       setLoading(false);
     }
@@ -139,8 +137,9 @@ export default function RedefinirSenha() {
           <div className="flex flex-col items-center gap-3 text-center">
             <AlertCircle className="h-10 w-10 text-amber-400" />
             <p className="text-sm text-white/80">
-              Este link é inválido ou expirou. Solicite um novo link de
-              recuperação.
+              {initialRecoveryError?.code === "otp_expired"
+                ? "Este link já foi usado ou expirou. Cada link funciona uma única vez — solicite um novo e abra-o logo em seguida."
+                : "Este link é inválido ou expirou. Solicite um novo link de recuperação."}
             </p>
           </div>
           <Button
