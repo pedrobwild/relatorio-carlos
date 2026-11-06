@@ -9,6 +9,7 @@ import type { FormData } from "./types";
 import type { ScheduleActivity } from "./ScheduleCard";
 import { safeParseInt, trackBlock1CUsage } from "@/lib/block1cMonitor";
 import { toLocalISODate } from "@/lib/localDate";
+import { buildWeeklyRows, type WeeklyPlan } from "@/lib/schedule/weeklySchedule";
 
 /** Collect non-fatal warnings during submit */
 interface SubmitWarning {
@@ -28,6 +29,7 @@ export function useNovaObraSubmit() {
     budgetFile?: File | null,
     manualActivities?: ScheduleActivity[],
     contractFile?: File,
+    weeklyPlan?: WeeklyPlan | null,
   ) => {
     if (!user) throw new Error("Você precisa estar logado");
 
@@ -221,8 +223,78 @@ export function useNovaObraSubmit() {
       }
     }
 
-    // 7. Create activities from template or manual
-    if (
+    // 7. Create activities: plano semanal, template ou manual
+    if (weeklyPlan && weeklyPlan.weeks.length > 0) {
+      const rows = buildWeeklyRows(weeklyPlan);
+      const weekToId = new Map<number, string>();
+      const clientRows = rows.client.map((r) => {
+        const id = crypto.randomUUID();
+        weekToId.set(r.weekIndex, id);
+        return {
+          id,
+          project_id: projectId,
+          description: r.description,
+          etapa: r.etapa,
+          planned_start: r.planned_start,
+          planned_end: r.planned_end,
+          weight: r.weight,
+          sort_order: r.sort_order,
+          created_by: user!.id,
+        };
+      });
+      const { error: weekErr } = await supabase
+        .from("project_activities")
+        .insert(clientRows);
+      if (weekErr) {
+        console.error("Weekly activities creation error:", weekErr);
+        warnings.push({
+          step: "Cronograma",
+          message: "As semanas do cronograma não foram criadas",
+        });
+      } else {
+        // O gatilho já espelhou cada semana no cronograma interno (1º nível).
+        // Os itens detalhados entram como micro-etapas dessas linhas espelho.
+        const { data: mirrors } = await supabase
+          .from("internal_schedule_items")
+          .select("id, client_activity_id")
+          .eq("project_id", projectId)
+          .is("parent_id", null)
+          .in("client_activity_id", clientRows.map((r) => r.id));
+        const parentByClient = new Map(
+          (mirrors ?? []).map((m) => [m.client_activity_id as string, m.id]),
+        );
+        const internalRows = rows.internal
+          .map((it) => {
+            const clientId = weekToId.get(it.weekIndex);
+            if (!clientId) return null;
+            return {
+              project_id: projectId,
+              client_activity_id: clientId,
+              parent_id: parentByClient.get(clientId) ?? null,
+              description: it.description,
+              etapa: `Semana ${it.weekIndex}`,
+              planned_start: it.planned_start,
+              planned_end: it.planned_end,
+              weight: 0,
+              sort_order: it.sort_order,
+              notes: it.notes,
+            };
+          })
+          .filter((r): r is NonNullable<typeof r> => r !== null);
+        if (internalRows.length > 0) {
+          const { error: intErr } = await supabase
+            .from("internal_schedule_items")
+            .insert(internalRows);
+          if (intErr) {
+            console.error("Internal schedule items error:", intErr);
+            warnings.push({
+              step: "Cronograma interno",
+              message: "As atividades detalhadas do cronograma interno não foram criadas",
+            });
+          }
+        }
+      }
+    } else if (
       selectedTemplate &&
       Array.isArray(selectedTemplate.default_activities) &&
       selectedTemplate.default_activities.length > 0
