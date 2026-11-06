@@ -176,14 +176,16 @@ async function fetchB64(url: string): Promise<string> {
 async function loadAssets(doc: import("jspdf").jsPDF): Promise<Assets> {
   const out: Assets = { fonts: false, logoBlue: null, logoWhite: null };
   try {
-    const [pf, pr, pm, ps] = await Promise.all([
+    const [pf, pf6, pr, pm, ps] = await Promise.all([
       import("@/assets/fonts/PlayfairDisplay-Bold.ttf?url"),
+      import("@/assets/fonts/PlayfairDisplay-SemiBold.ttf?url"),
       import("@/assets/fonts/Poppins-Regular.ttf?url"),
       import("@/assets/fonts/Poppins-Medium.ttf?url"),
       import("@/assets/fonts/Poppins-SemiBold.ttf?url"),
     ]);
     const files: [string, string, string, string][] = [
       [pf.default, "PlayfairDisplay-Bold.ttf", "Playfair", "bold"],
+      [pf6.default, "PlayfairDisplay-SemiBold.ttf", "PlayfairSemi", "normal"],
       [pr.default, "Poppins-Regular.ttf", "Poppins", "normal"],
       [pm.default, "Poppins-Medium.ttf", "PoppinsMedium", "normal"],
       [ps.default, "Poppins-SemiBold.ttf", "Poppins", "bold"],
@@ -218,6 +220,10 @@ function makeFonts(doc: Doc, a: Assets) {
   return {
     title: (size: number) => {
       doc.setFont(a.fonts ? "Playfair" : "helvetica", "bold");
+      doc.setFontSize(size);
+    },
+    subtitle: (size: number) => {
+      doc.setFont(a.fonts ? "PlayfairSemi" : "helvetica", a.fonts ? "normal" : "bold");
       doc.setFontSize(size);
     },
     body: (size: number) => {
@@ -475,7 +481,7 @@ export async function generateCronogramaPdf(
     y += lines.length * 5.2 + 5;
   }
   y += 2;
-  f.title(13);
+  f.subtitle(13);
   doc.setTextColor(...C.primary);
   doc.text(COPY.follow.channelsTitle, M, y);
   y += 7;
@@ -486,7 +492,7 @@ export async function generateCronogramaPdf(
     y += 6;
   }
   y += 4;
-  f.title(13);
+  f.subtitle(13);
   doc.setTextColor(...C.primary);
   doc.text(COPY.follow.notesTitle, M, y);
   y += 7;
