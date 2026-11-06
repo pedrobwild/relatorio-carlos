@@ -1,4 +1,9 @@
 import {
+  BudgetedAmount,
+  LinkBudgetButton,
+  LinkBudgetItemDialog,
+} from "@/components/compras/BudgetLink";
+import {
   PurchaseDeadlineDates,
   SchedulePurchaseBadges,
 } from "@/components/compras/SchedulePurchaseMeta";
@@ -463,6 +468,7 @@ function PurchaseRow({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [dateLogsOpen, setDateLogsOpen] = useState(false);
+  const [budgetLinkOpen, setBudgetLinkOpen] = useState(false);
   const isPrestador = purchase.purchase_type === "prestador";
 
   return (
@@ -542,6 +548,11 @@ function PurchaseRow({
                     )}
                 </>
               )}
+              <BudgetedAmount
+                projectId={purchase.project_id}
+                orcamentoItemId={purchase.orcamento_item_id}
+                actualCost={purchase.actual_cost}
+              />
               {purchase.orcamento_item_id && (
                 <span className="inline-flex items-center gap-0.5 text-[10px] text-primary/70 mt-0.5">
                   <FileText className="h-2.5 w-2.5" />
@@ -784,6 +795,24 @@ function PurchaseRow({
                       />
                     </div>
                   )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 md:col-span-3">
+                <LinkBudgetButton onClick={() => setBudgetLinkOpen(true)} />
+                <BudgetedAmount
+                  projectId={purchase.project_id}
+                  orcamentoItemId={purchase.orcamento_item_id}
+                  actualCost={purchase.actual_cost}
+                />
+                <LinkBudgetItemDialog
+                  open={budgetLinkOpen}
+                  onOpenChange={setBudgetLinkOpen}
+                  projectId={purchase.project_id}
+                  purchase={purchase}
+                  onSelect={(itemId) =>
+                    onUpdateField(purchase.id, "orcamento_item_id", itemId)
+                  }
+                />
               </div>
 
               {/* Dates */}
