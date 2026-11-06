@@ -1,5 +1,6 @@
+import { BudgetedAmount } from "@/components/compras/BudgetLink";
 import { SchedulePurchaseBadges } from "@/components/compras/SchedulePurchaseMeta";
-import { purchaseDeadlineState } from "@/lib/schedule/weeklyPurchases";
+import { isBuyThisWeek, purchaseDeadlineState } from "@/lib/schedule/weeklyPurchases";
 import { fmtBR } from "@/lib/schedule/weeklySchedule";
 import { Fragment, useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -1569,7 +1570,17 @@ export default function CalendarioCompras() {
   const queryClient = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatusRaw] = useState<string>("all");
+  // "Comprar esta semana": pendentes com ideal ou limite até domingo (ou vencidos).
+  const [buyThisWeek, setBuyThisWeek] = useState<boolean>(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("filtro") === "comprar-semana",
+  );
+  const setFilterStatus = (v: string) => {
+    setBuyThisWeek(false);
+    setFilterStatusRaw(v);
+  };
   const [filterProject, setFilterProject] = useState<string>("all");
   const [filterCustomer, setFilterCustomer] = useState<string>("all");
   const [filterSupplier, setFilterSupplier] = useState<string>("all");
@@ -2113,7 +2124,8 @@ export default function CalendarioCompras() {
 
   const filtered = useMemo(() => {
     return allPurchases.filter((p) => {
-      if (filterStatus !== "all") {
+      if (buyThisWeek && !isBuyThisWeek(p)) return false;
+      if (!buyThisWeek && filterStatus !== "all") {
         const agg = getPaidAggregate(p);
         if (
           toCalendarStatus(
@@ -2151,6 +2163,7 @@ export default function CalendarioCompras() {
     });
   }, [
     allPurchases,
+    buyThisWeek,
     filterStatus,
     filterProject,
     filterCustomer,
@@ -2174,6 +2187,7 @@ export default function CalendarioCompras() {
   }, [allPurchases]);
 
   const activeFilterCount =
+    (buyThisWeek ? 1 : 0) +
     (filterStatus !== "all" ? 1 : 0) +
     (filterProject !== "all" ? 1 : 0) +
     (filterCustomer !== "all" ? 1 : 0) +
@@ -2185,6 +2199,7 @@ export default function CalendarioCompras() {
 
   const clearFilters = () => {
     setFilterStatus("all");
+    setBuyThisWeek(false);
     setFilterProject("all");
     setFilterCustomer("all");
     setFilterSupplier("all");
@@ -2242,12 +2257,24 @@ export default function CalendarioCompras() {
     if (requestedSort) {
       return base.sort((a, b) => compareByCreatedAt(a, b, requestedSort));
     }
+    if (buyThisWeek) {
+      return base.sort((a, b) =>
+        (a.purchase_deadline_date || "9999").localeCompare(
+          b.purchase_deadline_date || "9999",
+        ),
+      );
+    }
     return base.sort((a, b) =>
       (a.planned_purchase_date || "").localeCompare(
         b.planned_purchase_date || "",
       ),
     );
-  }, [filtered, requestedSort, customerSort]);
+  }, [filtered, requestedSort, customerSort, buyThisWeek]);
+
+  const buyThisWeekCount = useMemo(
+    () => allPurchases.filter((p) => isBuyThisWeek(p)).length,
+    [allPurchases],
+  );
 
   const withoutDate = useMemo(() => {
     const base = filtered.filter((p) => !p.planned_purchase_date);
@@ -2485,7 +2512,7 @@ export default function CalendarioCompras() {
                 { key: "pending", label: "Pendentes" },
               ] as const
             ).map(({ key, label }) => {
-              const active = filterStatus === key;
+              const active = !buyThisWeek && filterStatus === key;
               return (
                 <Button
                   key={key}
@@ -2500,6 +2527,25 @@ export default function CalendarioCompras() {
                 </Button>
               );
             })}
+            <Button
+              type="button"
+              size="sm"
+              variant={buyThisWeek ? "default" : "outline"}
+              aria-pressed={buyThisWeek}
+              onClick={() => {
+                setFilterStatusRaw("all");
+                setBuyThisWeek(true);
+              }}
+              className="h-8 gap-1"
+            >
+              Comprar esta semana
+              <Badge
+                variant={buyThisWeek ? "secondary" : "outline"}
+                className="h-5 px-1.5 tabular-nums"
+              >
+                {buyThisWeekCount}
+              </Badge>
+            </Button>
           </div>
 
           {/* ── Filters + View Toggle + New Button ── */}
@@ -3110,6 +3156,11 @@ export default function CalendarioCompras() {
 
                               <TableCell className="text-right whitespace-nowrap tabular-nums">
                                 {fmtCompact(p.estimated_cost)}
+                                <BudgetedAmount
+                                  projectId={p.project_id}
+                                  orcamentoItemId={p.orcamento_item_id}
+                                  actualCost={p.actual_cost}
+                                />
                               </TableCell>
 
                               <TableCell className="text-right whitespace-nowrap tabular-nums">

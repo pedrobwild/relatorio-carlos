@@ -112,7 +112,8 @@ function NotificationItem({
   const config = typeConfig[notification.type] ?? typeConfig.general;
   const Icon = config.icon;
   const isUnread = !notification.read_at;
-  const isBlocking = isBlockingNotification(notification.type);
+  const isBlocking =
+    isBlockingNotification(notification.type) || !!notification.is_urgent;
 
   const handleClick = () => {
     if (isUnread) onRead(notification.id);

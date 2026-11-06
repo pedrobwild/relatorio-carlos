@@ -272,6 +272,20 @@ export function useProjectPurchases(
       id,
       ...updates
     }: Partial<ProjectPurchase> & { id: string }) => {
+      // Compra gerada pelo cronograma: prazo do fornecedor passa pela RPC,
+      // que recalcula ideal e limite no banco.
+      if (updates.lead_time_days != null) {
+        const cached = queryClient.getQueryData<ProjectPurchase[]>(
+          queryKeys.purchases.list(projectId),
+        );
+        const current = cached?.find((p) => p.id === id);
+        if (current?.auto_generated) {
+          const res = await purchasesRepo.confirmLeadTime(id, Number(updates.lead_time_days));
+          if (res.error) throw res.error;
+          delete updates.lead_time_days;
+          if (Object.keys(updates).length === 0) return current;
+        }
+      }
       const { data, error } = await supabase
         .from("project_purchases")
         .update(updates)

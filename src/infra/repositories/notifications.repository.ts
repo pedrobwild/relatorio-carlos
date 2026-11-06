@@ -10,6 +10,8 @@ export interface Notification {
   action_url: string | null;
   read_at: string | null;
   created_at: string;
+  /** Aviso urgente (ex.: compras do cronograma com obra começando em menos de 14 dias). */
+  is_urgent?: boolean;
 }
 
 export async function fetchNotifications(

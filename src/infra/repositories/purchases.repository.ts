@@ -50,7 +50,46 @@ export const purchasesRepo = {
       return { data: null, error };
     });
   },
+
+  /**
+   * Itens do orçamento da obra (orcamentos → seções → itens), para suprimentos
+   * vincular a compra. Valor orçado = custo interno do item.
+   */
+  async listProjectBudgetItems(projectId: string) {
+    return executeQuery<ProjectBudgetItem[]>(async () => {
+      const { data, error } = await supabase
+        .from("orcamento_items")
+        .select(
+          "id, title, item_category, internal_total, orcamento_sections!inner(title, orcamentos!inner(project_id))",
+        )
+        .eq("orcamento_sections.orcamentos.project_id", projectId)
+        .order("order_index", { ascending: true })
+        .order("id", { ascending: true })
+        .limit(1000);
+      if (error) return { data: null, error };
+      const rows = (data ?? []).map((r) => {
+        const sec = r.orcamento_sections as unknown as { title: string | null } | null;
+        return {
+          id: r.id,
+          name: r.title,
+          category: r.item_category,
+          section: sec?.title ?? null,
+          total: r.internal_total,
+        };
+      });
+      return { data: rows, error: null };
+    });
+  },
+
 };
+
+export interface ProjectBudgetItem {
+  id: string;
+  name: string;
+  category: string | null;
+  section: string | null;
+  total: number | null;
+}
 
 export interface SchedulePurchaseInput {
   activity_id: string;
