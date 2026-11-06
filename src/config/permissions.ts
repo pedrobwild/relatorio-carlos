@@ -21,6 +21,10 @@ export type Feature =
   | "schedule:save_baseline"
   | "schedule:import"
   | "schedule:view"
+  // PDF do cronograma: enviar ao cliente por WhatsApp (grava em Documentos)
+  // e gerar nova revisão (R1, R2...). Staff apenas.
+  | "schedule:send_whatsapp"
+  | "schedule:new_revision"
   // Cronograma interno (staff-only; o cliente nunca vê). Ver e editar: toda
   // a equipe com acesso à obra — mesma regra do banco para
   // internal_schedule_items (e a mesma da tabela do cliente), para que
@@ -122,7 +126,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
+    "schedule:new_revision",
     "schedule:view",
+    "schedule:send_whatsapp",
     "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
@@ -178,7 +184,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
+    "schedule:new_revision",
     "schedule:view",
+    "schedule:send_whatsapp",
     "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
@@ -235,7 +243,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
+    "schedule:new_revision",
     "schedule:view",
+    "schedule:send_whatsapp",
     "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
@@ -294,7 +304,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
+    "schedule:new_revision",
     "schedule:view",
+    "schedule:send_whatsapp",
     "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
@@ -341,6 +353,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     // Focused on purchases and supply chain
     "documents:view",
     "schedule:view",
+    "schedule:send_whatsapp",
     "internalSchedule:view",
     "internalSchedule:edit",
     "purchases:create",
@@ -362,6 +375,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "documents:view",
     "formalizations:view",
     "schedule:view",
+    "schedule:send_whatsapp",
     "internalSchedule:view",
     "internalSchedule:edit",
     "purchases:view",
@@ -392,7 +406,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
+    "schedule:new_revision",
     "schedule:view",
+    "schedule:send_whatsapp",
     "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
@@ -448,7 +464,9 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "internalSchedule:edit",
     "schedule:save_baseline",
     "schedule:import",
+    "schedule:new_revision",
     "schedule:view",
+    "schedule:send_whatsapp",
     "internalSchedule:view",
     "purchases:create",
     "purchases:edit",
