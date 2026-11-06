@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/states";
 import type { ProjectTemplate } from "@/hooks/useProjectTemplates";
+import { countBusinessDaysInclusive } from "@/lib/businessDays";
 import {
   fmtBR,
   generateWeeklyPlan,
@@ -135,35 +136,24 @@ export function WeeklySchedulePreview({
           />
         ) : (
           <>
-            <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1">
-              <p>
-                Fim pelo contrato: <strong>{fmtBR(plan.contractEnd)}</strong>
-                {plan.delivery && (
-                  <>
-                    {" · "}Entrega prevista:{" "}
-                    <strong>{fmtBR(plan.delivery)}</strong>
-                  </>
-                )}
+            {plan.slackAvailable > 0 ? (
+              <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
+                <span>
+                  Cabem {plan.slackAvailable}{" "}
+                  {plan.slackAvailable === 1 ? "semana" : "semanas"} de folga
+                  para repasses e atrasos
+                </span>
+                <Switch
+                  checked={useSlack}
+                  onCheckedChange={onUseSlackChange}
+                  aria-label="Usar semanas de folga"
+                />
+              </div>
+            ) : (
+              <p className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                Não cabem semanas de folga dentro do prazo do contrato.
               </p>
-              {plan.slackAvailable > 0 ? (
-                <div className="flex items-center justify-between gap-3">
-                  <span>
-                    Cabem {plan.slackAvailable}{" "}
-                    {plan.slackAvailable === 1 ? "semana" : "semanas"} de folga
-                    para repasses e atrasos
-                  </span>
-                  <Switch
-                    checked={useSlack}
-                    onCheckedChange={onUseSlackChange}
-                    aria-label="Usar semanas de folga"
-                  />
-                </div>
-              ) : (
-                <p className="text-muted-foreground">
-                  Não cabem semanas de folga dentro do prazo do contrato.
-                </p>
-              )}
-            </div>
+            )}
 
             {plan.alerts.map((a) => (
               <div
@@ -187,22 +177,18 @@ export function WeeklySchedulePreview({
                 const items = plan.items.filter((i) => i.week === w.index);
                 return (
                   <li key={w.index} className="rounded-lg border p-3 space-y-2">
-                    <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <span className="font-semibold">
-                        {w.label}
-                        {w.isSlack && (
-                          <Badge variant="outline" className="ml-2">
-                            Folga
-                          </Badge>
-                        )}
-                      </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {fmtBR(w.calStart)} a {fmtBR(w.calEnd)} ·{" "}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold tabular-nums">
+                        {w.label} · {weekRange(w.calStart, w.calEnd)} ·{" "}
                         {w.businessDays}{" "}
                         {w.businessDays === 1 ? "dia útil" : "dias úteis"}
-                        {w.holidays.length > 0 &&
-                          ` · feriado ${w.holidays.map((h) => fmtBR(h).slice(0, 5)).join(", ")}`}
                       </span>
+                      {w.isSlack && <Badge variant="outline">Folga</Badge>}
+                      {w.holidays.map((h) => (
+                        <Badge key={h} variant="secondary">
+                          feriado {fmtBR(h).slice(0, 5)}
+                        </Badge>
+                      ))}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Cliente vê: {weekClientDescription(plan, w.index)}
@@ -287,9 +273,58 @@ export function WeeklySchedulePreview({
                 );
               })}
             </ol>
+
+            {plan.delivery && (
+              <DeliveryCard
+                delivery={plan.delivery}
+                contractEnd={plan.contractEnd}
+              />
+            )}
           </>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/** "16 a 20/11" ou "30/11 a 04/12". */
+function weekRange(startIso: string, endIso: string): string {
+  const s = fmtBR(startIso).slice(0, 5);
+  const e = fmtBR(endIso).slice(0, 5);
+  return s.slice(3) === e.slice(3) ? `${s.slice(0, 2)} a ${e}` : `${s} a ${e}`;
+}
+
+/** Diferença em dias úteis entre a entrega e o fim pelo contrato (positiva = sobra). */
+export function deliveryDiff(delivery: string, contractEnd: string): number {
+  const d = new Date(`${delivery}T00:00:00`);
+  const c = new Date(`${contractEnd}T00:00:00`);
+  if (d.getTime() === c.getTime()) return 0;
+  const n = countBusinessDaysInclusive(d < c ? d : c, d < c ? c : d) - 1;
+  return d < c ? n : -n;
+}
+
+function DeliveryCard({ delivery, contractEnd }: { delivery: string; contractEnd: string }) {
+  const diff = deliveryDiff(delivery, contractEnd);
+  const fits = diff >= 0;
+  const abs = Math.abs(diff);
+  return (
+    <div className="sticky bottom-[calc(var(--bottom-nav-offset,0px)+0.5rem)] z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-3 shadow-md">
+      <div>
+        <p className="text-xs text-muted-foreground">Entrega prevista</p>
+        <p className="text-lg font-semibold tabular-nums">{fmtBR(delivery)}</p>
+      </div>
+      <div className="text-right">
+        <p className="text-xs text-muted-foreground">
+          Prazo do contrato: <span className="tabular-nums">{fmtBR(contractEnd)}</span>
+        </p>
+        <p className={`text-sm font-medium ${fits ? "text-success" : "text-destructive"}`}>
+          {diff === 0
+            ? "Entrega no último dia do contrato"
+            : fits
+              ? `Sobram ${abs} ${abs === 1 ? "dia útil" : "dias úteis"}`
+              : `Passa ${abs} ${abs === 1 ? "dia útil" : "dias úteis"} do contrato`}
+        </p>
+      </div>
+    </div>
   );
 }

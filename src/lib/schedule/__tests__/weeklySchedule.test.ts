@@ -142,3 +142,13 @@ describe("folga e alertas", () => {
     expect(overrun?.message).toMatch(/\d+ dias úteis/);
   });
 });
+
+describe("cartão de entrega", async () => {
+  const { deliveryDiff } = await import("@/pages/nova-obra/WeeklySchedulePreview");
+  it("com folga sobra 1 dia útil até 15/02/2027", () => {
+    expect(deliveryDiff("2027-02-12", "2027-02-15")).toBe(1);
+  });
+  it("passa do contrato fica negativo", () => {
+    expect(deliveryDiff("2027-02-16", "2027-02-15")).toBe(-1);
+  });
+});
