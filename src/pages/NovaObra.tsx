@@ -488,8 +488,11 @@ export default function NovaObra() {
   const handleNext = () => goToStep(currentStep + 1);
   const handleBack = () => goToStep(currentStep - 1);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (
+    e?: { preventDefault: () => void },
+    overrunConfirmed = false,
+  ) => {
+    e?.preventDefault();
     if (!user) {
       toast({
         title: "Erro",
@@ -1014,6 +1017,18 @@ export default function NovaObra() {
         </div>
       </div>
 
+      <WeeklyPlanConfirmDialog
+        open={confirmOverrunOpen}
+        onOpenChange={setConfirmOverrunOpen}
+        messages={
+          weeklyPlan?.alerts.filter((a) => a.blocking).map((a) => a.message) ??
+          []
+        }
+        onConfirm={() => {
+          setConfirmOverrunOpen(false);
+          void handleSubmit(undefined, true);
+        }}
+      />
       <DuplicateProjectDialog
         duplicate={duplicate}
         onOpenChange={(open) => {
