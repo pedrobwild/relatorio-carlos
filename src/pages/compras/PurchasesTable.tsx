@@ -1,3 +1,7 @@
+import {
+  PurchaseDeadlineDates,
+  SchedulePurchaseBadges,
+} from "@/components/compras/SchedulePurchaseMeta";
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import {
   MessageSquare,
@@ -516,6 +520,7 @@ function PurchaseRow({
                   </span>
                 )}
               </div>
+              <SchedulePurchaseBadges purchase={purchase} />
             </div>
 
             {/* Cost */}
@@ -558,9 +563,7 @@ function PurchaseRow({
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-muted-foreground">
-                    Compra: {fmtDate(purchase.planned_purchase_date)}
-                  </p>
+                  <PurchaseDeadlineDates purchase={purchase} />
                   {purchase.stock_exit_date ? (
                     <p className="text-xs font-medium text-emerald-600">
                       Enviado p/ Obra: {fmtDate(purchase.stock_exit_date)}
