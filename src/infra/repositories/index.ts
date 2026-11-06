@@ -12,6 +12,7 @@ export * from "./base.repository";
 export * as documentsRepo from "./documents.repository";
 export * as projectsRepo from "./projects.repository";
 export * as filesRepo from "./files.repository";
+export * as scheduleExportRepo from "./scheduleExport.repository";
 export * as auditoriaRepo from "./auditoria.repository";
 export * as journeyRepo from "./journey.repository";
 export * as formalizationsRepo from "./formalizations.repository";
