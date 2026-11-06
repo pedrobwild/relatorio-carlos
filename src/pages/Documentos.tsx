@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, History, ShieldCheck, Plus, ChevronRight, Share2 } from "lucide-react";
+import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, CalendarRange, FilePlus, History, ShieldCheck, Plus, ChevronRight, Share2 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ContentSkeleton } from "@/components/ContentSkeleton";

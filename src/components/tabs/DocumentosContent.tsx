@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, History, ShieldCheck, ChevronRight, Trash2 } from "lucide-react";
+import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, CalendarRange, FilePlus, History, ShieldCheck, ChevronRight, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
