@@ -1,3 +1,6 @@
+import { SchedulePurchaseBadges } from "@/components/compras/SchedulePurchaseMeta";
+import { purchaseDeadlineState } from "@/lib/schedule/weeklyPurchases";
+import { fmtBR } from "@/lib/schedule/weeklySchedule";
 import { Fragment, useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -2942,6 +2945,12 @@ export default function CalendarioCompras() {
                             )}
                           </button>
                         </TableHead>
+                        <TableHead className="whitespace-nowrap">
+                          Ideal
+                        </TableHead>
+                        <TableHead className="whitespace-nowrap">
+                          Comprar até
+                        </TableHead>
                         <TableHead className="whitespace-nowrap text-right">
                           Previsto
                         </TableHead>
@@ -3057,6 +3066,7 @@ export default function CalendarioCompras() {
                                     {(p as any).brand}
                                   </p>
                                 )}
+                                <SchedulePurchaseBadges purchase={p} />
                               </TableCell>
 
                               <TableCell
@@ -3089,6 +3099,13 @@ export default function CalendarioCompras() {
                                     </TooltipContent>
                                   </Tooltip>
                                 )}
+                              </TableCell>
+
+                              <TableCell className="whitespace-nowrap tabular-nums">
+                                <DeadlineCell purchase={p} field="ideal" />
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap tabular-nums">
+                                <DeadlineCell purchase={p} field="limite" />
                               </TableCell>
 
                               <TableCell className="text-right whitespace-nowrap tabular-nums">
@@ -3166,7 +3183,7 @@ export default function CalendarioCompras() {
                             {/* Expanded detail row */}
                             {expanded && hasDetails && (
                               <TableRow className="bg-muted/10 hover:bg-muted/10">
-                                <TableCell colSpan={11} className="p-0">
+                                <TableCell colSpan={13} className="p-0">
                                   <PurchaseRowDetail
                                     p={p}
                                     onUpdateField={handleUpdateField}
@@ -3180,7 +3197,7 @@ export default function CalendarioCompras() {
                       {sortedForList.length === 0 && (
                         <TableRow>
                           <TableCell
-                            colSpan={11}
+                            colSpan={13}
                             className="text-center py-12 text-muted-foreground"
                           >
                             Nenhuma compra agendada encontrada
@@ -3445,5 +3462,39 @@ export default function CalendarioCompras() {
         </PageContainer>
       </div>
     </div>
+  );
+}
+
+/** Célula "Ideal" (amarelo se passou) ou "Comprar até" (vermelho se passou). */
+function DeadlineCell({
+  purchase,
+  field,
+}: {
+  purchase: {
+    status: string;
+    planned_purchase_date: string | null;
+    purchase_deadline_date?: string | null;
+  };
+  field: "ideal" | "limite";
+}) {
+  const iso = field === "ideal" ? purchase.planned_purchase_date : purchase.purchase_deadline_date;
+  if (!iso) return <span className="text-muted-foreground">-</span>;
+  const state = purchaseDeadlineState(purchase);
+  const late =
+    field === "ideal" ? state === "late_ideal" : state === "late_deadline";
+  return (
+    <span
+      className={cn(
+        late
+          ? field === "ideal"
+            ? "font-medium text-warning"
+            : "font-medium text-destructive"
+          : "text-muted-foreground",
+      )}
+      title={late ? (field === "ideal" ? "Passou da data ideal" : "Passou do limite") : undefined}
+    >
+      {fmtBR(iso).slice(0, 5)}
+      {late && <span className="sr-only"> (atrasada)</span>}
+    </span>
   );
 }

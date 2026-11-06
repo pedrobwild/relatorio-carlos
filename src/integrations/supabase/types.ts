@@ -6448,6 +6448,7 @@ export type Database = {
           activity_id: string | null
           actual_cost: number | null
           actual_delivery_date: string | null
+          auto_generated: boolean
           boleto_code: string | null
           boleto_file_path: string | null
           brand: string | null
@@ -6466,6 +6467,7 @@ export type Database = {
           invoice_file_path: string | null
           invoice_number: string | null
           item_name: string
+          lead_time_confirmed: boolean | null
           lead_time_days: number
           notes: string | null
           orcamento_item_id: string | null
@@ -6477,10 +6479,16 @@ export type Database = {
           pix_key: string | null
           planned_purchase_date: string | null
           project_id: string
+          purchase_deadline_date: string | null
           purchase_type: string | null
           quantity: number
+          reminder_date: string | null
           required_by_date: string
           requisition_id: string | null
+          schedule_alert: string | null
+          schedule_conflict: boolean
+          schedule_ref_activity_id: string | null
+          schedule_rule: Json | null
           shipping_cost: number | null
           start_date: string | null
           status: string
@@ -6488,6 +6496,7 @@ export type Database = {
           stock_exit_date: string | null
           supplier_contact: string | null
           supplier_name: string | null
+          template_item_key: string | null
           unit: string
           updated_at: string
         }
@@ -6495,6 +6504,7 @@ export type Database = {
           activity_id?: string | null
           actual_cost?: number | null
           actual_delivery_date?: string | null
+          auto_generated?: boolean
           boleto_code?: string | null
           boleto_file_path?: string | null
           brand?: string | null
@@ -6513,6 +6523,7 @@ export type Database = {
           invoice_file_path?: string | null
           invoice_number?: string | null
           item_name: string
+          lead_time_confirmed?: boolean | null
           lead_time_days?: number
           notes?: string | null
           orcamento_item_id?: string | null
@@ -6524,10 +6535,16 @@ export type Database = {
           pix_key?: string | null
           planned_purchase_date?: string | null
           project_id: string
+          purchase_deadline_date?: string | null
           purchase_type?: string | null
           quantity?: number
+          reminder_date?: string | null
           required_by_date: string
           requisition_id?: string | null
+          schedule_alert?: string | null
+          schedule_conflict?: boolean
+          schedule_ref_activity_id?: string | null
+          schedule_rule?: Json | null
           shipping_cost?: number | null
           start_date?: string | null
           status?: string
@@ -6535,6 +6552,7 @@ export type Database = {
           stock_exit_date?: string | null
           supplier_contact?: string | null
           supplier_name?: string | null
+          template_item_key?: string | null
           unit?: string
           updated_at?: string
         }
@@ -6542,6 +6560,7 @@ export type Database = {
           activity_id?: string | null
           actual_cost?: number | null
           actual_delivery_date?: string | null
+          auto_generated?: boolean
           boleto_code?: string | null
           boleto_file_path?: string | null
           brand?: string | null
@@ -6560,6 +6579,7 @@ export type Database = {
           invoice_file_path?: string | null
           invoice_number?: string | null
           item_name?: string
+          lead_time_confirmed?: boolean | null
           lead_time_days?: number
           notes?: string | null
           orcamento_item_id?: string | null
@@ -6571,10 +6591,16 @@ export type Database = {
           pix_key?: string | null
           planned_purchase_date?: string | null
           project_id?: string
+          purchase_deadline_date?: string | null
           purchase_type?: string | null
           quantity?: number
+          reminder_date?: string | null
           required_by_date?: string
           requisition_id?: string | null
+          schedule_alert?: string | null
+          schedule_conflict?: boolean
+          schedule_ref_activity_id?: string | null
+          schedule_rule?: Json | null
           shipping_cost?: number | null
           start_date?: string | null
           status?: string
@@ -6582,6 +6608,7 @@ export type Database = {
           stock_exit_date?: string | null
           supplier_contact?: string | null
           supplier_name?: string | null
+          template_item_key?: string | null
           unit?: string
           updated_at?: string
         }
@@ -6633,6 +6660,13 @@ export type Database = {
             columns: ["requisition_id"]
             isOneToOne: false
             referencedRelation: "material_requisitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_purchases_schedule_ref_activity_id_fkey"
+            columns: ["schedule_ref_activity_id"]
+            isOneToOne: false
+            referencedRelation: "project_activities"
             referencedColumns: ["id"]
           },
         ]
@@ -8786,6 +8820,10 @@ export type Database = {
         Args: { p_formalization_id: string }
         Returns: string
       }
+      confirm_purchase_lead_time: {
+        Args: { p_days: number; p_purchase_id: string }
+        Returns: undefined
+      }
       copy_client_schedule_to_internal: {
         Args: { p_project_id: string; p_replace?: boolean }
         Returns: number
@@ -8818,6 +8856,10 @@ export type Database = {
           _user_id: string
         }
         Returns: string
+      }
+      create_schedule_purchases: {
+        Args: { p_items: Json; p_project_id: string }
+        Returns: number
       }
       easter_sunday: { Args: { p_year: number }; Returns: string }
       execute_assistant_query: { Args: { p_sql: string }; Returns: Json }
@@ -9145,6 +9187,7 @@ export type Database = {
         Returns: undefined
       }
       my_profile_role: { Args: never; Returns: string }
+      next_business_day: { Args: { p: string }; Returns: string }
       ops_material_status_from_purchase: {
         Args: { p_delivery_location?: string; p_status: string }
         Returns: Database["public"]["Enums"]["ops_material_status"]
@@ -9153,6 +9196,7 @@ export type Database = {
       pii_projects_backfill: { Args: never; Returns: Json }
       pii_projects_drop_legacy_columns: { Args: never; Returns: Json }
       pii_projects_status: { Args: never; Returns: Json }
+      prev_business_day: { Args: { p: string }; Returns: string }
       project_extra_non_working_days: {
         Args: { p_project_id: string }
         Returns: string[]
@@ -9162,6 +9206,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["painel_etapa_enum"]
       }
       purge_client_error_logs: { Args: never; Returns: number }
+      recompute_schedule_purchase: {
+        Args: { p_purchase_id: string }
+        Returns: undefined
+      }
       reorder_project_activities: {
         Args: { p_ordered_ids: string[]; p_project_id: string }
         Returns: undefined
@@ -9226,6 +9274,23 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      schedule_purchase_dates: {
+        Args: {
+          p_base: string
+          p_lead: number
+          p_lead_confirmed: boolean
+          p_ref: string
+          p_rule: Json
+        }
+        Returns: {
+          alert: string
+          expected: string
+          ideal: string
+          limite: string
+          precisa: string
+          reminder: string
+        }[]
       }
       set_project_internal_note_pinned: {
         Args: { p_note_id: string; p_pinned: boolean }

@@ -44,6 +44,13 @@ export interface ProjectPurchase {
   actual_cost: number | null;
   category: string | null;
   planned_purchase_date: string | null;
+  purchase_deadline_date?: string | null;
+  auto_generated?: boolean;
+  lead_time_confirmed?: boolean | null;
+  reminder_date?: string | null;
+  schedule_alert?: string | null;
+  schedule_conflict?: boolean;
+  template_item_key?: string | null;
   supplier_name: string | null;
   supplier_contact: string | null;
   lead_time_days: number;

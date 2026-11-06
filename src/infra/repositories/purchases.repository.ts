@@ -10,7 +10,7 @@
  * RLS: só equipe com acesso à obra (20260628073734 / 20261011120000).
  */
 import { supabase, executeQuery } from "./base.repository";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import type { Json, Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type ProjectPurchaseRow = Tables<"project_purchases">;
 export type CreatePurchaseInput = Omit<TablesInsert<"project_purchases">, "created_by">;
@@ -26,4 +26,41 @@ export const purchasesRepo = {
         .single();
     });
   },
+
+  /**
+   * Cria as compras do cronograma semanal (RPC SECURITY DEFINER; datas
+   * calculadas no banco por `schedule_purchase_dates`). Devolve quantas entraram.
+   */
+  async createFromSchedule(projectId: string, items: SchedulePurchaseInput[]) {
+    return executeQuery<number>(async () => {
+      return await supabase.rpc("create_schedule_purchases", {
+        p_project_id: projectId,
+        p_items: items as unknown as Json,
+      });
+    });
+  },
+
+  /** Suprimentos informa o prazo do fornecedor e o banco recalcula as datas. */
+  async confirmLeadTime(purchaseId: string, days: number) {
+    return executeQuery<null>(async () => {
+      const { error } = await supabase.rpc("confirm_purchase_lead_time", {
+        p_purchase_id: purchaseId,
+        p_days: days,
+      });
+      return { data: null, error };
+    });
+  },
 };
+
+export interface SchedulePurchaseInput {
+  activity_id: string;
+  ref_activity_id: string | null;
+  item_name: string;
+  category: string | null;
+  purchase_type: "produto" | "prestador";
+  delivery_location: "obra" | "fornecedor";
+  delivery_address: string | null;
+  template_item_key: string;
+  notes: string | null;
+  rule: unknown;
+}

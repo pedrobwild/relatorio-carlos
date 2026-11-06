@@ -112,7 +112,11 @@ export type {
 } from "./internalSchedule.repository";
 
 export { purchasesRepo } from "./purchases.repository";
-export type { CreatePurchaseInput, ProjectPurchaseRow } from "./purchases.repository";
+export type {
+  CreatePurchaseInput,
+  ProjectPurchaseRow,
+  SchedulePurchaseInput,
+} from "./purchases.repository";
 
 export { studioInfoRepo } from "./studioInfo.repository";
 export type { StudioInfo, StudioInfoPatch } from "./studioInfo.repository";
