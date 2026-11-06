@@ -4,7 +4,6 @@ import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { useMemo, useEffect } from "react";
 import { queryKeys } from "@/lib/queryKeys";
-import { purchasesRepo } from "@/infra/repositories";
 import { QUERY_TIMING } from "@/lib/queryClient";
 import { toLocalISODate } from "@/lib/localDate";
 import { purchasesRepo, type ProjectPurchaseRow } from "@/infra/repositories/purchases.repository";
@@ -52,7 +51,6 @@ export interface ProjectPurchase {
   schedule_alert?: string | null;
   schedule_conflict?: boolean;
   template_item_key?: string | null;
-  orcamento_item_id?: string | null;
   supplier_name: string | null;
   supplier_contact: string | null;
   lead_time_days: number;

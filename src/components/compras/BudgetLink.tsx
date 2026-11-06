@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link2 } from "lucide-react";
+import { FileText, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -108,7 +108,7 @@ export function LinkBudgetItemDialog({
           ) : error ? (
             <p className="text-sm text-destructive">Não foi possível carregar o orçamento da obra.</p>
           ) : ranked.length === 0 ? (
-            <EmptyState title="Nenhum item de orçamento" description="Esta obra não tem orçamento com itens cadastrados." />
+            <EmptyState icon={FileText} title="Nenhum item de orçamento" description="Esta obra não tem orçamento com itens cadastrados." />
           ) : (
             ranked.map((i) => (
               <button
