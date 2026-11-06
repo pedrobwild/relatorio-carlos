@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { useMemo, useEffect } from "react";
 import { queryKeys } from "@/lib/queryKeys";
+import { purchasesRepo } from "@/infra/repositories";
 import { QUERY_TIMING } from "@/lib/queryClient";
 import { toLocalISODate } from "@/lib/localDate";
 import { purchasesRepo, type ProjectPurchaseRow } from "@/infra/repositories/purchases.repository";
@@ -51,6 +52,7 @@ export interface ProjectPurchase {
   schedule_alert?: string | null;
   schedule_conflict?: boolean;
   template_item_key?: string | null;
+  orcamento_item_id?: string | null;
   supplier_name: string | null;
   supplier_contact: string | null;
   lead_time_days: number;
@@ -272,6 +274,20 @@ export function useProjectPurchases(
       id,
       ...updates
     }: Partial<ProjectPurchase> & { id: string }) => {
+      // Compra gerada pelo cronograma: prazo do fornecedor passa pela RPC,
+      // que recalcula ideal e limite no banco.
+      if (updates.lead_time_days != null) {
+        const cached = queryClient.getQueryData<ProjectPurchase[]>(
+          queryKeys.purchases.list(projectId),
+        );
+        const current = cached?.find((p) => p.id === id);
+        if (current?.auto_generated) {
+          const res = await purchasesRepo.confirmLeadTime(id, Number(updates.lead_time_days));
+          if (res.error) throw res.error;
+          delete updates.lead_time_days;
+          if (Object.keys(updates).length === 0) return current;
+        }
+      }
       const { data, error } = await supabase
         .from("project_purchases")
         .update(updates)

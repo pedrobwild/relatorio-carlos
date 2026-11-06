@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { InformLeadTimeDialog } from "./InformLeadTimeDialog";
 import { AlertTriangle, CalendarClock, Hourglass } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -5,6 +8,8 @@ import { fmtBR } from "@/lib/schedule/weeklySchedule";
 import { purchaseDeadlineState } from "@/lib/schedule/weeklyPurchases";
 
 export interface SchedulePurchaseFields {
+  id?: string;
+  item_name?: string;
   status: string;
   planned_purchase_date: string | null;
   purchase_deadline_date?: string | null;
@@ -20,6 +25,7 @@ const fmt = (iso: string | null | undefined) => (iso ? fmtBR(iso) : "Sem data");
 /** Selos: "Gerada pelo cronograma", "Prazo a confirmar", alerta e conflito. */
 export function SchedulePurchaseBadges({ purchase }: { purchase: SchedulePurchaseFields }) {
   const awaitingLead = purchase.auto_generated && purchase.lead_time_confirmed === false;
+  const [leadOpen, setLeadOpen] = useState(false);
   if (!purchase.auto_generated && !purchase.schedule_conflict) return null;
   return (
     <div className="flex flex-wrap items-center gap-1 mt-0.5">
@@ -34,6 +40,28 @@ export function SchedulePurchaseBadges({ purchase }: { purchase: SchedulePurchas
           <Hourglass className="h-3 w-3" aria-hidden />
           Prazo a confirmar
         </Badge>
+      )}
+      {awaitingLead && purchase.id && (
+        <>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="h-auto min-h-6 p-0 text-[11px]"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLeadOpen(true);
+            }}
+          >
+            Informar prazo
+          </Button>
+          <InformLeadTimeDialog
+            purchaseId={purchase.id}
+            itemName={purchase.item_name ?? "Compra"}
+            open={leadOpen}
+            onOpenChange={setLeadOpen}
+          />
+        </>
       )}
       {purchase.schedule_conflict && (
         <Badge variant="destructive" className="text-[10px] gap-1">
