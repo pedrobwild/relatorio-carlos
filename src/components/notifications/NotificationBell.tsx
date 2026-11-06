@@ -141,11 +141,6 @@ function NotificationItem({
             isUnread ? "font-semibold text-foreground" : "text-foreground/80",
           )}
         >
-          {notification.is_urgent && (
-            <span className="mr-1 rounded bg-destructive/10 px-1 text-[10px] font-semibold uppercase text-destructive">
-              Urgente
-            </span>
-          )}
           {notification.title}
         </p>
         {/* Contextual microcopy: imperative for actions, informative for updates */}
