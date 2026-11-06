@@ -18,6 +18,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -115,12 +123,22 @@ function NotificationItem({
   const isBlocking =
     isBlockingNotification(notification.type) || !!notification.is_urgent;
 
+  const [detailOpen, setDetailOpen] = useState(false);
   const handleClick = () => {
     if (isUnread) onRead(notification.id);
+    // Aviso urgente: texto completo (com a lista) num diálogo.
+    if (notification.is_urgent) {
+      setDetailOpen(true);
+      return;
+    }
     if (notification.action_url) onNavigate(notification.action_url);
   };
+  const urgentUrl = notification.project_id
+    ? `/obra/${notification.project_id}/compras?filtro=comprar-semana`
+    : notification.action_url;
 
   return (
+    <>
     <button
       onClick={handleClick}
       className={cn(
@@ -167,6 +185,35 @@ function NotificationItem({
         />
       )}
     </button>
+    {notification.is_urgent && (
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{notification.title}</DialogTitle>
+            <DialogDescription className="whitespace-pre-line text-sm text-foreground">
+              {notification.body}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" className="h-11" onClick={() => setDetailOpen(false)}>
+              Fechar
+            </Button>
+            {urgentUrl && (
+              <Button
+                className="h-11"
+                onClick={() => {
+                  setDetailOpen(false);
+                  onNavigate(urgentUrl);
+                }}
+              >
+                Ver compras
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )}
+    </>
   );
 }
 
