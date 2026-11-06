@@ -112,7 +112,8 @@ function NotificationItem({
   const config = typeConfig[notification.type] ?? typeConfig.general;
   const Icon = config.icon;
   const isUnread = !notification.read_at;
-  const isBlocking = isBlockingNotification(notification.type);
+  const isBlocking =
+    isBlockingNotification(notification.type) || !!notification.is_urgent;
 
   const handleClick = () => {
     if (isUnread) onRead(notification.id);
@@ -140,6 +141,11 @@ function NotificationItem({
             isUnread ? "font-semibold text-foreground" : "text-foreground/80",
           )}
         >
+          {notification.is_urgent && (
+            <span className="mr-1 rounded bg-destructive/10 px-1 text-[10px] font-semibold uppercase text-destructive">
+              Urgente
+            </span>
+          )}
           {notification.title}
         </p>
         {/* Contextual microcopy: imperative for actions, informative for updates */}
