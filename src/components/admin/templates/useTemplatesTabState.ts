@@ -11,6 +11,8 @@ import {
 } from "@/hooks/useProjectTemplates";
 import { activityTemplateSets } from "@/data/activityTemplates";
 import { matchesSearch } from "@/lib/searchNormalize";
+import { validateShowIf } from "@/lib/schedule/showIf";
+import { normalizeImportedTemplate, toExportShape } from "./templateIO";
 import {
   emptyForm,
   type FormState,
@@ -85,6 +87,38 @@ export function useTemplatesTabState() {
     return preset?.activities ?? f.custom_activities;
   };
 
+  const formFromTemplate = (t: ProjectTemplate, name: string): FormState => {
+    const activities = (t.default_activities ?? []) as ActivityItem[];
+    const actMatch = activityTemplateSets.find(
+      (a) => JSON.stringify(a.activities) === JSON.stringify(activities),
+    );
+    const sm = t.schedule_model;
+    const isWeekly = sm?.type === "weekly";
+    const extra: Record<string, unknown> = { ...(sm ?? {}) };
+    delete extra.type;
+    delete extra.weeks;
+    delete extra.default_contract_business_days;
+    return {
+      name,
+      description: t.description ?? "",
+      is_project_phase: t.is_project_phase,
+      default_contract_value: t.default_contract_value?.toString() ?? "",
+      selected_activity_template: isWeekly
+        ? "__custom__"
+        : (actMatch?.id ??
+          (activities.length > 0 ? "__custom__" : "__none__")),
+      custom_activities: actMatch && !isWeekly ? [] : activities,
+      category: t.category || "geral",
+      custom_fields: (t.custom_fields ?? []) as FormState["custom_fields"],
+      is_weekly: isWeekly,
+      weeks: String(sm?.weeks ?? 12),
+      default_contract_business_days: String(
+        sm?.default_contract_business_days ?? 60,
+      ),
+      schedule_model_extra: isWeekly ? extra : {},
+    };
+  };
+
   const openCreate = () => {
     setEditingId(null);
     setForm(emptyForm);
@@ -93,21 +127,7 @@ export function useTemplatesTabState() {
 
   const openEdit = (t: ProjectTemplate) => {
     setEditingId(t.id);
-    const activities = (t.default_activities ?? []) as ActivityItem[];
-    const actMatch = activityTemplateSets.find(
-      (a) => JSON.stringify(a.activities) === JSON.stringify(activities),
-    );
-    setForm({
-      name: t.name,
-      description: t.description ?? "",
-      is_project_phase: t.is_project_phase,
-      default_contract_value: t.default_contract_value?.toString() ?? "",
-      selected_activity_template:
-        actMatch?.id ?? (activities.length > 0 ? "__custom__" : "__none__"),
-      custom_activities: actMatch ? [] : activities,
-      category: t.category || "geral",
-      custom_fields: (t.custom_fields ?? []) as FormState["custom_fields"],
-    });
+    setForm(formFromTemplate(t, t.name));
     setDialogOpen(true);
   };
 
@@ -186,6 +206,40 @@ export function useTemplatesTabState() {
     if (!form.name.trim()) return;
     const activities = resolveActivities(form);
     const validActivities = activities.filter((a) => a.description.trim());
+    const validFields = form.custom_fields.filter(
+      (f) => f.key.trim() && f.label.trim(),
+    );
+    let schedule_model: ProjectTemplate["schedule_model"] = null;
+    if (form.is_weekly) {
+      const weeks = parseInt(form.weeks, 10);
+      const days = parseInt(form.default_contract_business_days, 10);
+      if (!weeks || weeks < 1) {
+        toast({ title: "Informe o número de semanas", variant: "destructive" });
+        return;
+      }
+      const errors = validActivities.flatMap((a, i) => [
+        ...validateShowIf(a.showIf, validFields).map(
+          (e) => `${a.description || `Atividade ${i + 1}`}: ${e}`,
+        ),
+        ...((a.week ?? 1) > weeks || (a.weekEnd ?? a.week ?? 1) > weeks
+          ? [`${a.description}: semana maior que ${weeks}`]
+          : []),
+      ]);
+      if (errors.length > 0) {
+        toast({
+          title: "Corrija as condições antes de salvar",
+          description: errors.slice(0, 3).join(" | "),
+          variant: "destructive",
+        });
+        return;
+      }
+      schedule_model = {
+        ...form.schedule_model_extra,
+        type: "weekly",
+        weeks,
+        ...(days > 0 ? { default_contract_business_days: days } : {}),
+      };
+    }
     const payload = {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
@@ -195,9 +249,8 @@ export function useTemplatesTabState() {
         ? parseFloat(form.default_contract_value)
         : null,
       category: form.category,
-      custom_fields: form.custom_fields.filter(
-        (f) => f.key.trim() && f.label.trim(),
-      ),
+      custom_fields: validFields,
+      schedule_model,
     };
 
     try {
@@ -225,34 +278,13 @@ export function useTemplatesTabState() {
 
   const handleDuplicate = (t: ProjectTemplate) => {
     setEditingId(null);
-    const activities = (t.default_activities ?? []) as ActivityItem[];
-    const actMatch = activityTemplateSets.find(
-      (a) => JSON.stringify(a.activities) === JSON.stringify(activities),
-    );
-    setForm({
-      name: `${t.name} (cópia)`,
-      description: t.description ?? "",
-      is_project_phase: t.is_project_phase,
-      default_contract_value: t.default_contract_value?.toString() ?? "",
-      selected_activity_template:
-        actMatch?.id ?? (activities.length > 0 ? "__custom__" : "__none__"),
-      custom_activities: actMatch ? [] : activities,
-      category: t.category || "geral",
-      custom_fields: (t.custom_fields ?? []) as FormState["custom_fields"],
-    });
+    setForm(formFromTemplate(t, `${t.name} (cópia)`));
     setDialogOpen(true);
   };
 
   const handleExport = useCallback(
     (t: ProjectTemplate) => {
-      const exportData = {
-        name: t.name,
-        description: t.description,
-        is_project_phase: t.is_project_phase,
-        default_activities: t.default_activities,
-        default_contract_value: t.default_contract_value,
-        category: t.category,
-      };
+      const exportData = toExportShape(t);
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
         type: "application/json",
       });
@@ -269,14 +301,7 @@ export function useTemplatesTabState() {
 
   const handleExportAll = useCallback(() => {
     if (!templates?.length) return;
-    const exportData = templates.map((t) => ({
-      name: t.name,
-      description: t.description,
-      is_project_phase: t.is_project_phase,
-      default_activities: t.default_activities,
-      default_contract_value: t.default_contract_value,
-      category: t.category,
-    }));
+    const exportData = templates.map(toExportShape);
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
       type: "application/json",
     });
@@ -299,35 +324,9 @@ export function useTemplatesTabState() {
         const items = Array.isArray(parsed) ? parsed : [parsed];
         let count = 0;
         for (const item of items) {
-          if (!item.name || typeof item.name !== "string") continue;
-          const activities = Array.isArray(item.default_activities)
-            ? item.default_activities
-                .filter(
-                  (a: any) =>
-                    a?.description &&
-                    typeof a.durationDays === "number" &&
-                    typeof a.weight === "number",
-                )
-                .map((a: any) => ({
-                  description: String(a.description).slice(0, 200),
-                  durationDays: Math.max(1, Math.round(a.durationDays)),
-                  weight: Math.max(0, Math.min(100, Math.round(a.weight))),
-                }))
-            : [];
-          await createTemplate.mutateAsync({
-            name: item.name.slice(0, 200),
-            description: item.description
-              ? String(item.description).slice(0, 500)
-              : undefined,
-            is_project_phase: !!item.is_project_phase,
-            default_activities: activities,
-            default_contract_value:
-              typeof item.default_contract_value === "number"
-                ? item.default_contract_value
-                : null,
-            category:
-              typeof item.category === "string" ? item.category : "geral",
-          });
+          const normalized = normalizeImportedTemplate(item);
+          if (!normalized) continue;
+          await createTemplate.mutateAsync(normalized);
           count++;
         }
         toast({

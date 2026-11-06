@@ -6834,6 +6834,7 @@ export type Database = {
           id: string
           is_project_phase: boolean
           name: string
+          schedule_model: Json | null
           template_id: string
           version_number: number
         }
@@ -6848,6 +6849,7 @@ export type Database = {
           id?: string
           is_project_phase?: boolean
           name: string
+          schedule_model?: Json | null
           template_id: string
           version_number?: number
         }
@@ -6862,6 +6864,7 @@ export type Database = {
           id?: string
           is_project_phase?: boolean
           name?: string
+          schedule_model?: Json | null
           template_id?: string
           version_number?: number
         }
@@ -6888,6 +6891,7 @@ export type Database = {
           is_project_phase: boolean
           last_used_at: string | null
           name: string
+          schedule_model: Json | null
           updated_at: string
           usage_count: number | null
         }
@@ -6903,6 +6907,7 @@ export type Database = {
           is_project_phase?: boolean
           last_used_at?: string | null
           name: string
+          schedule_model?: Json | null
           updated_at?: string
           usage_count?: number | null
         }
@@ -6918,6 +6923,7 @@ export type Database = {
           is_project_phase?: boolean
           last_used_at?: string | null
           name?: string
+          schedule_model?: Json | null
           updated_at?: string
           usage_count?: number | null
         }
@@ -6981,6 +6987,9 @@ export type Database = {
           planned_end_date: string | null
           planned_start_date: string | null
           property_type: string | null
+          schedule_exported_at: string | null
+          schedule_exported_end: string | null
+          schedule_revision: number
           status: string
           total_area: number | null
           unit_name: string | null
@@ -7043,6 +7052,9 @@ export type Database = {
           planned_end_date?: string | null
           planned_start_date?: string | null
           property_type?: string | null
+          schedule_exported_at?: string | null
+          schedule_exported_end?: string | null
+          schedule_revision?: number
           status?: string
           total_area?: number | null
           unit_name?: string | null
@@ -7105,6 +7117,9 @@ export type Database = {
           planned_end_date?: string | null
           planned_start_date?: string | null
           property_type?: string | null
+          schedule_exported_at?: string | null
+          schedule_exported_end?: string | null
+          schedule_revision?: number
           status?: string
           total_area?: number | null
           unit_name?: string | null

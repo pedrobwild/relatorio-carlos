@@ -1,3 +1,4 @@
+import { toLocalISODate } from "@/lib/localDate";
 import { useState, useMemo } from "react";
 import { LayoutTemplate, ChevronDown, ChevronUp } from "lucide-react";
 import {
@@ -123,7 +124,20 @@ export function TemplateSelectorCard({
                   "contract_value",
                   tpl.default_contract_value.toString(),
                 );
-              if (
+              const weeklyDays =
+                tpl.schedule_model?.type === "weekly"
+                  ? tpl.schedule_model.default_contract_business_days
+                  : undefined;
+              if (weeklyDays) {
+                onFormChange("business_days_duration", String(weeklyDays));
+                if (formData.planned_start_date) {
+                  const end = addBusinessDays(
+                    new Date(formData.planned_start_date + "T00:00:00"),
+                    weeklyDays - 1,
+                  );
+                  onFormChange("planned_end_date", toLocalISODate(end));
+                }
+              } else if (
                 formData.planned_start_date &&
                 Array.isArray(tpl.default_activities) &&
                 tpl.default_activities.length > 0
@@ -165,7 +179,19 @@ export function TemplateSelectorCard({
           </SelectContent>
         </Select>
 
+        {selectedTemplate?.schedule_model?.type === "weekly" && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">
+              Modelo semanal · {selectedTemplate.schedule_model.weeks} semanas
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              Responda as condições abaixo. A prévia das semanas aparece em
+              Planejamento.
+            </span>
+          </div>
+        )}
         {selectedTemplate &&
+          selectedTemplate.schedule_model?.type !== "weekly" &&
           Array.isArray(selectedTemplate.default_activities) &&
           selectedTemplate.default_activities.length > 0 && (
             <div className="mt-3 space-y-2">

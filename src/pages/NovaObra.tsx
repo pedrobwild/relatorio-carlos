@@ -34,6 +34,9 @@ import { useNovaObraSubmit } from "./nova-obra/useNovaObraSubmit";
 import { TemplateSelectorCard } from "./nova-obra/TemplateSelectorCard";
 import { ProjectInfoCard } from "./nova-obra/ProjectInfoCard";
 import { ScheduleCard, type ScheduleActivity } from "./nova-obra/ScheduleCard";
+import { WeeklySchedulePreview } from "./nova-obra/WeeklySchedulePreview";
+import { WeeklyPlanConfirmDialog } from "./nova-obra/WeeklyPlanConfirmDialog";
+import type { WeeklyPlan } from "@/lib/schedule/weeklySchedule";
 import { FinancialCard } from "./nova-obra/FinancialCard";
 import { CustomerCard } from "./nova-obra/CustomerCard";
 import { BudgetUploadCard } from "./nova-obra/BudgetUploadCard";
@@ -210,6 +213,10 @@ export default function NovaObra() {
   const [formData, setFormData] = useState<FormData>(
     draft?.formData ?? initialFormData,
   );
+  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan | null>(null);
+  const [useWeeklySlack, setUseWeeklySlack] = useState(true);
+  const [confirmOverrunOpen, setConfirmOverrunOpen] = useState(false);
+  const isWeeklyTemplate = selectedTemplate?.schedule_model?.type === "weekly";
   const [budgetFile, setBudgetFile] = useState<File | null>(null);
   const [scheduleActivities, setScheduleActivities] = useState<
     ScheduleActivity[]
@@ -481,8 +488,11 @@ export default function NovaObra() {
   const handleNext = () => goToStep(currentStep + 1);
   const handleBack = () => goToStep(currentStep - 1);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (
+    e?: { preventDefault: () => void },
+    overrunConfirmed = false,
+  ) => {
+    e?.preventDefault();
     if (!user) {
       toast({
         title: "Erro",
@@ -525,6 +535,15 @@ export default function NovaObra() {
       return;
     }
 
+    if (
+      isWeeklyTemplate &&
+      !overrunConfirmed &&
+      weeklyPlan?.alerts.some((a) => a.blocking)
+    ) {
+      setConfirmOverrunOpen(true);
+      return;
+    }
+
     setLoading(true);
     setErrors({});
 
@@ -548,6 +567,7 @@ export default function NovaObra() {
         budgetFile,
         scheduleActivities,
         contractState.file ?? undefined,
+        isWeeklyTemplate ? weeklyPlan : null,
       );
       toast({
         title: "Obra cadastrada!",
@@ -823,14 +843,26 @@ export default function NovaObra() {
                   )}
 
                   {/* Step 2: Planejamento */}
-                  {currentStep === 2 && (
-                    <ScheduleCard
-                      formData={formData}
-                      onChange={handleChange}
-                      activities={scheduleActivities}
-                      onActivitiesChange={setScheduleActivities}
-                    />
-                  )}
+                  {currentStep === 2 &&
+                    (isWeeklyTemplate && selectedTemplate ? (
+                      <WeeklySchedulePreview
+                        template={selectedTemplate}
+                        formData={formData}
+                        onChange={handleChange}
+                        conditions={customFieldValues}
+                        useSlack={useWeeklySlack}
+                        onUseSlackChange={setUseWeeklySlack}
+                        plan={weeklyPlan}
+                        onPlanChange={setWeeklyPlan}
+                      />
+                    ) : (
+                      <ScheduleCard
+                        formData={formData}
+                        onChange={handleChange}
+                        activities={scheduleActivities}
+                        onActivitiesChange={setScheduleActivities}
+                      />
+                    ))}
 
                   {/* Step 3: Revisão */}
                   {currentStep === 3 && (
@@ -985,6 +1017,18 @@ export default function NovaObra() {
         </div>
       </div>
 
+      <WeeklyPlanConfirmDialog
+        open={confirmOverrunOpen}
+        onOpenChange={setConfirmOverrunOpen}
+        messages={
+          weeklyPlan?.alerts.filter((a) => a.blocking).map((a) => a.message) ??
+          []
+        }
+        onConfirm={() => {
+          setConfirmOverrunOpen(false);
+          void handleSubmit(undefined, true);
+        }}
+      />
       <DuplicateProjectDialog
         duplicate={duplicate}
         onOpenChange={(open) => {
