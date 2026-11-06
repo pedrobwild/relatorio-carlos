@@ -22,11 +22,16 @@ export async function getScheduleExportMeta(
     const { data: p, error } = await supabase
       .from("projects")
       .select(
-        "schedule_revision, schedule_exported_at, schedule_exported_end, unit_name, nome_do_empreendimento",
+        "schedule_revision, schedule_exported_at, schedule_exported_end, unit_name",
       )
       .eq("id", projectId)
       .maybeSingle();
     if (error) return { data: null, error };
+    const { data: studio } = await supabase
+      .from("project_studio_info")
+      .select("nome_do_empreendimento")
+      .eq("project_id", projectId)
+      .maybeSingle();
     const { data: c } = await supabase
       .from("project_customers")
       .select("customer_name, customer_phone")
@@ -40,7 +45,7 @@ export async function getScheduleExportMeta(
         schedule_exported_at: p?.schedule_exported_at ?? null,
         schedule_exported_end: p?.schedule_exported_end ?? null,
         unit_name: p?.unit_name ?? null,
-        nome_do_empreendimento: p?.nome_do_empreendimento ?? null,
+        nome_do_empreendimento: studio?.nome_do_empreendimento ?? null,
         customer_name: c?.customer_name ?? null,
         customer_phone: c?.customer_phone ?? null,
       },

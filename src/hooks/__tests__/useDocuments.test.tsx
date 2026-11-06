@@ -143,6 +143,7 @@ describe("DOCUMENT_CATEGORIES", () => {
       "garantia",
       "as_built",
       "termo_entrega",
+      "cronograma",
     ];
 
     expect(Object.keys(DOCUMENT_CATEGORIES)).toEqual(expectedCategories);
