@@ -22,6 +22,7 @@ export const DOCUMENT_CATEGORIES = {
   garantia: { label: "Garantias", icon: "Shield" },
   as_built: { label: "As Built", icon: "Building" },
   termo_entrega: { label: "Termo de Entrega", icon: "CheckSquare" },
+  cronograma: { label: "Cronograma", icon: "CalendarRange" },
 } as const;
 
 export type DocumentCategory = keyof typeof DOCUMENT_CATEGORIES;

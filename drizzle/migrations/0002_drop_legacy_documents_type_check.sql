@@ -1,0 +1,1 @@
+ALTER TABLE public.project_documents DROP CONSTRAINT IF EXISTS documents_type_check;

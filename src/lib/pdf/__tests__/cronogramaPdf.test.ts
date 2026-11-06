@@ -3,6 +3,8 @@ import {
   generateCronogramaPdf,
   CronogramaPdfEmptyError,
   slugifyForFilename,
+  buildCronogramaFileName,
+  clientSafe,
   type CronogramaPdfProject,
 } from "../cronogramaPdf";
 import type { ProjectActivity } from "@/hooks/useProjectActivities";
@@ -59,6 +61,27 @@ describe("slugifyForFilename", () => {
   });
 });
 
+describe("buildCronogramaFileName", () => {
+  it("usa empreendimento, unidade e revisão", () => {
+    expect(
+      buildCronogramaFileName({
+        name: "x",
+        nome_do_empreendimento: "Exalt Ibirapuera",
+        unit_name: "808",
+        schedule_revision: 2,
+      }),
+    ).toBe("Cronograma-Bewild-Exalt-Ibirapuera-808-R2.pdf");
+  });
+});
+
+describe("clientSafe", () => {
+  it("remove travessão e a palavra setup", () => {
+    expect(clientSafe("Pintura — acabamento setup")).toBe(
+      "Pintura, acabamento preparação",
+    );
+  });
+});
+
 describe("generateCronogramaPdf", () => {
   it("lança CronogramaPdfEmptyError quando não há atividades", async () => {
     await expect(generateCronogramaPdf(baseProject, [])).rejects.toBeInstanceOf(
@@ -91,10 +114,10 @@ describe("generateCronogramaPdf", () => {
     const { doc, fileName } = await generateCronogramaPdf(
       baseProject,
       activities,
-      { now: fixedNow },
+      { now: fixedNow, skipAssets: true },
     );
 
-    expect(fileName).toBe("cronograma_apto-itaim-jardim_2026-05-24.pdf");
+    expect(fileName).toBe("Cronograma-Bewild-Apto-Itaim-Jardim-R0.pdf");
     const blob = doc.output("blob");
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.size).toBeGreaterThan(500);
@@ -126,10 +149,10 @@ describe("generateCronogramaPdf", () => {
     const { doc, fileName } = await generateCronogramaPdf(
       baseProject,
       activities,
-      { now: fixedNow },
+      { now: fixedNow, skipAssets: true },
     );
 
-    expect(fileName).toMatch(/^cronograma_apto-itaim-jardim_2026-05-24\.pdf$/);
+    expect(fileName).toBe("Cronograma-Bewild-Apto-Itaim-Jardim-R0.pdf");
     const blob = doc.output("blob");
     expect(blob.size).toBeGreaterThan(500);
   });
@@ -150,6 +173,7 @@ describe("generateCronogramaPdf", () => {
 
     const { doc } = await generateCronogramaPdf(baseProject, activities, {
       now: fixedNow,
+      skipAssets: true,
     });
 
     const blob = doc.output("blob");
@@ -160,6 +184,7 @@ describe("generateCronogramaPdf", () => {
     const activities = [makeActivity()];
     const { fileName } = await generateCronogramaPdf(baseProject, activities, {
       now: fixedNow,
+      skipAssets: true,
       fileName: "cronograma_custom.pdf",
     });
     expect(fileName).toBe("cronograma_custom.pdf");

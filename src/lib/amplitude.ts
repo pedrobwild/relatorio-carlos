@@ -30,6 +30,7 @@ export type AmplitudeEvent =
   | "mobile_tab_route_redirect"
   // Cronograma export
   | "cronograma_pdf_exported"
+  | "cronograma_pdf_whatsapp"
   // Instrumentação do link customer ↔ project por e-mail
   | "Customer Link Ensure"
   // Adoção da camada de operação (Painel de Obras, Semana, Hoje). Sem PII:

@@ -36,7 +36,9 @@ import { ProjectInfoCard } from "./nova-obra/ProjectInfoCard";
 import { ScheduleCard, type ScheduleActivity } from "./nova-obra/ScheduleCard";
 import { WeeklySchedulePreview } from "./nova-obra/WeeklySchedulePreview";
 import { WeeklyPlanConfirmDialog } from "./nova-obra/WeeklyPlanConfirmDialog";
-import type { WeeklyPlan } from "@/lib/schedule/weeklySchedule";
+import { buildWeeklyRows, type WeeklyPlan } from "@/lib/schedule/weeklySchedule";
+import { CronogramaPdfButton } from "@/components/cronograma/CronogramaPdfButton";
+import type { ProjectActivity } from "@/hooks/useProjectActivities";
 import { FinancialCard } from "./nova-obra/FinancialCard";
 import { CustomerCard } from "./nova-obra/CustomerCard";
 import { BudgetUploadCard } from "./nova-obra/BudgetUploadCard";
@@ -217,6 +219,31 @@ export default function NovaObra() {
   const [useWeeklySlack, setUseWeeklySlack] = useState(true);
   const [confirmOverrunOpen, setConfirmOverrunOpen] = useState(false);
   const isWeeklyTemplate = selectedTemplate?.schedule_model?.type === "weekly";
+  // Linhas do cliente da prévia, no formato do PDF do cronograma.
+  const previewActivities = useMemo<ProjectActivity[]>(() => {
+    if (!weeklyPlan) return [];
+    const now = new Date().toISOString();
+    return buildWeeklyRows(weeklyPlan).client.map((r) => ({
+      id: `prev-${r.weekIndex}`,
+      project_id: "",
+      description: r.description,
+      planned_start: r.planned_start,
+      planned_end: r.planned_end,
+      actual_start: null,
+      actual_end: null,
+      weight: r.weight,
+      sort_order: r.sort_order,
+      created_at: now,
+      updated_at: now,
+      created_by: "",
+      predecessor_ids: [],
+      baseline_start: null,
+      baseline_end: null,
+      baseline_saved_at: null,
+      etapa: r.etapa,
+      detailed_description: null,
+    }));
+  }, [weeklyPlan]);
   const [budgetFile, setBudgetFile] = useState<File | null>(null);
   const [scheduleActivities, setScheduleActivities] = useState<
     ScheduleActivity[]
@@ -854,6 +881,19 @@ export default function NovaObra() {
                         onUseSlackChange={setUseWeeklySlack}
                         plan={weeklyPlan}
                         onPlanChange={setWeeklyPlan}
+                        actions={
+                          <CronogramaPdfButton
+                            previewOnly
+                            project={{
+                              name: formData.name,
+                              unit_name: formData.unit_name,
+                              nome_do_empreendimento:
+                                formData.nome_do_empreendimento,
+                              customer_name: formData.customer_name,
+                            }}
+                            activities={previewActivities}
+                          />
+                        }
                       />
                     ) : (
                       <ScheduleCard
