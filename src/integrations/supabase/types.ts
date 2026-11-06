@@ -3365,6 +3365,7 @@ export type Database = {
           body: string | null
           created_at: string
           id: string
+          is_urgent: boolean
           project_id: string | null
           read_at: string | null
           title: string
@@ -3376,6 +3377,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          is_urgent?: boolean
           project_id?: string | null
           read_at?: string | null
           title: string
@@ -3387,6 +3389,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          is_urgent?: boolean
           project_id?: string | null
           read_at?: string | null
           title?: string
@@ -9188,6 +9191,10 @@ export type Database = {
       }
       my_profile_role: { Args: never; Returns: string }
       next_business_day: { Args: { p: string }; Returns: string }
+      notify_schedule_purchases: {
+        Args: { p_project_id: string }
+        Returns: undefined
+      }
       ops_material_status_from_purchase: {
         Args: { p_delivery_location?: string; p_status: string }
         Returns: Database["public"]["Enums"]["ops_material_status"]
@@ -9304,6 +9311,10 @@ export type Database = {
       start_project_execution: {
         Args: { p_project_id: string; p_start_date?: string }
         Returns: Json
+      }
+      subtract_business_days_simple: {
+        Args: { n: number; p: string }
+        Returns: string
       }
       sync_budget_items_to_purchases: {
         Args: { p_project_id: string }
