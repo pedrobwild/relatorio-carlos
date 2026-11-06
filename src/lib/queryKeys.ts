@@ -94,6 +94,8 @@ export const queryKeys = {
       [...queryKeys.purchases.lists(), projectId] as const,
     alerts: (projectId: string | undefined) =>
       [...queryKeys.purchases.all, "alerts", projectId] as const,
+    budgetItems: (projectId: string | undefined) =>
+      [...queryKeys.purchases.all, "budget-items", projectId] as const,
   },
 
   // ============================================================================

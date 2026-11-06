@@ -116,6 +116,7 @@ export type {
   CreatePurchaseInput,
   ProjectPurchaseRow,
   SchedulePurchaseInput,
+  ProjectBudgetItem,
 } from "./purchases.repository";
 
 export { studioInfoRepo } from "./studioInfo.repository";
