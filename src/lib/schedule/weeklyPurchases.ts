@@ -87,6 +87,17 @@ export function nextBusinessDay(d: Date): Date {
   return c;
 }
 
+/** Volta N dias úteis (espelho de `subtract_business_days_simple`). */
+export function subtractBusinessDaysStrict(d: Date, n: number): Date {
+  let c = new Date(d);
+  let k = 0;
+  while (k < Math.max(0, n)) {
+    c = addDays(c, -1);
+    if (!isNonBusinessDay(c)) k++;
+  }
+  return c;
+}
+
 export function computePurchaseDates(
   rule: PurchaseRule,
   baseIso: string,
@@ -118,13 +129,22 @@ export function computePurchaseDates(
   }
   let precisa = nextBusinessDay(base);
   if (rule.regra === "marmoraria") precisa = nextBusinessDay(addDays(base, -14));
-  const back =
-    lead?.confirmed ? lead.days : rule.regra === "limite" ? (rule.dias ?? 7) : 7;
-  const rawLimite = addDays(precisa, -back);
+  let limite: Date;
+  let ideal: Date;
+  if (lead?.confirmed && rule.prazo_confirmar) {
+    // Prazo do fornecedor em dias úteis.
+    limite = subtractBusinessDaysStrict(precisa, lead.days);
+    ideal = prevBusinessDay(addDays(limite, -7));
+  } else {
+    const back = rule.regra === "limite" ? (rule.dias ?? 7) : 7;
+    const rawLimite = addDays(precisa, -back);
+    limite = prevBusinessDay(rawLimite);
+    ideal = prevBusinessDay(addDays(rawLimite, -7));
+  }
   return {
     precisa: iso(precisa),
-    limite: iso(prevBusinessDay(rawLimite)),
-    ideal: iso(prevBusinessDay(addDays(rawLimite, -7))),
+    limite: iso(limite),
+    ideal: iso(ideal),
     reminder:
       rule.agendar_instalacao_dias != null
         ? iso(prevBusinessDay(addDays(precisa, -rule.agendar_instalacao_dias)))
@@ -222,4 +242,55 @@ export function purchaseDeadlineState(
   if (p.purchase_deadline_date && today > p.purchase_deadline_date) return "late_deadline";
   if (p.planned_purchase_date && today > p.planned_purchase_date) return "late_ideal";
   return "ok";
+}
+
+/** Domingo da semana atual (segunda a domingo), em ISO. */
+export function sundayOfWeek(todayIso: string): string {
+  const d = parse(todayIso);
+  const dow = d.getDay(); // 0 dom
+  return toLocalISODate(addDays(d, dow === 0 ? 0 : 7 - dow));
+}
+
+/** "Comprar esta semana": pendente e ideal ou limite até domingo (inclui vencidos). */
+export function isBuyThisWeek(
+  p: { status: string; planned_purchase_date: string | null; purchase_deadline_date?: string | null },
+  today: string = toLocalISODate(new Date()),
+): boolean {
+  if (p.status !== "pending") return false;
+  const sunday = sundayOfWeek(today);
+  return (
+    (!!p.planned_purchase_date && p.planned_purchase_date <= sunday) ||
+    (!!p.purchase_deadline_date && p.purchase_deadline_date <= sunday)
+  );
+}
+
+/** Custo real acima do valor orçado do item vinculado. */
+export function isAboveBudget(actual: number | null | undefined, budgeted: number | null | undefined): boolean {
+  return actual != null && budgeted != null && budgeted > 0 && actual > budgeted;
+}
+
+const norm = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+/** Semelhança simples (tokens em comum) para ordenar itens do orçamento. */
+export function similarityScore(
+  purchase: { item_name: string; category?: string | null },
+  candidate: { name: string; section?: string | null },
+): number {
+  const tokens = (s: string) => new Set(norm(s).split(/[^a-z0-9]+/).filter((t) => t.length > 2));
+  const a = tokens(purchase.item_name);
+  const b = tokens(candidate.name);
+  let score = 0;
+  a.forEach((t) => {
+    if (b.has(t)) score += 2;
+    else if ([...b].some((x) => x.startsWith(t.slice(0, 4)) || t.startsWith(x.slice(0, 4)))) score += 1;
+  });
+  if (purchase.category && candidate.section) {
+    const c = tokens(purchase.category);
+    const s = tokens(candidate.section);
+    c.forEach((t) => {
+      if (s.has(t)) score += 1;
+    });
+  }
+  return score;
 }

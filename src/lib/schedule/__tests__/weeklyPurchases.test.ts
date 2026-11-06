@@ -9,6 +9,9 @@ import {
   buildWeeklyPurchases,
   computePurchaseDates,
   purchaseDeadlineState,
+  isAboveBudget,
+  isBuyThisWeek,
+  similarityScore,
 } from "../weeklyPurchases";
 
 const m = models[0];
@@ -122,5 +125,47 @@ describe("alertas de prazo", () => {
     expect(purchaseDeadlineState(base, "2026-11-17")).toBe("late_ideal");
     expect(purchaseDeadlineState(base, "2026-11-24")).toBe("late_deadline");
     expect(purchaseDeadlineState({ ...base, status: "purchased" }, "2026-12-01")).toBe("ok");
+  });
+});
+
+describe("prazo do fornecedor informado", () => {
+  it("10 dias úteis: limite = precisa − 10 dias úteis; ideal = limite − 7 (dia útil anterior)", () => {
+    // Equipamento de ar-condicionado: precisa 04/01/2027
+    const d = computePurchaseDates({ regra: "padrao", prazo_confirmar: true }, "2027-01-04", null, {
+      days: 10,
+      confirmed: true,
+    });
+    expect(br(d.limite)).toBe("17/12/2026");
+    expect(br(d.ideal)).toBe("10/12/2026");
+  });
+});
+
+describe("comprar esta semana", () => {
+  const today = "2026-11-18"; // quarta; semana 16 a 22/11
+  const p = (status: string, ideal: string | null, limite: string | null) => ({
+    status,
+    planned_purchase_date: ideal,
+    purchase_deadline_date: limite,
+  });
+  it("inclui ideal ou limite na semana e vencidos, só pendentes", () => {
+    expect(isBuyThisWeek(p("pending", "2026-11-22", "2026-11-30"), today)).toBe(true);
+    expect(isBuyThisWeek(p("pending", "2026-11-30", "2026-11-20"), today)).toBe(true);
+    expect(isBuyThisWeek(p("pending", "2026-11-01", "2026-11-09"), today)).toBe(true);
+    expect(isBuyThisWeek(p("pending", "2026-11-23", "2026-11-30"), today)).toBe(false);
+    expect(isBuyThisWeek(p("purchased", "2026-11-17", "2026-11-18"), today)).toBe(false);
+  });
+});
+
+describe("valor orçado", () => {
+  it("custo real acima do orçado", () => {
+    expect(isAboveBudget(1200, 1000)).toBe(true);
+    expect(isAboveBudget(1000, 1000)).toBe(false);
+    expect(isAboveBudget(null, 1000)).toBe(false);
+  });
+  it("ordena por semelhança de nome", () => {
+    const c = { item_name: "Piso vinílico", category: "Revestimentos e piso" };
+    expect(similarityScore(c, { name: "Piso vinílico click 5mm" })).toBeGreaterThan(
+      similarityScore(c, { name: "Tinta acrílica" }),
+    );
   });
 });
