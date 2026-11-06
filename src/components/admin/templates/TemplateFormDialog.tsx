@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { activityTemplateSets } from "@/data/activityTemplates";
+import { WeeklyActivitiesEditor } from "./WeeklyActivitiesEditor";
 import {
   CATEGORIES,
   totalDays,
@@ -166,7 +167,33 @@ export function TemplateFormDialog({
 
           <Separator />
 
-          {/* Activities section */}
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <Label htmlFor="tpl-weekly" className="text-sm font-medium">
+                Modelo semanal
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Atividades por semana de calendário, com condições da obra
+              </p>
+            </div>
+            <Switch
+              id="tpl-weekly"
+              checked={form.is_weekly}
+              onCheckedChange={(v) =>
+                setForm((p) => ({
+                  ...p,
+                  is_weekly: v,
+                  selected_activity_template: v
+                    ? "__custom__"
+                    : p.selected_activity_template,
+                }))
+              }
+            />
+          </div>
+
+          {form.is_weekly ? (
+            <WeeklyActivitiesEditor form={form} setForm={setForm} />
+          ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Cronograma padrão</Label>
@@ -336,6 +363,7 @@ export function TemplateFormDialog({
               </div>
             ) : null}
           </div>
+          )}
 
           {/* Custom Fields Editor */}
           <Separator />
