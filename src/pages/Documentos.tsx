@@ -45,6 +45,7 @@ const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
   garantia: <Shield className="w-5 h-5" />,
   as_built: <Building className="w-5 h-5" />,
   termo_entrega: <CheckSquare className="w-5 h-5" />,
+  cronograma: <CalendarRange className="w-5 h-5" />,
 };
 
 const DocumentCard = ({

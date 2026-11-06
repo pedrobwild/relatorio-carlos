@@ -145,6 +145,7 @@ export const documentCategorySchema = z.enum([
   "garantia",
   "as_built",
   "termo_entrega",
+  "cronograma",
 ]);
 
 export const documentStatusSchema = z.enum(["pending", "approved"]);

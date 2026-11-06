@@ -30,7 +30,8 @@ export type DocumentCategory =
   | "nota_fiscal"
   | "garantia"
   | "as_built"
-  | "termo_entrega";
+  | "termo_entrega"
+  | "cronograma";
 
 export type DocumentStatus = "pending" | "approved";
 
@@ -120,6 +121,7 @@ export const DOCUMENT_CATEGORIES: Record<
   garantia: { label: "Garantias", icon: "Shield" },
   as_built: { label: "As Built", icon: "Building" },
   termo_entrega: { label: "Termo de Entrega", icon: "CheckSquare" },
+  cronograma: { label: "Cronograma", icon: "CalendarRange" },
 };
 
 const SIGNED_URL_EXPIRY_SECONDS = 3600; // 1 hour
