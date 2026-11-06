@@ -1,3 +1,4 @@
+import { BudgetedAmount } from "@/components/compras/BudgetLink";
 import { SchedulePurchaseBadges } from "@/components/compras/SchedulePurchaseMeta";
 import { isBuyThisWeek, purchaseDeadlineState } from "@/lib/schedule/weeklyPurchases";
 import { fmtBR } from "@/lib/schedule/weeklySchedule";
@@ -3155,6 +3156,11 @@ export default function CalendarioCompras() {
 
                               <TableCell className="text-right whitespace-nowrap tabular-nums">
                                 {fmtCompact(p.estimated_cost)}
+                                <BudgetedAmount
+                                  projectId={p.project_id}
+                                  orcamentoItemId={p.orcamento_item_id}
+                                  actualCost={p.actual_cost}
+                                />
                               </TableCell>
 
                               <TableCell className="text-right whitespace-nowrap tabular-nums">
