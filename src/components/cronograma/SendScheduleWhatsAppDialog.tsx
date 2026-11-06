@@ -66,11 +66,10 @@ export function SendScheduleWhatsAppDialog({
     setBusy(true);
     try {
       const p = await ensurePrepared();
-      window.open(
-        `https://wa.me/${digits}?text=${encodeURIComponent(p.message)}`,
-        "_blank",
-        "noopener",
-      );
+      const waUrl = `https://wa.me/${digits}?text=${encodeURIComponent(p.message)}`;
+      // Após o await o navegador pode bloquear a nova aba: cai para a mesma aba.
+      const win = window.open(waUrl, "_blank", "noopener");
+      if (!win) window.location.href = waUrl;
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : COPY.errors.generic);
