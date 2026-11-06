@@ -36,6 +36,13 @@
       "when": 1794001717278,
       "tag": "0004_supplies_notice_and_business_day_lead_time",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794002767661,
+      "tag": "0005_supplies_notice_m_next_14_days",
+      "breakpoints": true
     }
   ]
 }
