@@ -9,6 +9,25 @@ export interface TemplateActivity {
   description: string;
   durationDays: number;
   weight: number;
+  /** Modelo semanal: semana em que começa (1-based). */
+  week?: number;
+  /** Modelo semanal: semana em que termina (>= week). */
+  weekEnd?: number;
+  /** `marco` fica só no cronograma interno. */
+  kind?: "execucao" | "marco";
+  /** Condição: `chave=Valor`, `chave!=Valor`, combinadas com `&`. */
+  showIf?: string;
+  note?: string;
+  /** Itens de compra — preservados como vieram (usados numa próxima etapa). */
+  purchases?: unknown[];
+}
+
+/** Modelo de cronograma do template (hoje só "weekly"). Campos extras são preservados. */
+export interface TemplateScheduleModel {
+  type: "weekly";
+  weeks: number;
+  default_contract_business_days?: number;
+  [extra: string]: unknown;
 }
 
 export interface TemplateCustomField {
@@ -28,6 +47,7 @@ export interface ProjectTemplate {
   default_contract_value: number | null;
   category: string | null;
   custom_fields: TemplateCustomField[] | null;
+  schedule_model: TemplateScheduleModel | null;
   usage_count: number;
   last_used_at: string | null;
   created_by: string;
@@ -46,6 +66,7 @@ export interface TemplateVersion {
   default_contract_value: number | null;
   category: string | null;
   custom_fields: TemplateCustomField[] | null;
+  schedule_model: TemplateScheduleModel | null;
   created_by: string;
   created_at: string;
 }
@@ -58,6 +79,7 @@ interface CreateTemplateInput {
   default_contract_value?: number | null;
   category?: string;
   custom_fields?: TemplateCustomField[];
+  schedule_model?: TemplateScheduleModel | null;
 }
 
 export function useProjectTemplates() {
@@ -112,6 +134,7 @@ export function useRestoreTemplateVersion() {
           default_contract_value: version.default_contract_value,
           category: version.category,
           custom_fields: (version.custom_fields ?? []) as unknown as Json,
+          schedule_model: (version.schedule_model ?? null) as unknown as Json,
         })
         .eq("id", templateId)
         .select()
@@ -145,6 +168,7 @@ export function useCreateProjectTemplate() {
           default_contract_value: input.default_contract_value ?? null,
           category: input.category ?? null,
           custom_fields: (input.custom_fields ?? []) as unknown as Json,
+          schedule_model: (input.schedule_model ?? null) as unknown as Json,
           created_by: user.id,
         })
         .select()
@@ -178,6 +202,8 @@ export function useUpdateProjectTemplate() {
       if (input.category !== undefined) updateData.category = input.category;
       if (input.custom_fields !== undefined)
         updateData.custom_fields = input.custom_fields as unknown as Json;
+      if (input.schedule_model !== undefined)
+        updateData.schedule_model = input.schedule_model as unknown as Json;
 
       const { data, error } = await supabase
         .from("project_templates")
