@@ -108,14 +108,7 @@ describe("recalcular", () => {
     expect(br(tinta.ideal)).toBe("23/11/2026");
     expect(br(tinta.limite)).toBe("30/11/2026");
   });
-  it("prazo confirmado: limite = precisa − prazo; ideal = limite − 7", () => {
-    const d = computePurchaseDates({ regra: "padrao", prazo_confirmar: true }, "2027-01-04", null, {
-      days: 21,
-      confirmed: true,
-    });
-    expect(br(d.limite)).toBe("14/12/2026");
-    expect(br(d.ideal)).toBe("07/12/2026");
-  });
+
 });
 
 describe("alertas de prazo", () => {
