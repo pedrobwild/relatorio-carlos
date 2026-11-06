@@ -4,6 +4,12 @@ export interface ActivityItem {
   weight: number;
   etapa?: string;
   detailed_description?: string;
+  week?: number;
+  weekEnd?: number;
+  kind?: "execucao" | "marco";
+  showIf?: string;
+  note?: string;
+  purchases?: unknown[];
 }
 
 export interface FormState {
@@ -15,6 +21,12 @@ export interface FormState {
   custom_activities: ActivityItem[];
   category: string;
   custom_fields: import("@/hooks/useProjectTemplates").TemplateCustomField[];
+  /** Modelo semanal (semanas de calendário). */
+  is_weekly: boolean;
+  weeks: string;
+  default_contract_business_days: string;
+  /** Demais chaves do schedule_model, preservadas como vieram. */
+  schedule_model_extra: Record<string, unknown>;
 }
 
 export type SortField =
@@ -40,6 +52,10 @@ export const emptyForm: FormState = {
   custom_activities: [],
   category: "geral",
   custom_fields: [],
+  is_weekly: false,
+  weeks: "12",
+  default_contract_business_days: "60",
+  schedule_model_extra: {},
 };
 
 export const totalWeight = (acts: ActivityItem[]) =>
