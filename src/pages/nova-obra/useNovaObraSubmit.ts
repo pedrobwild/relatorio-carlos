@@ -10,6 +10,8 @@ import type { ScheduleActivity } from "./ScheduleCard";
 import { safeParseInt, trackBlock1CUsage } from "@/lib/block1cMonitor";
 import { toLocalISODate } from "@/lib/localDate";
 import { buildWeeklyRows, type WeeklyPlan } from "@/lib/schedule/weeklySchedule";
+import { buildWeeklyPurchases } from "@/lib/schedule/weeklyPurchases";
+import { purchasesRepo } from "@/infra/repositories";
 
 /** Collect non-fatal warnings during submit */
 interface SubmitWarning {
@@ -290,6 +292,36 @@ export function useNovaObraSubmit() {
             warnings.push({
               step: "Cronograma interno",
               message: "As atividades detalhadas do cronograma interno não foram criadas",
+            });
+          }
+        }
+
+        // Compras geradas pelo cronograma (datas e alertas calculados no banco).
+        const purchaseItems = buildWeeklyPurchases(weeklyPlan)
+          .map((p) => {
+            const activityId = weekToId.get(p.weekIndex);
+            if (!activityId) return null;
+            return {
+              activity_id: activityId,
+              ref_activity_id: p.refWeekIndex ? (weekToId.get(p.refWeekIndex) ?? null) : null,
+              item_name: p.item_name,
+              category: p.category,
+              purchase_type: p.purchase_type,
+              delivery_location: p.delivery_location,
+              delivery_address: p.delivery_address,
+              template_item_key: p.template_item_key,
+              notes: p.notes,
+              rule: p.rule,
+            };
+          })
+          .filter((p): p is NonNullable<typeof p> => p !== null);
+        if (purchaseItems.length > 0) {
+          const res = await purchasesRepo.createFromSchedule(projectId, purchaseItems);
+          if (res.error) {
+            console.error("Schedule purchases error:", res.error);
+            warnings.push({
+              step: "Compras",
+              message: "As compras do cronograma não foram criadas",
             });
           }
         }
