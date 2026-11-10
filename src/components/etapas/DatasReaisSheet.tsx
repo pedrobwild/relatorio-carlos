@@ -94,7 +94,7 @@ export function DatasReaisSheet({ etapa, campoInicial, hoje, subtitle, onClose, 
                   aria-checked={on}
                   onClick={() => trocarCampo(c)}
                   className={cn(
-                    "flex !min-h-[56px] flex-col items-start justify-center rounded-xl border px-3.5 py-1.5 text-left transition-colors",
+                    "flex min-h-[56px] flex-col items-start justify-center rounded-xl border px-3.5 py-1.5 text-left transition-colors",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     on ? "border-primary bg-primary/10" : "border-border bg-card",
                   )}
@@ -123,7 +123,7 @@ export function DatasReaisSheet({ etapa, campoInicial, hoje, subtitle, onClose, 
                     setMes(parseISODate(a.date));
                   }}
                   className={cn(
-                    "flex !min-h-[52px] flex-col items-center justify-center rounded-xl border px-1 py-1 transition-colors",
+                    "flex min-h-[52px] flex-col items-center justify-center rounded-xl border px-1 py-1 transition-colors",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground",
                   )}

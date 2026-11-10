@@ -101,7 +101,7 @@ function Grupo({
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((v) => !v)}
-        className="flex !min-h-[48px] w-full items-center justify-between rounded-xl border border-border bg-card px-3.5 text-[15px] font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-h-[48px] w-full items-center justify-between rounded-xl border border-border bg-card px-3.5 text-[15px] font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span>{title}</span>
         <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform", open && "rotate-180")} aria-hidden="true" />

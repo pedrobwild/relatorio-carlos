@@ -36,8 +36,7 @@ interface RegistrarSheetProps {
 }
 
 const rowClass = cn(
-  // `!`: o CSS base fixa min-height de 44px em <button> e ganha do utilitário.
-  "flex !min-h-[68px] w-full items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-2 text-left",
+  "flex min-h-[68px] w-full items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-2 text-left",
   "transition-colors active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 );
 
@@ -148,7 +147,7 @@ export function RegistrarSheet({ open, onOpenChange, projectId }: RegistrarSheet
                       setPicking(false);
                       setQuery("");
                     }}
-                    className="flex !min-h-[52px] w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex min-h-[52px] w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-base font-medium text-foreground">{displayName(p)}</span>

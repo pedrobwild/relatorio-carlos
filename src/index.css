@@ -334,16 +334,42 @@
     line-height: 1.4;
   }
 
-  /* Improve touch targets for mobile - Apple's minimum is 44px */
-  button:not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8),
-  [role="button"]:not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8) {
+  /* Alvo de toque: todo botão tem pelo menos 44px (mínimo da Apple).
+     Especificidade ZERO (`:where`) de propósito: um `min-h-*` explícito no
+     componente vence. Antes esta regra ganhava dos utilitários e achatava
+     em 44px qualquer botão que pedisse mais (linhas de gaveta, cartões). */
+  :where(
+      button:not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8),
+      [role="button"]:not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8)
+    ) {
     min-height: 44px;
   }
 
-  /* Small buttons get smaller touch target */
-  button.h-8,
-  button.h-9 {
+  /* Botão pequeno (h-8): alvo de 36px, salvo se declarar outro mínimo. */
+  :where(button.h-8) {
     min-height: 36px;
+  }
+
+  /* Piso: quem declara um mínimo MENOR que 44px continua com 44px, como
+     sempre foi (a regra antiga já ignorava esses valores). Assim nenhum
+     botão encolhe em tela de toque por causa da mudança acima. Para um
+     botão realmente menor, use h-6 / h-7 / h-8 ou `min-h-auto`. */
+  :is(button, [role="button"]):is(
+      .min-h-0,
+      .min-h-6,
+      .min-h-7,
+      .min-h-8,
+      .min-h-9,
+      .min-h-10,
+      .min-h-\[24px\],
+      .min-h-\[28px\],
+      .min-h-\[32px\],
+      .min-h-\[36px\],
+      .min-h-\[40px\],
+      .sm\:min-h-0,
+      .md\:min-h-0
+    ):not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8) {
+    min-height: 44px;
   }
 
   /* Exclude small inline elements from min-width */
@@ -588,6 +614,20 @@
      altura dele (publicada pelo ConsentBanner), para nada ficar coberto. */
   html[data-consent-banner] .consent-safe {
     padding-bottom: var(--consent-banner-offset, 0px);
+  }
+
+  /* Com barra inferior fixa (celular, telas logadas) o aviso fica ACIMA
+     dela: a barra e o botão Registrar continuam tocáveis. O conteúdo reserva
+     a altura das duas. `data-bottom-nav` é posto pelo MobileBottomNav. */
+  @media (max-width: 767px) {
+    html[data-bottom-nav] .consent-banner {
+      bottom: var(--bottom-nav-offset);
+    }
+    html[data-bottom-nav][data-consent-banner] .consent-safe {
+      padding-bottom: calc(
+        var(--consent-banner-offset, 0px) + var(--bottom-nav-offset)
+      );
+    }
   }
 
   /* Área de toque de 44px sem mexer no layout: o botão continua do mesmo
