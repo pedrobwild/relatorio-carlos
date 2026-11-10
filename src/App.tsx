@@ -54,6 +54,7 @@ const AuthRedirectPage = () => {
 const Auth = lazy(() => import("./pages/Auth"));
 const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
+const PrimeiroAcesso = lazy(() => import("./pages/PrimeiroAcesso"));
 const VerificarAssinatura = lazy(() => import("./pages/VerificarAssinatura"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const VitrineEntry = lazy(() => import("./pages/VitrineEntry"));
@@ -254,6 +255,10 @@ const AppContent = () => {
               <Route
                 path="/redefinir-senha"
                 element={withSuspense(<RedefinirSenha />)}
+              />
+              <Route
+                path="/primeiro-acesso"
+                element={withSuspense(<PrimeiroAcesso />)}
               />
               <Route
                 path="/verificar/:hash"

@@ -19,6 +19,7 @@ import type { AppRole } from "@/hooks/useUserRole";
 import { RoleSelector } from "./RoleSelector";
 import { EditUserDialog } from "./EditUserDialog";
 import { ResetPasswordDialog } from "./ResetPasswordDialog";
+import { AccessLinkDialog } from "./AccessLinkDialog";
 
 export function UserCard({
   user,
@@ -57,6 +58,7 @@ export function UserCard({
           <div className="flex items-center gap-1 shrink-0">
             <RoleSelector user={user} onRoleChange={onRoleChange} />
             <EditUserDialog user={user} onSave={onEdit} />
+            <AccessLinkDialog user={user} />
             <ResetPasswordDialog user={user} onReset={onResetPassword} />
             <AlertDialog>
               <AlertDialogTrigger asChild>

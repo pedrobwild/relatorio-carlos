@@ -20,6 +20,7 @@ import { UserCard } from "./users/UserCard";
 import { RoleSelector } from "./users/RoleSelector";
 import { EditUserDialog } from "./users/EditUserDialog";
 import { ResetPasswordDialog } from "./users/ResetPasswordDialog";
+import { AccessLinkDialog } from "./users/AccessLinkDialog";
 import { DeleteUserAlert } from "./users/DeleteUserAlert";
 import { matchesSearch } from "@/lib/searchNormalize";
 
@@ -222,6 +223,7 @@ export function UsersTab() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <EditUserDialog user={user} onSave={handleEdit} />
+                        <AccessLinkDialog user={user} />
                         <ResetPasswordDialog
                           user={user}
                           onReset={handleResetPassword}

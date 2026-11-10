@@ -8767,6 +8767,19 @@ export type Database = {
       }
     }
     Functions: {
+      create_access_invite: { Args: { _user_id: string }; Returns: string }
+      get_access_invite: {
+        Args: { _token: string }
+        Returns: {
+          display_name: string | null
+          email: string | null
+          status: string
+        }[]
+      }
+      redeem_access_invite: {
+        Args: { _password: string; _token: string }
+        Returns: string
+      }
       _copy_client_schedule_to_internal: {
         Args: {
           p_only_if_following?: boolean
