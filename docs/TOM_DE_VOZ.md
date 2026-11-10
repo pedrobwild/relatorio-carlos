@@ -39,7 +39,7 @@ Guia oficial de microcopy do Portal BWild. Toda copy nova — botões, toasts, m
 
 | ❌ Antes | ✅ Depois |
 |---------|----------|
-| "Nenhum registro encontrado." | "Nenhuma compra pendente — tudo em dia" |
+| "Nenhum registro encontrado." | "Nenhuma compra pendente, tudo em dia" |
 | "Lista vazia." | "Você ainda não cadastrou obras. Comece pela primeira." |
 | "Sem dados." | "Nenhum RDO esta semana. Lance o de hoje pra começar." |
 
@@ -61,6 +61,7 @@ Guia oficial de microcopy do Portal BWild. Toda copy nova — botões, toasts, m
 
 ## Regras práticas
 
+- **Sem travessão (—) em texto de interface.** Use ponto, dois-pontos ou vírgula. Para valor vazio em tabela, a meia-risca (–).
 - **Verbo no imperativo nos CTAs**: "Registrar", "Aprovar", "Excluir", "Convidar". Nunca "Clique", "Aperte", "Selecione aqui".
 - **Não comece toast com saudação.** Direto na ação: "Medição registrada", não "Pronto! Medição registrada".
 - **Erro de rede usa fallback humano.** Mensagens cruas do Postgres/Supabase passam por `getUserFriendlyMessage` (`src/lib/queryClient.ts`).
