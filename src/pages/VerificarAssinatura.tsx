@@ -134,7 +134,7 @@ export default function VerificarAssinatura() {
   }, [hash]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="consent-safe min-h-screen bg-background">
       {/* Header */}
       <header className="bg-background/95 backdrop-blur-sm border-b">
         <div className="mx-auto px-4 py-4">

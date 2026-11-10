@@ -584,6 +584,12 @@
     justify-content: center;
   }
 
+  /* Aviso de consentimento visível: as páginas marcadas reservam, no fim, a
+     altura dele (publicada pelo ConsentBanner), para nada ficar coberto. */
+  html[data-consent-banner] .consent-safe {
+    padding-bottom: var(--consent-banner-offset, 0px);
+  }
+
   /* Área de toque de 44px sem mexer no layout: o botão continua do mesmo
      tamanho, mas no celular (ponteiro "grosso") a área que recebe o toque
      cresce até 44x44 por um pseudo-elemento invisível. Aplicada pelo Button

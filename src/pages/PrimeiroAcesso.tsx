@@ -317,7 +317,7 @@ export default function PrimeiroAcesso() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 bg-slate-900"
+      className="consent-safe min-h-screen flex items-center justify-center p-4 bg-slate-900"
       style={{
         backgroundImage: `linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.85)), url(${authBg})`,
         backgroundSize: "cover",
