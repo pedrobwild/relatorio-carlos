@@ -152,12 +152,12 @@ export function ProjectMobileHeader() {
                 {projectDisplayName}
               </span>
               {sectionLabel ? (
-                <span className="block text-[11px] text-muted-foreground truncate leading-tight">
+                <span className="block text-xs text-muted-foreground truncate leading-tight">
                   <span aria-hidden="true">›</span> {sectionLabel}
                 </span>
               ) : (
                 project?.customer_name && (
-                  <span className="block text-[10px] text-muted-foreground truncate leading-tight">
+                  <span className="block text-xs text-muted-foreground truncate leading-tight">
                     {project.customer_name}
                   </span>
                 )
@@ -214,7 +214,7 @@ export function ProjectMobileHeader() {
                     {projectDisplayName}
                   </p>
                   {project?.customer_name && (
-                    <p className="text-[11px] text-muted-foreground truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {project.customer_name}
                     </p>
                   )}
@@ -239,7 +239,7 @@ export function ProjectMobileHeader() {
                     >
                       {group.label}
                     </Badge>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {group.projects.length}
                     </span>
                   </div>
@@ -273,7 +273,7 @@ export function ProjectMobileHeader() {
                             </span>
                             <span className="flex items-center gap-1.5 mt-0.5">
                               {p.customer_name && (
-                                <span className="text-[11px] text-muted-foreground truncate">
+                                <span className="text-xs text-muted-foreground truncate">
                                   {p.customer_name}
                                 </span>
                               )}
@@ -281,10 +281,10 @@ export function ProjectMobileHeader() {
                                 (p as { engineer_name?: string })
                                   .engineer_name && (
                                   <>
-                                    <span className="text-[11px] text-muted-foreground/50">
+                                    <span className="text-xs text-muted-foreground/50">
                                       ·
                                     </span>
-                                    <span className="text-[11px] text-muted-foreground/70 truncate">
+                                    <span className="text-xs text-muted-foreground/70 truncate">
                                       {
                                         (p as { engineer_name?: string })
                                           .engineer_name

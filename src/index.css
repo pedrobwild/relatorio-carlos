@@ -584,6 +584,25 @@
     justify-content: center;
   }
 
+  /* Área de toque de 44px sem mexer no layout: o botão continua do mesmo
+     tamanho, mas no celular (ponteiro "grosso") a área que recebe o toque
+     cresce até 44x44 por um pseudo-elemento invisível. Aplicada pelo Button
+     no tamanho `icon`. No desktop não faz nada. */
+  @media (pointer: coarse) {
+    .tap-target:not(.absolute):not(.fixed):not(.sticky) {
+      position: relative;
+    }
+    .tap-target::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: max(100%, 2.75rem);
+      height: max(100%, 2.75rem);
+      transform: translate(-50%, -50%);
+    }
+  }
+
   /* Keyboard avoidance — use on sticky footers */
   @supports (padding-bottom: env(keyboard-inset-height, 0px)) {
     .keyboard-aware {

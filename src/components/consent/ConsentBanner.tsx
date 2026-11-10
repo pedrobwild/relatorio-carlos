@@ -24,12 +24,12 @@ export function ConsentBanner() {
         aria-label="Consentimento de privacidade"
         className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 sm:px-6 sm:pb-6 pointer-events-none"
       >
-        <div className="mx-auto max-w-3xl pointer-events-auto rounded-lg border bg-background shadow-lg">
-          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:p-5">
+        <div className="relative mx-auto max-w-3xl pointer-events-auto rounded-lg border bg-background shadow-lg">
+          <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:gap-4 sm:p-5">
             <div className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Shield className="h-4 w-4" aria-hidden />
             </div>
-            <div className="flex-1 space-y-1">
+            <div className="flex-1 space-y-1 pr-8 sm:pr-0">
               <p className="text-sm font-medium">
                 Podemos usar dados de uso para melhorar o produto?
               </p>
@@ -39,10 +39,13 @@ export function ConsentBanner() {
                 aceitar, recusar ou personalizar, e mudar de ideia depois.
               </p>
             </div>
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-2 sm:shrink-0">
+            {/* Celular: os três botões numa linha só, para o aviso ocupar menos
+                da tela (ele cobria o formulário de login). */}
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-row sm:items-center sm:shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
+                className="px-1"
                 onClick={() => setSettingsOpen(true)}
               >
                 Personalizar
@@ -58,7 +61,7 @@ export function ConsentBanner() {
               type="button"
               aria-label="Fechar e recusar"
               onClick={() => rejectAll()}
-              className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground sm:hidden"
+              className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground sm:hidden"
             >
               <X className="h-4 w-4" />
             </button>

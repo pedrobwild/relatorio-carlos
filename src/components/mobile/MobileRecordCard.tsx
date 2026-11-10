@@ -112,7 +112,7 @@ export function MobileRecordCard({
       >
         <div className="flex-1 min-w-0 space-y-1">
           {eyebrow && (
-            <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground truncate">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground truncate">
               {eyebrow}
             </div>
           )}

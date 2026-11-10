@@ -287,7 +287,7 @@ export function CronogramaMobileView({
               : "[&>div]:bg-[hsl(var(--success))]",
           )}
         />
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {stats.completed} de {stats.total} atividades
           {filter !== "all" && ` · ${filtered.length} visíveis`}
           {" · "}
@@ -505,7 +505,7 @@ function ActivityCard({
           )}
 
           {/* Meta row */}
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {format(new Date(act.planned_start + "T00:00:00"), "dd/MM", {
@@ -570,7 +570,7 @@ function ActivityCard({
               <button
                 type="button"
                 onClick={() => setShowDetails((v) => !v)}
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors touch-target"
+                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors touch-target"
                 aria-expanded={showDetails}
               >
                 <FileText className="h-3 w-3" />
