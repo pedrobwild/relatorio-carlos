@@ -15,6 +15,8 @@ import { WeeklyReportVersionHistory } from "./WeeklyReportVersionHistory";
 import ServerDivergenceAlert from "./editor/ServerDivergenceAlert";
 import OfflineConflictAlert from "./editor/OfflineConflictAlert";
 import PendingUploadsBanner from "./editor/PendingUploadsBanner";
+import WeeklyReportStepsMobile from "./WeeklyReportStepsMobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 
@@ -53,6 +55,19 @@ const WeeklyReportEditor = ({
   const handleAIGenerated = (updatedData: WeeklyReportData) => {
     state.setFormData(updatedData);
   };
+
+  // Celular: o mesmo estado, apresentado em passos (fotos primeiro). O hook
+  // fica aqui em cima para que girar o aparelho não perca o que foi digitado.
+  const isMobile = useIsMobile();
+  if (isMobile) {
+    return (
+      <WeeklyReportStepsMobile
+        state={state}
+        projectId={projectId}
+        onCancel={onCancel}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4 animate-fade-in">
