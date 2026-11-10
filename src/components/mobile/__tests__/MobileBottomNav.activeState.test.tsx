@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { MobileBottomNav } from "../MobileBottomNav";
 
@@ -41,6 +41,11 @@ vi.mock("@/hooks/useFeatureFlags", () => ({
 
 vi.mock("../MobileProfileSheet", () => ({
   MobileProfileSheet: () => null,
+}));
+
+vi.mock("../RegistrarSheet", () => ({
+  RegistrarSheet: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Registrar" /> : null,
 }));
 
 /**
@@ -114,7 +119,53 @@ describe("MobileBottomNav — active state on sub-routes", () => {
     expect(financeiro).not.toHaveAttribute("aria-current");
   });
 
-  it("gestor no modo simples: a barra é Obras / Semana / Hoje, com Hoje ativo na tela Hoje", () => {
+  it("equipe: Hoje, Obras, Registrar, Pendências e Perfil; Obras abre a lista e fica aceso dentro da obra", () => {
+    navState.isStaff = true;
+
+    render(
+      <MemoryRouter initialEntries={["/obra/proj-1/etapas"]}>
+        <MobileBottomNav />
+      </MemoryRouter>,
+    );
+
+    const nav = screen.getByRole("navigation", { name: "Navegação principal" });
+    const labels = Array.from(nav.querySelectorAll("a, button")).map(
+      (el) => el.getAttribute("aria-label"),
+    );
+    expect(labels).toEqual(["Hoje", "Obras", "Registrar", "Pendências", "Perfil"]);
+
+    const obras = screen.getByRole("link", { name: /^Obras$/i });
+    expect(obras).toHaveAttribute("href", "/gestao/painel-obras");
+    expect(obras).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /^Hoje$/i })).toHaveAttribute("href", "/gestao/hoje");
+    expect(screen.queryByRole("link", { name: /Atividades/i })).toBeNull();
+  });
+
+  it("equipe: o botão Registrar abre a gaveta", () => {
+    navState.isStaff = true;
+
+    render(
+      <MemoryRouter initialEntries={["/gestao/hoje"]}>
+        <MobileBottomNav />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole("dialog", { name: "Registrar" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    expect(screen.getByRole("dialog", { name: "Registrar" })).toBeInTheDocument();
+  });
+
+  it("cliente: sem botão Registrar", () => {
+    render(
+      <MemoryRouter initialEntries={["/obra/proj-1"]}>
+        <MobileBottomNav />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole("button", { name: "Registrar" })).toBeNull();
+  });
+
+  it("gestor no modo simples: a barra é Obras / Semana / Registrar / Hoje, com Hoje ativo na tela Hoje", () => {
     navState.isStaff = true;
     navState.isSimple = true;
     navState.novoPainel = true;
@@ -129,6 +180,7 @@ describe("MobileBottomNav — active state on sub-routes", () => {
     expect(screen.getByRole("link", { name: /^Obras$/i })).toHaveAttribute("href", "/gestao/obras");
     expect(screen.getByRole("link", { name: /^Semana$/i })).toHaveAttribute("href", "/gestao/semana");
     expect(screen.getByRole("link", { name: /^Hoje$/i })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Registrar" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Atividades/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /Pendências/i })).toBeNull();
   });
