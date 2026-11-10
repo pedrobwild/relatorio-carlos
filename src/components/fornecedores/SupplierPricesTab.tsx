@@ -252,7 +252,7 @@ export function SupplierPricesTab({
                       ? new Date(
                           p.data_validade + "T12:00:00",
                         ).toLocaleDateString("pt-BR")
-                      : "—"}
+                      : "–"}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">

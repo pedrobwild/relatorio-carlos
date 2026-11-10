@@ -27,10 +27,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusTooltips: Record<string, string> = {
-  active: "Obra em execução — cronograma e financeiro ativos",
+  active: "Obra em execução: cronograma e financeiro ativos",
   completed: "Obra entregue e finalizada",
-  paused: "Obra temporariamente pausada — sem atividades em andamento",
-  cancelled: "Obra cancelada — não será retomada",
+  paused: "Obra temporariamente pausada: sem atividades em andamento",
+  cancelled: "Obra cancelada: não será retomada",
 };
 
 interface EditarObraSidebarProps {
@@ -96,7 +96,7 @@ export function EditarObraSidebar({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">
-                      Fase de planejamento e projeto — ainda não iniciou
+                      Fase de planejamento e projeto, ainda não iniciou
                       execução
                     </p>
                   </TooltipContent>

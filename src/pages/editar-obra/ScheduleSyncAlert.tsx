@@ -14,7 +14,7 @@ interface ScheduleSyncAlertProps {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return "—";
+  if (!value) return "–";
   try {
     return format(parseISO(value), "dd 'de' MMM 'de' yyyy", { locale: ptBR });
   } catch {
@@ -56,7 +56,7 @@ export function ScheduleSyncAlert({
       <AlertDescription className="space-y-3 mt-1">
         <p className="text-sm text-foreground/90">
           As datas planejadas em "Dados Gerais" não correspondem às bordas
-          atuais do cronograma. Você pode recalcular agora ou ao salvar — em
+          atuais do cronograma. Você pode recalcular agora ou ao salvar, em
           ambos os casos poderá escolher entre manter a duração de cada
           atividade ou encaixar tudo proporcionalmente na nova janela.
         </p>

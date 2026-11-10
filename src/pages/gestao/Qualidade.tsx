@@ -943,7 +943,7 @@ function PunchItemRow({
         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {item.responsible_user_id && (
             <span>
-              Resp.: {staffMap.get(item.responsible_user_id) ?? "—"}
+              Resp.: {staffMap.get(item.responsible_user_id) ?? "–"}
             </span>
           )}
           {item.due_date && (

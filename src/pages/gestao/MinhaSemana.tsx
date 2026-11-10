@@ -98,7 +98,7 @@ export default function MinhaSemana() {
       <PageHeader
         eyebrow="Meu trabalho"
         title="Minha semana"
-        description="Tudo que precisa da sua atenção agora — organizado por urgência."
+        description="Tudo que precisa da sua atenção agora, organizado por urgência."
         actions={
           <Button
             variant="outline"
@@ -147,7 +147,7 @@ export default function MinhaSemana() {
               title="Esta semana"
               items={buckets.semana}
               tone="info"
-              emptyMessage="Semana leve — sem prazos nos próximos dias úteis."
+              emptyMessage="Semana leve, sem prazos nos próximos dias úteis."
             />
             <Section
               title="Próximas"

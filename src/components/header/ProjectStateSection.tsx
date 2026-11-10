@@ -70,7 +70,7 @@ export function ProjectStateSection({
             <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-caption">Início</span>
             <span className="text-sm font-bold tabular-nums text-foreground">
-              {displayStartDate ? formatDateShort(displayStartDate) : "—"}
+              {displayStartDate ? formatDateShort(displayStartDate) : "–"}
             </span>
           </div>
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
@@ -90,7 +90,7 @@ export function ProjectStateSection({
                   : "text-foreground cursor-default",
               )}
             >
-              {displayEndDate ? formatDateShort(displayEndDate) : "—"}
+              {displayEndDate ? formatDateShort(displayEndDate) : "–"}
             </button>
             {endDate === dateChangeInfo.originalDate && (
               <AlertCircle className="w-3 h-3 text-warning" />
@@ -190,7 +190,7 @@ export function MilestonesBar({
                             : "text-muted-foreground/40",
                         )}
                       >
-                        {m.value ? formatDateShort(m.value) : "—"}
+                        {m.value ? formatDateShort(m.value) : "–"}
                       </span>
                     </button>
                   </PopoverTrigger>
@@ -211,7 +211,7 @@ export function MilestonesBar({
                       m.value ? "text-foreground" : "text-muted-foreground/40",
                     )}
                   >
-                    {m.value ? formatDateShort(m.value) : "—"}
+                    {m.value ? formatDateShort(m.value) : "–"}
                   </span>
                 </>
               )}
@@ -256,7 +256,7 @@ export function MilestonesBar({
                             : "text-muted-foreground/50",
                         )}
                       >
-                        {m.value ? formatDateFull(m.value) : "—"}
+                        {m.value ? formatDateFull(m.value) : "–"}
                       </span>
                       <Pencil className="w-2.5 h-2.5 text-muted-foreground/0 group-hover:text-muted-foreground/70 transition-colors" />
                     </button>
@@ -280,7 +280,7 @@ export function MilestonesBar({
                       m.value ? "text-foreground" : "text-muted-foreground/50",
                     )}
                   >
-                    {m.value ? formatDateFull(m.value) : "—"}
+                    {m.value ? formatDateFull(m.value) : "–"}
                   </span>
                 </div>
               )}

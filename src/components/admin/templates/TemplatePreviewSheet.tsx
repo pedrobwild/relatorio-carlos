@@ -77,7 +77,7 @@ export function TemplatePreviewSheet({
               <p className="font-medium text-sm">
                 {template.default_contract_value
                   ? `R$ ${Number(template.default_contract_value).toLocaleString("pt-BR")}`
-                  : "—"}
+                  : "–"}
               </p>
             </div>
           </div>
@@ -121,7 +121,7 @@ export function TemplatePreviewSheet({
                                 left: `${(cumDays[i] / total) * 100}%`,
                                 width: `${Math.max((act.durationDays / total) * 100, 2)}%`,
                               }}
-                              title={`${act.description} — ${act.durationDays}d`}
+                              title={`${act.description} – ${act.durationDays}d`}
                             />
                           </div>
                         </div>
@@ -210,7 +210,7 @@ export function TemplatePreviewSheet({
                     >
                       <div>
                         <p className="text-sm font-medium">
-                          v{v.version_number} — {v.name}
+                          v{v.version_number} – {v.name}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(v.created_at).toLocaleDateString("pt-BR")}

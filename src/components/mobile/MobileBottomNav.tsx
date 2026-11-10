@@ -206,7 +206,7 @@ export function MobileBottomNav() {
                   badge > 0
                     ? isStaff
                       ? `${slot.label}: ${badge} críticas`
-                      : `${slot.label} — ${badge} críticas`
+                      : `${slot.label} – ${badge} críticas`
                     : slot.label
                 }
                 title={slot.label}
@@ -267,7 +267,7 @@ export function MobileBottomNav() {
             )}
             aria-label={
               unreadCount > 0
-                ? `${PROFILE_SLOT.label} — ${unreadCount} avisos não lidos`
+                ? `${PROFILE_SLOT.label} – ${unreadCount} avisos não lidos`
                 : PROFILE_SLOT.label
             }
             title={PROFILE_SLOT.label}

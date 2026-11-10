@@ -68,13 +68,13 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 const _formatDateFull = (dateStr: string | null | undefined): string => {
-  if (!dateStr) return "—";
+  if (!dateStr) return "–";
   const date = parseLocalDate(dateStr);
   return format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 };
 
 const formatDateShort = (dateStr: string | null | undefined): string => {
-  if (!dateStr) return "—";
+  if (!dateStr) return "–";
   const date = parseLocalDate(dateStr);
   return format(date, "dd/MM/yyyy");
 };

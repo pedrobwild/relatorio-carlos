@@ -203,7 +203,7 @@ export function StickySummary({
           hasContent={hasPlanejamento}
         >
           {formData.is_project_phase && !formData.planned_start_date ? (
-            <p>Fase de projeto — datas em definição</p>
+            <p>Fase de projeto: datas em definição</p>
           ) : (
             <>
               {formData.planned_start_date && (

@@ -632,7 +632,7 @@ export function ScheduleCard({
           ) : formData.budget_uploaded ? (
             <p className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
-              Orçamento anexado — o cronograma pode ser refinado com base nele
+              Orçamento anexado: o cronograma pode ser refinado com base nele
               após a criação.
             </p>
           ) : (
@@ -822,7 +822,7 @@ export function ScheduleCard({
             <SelectContent>
               {SCHEDULE_TEMPLATES.map((t) => (
                 <SelectItem key={t.id} value={t.id}>
-                  {t.name} — {t.entries.length} etapas
+                  {t.name} – {t.entries.length} etapas
                 </SelectItem>
               ))}
             </SelectContent>

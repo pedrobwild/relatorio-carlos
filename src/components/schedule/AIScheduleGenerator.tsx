@@ -137,7 +137,7 @@ export function AIScheduleGenerator({
         setPdfFile({ name: file.name, base64 });
         setBudgetItems([]);
         toast.success(
-          `PDF "${file.name}" carregado — a IA irá extrair os itens`,
+          `PDF "${file.name}" carregado: a IA irá extrair os itens`,
         );
       };
       reader.onerror = () => toast.error("Erro ao ler PDF");
@@ -353,7 +353,7 @@ export function AIScheduleGenerator({
                         <FileSpreadsheet className="h-8 w-8 text-primary mx-auto" />
                         <p className="text-sm font-medium">{pdfFile.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          PDF carregado — a IA extrairá os itens automaticamente
+                          PDF carregado: a IA extrairá os itens automaticamente
                         </p>
                       </div>
                     ) : budgetItems.length > 0 ? (

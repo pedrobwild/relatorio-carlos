@@ -139,7 +139,7 @@ function RateChip({ rate, label }: { rate: number | null; label?: string }) {
         CHIP_TONE[rateTone(rate)],
       )}
     >
-      {rate == null ? "—" : `${rate}%`}
+      {rate == null ? "–" : `${rate}%`}
       {label && <span className="ml-1 font-medium">{label}</span>}
     </span>
   );
@@ -230,7 +230,7 @@ function AdocaoCards({ rows }: { rows: AdocaoGestor[] }) {
           </div>
           <p className="mt-2 text-sm text-foreground">
             Esta semana: <span className="font-medium tabular-nums">{g.plannedThisWeek}/{g.n}</span> planejadas
-            {" · "}PPC <span className="font-medium tabular-nums">{g.lastPpc == null ? "—" : `${g.lastPpc}%`}</span>
+            {" · "}PPC <span className="font-medium tabular-nums">{g.lastPpc == null ? "–" : `${g.lastPpc}%`}</span>
           </p>
         </li>
       ))}
@@ -266,11 +266,11 @@ function AdocaoTable({ rows }: { rows: AdocaoGestor[] }) {
               <td className="px-3 py-2">
                 <RateChip rate={g.closedRate} />
                 <span className="ml-1 text-xs text-muted-foreground">
-                  planejou {g.plannedRate == null ? "—" : `${g.plannedRate}%`}
+                  planejou {g.plannedRate == null ? "–" : `${g.plannedRate}%`}
                 </span>
               </td>
               <td className="px-3 py-2 tabular-nums text-foreground">{g.plannedThisWeek}/{g.n} planejadas</td>
-              <td className="px-3 py-2 tabular-nums text-foreground">{g.lastPpc == null ? "—" : `${g.lastPpc}%`}</td>
+              <td className="px-3 py-2 tabular-nums text-foreground">{g.lastPpc == null ? "–" : `${g.lastPpc}%`}</td>
             </tr>
           ))}
         </tbody>
@@ -369,7 +369,7 @@ function ResumoConteudo() {
           <dl className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" aria-label="Números da semana">
             <BigNumber
               label="PPC da semana"
-              value={historyError ? "–" : s.ppc == null ? "—" : `${s.ppc}%`}
+              value={historyError ? "–" : s.ppc == null ? "–" : `${s.ppc}%`}
               hint={historyError ? undefined : s.planned > 0 ? `${s.done} de ${s.planned} dias feitos` : "nenhuma obra fechou"}
             />
             <BigNumber

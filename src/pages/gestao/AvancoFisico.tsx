@@ -287,7 +287,7 @@ export default function AvancoFisico() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Curva S — planejado × realizado</CardTitle>
+              <CardTitle>Curva S: planejado × realizado</CardTitle>
             </CardHeader>
             <CardContent>
               {curveQ.isLoading || baselinesQ.isLoading ? (
@@ -394,7 +394,7 @@ export default function AvancoFisico() {
                             {Number(m.progress_pct).toFixed(1)}%
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground whitespace-pre-line">
-                            {m.notes || "—"}
+                            {m.notes || "–"}
                           </TableCell>
                         </TableRow>
                       ))}

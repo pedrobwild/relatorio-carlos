@@ -65,7 +65,7 @@ export const errorLabels = {
   duplicateRecord: {
     title: "Registro já existe",
     description:
-      "Confira a lista — talvez ele tenha sido criado por outra pessoa.",
+      "Confira a lista: talvez ele tenha sido criado por outra pessoa.",
   },
   foreignKeyConstraint: {
     title: "Não dá para excluir",

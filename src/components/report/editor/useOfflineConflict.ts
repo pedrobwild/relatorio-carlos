@@ -154,7 +154,7 @@ export function useOfflineConflict({
           onApplyRef.current(server);
           baseRef.current = server;
           toast.info(
-            "Trouxemos a versão mais recente do servidor — você não tinha alterações pendentes.",
+            "Trouxemos a versão mais recente do servidor: você não tinha alterações pendentes.",
           );
           return { blocked: false as const, data: server };
         }

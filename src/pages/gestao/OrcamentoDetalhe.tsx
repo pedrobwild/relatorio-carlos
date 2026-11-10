@@ -108,7 +108,7 @@ const PRIORITIES: Record<string, { label: string; className: string }> = {
 const QUICK_TEMPLATES = [
   "Aguardo retorno do comercial",
   "Informação solicitada ao cliente",
-  "Orçamento revisado — pronto para envio",
+  "Orçamento revisado, pronto para envio",
 ];
 
 function calcSalePrice(cost: number, bdi: number): number {
@@ -233,7 +233,7 @@ export default function OrcamentoDetalhe({
 
   const getProfileName = useCallback(
     (id: string | null) => {
-      if (!id) return "—";
+      if (!id) return "–";
       const p = profiles?.find((p: any) => p.id === id);
       return p?.nome || p?.email?.split("@")[0] || id.slice(0, 8);
     },
@@ -486,7 +486,7 @@ export default function OrcamentoDetalhe({
           <div className="ml-auto">
             <AssessorSheet
               defaultEventType="budget_request"
-              placeholder="Ex: A margem está em 8% — onde posso reduzir custo sem comprometer a qualidade percebida?"
+              placeholder="Ex: A margem está em 8%: onde posso reduzir custo sem comprometer a qualidade percebida?"
             />
           </div>
         </div>
@@ -898,9 +898,9 @@ export default function OrcamentoDetalhe({
                               </span>
                             </>
                           ) : ev.event_type === "comment" ? (
-                            " — comentou"
+                            " comentou"
                           ) : (
-                            ` — ${ev.event_type}`
+                            ` – ${ev.event_type}`
                           )}
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -1051,7 +1051,7 @@ function SectionBlock({ section }: { section: any }) {
                 <div className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-xs border-b border-border/50 last:border-b-0 hover:bg-muted/20">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="truncate">{item.title || "—"}</span>
+                      <span className="truncate">{item.title || "–"}</span>
                       {item.item_category && (
                         <Badge
                           variant="secondary"
@@ -1079,19 +1079,19 @@ function SectionBlock({ section }: { section: any }) {
                     )}
                   </div>
                   <span className="text-right text-muted-foreground tabular-nums">
-                    {item.qty || "—"}
+                    {item.qty || "–"}
                   </span>
                   <span className="text-right text-muted-foreground tabular-nums">
-                    {item.cost > 0 ? formatBRL(item.cost) : "—"}
+                    {item.cost > 0 ? formatBRL(item.cost) : "–"}
                   </span>
                   <span className="text-right text-muted-foreground tabular-nums">
-                    {item.bdi > 0 ? `${item.bdi}%` : "—"}
+                    {item.bdi > 0 ? `${item.bdi}%` : "–"}
                   </span>
                   <span className="text-right text-muted-foreground tabular-nums">
-                    {item.sale > 0 ? formatBRL(item.sale) : "—"}
+                    {item.sale > 0 ? formatBRL(item.sale) : "–"}
                   </span>
                   <span className="text-right font-medium tabular-nums">
-                    {item.totalSale > 0 ? formatBRL(item.totalSale) : "—"}
+                    {item.totalSale > 0 ? formatBRL(item.totalSale) : "–"}
                   </span>
                 </div>
               </div>

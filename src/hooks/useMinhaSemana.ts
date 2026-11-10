@@ -359,7 +359,7 @@ async function fetchMyPunchItems(userId: string): Promise<InboxItem[]> {
   return merged.map((row) => ({
     id: `punch-${row.id}`,
     kind: "entrega" as InboxKind,
-    title: `${row.ambiente} — ${row.descricao}`,
+    title: `${row.ambiente} – ${row.descricao}`,
     dueDate: row.due_date ?? null,
     daysOverdue: calcOverdue(row.due_date ?? null),
     businessDaysUntil: calcBusinessDaysUntil(row.due_date ?? null),

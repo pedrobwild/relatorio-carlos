@@ -92,7 +92,7 @@ export function WelcomeContractCard({
               Resumo do Contrato
             </h3>
             <p className="text-xs text-primary font-medium">
-              Etapa de Projeto (3D + Executivo) — o que cada parte faz
+              Etapa de Projeto (3D + Executivo): o que cada parte faz
             </p>
           </div>
           <motion.div

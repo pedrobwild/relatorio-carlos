@@ -161,7 +161,7 @@ export function AuthRedirect() {
             {backendUnavailable
               ? "Não é problema na sua conta. Tente de novo em alguns segundos."
               : connectionFailed
-                ? "A requisição não chegou até nós — verifique sua conexão e tente de novo."
+                ? "A requisição não chegou até nós. Verifique sua conexão e tente de novo."
                 : roleError
                   ? "Sua sessão pode ter expirado."
                   : "Sua conta ainda não tem um perfil definido. Fale com o time da Bwild."}

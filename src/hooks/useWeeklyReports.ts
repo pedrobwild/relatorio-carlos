@@ -383,7 +383,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
           lastPersistedUpdatedAt.current.delete(vars.weekNumber);
         }
         toast.error(
-          "Outra pessoa atualizou este relatório enquanto você editava. Recarregamos a versão mais recente — revise e salve novamente. Nenhuma informação foi perdida: o histórico de versões guarda tudo.",
+          "Outra pessoa atualizou este relatório enquanto você editava. Recarregamos a versão mais recente. Revise e salve novamente. Nenhuma informação foi perdida: o histórico de versões guarda tudo.",
           { duration: 10000 },
         );
         return;

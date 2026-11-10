@@ -36,7 +36,7 @@ export function ConsentBanner() {
               <p className="text-sm text-muted-foreground">
                 Coletamos eventos anônimos de navegação e, opcionalmente,
                 gravações de sessão para entender pontos de fricção. Você pode
-                aceitar, recusar ou personalizar — e mudar de ideia depois.
+                aceitar, recusar ou personalizar, e mudar de ideia depois.
               </p>
             </div>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-2 sm:shrink-0">

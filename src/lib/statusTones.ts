@@ -151,7 +151,7 @@ export function getTone<T extends string>(
 export function getLabel<T extends string>(
   map: Record<string, string>,
   key: T | null | undefined,
-  fallback = "—",
+  fallback = "–",
 ): string {
   if (!key) return fallback;
   return map[key] ?? key;

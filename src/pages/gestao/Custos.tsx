@@ -60,7 +60,7 @@ function formatBRL(value: number | null | undefined): string {
 }
 
 function formatPct(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return "–";
   return `${Number(value).toFixed(1)}%`;
 }
 
@@ -276,7 +276,7 @@ export default function Custos() {
                   ? `${totals.variacao >= 0 ? "+" : ""}${formatBRL(
                       totals.variacao,
                     )}`
-                  : "—"
+                  : "–"
               }
               hint={
                 totals?.variacao_pct !== null && totals?.variacao_pct !== undefined
@@ -321,7 +321,7 @@ export default function Custos() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <LineIcon className="h-4 w-4 text-muted-foreground" />
-                Curva S financeira — desembolso acumulado
+                Curva S financeira: desembolso acumulado
               </CardTitle>
             </CardHeader>
             <CardContent>

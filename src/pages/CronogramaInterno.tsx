@@ -178,7 +178,7 @@ export default function CronogramaInterno() {
     <div className="space-y-1">
       <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Cronograma interno</h1>
       <p className="text-sm text-muted-foreground">
-        Ferramenta de trabalho da equipe. O cliente não vê — o que ele vê continua no{" "}
+        Ferramenta de trabalho da equipe. O cliente não vê. O que ele vê continua no{" "}
         <Link to={paths.cronograma} className="font-medium text-foreground underline underline-offset-2">
           cronograma do cliente
         </Link>
@@ -296,10 +296,10 @@ export default function CronogramaInterno() {
         >
           <p className="text-sm tabular-nums text-foreground">
             <span className="text-muted-foreground">Entrega interna</span>{" "}
-            <strong>{summary.internalEnd ? ddmm(summary.internalEnd) : "—"}</strong>
+            <strong>{summary.internalEnd ? ddmm(summary.internalEnd) : "–"}</strong>
             <span className="mx-2 text-muted-foreground">·</span>
             <span className="text-muted-foreground">Cliente</span>{" "}
-            <strong>{summary.clientEnd ? ddmm(summary.clientEnd) : clientLoaded ? "sem cronograma" : "—"}</strong>
+            <strong>{summary.clientEnd ? ddmm(summary.clientEnd) : clientLoaded ? "sem cronograma" : "–"}</strong>
           </p>
           <DeliveryChip summary={summary} />
         </section>

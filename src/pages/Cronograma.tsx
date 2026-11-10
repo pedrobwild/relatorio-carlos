@@ -743,7 +743,7 @@ const Cronograma = () => {
       toast.error("Não foi possível salvar o cronograma", {
         id: AUTOSAVE_ERROR_TOAST_ID,
         description: autosaveBlockedRef.current
-          ? `${result.message} Suas alterações continuam nesta tela — clique em Salvar para tentar de novo.`
+          ? `${result.message} Suas alterações continuam nesta tela. Clique em Salvar para tentar de novo.`
           : result.message,
       });
     }, AUTOSAVE_DEBOUNCE_MS);
@@ -903,7 +903,7 @@ const Cronograma = () => {
             )}
             {autosaveStatus === "saved" && "Salvo automaticamente"}
             {autosaveStatus === "error" &&
-              "Falha ao salvar — tentaremos de novo"}
+              "Falha ao salvar. Tentaremos de novo"}
           </span>
           <AIScheduleGenerator
             projectId={projectId || ""}
@@ -985,7 +985,7 @@ const Cronograma = () => {
           />
           <AssessorSheet
             defaultEventType="schedule_request"
-            placeholder="Ex: A demolição encontrou parede de tijolo maciço — qual o impacto no caminho crítico?"
+            placeholder="Ex: A demolição encontrou parede de tijolo maciço: qual o impacto no caminho crítico?"
           />
           {canEditSchedule && (
           <Button size="sm" onClick={handleSave} disabled={saving}>

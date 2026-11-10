@@ -201,7 +201,7 @@ export function useAutoSave<T>({
     if (totalAttemptsRef.current >= MAX_TOTAL_ATTEMPTS) {
       setStatus("error");
       toast.error(
-        "Não foi possível salvar automaticamente. Suas alterações estão na tela — use “Tentar novamente”.",
+        "Não foi possível salvar automaticamente. Suas alterações estão na tela. Use “Tentar novamente”.",
       );
       return;
     }
@@ -214,7 +214,7 @@ export function useAutoSave<T>({
       // Esgotou as tentativas automáticas: cabe ao usuário tentar de novo.
       setStatus("error");
       toast.error(
-        "Não foi possível salvar automaticamente. Suas alterações estão na tela — use “Tentar novamente”.",
+        "Não foi possível salvar automaticamente. Suas alterações estão na tela. Use “Tentar novamente”.",
       );
       return;
     }

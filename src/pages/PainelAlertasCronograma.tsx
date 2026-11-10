@@ -66,7 +66,7 @@ import {
 const ALL = "__all__";
 
 const fmtDate = (iso: string | null) =>
-  iso ? format(parseISO(iso), "dd/MM/yy", { locale: ptBR }) : "—";
+  iso ? format(parseISO(iso), "dd/MM/yy", { locale: ptBR }) : "–";
 
 type AlertFilter = "all" | ScheduleAlertKind;
 
@@ -225,23 +225,23 @@ export default function PainelAlertasCronograma() {
         <MetricRail>
           <MetricCard
             label="Pendências"
-            value={isLoading ? "—" : summary.total}
+            value={isLoading ? "–" : summary.total}
             accent={summary.total > 0 ? "destructive" : "success"}
             hint="Total de atividades alertando"
           />
           <MetricCard
             label="Início pendente"
-            value={isLoading ? "—" : summary.missingStart}
+            value={isLoading ? "–" : summary.missingStart}
             accent={summary.missingStart > 0 ? "warning" : "muted"}
           />
           <MetricCard
             label="Término pendente"
-            value={isLoading ? "—" : summary.missingEnd}
+            value={isLoading ? "–" : summary.missingEnd}
             accent={summary.missingEnd > 0 ? "destructive" : "muted"}
           />
           <MetricCard
             label="Obras impactadas"
-            value={isLoading ? "—" : summary.projects}
+            value={isLoading ? "–" : summary.projects}
             accent="info"
           />
         </MetricRail>

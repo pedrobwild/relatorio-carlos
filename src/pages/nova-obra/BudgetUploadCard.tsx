@@ -71,7 +71,7 @@ export function BudgetUploadCard({
           Orçamento da Obra
         </CardTitle>
         <CardDescription>
-          Opcional — Anexe o orçamento detalhado (PDF, Excel ou CSV) para
+          Opcional: anexe o orçamento detalhado (PDF, Excel ou CSV) para
           referência comercial e geração futura de cronograma.
         </CardDescription>
       </CardHeader>

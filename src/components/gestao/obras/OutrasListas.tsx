@@ -39,7 +39,7 @@ const cardClass =
 function Dash({ label }: { label: string }) {
   return (
     <span className="text-muted-foreground" title={label}>
-      —<span className="sr-only">{label}</span>
+      –<span className="sr-only">{label}</span>
     </span>
   );
 }

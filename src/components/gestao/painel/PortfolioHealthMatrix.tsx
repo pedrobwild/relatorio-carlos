@@ -69,7 +69,7 @@ function bubbleSize(orcado: number | null, maxOrc: number): number {
 }
 
 function fmtNumber(n: number | null | undefined, digits = 1): string {
-  if (n == null || !Number.isFinite(n)) return "—";
+  if (n == null || !Number.isFinite(n)) return "–";
   return n.toLocaleString("pt-BR", {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
@@ -77,7 +77,7 @@ function fmtNumber(n: number | null | undefined, digits = 1): string {
 }
 
 function fmtCurrency(n: number | null | undefined): string {
-  if (n == null || !Number.isFinite(n)) return "—";
+  if (n == null || !Number.isFinite(n)) return "–";
   return n.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -109,7 +109,7 @@ function MatrixTooltip({ active, payload }: { active?: boolean; payload?: Toolti
         <span className="text-right">{p.overdueDays}d</span>
         <span className="text-muted-foreground">Variação</span>
         <span className="text-right">
-          {p.variacaoPct == null ? "—" : `${fmtNumber(p.variacaoPct)}%`}
+          {p.variacaoPct == null ? "–" : `${fmtNumber(p.variacaoPct)}%`}
         </span>
         <span className="text-muted-foreground">Orçado</span>
         <span className="text-right">{fmtCurrency(p.orcado)}</span>
@@ -242,7 +242,7 @@ export function PortfolioHealthMatrix({
   }, [points]);
 
   // Resumo aria-live para leitores de tela.
-  const ariaSummary = `Matriz de saúde: ${points.length} obras ativas — ${counts.critica} críticas, ${counts.atencao} em atenção, ${counts.saudavel} saudáveis.`;
+  const ariaSummary = `Matriz de saúde: ${points.length} obras ativas: ${counts.critica} críticas, ${counts.atencao} em atenção, ${counts.saudavel} saudáveis.`;
 
   return (
     <section

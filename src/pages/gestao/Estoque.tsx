@@ -304,7 +304,7 @@ export default function Estoque() {
           (p) => p.id === input.project_id,
         );
         if (!projectExists) {
-          throw new Error("Obra selecionada não encontrada — atualize a página");
+          throw new Error("Obra selecionada não encontrada. Atualize a página");
         }
       } else if (input.location_type === "estoque" && input.project_id) {
         // estoque central nunca tem project_id (regra do índice uniq_balance_estoque)
@@ -321,7 +321,7 @@ export default function Estoque() {
         }
         const exists = items.some((it) => it.id === itemId);
         if (!exists) {
-          throw new Error("Item não encontrado — atualize a página e tente novamente");
+          throw new Error("Item não encontrado. Atualize a página e tente novamente");
         }
       } else if (input.movement_type !== "entrada") {
         throw new Error("Selecione um item existente para esta movimentação");
@@ -397,7 +397,7 @@ export default function Estoque() {
       if (variables.movement_type === "entrada") {
         toast.success("Entrada registrada no estoque");
       } else {
-        toast.success("Movimentação registrada — saldo atualizado");
+        toast.success("Movimentação registrada. Saldo atualizado");
       }
       setMovDialogOpen(false);
     },
@@ -636,7 +636,7 @@ function BalancesTable({
             return (
               <TableRow key={b.id}>
                 <TableCell className="font-medium">
-                  {item?.name ?? "—"}
+                  {item?.name ?? "–"}
                 </TableCell>
                 <TableCell>
                   <LocationBadge
@@ -657,7 +657,7 @@ function BalancesTable({
                   })}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {item?.unit ?? "—"}
+                  {item?.unit ?? "–"}
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {format(new Date(b.updated_at), "dd/MM/yyyy HH:mm", {
@@ -727,7 +727,7 @@ function MovementsTable({
                   <MovementBadge type={m.movement_type} />
                 </TableCell>
                 <TableCell className="font-medium">
-                  {item?.name ?? "—"}
+                  {item?.name ?? "–"}
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
                   {Number(m.quantity).toLocaleString("pt-BR", {
@@ -746,7 +746,7 @@ function MovementsTable({
                   />
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {m.supplier_name || "—"}
+                  {m.supplier_name || "–"}
                   {m.invoice_number ? ` • NF ${m.invoice_number}` : ""}
                 </TableCell>
                 <TableCell>
@@ -780,7 +780,7 @@ function MovementPhotoCell({ path }: { path: string | null }) {
   });
 
   if (!path) {
-    return <span className="text-xs text-muted-foreground">—</span>;
+    return <span className="text-xs text-muted-foreground">–</span>;
   }
 
   if (!url) {
@@ -865,10 +865,10 @@ function ItemsTable({
               <TableCell className="font-medium">{it.name}</TableCell>
               <TableCell className="text-muted-foreground">{it.unit}</TableCell>
               <TableCell className="text-muted-foreground">
-                {it.category || "—"}
+                {it.category || "–"}
               </TableCell>
               <TableCell className="text-xs text-muted-foreground line-clamp-2">
-                {it.description || "—"}
+                {it.description || "–"}
               </TableCell>
             </TableRow>
           ))}

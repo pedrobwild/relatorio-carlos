@@ -173,7 +173,7 @@ describe("CloseWeekSheet", () => {
 
   it("semana sem nada marcado: não há o que fechar", () => {
     renderSheet({ assignments: [] });
-    expect(within(ppc()).getByText("—")).toBeInTheDocument();
+    expect(within(ppc()).getByText("–")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Nada foi marcado nesta semana");
     expect(fechar()).toBeDisabled();
     expect(screen.queryByLabelText("Observação da semana (opcional)")).toBeNull();
@@ -271,7 +271,7 @@ describe("CloseWeekSheet", () => {
         reason: "cliente_decisao",
         business_days_added: 2,
         description:
-          "Semana de 05/10 a 09/10: 2 dias sem execução (05/10, 06/10) em Passar conduíte — Aguardando decisão do cliente.",
+          "Semana de 05/10 a 09/10: 2 dias sem execução (05/10, 06/10) em Passar conduíte – Aguardando decisão do cliente.",
         event_date: "2026-10-05",
         evidence_urls: ["p1/d1/a.jpg"],
         photo: null,

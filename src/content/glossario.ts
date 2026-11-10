@@ -135,7 +135,7 @@ export const glossario = {
   formalizacao: {
     term: "Formalização",
     definition:
-      "Decisão importante que precisa de ciência ou aprovação registrada — escolha de acabamento, mudança de escopo, aprovação de cor.",
+      "Decisão importante que precisa de ciência ou aprovação registrada: escolha de acabamento, mudança de escopo, aprovação de cor.",
     category: "documentacao",
   },
   pendencia: {
@@ -177,7 +177,7 @@ export const glossario = {
   projetoExecutivo: {
     term: "Projeto executivo",
     definition:
-      "Conjunto de plantas e detalhes que mostram, com precisão milimétrica, como a obra será construída — base para o canteiro.",
+      "Conjunto de plantas e detalhes que mostram, com precisão milimétrica, como a obra será construída, base para o canteiro.",
     category: "projeto",
   },
   projetoBasico: {
@@ -201,7 +201,7 @@ export const glossario = {
   pedidoDeCompra: {
     term: "Pedido de compra",
     definition:
-      "Documento formal pedindo material ou serviço a um fornecedor — com quantidade, prazo e valor acordados.",
+      "Documento formal pedindo material ou serviço a um fornecedor, com quantidade, prazo e valor acordados.",
     category: "compras",
   },
   recebimento: {

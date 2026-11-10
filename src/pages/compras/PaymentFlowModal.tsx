@@ -160,7 +160,7 @@ export function PaymentFlowModal({
       <DialogContent className="max-w-3xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Fluxo de Pagamento — {itemName}
+            Fluxo de Pagamento: {itemName}
           </DialogTitle>
         </DialogHeader>
 

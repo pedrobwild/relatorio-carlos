@@ -126,7 +126,7 @@ export function PortfolioCommandBar({
                     <button
                       role="radio"
                       aria-checked={viewMode === mode}
-                      aria-label={`Visualização: ${label} — ${description}`}
+                      aria-label={`Visualização: ${label} – ${description}`}
                       className={cn(
                         "inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-xs font-medium transition-all",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",

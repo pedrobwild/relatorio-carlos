@@ -41,7 +41,7 @@ export function ObservationsModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Observações — {itemName}</DialogTitle>
+          <DialogTitle>Observações: {itemName}</DialogTitle>
         </DialogHeader>
         <div className="py-4">
           <Label htmlFor="obs-text">Observações</Label>

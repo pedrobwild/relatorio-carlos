@@ -199,7 +199,7 @@ function diffPhotos(
     const fields: ListItemChange[] = [];
     const compare = (label: string, a?: string, b?: string) => {
       if ((a ?? "").trim() !== (b ?? "").trim()) {
-        fields.push({ label, before: a?.trim() || "—", after: b?.trim() || "—" });
+        fields.push({ label, before: a?.trim() || "–", after: b?.trim() || "–" });
       }
     };
     compare("Legenda", prev.caption, photo.caption);

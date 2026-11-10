@@ -48,9 +48,9 @@ export function ReviewSummary({
   };
 
   const formatCurrency = (v: string) => {
-    if (!v) return "—";
+    if (!v) return "–";
     const num = parseFloat(v);
-    if (isNaN(num)) return "—";
+    if (isNaN(num)) return "–";
     return `R$ ${num.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
   };
 
@@ -74,7 +74,7 @@ export function ReviewSummary({
       value:
         [formData.address, formData.bairro, formData.cidade_imovel]
           .filter(Boolean)
-          .join(", ") || "—",
+          .join(", ") || "–",
       sub: [
         formData.cep,
         formData.tipo_de_locacao,
@@ -107,7 +107,7 @@ export function ReviewSummary({
         : "Não anexado",
       sub: formData.budget_uploaded
         ? "Pronto para processamento"
-        : "Opcional — pode ser adicionado depois",
+        : "Opcional, pode ser adicionado depois",
       filled: formData.budget_uploaded,
     },
     {

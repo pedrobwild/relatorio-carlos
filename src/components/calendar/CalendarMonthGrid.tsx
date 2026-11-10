@@ -89,14 +89,14 @@ function getActivityStatus(a: WeekActivity): {
   const plannedEnd = parseLocalDate(a.planned_end);
   if (plannedEnd < today) {
     return {
-      label: "Atrasada — não concluída",
+      label: "Atrasada, não concluída",
       Icon: AlertTriangle,
       className: "text-destructive",
     };
   }
   if (plannedStart <= today) {
     return {
-      label: "Atrasada — não iniciada",
+      label: "Atrasada, não iniciada",
       Icon: AlertTriangle,
       className: "text-destructive",
     };
@@ -529,8 +529,8 @@ function WeekRow({
                             className="absolute -top-1 -right-1 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-none shadow-sm ring-1 ring-background z-10"
                             title={
                               isOverdueStart
-                                ? "Atividade atrasada — não iniciada"
-                                : "Atividade atrasada — não concluída"
+                                ? "Atividade atrasada, não iniciada"
+                                : "Atividade atrasada, não concluída"
                             }
                             aria-label="Atrasada"
                           >
@@ -746,7 +746,7 @@ function WeekRow({
                                   <CalendarClock className="h-3.5 w-3.5 shrink-0" />
                                   <span className="truncate">
                                     {latestLabel
-                                      ? `Replanejar — pendência anterior a ${latestLabel}`
+                                      ? `Replanejar: pendência anterior a ${latestLabel}`
                                       : "Replanejar cronograma"}
                                   </span>
                                 </button>

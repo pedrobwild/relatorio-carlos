@@ -75,7 +75,7 @@ const _statusLabel = (s: CsActionStatus) =>
   CS_ACTION_STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s;
 
 const fmtDate = (d: string | null) =>
-  d ? format(parseISO(d), "dd/MM/yyyy", { locale: ptBR }) : "—";
+  d ? format(parseISO(d), "dd/MM/yyyy", { locale: ptBR }) : "–";
 
 const isOverdue = (a: CsTicketAction) => {
   if (!a.due_date) return false;
@@ -191,11 +191,11 @@ function ActionRow({ action, staff, onPatch, onDelete }: ActionRowProps) {
             }
           >
             <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder="—" />
+              <SelectValue placeholder="–" />
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectItem value={NONE} className="text-xs">
-                — Sem responsável —
+                Sem responsável
               </SelectItem>
               {staff.map((s) => (
                 <SelectItem key={s.id} value={s.id} className="text-xs">
@@ -315,7 +315,7 @@ export function CsTicketActionsPanel({ ticketId }: CsTicketActionsPanelProps) {
               <SelectValue placeholder="Responsável" />
             </SelectTrigger>
             <SelectContent position="popper">
-              <SelectItem value={NONE}>— Sem responsável —</SelectItem>
+              <SelectItem value={NONE}>Sem responsável</SelectItem>
               {staff.map((s: any) => (
                 <SelectItem key={s.id} value={s.id}>
                   {s.nome}

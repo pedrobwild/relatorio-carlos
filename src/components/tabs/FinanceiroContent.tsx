@@ -104,9 +104,9 @@ const FinanceiroContent = () => {
   };
 
   const formatShortDate = (date: Date | string | null | undefined) => {
-    if (!date) return "—";
+    if (!date) return "–";
     const d = typeof date === "string" ? parseLocal(date) : date;
-    if (isNaN(d.getTime())) return "—";
+    if (isNaN(d.getTime())) return "–";
     return format(d, "dd/MM", { locale: ptBR });
   };
 

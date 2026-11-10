@@ -28,8 +28,8 @@ export function syncStatusFor({ online, pending, justFlushed }: SyncStatusInput)
       tone: "offline",
       text:
         pending > 0
-          ? `Sem sinal — ${pendingPhrase(pending)}`
-          : "Sem sinal — o que você marcar fica guardado e é enviado quando a conexão voltar",
+          ? `Sem sinal: ${pendingPhrase(pending)}`
+          : "Sem sinal: o que você marcar fica guardado e é enviado quando a conexão voltar",
     };
   }
   if (pending > 0) {

@@ -5,17 +5,17 @@ describe("linha de estado da fila offline", () => {
   it("sem sinal, com registros guardados", () => {
     expect(syncStatusFor({ online: false, pending: 3, justFlushed: false })).toEqual({
       tone: "offline",
-      text: "Sem sinal — 3 registros aguardando envio",
+      text: "Sem sinal: 3 registros aguardando envio",
     });
     expect(syncStatusFor({ online: false, pending: 1, justFlushed: false })?.text).toBe(
-      "Sem sinal — 1 registro aguardando envio",
+      "Sem sinal: 1 registro aguardando envio",
     );
   });
 
   it("sem sinal e nada guardado: avisa que dá para marcar mesmo assim", () => {
     const s = syncStatusFor({ online: false, pending: 0, justFlushed: false });
     expect(s?.tone).toBe("offline");
-    expect(s?.text).toMatch(/^Sem sinal — o que você marcar fica guardado/);
+    expect(s?.text).toMatch(/^Sem sinal: o que você marcar fica guardado/);
   });
 
   it("com sinal e fila andando: Enviando…", () => {

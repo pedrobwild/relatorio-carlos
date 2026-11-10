@@ -181,7 +181,7 @@ export function DateLogsModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-base">
-            Histórico de Datas — {purchase.item_name}
+            Histórico de Datas: {purchase.item_name}
           </DialogTitle>
         </DialogHeader>
 

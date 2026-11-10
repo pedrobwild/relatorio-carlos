@@ -108,10 +108,10 @@ export function ProtectedRoute({
           </p>
           <p className="text-caption text-muted-foreground">
             {backendUnavailable
-              ? "Não é problema na sua conta — o sistema está fora do ar por instantes. Já tentamos algumas vezes; tente de novo em alguns segundos."
+              ? "Não é problema na sua conta: o sistema está fora do ar por instantes. Já tentamos algumas vezes; tente de novo em alguns segundos."
               : connectionFailed
-                ? "A requisição não chegou até nós — verifique sua conexão e tente de novo. Sua conta e seus dados estão salvos."
-                : "Sua sessão pode ter expirado. Tente novamente — se continuar, entre na sua conta outra vez."}
+                ? "A requisição não chegou até nós. Verifique sua conexão e tente de novo. Sua conta e seus dados estão salvos."
+                : "Sua sessão pode ter expirado. Tente novamente. Se continuar, entre na sua conta outra vez."}
           </p>
           <button
             type="button"

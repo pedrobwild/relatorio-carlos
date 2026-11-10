@@ -30,10 +30,10 @@ function safeFormatDate(dateStr: string, fmt: string): string {
       ? parseLocalDate(dateStr)
       : new Date(dateStr);
     return isNaN(d.getTime())
-      ? dateStr || "—"
+      ? dateStr || "–"
       : format(d, fmt, { locale: ptBR });
   } catch {
-    return dateStr || "—";
+    return dateStr || "–";
   }
 }
 

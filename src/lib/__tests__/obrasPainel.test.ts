@@ -321,6 +321,6 @@ describe("ordem e resumo", () => {
     expect(slackLabel(-4)).toBe("−4 dias");
     expect(slackLabel(1)).toBe("+1 dia");
     expect(slackLabel(0)).toBe("0 dia");
-    expect(slackLabel(null)).toBe("—");
+    expect(slackLabel(null)).toBe("–");
   });
 });

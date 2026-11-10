@@ -97,9 +97,9 @@ const buildPendingImpact = (
 ): string => {
   if (item.impact?.trim()) return item.impact.trim();
   if (daysToDeadline < 0)
-    return `Vencida ${formatDeadline(daysToDeadline)} — risco de impacto no cronograma.`;
+    return `Vencida ${formatDeadline(daysToDeadline)}: risco de impacto no cronograma.`;
   if (daysToDeadline <= 2)
-    return `Prazo ${formatDeadline(daysToDeadline)} — sem decisão a obra para de avançar.`;
+    return `Prazo ${formatDeadline(daysToDeadline)}: sem decisão a obra para de avançar.`;
   return "Sem decisão, etapas dependentes ficam bloqueadas.";
 };
 
@@ -184,7 +184,7 @@ export function rankNextActions(inputs: RankInputs): NextAction[] {
       title: tacit.title?.trim() || "Aprovação tácita iminente",
       impact:
         days <= 0
-          ? "O prazo contratual venceu — o documento será aprovado automaticamente."
+          ? "O prazo contratual venceu: o documento será aprovado automaticamente."
           : `Sem manifestação ${formatDeadline(days)}, o documento é aprovado automaticamente.`,
       cta: { label: "Aprovar ou solicitar revisão", href },
       owner: "client",
@@ -210,8 +210,8 @@ export function rankNextActions(inputs: RankInputs): NextAction[] {
       title: `Pagamento ${payment.description || `#${payment.installment_number}`}`,
       impact:
         days < 0
-          ? `Vencido ${formatDeadline(days)} — pode gerar juros e multa contratual.`
-          : `Vence ${formatDeadline(days)} — evite multa por atraso.`,
+          ? `Vencido ${formatDeadline(days)}: pode gerar juros e multa contratual.`
+          : `Vence ${formatDeadline(days)}: evite multa por atraso.`,
       cta: { label: "Ver no Financeiro", href },
       owner: "client",
       daysToDeadline: days,

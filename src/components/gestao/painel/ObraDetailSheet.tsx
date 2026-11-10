@@ -71,15 +71,15 @@ const brl = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 0,
 });
 const fmtDateBR = (iso: string | null | undefined) => {
-  if (!iso) return "—";
+  if (!iso) return "–";
   const [y, m, d] = iso.slice(0, 10).split("-");
   if (!y || !m || !d) return iso;
   return `${d}/${m}/${y}`;
 };
 const fmtMoney = (v: number | null | undefined) =>
-  v == null ? "—" : brl.format(v);
+  v == null ? "–" : brl.format(v);
 const fmtPct = (v: number | null | undefined, digits = 0) =>
-  v == null ? "—" : `${v.toFixed(digits)}%`;
+  v == null ? "–" : `${v.toFixed(digits)}%`;
 
 // Semântica de variação de custo (EAC vs orçado): positivo = estouro
 // (destructive), negativo = economia (success), próximo de 0 = neutro.
@@ -145,7 +145,7 @@ export function ObraDetailSheet({
                 {obra.customer_name ?? "Sem cliente"}
               </SheetTitle>
               <SheetDescription className="text-[13px] text-muted-foreground truncate">
-                {obra.nome ?? "—"}
+                {obra.nome ?? "–"}
               </SheetDescription>
               <div className="pt-3 flex flex-wrap items-center gap-2">
                 <Button asChild size="sm" variant="default" className="h-8 gap-1.5">

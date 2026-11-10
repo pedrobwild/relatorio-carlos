@@ -31,7 +31,7 @@ export const fmtNumber = (v: unknown): string => {
 };
 
 export const fmtDateBR = (v: unknown): string => {
-  if (v == null || v === "") return "—";
+  if (v == null || v === "") return "–";
   return DATE_BR(String(v));
 };
 
@@ -206,7 +206,7 @@ export function generateInsights({
           title: "Top 5 maiores",
           summary: `Maiores valores em "${numericKey}" entre os resultados retornados.`,
           evidence: sorted.map((r) => ({
-            label: String(r[labelKey] ?? "—"),
+            label: String(r[labelKey] ?? "–"),
             value: fmtBRL(toNumber(r[numericKey]) ?? 0),
           })),
           severity: "low",
@@ -280,7 +280,7 @@ export function generateInsights({
   if (groupKey && numericForGroup && total >= 5) {
     const grouped = new Map<string, number>();
     for (const r of rows) {
-      const k = String(r[groupKey] ?? "—");
+      const k = String(r[groupKey] ?? "–");
       grouped.set(
         k,
         (grouped.get(k) ?? 0) + (toNumber(r[numericForGroup]) ?? 0),
@@ -303,9 +303,9 @@ export function generateInsights({
           type: "diagnostic",
           domain,
           title: `Concentração em ${n} de ${items.length} ${groupKey}`,
-          summary: `${n} grupos respondem por 80% do total — padrão típico de Pareto. Foque nesses para ganho rápido.`,
+          summary: `${n} grupos respondem por 80% do total: padrão típico de Pareto. Foque nesses para ganho rápido.`,
           evidence: items.slice(0, n).map(([label, value]) => ({
-            label: label || "—",
+            label: label || "–",
             value: fmtBRL(value),
             changePct: value / grandTotal,
           })),
@@ -373,7 +373,7 @@ export function buildExecutiveSummary(args: ExecutiveSummaryArgs): string {
     return `Nenhum registro encontrado no domínio **${domain}** para a pergunta. Considere ampliar o período ou revisar filtros.`;
   }
   const top = insights.slice(0, 3);
-  const bullets = top.map((i) => `- **${i.title}** — ${i.summary}`).join("\n");
+  const bullets = top.map((i) => `- **${i.title}**: ${i.summary}`).join("\n");
   return [
     `Analisando ${rows.length} registro(s) no domínio **${domain}**:`,
     bullets,

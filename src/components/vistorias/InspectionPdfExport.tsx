@@ -106,7 +106,7 @@ export function InspectionPdfExport({ inspection, items }: Props) {
                   <td style="border: 1px solid #d1d5db; padding: 8px; text-align: center;">${i + 1}</td>
                   <td style="border: 1px solid #d1d5db; padding: 8px;">${item.description}</td>
                   <td style="border: 1px solid #d1d5db; padding: 8px; text-align: center;">${resultLabel[item.result]}</td>
-                  <td style="border: 1px solid #d1d5db; padding: 8px; color: #666;">${item.notes || "—"}</td>
+                  <td style="border: 1px solid #d1d5db; padding: 8px; color: #666;">${item.notes || "–"}</td>
                 </tr>
               `,
                 )

@@ -89,9 +89,9 @@ export function AtividadeDetailSheet({
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const getMemberName = (userId: string | null) => {
-    if (!userId) return "—";
+    if (!userId) return "–";
     const u = staffUsers.find((u) => u.id === userId);
-    return u?.nome || u?.email || "—";
+    return u?.nome || u?.email || "–";
   };
 
   const getInitials = (name: string) => {
@@ -198,7 +198,7 @@ export function AtividadeDetailSheet({
                           "dd/MM/yyyy",
                           { locale: ptBR },
                         )
-                      : "—"
+                      : "–"
                   }
                   danger={!!isOverdue}
                 />

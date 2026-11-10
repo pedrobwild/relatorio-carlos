@@ -388,7 +388,7 @@ const Executivo = () => {
                     <MessageSquareWarning className="h-5 w-5 text-[hsl(var(--warning))] shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-foreground">
-                        Solicitação de Revisão — Versão {version.version_number}
+                        Solicitação de Revisão · Versão {version.version_number}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Solicitada em{" "}

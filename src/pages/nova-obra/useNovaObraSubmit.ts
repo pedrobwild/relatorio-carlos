@@ -120,7 +120,7 @@ export function useNovaObraSubmit() {
       // This is critical — without this, user may not see the project
       warnings.push({
         step: "Membro",
-        message: "Falha ao vincular seu acesso — entre em contato com suporte",
+        message: "Falha ao vincular seu acesso. Entre em contato com suporte",
       });
     }
 
@@ -151,7 +151,7 @@ export function useNovaObraSubmit() {
       warnings.push({
         step: "Contratante",
         message:
-          "Dados do contratante não foram salvos — edite na tela de Dados do Cliente",
+          "Dados do contratante não foram salvos. Edite na tela de Dados do Cliente",
       });
     }
 
@@ -187,7 +187,7 @@ export function useNovaObraSubmit() {
         warnings.push({
           step: "Imóvel",
           message:
-            "Dados do imóvel não foram salvos — edite na tela de Dados do Cliente",
+            "Dados do imóvel não foram salvos. Edite na tela de Dados do Cliente",
         });
       }
     }
@@ -220,7 +220,7 @@ export function useNovaObraSubmit() {
         console.error("Journey initialization error:", journeyError);
         warnings.push({
           step: "Jornada",
-          message: "Jornada não foi inicializada — pode ser criada depois",
+          message: "Jornada não foi inicializada. Pode ser criada depois",
         });
       }
     }

@@ -66,7 +66,7 @@ export default function Vistorias() {
           </Button>
           <AssessorSheet
             defaultEventType="quality_inspection"
-            placeholder="Ex: Encontrei 3 NCs críticas no banheiro do casal — revestimento, ralo e elétrica. O que preciso travar antes de avançar?"
+            placeholder="Ex: Encontrei 3 NCs críticas no banheiro do casal: revestimento, ralo e elétrica. O que preciso travar antes de avançar?"
           />
           {can("inspections:create") && (
             <Button

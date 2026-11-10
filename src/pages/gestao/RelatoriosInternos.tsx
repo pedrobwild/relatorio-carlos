@@ -88,7 +88,7 @@ interface ReportPayload {
 }
 
 function fmtDate(iso?: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "–";
   try {
     return format(parseISO(iso), "dd 'de' LLLL", { locale: ptBR });
   } catch {
@@ -97,7 +97,7 @@ function fmtDate(iso?: string | null): string {
 }
 
 function fmtMoney(n?: number | null): string {
-  if (n === null || n === undefined) return "—";
+  if (n === null || n === undefined) return "–";
   return n.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -106,7 +106,7 @@ function fmtMoney(n?: number | null): string {
 }
 
 function fmtPct(n?: number | null): string {
-  if (n === null || n === undefined) return "—";
+  if (n === null || n === undefined) return "–";
   return `${Number(n).toFixed(1)}%`;
 }
 
@@ -249,7 +249,7 @@ function ReportView({ report }: { report: InternalWeeklyReport }) {
               value={
                 punch.total
                   ? `${Math.round(((punch.done ?? 0) / punch.total) * 100)}%`
-                  : "—"
+                  : "–"
               }
             />
           </div>
@@ -272,7 +272,7 @@ function ReportView({ report }: { report: InternalWeeklyReport }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            Lookahead — semana{" "}
+            Lookahead · semana{" "}
             {lookahead.window?.start ? fmtDate(lookahead.window.start) : ""} a{" "}
             {lookahead.window?.end ? fmtDate(lookahead.window.end) : ""}
           </CardTitle>
@@ -490,7 +490,7 @@ export default function RelatoriosInternos() {
               </div>
               <div className="hidden print:block mb-2">
                 <h1 className="text-xl font-bold">
-                  Relatório interno — {projectMap.get(selected.project_id) ?? "Obra"}
+                  Relatório interno: {projectMap.get(selected.project_id) ?? "Obra"}
                 </h1>
                 <p className="text-sm text-muted-foreground">
                   Semana de {fmtDate(selected.week_start)}

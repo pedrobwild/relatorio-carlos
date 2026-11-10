@@ -145,7 +145,7 @@ function buildActionItems(
           id: `stale-${p.id}`,
           projectName: p.name,
           projectId: `stale-${p.id}`,
-          reason: `Parada há ${staleDays} dias — verifique se há bloqueio`,
+          reason: `Parada há ${staleDays} dias. Verifique se há bloqueio`,
           responsible: p.engineer_name ?? null,
           urgency: (staleDays ?? 8) >= 14 ? "high" : "medium",
           deadline: null,
@@ -162,8 +162,8 @@ function buildActionItems(
         projectId: p.id,
         reason:
           s.overdue_count === 1
-            ? "1 pendência vencida — ação imediata necessária"
-            : `${s.overdue_count} pendências vencidas — priorize resolução`,
+            ? "1 pendência vencida: ação imediata necessária"
+            : `${s.overdue_count} pendências vencidas: priorize resolução`,
         responsible: p.engineer_name ?? null,
         urgency: "critical",
         deadline: null,

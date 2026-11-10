@@ -394,7 +394,7 @@ export default function EditarObraWizard() {
           <Rocket className="h-4 w-4 text-amber-600 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-amber-800">
-              Rascunho — Recebido via integração
+              Rascunho: recebido via integração
             </p>
             <p className="text-[11px] text-amber-600">
               Revise as informações e clique em"Publicar Obra" para ativar o

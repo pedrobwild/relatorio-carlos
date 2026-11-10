@@ -283,7 +283,7 @@ function shortDay(iso: string, today: string): string {
 
 /** Folga em texto curto: "+6 dias", "−4 dias", "0 dia". */
 export function slackLabel(slack: number | null): string {
-  if (slack == null) return "—";
+  if (slack == null) return "–";
   const abs = Math.abs(slack);
   const sign = slack > 0 ? "+" : slack < 0 ? "−" : "";
   return `${sign}${abs} ${abs === 1 || abs === 0 ? "dia" : "dias"}`;

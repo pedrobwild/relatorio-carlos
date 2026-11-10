@@ -248,7 +248,7 @@ export function PortfolioKpiStrip({
     <div
       className="grid grid-cols-3 gap-2 px-0 pb-1 md:flex md:flex-wrap"
       role="group"
-      aria-label="KPIs operacionais — clique para filtrar"
+      aria-label="KPIs operacionais: clique para filtrar"
     >
       {kpiDefinitions
         .filter((kpi) => {

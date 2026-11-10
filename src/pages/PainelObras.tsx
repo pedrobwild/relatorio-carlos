@@ -272,7 +272,7 @@ const parseValidIsoDate = (iso: string | null | undefined): Date | null => {
 
 const fmtDate = (iso: string | null) => {
   const parsed = parseValidIsoDate(iso);
-  return parsed ? format(parsed, "dd/MM/yy", { locale: ptBR }) : "—";
+  return parsed ? format(parsed, "dd/MM/yy", { locale: ptBR }) : "–";
 };
 
 /**
@@ -1450,9 +1450,9 @@ export default function PainelObras() {
           }
           description={
             fase === "projetos"
-              ? "Empreendimentos em fase de projeto — anteprojeto, executivo e aprovações antes da execução em campo."
+              ? "Empreendimentos em fase de projeto: anteprojeto, executivo e aprovações antes da execução em campo."
               : fase === "obras"
-                ? "Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
+                ? "Cockpit operacional unificado: monitore status, prazos e relacionamento de todas as obras em execução."
                 : "Visão unificada de obras em execução e empreendimentos em fase de projeto."
           }
           actions={
@@ -1605,7 +1605,7 @@ export default function PainelObras() {
                 </span>
                 <span className="block font-semibold text-foreground">
                   {deleteTarget?.customer_name && (
-                    <>{deleteTarget.customer_name} — </>
+                    <>{deleteTarget.customer_name} – </>
                   )}
                   {deleteTarget?.nome}
                 </span>
@@ -2209,8 +2209,8 @@ export default function PainelObras() {
                         aria-pressed={density === "compact"}
                         aria-label={
                           density === "compact"
-                            ? "Densidade compacta — alternar para confortável"
-                            : "Densidade confortável — alternar para compacta"
+                            ? "Densidade compacta: alternar para confortável"
+                            : "Densidade confortável: alternar para compacta"
                         }
                         title={
                           density === "compact"
@@ -2703,7 +2703,7 @@ function ObraRow({
         data-testid="painel-obras-row"
         data-expanded={expanded ? "true" : "false"}
         tabIndex={0}
-        aria-label={`Obra ${obra.customer_name ?? "Sem cliente"} — ${obra.nome ?? ""}. Enter para abrir, seta para baixo ou para cima para navegar, espaço para expandir.`}
+        aria-label={`Obra ${obra.customer_name ?? "Sem cliente"} – ${obra.nome ?? ""}. Enter para abrir, seta para baixo ou para cima para navegar, espaço para expandir.`}
         onKeyDown={(e) => {
           // Só reagimos quando o foco está na própria linha (não em
           // controles internos como botões / selects), preservando o
@@ -2803,7 +2803,7 @@ function ObraRow({
               // ring-inset + offset-0 mantém o halo de foco DENTRO do botão,
               // evitando vazamento visual sobre a borda da célula sticky.
               className="text-left flex flex-col gap-0.5 flex-1 min-w-0 max-w-full overflow-hidden group/link focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0 rounded-md px-0.5"
-              title={`${obra.customer_name ?? "Sem cliente"} — ${obra.nome ?? ""}`.trim()}
+              title={`${obra.customer_name ?? "Sem cliente"} – ${obra.nome ?? ""}`.trim()}
             >
               <span className="flex items-center gap-1.5 min-w-0 max-w-full w-full">
                 <span className="font-semibold text-sm truncate [overflow-wrap:anywhere] group-hover/link:text-primary transition-colors min-w-0 flex-1">
@@ -2815,7 +2815,7 @@ function ObraRow({
                 />
               </span>
               <span className="block text-xs text-muted-foreground truncate [overflow-wrap:anywhere] min-w-0 max-w-full w-full">
-                {obra.nome ?? "—"}
+                {obra.nome ?? "–"}
               </span>
             </button>
           </div>
@@ -2859,7 +2859,7 @@ function ObraRow({
               manualStatus={obra.status}
             />
           ) : (
-            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-muted-foreground text-xs">–</span>
           )}
         </TableCell>
 
@@ -3032,7 +3032,7 @@ function ObraRow({
               </span>
             </div>
           ) : (
-            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-muted-foreground text-xs">–</span>
           )}
         </TableCell>
 
@@ -3064,7 +3064,7 @@ function ObraRow({
               </span>
             </div>
           ) : (
-            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-muted-foreground text-xs">–</span>
           )}
         </TableCell>
 
@@ -3072,7 +3072,7 @@ function ObraRow({
             <-5% success, entre 0..5 warning, negativo pequeno neutro. */}
         <TableCell className="text-right hidden xl:table-cell">
           {snapshot?.variacao_pct == null ? (
-            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-muted-foreground text-xs">–</span>
           ) : (
             (() => {
               const v = snapshot.variacao_pct;
@@ -3186,7 +3186,7 @@ function ObraRow({
               <User className="h-3 w-3 shrink-0 opacity-60" />
               <span className="truncate font-medium">
                 {obra.responsavel_nome ??
-                  (obra.responsavel_id ? "—" : "Definir")}
+                  (obra.responsavel_id ? "–" : "Definir")}
               </span>
             </SelectTrigger>
             <SelectContent>
@@ -4164,7 +4164,7 @@ function KanbanCard({
             )}
             aria-hidden
           />
-          {displayStatus ?? "—"}
+          {displayStatus ?? "–"}
         </span>
       </div>
 
@@ -5207,7 +5207,7 @@ function MobilePainelView({
               >
                 <MobileRecordCard
                   title={o.customer_name ?? "Sem cliente"}
-                  subtitle={o.nome ?? "—"}
+                  subtitle={o.nome ?? "–"}
                   chips={chips}
                   meta={meta}
                   tone={tone}
@@ -5637,7 +5637,7 @@ function PeriodScheduleBanner({ projectId, projectName }: { projectId: string; p
       const days = Math.round(
         (parseISO(todayIso).getTime() - parseISO(a.planned_start).getTime()) / 86400000,
       );
-      return { reason: `Não iniciada — devia ter começado há ${days}d`, days };
+      return { reason: `Não iniciada, devia ter começado há ${days}d`, days };
     }
     return null;
   };
@@ -5740,7 +5740,7 @@ function PeriodScheduleBanner({ projectId, projectName }: { projectId: string; p
                 {overduePrior.length === 1
                   ? "etapa anterior em aberto"
                   : "etapas anteriores em aberto"}{" "}
-                — pode comprometer este período
+                , pode comprometer este período
               </p>
               <ul className="mt-1 space-y-0.5">
                 {overduePrior.slice(0, 4).map((a) => (
@@ -5926,7 +5926,7 @@ function PeriodEtapaDetails({
       origem_atraso: causes
         .map(
           (c) =>
-            `${c.description}${c.etapa ? ` (${c.etapa})` : ""} — prevista até ${format(parseISO(c.planned_end), "dd/MM", { locale: ptBR })}`,
+            `${c.description}${c.etapa ? ` (${c.etapa})` : ""}, prevista até ${format(parseISO(c.planned_end), "dd/MM", { locale: ptBR })}`,
         )
         .join(" | "),
     })),
@@ -5998,7 +5998,7 @@ function PeriodEtapaDetails({
       doc.text("Previsto x realizado por etapa", 40, 40);
       doc.setFontSize(10);
       doc.setTextColor(90);
-      doc.text(`Obra: ${projectName ?? "—"}`, 40, 58);
+      doc.text(`Obra: ${projectName ?? "–"}`, 40, 58);
       doc.text(`Período: ${periodLabel}`, 40, 72);
       doc.text(
         `Resumo:  Total ${totals.total}  ·  Concluídas ${totals.concluded}  ·  Em aberto ${totals.open}  ·  Em atraso ${totals.overdue}`,
@@ -6044,12 +6044,12 @@ function PeriodEtapaDetails({
             : "",
           r.realizado_inicio
             ? format(parseISO(r.realizado_inicio), "dd/MM/yy", { locale: ptBR })
-            : "—",
+            : "–",
           r.realizado_fim
             ? format(parseISO(r.realizado_fim), "dd/MM/yy", { locale: ptBR })
-            : "—",
+            : "–",
           String(r.atraso_dias ?? ""),
-          [r.motivo, r.origem_atraso].filter(Boolean).join(" — "),
+          [r.motivo, r.origem_atraso].filter(Boolean).join(" – "),
         ]),
         didParseCell: (data) => {
           if (data.section === "body" && data.column.index === 2) {
@@ -6230,11 +6230,11 @@ function PeriodEtapaDetails({
                           <span className="text-foreground/80">
                             {a.actual_start
                               ? format(parseISO(a.actual_start), "dd/MM", { locale: ptBR })
-                              : "—"}
+                              : "–"}
                             {" – "}
                             {a.actual_end
                               ? format(parseISO(a.actual_end), "dd/MM", { locale: ptBR })
-                              : "—"}
+                              : "–"}
                           </span>
                         </span>
                       </div>
@@ -6247,7 +6247,7 @@ function PeriodEtapaDetails({
                       {!a.actual_end && causes.length > 0 && (
                         <div className="rounded-sm border border-warning/30 bg-warning/10 px-1.5 py-1 text-[10px] text-warning-foreground space-y-0.5">
                           <div className="font-medium">
-                            Possível origem do atraso — etapa anterior em aberto:
+                            Possível origem do atraso, etapa anterior em aberto:
                           </div>
                           <ul className="space-y-0.5">
                             {causes.map((c) => {
@@ -6273,7 +6273,7 @@ function PeriodEtapaDetails({
                                     </span>
                                   )}
                                   <span className="text-muted-foreground tabular-nums">
-                                    — prevista até{" "}
+                                    , prevista até{" "}
                                     {format(parseISO(c.planned_end), "dd/MM", {
                                       locale: ptBR,
                                     })}

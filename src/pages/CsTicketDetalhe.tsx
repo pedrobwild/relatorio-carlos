@@ -99,7 +99,7 @@ const statusLabel = (s: CsTicketStatus) =>
   CS_STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s;
 
 const fmtDateTime = (iso: string | null | undefined) =>
-  iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "—";
+  iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "–";
 
 const fmtRelative = (iso: string) =>
   formatDistanceToNow(parseISO(iso), { locale: ptBR, addSuffix: true });
@@ -391,7 +391,7 @@ export default function CsTicketDetalhe() {
               className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 group"
             >
               {ticket.project_name ?? "Obra"}
-              {ticket.customer_name ? ` — ${ticket.customer_name}` : ""}
+              {ticket.customer_name ? ` – ${ticket.customer_name}` : ""}
               <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100" />
             </button>
             <h1 className="text-2xl font-bold tracking-tight leading-tight break-words">
@@ -629,7 +629,7 @@ export default function CsTicketDetalhe() {
                 onClick={() => navigate(`/gestao/obra/${ticket.project_id}`)}
                 className="font-medium text-foreground hover:text-primary truncate text-right"
               >
-                {ticket.project_name ?? "—"}
+                {ticket.project_name ?? "–"}
               </button>
             </div>
             {ticket.customer_name && (

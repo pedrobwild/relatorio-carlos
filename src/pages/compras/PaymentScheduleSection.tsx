@@ -282,7 +282,7 @@ export function PaymentScheduleSection({
             )}
           >
             <span>
-              Total: {totalPct.toFixed(1)}% — {fmt(totalAmt)}
+              Total: {totalPct.toFixed(1)}% · {fmt(totalAmt)}
             </span>
             {!isBalanced && <span>⚠ Soma ≠ 100%</span>}
           </div>

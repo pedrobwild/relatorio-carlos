@@ -377,7 +377,7 @@ const DocumentosContent = () => {
           }
           hint={
             !canUpload
-              ? "Fique tranquilo — assim que um documento for adicionado, você receberá uma notificação."
+              ? "Fique tranquilo: assim que um documento for adicionado, você receberá uma notificação."
               : undefined
           }
           infoLink={{ label: "Entenda como funciona", href: "#faq-documentos" }}

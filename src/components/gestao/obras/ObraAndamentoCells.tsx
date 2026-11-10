@@ -134,7 +134,7 @@ export function EtapaCell({ row }: { row: ObraRow }) {
     texto = a.atual.name;
     tom = a.atual.state === "atrasada" ? "font-medium text-destructive" : "font-medium text-foreground";
   } else {
-    texto = "—";
+    texto = "–";
   }
   return (
     <div className="min-w-0" title={a.atual ? itemTitle(a.atual) : undefined}>
@@ -156,7 +156,7 @@ export function AgoraCell({ row }: { row: ObraRow }) {
   const a = row.andamento;
   const items = a?.agora ?? [];
   if (items.length === 0) {
-    const vazio = !a || a.fase === "sem_cronograma" ? "—" : a.fase === "fim" ? "Nada" : "Nada previsto hoje";
+    const vazio = !a || a.fase === "sem_cronograma" ? "–" : a.fase === "fim" ? "Nada" : "Nada previsto hoje";
     return <span className="text-sm text-muted-foreground">{vazio}</span>;
   }
   const first = items[0];
@@ -182,7 +182,7 @@ export function AgoraCell({ row }: { row: ObraRow }) {
 /** "Semana que vem": o que começa (com o dia) ou o que continua. */
 export function ProximaSemanaCell({ row }: { row: ObraRow }) {
   const a = row.andamento;
-  if (!a || a.fase === "sem_cronograma") return <span className="text-sm text-muted-foreground">—</span>;
+  if (!a || a.fase === "sem_cronograma") return <span className="text-sm text-muted-foreground">–</span>;
   const comeca = a.proximaSemana;
   const continua = a.continuaProximaSemana;
   if (comeca.length === 0 && continua.length === 0) {

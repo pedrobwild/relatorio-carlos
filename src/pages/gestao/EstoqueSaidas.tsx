@@ -272,7 +272,7 @@ export default function EstoqueSaidas({
       qc.invalidateQueries({
         queryKey: ["stock", "movements", "saidas-recent"],
       });
-      toast.success("Saída registrada — saldo atualizado");
+      toast.success("Saída registrada. Saldo atualizado");
       setForm((f) => ({
         ...f,
         item_id: "",
@@ -452,7 +452,7 @@ export default function EstoqueSaidas({
                       )}{" "}
                       {selectedItem.unit}
                     </span>
-                    {willGoNegative && " — saída deixará o saldo negativo"}
+                    {willGoNegative && ". Saída deixará o saldo negativo"}
                   </p>
                 )}
               </div>
@@ -629,7 +629,7 @@ export default function EstoqueSaidas({
                             </TableCell>
                             <TableCell className="text-xs">
                               <div className="font-medium">
-                                {item?.name ?? "—"}
+                                {item?.name ?? "–"}
                               </div>
                               <div className="text-muted-foreground">
                                 {m.location_type === "obra"
@@ -656,8 +656,8 @@ export default function EstoqueSaidas({
                             </TableCell>
                             <TableCell className="text-xs">
                               {m.responsible_user_id
-                                ? (staffMap.get(m.responsible_user_id) ?? "—")
-                                : "—"}
+                                ? (staffMap.get(m.responsible_user_id) ?? "–")
+                                : "–"}
                             </TableCell>
                           </TableRow>
                         );

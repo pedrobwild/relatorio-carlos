@@ -3,7 +3,7 @@ import { Status } from "./types";
 import { parseLocalDate } from "@/lib/dates";
 
 export const formatDate = (dateStr: string, baseYear?: number): string => {
-  if (!dateStr) return "—";
+  if (!dateStr) return "–";
   // Calendar date — parse as local to avoid UTC midnight shifting back one day in pt-BR.
   const date = parseLocalDate(dateStr);
   const day = date.getDate().toString().padStart(2, "0");
@@ -49,7 +49,7 @@ export const getDelayDays = (activity: Activity): number | null => {
 export const formatDeviation = (
   days: number | null,
 ): { text: string; className: string } => {
-  if (days === null) return { text: "—", className: "text-muted-foreground" };
+  if (days === null) return { text: "–", className: "text-muted-foreground" };
   if (days === 0) return { text: "No prazo", className: "text-success" };
   if (days > 0)
     return { text: `+${days}d`, className: "text-destructive font-semibold" };

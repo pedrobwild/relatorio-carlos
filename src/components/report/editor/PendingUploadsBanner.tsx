@@ -32,7 +32,7 @@ const PendingUploadsBanner = ({
       <AlertDescription className="flex flex-wrap items-center gap-3">
         <span>
           {hasBlocked
-            ? "As tentativas automáticas falharam. Os arquivos continuam salvos no aparelho — tente reenviar."
+            ? "As tentativas automáticas falharam. Os arquivos continuam salvos no aparelho. Tente reenviar."
             : "Os arquivos ficam guardados no aparelho e o envio continua sozinho, mesmo se você sair desta tela ou perder o sinal."}
         </span>
         <Button

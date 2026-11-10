@@ -81,7 +81,7 @@ export function AIReportGenerator({
         ?.context?.status;
       if (status === 402) {
         throw new Error(
-          "Os créditos de IA do workspace acabaram. Adicione créditos para gerar o relatório automaticamente — enquanto isso, você pode preencher o relatório manualmente.",
+          "Os créditos de IA do workspace acabaram. Adicione créditos para gerar o relatório automaticamente. Enquanto isso, você pode preencher o relatório manualmente.",
         );
       }
       if (status === 429) {

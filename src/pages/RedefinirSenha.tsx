@@ -138,7 +138,7 @@ export default function RedefinirSenha() {
             <AlertCircle className="h-10 w-10 text-amber-400" />
             <p className="text-sm text-white/80">
               {initialRecoveryError?.code === "otp_expired"
-                ? "Este link já foi usado ou expirou. Cada link funciona uma única vez — solicite um novo e abra-o logo em seguida."
+                ? "Este link já foi usado ou expirou. Cada link funciona uma única vez. Solicite um novo e abra-o logo em seguida."
                 : "Este link é inválido ou expirou. Solicite um novo link de recuperação."}
             </p>
           </div>

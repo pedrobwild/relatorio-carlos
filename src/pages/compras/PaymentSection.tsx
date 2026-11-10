@@ -354,7 +354,7 @@ export function PaymentSection({
             placeholder="Selecione…"
             onSave={(v) => onUpdateField(purchase.id, "payment_method", v)}
           >
-            <SelectItem value="none">—</SelectItem>
+            <SelectItem value="none">–</SelectItem>
             {PAYMENT_METHODS.map((m) => (
               <SelectItem key={m.value} value={m.value}>
                 {m.label}

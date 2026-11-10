@@ -134,7 +134,7 @@ export function amendmentDescription(c: AmendmentCandidate, monday: string): str
   const daysText = c.days === 1 ? "1 dia sem execução" : `${c.days} dias sem execução`;
   return (
     `Semana de ${weekLabel(monday)}: ${daysText} (${c.dates.map(ddmmOf).join(", ")})` +
-    ` em ${listText(c.activityTitles)} — ${OPS_REASON_LABEL[c.opsReason]}.`
+    ` em ${listText(c.activityTitles)} – ${OPS_REASON_LABEL[c.opsReason]}.`
   );
 }
 

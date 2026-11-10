@@ -222,7 +222,7 @@ export function IntegrationMonitorCard() {
                           ? format(new Date(log.created_at), "dd/MM HH:mm", {
                               locale: ptBR,
                             })
-                          : "—"}
+                          : "–"}
                       </p>
                       {log.attempts && log.attempts > 1 && (
                         <p className="text-xs text-muted-foreground">

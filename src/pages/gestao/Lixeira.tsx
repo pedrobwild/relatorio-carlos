@@ -287,7 +287,7 @@ export default function Lixeira() {
                     <TableCell className="text-sm">
                       {p.customer_name ?? (
                         <span className="text-muted-foreground italic text-xs">
-                          —
+                          –
                         </span>
                       )}
                     </TableCell>
@@ -315,7 +315,7 @@ export default function Lixeira() {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-xs text-muted-foreground">–</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">

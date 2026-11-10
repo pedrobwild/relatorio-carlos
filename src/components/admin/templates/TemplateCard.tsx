@@ -126,7 +126,7 @@ export function TemplateCard({
                             new Date(latestVersion.created_at),
                             { locale: ptBR, addSuffix: true },
                           )
-                        : "—"}
+                        : "–"}
                     </p>
                   </TooltipContent>
                 </Tooltip>

@@ -202,7 +202,7 @@ export function MobileReportHeader({
                       <span className="text-sm font-bold tabular-nums text-foreground">
                         {displayStartDate
                           ? formatDateShort(displayStartDate)
-                          : "—"}
+                          : "–"}
                       </span>
                     </div>
                     <div className="flex-1 h-px bg-border mx-2" />
@@ -211,7 +211,7 @@ export function MobileReportHeader({
                         Entrega
                       </span>
                       <span className="text-sm font-bold tabular-nums text-foreground">
-                        {displayEndDate ? formatDateShort(displayEndDate) : "—"}
+                        {displayEndDate ? formatDateShort(displayEndDate) : "–"}
                       </span>
                     </div>
                   </div>

@@ -303,7 +303,7 @@ const ScheduleTable = ({
                       <div className="bg-muted/40 rounded px-1.5 py-0.5">
                         <span className="text-muted-foreground">Real: </span>
                         <span className="font-semibold tabular-nums text-foreground">
-                          {realRange ?? "—"}
+                          {realRange ?? "–"}
                         </span>
                       </div>
                     </div>
@@ -381,7 +381,7 @@ const ScheduleTable = ({
                               Real
                             </p>
                             <p className="text-[11px] font-semibold tabular-nums text-foreground">
-                              {realRange ?? "—"}
+                              {realRange ?? "–"}
                             </p>
                           </div>
                         )}

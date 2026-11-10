@@ -311,7 +311,7 @@ export default function Fornecedores() {
 
   const renderStars = (rating: number | null) => {
     if (!rating)
-      return <span className="text-muted-foreground text-xs">—</span>;
+      return <span className="text-muted-foreground text-xs">–</span>;
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((i) => (
@@ -577,7 +577,7 @@ export default function Fornecedores() {
                       <TableCell className="hidden md:table-cell text-sm">
                         {s.prazo_entrega_dias
                           ? `${s.prazo_entrega_dias}d`
-                          : "—"}
+                          : "–"}
                       </TableCell>
                       <TableCell>{renderStars(s.nota_avaliacao)}</TableCell>
                       <TableCell className="hidden sm:table-cell">

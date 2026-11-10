@@ -43,7 +43,7 @@ export function AssessorMemoryView({
       <Alert className="mt-6">
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Memória vazia — nenhuma consulta ainda preencheu o estado deste
+          Memória vazia: nenhuma consulta ainda preencheu o estado deste
           projeto.
         </AlertDescription>
       </Alert>

@@ -39,7 +39,7 @@ export function AiFieldIndicator({
         </TooltipTrigger>
         <TooltipContent side="top" className="text-xs max-w-[200px]">
           {isConflict
-            ? "Valor pode ter divergência — verifique com o contrato"
+            ? "Valor pode ter divergência. Verifique com o contrato"
             : "Preenchido automaticamente via contrato"}
         </TooltipContent>
       </Tooltip>

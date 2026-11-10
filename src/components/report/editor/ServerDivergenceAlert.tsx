@@ -38,7 +38,7 @@ const ServerDivergenceAlert = ({
         <p>
           O relatório salvo no servidor mudou desde que esta tela carregou
           {check.divergentSections.length > 0 && (
-            <> — divergência em: {check.divergentSections.join(", ")}</>
+            <>, divergência em: {check.divergentSections.join(", ")}</>
           )}
           . O salvamento automático está pausado para não apagar nada. Escolha
           como continuar.

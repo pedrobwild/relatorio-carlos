@@ -394,7 +394,7 @@ export function InspectionDetailDialog({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold text-base">
-            Vistoria —{" "}
+            Vistoria:{" "}
             {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", {
               locale: ptBR,
             })}

@@ -71,7 +71,7 @@ export function EditableDateCell({
           )}
           title={`Clique para ${value ? "alterar" : "definir"} a data`}
         >
-          {value ? formatDate(value, baseYear) : "—"}
+          {value ? formatDate(value, baseYear) : "–"}
           <CalendarIcon className="w-3 h-3 opacity-0 group-hover:opacity-70 transition-opacity shrink-0" />
         </button>
       </PopoverTrigger>

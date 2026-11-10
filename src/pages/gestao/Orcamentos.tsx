@@ -125,7 +125,7 @@ export default function Orcamentos() {
                   >
                     <TableCell>
                       <span className="text-xs font-mono text-muted-foreground">
-                        {orc.sequential_code || "—"}
+                        {orc.sequential_code || "–"}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -167,14 +167,14 @@ export default function Orcamentos() {
                     <TableCell>
                       <span className="text-xs text-muted-foreground truncate block max-w-[100px]">
                         {[orc.bairro, orc.city].filter(Boolean).join(", ") ||
-                          "—"}
+                          "–"}
                       </span>
                     </TableCell>
                     <TableCell>
                       <span className="text-xs text-muted-foreground">
                         {orc.created_at
                           ? format(new Date(orc.created_at), "dd/MM/yyyy")
-                          : "—"}
+                          : "–"}
                       </span>
                     </TableCell>
                     <TableCell>

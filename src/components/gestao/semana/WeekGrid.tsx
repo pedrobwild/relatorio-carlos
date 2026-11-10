@@ -606,7 +606,7 @@ export function MobileWeekList(props: WeekGridProps) {
             >
               <span>{d.label}</span>
               <span className={cn("text-[11px] font-normal", on ? "text-primary-foreground" : "text-muted-foreground")}>
-                {d.holiday ? "Feriado" : n === 0 ? "—" : `${n} ${n === 1 ? "pessoa" : "pessoas"}`}
+                {d.holiday ? "Feriado" : n === 0 ? "–" : `${n} ${n === 1 ? "pessoa" : "pessoas"}`}
               </span>
             </button>
           );

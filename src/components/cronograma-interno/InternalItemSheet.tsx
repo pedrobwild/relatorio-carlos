@@ -124,7 +124,7 @@ export function InternalItemSheet({
         <SheetHeader className="space-y-1 border-b border-border p-4 pr-10 text-left">
           <SheetTitle>{title}</SheetTitle>
           <SheetDescription>
-            {parent ? `Micro-etapa de “${parent.description}”` : "Cronograma interno — o cliente não vê."}
+            {parent ? `Micro-etapa de “${parent.description}”` : "Cronograma interno: o cliente não vê."}
           </SheetDescription>
         </SheetHeader>
 

@@ -237,7 +237,7 @@ export function AtividadesListView({
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">
-                    {getMemberName(staffUsers, task.responsible_user_id) ?? "—"}
+                    {getMemberName(staffUsers, task.responsible_user_id) ?? "–"}
                   </TableCell>
                   <TableCell>
                     <span
@@ -265,7 +265,7 @@ export function AtividadesListView({
                         )}
                       </span>
                     ) : (
-                      "—"
+                      "–"
                     )}
                   </TableCell>
                   <TableCell>
@@ -277,7 +277,7 @@ export function AtividadesListView({
                         })}
                       </span>
                     ) : (
-                      "—"
+                      "–"
                     )}
                   </TableCell>
                   <TableCell>
@@ -335,7 +335,7 @@ export function AtividadesListView({
                         )}
                       </div>
                     ) : (
-                      "—"
+                      "–"
                     )}
                   </TableCell>
                   <TableCell>

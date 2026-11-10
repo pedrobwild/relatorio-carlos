@@ -360,7 +360,7 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
         {/* Reincident indicator */}
         {stats.reincidentCount > 0 && (
           <p className="text-xs text-destructive">
-            ⚠ {stats.reincidentCount} NC(s) reincidente(s) — atenção para
+            ⚠ {stats.reincidentCount} NC(s) reincidente(s): atenção para
             causas-raiz.
           </p>
         )}

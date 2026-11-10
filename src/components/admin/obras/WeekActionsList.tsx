@@ -352,7 +352,7 @@ function ActionRow({ action, staffUsers, onUpdate, onDelete }: ActionRowProps) {
           ? format(parseISO(action.due_date), "dd/MM/yyyy", { locale: ptBR })
           : "Sem prazo";
         const fullTitle = urgency.label
-          ? `${dateLabel} — ${urgency.label}`
+          ? `${dateLabel} – ${urgency.label}`
           : dateLabel;
         return (
           <div className="relative shrink-0" title={fullTitle}>

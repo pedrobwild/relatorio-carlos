@@ -43,7 +43,7 @@ const AutoSaveIndicator = ({
         aria-live="polite"
       >
         <CloudOff className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-        Sem conexão — alterações guardadas neste dispositivo
+        Sem conexão: alterações guardadas neste dispositivo
       </span>
     );
   }
