@@ -17,10 +17,11 @@ import { useCan } from "@/hooks/useCan";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { useInternalSchedule } from "@/hooks/useInternalSchedule";
 import { useProjectDeadline } from "@/hooks/useContractDeadline";
+import { useReportPhotoInbox } from "@/hooks/useReportPhotoInbox";
+import { useRelatorioSemanaStatus } from "@/hooks/useRelatorioSemanaStatus";
 import { agruparEtapas } from "@/lib/datasReais";
 import { todayISO } from "@/lib/hojeDia";
 import { ddmm } from "@/lib/obrasPainel";
-import { stashReportPhotos } from "@/lib/pendingReportPhotos";
 import { equipeMobileLabels } from "@/content/equipeMobileLabels";
 import { cn } from "@/lib/utils";
 import type { Activity } from "@/types/report";
@@ -87,6 +88,8 @@ export function StaffObraHubMobile() {
   const metrics = useProjectMetrics(project?.planned_start_date ?? null, entrega, hoje, activities);
   const grupos = useMemo(() => agruparEtapas(items, hoje), [items, hoje]);
   const etapaAtual = grupos.paraHoje.find((e) => e.item.actual_start)?.item.description ?? null;
+  const { waiting, keep } = useReportPhotoInbox(projectId);
+  const relatorio = useRelatorioSemanaStatus(projectId, { inicio: project?.planned_start_date, fim: entrega });
 
   if (!project || !projectId) return null;
 
@@ -96,12 +99,12 @@ export function StaffObraHubMobile() {
   const pct = Math.max(0, Math.min(100, metrics.actualProgress));
   const temCronograma = activities.length > 0;
 
-  const onPhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     event.target.value = "";
     if (files.length === 0) return;
-    stashReportPhotos(projectId, files);
-    navigate(`${base}/relatorio-semana`);
+    // A foto fica guardada no aparelho; o relatório a recebe ao abrir.
+    if (await keep(projectId, files)) navigate(`${base}/relatorio-semana`);
   };
 
   const atalhos: { label: string; to: string; show: boolean }[] = [
@@ -162,7 +165,7 @@ export function StaffObraHubMobile() {
         {canReport && (
           <>
             <Link to={`${base}/relatorio-semana`} className={actionClass}>
-              <ActionBody icon={FileText} title={L.relatorio} hint={L.relatorioHint} />
+              <ActionBody icon={FileText} title={L.relatorio} hint={relatorio.text} />
             </Link>
             <input
               id={photoInputId}
@@ -173,7 +176,12 @@ export function StaffObraHubMobile() {
               onChange={onPhoto}
             />
             <label htmlFor={photoInputId} className={cn(actionClass, "cursor-pointer focus-within:ring-2 focus-within:ring-ring")}>
-              <ActionBody icon={Camera} title={L.foto} hint={L.fotoHint} />
+              <ActionBody
+                icon={Camera}
+                title={L.foto}
+                hint={waiting > 0 ? equipeMobileLabels.fotosGuardadas.esperando(waiting) : L.fotoHint}
+                attention={waiting > 0}
+              />
             </label>
           </>
         )}

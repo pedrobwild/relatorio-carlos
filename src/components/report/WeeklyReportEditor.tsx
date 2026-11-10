@@ -17,6 +17,7 @@ import OfflineConflictAlert from "./editor/OfflineConflictAlert";
 import PendingUploadsBanner from "./editor/PendingUploadsBanner";
 import WeeklyReportStepsMobile from "./WeeklyReportStepsMobile";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useReportPhotoInboxDelivery } from "@/hooks/useReportPhotoInbox";
 
 
 
@@ -34,6 +35,12 @@ interface WeeklyReportEditorProps {
   ) => void | Promise<WeeklyReportData | null | undefined | void>;
   onCancel?: () => void;
   isSaving?: boolean;
+  /**
+   * Este editor é o da semana corrente aberto pela equipe
+   * (`/obra/:id/relatorio-semana`): recebe as fotos guardadas no aparelho
+   * pelo hub da obra e pela gaveta Registrar.
+   */
+  acceptInboxPhotos?: boolean;
 }
 
 const WeeklyReportEditor = ({
@@ -43,6 +50,7 @@ const WeeklyReportEditor = ({
   onSaveAndClose,
   onCancel,
   isSaving: externalIsSaving,
+  acceptInboxPhotos = false,
 }: WeeklyReportEditorProps) => {
   const state = useEditorState({
     data,
@@ -51,6 +59,16 @@ const WeeklyReportEditor = ({
     onSaveAndClose,
     externalIsSaving,
   });
+
+  useReportPhotoInboxDelivery(
+    {
+      gallery: state.formData.gallery,
+      autoSaveStatus: state.autoSaveStatus,
+      addInboxPhotos: state.addInboxPhotos,
+    },
+    projectId,
+    acceptInboxPhotos,
+  );
 
   const handleAIGenerated = (updatedData: WeeklyReportData) => {
     state.setFormData(updatedData);
@@ -63,7 +81,6 @@ const WeeklyReportEditor = ({
     return (
       <WeeklyReportStepsMobile
         state={state}
-        projectId={projectId}
         onCancel={onCancel}
       />
     );

@@ -4,7 +4,9 @@
  * Um banco só (`bwild-offline`) com um store por fila:
  *  - `ops-photos`   — fotos tiradas sem sinal (photoQueue);
  *  - `ops-outcomes` — Feito / Não feito / desfazer ainda não enviados
- *    (outcomeOutbox).
+ *    (outcomeOutbox);
+ *  - `report-photo-inbox` — fotos tiradas fora do relatório da semana, à
+ *    espera de entrar nele (reportPhotoInbox).
  *
  * É separado do cache das consultas (localStorage) de propósito: aquele cache
  * pode ser descartado a qualquer momento (24 h, versão nova, cota cheia) e o
@@ -12,12 +14,13 @@
  */
 
 const DB_NAME = "bwild-offline";
-/** v1: ops-photos. v2: + ops-outcomes. */
-const DB_VERSION = 2;
+/** v1: ops-photos. v2: + ops-outcomes. v3: + report-photo-inbox. */
+const DB_VERSION = 3;
 
 export const IDB_STORES = {
   photos: "ops-photos",
   outcomes: "ops-outcomes",
+  reportInbox: "report-photo-inbox",
 } as const;
 
 export type IdbStoreName = (typeof IDB_STORES)[keyof typeof IDB_STORES];

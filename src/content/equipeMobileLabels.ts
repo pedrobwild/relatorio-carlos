@@ -13,6 +13,25 @@ export const equipeMobileLabels = {
     registrar: "Registrar",
   },
 
+  fotosGuardadas: {
+    guardada: (n: number) => (n === 1 ? "Foto guardada no aparelho" : `${n} fotos guardadas no aparelho`),
+    entraram: (n: number) =>
+      n === 1 ? "1 foto guardada entrou no relatório" : `${n} fotos guardadas entraram no relatório`,
+    esperando: (n: number) =>
+      n === 1
+        ? "1 foto guardada no aparelho. Abra o relatório para enviar."
+        : `${n} fotos guardadas no aparelho. Abra o relatório para enviar.`,
+    cheia: "Muitas fotos guardadas no aparelho. Abra o relatório da semana para enviá-las.",
+    erro: "Não deu para guardar a foto. Tente de novo.",
+  },
+
+  relatorioStatus: {
+    neutro: "Abrir relatório da semana",
+    semRelatorio: "Semana ainda sem relatório",
+    rascunho: (fotos: number) =>
+      fotos > 0 ? `Rascunho salvo · ${fotos} ${fotos === 1 ? "foto" : "fotos"}` : "Rascunho salvo",
+  },
+
   registrar: {
     title: "Registrar",
     subtitle: "O que aconteceu na obra?",
@@ -23,7 +42,7 @@ export const equipeMobileLabels = {
     nenhumaObra: "Nenhuma obra encontrada",
     foto: { title: "Foto da obra", hint: "Abre a câmera" },
     etapa: { title: "Etapa começou ou terminou", hint: "Lançar a data real" },
-    relatorio: { title: "Relatório da semana", hint: "Fotos, resumo e próxima semana" },
+    relatorio: { title: "Relatório da semana" },
     pendencia: { title: "Pendência ou problema", hint: "Com foto e responsável" },
   },
 
@@ -76,9 +95,8 @@ export const equipeMobileLabels = {
     esperando: (n: number) => plural(n, "esperando data real", "esperando data real"),
     etapasEmDia: "Datas reais em dia",
     relatorio: "Relatório da semana",
-    relatorioHint: "Fotos, resumo e próxima semana",
     foto: "Tirar foto da obra",
-    fotoHint: "Vai direto para o relatório da semana",
+    fotoHint: "Fica guardada e entra no relatório da semana",
     mais: "Mais da obra",
     cronograma: "Cronograma completo",
     cronogramaInterno: "Cronograma interno",

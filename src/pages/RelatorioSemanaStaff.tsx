@@ -145,6 +145,7 @@ export default function RelatorioSemanaStaff() {
         onSaveAndClose={saveAndClose}
         onCancel={() => navigate(hub)}
         isSaving={isSavingReport && savingWeek === weekNum}
+        acceptInboxPhotos
       />
     </div>
   );

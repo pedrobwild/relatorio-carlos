@@ -21,7 +21,8 @@ import { Input } from "@/components/ui/input";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { useCan } from "@/hooks/useCan";
 import { matchesSearch } from "@/lib/searchNormalize";
-import { stashReportPhotos } from "@/lib/pendingReportPhotos";
+import { useReportPhotoInbox } from "@/hooks/useReportPhotoInbox";
+import { useRelatorioSemanaStatus } from "@/hooks/useRelatorioSemanaStatus";
 import { equipeMobileLabels } from "@/content/equipeMobileLabels";
 import { cn } from "@/lib/utils";
 
@@ -90,12 +91,20 @@ export function RegistrarSheet({ open, onOpenChange, projectId }: RegistrarSheet
     navigate(path);
   };
 
-  const onPhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Só consulta com a gaveta aberta e uma obra escolhida.
+  const activeId = open && selected ? selected.id : undefined;
+  const { waiting, keep } = useReportPhotoInbox(activeId);
+  const relatorio = useRelatorioSemanaStatus(activeId, {
+    inicio: selected?.planned_start_date,
+    fim: selected?.planned_end_date,
+  });
+
+  const onPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     event.target.value = "";
     if (!selected || files.length === 0) return;
-    stashReportPhotos(selected.id, files);
-    go(`/obra/${selected.id}/relatorio-semana`);
+    // A foto fica guardada no aparelho; o relatório a recebe ao abrir.
+    if (await keep(selected.id, files)) go(`/obra/${selected.id}/relatorio-semana`);
   };
 
   const canReport = can("reports:edit_weekly");
@@ -180,7 +189,11 @@ export function RegistrarSheet({ open, onOpenChange, projectId }: RegistrarSheet
                   onChange={onPhoto}
                 />
                 <label htmlFor={photoInputId} className={cn(rowClass, "cursor-pointer focus-within:ring-2 focus-within:ring-ring")}>
-                  <RowBody icon={Camera} title={L.foto.title} hint={L.foto.hint} />
+                  <RowBody
+                    icon={Camera}
+                    title={L.foto.title}
+                    hint={waiting > 0 ? equipeMobileLabels.fotosGuardadas.esperando(waiting) : L.foto.hint}
+                  />
                 </label>
               </>
             )}
@@ -191,7 +204,7 @@ export function RegistrarSheet({ open, onOpenChange, projectId }: RegistrarSheet
             )}
             {canReport && (
               <button type="button" className={rowClass} onClick={() => go(`/obra/${selected.id}/relatorio-semana`)}>
-                <RowBody icon={FileText} title={L.relatorio.title} hint={L.relatorio.hint} />
+                <RowBody icon={FileText} title={L.relatorio.title} hint={relatorio.text} />
               </button>
             )}
             {can("ncs:create") && (

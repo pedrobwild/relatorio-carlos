@@ -5,7 +5,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import WeeklyReportStepsMobile from "../WeeklyReportStepsMobile";
-import { stashReportPhotos } from "@/lib/pendingReportPhotos";
 import type { useEditorState } from "../editor/useEditorState";
 
 type State = ReturnType<typeof useEditorState>;
@@ -56,7 +55,7 @@ describe("WeeklyReportStepsMobile", () => {
   });
 
   it("abre no passo 1 (Fotos), com câmera, galeria e os três alertas do editor", () => {
-    const { container } = render(<WeeklyReportStepsMobile state={makeState()} projectId="p1" />);
+    const { container } = render(<WeeklyReportStepsMobile state={makeState()} />);
     expect(screen.getByRole("heading", { level: 1, name: "Relatório · semana 6" })).toBeInTheDocument();
     expect(screen.getByText("Passo 1 de 5 · Fotos")).toBeInTheDocument();
     expect(screen.getByText("Tirar foto")).toBeInTheDocument();
@@ -74,7 +73,7 @@ describe("WeeklyReportStepsMobile", () => {
 
   it("câmera e galeria usam o mesmo handler do editor; ambiente edita a foto", () => {
     const state = makeState();
-    const { container } = render(<WeeklyReportStepsMobile state={state} projectId="p1" />);
+    const { container } = render(<WeeklyReportStepsMobile state={state} />);
     const [camera] = Array.from(container.querySelectorAll('input[type="file"]'));
     fireEvent.change(camera, { target: { files: [new File(["x"], "a.jpg", { type: "image/jpeg" })] } });
     expect(state.handleBulkFileSelect).toHaveBeenCalledTimes(1);
@@ -86,7 +85,7 @@ describe("WeeklyReportStepsMobile", () => {
 
   it("avança pelos cinco passos e só salva no último", () => {
     const state = makeState();
-    render(<WeeklyReportStepsMobile state={state} projectId="p1" />);
+    render(<WeeklyReportStepsMobile state={state} />);
     fireEvent.click(screen.getByRole("button", { name: "Continuar: Resumo" }));
     expect(screen.getByText("Passo 2 de 5 · Resumo")).toBeInTheDocument();
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Pintura iniciada." } });
@@ -98,15 +97,5 @@ describe("WeeklyReportStepsMobile", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continuar: Enviar" }));
     fireEvent.click(screen.getByRole("button", { name: "Salvar relatório" }));
     expect(state.handleSave).toHaveBeenCalledTimes(1);
-  });
-
-  it("fotos tiradas fora do relatório entram pelo handler de vários arquivos", () => {
-    const state = makeState();
-    const foto = new File(["x"], "obra.jpg", { type: "image/jpeg" });
-    stashReportPhotos("p1", [foto]);
-    render(<WeeklyReportStepsMobile state={state} projectId="p1" />);
-    expect(state.handleBulkFileSelect).toHaveBeenCalledTimes(1);
-    const evento = (state.handleBulkFileSelect as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(Array.from(evento.target.files)).toEqual([foto]);
   });
 });

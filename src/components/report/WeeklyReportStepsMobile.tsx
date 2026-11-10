@@ -8,7 +8,7 @@
  *
  * 1 Fotos · 2 Resumo · 3 Próxima semana · 4 Atenção · 5 Enviar
  */
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { Camera, Check, ChevronLeft, Images, Save, Trash2 } from "lucide-react";
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,6 @@ import OfflineConflictAlert from "./editor/OfflineConflictAlert";
 import PendingUploadsBanner from "./editor/PendingUploadsBanner";
 import type { useEditorState } from "./editor/useEditorState";
 import { StickyActionBar } from "@/components/mobile/StickyActionBar";
-import { takeReportPhotos } from "@/lib/pendingReportPhotos";
 import { equipeMobileLabels } from "@/content/equipeMobileLabels";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +34,6 @@ const MEDIA_ACCEPT = "image/jpeg,image/png,image/webp,video/mp4,video/quicktime,
 
 interface WeeklyReportStepsMobileProps {
   state: ReturnType<typeof useEditorState>;
-  projectId?: string;
   onCancel?: () => void;
 }
 
@@ -47,23 +45,11 @@ const bigButtonClass = cn(
   "transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
 );
 
-export default function WeeklyReportStepsMobile({ state, projectId, onCancel }: WeeklyReportStepsMobileProps) {
+export default function WeeklyReportStepsMobile({ state, onCancel }: WeeklyReportStepsMobileProps) {
   const [step, setStep] = useState(0);
   const cameraId = useId();
   const galleryId = useId();
   const { formData, uploadQueue } = state;
-
-  // Fotos tiradas no hub da obra ou na gaveta Registrar chegam por aqui e
-  // entram pelo mesmo caminho das escolhidas na galeria.
-  const { handleBulkFileSelect } = state;
-  useEffect(() => {
-    if (!projectId) return;
-    const files = takeReportPhotos(projectId);
-    if (files.length === 0) return;
-    void handleBulkFileSelect({ target: { files, value: "" } } as unknown as React.ChangeEvent<HTMLInputElement>);
-    // Só na abertura do editor.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
 
   const goTo = (next: number) => {
     setStep(Math.max(0, Math.min(TOTAL - 1, next)));
