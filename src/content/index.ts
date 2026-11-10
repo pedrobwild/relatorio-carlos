@@ -36,3 +36,4 @@ export {
   type OnboardingStep,
   type ObraStatus,
 } from "./onboardingFlows";
+export { equipeMobileLabels } from "./equipeMobileLabels";
