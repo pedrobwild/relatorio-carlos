@@ -76,6 +76,16 @@ export function MobileBottomNav() {
     }
   }, [location.pathname, projectId]);
 
+  // Avisa o resto da página de que existe barra inferior (o aviso de
+  // consentimento sobe para cima dela em vez de cobri-la). Ver index.css.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.bottomNav = "true";
+    return () => {
+      delete root.dataset.bottomNav;
+    };
+  }, []);
+
   const criticalPendencias = stats.overdueCount + stats.urgentCount;
   const hasProject = !!projectId;
 

@@ -371,9 +371,10 @@ export default function WeeklyReportStepsMobile({ state, onCancel }: WeeklyRepor
 
       {/* Rodapé fixo acima da barra inferior. `sticky` não serve aqui: o
           <main> da obra tem overflow próprio e não é quem rola. O espaçador
-          guarda o lugar para o fim do conteúdo não ficar atrás da barra. */}
+          guarda o lugar para o fim do conteúdo não ficar atrás da barra. Com o
+          aviso de consentimento aberto, o rodapé sobe para cima dele. */}
       <div className="h-[4.5rem]" aria-hidden="true" />
-      <div className="fixed inset-x-0 bottom-cta z-docked flex items-center gap-2 border-t border-border bg-card px-safe-4 py-3">
+      <div className="fixed inset-x-0 bottom-[calc(var(--bottom-nav-offset)+var(--consent-banner-offset,0px))] z-docked flex items-center gap-2 border-t border-border bg-card px-safe-4 py-3">
         {step > 0 && (
           <Button
             type="button"

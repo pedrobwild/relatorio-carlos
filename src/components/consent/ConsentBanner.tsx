@@ -54,7 +54,7 @@ export function ConsentBanner() {
         ref={regionRef}
         role="region"
         aria-label="Consentimento de privacidade"
-        className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 pt-2 sm:px-6 sm:pb-6 pointer-events-none"
+        className="consent-banner fixed inset-x-0 bottom-0 z-50 px-3 pb-3 pt-2 sm:px-6 sm:pb-6 pointer-events-none"
       >
         {/* Celular: altura máxima com rolagem só no texto explicativo (a
             pergunta e os botões ficam sempre visíveis). Desktop: cartão no
