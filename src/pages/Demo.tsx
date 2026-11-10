@@ -179,7 +179,7 @@ export default function Demo() {
       };
 
       await html2pdf().set(opt).from(element).save();
-      toast.success("PDF exportado com sucesso!");
+      toast.success("PDF exportado");
     } catch (error) {
       console.error("Erro ao exportar PDF:", error);
       toast.error("Erro ao gerar PDF. Tente novamente.");

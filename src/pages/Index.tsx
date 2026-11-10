@@ -361,7 +361,7 @@ const Index = () => {
       };
       await html2pdf().set(opt).from(reportRef.current).save();
       toast.dismiss(loadingToast);
-      toast.success("PDF exportado com sucesso!");
+      toast.success("PDF exportado");
       pdfLogger.end(operationId, { level: "success" });
     } catch (error) {
       toast.dismiss(loadingToast);

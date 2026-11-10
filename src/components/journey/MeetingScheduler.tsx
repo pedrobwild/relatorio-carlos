@@ -133,7 +133,7 @@ export function MeetingScheduler({
       {
         onSuccess: () => {
           toast.success(
-            "Reunião agendada com sucesso! A equipe foi notificada.",
+            "Reunião agendada. A equipe foi notificada.",
           );
           setOpen(false);
         },

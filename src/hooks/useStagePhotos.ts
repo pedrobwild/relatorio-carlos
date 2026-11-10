@@ -93,7 +93,7 @@ export function useStagePhotos(stageId: string, projectId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey });
-      toast.success("Fotos enviadas com sucesso!");
+      toast.success("Fotos enviadas");
     },
     onError: (err: any) => {
       toast.error(err.message || "Erro ao enviar fotos");
