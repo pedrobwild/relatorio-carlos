@@ -73,7 +73,7 @@ export function AppHeader({
               className="shrink-0 inline-flex items-center"
               aria-label="Início"
             >
-              <img src={bwildLogo} alt="Bwild" className="h-7 sm:h-8" />
+              <img width={1000} height={400} src={bwildLogo} alt="Bwild" className="h-7 sm:h-8 w-auto" />
             </Link>
             {children}
           </div>

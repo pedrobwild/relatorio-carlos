@@ -56,7 +56,7 @@ export function IdentityBar({
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
+        <img width={1000} height={400} src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
         <Separator orientation="vertical" className="h-6" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

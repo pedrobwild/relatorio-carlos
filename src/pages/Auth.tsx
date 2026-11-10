@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   HelpCircle,
 } from "lucide-react";
-import authBg from "@/assets/auth-bg.png";
+import authBg from "@/assets/auth-bg.webp";
 import workflowLogo from "@/assets/bwild-workflow-manager.png";
 import { z } from "zod";
 import { buildSupportWhatsappUrl } from "@/config/contact";

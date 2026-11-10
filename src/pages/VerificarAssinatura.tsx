@@ -140,7 +140,7 @@ export default function VerificarAssinatura() {
         <div className="mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src={bwildLogo} alt="Bwild" className="h-8" />
+              <img width={1000} height={400} src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
               <span className="text-muted-foreground">|</span>
               <span className="text-sm font-medium">
                 Verificação de Assinatura

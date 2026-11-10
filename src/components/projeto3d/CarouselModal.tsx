@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Loader2, ImageIcon } from "lucide-react";
 import { use3DImages } from "@/hooks/use3DVersions";
 import { ImageWithComments } from "./ImageWithComments";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 interface Props {
   versionId: string;
@@ -136,7 +137,7 @@ export function CarouselModal({ versionId, open, onOpenChange }: Props) {
                       : "border-transparent hover:border-muted-foreground/30"
                   }`}
                 >
-                  <img
+                  <img decoding="async" onError={hideBrokenImage}
                     src={img.url}
                     alt={`Miniatura ${idx + 1}`}
                     className="w-full h-full object-cover"

@@ -14,6 +14,7 @@ import {
   type PhotoChange,
 } from "./editor/versionDiff";
 import type { WeeklyReportVersion } from "@/infra/repositories/weeklyReports.repository";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 interface Props {
   open: boolean;
@@ -41,7 +42,7 @@ function PhotoCard({
     <li className={`rounded-lg border border-border p-2 ring-1 ${ring}`}>
       <div className="aspect-video rounded-md overflow-hidden bg-muted flex items-center justify-center">
         {photo.url ? (
-          <img
+          <img decoding="async" onError={hideBrokenImage}
             src={photo.url}
             alt={photo.caption || "Foto do relatório"}
             loading="lazy"

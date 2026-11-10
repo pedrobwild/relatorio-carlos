@@ -348,7 +348,7 @@ export default function AdminUxInsights() {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <img src={bwildLogo} alt="Bwild" className="h-8" />
+            <img width={1000} height={400} src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
             <div>
               <h1 className="text-h3 font-bold flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />

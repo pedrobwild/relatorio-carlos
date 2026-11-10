@@ -29,6 +29,7 @@ import {
   type AmendmentReason,
 } from "@/lib/semanaAditivo";
 import type { OpsAssignment } from "@/infra/repositories/ops.repository";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 const REASONS = Object.keys(AMENDMENT_REASON_LABEL) as AmendmentReason[];
 
@@ -233,7 +234,7 @@ function CandidateCard({
             <span>{photosText}</span>
             {photo ? (
               <span className="inline-flex items-center gap-2">
-                <img src={photo.previewUrl} alt="Foto nova da evidência" className="h-10 w-10 rounded object-cover" />
+                <img loading="lazy" decoding="async" onError={hideBrokenImage} src={photo.previewUrl} alt="Foto nova da evidência" className="h-10 w-10 rounded object-cover" />
                 <Button type="button" variant="ghost" size="sm" className="min-h-[40px]" onClick={() => setPhoto(null)}>
                   Tirar foto nova
                 </Button>
