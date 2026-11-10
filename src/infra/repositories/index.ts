@@ -17,6 +17,11 @@ export * as auditoriaRepo from "./auditoria.repository";
 export * as journeyRepo from "./journey.repository";
 export * as formalizationsRepo from "./formalizations.repository";
 export * as agentMemoryRepo from "./agentMemory.repository";
+export * as accessInvitesRepo from "./accessInvites.repository";
+export type {
+  AccessLinkTarget,
+  AccessInviteInfo,
+} from "./accessInvites.repository";
 export { purchaseReceiptsRepo } from "./purchaseReceipts.repository";
 export type { PurchaseReceipt } from "./purchaseReceipts.repository";
 export {
@@ -30,7 +35,6 @@ export type {
   CreateInternalNoteInput,
   UpdateInternalNoteInput,
 } from "./projectInternalNotes.repository";
-
 
 // Re-export types for convenience
 export type {

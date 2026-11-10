@@ -259,6 +259,9 @@ export function CustomerCard({
               <Input
                 id="customer_password"
                 type={showPassword ? "text" : "password"}
+                // Sem isto o navegador preenche com a senha salva de quem
+                // está cadastrando, e o cliente recebe uma senha "errada".
+                autoComplete="new-password"
                 value={formData.customer_password}
                 onChange={(e) => onChange("customer_password", e.target.value)}
                 placeholder="Mínimo 6 caracteres"
