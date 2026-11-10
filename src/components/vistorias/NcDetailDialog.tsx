@@ -258,7 +258,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
             <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
             <span className="break-words flex-1">{nc.title}</span>
             {isEditable && !editing && (
-              <Button
+              <Button aria-label="Editar"
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 shrink-0"
@@ -270,7 +270,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
             {canDelete && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button
+                  <Button aria-label="Excluir"
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"

@@ -288,7 +288,7 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
                     </Badge>
                   </div>
                 </div>
-                <Button
+                <Button aria-label="Remover"
                   variant="ghost"
                   size="icon"
                   onClick={() => setFile(null)}

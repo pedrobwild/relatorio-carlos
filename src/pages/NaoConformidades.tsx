@@ -80,7 +80,7 @@ export default function NaoConformidades() {
             ))}
           </div>
 
-          <Button
+          <Button aria-label="Buscar"
             variant="ghost"
             size="icon"
             className="md:hidden h-10 w-10"

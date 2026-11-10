@@ -16,7 +16,7 @@ export const BuildInfoCard = () => {
             <Server className="w-5 h-5 text-muted-foreground" />
             <CardTitle className="text-lg">Build Info</CardTitle>
           </div>
-          <Button
+          <Button aria-label="Copiar versão"
             variant="ghost"
             size="sm"
             onClick={async () => {

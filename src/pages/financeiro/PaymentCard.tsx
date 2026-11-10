@@ -132,7 +132,7 @@ export function DesktopPaymentCard({
           )}
 
           {isAdmin && payment.boleto_path && (
-            <Button
+            <Button aria-label="Baixar boleto"
               variant="ghost"
               size="sm"
               className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground min-h-auto"

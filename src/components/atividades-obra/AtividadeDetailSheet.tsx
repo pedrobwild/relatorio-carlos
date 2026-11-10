@@ -393,7 +393,7 @@ export function AtividadeDetailSheet({
                             )}
                           </span>
                           {user?.id === c.author_id && (
-                            <Button
+                            <Button aria-label="Remover"
                               variant="ghost"
                               size="icon"
                               className="h-6 w-6 ml-auto opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity"
@@ -426,7 +426,7 @@ export function AtividadeDetailSheet({
               className="min-h-[40px] max-h-[100px] resize-none text-sm rounded-xl border-border/50 bg-muted/20"
               rows={1}
             />
-            <Button
+            <Button aria-label="Enviar comentário"
               size="icon"
               onClick={handleAddComment}
               disabled={!newComment.trim() || addComment.isPending}

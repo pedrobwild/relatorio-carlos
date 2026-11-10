@@ -49,7 +49,7 @@ export function JourneyHeroSection({
             {journeyCopy.admin.editHero}
           </span>
           <div className="flex gap-2">
-            <Button
+            <Button aria-label="Cancelar"
               size="icon"
               variant="ghost"
               onClick={handleCancel}
@@ -57,7 +57,7 @@ export function JourneyHeroSection({
             >
               <X className="h-4 w-4" />
             </Button>
-            <Button
+            <Button aria-label="Salvar"
               size="icon"
               onClick={handleSave}
               disabled={updateHero.isPending}
@@ -91,7 +91,7 @@ export function JourneyHeroSection({
   return (
     <div className="relative space-y-3 md:space-y-4 p-4 md:p-6 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl md:rounded-2xl border">
       {isAdmin && (
-        <Button
+        <Button aria-label="Editar"
           size="icon"
           variant="ghost"
           className="absolute top-3 right-3 md:top-4 md:right-4 h-10 w-10"

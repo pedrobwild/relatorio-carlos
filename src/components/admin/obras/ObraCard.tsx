@@ -68,7 +68,7 @@ export function ObraCard({ project, onView, onEdit, onDelete }: ObraCardProps) {
               {statusLabels[project.status]}
             </Badge>
             <div className="flex items-center gap-1">
-              <Button
+              <Button aria-label="Ver detalhes"
                 variant="ghost"
                 size="icon"
                 className="min-h-[44px] min-w-[44px] h-11 w-11"
@@ -76,7 +76,7 @@ export function ObraCard({ project, onView, onEdit, onDelete }: ObraCardProps) {
               >
                 <Eye className="h-4 w-4" />
               </Button>
-              <Button
+              <Button aria-label="Editar obra"
                 variant="ghost"
                 size="icon"
                 className="min-h-[44px] min-w-[44px] h-11 w-11"
@@ -86,7 +86,7 @@ export function ObraCard({ project, onView, onEdit, onDelete }: ObraCardProps) {
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button
+                  <Button aria-label="Excluir"
                     variant="ghost"
                     size="icon"
                     className="min-h-[44px] min-w-[44px] h-11 w-11 text-destructive hover:text-destructive"

@@ -100,7 +100,7 @@ export default function FornecedoresAdmin() {
     <div className="space-y-6 p-4 md:p-6 max-w-4xl">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button
+        <Button aria-label="Voltar"
           variant="ghost"
           size="icon"
           onClick={() => navigate("/gestao/fornecedores")}

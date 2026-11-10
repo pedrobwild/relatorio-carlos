@@ -844,7 +844,7 @@ export function ScheduleCard({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button
+                        <Button aria-label="Recalcular datas"
                           type="button"
                           variant="outline"
                           size="icon"
@@ -915,7 +915,7 @@ export function ScheduleCard({
                     >
                       <GripVertical className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
+                    <Button aria-label="Mover para cima"
                       type="button"
                       variant="ghost"
                       size="icon"
@@ -925,7 +925,7 @@ export function ScheduleCard({
                     >
                       <ArrowUp className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
+                    <Button aria-label="Mover para baixo"
                       type="button"
                       variant="ghost"
                       size="icon"
@@ -958,7 +958,7 @@ export function ScheduleCard({
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button
+                      <Button aria-label="Mover para cima"
                         type="button"
                         variant="ghost"
                         size="icon"
@@ -968,7 +968,7 @@ export function ScheduleCard({
                       >
                         <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
+                      <Button aria-label="Mover para baixo"
                         type="button"
                         variant="ghost"
                         size="icon"
@@ -1027,7 +1027,7 @@ export function ScheduleCard({
                         className="text-sm h-9 text-center"
                       />
                     </div>
-                    <Button
+                    <Button aria-label="Remover"
                       type="button"
                       variant="ghost"
                       size="icon"

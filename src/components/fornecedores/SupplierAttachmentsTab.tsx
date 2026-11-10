@@ -14,6 +14,7 @@ import {
   Eye,
   X,
 } from "lucide-react";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 interface Attachment {
   id: string;
@@ -76,7 +77,7 @@ function AttachmentPreview({ att }: { att: Attachment }) {
           className="relative cursor-pointer group/img"
           onClick={() => setFullscreen(true)}
         >
-          <img
+          <img loading="lazy" decoding="async" onError={hideBrokenImage}
             src={url}
             alt={att.file_name}
             className="w-full h-40 object-cover rounded-md border"
@@ -91,7 +92,7 @@ function AttachmentPreview({ att }: { att: Attachment }) {
             className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
             onClick={() => setFullscreen(false)}
           >
-            <Button
+            <Button aria-label="Fechar"
               variant="ghost"
               size="icon"
               className="absolute top-4 right-4 text-white hover:bg-white/20"

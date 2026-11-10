@@ -109,7 +109,7 @@ export default function AdminResearch() {
       {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <PageContainer maxWidth="xl" className="py-3 flex items-center gap-3">
-          <Button
+          <Button aria-label="Voltar"
             variant="ghost"
             size="icon"
             onClick={() => navigate("/admin")}

@@ -607,14 +607,14 @@ export default function Fornecedores() {
                           className="flex gap-1"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Button
+                          <Button aria-label="Editar"
                             variant="ghost"
                             size="icon"
                             onClick={() => openEdit(s)}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button
+                          <Button aria-label="Excluir"
                             variant="ghost"
                             size="icon"
                             className="text-destructive"

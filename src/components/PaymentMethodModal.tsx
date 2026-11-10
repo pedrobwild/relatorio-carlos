@@ -444,7 +444,7 @@ export function PaymentMethodModal({
                       <Download className="h-3.5 w-3.5 mr-1" />
                       Baixar
                     </Button>
-                    <Button
+                    <Button aria-label="Remover"
                       type="button"
                       variant="ghost"
                       size="sm"

@@ -602,7 +602,7 @@ function ActivityRow({
           </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button
+              <Button aria-label="Remover"
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 shrink-0 text-muted-foreground/50 hover:text-destructive"

@@ -99,7 +99,7 @@ export const ActivitiesSection = ({
                   Atividade #{index + 1}
                 </span>
                 {activities.length > 1 && (
-                  <Button
+                  <Button aria-label="Remover"
                     type="button"
                     variant="ghost"
                     size="icon"

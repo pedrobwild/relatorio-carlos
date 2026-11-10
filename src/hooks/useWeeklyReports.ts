@@ -349,7 +349,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.weeklyReports.versions(projectId, vars.weekNumber),
       });
-      toast.success("Relatório salvo com sucesso!");
+      toast.success("Relatório salvo");
     },
     onError: async (err, vars, context) => {
       // Roll back to the snapshot so we don't leave a fake row in the cache.

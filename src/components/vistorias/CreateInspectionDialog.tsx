@@ -333,7 +333,7 @@ export function CreateInspectionDialog({
                 onKeyDown={(e) => e.key === "Enter" && handleAddCustomItem()}
                 className="h-11 sm:h-10"
               />
-              <Button
+              <Button aria-label="Adicionar item"
                 variant="outline"
                 size="icon"
                 onClick={handleAddCustomItem}
@@ -355,7 +355,7 @@ export function CreateInspectionDialog({
                     <span className="truncate text-xs sm:text-sm">
                       {item.description}
                     </span>
-                    <Button
+                    <Button aria-label="Remover"
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 sm:h-7 sm:w-7 shrink-0"

@@ -113,7 +113,7 @@ function ActionRow({ action, staff, onPatch, onDelete }: ActionRowProps) {
           }}
           className="h-8 text-sm font-medium border-0 px-2 -ml-2 focus-visible:ring-1 bg-transparent"
         />
-        <Button
+        <Button aria-label="Remover"
           type="button"
           variant="ghost"
           size="icon"

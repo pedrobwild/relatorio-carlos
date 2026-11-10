@@ -123,7 +123,7 @@ export function DuplicateProjectModal({
       if (error) throw error;
 
       toast({
-        title: "Obra duplicada com sucesso!",
+        title: "Obra duplicada",
         description: `A obra "${projectName}" foi criada.`,
       });
 

@@ -141,7 +141,7 @@ export function PiiMigrationCard() {
               <Database className="h-4 w-4" />
               Status atual
             </span>
-            <Button
+            <Button aria-label="Atualizar"
               variant="ghost"
               size="sm"
               onClick={() => refetch()}

@@ -286,7 +286,7 @@ export function PaymentFlowModal({
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Button
+                        <Button aria-label="Remover"
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-destructive hover:text-destructive"

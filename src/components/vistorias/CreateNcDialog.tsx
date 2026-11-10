@@ -458,7 +458,7 @@ export function CreateNcDialog({
                   <Sparkles className="h-4 w-4" />
                   Análise com IA
                 </div>
-                <Button
+                <Button aria-label="Fechar"
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
@@ -496,7 +496,7 @@ export function CreateNcDialog({
                         alt={`Evidência ${idx + 1}`}
                         className="w-full h-full object-cover"
                       />
-                      <button
+                      <button aria-label="Remover"
                         type="button"
                         onClick={() => handleRemoveAiContext(idx)}
                         className="absolute top-0.5 right-0.5 bg-destructive/80 text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -772,7 +772,7 @@ export function CreateNcDialog({
                         </span>
                       </div>
                     )}
-                    <button
+                    <button aria-label="Remover"
                       type="button"
                       onClick={() => handleRemoveMedia(idx)}
                       className="absolute top-1 right-1 bg-destructive/80 text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"

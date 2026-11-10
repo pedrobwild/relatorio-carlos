@@ -319,7 +319,7 @@ export default function EditarObraWizard() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b">
         <PageContainer maxWidth="md" className="py-3">
           <div className="flex items-center gap-3">
-            <Button
+            <Button aria-label="Voltar"
               variant="ghost"
               size="icon"
               onClick={() => navigate("/gestao")}

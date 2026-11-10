@@ -1186,7 +1186,7 @@ const Cronograma = () => {
                         </div>
 
                         <div className="pr-3 py-2 flex justify-center">
-                          <Button
+                          <Button aria-label="Remover"
                             variant="ghost"
                             size="icon"
                             className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
@@ -1253,7 +1253,7 @@ const Cronograma = () => {
                         placeholder="Descrição da atividade..."
                       />
                     </div>
-                    <Button
+                    <Button aria-label="Remover"
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 shrink-0 text-muted-foreground/50 hover:text-destructive"

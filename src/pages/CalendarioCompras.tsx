@@ -663,7 +663,7 @@ function ActualCostCell({
           onBlur={commit}
           className="h-7 w-24 text-xs px-2"
         />
-        <Button
+        <Button aria-label="Salvar"
           size="icon"
           variant="ghost"
           className="h-6 w-6"
@@ -672,7 +672,7 @@ function ActualCostCell({
         >
           <Check className="h-3 w-3" />
         </Button>
-        <Button
+        <Button aria-label="Cancelar"
           size="icon"
           variant="ghost"
           className="h-6 w-6"
@@ -1152,7 +1152,7 @@ function NewPurchaseDialog({
         }
       }
 
-      toast.success("Solicitação criada com sucesso!", {
+      toast.success("Solicitação criada", {
         description: `${form.item_name.trim()} foi adicionada ao calendário de compras.`,
       });
       onCreated();
@@ -2786,7 +2786,7 @@ export default function CalendarioCompras() {
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <Button
+                  <Button aria-label="Mês anterior"
                     variant="ghost"
                     size="icon"
                     onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -2796,7 +2796,7 @@ export default function CalendarioCompras() {
                   <CardTitle className="capitalize">
                     {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                   </CardTitle>
-                  <Button
+                  <Button aria-label="Próximo mês"
                     variant="ghost"
                     size="icon"
                     onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}

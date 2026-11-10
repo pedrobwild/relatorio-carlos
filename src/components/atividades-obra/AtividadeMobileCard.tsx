@@ -114,7 +114,7 @@ export function AtividadeMobileCard({
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
+                <Button aria-label="Mais ações"
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 shrink-0 -mr-1 rounded-lg"

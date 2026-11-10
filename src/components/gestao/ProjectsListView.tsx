@@ -826,7 +826,7 @@ function ProjectRow({
         <TableCell className="py-2 px-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
+              <Button aria-label="Mais ações"
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 text-muted-foreground hover:text-foreground"

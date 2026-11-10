@@ -629,7 +629,7 @@ function PurchaseRow({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
+                  <Button aria-label="Mais ações"
                     variant="ghost"
                     size="icon"
                     className="h-9 w-9 sm:h-7 sm:w-7"

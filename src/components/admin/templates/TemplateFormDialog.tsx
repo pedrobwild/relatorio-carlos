@@ -299,7 +299,7 @@ export function TemplateFormDialog({
                             />
                           </TableCell>
                           <TableCell className="p-1">
-                            <Button
+                            <Button aria-label="Remover"
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-destructive"
@@ -460,7 +460,7 @@ export function TemplateFormDialog({
                           Req
                         </span>
                       </div>
-                      <Button
+                      <Button aria-label="Remover"
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive shrink-0"
@@ -498,7 +498,7 @@ export function TemplateFormDialog({
                               placeholder={`Opção ${oi + 1}`}
                               className="h-7 text-xs flex-1"
                             />
-                            <Button
+                            <Button aria-label="Remover"
                               variant="ghost"
                               size="icon"
                               className="h-6 w-6"

@@ -293,7 +293,7 @@ const FinanceiroContent = () => {
                           />
                         )}
                         {isStaff && payment.boleto_path && (
-                          <Button
+                          <Button aria-label="Baixar boleto"
                             variant="ghost"
                             size="sm"
                             className="h-11 min-h-[44px] px-3 text-xs text-muted-foreground hover:text-foreground"

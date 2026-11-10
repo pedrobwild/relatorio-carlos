@@ -163,7 +163,7 @@ export default function OrcamentoProjeto() {
 
       setProgress(100);
       setStatusText("Concluído!");
-      toast.success(data?.message || "Orçamento importado com sucesso!");
+      toast.success(data?.message || "Orçamento importado");
 
       setTimeout(() => {
         setImporting(false);

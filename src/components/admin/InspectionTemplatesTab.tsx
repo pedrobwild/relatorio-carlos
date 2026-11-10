@@ -232,7 +232,7 @@ export function InspectionTemplatesTab() {
                       }
                       className="scale-75"
                     />
-                    <Button
+                    <Button aria-label="Editar"
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7"
@@ -240,7 +240,7 @@ export function InspectionTemplatesTab() {
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
+                    <Button aria-label="Excluir"
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive"

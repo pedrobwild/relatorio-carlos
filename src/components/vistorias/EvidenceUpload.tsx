@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 interface EvidenceUploadProps {
   projectId: string;
@@ -171,7 +172,7 @@ export function EvidenceUpload({
               onClick={() => signedUrls[path] && setLightboxIndex(idx)}
             >
               {signedUrls[path] ? (
-                <img
+                <img loading="lazy" decoding="async" onError={hideBrokenImage}
                   src={signedUrls[path]}
                   alt="Evidência"
                   className="w-full h-full object-cover"
@@ -182,7 +183,7 @@ export function EvidenceUpload({
                 </div>
               )}
               {!disabled && (
-                <button
+                <button aria-label="Remover"
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -312,7 +313,7 @@ export function EvidenceUpload({
               />
               {value.length > 1 && (
                 <>
-                  <Button
+                  <Button aria-label="Foto anterior"
                     variant="ghost"
                     size="icon"
                     className="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 text-white hover:bg-black/70 touch-manipulation"
@@ -325,7 +326,7 @@ export function EvidenceUpload({
                   >
                     <ChevronLeft className="h-6 w-6" />
                   </Button>
-                  <Button
+                  <Button aria-label="Próxima foto"
                     variant="ghost"
                     size="icon"
                     className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 text-white hover:bg-black/70 touch-manipulation"

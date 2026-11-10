@@ -154,7 +154,7 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
                   <h4 className="text-sm font-medium">
                     Upload de imagens (.png)
                   </h4>
-                  <Button
+                  <Button aria-label="Cancelar"
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
@@ -199,7 +199,7 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
                             ({(file.size / 1024 / 1024).toFixed(1)}MB)
                           </span>
                         </div>
-                        <Button
+                        <Button aria-label="Remover"
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 shrink-0"

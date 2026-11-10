@@ -556,7 +556,7 @@ export default function AtividadeDetalhe() {
                 }
               }}
             />
-            <Button
+            <Button aria-label="Adicionar subtarefa"
               size="sm"
               className="h-8 px-3"
               onClick={handleAddSubtask}
@@ -564,7 +564,7 @@ export default function AtividadeDetalhe() {
             >
               <Plus className="h-3 w-3" />
             </Button>
-            <Button
+            <Button aria-label="Cancelar"
               size="sm"
               variant="ghost"
               className="h-8 px-2"
@@ -753,7 +753,7 @@ export default function AtividadeDetalhe() {
               className="min-h-[40px] max-h-[100px] resize-none text-sm rounded-xl border-border/50 bg-muted/20"
               rows={1}
             />
-            <Button
+            <Button aria-label="Enviar comentário"
               size="icon"
               onClick={() => handleAddComment()}
               disabled={!newComment.trim() || addComment.isPending}
@@ -802,7 +802,7 @@ export default function AtividadeDetalhe() {
 
         {/* Prev / Next */}
         <div className="flex items-center gap-0.5 ml-auto">
-          <Button
+          <Button aria-label="Atividade anterior"
             variant="ghost"
             size="icon"
             className="h-7 w-7"
@@ -811,7 +811,7 @@ export default function AtividadeDetalhe() {
           >
             <ChevronUp className="h-4 w-4" />
           </Button>
-          <Button
+          <Button aria-label="Próxima atividade"
             variant="ghost"
             size="icon"
             className="h-7 w-7"
@@ -824,7 +824,7 @@ export default function AtividadeDetalhe() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button aria-label="Mais ações" variant="ghost" size="icon" className="h-8 w-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

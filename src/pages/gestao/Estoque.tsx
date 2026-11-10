@@ -52,6 +52,7 @@ import {
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -795,7 +796,7 @@ function MovementPhotoCell({ path }: { path: string | null }) {
         className="block h-10 w-10 rounded-md overflow-hidden border bg-muted hover:ring-2 hover:ring-ring transition"
         aria-label="Ver foto do item"
       >
-        <img src={url} alt="Foto do item" className="h-full w-full object-cover" />
+        <img loading="lazy" decoding="async" onError={hideBrokenImage} src={url} alt="Foto do item" className="h-full w-full object-cover" />
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">

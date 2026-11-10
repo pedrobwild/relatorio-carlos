@@ -40,7 +40,7 @@ export function JourneyFooterSection({
               Editando mensagem final
             </span>
             <div className="flex gap-2">
-              <Button
+              <Button aria-label="Cancelar"
                 size="icon"
                 variant="ghost"
                 onClick={handleCancel}
@@ -48,7 +48,7 @@ export function JourneyFooterSection({
               >
                 <X className="h-4 w-4" />
               </Button>
-              <Button
+              <Button aria-label="Salvar"
                 size="icon"
                 onClick={handleSave}
                 disabled={updateFooter.isPending}
@@ -71,7 +71,7 @@ export function JourneyFooterSection({
   return (
     <Card className="relative bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
       {isAdmin && (
-        <Button
+        <Button aria-label="Editar"
           size="icon"
           variant="ghost"
           className="absolute top-3 right-3 md:top-4 md:right-4 h-10 w-10"

@@ -309,7 +309,7 @@ export function MeetingScheduler({
                             </p>
                           </div>
                           {isAdmin ? (
-                            <Button
+                            <Button aria-label="Remover"
                               size="icon"
                               variant="ghost"
                               className="h-11 w-11 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"

@@ -56,7 +56,7 @@ export default function Vistorias() {
     <>
       <PageHeader title="Vistorias" maxWidth="full" showLogo={false}>
         <div className="flex items-center gap-2">
-          <Button
+          <Button aria-label="Buscar"
             variant="ghost"
             size="icon"
             className="md:hidden h-10 w-10"

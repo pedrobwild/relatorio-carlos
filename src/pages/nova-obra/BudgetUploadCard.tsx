@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   FileSpreadsheet,
   Upload,
@@ -42,7 +43,7 @@ export function BudgetUploadCard({
 
   const handleFile = (f: File) => {
     if (f.size > 20 * 1024 * 1024) {
-      alert("Arquivo muito grande. Máximo: 20MB");
+      toast.error("Arquivo muito grande. O máximo é 20 MB.");
       return;
     }
     onFileChange(f);

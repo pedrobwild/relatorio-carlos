@@ -85,7 +85,7 @@ const Suporte = () => {
         <PageContainer maxWidth="lg" className="py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/relatorio">
-              <Button
+              <Button aria-label="Voltar"
                 variant="ghost"
                 size="icon"
                 className="shrink-0 h-11 w-11 rounded-full hover:bg-primary/10"
@@ -94,7 +94,7 @@ const Suporte = () => {
               </Button>
             </Link>
             <div className="flex items-center gap-2.5">
-              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
+              <img width={1000} height={400} src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
               <span className="text-muted-foreground/40">|</span>
               <h1 className="text-h2">Formalizações</h1>
             </div>
@@ -155,7 +155,7 @@ const Suporte = () => {
                 className="pl-9 h-11"
               />
             </div>
-            <Button variant="outline" size="icon" className="h-11 w-11">
+            <Button aria-label="Filtrar" variant="outline" size="icon" className="h-11 w-11">
               <Filter className="w-4 h-4" />
             </Button>
           </div>

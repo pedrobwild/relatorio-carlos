@@ -337,14 +337,14 @@ export function ObrasTab() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex items-center justify-end gap-1">
-                            <Button
+                            <Button aria-label="Ver detalhes"
                               variant="ghost"
                               size="icon"
                               onClick={() => navigate(`/obra/${project.id}`)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button
+                            <Button aria-label="Editar obra"
                               variant="ghost"
                               size="icon"
                               onClick={() =>
@@ -355,7 +355,7 @@ export function ObrasTab() {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button
+                                <Button aria-label="Excluir"
                                   variant="ghost"
                                   size="icon"
                                   className="text-destructive hover:text-destructive"

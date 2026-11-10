@@ -41,7 +41,7 @@ export function AuditDetailModal({ audit }: { audit: AuditoriaWithUser }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button aria-label="Ver detalhes" variant="ghost" size="icon" className="h-8 w-8">
           <Eye className="h-4 w-4" />
         </Button>
       </DialogTrigger>

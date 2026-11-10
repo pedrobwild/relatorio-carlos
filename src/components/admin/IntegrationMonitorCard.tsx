@@ -118,7 +118,7 @@ export function IntegrationMonitorCard() {
             </p>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => refetch()}>
+        <Button aria-label="Atualizar" variant="ghost" size="icon" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>

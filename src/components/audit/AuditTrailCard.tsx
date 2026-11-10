@@ -104,7 +104,7 @@ function AuditDetailDialog({ audit }: { audit: AuditoriaWithUser }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button
+        <Button aria-label="Ver detalhes"
           variant="ghost"
           size="sm"
           className="h-11 w-11 min-h-[44px] min-w-[44px] p-0"

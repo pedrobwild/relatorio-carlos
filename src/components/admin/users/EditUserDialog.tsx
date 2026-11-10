@@ -46,7 +46,7 @@ export function EditUserDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
+        <Button aria-label="Editar"
           variant="ghost"
           size="icon"
           className="h-11 w-11 min-h-[44px] min-w-[44px]"

@@ -260,7 +260,7 @@ export function PaymentScheduleSection({
                   className="h-8 text-xs"
                 />
               </div>
-              <Button
+              <Button aria-label="Remover"
                 type="button"
                 variant="ghost"
                 size="icon"

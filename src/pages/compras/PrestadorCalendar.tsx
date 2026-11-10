@@ -173,7 +173,7 @@ export function PrestadorCalendar({
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <Button
+            <Button aria-label="Semana anterior"
               variant="ghost"
               size="icon"
               className="h-7 w-7"
@@ -189,7 +189,7 @@ export function PrestadorCalendar({
             >
               Hoje
             </Button>
-            <Button
+            <Button aria-label="Próxima semana"
               variant="ghost"
               size="icon"
               className="h-7 w-7"

@@ -178,7 +178,7 @@ export default function Orcamentos() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Button
+                      <Button aria-label="Abrir orçamento"
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"

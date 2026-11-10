@@ -4226,7 +4226,7 @@ function KanbanCard({
               }
               title={
                 obra.responsavel_nome
-                  ? `Gestor: ${obra.responsavel_nome}`
+                  ? `Coordenador: ${obra.responsavel_nome}`
                   : "Sem coordenador definido"
               }
             >

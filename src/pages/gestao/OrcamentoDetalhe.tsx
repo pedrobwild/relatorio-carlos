@@ -418,7 +418,7 @@ export default function OrcamentoDetalhe({
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           {!isEmbedded && (
-            <Button
+            <Button aria-label="Voltar"
               variant="ghost"
               size="icon"
               onClick={() => navigate("/gestao/orcamentos")}

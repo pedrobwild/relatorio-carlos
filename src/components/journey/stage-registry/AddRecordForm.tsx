@@ -270,7 +270,7 @@ export function AddRecordForm({
                   className="h-9 text-sm flex-1"
                 />
                 {participants.length > 1 && (
-                  <Button
+                  <Button aria-label="Remover"
                     type="button"
                     size="icon"
                     variant="ghost"

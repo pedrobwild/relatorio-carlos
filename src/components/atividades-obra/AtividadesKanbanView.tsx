@@ -183,7 +183,7 @@ export function AtividadesKanbanView({
                           </span>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button
+                              <Button aria-label="Mais ações"
                                 variant="ghost"
                                 size="icon"
                                 className="h-6 w-6 shrink-0 rounded-lg"
