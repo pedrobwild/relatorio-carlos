@@ -109,7 +109,7 @@ export function ProjectMobileHeader() {
   return (
     <header
       className={cn(
-        "md:hidden sticky top-0 z-shell h-12 shrink-0",
+        "md:hidden sticky top-0 z-shell min-h-12 shrink-0 py-0.5",
         "border-b border-border-subtle surface-glass",
         "flex items-center px-2 gap-1 pt-safe",
       )}
@@ -148,7 +148,7 @@ export function ProjectMobileHeader() {
               aria-hidden="true"
             />
             <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-bold text-foreground truncate leading-tight">
+              <span className="line-clamp-2 break-words text-[clamp(13px,3.6vw,15px)] font-bold text-foreground leading-tight">
                 {projectDisplayName}
               </span>
               {sectionLabel ? (

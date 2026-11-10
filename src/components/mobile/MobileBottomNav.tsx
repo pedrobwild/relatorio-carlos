@@ -155,12 +155,12 @@ export function MobileBottomNav() {
           {barItems.map((item) => {
             if (item.kind === "registrar") {
               return (
-                <div key={REGISTRAR_SLOT.id} className="flex shrink-0 items-center justify-center px-2">
+                <div key={REGISTRAR_SLOT.id} className="flex shrink-0 items-center justify-center px-1 min-[360px]:px-2">
                   <button
                     type="button"
                     onClick={() => setRegistrarOpen(true)}
                     className={cn(
-                      "flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md",
+                      "flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md min-[360px]:h-14 min-[360px]:w-14",
                       "transition-transform active:scale-[0.94]",
                       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                     )}
@@ -245,7 +245,10 @@ export function MobileBottomNav() {
                 </span>
                 <span
                   className={cn(
-                    "text-[clamp(8px,2.2vw,11px)] leading-[1.05] text-center whitespace-nowrap overflow-visible",
+                    "leading-[1.05] text-center whitespace-nowrap overflow-visible",
+                    // Equipe: cinco espaços com o botão central; o rótulo nunca
+                    // fica abaixo de 10px (em 320px "Pendências" ainda cabe).
+                    isStaff ? "text-[clamp(10px,2.9vw,12px)]" : "text-[clamp(8px,2.2vw,11px)]",
                     isActive ? "font-semibold text-primary" : "font-medium",
                   )}
                 >
@@ -308,7 +311,8 @@ export function MobileBottomNav() {
             </span>
             <span
               className={cn(
-                "text-[clamp(8px,2.2vw,11px)] leading-[1.05] text-center whitespace-nowrap overflow-visible",
+                "leading-[1.05] text-center whitespace-nowrap overflow-visible",
+                isStaff ? "text-[clamp(10px,2.9vw,12px)]" : "text-[clamp(8px,2.2vw,11px)]",
                 profileOpen ? "font-semibold text-primary" : "font-medium",
               )}
             >

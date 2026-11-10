@@ -91,7 +91,7 @@ export function ObrasMobileList({ rows, userId, isLoading, error, onRetry, foote
         />
       </div>
 
-      <div role="radiogroup" aria-label={L.filtrosLabel} className="flex gap-2">
+      <div role="radiogroup" aria-label={L.filtrosLabel} className="flex flex-wrap gap-2">
         {(["todas", "atencao", "minhas"] as const).map((f) => {
           const on = filtro === f;
           return (
@@ -102,7 +102,7 @@ export function ObrasMobileList({ rows, userId, isLoading, error, onRetry, foote
               aria-checked={on}
               onClick={() => setFiltro(f)}
               className={cn(
-                "flex min-h-[44px] items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition-colors",
+                "flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-sm font-semibold transition-colors min-[360px]:px-4",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground",
               )}
@@ -145,7 +145,7 @@ export function ObrasMobileList({ rows, userId, isLoading, error, onRetry, foote
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <span className="block truncate text-base font-semibold text-foreground">{r.name}</span>
+                      <span className="line-clamp-2 break-words text-base font-semibold leading-snug text-foreground">{r.name}</span>
                       {sub && <span className="block truncate text-sm text-muted-foreground">{sub}</span>}
                     </div>
                     <span className={cn("shrink-0 whitespace-nowrap rounded-xl px-2.5 py-1 text-xs font-semibold", chip.tone)}>
