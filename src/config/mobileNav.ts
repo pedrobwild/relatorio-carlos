@@ -1,13 +1,12 @@
 import {
-  Home,
   Building2,
   DollarSign,
   AlertCircle,
-  CheckSquare,
   CalendarCheck,
   CalendarRange,
   FolderOpen,
   ClipboardSignature,
+  Plus,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -52,9 +51,10 @@ export type MobileNavSlot = {
 };
 
 const HOME_CLIENT = "/minhas-obras";
-const HOME_STAFF = "/gestao/painel-obras";
 const STAFF_OBRAS_INDEX = "/gestao/painel-obras";
-const STAFF_ATIVIDADES = "/gestao/atividades";
+const STAFF_HOJE = "/gestao/hoje";
+export const STAFF_OBRAS_NOVO = "/gestao/obras";
+export const STAFF_OBRAS_LEGADO = "/gestao/painel-obras";
 const STAFF_NCS = "/gestao/nao-conformidades";
 
 // Helper: resolve effective projectId (current URL > last visited).
@@ -115,39 +115,29 @@ export const CLIENT_NAV: MobileNavSlot[] = [
   },
 ];
 
+/**
+ * Barra da equipe no celular (redesenho mobile, passo 1):
+ * Hoje · Obras · [Registrar] · Pendências · Perfil.
+ *
+ * "Obras" sempre abre a lista de obras (antes voltava para a última obra
+ * visitada, e a pessoa não achava mais a lista). Dentro de uma obra a aba
+ * continua acesa, menos em Pendências, que tem aba própria.
+ * O botão central Registrar não é um link: ver `staffBottomBar`.
+ */
 export const STAFF_NAV: MobileNavSlot[] = [
   {
-    id: "inicio",
-    label: "Início",
-    icon: Home,
-    to: () => HOME_STAFF,
-    end: true,
+    id: "hoje",
+    label: "Hoje",
+    icon: CalendarCheck,
+    to: () => STAFF_HOJE,
     badge: "none",
   },
   {
     id: "obras",
     label: "Obras",
     icon: Building2,
-    // Quando há uma obra ativa (URL) ou uma obra recém-visitada, voltar
-    // direto para ela em vez do painel global — evita o usuário "perder" a
-    // obra ao alternar entre Início e Obras.
-    to: (ctx) => {
-      const id = effectiveProjectId(ctx);
-      return id ? `/obra/${id}` : STAFF_OBRAS_INDEX;
-    },
-    // Obra hub root — exact match so it doesn't stay active on sub-routes
-    // (pendências, etc.), which would double-highlight the bar. The report-hub
-    // alias (`/obra/:id/relatorio`) renders the same hub page, so keep the tab
-    // lit there too.
-    end: true,
-    matchReportHub: true,
-    badge: "none",
-  },
-  {
-    id: "atividades",
-    label: "Atividades",
-    icon: CheckSquare,
-    to: () => STAFF_ATIVIDADES,
+    to: () => STAFF_OBRAS_INDEX,
+    alsoActiveOn: [STAFF_OBRAS_NOVO, "/obra/"],
     badge: "none",
   },
   {
@@ -170,9 +160,6 @@ export const STAFF_NAV: MobileNavSlot[] = [
  *
  * `obrasPath` segue a flag `novoPainelObras`: tela Obras nova ou o Painel.
  */
-export const STAFF_OBRAS_NOVO = "/gestao/obras";
-export const STAFF_OBRAS_LEGADO = "/gestao/painel-obras";
-
 export function staffSimpleNav(obrasPath: string): MobileNavSlot[] {
   return [
     {
@@ -195,10 +182,59 @@ export function staffSimpleNav(obrasPath: string): MobileNavSlot[] {
       id: "hoje",
       label: "Hoje",
       icon: CalendarCheck,
-      to: () => "/gestao/hoje",
+      to: () => STAFF_HOJE,
       badge: "none",
     },
   ];
+}
+
+/** Botão central da barra da equipe: abre a gaveta Registrar (não navega). */
+export const REGISTRAR_SLOT = {
+  id: "registrar",
+  label: "Registrar",
+  icon: Plus,
+} as const;
+
+export type StaffBarItem =
+  | { kind: "link"; slot: MobileNavSlot }
+  | { kind: "registrar" };
+
+/**
+ * Itens da barra da equipe, na ordem em que aparecem (o Perfil vem depois,
+ * sempre por último). O Registrar fica no meio dos cinco espaços:
+ *   completo: Hoje · Obras · [Registrar] · Pendências
+ *   simples:  Obras · Semana · [Registrar] · Hoje
+ */
+export function staffBottomBar(opts: { simple: boolean; obrasPath: string }): StaffBarItem[] {
+  const slots = opts.simple ? staffSimpleNav(opts.obrasPath) : STAFF_NAV;
+  const items: StaffBarItem[] = slots.map((slot) => ({ kind: "link", slot }));
+  items.splice(2, 0, { kind: "registrar" });
+  return items;
+}
+
+type SlotCtx = Parameters<MobileNavSlot["to"]>[0];
+
+/**
+ * Qual aba da equipe fica acesa em `pathname`: no máximo uma. Quando mais de
+ * uma casa (ex.: "Obras" cobre `/obra/` e "Pendências" é `/obra/:id/pendencias`),
+ * vence o prefixo mais longo.
+ */
+export function resolveActiveStaffSlotId(
+  slots: readonly MobileNavSlot[],
+  pathname: string,
+  ctx: SlotCtx,
+): string | null {
+  const covers = (prefix: string) =>
+    pathname === prefix || pathname.startsWith(prefix.endsWith("/") ? prefix : prefix + "/");
+  let best: { id: string; len: number } | null = null;
+  for (const slot of slots) {
+    const prefixes = [slot.to(ctx), ...(slot.alsoActiveOn ?? [])];
+    for (const prefix of prefixes) {
+      if (!covers(prefix)) continue;
+      if (!best || prefix.length > best.len) best = { id: slot.id, len: prefix.length };
+    }
+  }
+  return best?.id ?? null;
 }
 
 export const PROFILE_SLOT = {

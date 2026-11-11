@@ -132,98 +132,43 @@ describe("CLIENT_NAV — fallback projectId", () => {
   );
 });
 
-describe("STAFF_NAV — fallback projectId entre Início/Atividades e Obras", () => {
+describe("STAFF_NAV: Hoje, Obras e Pendências", () => {
   const PROJECT_ID = "proj-1";
   const LAST_ID = "proj-last";
 
-  it("Início sempre aponta para /gestao/painel-obras (não usa fallback)", () => {
-    const slot = findSlot(STAFF_NAV, "inicio");
-    expect(
-      slot.to({
-        paths: projectPaths(PROJECT_ID),
-        hasProject: true,
-        projectId: PROJECT_ID,
-      }),
-    ).toBe("/gestao/painel-obras");
-    expect(
-      slot.to({
-        paths: emptyPaths,
-        hasProject: false,
-        lastProjectId: LAST_ID,
-      }),
-    ).toBe("/gestao/painel-obras");
+  it("tem só as três abas de link (o Registrar e o Perfil não são links)", () => {
+    expect(STAFF_NAV.map((s) => s.id)).toEqual(["hoje", "obras", "pendencias"]);
   });
 
-  it("Atividades sempre aponta para /gestao/atividades (rota global)", () => {
-    const slot = findSlot(STAFF_NAV, "atividades");
+  it("Hoje sempre aponta para /gestao/hoje", () => {
+    const slot = findSlot(STAFF_NAV, "hoje");
     expect(
-      slot.to({
-        paths: emptyPaths,
-        hasProject: false,
-        lastProjectId: LAST_ID,
-      }),
-    ).toBe("/gestao/atividades");
+      slot.to({ paths: projectPaths(PROJECT_ID), hasProject: true, projectId: PROJECT_ID }),
+    ).toBe("/gestao/hoje");
+    expect(
+      slot.to({ paths: emptyPaths, hasProject: false, lastProjectId: LAST_ID }),
+    ).toBe("/gestao/hoje");
   });
 
-  describe("Obras — regressão do bug original", () => {
+  describe("Obras sempre abre a lista de obras", () => {
     const slot = findSlot(STAFF_NAV, "obras");
 
-    it("usa projectId da URL quando o usuário está em /obra/:id", () => {
+    it("dentro de uma obra", () => {
       expect(
-        slot.to({
-          paths: projectPaths(PROJECT_ID),
-          hasProject: true,
-          projectId: PROJECT_ID,
-        }),
-      ).toBe(`/obra/${PROJECT_ID}`);
-    });
-
-    it("fluxo completo: Obra → Início → Obras volta para a mesma obra", () => {
-      // 1) Usuário entra direto em /obra/proj-1 (projectId presente)
-      const step1 = slot.to({
-        paths: projectPaths(PROJECT_ID),
-        hasProject: true,
-        projectId: PROJECT_ID,
-      });
-      expect(step1).toBe(`/obra/${PROJECT_ID}`);
-
-      // 2) Clica em Início → navega para /gestao/painel-obras. A partir daí
-      //    `projectId` (vindo de useParams) é undefined, mas a memória
-      //    `lastProjectId` foi atualizada para "proj-1".
-      const step2 = slot.to({
-        paths: emptyPaths,
-        hasProject: false,
-        projectId: undefined,
-        lastProjectId: PROJECT_ID,
-      });
-
-      // 3) Clica em Obras → deve voltar para /obra/proj-1, NÃO para o
-      //    painel global. Esta é a asserção que blinda o bug.
-      expect(step2).toBe(`/obra/${PROJECT_ID}`);
-    });
-
-    it("primeira sessão (sem memória nem URL): cai no painel global", () => {
-      expect(
-        slot.to({
-          paths: emptyPaths,
-          hasProject: false,
-          projectId: undefined,
-          lastProjectId: undefined,
-        }),
+        slot.to({ paths: projectPaths(PROJECT_ID), hasProject: true, projectId: PROJECT_ID }),
       ).toBe("/gestao/painel-obras");
     });
 
-    it("URL atual tem prioridade sobre a memória (obras diferentes)", () => {
-      // Cenário: usuário está em /obra/proj-1, mas a memória ainda guarda
-      // /obra/proj-last (residual). O slot deve respeitar a URL atual.
+    it("fora da obra, mesmo com uma obra recente na memória", () => {
       expect(
-        slot.to({
-          paths: projectPaths(PROJECT_ID),
-          hasProject: true,
-          projectId: PROJECT_ID,
-          lastProjectId: LAST_ID,
-        }),
-      ).toBe(`/obra/${PROJECT_ID}`);
+        slot.to({ paths: emptyPaths, hasProject: false, projectId: undefined, lastProjectId: LAST_ID }),
+      ).toBe("/gestao/painel-obras");
+    });
+
+    it("primeira sessão (sem memória nem URL)", () => {
+      expect(
+        slot.to({ paths: emptyPaths, hasProject: false, projectId: undefined, lastProjectId: undefined }),
+      ).toBe("/gestao/painel-obras");
     });
   });
 

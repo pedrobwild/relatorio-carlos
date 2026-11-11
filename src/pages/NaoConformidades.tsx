@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, Search, LayoutList, Columns3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,11 @@ export default function NaoConformidades() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [selectedNc, setSelectedNc] = useState<NonConformity | null>(null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  // `?nova=1` (gaveta Registrar do celular) já abre o cadastro.
+  const [searchParams] = useSearchParams();
+  const [showCreateDialog, setShowCreateDialog] = useState(
+    () => searchParams.get("nova") === "1",
+  );
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
 
   const _openNcs = useMemo(
@@ -143,7 +148,7 @@ export default function NaoConformidades() {
         />
       )}
 
-      {showCreateDialog && projectId && (
+      {showCreateDialog && projectId && can("ncs:create") && (
         <CreateNcDialog
           open={showCreateDialog}
           onOpenChange={setShowCreateDialog}

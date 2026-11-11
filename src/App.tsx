@@ -116,6 +116,11 @@ const AssistenteLogs = lazy(() => import("./pages/AssistenteLogs"));
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
 
 const Index = lazy(() => import("./pages/Index"));
+const ObraHubEntry = lazy(() => import("./pages/obra/ObraHubEntry"));
+const AtualizarEtapas = lazy(() => import("./pages/AtualizarEtapas"));
+const RelatorioSemanaStaff = lazy(
+  () => import("./pages/RelatorioSemanaStaff"),
+);
 const Contrato = lazy(() => import("./pages/Contrato"));
 const Projeto3D = lazy(() => import("./pages/Projeto3D"));
 const Executivo = lazy(() => import("./pages/Executivo"));
@@ -702,11 +707,13 @@ const AppContent = () => {
               />
 
               {/* Project-scoped routes (both staff and customer with project access) */}
+              {/* Hub da obra: equipe no celular vê o hub enxuto; cliente e
+                  desktop seguem na Index (ver pages/obra/ObraHubEntry). */}
               <Route
                 path="/obra/:projectId"
                 element={
                   <ProtectedRoute>
-                    <ProjectPage>{withSuspense(<Index />)}</ProjectPage>
+                    <ProjectPage>{withSuspense(<ObraHubEntry />)}</ProjectPage>
                   </ProtectedRoute>
                 }
               />
@@ -810,6 +817,26 @@ const AppContent = () => {
                   <ProtectedRoute>
                     <ProjectPage>{withSuspense(<Cronograma />)}</ProjectPage>
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/obra/:projectId/etapas"
+                element={
+                  <StaffRoute>
+                    <ProjectPage>
+                      {withSuspense(<AtualizarEtapas />)}
+                    </ProjectPage>
+                  </StaffRoute>
+                }
+              />
+              <Route
+                path="/obra/:projectId/relatorio-semana"
+                element={
+                  <StaffRoute>
+                    <ProjectPage>
+                      {withSuspense(<RelatorioSemanaStaff />)}
+                    </ProjectPage>
+                  </StaffRoute>
                 }
               />
               <Route

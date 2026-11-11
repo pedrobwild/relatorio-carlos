@@ -50,6 +50,11 @@ vi.mock("../MobileProfileSheet", () => ({
   MobileProfileSheet: () => null,
 }));
 
+vi.mock("../RegistrarSheet", () => ({
+  RegistrarSheet: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Registrar" /> : null,
+}));
+
 describe("MobileBottomNav — reset do hub da obra", () => {
   beforeEach(() => {
     localStorage.clear();

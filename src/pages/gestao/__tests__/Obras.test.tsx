@@ -374,9 +374,9 @@ describe("Painel de Obras reformulado", () => {
       expect(link.getAttribute("href")).toMatch(/^\/gestao\/semana\?obra=a&semana=\d{4}-\d{2}-\d{2}$/);
     });
 
-    it("celular mostra cartões com link para a Semana", () => {
+    it("celular, painel completo: cartões com link para a Semana", () => {
       h.mobile = true;
-      renderPage();
+      renderPage("?completo=1");
       expect(screen.queryByRole("table")).toBeNull();
       expect(screen.getByRole("link", { name: /Ap\. 1204/ }).getAttribute("href")).toContain("/gestao/semana?obra=a");
     });
@@ -768,9 +768,35 @@ describe("Painel de Obras reformulado", () => {
       expect(within(screen.getByRole("dialog")).getByText("Obra não encontrada")).toBeInTheDocument();
     });
 
-    it("celular: cartões abrem a gaveta", () => {
+    it("celular: lista enxuta com busca, filtros e cartões que abrem o hub da obra", () => {
       h.mobile = true;
       renderPage();
+      expect(screen.getByRole("heading", { level: 1, name: "Obras" })).toBeInTheDocument();
+      expect(screen.queryByRole("table")).toBeNull();
+      expect(screen.getByRole("searchbox", { name: "Buscar obra ou cliente" })).toBeInTheDocument();
+      const filtros = screen.getByRole("radiogroup", { name: "Quais obras" });
+      expect(within(filtros).getAllByRole("radio").map((r) => r.textContent?.replace(/\d+/g, "").trim())).toEqual([
+        "Todas",
+        "Atenção",
+        "Minhas",
+      ]);
+      expect(screen.getByRole("link", { name: /Ap\. 1204/ }).getAttribute("href")).toBe("/obra/a");
+      expect(screen.getByRole("link", { name: "Painel completo" }).getAttribute("href")).toContain("completo=1");
+    });
+
+    it("celular: o filtro Atenção deixa só as obras no vermelho ou amarelo", () => {
+      h.mobile = true;
+      renderPage();
+      const total = screen.getAllByRole("listitem").length;
+      fireEvent.click(screen.getByRole("radio", { name: /Atenção/ }));
+      const links = within(screen.getByRole("list", { name: "Obras" })).getAllByRole("link");
+      expect(links.length).toBeLessThan(total);
+      expect(links.some((l) => /Ap\. 1204/.test(l.textContent ?? ""))).toBe(true);
+    });
+
+    it("celular, painel completo: cartões abrem a gaveta", () => {
+      h.mobile = true;
+      renderPage("?completo=1");
       expect(screen.queryByRole("table")).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: /Ap\. 1204/ }));
       expect(onde()).toContain("obra=a");

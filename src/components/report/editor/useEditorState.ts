@@ -21,6 +21,10 @@ import {
   OfflineConflictError,
 } from "./useOfflineConflict";
 import { toLocalISODate } from "@/lib/localDate";
+import {
+  inboxIdFromGalleryId,
+  reportPhotoInbox,
+} from "@/lib/offline/reportPhotoInbox";
 
 
 
@@ -441,6 +445,10 @@ export function useEditorState({
     setFormDataWithTracking((prev) => {
       const removed = prev.gallery[index];
       if (removed?.id) void removePendingUpload(removed.id);
+      // Foto que veio da caixa de entrada (hub / Registrar): removida aqui,
+      // sai de lá também, senão voltaria na próxima abertura.
+      const inboxId = removed?.id ? inboxIdFromGalleryId(removed.id) : null;
+      if (inboxId) void reportPhotoInbox.remove([inboxId]).catch(() => undefined);
       if (removed?.url?.startsWith("blob:")) {
         URL.revokeObjectURL(removed.url);
       }
@@ -522,6 +530,68 @@ export function useEditorState({
     event.target.value = "";
   };
 
+  // Fotos guardadas fora do relatório (hub da obra, gaveta Registrar). O id
+  // da galeria é fixo por foto, então entregar duas vezes não duplica.
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
+  const addInboxPhotos = useCallback(
+    async (
+      photos: Array<{ galleryId: string; blob: Blob; name: string; type: string }>,
+    ): Promise<{ persisted: string[]; rejected: string[] }> => {
+      const existing = new Map(formDataRef.current.gallery.map((p) => [p.id, p]));
+      const persisted: string[] = [];
+      const rejected: string[] = [];
+      const fresh = photos.filter((p) => {
+        const current = existing.get(p.galleryId);
+        if (current) {
+          // Já está no relatório salvo (URL definitiva): nada a fazer.
+          if (current.url && !current.url.startsWith("blob:")) persisted.push(p.galleryId);
+          return false;
+        }
+        if (!validateFile(new File([p.blob], p.name, { type: p.type }))) {
+          rejected.push(p.galleryId);
+          return false;
+        }
+        return true;
+      });
+      if (fresh.length === 0) return { persisted, rejected };
+      const weekNumber = formDataRef.current.weekNumber;
+      if (projectId) {
+        // Os bytes vão para a fila de envio do relatório antes de a foto
+        // aparecer na galeria.
+        await Promise.all(
+          fresh.map((p) =>
+            enqueuePhotoUpload({
+              id: p.galleryId,
+              projectId,
+              weekNumber,
+              blob: p.blob,
+              mimeType: p.type,
+              fileName: p.name,
+            }),
+          ),
+        );
+      }
+      setFormDataWithTracking((prev) => {
+        const have = new Set(prev.gallery.map((g) => g.id));
+        const added: GalleryPhoto[] = fresh
+          .filter((p) => !have.has(p.galleryId))
+          .map((p) => ({
+            id: p.galleryId,
+            url: URL.createObjectURL(p.blob),
+            caption: "",
+            area: "",
+            date: toLocalISODate(new Date()),
+            category: "progresso",
+          }));
+        return added.length > 0
+          ? { ...prev, gallery: [...prev.gallery, ...added] }
+          : prev;
+      });
+      return { persisted, rejected };
+    },
+    [projectId, setFormDataWithTracking],
+  );
 
   return {
     formData,
@@ -563,5 +633,6 @@ export function useEditorState({
     removeGalleryPhoto,
     handleFileSelect,
     handleBulkFileSelect,
+    addInboxPhotos,
   };
 }

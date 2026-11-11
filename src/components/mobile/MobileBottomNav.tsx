@@ -9,14 +9,17 @@ import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { cn } from "@/lib/utils";
 import {
   CLIENT_NAV,
-  STAFF_NAV,
   STAFF_OBRAS_LEGADO,
   STAFF_OBRAS_NOVO,
-  staffSimpleNav,
+  staffBottomBar,
+  resolveActiveStaffSlotId,
   PROFILE_SLOT,
+  REGISTRAR_SLOT,
   type MobileNavSlot,
+  type StaffBarItem,
 } from "@/config/mobileNav";
 import { MobileProfileSheet } from "./MobileProfileSheet";
+import { RegistrarSheet } from "./RegistrarSheet";
 import { rememberMobileNavSlot, clearMobileNavSlot } from "@/lib/mobileBottomNavMemory";
 import { getPortalViewStateKey, patchPortalViewState } from "@/lib/portalViewState";
 import { rememberLastProjectId, getLastProjectId } from "@/lib/lastProjectMemory";
@@ -29,11 +32,12 @@ const ROUTE_TAB_SLOTS = new Set([
 ]);
 
 /**
- * Universal mobile bottom navigation — 4 tabs + Profile.
+ * Universal mobile bottom navigation.
  *
- * Renders the same shape for cliente and staff; the contents are driven by
- * `src/config/mobileNav.ts`. The fifth slot is always the profile sheet
- * (never a "more tools" catalog).
+ * Cliente: 4 tabs + Profile. Equipe: Hoje, Obras, botão central Registrar,
+ * Pendências + Profile (modo simples: Obras, Semana, Registrar, Hoje). The
+ * contents are driven by `src/config/mobileNav.ts`. The last slot is always
+ * the profile sheet (never a "more tools" catalog).
  */
 export function MobileBottomNav() {
   const { paths, projectId } = useProjectNavigation();
@@ -45,6 +49,7 @@ export function MobileBottomNav() {
   const novoPainel = isFlagOn("novoPainelObras");
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [registrarOpen, setRegistrarOpen] = useState(false);
 
   // Lê o último projectId visitado (memória) — usado como fallback quando o
   // usuário está em uma rota global e quer voltar para a obra anterior.
@@ -74,12 +79,14 @@ export function MobileBottomNav() {
   const criticalPendencias = stats.overdueCount + stats.urgentCount;
   const hasProject = !!projectId;
 
-  // Modo simples (gestor de obra): a barra do celular mostra as mesmas três
-  // telas do menu lateral — Obras / Semana / Hoje.
-  const navItems = useMemo<MobileNavSlot[]>(() => {
-    if (!isStaff) return CLIENT_NAV;
-    if (isSimple) return staffSimpleNav(novoPainel ? STAFF_OBRAS_NOVO : STAFF_OBRAS_LEGADO);
-    return STAFF_NAV;
+  // Cliente: as quatro abas de sempre. Equipe: a barra com o botão central
+  // Registrar (modo completo ou simples), ver `staffBottomBar`.
+  const barItems = useMemo<StaffBarItem[]>(() => {
+    if (!isStaff) return CLIENT_NAV.map((slot) => ({ kind: "link", slot }));
+    return staffBottomBar({
+      simple: isSimple,
+      obrasPath: novoPainel ? STAFF_OBRAS_NOVO : STAFF_OBRAS_LEGADO,
+    });
   }, [isStaff, isSimple, novoPainel]);
 
   const resetProjectHubState = (targetProjectId?: string) => {
@@ -123,6 +130,16 @@ export function MobileBottomNav() {
     return path === to || path.startsWith(to + "/");
   };
 
+  // Equipe: no máximo uma aba acesa ("Obras" cobre toda a obra, menos as
+  // rotas que têm aba própria).
+  const activeStaffSlotId = isStaff
+    ? resolveActiveStaffSlotId(
+        barItems.flatMap((item) => (item.kind === "link" ? [item.slot] : [])),
+        location.pathname,
+        { paths, hasProject, projectId, lastProjectId },
+      )
+    : null;
+
   return (
     <>
       <nav
@@ -135,11 +152,33 @@ export function MobileBottomNav() {
         aria-label="Navegação principal"
       >
         <div className="flex items-stretch justify-between h-16 px-1">
-          {navItems.map((slot) => {
+          {barItems.map((item) => {
+            if (item.kind === "registrar") {
+              return (
+                <div key={REGISTRAR_SLOT.id} className="flex shrink-0 items-center justify-center px-2">
+                  <button
+                    type="button"
+                    onClick={() => setRegistrarOpen(true)}
+                    className={cn(
+                      "flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md",
+                      "transition-transform active:scale-[0.94]",
+                      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                    )}
+                    aria-label={REGISTRAR_SLOT.label}
+                    title={REGISTRAR_SLOT.label}
+                    aria-haspopup="dialog"
+                    aria-expanded={registrarOpen}
+                  >
+                    <REGISTRAR_SLOT.icon className="h-7 w-7" strokeWidth={2.4} aria-hidden="true" />
+                  </button>
+                </div>
+              );
+            }
+            const { slot } = item;
             const to = slot.to({ paths, hasProject, projectId, lastProjectId });
             const badge = resolveBadge(slot);
             const Icon = slot.icon;
-            const isActive = isSlotActive(slot, to);
+            const isActive = isStaff ? slot.id === activeStaffSlotId : isSlotActive(slot, to);
             return (
               <Link
                 key={slot.id}
@@ -164,7 +203,11 @@ export function MobileBottomNav() {
                   isActive ? "text-primary" : "text-foreground-muted",
                 )}
                 aria-label={
-                  badge > 0 ? `${slot.label} — ${badge} críticas` : slot.label
+                  badge > 0
+                    ? isStaff
+                      ? `${slot.label}: ${badge} críticas`
+                      : `${slot.label} — ${badge} críticas`
+                    : slot.label
                 }
                 title={slot.label}
               >
@@ -276,6 +319,13 @@ export function MobileBottomNav() {
       </nav>
 
       <MobileProfileSheet open={profileOpen} onOpenChange={setProfileOpen} />
+      {isStaff && (
+        <RegistrarSheet
+          open={registrarOpen}
+          onOpenChange={setRegistrarOpen}
+          projectId={projectId ?? lastProjectId}
+        />
+      )}
     </>
   );
 }

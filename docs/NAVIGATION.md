@@ -51,6 +51,31 @@ Rota: `/gestao/*`. Sidebar de portfólio + header com busca global, sino e menu.
 
 Rotas não autenticadas. Renderiza `AppHeader` legacy com logo/login.
 
+## Barra inferior da equipe no celular
+
+`src/config/mobileNav.ts` define as duas barras. A do cliente (`CLIENT_NAV`)
+não muda. A da equipe (`staffBottomBar`) é:
+
+```
+completo: Hoje · Obras · [Registrar] · Pendências · Perfil
+simples:  Obras · Semana · [Registrar] · Hoje · Perfil
+```
+
+- **Obras** sempre abre a lista de obras e fica acesa em qualquer rota
+  `/obra/*` que não tenha aba própria (`resolveActiveStaffSlotId`).
+- **Registrar** não navega: abre `RegistrarSheet` (foto, etapa, relatório da
+  semana, pendência) para a obra atual ou a última visitada.
+
+Rotas de equipe pensadas para o celular:
+
+| Rota                              | Tela                                               |
+|-----------------------------------|----------------------------------------------------|
+| `/obra/:id` (equipe, abaixo de md)| `StaffObraHubMobile`, via `pages/obra/ObraHubEntry` |
+| `/obra/:id/etapas`                | `AtualizarEtapas` (datas reais com um toque)        |
+| `/obra/:id/relatorio-semana`      | `RelatorioSemanaStaff` (editor da semana em passos) |
+
+Cliente e desktop continuam na `Index` em `/obra/:id`.
+
 ## Sidebar do projeto — 3 grupos canônicos
 
 `ProjectSidebar` é organizada em **três grupos**, na ordem de leitura:

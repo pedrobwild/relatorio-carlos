@@ -65,7 +65,9 @@ function openTab(projectId: string | undefined) {
   };
 }
 
-const obraSlotStaff = STAFF_NAV.find((s) => s.id === "obras")!;
+// Na barra da equipe, "Obras" abre sempre a lista; quem segue a obra da aba
+// (URL > memória) é "Pendências".
+const obraSlotStaff = STAFF_NAV.find((s) => s.id === "pendencias")!;
 const obraSlotClient = CLIENT_NAV.find((s) => s.id === "obra")!;
 
 describe("Multi-aba: fallback de projectId entre obras diferentes", () => {
@@ -73,7 +75,7 @@ describe("Multi-aba: fallback de projectId entre obras diferentes", () => {
     localStorage.clear();
   });
 
-  it("staff: cada aba resolve 'Obras' para SUA obra (URL > memória compartilhada)", () => {
+  it("staff: cada aba resolve 'Pendências' para SUA obra (URL > memória compartilhada)", () => {
     // Aba A entra em /obra/A — grava A na memória.
     const tabA = openTab("proj-A");
     expect(getLastProjectId()).toBe("proj-A");
@@ -97,8 +99,8 @@ describe("Multi-aba: fallback de projectId entre obras diferentes", () => {
     });
 
     // Nenhuma aba "cruza" para a obra da outra: cada uma volta para si.
-    expect(linkFromA).toBe("/obra/proj-A");
-    expect(linkFromB).toBe("/obra/proj-B");
+    expect(linkFromA).toBe("/obra/proj-A/pendencias");
+    expect(linkFromB).toBe("/obra/proj-B/pendencias");
   });
 
   it("client: mesma garantia para o slot Obra do CLIENT_NAV", () => {
@@ -140,7 +142,7 @@ describe("Multi-aba: fallback de projectId entre obras diferentes", () => {
         projectId: undefined,
         lastProjectId: tabC.lastProjectId,
       }),
-    ).toBe("/obra/proj-A");
+    ).toBe("/obra/proj-A/pendencias");
 
     // E uma aba global "recém-aberta" (re-snapshot) pega a memória atual.
     const tabDFresh = openTab(undefined);
@@ -151,7 +153,7 @@ describe("Multi-aba: fallback de projectId entre obras diferentes", () => {
         projectId: undefined,
         lastProjectId: tabDFresh.lastProjectId,
       }),
-    ).toBe("/obra/proj-B");
+    ).toBe("/obra/proj-B/pendencias");
   });
 
   it("aba sem URL nunca redireciona para uma obra que a memória não conhece", () => {
@@ -164,6 +166,6 @@ describe("Multi-aba: fallback de projectId entre obras diferentes", () => {
         projectId: undefined,
         lastProjectId: tab.lastProjectId,
       }),
-    ).toBe("/gestao/painel-obras");
+    ).toBe("/gestao/nao-conformidades");
   });
 });

@@ -24,7 +24,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOpsScreenViewed } from "@/hooks/useOpsScreenViewed";
 import { Link, useSearchParams } from "react-router-dom";
-import { Building2, Newspaper, Plus, Search } from "lucide-react";
+import { ArrowLeft, Building2, Newspaper, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
@@ -81,6 +81,8 @@ import {
 import { EtapaBoard } from "@/components/gestao/obras/EtapaBoard";
 import { EtapaKanban } from "@/components/gestao/obras/EtapaKanban";
 import { ObraDrawer } from "@/components/gestao/obras/ObraDrawer";
+import { ObrasMobileList } from "@/components/gestao/obras/ObrasMobileList";
+import { equipeMobileLabels } from "@/content/equipeMobileLabels";
 
 const SCOPE_KEY = "bwild.obras.escopo";
 type Scope = "minhas" | "todas";
@@ -418,8 +420,54 @@ export default function Obras() {
     );
   };
 
+  // Celular: a lista de obras enxuta (busca, Todas / Atenção / Minhas, um
+  // cartão por obra que abre o hub). O painel completo, com as listas
+  // Projetos e Concluídas, as visões e a gaveta, continua a um toque
+  // (`?completo=1`) e abre sozinho quando o endereço já pede uma delas.
+  const painelCompleto = params.get("completo") === "1";
+  if (isMobile && !painelCompleto && lista === "execucao" && visao === "lista" && !openId) {
+    const linkClass =
+      "flex min-h-[44px] items-center rounded-xl border border-border bg-card px-3.5 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+    const L = equipeMobileLabels.obras;
+    return (
+      <ObrasMobileList
+        rows={rows}
+        userId={user?.id}
+        isLoading={isLoading}
+        error={error}
+        onRetry={refetch}
+        footer={
+          <nav aria-label={L.outrasListas} className="mt-3 flex flex-wrap gap-2">
+            {office && (
+              <>
+                <Link to="?fase=projetos" className={linkClass}>
+                  {L.emProjeto(projetos.length)}
+                </Link>
+                <Link to="?aba=concluidas" className={linkClass}>
+                  {L.concluidas(concluidas.length)}
+                </Link>
+              </>
+            )}
+            <Link to="?completo=1" className={linkClass}>
+              {L.painelCompleto}
+            </Link>
+          </nav>
+        }
+      />
+    );
+  }
+
   return (
     <PageContainer maxWidth="full">
+      {isMobile && painelCompleto && (
+        <Link
+          to={{ search: "" }}
+          className="mb-2 inline-flex min-h-[44px] items-center gap-1 rounded-sm text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          {equipeMobileLabels.obras.listaSimples}
+        </Link>
+      )}
       <PageHeader
         eyebrow="Painel de Obras"
         title="Como estão as obras"
