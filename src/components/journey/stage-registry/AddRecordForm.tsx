@@ -87,7 +87,7 @@ export function AddRecordForm({
       )
       .join(", ");
 
-    const generatedTitle = `Ata de Reunião — ${dateFormatted}${meetingTime ? ` às ${meetingTime}` : ""}`;
+    const generatedTitle = `Ata de Reunião: ${dateFormatted}${meetingTime ? ` às ${meetingTime}` : ""}`;
     const generatedDescription = [
       participantsList ? `Participantes: ${participantsList}` : "",
       mainTopics.trim(),
@@ -270,7 +270,7 @@ export function AddRecordForm({
                   className="h-9 text-sm flex-1"
                 />
                 {participants.length > 1 && (
-                  <Button
+                  <Button aria-label="Remover"
                     type="button"
                     size="icon"
                     variant="ghost"

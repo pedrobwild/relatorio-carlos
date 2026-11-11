@@ -303,7 +303,7 @@ export function DailyLogInline({
           previewWhenClosed={(() => {
             if (isLoading) return "Carregando…";
             if (services.length === 0 && workers.length === 0) {
-              return "Nenhum serviço ou prestador — toque para adicionar";
+              return "Nenhum serviço ou prestador. Toque para adicionar";
             }
             const parts: string[] = [];
             if (services.length > 0) {
@@ -352,7 +352,7 @@ export function DailyLogInline({
                 }
               />
               {services.length === 0 && (
-                <EmptyLine text="Nenhum serviço adicionado — toque em Adicionar para começar." />
+                <EmptyLine text="Nenhum serviço adicionado. Toque em Adicionar para começar." />
               )}
               <div
                 ref={servicesListRef}
@@ -495,7 +495,7 @@ export function DailyLogInline({
                 }
               />
               {workers.length === 0 && (
-                <EmptyLine text="Nenhum prestador adicionado — toque em Adicionar para começar." />
+                <EmptyLine text="Nenhum prestador adicionado. Toque em Adicionar para começar." />
               )}
               <div
                 ref={workersListRef}
@@ -637,7 +637,7 @@ export function DailyLogInline({
             if (!data?.id)
               return "Salve o registro para adicionar ações";
             if (weekActions.length === 0)
-              return "Nenhuma ação — toque para adicionar";
+              return "Nenhuma ação. Toque para adicionar";
             return `${weekActionsDone}/${weekActions.length} concluída${weekActions.length === 1 ? "" : "s"}`;
           })()}
         >
@@ -656,7 +656,7 @@ export function DailyLogInline({
               ? "Carregando planejamento…"
               : planning.trim()
                 ? truncate(planning, 80)
-                : "Sem planejamento — toque para preencher"
+                : "Sem planejamento. Toque para preencher"
           }
         >
           <Textarea
@@ -680,13 +680,13 @@ export function DailyLogInline({
               ? "Carregando observações…"
               : notes.trim()
                 ? truncate(notes, 80)
-                : "Sem observações — toque para adicionar"
+                : "Sem observações. Toque para adicionar"
           }
         >
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Relato livre — incidentes, decisões, contexto do dia"
+            placeholder="Relato livre: incidentes, decisões, contexto do dia"
             className="min-h-[88px] text-sm"
             disabled={isSaving}
           />

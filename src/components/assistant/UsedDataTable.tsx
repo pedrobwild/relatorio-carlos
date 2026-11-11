@@ -28,7 +28,7 @@ const NUMERIC_HINTS = [
 ];
 
 const fmtCell = (v: unknown, key: string): string => {
-  if (v == null || v === "") return "—";
+  if (v == null || v === "") return "–";
   const lower = key.toLowerCase();
   if (NUMERIC_HINTS.some((h) => lower.includes(h))) {
     const n = typeof v === "number" ? v : Number(v);

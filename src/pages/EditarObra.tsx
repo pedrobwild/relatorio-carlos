@@ -89,7 +89,7 @@ export default function EditarObra() {
           <PageContainer maxWidth="lg" className="py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button
+                <Button aria-label="Voltar"
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate("/gestao")}
@@ -149,7 +149,7 @@ export default function EditarObra() {
                     onOpenChange={setShowDeleteDialog}
                   >
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon">
+                      <Button aria-label="Excluir" variant="destructive" size="icon">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
@@ -181,7 +181,7 @@ export default function EditarObra() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span tabIndex={0}>
-                        <Button variant="destructive" size="icon" disabled>
+                        <Button aria-label="Excluir" variant="destructive" size="icon" disabled>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </span>

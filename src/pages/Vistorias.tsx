@@ -56,7 +56,7 @@ export default function Vistorias() {
     <>
       <PageHeader title="Vistorias" maxWidth="full" showLogo={false}>
         <div className="flex items-center gap-2">
-          <Button
+          <Button aria-label="Buscar"
             variant="ghost"
             size="icon"
             className="md:hidden h-10 w-10"
@@ -66,7 +66,7 @@ export default function Vistorias() {
           </Button>
           <AssessorSheet
             defaultEventType="quality_inspection"
-            placeholder="Ex: Encontrei 3 NCs críticas no banheiro do casal — revestimento, ralo e elétrica. O que preciso travar antes de avançar?"
+            placeholder="Ex: Encontrei 3 NCs críticas no banheiro do casal: revestimento, ralo e elétrica. O que preciso travar antes de avançar?"
           />
           {can("inspections:create") && (
             <Button

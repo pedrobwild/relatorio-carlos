@@ -163,7 +163,7 @@ export function CustomersWithoutProjectCard() {
                   {o.customer_name && (
                     <span className="text-muted-foreground">
                       {" "}
-                      — {o.customer_name}
+                      – {o.customer_name}
                     </span>
                   )}
                 </li>

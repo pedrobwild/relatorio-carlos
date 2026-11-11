@@ -18,6 +18,7 @@ import { useIsOnline, useQueuedPhotos } from "@/hooks/useOpsOffline";
 import { getOpsPhotoQueue } from "@/lib/offline/opsPhotoSync";
 import { PhotoQueueFullError, type QueuedPhoto } from "@/lib/offline/photoQueue";
 import type { OpsDayAssignment } from "@/infra/repositories/ops.repository";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 interface Props {
   assignment: Pick<OpsDayAssignment, "id" | "project_id" | "photo_paths">;
@@ -77,7 +78,7 @@ export function AssignmentPhotos({ assignment }: Props) {
           {urls.map((u, i) => (
             <li key={u.path} className="shrink-0">
               <a href={u.url} target="_blank" rel="noreferrer" className="block">
-                <img
+                <img decoding="async" onError={hideBrokenImage}
                   src={u.url}
                   alt={`Foto ${i + 1}`}
                   loading="lazy"

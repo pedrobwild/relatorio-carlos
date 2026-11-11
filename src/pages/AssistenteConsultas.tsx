@@ -187,7 +187,7 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
     ],
   },
   {
-    label: "CS — Atendimento",
+    label: "CS · Atendimento",
     icon: ClipboardList,
     color: "text-rose-600",
     questions: [
@@ -302,7 +302,7 @@ export default function AssistenteConsultas() {
               Consultas do Assistente
             </h1>
             <p className="text-sm text-muted-foreground">
-              Pergunte em linguagem natural — receba números, insights e
+              Pergunte em linguagem natural: receba números, insights e
               próximos passos. As respostas respeitam suas permissões.
             </p>
           </div>

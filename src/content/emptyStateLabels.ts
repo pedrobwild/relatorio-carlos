@@ -28,7 +28,7 @@ export const emptyStateLabels = {
       "Quando a equipe BWild liberar o acesso, sua obra aparece aqui.",
   },
   compras: {
-    title: "Nenhuma compra pendente — tudo em dia",
+    title: "Nenhuma compra pendente, tudo em dia",
     description:
       "Quando algo precisar de aprovação, pedido ou recebimento, aparece aqui.",
   },
@@ -78,7 +78,7 @@ export const emptyStateLabels = {
       "Decisões importantes que precisam de ciência ficam listadas aqui.",
   },
   pendencias: {
-    title: "Nenhuma pendência — tudo em dia",
+    title: "Nenhuma pendência, tudo em dia",
     description: "Quando algo precisar da sua atenção, aparece aqui.",
   },
   financeiro: {

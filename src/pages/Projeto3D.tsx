@@ -273,7 +273,7 @@ const Projeto3D = () => {
                     >
                       Salvar
                     </Button>
-                    <Button
+                    <Button aria-label="Cancelar"
                       size="sm"
                       variant="ghost"
                       className="h-9"

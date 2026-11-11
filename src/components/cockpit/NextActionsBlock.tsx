@@ -86,7 +86,7 @@ export function NextActionsBlock({
   return (
     <SectionCard
       title="Ação necessária"
-      description="O que precisa da sua atenção agora — máximo 3 itens prioritários."
+      description="O que precisa da sua atenção agora: máximo 3 itens prioritários."
       className={className}
     >
       {isLoading ? (

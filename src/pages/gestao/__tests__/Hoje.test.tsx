@@ -302,7 +302,7 @@ describe("Tela Hoje", () => {
       expect(screen.getByText("2 de 3 confirmados")).toBeInTheDocument();
       // Os outros cards não ficam marcados.
       expect(within(screen.getByRole("article", { name: "Atividade 2" })).queryByText("Aguardando envio")).toBeNull();
-      expect(screen.getByRole("status")).toHaveTextContent("Sem sinal — 1 registro aguardando envio");
+      expect(screen.getByRole("status")).toHaveTextContent("Sem sinal: 1 registro aguardando envio");
     });
 
     it("conta também as fotos guardadas no aparelho", () => {
@@ -313,7 +313,7 @@ describe("Tela Hoje", () => {
         { id: "f2", userId: "outra-conta", assignmentId: "2", failed: false, blob: new Blob(["x"]) },
       ];
       renderAt();
-      expect(screen.getByRole("status")).toHaveTextContent("Sem sinal — 2 registros aguardando envio");
+      expect(screen.getByRole("status")).toHaveTextContent("Sem sinal: 2 registros aguardando envio");
       // Miniatura marcada no card (só a desta conta).
       const card = screen.getByRole("article", { name: "Atividade 2" });
       expect(within(card).getAllByText("aguardando envio")).toHaveLength(1);

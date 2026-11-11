@@ -58,7 +58,7 @@ const GallerySection = ({
               <span className="text-sm font-medium text-muted-foreground">
                 Mídia {index + 1}
               </span>
-              <Button
+              <Button aria-label="Remover"
                 variant="ghost"
                 size="icon"
                 className="min-h-[44px] min-w-[44px] h-11 w-11"
@@ -91,7 +91,7 @@ const GallerySection = ({
                       />
                     </div>
                   )}
-                  <Button
+                  <Button aria-label="Remover"
                     variant="destructive"
                     size="icon"
                     className="absolute top-2 right-2 h-6 w-6"

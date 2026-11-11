@@ -145,7 +145,7 @@ export function ProjectsListViewProjetos({ projects }: Props) {
                           stage.currentStageStatus}
                       </StatusBadge>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">–</span>
                     )}
                   </TableCell>
 
@@ -163,7 +163,7 @@ export function ProjectsListViewProjetos({ projects }: Props) {
                         </TooltipContent>
                       </Tooltip>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">–</span>
                     )}
                   </TableCell>
 
@@ -184,7 +184,7 @@ export function ProjectsListViewProjetos({ projects }: Props) {
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">–</span>
                     )}
                   </TableCell>
 

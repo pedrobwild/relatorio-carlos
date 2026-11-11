@@ -63,7 +63,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
         <div className="relative min-h-[100dvh]">
           <ProjectMobileHeader />
           {isSwitching && <ProjectSwitchOverlay />}
-          <div className="pb-bottom-nav">
+          <div className="pb-bottom-nav consent-safe">
             {/* Keep ProjectRouteTransition mounted across the switch so its
                 scroll-reset effect still runs; only gate the page content so
                 we never render a page against a null project mid-switch (the
@@ -95,7 +95,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
             <main
               id="main-content"
               ref={mainRef}
-              className="flex-1 overflow-y-auto pb-bottom-nav"
+              className="flex-1 overflow-y-auto pb-bottom-nav consent-safe"
             >
               {/* See client branch: keep the transition mounted so the scroll
                   reset still fires when switching obras; only gate the page

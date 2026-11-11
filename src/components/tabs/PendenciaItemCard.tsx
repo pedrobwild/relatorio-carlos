@@ -144,7 +144,7 @@ export function PendenciaItemCard({
       },
       {
         onSuccess: () => {
-          toast.success("Aprovação registrada com sucesso!");
+          toast.success("Aprovação registrada");
           setDialogOpen(false);
         },
         onError: () => toast.error("Erro ao aprovar. Tente novamente."),

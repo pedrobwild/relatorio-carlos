@@ -870,7 +870,7 @@ export default function CalendarioObras() {
                   </p>
                 ) : draftDirty ? (
                   <p className="text-xs text-muted-foreground">
-                    Período selecionado ainda não aplicado — clique em{" "}
+                    Período selecionado ainda não aplicado. Clique em{" "}
                     <strong>Aplicar</strong> para atualizar a timeline.
                   </p>
                 ) : (

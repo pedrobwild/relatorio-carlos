@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { parseLocalDate } from "@/lib/dates";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 interface IncidentsSectionProps {
   incidents: Incident[];
@@ -30,10 +31,10 @@ function safeFormatDate(dateStr: string, fmt: string): string {
       ? parseLocalDate(dateStr)
       : new Date(dateStr);
     return isNaN(d.getTime())
-      ? dateStr || "—"
+      ? dateStr || "–"
       : format(d, fmt, { locale: ptBR });
   } catch {
-    return dateStr || "—";
+    return dateStr || "–";
   }
 }
 
@@ -138,7 +139,7 @@ const IncidentItem = ({
                   onClick={() => setSelectedPhotoIndex(index)}
                   className="relative aspect-video rounded overflow-hidden border border-border hover:border-primary/50 transition-colors group"
                 >
-                  <img
+                  <img loading="lazy" decoding="async" onError={hideBrokenImage}
                     src={photo.url}
                     alt={photo.caption || "Foto da intercorrência"}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
@@ -192,7 +193,7 @@ const IncidentItem = ({
 
           {selectedPhotoIndex !== null && photos[selectedPhotoIndex] && (
             <div className="relative">
-              <Button
+              <Button aria-label="Fechar"
                 variant="ghost"
                 size="icon"
                 className="absolute top-4 right-4 z-10 text-white hover:bg-white/20"
@@ -202,7 +203,7 @@ const IncidentItem = ({
               </Button>
 
               {selectedPhotoIndex > 0 && (
-                <Button
+                <Button aria-label="Foto anterior"
                   variant="ghost"
                   size="icon"
                   className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20"
@@ -212,7 +213,7 @@ const IncidentItem = ({
                 </Button>
               )}
               {selectedPhotoIndex < photos.length - 1 && (
-                <Button
+                <Button aria-label="Próxima foto"
                   variant="ghost"
                   size="icon"
                   className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20"

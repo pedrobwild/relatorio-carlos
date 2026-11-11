@@ -142,7 +142,7 @@ export function getLeadTimeRisk(
     level: "on_track",
     tone: TONE.on_track,
     label: LABEL.on_track,
-    message: `Folga de ${slackDays} dia(s) — pedir até ${format(orderByDate, "dd/MM")}.`,
+    message: `Folga de ${slackDays} dia(s), pedir até ${format(orderByDate, "dd/MM")}.`,
     orderByDate,
     slackDays,
   };

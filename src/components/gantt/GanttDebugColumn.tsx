@@ -35,8 +35,8 @@ export function GanttDebugColumn({
                   → {task.plannedEnd}
                 </div>
                 <div className="text-green-700">
-                  <span className="text-green-500">A:</span> {task.start || "—"}{" "}
-                  → {task.end || "—"}
+                  <span className="text-green-500">A:</span> {task.start || "–"}{" "}
+                  → {task.end || "–"}
                 </div>
               </div>
               <div className="flex-1">

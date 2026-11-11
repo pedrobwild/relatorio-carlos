@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { RoomProgress } from "@/types/weeklyReport";
 import { PhaseType, phaseConfig } from "./types";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 const statusConfig = {
   concluído: {
@@ -70,7 +71,7 @@ function DesktopPhaseGrid({
               isClickable && "cursor-pointer",
             )}
           >
-            <img
+            <img loading="lazy" decoding="async" onError={hideBrokenImage}
               src={photo.url}
               alt={photo.caption}
               className="w-full h-full object-cover transition-transform group-hover:scale-105"

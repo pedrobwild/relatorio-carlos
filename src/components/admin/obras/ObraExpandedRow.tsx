@@ -117,7 +117,7 @@ export function ObraExpandedRow({
           <p className="text-sm font-medium">
             {contractValue
               ? `R$ ${paidAmount.toLocaleString("pt-BR", { minimumFractionDigits: 0 })} / ${contractValue.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}`
-              : "—"}
+              : "–"}
           </p>
         </div>
       </div>

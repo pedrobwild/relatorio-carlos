@@ -371,7 +371,7 @@ export default function FornecedorDetalhe() {
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <Button
+        <Button aria-label="Voltar"
           variant="ghost"
           size="icon"
           onClick={() => navigate("/gestao/fornecedores")}

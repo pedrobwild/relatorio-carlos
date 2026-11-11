@@ -125,7 +125,7 @@ Cliente solicitou upgrade do revestimento.`,
         meta: { source: "test_data" },
       });
 
-      toast.success("Formalização de teste criada com sucesso!");
+      toast.success("Formalização de teste criada");
       // Refresh the list
       queryClient.invalidateQueries({ queryKey: ["formalizacoes"] });
     } catch (error) {

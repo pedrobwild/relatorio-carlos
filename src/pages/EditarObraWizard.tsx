@@ -319,7 +319,7 @@ export default function EditarObraWizard() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b">
         <PageContainer maxWidth="md" className="py-3">
           <div className="flex items-center gap-3">
-            <Button
+            <Button aria-label="Voltar"
               variant="ghost"
               size="icon"
               onClick={() => navigate("/gestao")}
@@ -394,7 +394,7 @@ export default function EditarObraWizard() {
           <Rocket className="h-4 w-4 text-amber-600 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-amber-800">
-              Rascunho — Recebido via integração
+              Rascunho: recebido via integração
             </p>
             <p className="text-[11px] text-amber-600">
               Revise as informações e clique em"Publicar Obra" para ativar o

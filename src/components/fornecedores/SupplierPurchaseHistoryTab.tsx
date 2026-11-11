@@ -47,10 +47,10 @@ const STATUS_MAP: Record<
 const formatCurrency = (v: number | null) =>
   v != null
     ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-    : "—";
+    : "–";
 
 const formatDate = (d: string | null) =>
-  d ? format(parseLocalDate(d), "dd/MM/yyyy") : "—";
+  d ? format(parseLocalDate(d), "dd/MM/yyyy") : "–";
 
 export function SupplierPurchaseHistoryTab({
   fornecedorId,
@@ -151,7 +151,7 @@ export function SupplierPurchaseHistoryTab({
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">
-                    {p.projects?.name || "—"}
+                    {p.projects?.name || "–"}
                   </TableCell>
                   <TableCell className="text-right text-sm">
                     {p.quantity} {p.unit}

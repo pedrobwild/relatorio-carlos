@@ -173,7 +173,7 @@ export function TemplateSelectorCard({
               .map((t) => (
                 <SelectItem key={t.id} value={t.id}>
                   {t.name}
-                  {t.description ? ` — ${t.description}` : ""}
+                  {t.description ? ` – ${t.description}` : ""}
                 </SelectItem>
               ))}
           </SelectContent>
@@ -245,7 +245,7 @@ export function TemplateSelectorCard({
                               left: `${(cumDays[i] / total) * 100}%`,
                               width: `${Math.max((act.durationDays / total) * 100, 2)}%`,
                             }}
-                            title={`${act.description} — ${act.durationDays}d`}
+                            title={`${act.description} – ${act.durationDays}d`}
                           />
                         </div>
                       </div>

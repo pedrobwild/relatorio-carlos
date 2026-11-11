@@ -28,7 +28,7 @@ const OfflineConflictAlert = ({ guard }: OfflineConflictAlertProps) => {
         <p>
           Alterações na mesma seção dos dois lados:{" "}
           <strong>{conflictingSections.join(", ")}</strong>. O envio está
-          pausado para não apagar nada — escolha qual versão vale.
+          pausado para não apagar nada. Escolha qual versão vale.
         </p>
         <ul className="list-disc space-y-1 pl-5 text-xs">
           <li>Você editou neste aparelho: {localSections.join(", ")}</li>

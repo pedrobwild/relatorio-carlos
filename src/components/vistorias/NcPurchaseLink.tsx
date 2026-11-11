@@ -59,7 +59,7 @@ export function NcPurchaseLink({ nc }: Props) {
         unit: "un",
         lead_time_days: nc.severity === "critical" ? 3 : 7,
         required_by_date: toLocalISODate(requiredByDate),
-        notes: `Prioridade: ${nc.severity === "critical" ? "URGENTE" : "ALTA"} — Originada de NC`,
+        notes: `Prioridade: ${nc.severity === "critical" ? "URGENTE" : "ALTA"} · Originada de NC`,
       } satisfies PurchaseInput,
       {
         onSuccess: () => {

@@ -179,7 +179,7 @@ export default function Demo() {
       };
 
       await html2pdf().set(opt).from(element).save();
-      toast.success("PDF exportado com sucesso!");
+      toast.success("PDF exportado");
     } catch (error) {
       console.error("Erro ao exportar PDF:", error);
       toast.error("Erro ao gerar PDF. Tente novamente.");
@@ -229,7 +229,7 @@ export default function Demo() {
                 Voltar
               </Button>
               <div className="flex items-center gap-2">
-                <img src={bwildLogo} alt="Bwild" className="h-6" />
+                <img width={1000} height={400} src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
                 <Badge
                   variant="outline"
                   className="bg-accent text-accent-foreground border-accent"

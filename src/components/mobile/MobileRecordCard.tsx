@@ -99,7 +99,7 @@ export function MobileRecordCard({
         type="button"
         onClick={onClick}
         disabled={!isInteractive}
-        aria-label={ariaLabel ?? `${title}${subtitle ? ` — ${subtitle}` : ""}`}
+        aria-label={ariaLabel ?? `${title}${subtitle ? ` – ${subtitle}` : ""}`}
         className={cn(
           "flex items-start gap-3 w-full text-left px-4 py-3 min-h-[72px]",
           // Reservar espaço à direita para o menu de overflow (44px) e/ou
@@ -112,7 +112,7 @@ export function MobileRecordCard({
       >
         <div className="flex-1 min-w-0 space-y-1">
           {eyebrow && (
-            <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground truncate">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground truncate">
               {eyebrow}
             </div>
           )}

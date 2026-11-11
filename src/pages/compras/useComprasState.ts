@@ -421,9 +421,9 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   };
 
   const getActivityName = (activityId: string | null) => {
-    if (!activityId) return "—";
+    if (!activityId) return "–";
     const activity = activities.find((a) => a.id === activityId);
-    return activity?.description || "—";
+    return activity?.description || "–";
   };
 
   const getDaysUntilRequired = (

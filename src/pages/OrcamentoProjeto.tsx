@@ -127,7 +127,7 @@ export default function OrcamentoProjeto() {
       }
 
       setProgress(30);
-      setStatusText("Analisando o orçamento com IA — pode levar alguns minutos.");
+      setStatusText("Analisando o orçamento com IA. Pode levar alguns minutos.");
 
       // A leitura do PDF é demorada: o avanço lento mostra que ainda está rodando.
       creep = setInterval(() => {
@@ -163,7 +163,7 @@ export default function OrcamentoProjeto() {
 
       setProgress(100);
       setStatusText("Concluído!");
-      toast.success(data?.message || "Orçamento importado com sucesso!");
+      toast.success(data?.message || "Orçamento importado");
 
       setTimeout(() => {
         setImporting(false);
@@ -219,7 +219,7 @@ export default function OrcamentoProjeto() {
               Importar Orçamento com IA
             </CardTitle>
             <CardDescription>
-              Envie o PDF do orçamento — a IA extrairá seções e itens
+              Envie o PDF do orçamento: a IA extrairá seções e itens
               automaticamente.
             </CardDescription>
           </CardHeader>

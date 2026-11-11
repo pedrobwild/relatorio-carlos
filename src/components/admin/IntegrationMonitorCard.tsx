@@ -118,7 +118,7 @@ export function IntegrationMonitorCard() {
             </p>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => refetch()}>
+        <Button aria-label="Atualizar" variant="ghost" size="icon" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
@@ -222,7 +222,7 @@ export function IntegrationMonitorCard() {
                           ? format(new Date(log.created_at), "dd/MM HH:mm", {
                               locale: ptBR,
                             })
-                          : "—"}
+                          : "–"}
                       </p>
                       {log.attempts && log.attempts > 1 && (
                         <p className="text-xs text-muted-foreground">

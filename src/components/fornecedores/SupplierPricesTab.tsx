@@ -184,7 +184,7 @@ export function SupplierPricesTab({
       </TableCell>
       <TableCell>
         <div className="flex gap-1">
-          <Button
+          <Button aria-label="Salvar"
             variant="ghost"
             size="icon"
             className="h-7 w-7"
@@ -193,7 +193,7 @@ export function SupplierPricesTab({
           >
             <Check className="h-4 w-4 text-green-600" />
           </Button>
-          <Button
+          <Button aria-label="Cancelar"
             variant="ghost"
             size="icon"
             className="h-7 w-7"
@@ -252,7 +252,7 @@ export function SupplierPricesTab({
                       ? new Date(
                           p.data_validade + "T12:00:00",
                         ).toLocaleDateString("pt-BR")
-                      : "—"}
+                      : "–"}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
@@ -265,7 +265,7 @@ export function SupplierPricesTab({
                       >
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
+                      <Button aria-label="Editar"
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
@@ -273,7 +273,7 @@ export function SupplierPricesTab({
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
+                      <Button aria-label="Excluir"
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-destructive"

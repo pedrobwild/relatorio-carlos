@@ -139,7 +139,7 @@ export function FornecedorSelector({
               <span className="font-medium text-foreground">
                 {c.project_name}
               </span>
-              {" — "}
+              {" – "}
               {c.item_name} ({fmtDate(c.start_date)} – {fmtDate(c.end_date)})
             </p>
           ))}

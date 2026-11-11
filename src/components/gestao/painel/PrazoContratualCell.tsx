@@ -22,7 +22,7 @@ const CHIP: Record<DeadlineHealth, string> = {
 };
 
 const fmt = (iso: string | null | undefined, pattern = "dd/MM/yy") =>
-  iso ? format(parseISO(iso), pattern, { locale: ptBR }) : "—";
+  iso ? format(parseISO(iso), pattern, { locale: ptBR }) : "–";
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export function prazoResumo(d: ProjectDeadline | null | undefined, entregue: boolean): string {

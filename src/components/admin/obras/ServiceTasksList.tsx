@@ -342,7 +342,7 @@ function TaskRow({ task, staffUsers, onUpdate, onDelete }: TaskRowProps) {
         }
       >
         <SelectTrigger className="h-6 w-[100px] text-[11px] px-1.5 shrink-0">
-          <SelectValue placeholder="—" />
+          <SelectValue placeholder="–" />
         </SelectTrigger>
         <SelectContent position="popper">
           <SelectItem value={NONE}>Sem responsável</SelectItem>
@@ -363,7 +363,7 @@ function TaskRow({ task, staffUsers, onUpdate, onDelete }: TaskRowProps) {
           ? format(parseISO(task.due_date), "dd/MM/yyyy", { locale: ptBR })
           : "Sem prazo";
         const fullTitle = urgency.label
-          ? `${dateLabel} — ${urgency.label}`
+          ? `${dateLabel} – ${urgency.label}`
           : dateLabel;
         return (
           <div className="relative shrink-0" title={fullTitle}>

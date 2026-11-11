@@ -163,7 +163,7 @@ export function ActivityDetailDialog({
   };
 
   const formatPreview = (d: Date | undefined) =>
-    d ? format(d, "dd 'de' MMM 'de' yyyy", { locale: ptBR }) : "—";
+    d ? format(d, "dd 'de' MMM 'de' yyyy", { locale: ptBR }) : "–";
 
   // Build inline history from available signals
   type Event = {

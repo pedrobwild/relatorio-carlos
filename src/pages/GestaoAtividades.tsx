@@ -680,7 +680,7 @@ export default function GestaoAtividades() {
                           </span>
                         </TableCell>
                         <TableCell className="text-sm">
-                          {responsible ?? "—"}
+                          {responsible ?? "–"}
                         </TableCell>
                         <TableCell>
                           <span
@@ -708,7 +708,7 @@ export default function GestaoAtividades() {
                               )}
                             </span>
                           ) : (
-                            "—"
+                            "–"
                           )}
                         </TableCell>
                         <TableCell>

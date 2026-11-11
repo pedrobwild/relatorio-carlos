@@ -65,7 +65,7 @@ export function buildAnalysis(input: InsightEngineInput): AnalysisResult {
     limitations.push("Resultado truncado em 200 linhas pela RPC de segurança.");
   if (dataQuality.length > 0)
     limitations.push(
-      "Foram detectadas inconsistências de dados — veja a seção de qualidade.",
+      "Foram detectadas inconsistências de dados: veja a seção de qualidade.",
     );
   if (!input.sql) limitations.push("Sem SQL gerado para auditoria.");
 

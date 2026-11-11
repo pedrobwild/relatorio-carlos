@@ -56,7 +56,7 @@ function TodoItem({ todo, projectId, isAdmin, canCheck }: TodoItemProps) {
           autoFocus
           onKeyDown={(e) => e.key === "Enter" && handleSave()}
         />
-        <Button
+        <Button aria-label="Salvar"
           size="icon"
           variant="ghost"
           className="h-10 w-10 shrink-0"
@@ -64,7 +64,7 @@ function TodoItem({ todo, projectId, isAdmin, canCheck }: TodoItemProps) {
         >
           <Check className="h-4 w-4" />
         </Button>
-        <Button
+        <Button aria-label="Cancelar"
           size="icon"
           variant="ghost"
           className="h-10 w-10 shrink-0"
@@ -72,7 +72,7 @@ function TodoItem({ todo, projectId, isAdmin, canCheck }: TodoItemProps) {
         >
           <X className="h-4 w-4" />
         </Button>
-        <Button
+        <Button aria-label="Remover"
           size="icon"
           variant="ghost"
           className="h-10 w-10 shrink-0 text-destructive"
@@ -107,7 +107,7 @@ function TodoItem({ todo, projectId, isAdmin, canCheck }: TodoItemProps) {
         {todo.text}
       </span>
       {isAdmin && (
-        <Button
+        <Button aria-label="Editar"
           size="icon"
           variant="ghost"
           className="h-11 w-11 min-h-[44px] min-w-[44px] opacity-100 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity shrink-0"
@@ -205,7 +205,7 @@ export function StageChecklist({
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             />
-            <Button
+            <Button aria-label="Salvar"
               size="icon"
               variant="ghost"
               className="h-10 w-10 shrink-0"
@@ -213,7 +213,7 @@ export function StageChecklist({
             >
               <Check className="h-4 w-4" />
             </Button>
-            <Button
+            <Button aria-label="Cancelar"
               size="icon"
               variant="ghost"
               className="h-10 w-10 shrink-0"

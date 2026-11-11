@@ -11,7 +11,7 @@ export function MediaUnavailable({ compact = false }: { compact?: boolean }) {
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-muted text-muted-foreground p-2 text-center">
       <ImageOff className={compact ? "w-4 h-4" : "w-6 h-6"} />
       {!compact && (
-        <span className="text-tiny">Mídia indisponível — recarregue</span>
+        <span className="text-tiny">Mídia indisponível. Recarregue</span>
       )}
     </div>
   );

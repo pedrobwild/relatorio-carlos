@@ -160,7 +160,7 @@ export function PaymentFlowModal({
       <DialogContent className="max-w-3xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Fluxo de Pagamento — {itemName}
+            Fluxo de Pagamento: {itemName}
           </DialogTitle>
         </DialogHeader>
 
@@ -286,7 +286,7 @@ export function PaymentFlowModal({
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Button
+                        <Button aria-label="Remover"
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-destructive hover:text-destructive"

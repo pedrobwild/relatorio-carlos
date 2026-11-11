@@ -442,7 +442,7 @@ export function StageDetailInline({
           onOpenChange={setInstrEditorOpen}
           value={displayHtml}
           onSave={saveInstruction}
-          title={`Editar Instruções — ${stage.name}`}
+          title={`Editar Instruções: ${stage.name}`}
         />
       )}
       {isProjeto3DStage && (

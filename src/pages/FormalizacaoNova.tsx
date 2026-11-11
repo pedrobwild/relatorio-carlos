@@ -313,7 +313,7 @@ export default function FormalizacaoNova() {
                   <ChevronLeft className="h-5 w-5" />
                 )}
               </Button>
-              <img src={bwildLogo} alt="Bwild" className="h-6" />
+              <img width={1000} height={400} src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
               <span className="text-muted-foreground/30">|</span>
               <h1 className="text-sm font-medium">Nova Formalização</h1>
             </div>

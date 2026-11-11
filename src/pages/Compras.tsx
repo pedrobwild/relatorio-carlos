@@ -353,7 +353,7 @@ export default function Compras() {
         <div className="flex items-center gap-2">
           <AssessorSheet
             defaultEventType="purchase_decision"
-            placeholder="Ex: A marmoraria deu prazo de 30 dias para a bancada — vou conseguir instalar antes da marcenaria?"
+            placeholder="Ex: A marmoraria deu prazo de 30 dias para a bancada. Vou conseguir instalar antes da marcenaria?"
           />
         </div>
       </PageHeader>

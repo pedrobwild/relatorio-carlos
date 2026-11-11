@@ -142,7 +142,7 @@ export function logError(
           ? entry.context.component
           : undefined,
         message: entry.error
-          ? `${entry.message} — ${entry.error.message}`
+          ? `${entry.message} – ${entry.error.message}`
           : entry.message,
         errorCode:
           typeof entry.context.errorCode === "string"

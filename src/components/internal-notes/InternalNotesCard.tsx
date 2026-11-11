@@ -451,7 +451,7 @@ export function InternalNotesCard({
       </header>
       {!isCompact && (
         <p className="mt-1 text-xs text-muted-foreground">
-          Contexto para os times de obras e CS — por exemplo, por que a obra
+          Contexto para os times de obras e CS, por exemplo, por que a obra
           está sem atualização. O cliente não vê estas observações.
         </p>
       )}

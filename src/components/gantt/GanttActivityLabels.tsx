@@ -54,7 +54,7 @@ export function GanttActivityLabels({
             {hasDetail && !isDesktop && (
               <Info
                 className="h-3 w-3 text-primary/60 shrink-0"
-                aria-label="Possui descrição detalhada — toque para ver"
+                aria-label="Possui descrição detalhada. Toque para ver"
               />
             )}
             {activity.predecessorIds && activity.predecessorIds.length > 0 && (

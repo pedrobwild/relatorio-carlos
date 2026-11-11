@@ -146,7 +146,7 @@ function MobileProjectRow({
 
         {/* Row 2: Customer + unit */}
         {(project.customer_name || project.unit_name) && (
-          <p className="text-[11px] text-muted-foreground truncate leading-tight">
+          <p className="text-xs text-muted-foreground truncate leading-tight">
             {[project.customer_name, project.unit_name]
               .filter(Boolean)
               .join(" · ")}

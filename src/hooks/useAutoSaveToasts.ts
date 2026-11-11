@@ -40,7 +40,7 @@ export function useAutoSaveToasts({
     if (previous === null || previous === status) return;
 
     if (status === "offline") {
-      toast.warning("Sem conexão — alterações guardadas neste dispositivo", {
+      toast.warning("Sem conexão: alterações guardadas neste dispositivo", {
         id: TOAST_ID,
         description: "Vamos sincronizar sozinho assim que a internet voltar.",
         duration: 6000,

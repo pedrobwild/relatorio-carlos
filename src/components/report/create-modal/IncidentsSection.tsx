@@ -116,7 +116,7 @@ export const IncidentsSection = ({
                     <AlertOctagon className="w-3.5 h-3.5" />
                     Intercorrência #{index + 1}
                   </span>
-                  <Button
+                  <Button aria-label="Remover"
                     type="button"
                     variant="ghost"
                     size="icon"

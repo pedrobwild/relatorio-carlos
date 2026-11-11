@@ -327,7 +327,7 @@ export function ContractImportCard({
         {/* Skip option */}
         {!isSuccess && !isProcessing && (
           <p className="text-[11px] text-muted-foreground text-center">
-            Etapa opcional — você pode preencher todos os dados manualmente
+            Etapa opcional: você pode preencher todos os dados manualmente
           </p>
         )}
       </CardContent>

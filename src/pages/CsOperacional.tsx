@@ -107,7 +107,7 @@ const statusLabel = (s: CsTicketStatus): string =>
   CS_STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s;
 
 const fmtDateTime = (iso: string | null) =>
-  iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "—";
+  iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "–";
 
 // Trigger pílula (mantém affordance de edição, visual semelhante ao StatusBadge)
 const pillTriggerClass = (extra?: string) =>
@@ -182,7 +182,7 @@ export default function CsOperacional() {
     tickets.forEach((t) => {
       const label = t.project_name
         ? t.customer_name
-          ? `${t.project_name} — ${t.customer_name}`
+          ? `${t.project_name} – ${t.customer_name}`
           : t.project_name
         : (t.customer_name ?? "Obra sem nome");
       map.set(t.project_id, label);
@@ -305,7 +305,7 @@ export default function CsOperacional() {
                 }}
                 className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate text-left flex items-center gap-1 group/link min-w-0"
               >
-                <span className="truncate">{t.project_name ?? "—"}</span>
+                <span className="truncate">{t.project_name ?? "–"}</span>
                 <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-100 shrink-0" />
               </button>
               <PinnedInternalNoteIndicator
@@ -573,7 +573,7 @@ export default function CsOperacional() {
       <TooltipProvider delayDuration={150}>
         <PageHeader
           eyebrow="Customer Success"
-          title="CS — Operacional"
+          title="CS · Operacional"
           description="Gestão diária de tickets vinculados às obras: registre situações, severidade, plano de ação e responsável."
           actions={
             <>
@@ -753,7 +753,7 @@ export default function CsOperacional() {
               <AlertDialogDescription>
                 Esta ação não pode ser desfeita. O ticket{" "}
                 <strong>"{deleteTarget?.situation}"</strong> da obra{" "}
-                <strong>{deleteTarget?.project_name ?? "—"}</strong> será
+                <strong>{deleteTarget?.project_name ?? "–"}</strong> será
                 removido permanentemente.
               </AlertDialogDescription>
             </AlertDialogHeader>

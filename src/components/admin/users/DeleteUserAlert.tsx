@@ -22,7 +22,7 @@ export function DeleteUserAlert({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
+        <Button aria-label="Excluir"
           variant="ghost"
           size="icon"
           className="h-11 w-11 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"

@@ -135,7 +135,7 @@ export function WorkQuickPreviewDrawer({
   if (project.status === "paused") {
     blockers.push({
       icon: <AlertTriangle className="h-3.5 w-3.5" />,
-      label: "Obra pausada — aguardando desbloqueio",
+      label: "Obra pausada, aguardando desbloqueio",
       accent: "text-destructive",
     });
   }

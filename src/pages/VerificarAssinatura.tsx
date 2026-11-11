@@ -134,13 +134,13 @@ export default function VerificarAssinatura() {
   }, [hash]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="consent-safe min-h-screen bg-background">
       {/* Header */}
       <header className="bg-background/95 backdrop-blur-sm border-b">
         <div className="mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src={bwildLogo} alt="Bwild" className="h-8" />
+              <img width={1000} height={400} src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
               <span className="text-muted-foreground">|</span>
               <span className="text-sm font-medium">
                 Verificação de Assinatura

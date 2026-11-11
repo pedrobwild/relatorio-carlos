@@ -460,8 +460,7 @@ export function AssistantChat({
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 Pergunte sobre pagamentos, compras, cronogramas, NCs, pendências
-                e atendimento. Eu trago números, insights e próximos passos —
-                sempre respeitando suas permissões.
+                e atendimento. Eu trago números, insights e próximos passos, sempre respeitando suas permissões.
               </p>
             </div>
           )}

@@ -46,7 +46,7 @@ export const JourneyStageCard = forwardRef<
         aria-disabled={isBlocked}
         aria-label={
           isBlocked
-            ? `${stage.name} — Bloqueada`
+            ? `${stage.name} · Bloqueada`
             : journeyCopy.a11y.open_stage.replace("{stageName}", stage.name)
         }
         tabIndex={isBlocked ? -1 : 0}

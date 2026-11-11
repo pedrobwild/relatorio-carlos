@@ -25,6 +25,7 @@ import {
 } from "@/lib/semanaAditivo";
 import type { ContractAmendment } from "@/infra/repositories/contractDeadline.repository";
 import { cn } from "@/lib/utils";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 const STATUS_CLASS: Record<AmendmentStatus, string> = {
   rascunho: "bg-muted text-muted-foreground",
@@ -196,7 +197,7 @@ function EvidencePhotos({ paths }: { paths: string[] }) {
     <div className="mt-2 flex flex-wrap gap-2">
       {urls.map((u, i) => (
         <a key={u.path} href={u.url} target="_blank" rel="noopener noreferrer">
-          <img src={u.url} alt={`Evidência ${i + 1}`} className="h-16 w-16 rounded object-cover" />
+          <img loading="lazy" decoding="async" onError={hideBrokenImage} src={u.url} alt={`Evidência ${i + 1}`} className="h-16 w-16 rounded object-cover" />
         </a>
       ))}
     </div>

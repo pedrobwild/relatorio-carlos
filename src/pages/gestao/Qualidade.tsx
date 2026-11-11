@@ -531,7 +531,7 @@ function TemplateEditorDialog({
                   onChange={(e) => setNewItemText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addItem()}
                 />
-                <Button
+                <Button aria-label="Adicionar item"
                   type="button"
                   variant="outline"
                   onClick={addItem}
@@ -943,7 +943,7 @@ function PunchItemRow({
         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {item.responsible_user_id && (
             <span>
-              Resp.: {staffMap.get(item.responsible_user_id) ?? "—"}
+              Resp.: {staffMap.get(item.responsible_user_id) ?? "–"}
             </span>
           )}
           {item.due_date && (
@@ -1021,7 +1021,7 @@ function PunchItemRow({
             Reabrir
           </Button>
         )}
-        <Button
+        <Button aria-label="Remover"
           size="sm"
           variant="ghost"
           onClick={() => setConfirmDelete(true)}

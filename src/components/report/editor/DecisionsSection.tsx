@@ -44,7 +44,7 @@ const DecisionsSection = ({
               <span className="text-sm font-medium text-muted-foreground">
                 Decisão {index + 1}
               </span>
-              <Button
+              <Button aria-label="Remover"
                 variant="ghost"
                 size="icon"
                 className="min-h-[44px] min-w-[44px] h-11 w-11"

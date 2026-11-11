@@ -30,7 +30,7 @@ describe("PPC", () => {
 
   it("sem nada marcado não tem PPC (não é zero)", () => {
     expect(ppcOf(0, 0)).toBeNull();
-    expect(ppcLabel(null)).toBe("—");
+    expect(ppcLabel(null)).toBe("–");
     expect(ppcLabel(80)).toBe("80%");
   });
 

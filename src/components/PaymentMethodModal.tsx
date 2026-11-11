@@ -272,7 +272,7 @@ export function PaymentMethodModal({
         <DialogHeader>
           <DialogTitle>Forma de Pagamento</DialogTitle>
           <DialogDescription>
-            Parcela #{installmentNumber} — {description}
+            Parcela #{installmentNumber} – {description}
           </DialogDescription>
         </DialogHeader>
 
@@ -444,7 +444,7 @@ export function PaymentMethodModal({
                       <Download className="h-3.5 w-3.5 mr-1" />
                       Baixar
                     </Button>
-                    <Button
+                    <Button aria-label="Remover"
                       type="button"
                       variant="ghost"
                       size="sm"
@@ -499,7 +499,7 @@ export function PaymentMethodModal({
                     Código do boleto (linha digitável)
                   </Label>
                   <span className="text-[10px] text-muted-foreground">
-                    Editável — recalculado ao salvar
+                    Editável, recalculado ao salvar
                   </span>
                 </div>
                 <Input

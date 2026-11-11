@@ -24,7 +24,6 @@ import ServerDivergenceAlert from "./editor/ServerDivergenceAlert";
 import OfflineConflictAlert from "./editor/OfflineConflictAlert";
 import PendingUploadsBanner from "./editor/PendingUploadsBanner";
 import type { useEditorState } from "./editor/useEditorState";
-import { StickyActionBar } from "@/components/mobile/StickyActionBar";
 import { equipeMobileLabels } from "@/content/equipeMobileLabels";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +37,8 @@ interface WeeklyReportStepsMobileProps {
 }
 
 const isVideoUrl = (url: string) => url.includes("video") || url.endsWith(".mp4") || url.endsWith(".mov");
+/** yyyy-mm-dd vira dd/mm; qualquer outro formato aparece como veio. */
+const periodo = (value: string) => (/^\d{4}-\d{2}-\d{2}/.test(value) ? `${value.slice(8, 10)}/${value.slice(5, 7)}` : value);
 const hasMarkup = (text: string) => /<[a-z][\s\S]*>/i.test(text);
 
 const bigButtonClass = cn(
@@ -83,28 +84,30 @@ export default function WeeklyReportStepsMobile({ state, onCancel }: WeeklyRepor
             <ChevronLeft className="h-6 w-6" aria-hidden="true" />
           </button>
         )}
-        <div className={cn("flex min-w-0 flex-1 flex-col", !onCancel && "pl-2")}>
-          <h1 className="text-base font-bold text-foreground">{L.title(formData.weekNumber)}</h1>
-          <span className="truncate text-xs text-muted-foreground">
-            {formData.periodStart} a {formData.periodEnd}
-          </span>
+        <div className={cn("flex min-w-0 flex-1 flex-col py-1.5", !onCancel && "pl-2")}>
+          <h1 className="break-words text-base font-bold leading-tight text-foreground">{L.title(formData.weekNumber)}</h1>
+          {/* Período e estado do salvamento na mesma linha, quebrando em
+              tela estreita em vez de espremer o título. */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+            <span className="text-muted-foreground">
+              {periodo(formData.periodStart)} a {periodo(formData.periodEnd)}
+            </span>
+            <AutoSaveIndicator
+              status={state.isSaving ? "saving" : (state.autoSaveStatus ?? "idle")}
+              lastSaved={state.lastSaved}
+              retryInSeconds={state.retryInSeconds}
+              errorMessage={state.autoSaveError}
+              onRetry={state.retryAutoSave}
+            />
+          </div>
         </div>
-        <span className="shrink-0 text-xs">
-          <AutoSaveIndicator
-            status={state.isSaving ? "saving" : (state.autoSaveStatus ?? "idle")}
-            lastSaved={state.lastSaved}
-            retryInSeconds={state.retryInSeconds}
-            errorMessage={state.autoSaveError}
-            onRetry={state.retryAutoSave}
-          />
-        </span>
       </header>
 
-      <nav aria-label={L.passoDe(step + 1, TOTAL)} className="border-b border-border bg-card px-4 pb-2 pt-3">
+      <nav aria-label={L.passoDe(step + 1, TOTAL)} className="border-b border-border bg-card px-4 pt-2">
         <p className="text-sm font-medium text-foreground">
           {L.passoDe(step + 1, TOTAL)} · {L.passos[step]}
         </p>
-        <ol className="mt-1 grid grid-cols-5 gap-1.5">
+        <ol className="-mt-1.5 grid grid-cols-5 gap-1.5">
           {L.passos.map((nome, i) => (
             <li key={nome}>
               <button
@@ -366,7 +369,12 @@ export default function WeeklyReportStepsMobile({ state, onCancel }: WeeklyRepor
         )}
       </div>
 
-      <StickyActionBar aboveBottomNav className="pb-0">
+      {/* Rodapé fixo acima da barra inferior. `sticky` não serve aqui: o
+          <main> da obra tem overflow próprio e não é quem rola. O espaçador
+          guarda o lugar para o fim do conteúdo não ficar atrás da barra. Com o
+          aviso de consentimento aberto, o rodapé sobe para cima dele. */}
+      <div className="h-[4.5rem]" aria-hidden="true" />
+      <div className="fixed inset-x-0 bottom-[calc(var(--bottom-nav-offset)+var(--consent-banner-offset,0px))] z-docked flex items-center gap-2 border-t border-border bg-card px-safe-4 py-3">
         {step > 0 && (
           <Button
             type="button"
@@ -393,7 +401,7 @@ export default function WeeklyReportStepsMobile({ state, onCancel }: WeeklyRepor
             {state.isSaving ? L.enviar.salvando : L.enviar.salvar}
           </Button>
         )}
-      </StickyActionBar>
+      </div>
     </div>
   );
 }

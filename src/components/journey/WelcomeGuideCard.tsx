@@ -132,7 +132,7 @@ export function WelcomeGuideCard({
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Aqui você acompanha cada etapa do seu projeto com
                   transparência e previsibilidade. O portal reúne prazos,
-                  documentos, aprovações e comunicação com o time — para você
+                  documentos, aprovações e comunicação com o time, para você
                   tomar decisões com segurança e evitar retrabalho.
                 </p>
               </div>

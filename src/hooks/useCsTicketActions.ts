@@ -327,7 +327,7 @@ export function avgActionResolutionMs(
 
 /** Formata duração (ms) em "Xd Yh" / "Yh Zmin" / "Zmin". */
 export function formatDuration(ms: number | null | undefined): string {
-  if (ms == null || !isFinite(ms) || ms < 0) return "—";
+  if (ms == null || !isFinite(ms) || ms < 0) return "–";
   const mins = Math.round(ms / 60000);
   if (mins < 60) return `${mins}min`;
   const hours = Math.floor(mins / 60);

@@ -79,13 +79,13 @@ describe("amendmentDescription", () => {
       titleOf,
     );
     expect(amendmentDescription(c, MON)).toBe(
-      "Semana de 05/10 a 09/10: 4 dias sem execução (05/10, 06/10, 07/10, 08/10) em Passar conduíte, Massa corrida, Rodapé e mais 1 — Condomínio.",
+      "Semana de 05/10 a 09/10: 4 dias sem execução (05/10, 06/10, 07/10, 08/10) em Passar conduíte, Massa corrida, Rodapé e mais 1 – Condomínio.",
     );
   });
 
   it("singular", () => {
     const [c] = amendmentCandidates([nd("1", "2026-10-07", "clima")], titleOf);
-    expect(amendmentDescription(c, MON)).toBe("Semana de 05/10 a 09/10: 1 dia sem execução (07/10) em Passar conduíte — Clima.");
+    expect(amendmentDescription(c, MON)).toBe("Semana de 05/10 a 09/10: 1 dia sem execução (07/10) em Passar conduíte – Clima.");
   });
 });
 

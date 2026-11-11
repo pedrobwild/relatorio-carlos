@@ -68,7 +68,7 @@ export function NetworkStatusBanner() {
               <>
                 <WifiOff className="h-3.5 w-3.5 shrink-0" />
                 <span>
-                  Sem conexão — alterações serão sincronizadas ao reconectar
+                  Sem conexão. Alterações serão sincronizadas ao reconectar
                 </span>
                 <Button
                   variant="ghost"

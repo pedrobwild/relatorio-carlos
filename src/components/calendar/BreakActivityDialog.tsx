@@ -1008,7 +1008,7 @@ function DatePopover({
           )}
           title={
             valueIsBlocked
-              ? `Dia não útil${reason ? ` — ${reason}` : " (fim de semana/feriado)"}`
+              ? `Dia não útil${reason ? ` – ${reason}` : " (fim de semana/feriado)"}`
               : undefined
           }
         >

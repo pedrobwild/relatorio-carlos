@@ -130,7 +130,7 @@ export function ProjectSwitcherSheet({
                 >
                   {STATUS_LABELS[status] ?? status}
                 </Badge>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {projects.length}
                 </span>
               </div>

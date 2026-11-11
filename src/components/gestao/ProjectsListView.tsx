@@ -594,7 +594,7 @@ function ProjectRow({
               );
             })()
           ) : (
-            <span className="text-[10px] text-muted-foreground/40">—</span>
+            <span className="text-[10px] text-muted-foreground/40">–</span>
           )}
         </TableCell>
 
@@ -619,7 +619,7 @@ function ProjectRow({
               </span>
             </div>
           ) : (
-            <span className="text-[10px] text-muted-foreground/40">—</span>
+            <span className="text-[10px] text-muted-foreground/40">–</span>
           )}
         </TableCell>
         <TableCell className="text-center py-2">
@@ -652,7 +652,7 @@ function ProjectRow({
               : null;
             if (daysSinceUpdate === null || !lastActivityDate) {
               return (
-                <span className="text-[10px] text-muted-foreground/40">—</span>
+                <span className="text-[10px] text-muted-foreground/40">–</span>
               );
             }
             let label: string;
@@ -728,7 +728,7 @@ function ProjectRow({
               )}
             </div>
           ) : (
-            <span className="text-[10px] text-muted-foreground/40">—</span>
+            <span className="text-[10px] text-muted-foreground/40">–</span>
           )}
         </TableCell>
 
@@ -826,7 +826,7 @@ function ProjectRow({
         <TableCell className="py-2 px-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
+              <Button aria-label="Mais ações"
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 text-muted-foreground hover:text-foreground"

@@ -394,7 +394,7 @@ export function InspectionDetailDialog({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold text-base">
-            Vistoria —{" "}
+            Vistoria:{" "}
             {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", {
               locale: ptBR,
             })}
@@ -571,7 +571,7 @@ export function InspectionDetailDialog({
           <div className="shrink-0 border-t border-border px-4 py-3 pb-safe bg-card/95 backdrop-blur-md space-y-2">
             {viewMode === "step" && isEditable && items.length > 0 && (
               <div className="flex items-center gap-2">
-                <Button
+                <Button aria-label="Item anterior"
                   variant="outline"
                   size="icon"
                   className="h-11 w-11 shrink-0 touch-manipulation"
@@ -601,7 +601,7 @@ export function InspectionDetailDialog({
                   </Button>
                 )}
 
-                <Button
+                <Button aria-label="Próximo item"
                   variant="outline"
                   size="icon"
                   className="h-11 w-11 shrink-0 touch-manipulation"

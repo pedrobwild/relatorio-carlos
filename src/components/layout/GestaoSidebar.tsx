@@ -241,12 +241,12 @@ export function GestaoSidebar() {
           path: "/gestao/atividades",
         },
         {
-          label: "CS — Operacional",
+          label: "CS · Operacional",
           icon: Headset,
           path: "/gestao/cs/operacional",
         },
         {
-          label: "CS — Analytics",
+          label: "CS · Analytics",
           icon: BarChart3,
           path: "/gestao/cs/analytics",
         },

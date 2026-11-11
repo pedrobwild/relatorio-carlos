@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { AlertTriangle, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePendencias, getStatus } from "@/hooks/usePendencias";
@@ -26,6 +26,12 @@ export function FloatingApprovalBanner({
   const { sortedItems } = usePendencias({ projectId });
   const { paths } = useProjectNavigation();
   const reducedMotion = useReducedMotionSafe();
+  // No detalhe da formalização a barra "Dar ciência" tem prioridade: os dois
+  // ocupariam o mesmo lugar no rodapé do celular.
+  const { pathname } = useLocation();
+  const onFormalizacaoDetail = /^\/obra\/[^/]+\/formalizacoes\/[^/]+\/?$/.test(
+    pathname,
+  );
 
   // Only show for urgent/overdue approval-type items
   const urgentApprovals = sortedItems.filter((item) => {
@@ -35,7 +41,8 @@ export function FloatingApprovalBanner({
     return s === "atrasado" || s === "urgente";
   });
 
-  if (dismissed || urgentApprovals.length === 0) return null;
+  if (dismissed || onFormalizacaoDetail || urgentApprovals.length === 0)
+    return null;
 
   const hasOverdue = urgentApprovals.some(
     (i) => i.dueDate && getStatus(i.dueDate) === "atrasado",

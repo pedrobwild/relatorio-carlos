@@ -79,7 +79,7 @@ export default function AdminAuditoria() {
         <PageContainer maxWidth="full" className="py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button
+              <Button aria-label="Voltar"
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate("/admin")}
@@ -87,7 +87,7 @@ export default function AdminAuditoria() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <img src={bwildLogo} alt="Bwild" className="h-8" />
+              <img width={1000} height={400} src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
               <div>
                 <h1 className="text-lg font-bold flex items-center gap-2">
                   <History className="h-5 w-5" />

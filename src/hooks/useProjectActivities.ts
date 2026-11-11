@@ -252,7 +252,7 @@ export function useProjectActivities(projectId: string | undefined) {
       return true;
     },
     onSuccess: () => {
-      toast.success("Baseline salvo com sucesso!");
+      toast.success("Baseline salvo");
       if (projectId) {
         invalidateActivityQueries(projectId);
       }

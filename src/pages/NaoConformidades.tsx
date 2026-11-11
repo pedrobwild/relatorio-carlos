@@ -80,7 +80,7 @@ export default function NaoConformidades() {
             ))}
           </div>
 
-          <Button
+          <Button aria-label="Buscar"
             variant="ghost"
             size="icon"
             className="md:hidden h-10 w-10"
@@ -90,7 +90,7 @@ export default function NaoConformidades() {
           </Button>
           <AssessorSheet
             defaultEventType="field_problem"
-            placeholder="Ex: Surgiu uma fissura na alvenaria nova após a primeira chuva — como diagnostico a causa-raiz antes de pintar?"
+            placeholder="Ex: Surgiu uma fissura na alvenaria nova após a primeira chuva: como diagnostico a causa-raiz antes de pintar?"
           />
           {can("ncs:create") && (
             <Button

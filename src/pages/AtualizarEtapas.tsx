@@ -62,15 +62,17 @@ function datasLinha(e: Etapa): string {
 
 function EtapaTexto({ e }: { e: Etapa }) {
   return (
-    <div className="flex items-start justify-between gap-2">
+    // Tela estreita: a etiqueta desce para baixo do texto, que fica com a
+    // largura toda (lado a lado ela espremia o nome em três linhas).
+    <div className="flex flex-col gap-1.5 min-[400px]:flex-row min-[400px]:items-start min-[400px]:justify-between min-[400px]:gap-2">
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-base font-semibold text-foreground">
+        <span className="break-words text-base font-semibold text-foreground">
           {e.parentName && <span className="font-normal text-muted-foreground">{e.parentName} › </span>}
           {e.item.description}
         </span>
         <span className="text-sm text-muted-foreground">{datasLinha(e)}</span>
       </div>
-      <span className={cn("shrink-0 whitespace-nowrap rounded-xl px-2.5 py-1 text-xs font-semibold", CHIP_TONE[e.situacao])}>
+      <span className={cn("shrink-0 self-start whitespace-nowrap rounded-xl px-2.5 py-1 text-xs font-semibold", CHIP_TONE[e.situacao])}>
         {chipText(e)}
       </span>
     </div>
@@ -158,7 +160,7 @@ export default function AtualizarEtapas() {
 
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <header className="flex min-h-[60px] items-center gap-1 border-b border-border bg-card pl-2 pr-4">
+      <header className="flex min-h-[52px] items-center gap-1 border-b border-border bg-card pl-2 pr-4">
         <Link
           to={projectId ? `/obra/${projectId}` : "/gestao/painel-obras"}
           aria-label={L.voltar}
@@ -168,7 +170,7 @@ export default function AtualizarEtapas() {
         </Link>
         <div className="flex min-w-0 flex-1 flex-col">
           <h1 className="text-base font-bold text-foreground">{L.title}</h1>
-          {projectName && <span className="truncate text-xs text-muted-foreground">{projectName}</span>}
+          {projectName && <span className="sr-only">{projectName}</span>}
         </div>
         <span role="status" aria-live="polite" className="flex shrink-0 items-center gap-1 text-xs font-semibold">
           {isSaving ? (
@@ -211,12 +213,12 @@ export default function AtualizarEtapas() {
                 <article key={e.item.id} className="flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-3.5">
                   <EtapaTexto e={e} />
                   {canEdit && (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         type="button"
                         variant={e.situacao === "em_andamento" ? "outline" : "default"}
                         className={cn(
-                          "h-12 flex-1 rounded-xl text-[15px] font-semibold",
+                          "h-12 min-w-[9.5rem] flex-1 rounded-xl text-[15px] font-semibold",
                           e.situacao === "em_andamento" && "border-primary text-primary",
                         )}
                         onClick={() => responder(e)}
@@ -226,7 +228,7 @@ export default function AtualizarEtapas() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-12 rounded-xl px-4 text-[15px] font-semibold"
+                        className="h-12 flex-1 rounded-xl px-4 text-[15px] font-semibold min-[360px]:flex-none"
                         onClick={() => abrir(e)}
                       >
                         {L.outraData}

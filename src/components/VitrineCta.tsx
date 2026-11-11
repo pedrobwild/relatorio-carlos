@@ -43,24 +43,38 @@ export function VitrineCta() {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pointer-events-none">
-      <div className="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl border border-border bg-card/95 backdrop-blur px-4 py-3 shadow-xl">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground leading-tight">Gostou do que viu?</p>
-          <p className="text-xs text-muted-foreground leading-tight mt-0.5">Fale com a Bewild e faça o seu.</p>
+    // `bottom-cta`: no celular fica acima da barra inferior (antes ficava por
+    // cima dela). O espaçador reserva o fim da página para o cartão.
+    <>
+      <div className="h-24" aria-hidden="true" />
+      <div className="fixed inset-x-0 bottom-cta z-50 flex justify-center px-3 pb-3 md:pb-[calc(0.75rem+env(safe-area-inset-bottom))] pointer-events-none">
+        <div className="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl border border-border bg-card/95 backdrop-blur px-4 py-3 shadow-xl">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              Gostou do que viu?
+            </p>
+            <p className="text-xs text-muted-foreground leading-tight mt-0.5">
+              Fale com a Bewild e faça o seu.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={openWhats}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90 transition-opacity shrink-0"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Falar no WhatsApp
+          </button>
+          <button
+            type="button"
+            onClick={dismiss}
+            aria-label="Fechar"
+            className="flex h-11 w-9 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={openWhats}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90 transition-opacity shrink-0"
-        >
-          <MessageCircle className="h-4 w-4" />
-          Falar no WhatsApp
-        </button>
-        <button type="button" onClick={dismiss} aria-label="Fechar" className="shrink-0 text-muted-foreground hover:text-foreground p-1">
-          <X className="h-4 w-4" />
-        </button>
       </div>
-    </div>
+    </>
   );
 }

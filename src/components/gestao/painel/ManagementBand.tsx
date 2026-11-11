@@ -107,7 +107,7 @@ export function ManagementBand({ tiles, activeTile, onSelect, isLoading }: Props
                   isZero ? "text-muted-foreground" : styles.value,
                 )}
               >
-                {isLoading ? "—" : t.value}
+                {isLoading ? "–" : t.value}
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground mt-1 truncate">{t.hint}</p>

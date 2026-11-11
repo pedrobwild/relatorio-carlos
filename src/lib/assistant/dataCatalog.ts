@@ -551,7 +551,7 @@ export function renderCatalogPrompt(
       ? `\n  NÃO existem (não invente): ${t.forbiddenColumns.join(", ")}`
       : "";
     blocks.push(
-      `## ${t.table} — ${t.businessName} [${t.domain}]\n  ${t.description}\n  Colunas: ${cols}${rels}${derived}${forbidden}`,
+      `## ${t.table} – ${t.businessName} [${t.domain}]\n  ${t.description}\n  Colunas: ${cols}${rels}${derived}${forbidden}`,
     );
   }
   return blocks.join("\n\n");

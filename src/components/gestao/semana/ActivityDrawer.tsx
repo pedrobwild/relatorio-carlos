@@ -67,7 +67,7 @@ const REASONS = Object.keys(OPS_REASON_LABEL) as OpsBlockReason[];
 const MAT_STATUSES: OpsMaterialStatus[] = ["pendente", "comprado", "na_obra"];
 
 const brl = (v: number | null | undefined) =>
-  v == null ? "—" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  v == null ? "–" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 interface Props {
   activity: OpsActivityView | null;
@@ -514,7 +514,7 @@ export function MaterialsSection({ activityId, projectId, clientActivityId, acti
                         disabled={unlink.isPending}
                         onClick={() =>
                           unlink.mutate(m.id, {
-                            onSuccess: () => toast.success("Compra desvinculada — a situação volta a ser manual"),
+                            onSuccess: () => toast.success("Compra desvinculada: a situação volta a ser manual"),
                             onError: () => toast.error("Não foi possível desvincular."),
                           })
                         }

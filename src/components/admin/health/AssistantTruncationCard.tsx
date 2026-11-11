@@ -57,7 +57,7 @@ export function AssistantTruncationCard() {
           <MessageSquare className="h-4 w-4" />
           Qualidade do assistente (24h)
         </CardTitle>
-        <Button
+        <Button aria-label="Atualizar"
           variant="ghost"
           size="sm"
           onClick={() => void load()}
@@ -103,7 +103,7 @@ export function AssistantTruncationCard() {
               <div>
                 <p className="text-muted-foreground">Tamanho médio</p>
                 <p className="font-medium">
-                  {stats.avg_answer_length ?? "—"} chars
+                  {stats.avg_answer_length ?? "–"} chars
                 </p>
               </div>
             </div>

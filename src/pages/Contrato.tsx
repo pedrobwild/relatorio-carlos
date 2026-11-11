@@ -199,7 +199,7 @@ const Contrato = () => {
                                       Download
                                     </Button>
                                     <DialogClose asChild>
-                                      <Button
+                                      <Button aria-label="Fechar"
                                         variant="ghost"
                                         size="icon"
                                         className="h-8 w-8 rounded-full"
@@ -299,7 +299,7 @@ const Contrato = () => {
                                     Download
                                   </Button>
                                   <DialogClose asChild>
-                                    <Button
+                                    <Button aria-label="Fechar"
                                       variant="ghost"
                                       size="icon"
                                       className="h-8 w-8 rounded-full"

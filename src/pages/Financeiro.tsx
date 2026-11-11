@@ -93,7 +93,7 @@ const Financeiro = () => {
               variant="payments"
               title="Nenhum pagamento programado"
               description="Assim que o cronograma financeiro for definido, as parcelas e boletos aparecerão aqui automaticamente."
-              hint="Fique tranquilo — você será notificado quando houver um pagamento próximo do vencimento."
+              hint="Fique tranquilo: você será notificado quando houver um pagamento próximo do vencimento."
             />
           ) : (
             <>

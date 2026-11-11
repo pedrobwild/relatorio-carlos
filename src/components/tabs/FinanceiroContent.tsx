@@ -104,9 +104,9 @@ const FinanceiroContent = () => {
   };
 
   const formatShortDate = (date: Date | string | null | undefined) => {
-    if (!date) return "—";
+    if (!date) return "–";
     const d = typeof date === "string" ? parseLocal(date) : date;
-    if (isNaN(d.getTime())) return "—";
+    if (isNaN(d.getTime())) return "–";
     return format(d, "dd/MM", { locale: ptBR });
   };
 
@@ -293,7 +293,7 @@ const FinanceiroContent = () => {
                           />
                         )}
                         {isStaff && payment.boleto_path && (
-                          <Button
+                          <Button aria-label="Baixar boleto"
                             variant="ghost"
                             size="sm"
                             className="h-11 min-h-[44px] px-3 text-xs text-muted-foreground hover:text-foreground"

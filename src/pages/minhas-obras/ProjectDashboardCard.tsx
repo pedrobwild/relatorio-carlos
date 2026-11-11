@@ -84,7 +84,7 @@ function deriveNextAction(project: ProjectSummary): {
     };
   }
   return {
-    label: "Tudo em dia — acompanhar evolução",
+    label: "Tudo em dia, acompanhar evolução",
     owner: "bwild",
     tone: "success",
   };

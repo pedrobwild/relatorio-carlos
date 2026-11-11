@@ -148,7 +148,7 @@ function NotificationRow({
             {notification.body}
           </p>
         )}
-        <p className="text-[10px] text-muted-foreground/70 mt-1">
+        <p className="text-xs text-muted-foreground/70 mt-1">
           {formatTime(notification.created_at)}
         </p>
       </div>
@@ -299,7 +299,7 @@ function VirtualNotificationList({
         </div>
       )}
       {showLoadMore && !hasNextPage && items.length > 0 && (
-        <p className="py-4 text-center text-[11px] text-muted-foreground/60">
+        <p className="py-4 text-center text-xs text-muted-foreground/60">
           Você chegou ao fim.
         </p>
       )}

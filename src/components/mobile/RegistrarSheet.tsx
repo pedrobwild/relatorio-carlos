@@ -36,7 +36,7 @@ interface RegistrarSheetProps {
 }
 
 const rowClass = cn(
-  "flex min-h-[68px] w-full items-center gap-3.5 rounded-2xl border border-border bg-card px-4 text-left",
+  "flex min-h-[68px] w-full items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-2 text-left",
   "transition-colors active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 );
 
@@ -147,7 +147,7 @@ export function RegistrarSheet({ open, onOpenChange, projectId }: RegistrarSheet
                       setPicking(false);
                       setQuery("");
                     }}
-                    className="flex min-h-[52px] w-full items-center gap-2 rounded-xl px-3 text-left active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex min-h-[52px] w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-base font-medium text-foreground">{displayName(p)}</span>
@@ -163,11 +163,11 @@ export function RegistrarSheet({ open, onOpenChange, projectId }: RegistrarSheet
           </div>
         ) : (
           <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-5 pb-5">
-            <div className="flex min-h-[56px] items-center gap-3 rounded-2xl bg-muted/60 px-4">
+            <div className="flex min-h-[56px] items-center gap-3 rounded-2xl bg-muted/60 px-4 py-1.5">
               <Building2 className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
               <span className="min-w-0 flex-1">
                 <span className="block text-xs text-muted-foreground">{L.obra}</span>
-                <span className="block truncate text-base font-semibold text-foreground">{displayName(selected)}</span>
+                <span className="line-clamp-2 break-words text-base font-semibold leading-snug text-foreground">{displayName(selected)}</span>
               </span>
               <button
                 type="button"

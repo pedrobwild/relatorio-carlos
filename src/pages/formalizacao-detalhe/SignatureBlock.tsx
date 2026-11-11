@@ -71,28 +71,35 @@ export function MobileSignatureBar({
   onQuickAcknowledge,
 }: MobileSignatureBarProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t shadow-lg sm:hidden animate-fade-in">
-      <div className="flex items-center gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-amber-700">Ciência pendente</p>
-          <p className="text-xs text-muted-foreground truncate">
-            Leia e confirme sua ciência
-          </p>
+    // `bottom-cta`: fica acima da barra inferior do celular (que é fixa e
+    // cobria este botão). O espaçador evita que a barra tape o fim da página.
+    <>
+      <div className="h-20 sm:hidden" aria-hidden="true" />
+      <div className="fixed bottom-cta left-0 right-0 z-docked p-4 bg-background/95 backdrop-blur-sm border-t shadow-lg sm:hidden animate-fade-in">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-amber-700">
+              Ciência pendente
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              Leia e confirme sua ciência
+            </p>
+          </div>
+          <Button
+            onClick={onQuickAcknowledge}
+            disabled={isPending}
+            size="sm"
+            className="shrink-0"
+          >
+            {isPending ? (
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 mr-1.5" />
+            )}
+            Dar ciência
+          </Button>
         </div>
-        <Button
-          onClick={onQuickAcknowledge}
-          disabled={isPending}
-          size="sm"
-          className="shrink-0"
-        >
-          {isPending ? (
-            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-          ) : (
-            <CheckCircle2 className="h-4 w-4 mr-1.5" />
-          )}
-          Dar ciência
-        </Button>
       </div>
-    </div>
+    </>
   );
 }

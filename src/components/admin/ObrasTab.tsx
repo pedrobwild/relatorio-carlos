@@ -315,13 +315,13 @@ export function ObrasTab() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{project.customer_name || "—"}</TableCell>
+                        <TableCell>{project.customer_name || "–"}</TableCell>
                         <TableCell>
                           <span className="text-sm">
                             {project.planned_start_date &&
                             project.planned_end_date
                               ? `${format(parseLocalDate(project.planned_start_date), "dd/MM/yy", { locale: ptBR })} - ${format(parseLocalDate(project.planned_end_date), "dd/MM/yy", { locale: ptBR })}`
-                              : "—"}
+                              : "–"}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -337,14 +337,14 @@ export function ObrasTab() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex items-center justify-end gap-1">
-                            <Button
+                            <Button aria-label="Ver detalhes"
                               variant="ghost"
                               size="icon"
                               onClick={() => navigate(`/obra/${project.id}`)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button
+                            <Button aria-label="Editar obra"
                               variant="ghost"
                               size="icon"
                               onClick={() =>
@@ -355,7 +355,7 @@ export function ObrasTab() {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button
+                                <Button aria-label="Excluir"
                                   variant="ghost"
                                   size="icon"
                                   className="text-destructive hover:text-destructive"

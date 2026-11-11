@@ -104,7 +104,7 @@ export function CsTicketDialog({
   );
 
   const projectLabel = (p: any) =>
-    `${p?.name ?? ""}${p?.customer_name ? ` — ${p.customer_name}` : ""}`.trim();
+    `${p?.name ?? ""}${p?.customer_name ? ` – ${p.customer_name}` : ""}`.trim();
 
   // Reset / hidrata estado ao abrir
   useEffect(() => {
@@ -352,7 +352,7 @@ export function CsTicketDialog({
             <SelectValue placeholder="Sem responsável" />
           </SelectTrigger>
           <SelectContent position="popper" className="max-h-[280px]">
-            <SelectItem value={NONE}>— Sem responsável —</SelectItem>
+            <SelectItem value={NONE}>Sem responsável</SelectItem>
             {staff.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {s.nome}

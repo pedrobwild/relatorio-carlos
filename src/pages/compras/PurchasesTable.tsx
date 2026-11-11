@@ -76,10 +76,10 @@ interface PurchasesTableProps {
 const fmt = (v: number | null) =>
   v != null
     ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-    : "—";
+    : "–";
 
 const fmtDate = (d: string | null) => {
-  if (!d) return "—";
+  if (!d) return "–";
   const parts = d.split("-");
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 };
@@ -408,7 +408,7 @@ function StockTrackingSection({
           >
             {stockDays != null
               ? `${stockDays} dia${stockDays !== 1 ? "s" : ""}`
-              : "—"}
+              : "–"}
           </div>
         </div>
       </div>
@@ -418,7 +418,7 @@ function StockTrackingSection({
           Produto enviado para obra em {fmtDate(purchase.stock_exit_date)}
           {purchase.shipping_cost != null && purchase.shipping_cost > 0 && (
             <span className="text-muted-foreground ml-1">
-              — Frete: {fmt(purchase.shipping_cost)}
+              · Frete: {fmt(purchase.shipping_cost)}
             </span>
           )}
         </div>
@@ -629,7 +629,7 @@ function PurchaseRow({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
+                  <Button aria-label="Mais ações"
                     variant="ghost"
                     size="icon"
                     className="h-9 w-9 sm:h-7 sm:w-7"
@@ -1075,7 +1075,7 @@ function PurchaseRow({
                   </label>
                   <InlineField
                     value={purchase.invoice_number}
-                    placeholder="—"
+                    placeholder="–"
                     className="w-full"
                     onSave={(v) =>
                       onUpdateField(

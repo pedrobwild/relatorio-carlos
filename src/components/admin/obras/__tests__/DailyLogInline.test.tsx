@@ -288,7 +288,7 @@ describe("DailyLogInline — seção unificada Serviços e prestadores", () => {
     // diretamente no preview.
     expect(
       await screen.findByText(
-        /Nenhum serviço ou prestador — toque para adicionar/i,
+        /Nenhum serviço ou prestador\. Toque para adicionar/i,
       ),
     ).toBeInTheDocument();
 

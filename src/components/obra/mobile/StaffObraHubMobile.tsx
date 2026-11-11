@@ -29,7 +29,7 @@ import type { Activity } from "@/types/report";
 const L = equipeMobileLabels.hub;
 
 const actionClass = cn(
-  "flex min-h-[68px] w-full items-center gap-3.5 rounded-2xl border border-border bg-card px-4 text-left",
+  "flex min-h-[68px] w-full items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-2 text-left",
   "transition-colors active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 );
 

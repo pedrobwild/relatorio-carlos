@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   Mail,
 } from "lucide-react";
-import authBg from "@/assets/auth-bg.png";
+import authBg from "@/assets/auth-bg.webp";
 import bwildLogo from "@/assets/bwild-logo-transparent.png";
 import { z } from "zod";
 import { logError, logInfo } from "@/lib/errorLogger";
@@ -317,7 +317,7 @@ export default function PrimeiroAcesso() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 bg-slate-900"
+      className="consent-safe min-h-screen flex items-center justify-center p-4 bg-slate-900"
       style={{
         backgroundImage: `linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.85)), url(${authBg})`,
         backgroundSize: "cover",
@@ -327,7 +327,7 @@ export default function PrimeiroAcesso() {
       <Card className="w-full max-w-md bg-slate-900/80 backdrop-blur-md border-white/10 shadow-2xl">
         <CardContent className="p-8">
           <div className="flex flex-col items-center mb-6">
-            <img src={bwildLogo} alt="BWild" className="h-12 mb-4" />
+            <img width={1000} height={400} src={bwildLogo} alt="BWild" className="h-12 mb-4 w-auto" />
             <h1 className="text-2xl font-semibold text-white text-center">
               {firstName && invite?.status === "valid"
                 ? `Bem-vindo(a), ${firstName}`

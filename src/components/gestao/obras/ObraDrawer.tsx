@@ -261,11 +261,11 @@ export function ObraDrawer({
               <dl className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3">
                 <Fact label="Entrega do contrato">{row.deadline ? ddmmaa(row.deadline) : "Não cadastrada"}</Fact>
                 <Fact label="Folga" tone={slackTone(row.slack)}>
-                  {row.slack == null ? "—" : `${slackLabel(row.slack)} úteis`}
+                  {row.slack == null ? "–" : `${slackLabel(row.slack)} úteis`}
                 </Fact>
                 <Fact label="Término projetado">{row.projectedEnd ? ddmmaa(row.projectedEnd) : "Sem cronograma"}</Fact>
                 <Fact label="Multa se nada mudar" tone={row.penalty ? "text-destructive" : undefined}>
-                  {row.penalty == null ? "—" : formatBRL(row.penalty)}
+                  {row.penalty == null ? "–" : formatBRL(row.penalty)}
                 </Fact>
               </dl>
               {/* Cronograma interno × cliente: só quando as entregas diferem. */}
@@ -344,7 +344,7 @@ export function ObraDrawer({
             <section aria-label="Resultado da obra">
               <dl className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3">
                 <Fact label="Entrega do contrato">{concluida.deadline ? ddmmaa(concluida.deadline) : "Não cadastrada"}</Fact>
-                <Fact label="Entregue em">{concluida.deliveredOn ? ddmmaa(concluida.deliveredOn) : "—"}</Fact>
+                <Fact label="Entregue em">{concluida.deliveredOn ? ddmmaa(concluida.deliveredOn) : "–"}</Fact>
                 <Fact
                   label="Resultado"
                   tone={concluida.resultado === "atrasada" ? "text-destructive" : concluida.resultado === "no_prazo" ? "text-success" : undefined}
@@ -352,7 +352,7 @@ export function ObraDrawer({
                   {resultadoLabel(concluida)}
                 </Fact>
                 <Fact label="Multa" tone={concluida.penalty ? "text-destructive" : undefined}>
-                  {concluida.penalty ? formatBRL(concluida.penalty) : "—"}
+                  {concluida.penalty ? formatBRL(concluida.penalty) : "–"}
                 </Fact>
               </dl>
             </section>
@@ -362,7 +362,7 @@ export function ObraDrawer({
               <dl className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3">
                 <Fact label="Última atualização">{staleLabel(projeto.staleDays)}</Fact>
                 <Fact label="Na etapa atual">
-                  {projeto.daysInEtapa == null ? "—" : `${projeto.daysInEtapa} ${projeto.daysInEtapa === 1 ? "dia" : "dias"}`}
+                  {projeto.daysInEtapa == null ? "–" : `${projeto.daysInEtapa} ${projeto.daysInEtapa === 1 ? "dia" : "dias"}`}
                 </Fact>
               </dl>
             </section>

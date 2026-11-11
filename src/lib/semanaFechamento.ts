@@ -20,7 +20,7 @@ export function ppcOf(done: number, planned: number): number | null {
 }
 
 export function ppcLabel(ppc: number | null): string {
-  return ppc == null ? "—" : `${ppc}%`;
+  return ppc == null ? "–" : `${ppc}%`;
 }
 
 /** "8 de 10 dias feitos" */

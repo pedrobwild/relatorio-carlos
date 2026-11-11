@@ -36,9 +36,9 @@ interface Props {
 }
 
 const fmtDate = (iso: string | null | undefined) =>
-  iso ? format(parseISO(iso), "dd/MM/yyyy (EEE)", { locale: ptBR }) : "—";
+  iso ? format(parseISO(iso), "dd/MM/yyyy (EEE)", { locale: ptBR }) : "–";
 const fmtBRL = (v: number | null | undefined) =>
-  v == null ? "—" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  v == null ? "–" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const toInput = (v: number | null | undefined) => (v == null ? "" : String(v).replace(".", ","));
 
 const HEALTH_CLASS = {

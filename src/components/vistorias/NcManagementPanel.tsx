@@ -250,7 +250,7 @@ export function NcManagementPanel({
           />
         )}
         <div className="ml-auto flex items-center gap-1.5 shrink-0">
-          <Button
+          <Button aria-label="Buscar"
             variant="ghost"
             size="icon"
             className="h-9 w-9 md:hidden"
@@ -290,7 +290,7 @@ export function NcManagementPanel({
                 autoFocus
               />
               {localSearch && (
-                <Button
+                <Button aria-label="Limpar busca"
                   variant="ghost"
                   size="icon"
                   className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"

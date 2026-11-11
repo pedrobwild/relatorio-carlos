@@ -124,7 +124,7 @@ export function JourneyCSMSection({
               Editando informações
             </span>
             <div className="flex gap-2">
-              <Button
+              <Button aria-label="Cancelar"
                 size="icon"
                 variant="ghost"
                 onClick={handleCancel}
@@ -217,7 +217,7 @@ export function JourneyCSMSection({
   return (
     <Card className="relative border-primary/20 bg-gradient-to-br from-background to-muted/30 overflow-hidden">
       {isAdmin && (
-        <Button
+        <Button aria-label="Editar"
           size="icon"
           variant="ghost"
           className="absolute top-3 right-3 md:top-4 md:right-4 h-11 w-11 min-h-[44px] z-10"

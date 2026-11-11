@@ -743,7 +743,7 @@ const Cronograma = () => {
       toast.error("Não foi possível salvar o cronograma", {
         id: AUTOSAVE_ERROR_TOAST_ID,
         description: autosaveBlockedRef.current
-          ? `${result.message} Suas alterações continuam nesta tela — clique em Salvar para tentar de novo.`
+          ? `${result.message} Suas alterações continuam nesta tela. Clique em Salvar para tentar de novo.`
           : result.message,
       });
     }, AUTOSAVE_DEBOUNCE_MS);
@@ -903,7 +903,7 @@ const Cronograma = () => {
             )}
             {autosaveStatus === "saved" && "Salvo automaticamente"}
             {autosaveStatus === "error" &&
-              "Falha ao salvar — tentaremos de novo"}
+              "Falha ao salvar. Tentaremos de novo"}
           </span>
           <AIScheduleGenerator
             projectId={projectId || ""}
@@ -985,7 +985,7 @@ const Cronograma = () => {
           />
           <AssessorSheet
             defaultEventType="schedule_request"
-            placeholder="Ex: A demolição encontrou parede de tijolo maciço — qual o impacto no caminho crítico?"
+            placeholder="Ex: A demolição encontrou parede de tijolo maciço: qual o impacto no caminho crítico?"
           />
           {canEditSchedule && (
           <Button size="sm" onClick={handleSave} disabled={saving}>
@@ -1186,7 +1186,7 @@ const Cronograma = () => {
                         </div>
 
                         <div className="pr-3 py-2 flex justify-center">
-                          <Button
+                          <Button aria-label="Remover"
                             variant="ghost"
                             size="icon"
                             className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
@@ -1253,7 +1253,7 @@ const Cronograma = () => {
                         placeholder="Descrição da atividade..."
                       />
                     </div>
-                    <Button
+                    <Button aria-label="Remover"
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 shrink-0 text-muted-foreground/50 hover:text-destructive"

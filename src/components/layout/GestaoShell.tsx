@@ -47,7 +47,7 @@ export function GestaoShell({ children }: GestaoShellProps) {
             </div>
           </header>
 
-          <main id="main-content" className="pb-bottom-nav">
+          <main id="main-content" className="pb-bottom-nav consent-safe">
             {children}
           </main>
         </div>

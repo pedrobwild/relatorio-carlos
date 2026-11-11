@@ -2,6 +2,7 @@ import { ArrowLeftRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TimelinePhoto } from "@/types/weeklyReport";
 import { PhaseType, phaseConfig } from "./types";
+import { hideBrokenImage } from "@/lib/brokenImage";
 
 interface PhaseImageProps {
   photo?: TimelinePhoto;
@@ -36,7 +37,7 @@ export function PhaseImage({
       onClick={onClick}
       className="relative w-full aspect-[4/3] rounded-lg overflow-hidden group"
     >
-      <img
+      <img loading="lazy" decoding="async" onError={hideBrokenImage}
         src={photo.url}
         alt={photo.caption}
         className="w-full h-full object-cover transition-transform group-hover:scale-105"

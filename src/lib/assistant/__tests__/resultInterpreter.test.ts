@@ -22,7 +22,7 @@ describe("formatters", () => {
 
   it("formats dates as DD/MM/AAAA", () => {
     expect(fmtDateBR("2026-04-30")).toMatch(/30\/04\/2026/);
-    expect(fmtDateBR(null)).toBe("—");
+    expect(fmtDateBR(null)).toBe("–");
   });
 });
 

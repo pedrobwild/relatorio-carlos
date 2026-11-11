@@ -201,7 +201,7 @@ export default function SuprimentosDetalhe() {
 
       {req.status === "pedido_emitido" && (
         <p className="text-xs text-muted-foreground">
-          Pedido já emitido — acompanhe no{" "}
+          Pedido já emitido. Acompanhe no{" "}
           <Link
             to="/gestao/calendario-compras"
             className="text-primary underline"
@@ -414,7 +414,7 @@ function QuotesSection({
   }, [quotes]);
 
   const supplierName = (id: string | null) =>
-    fornecedores.find((f) => f.id === id)?.nome ?? "—";
+    fornecedores.find((f) => f.id === id)?.nome ?? "–";
 
   return (
     <Card>
@@ -492,25 +492,25 @@ function QuotesSection({
                     <dd className="text-right font-medium">
                       {q.valor_total != null
                         ? `R$ ${Number(q.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-                        : "—"}
+                        : "–"}
                     </dd>
                     <dt className="text-muted-foreground">Prazo</dt>
                     <dd className="text-right">
                       {q.prazo_entrega_dias != null
                         ? `${q.prazo_entrega_dias} dias`
-                        : "—"}
+                        : "–"}
                     </dd>
                     <dt className="text-muted-foreground">Frete</dt>
                     <dd className="text-right">
                       {q.frete != null
                         ? `R$ ${Number(q.frete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-                        : "—"}
+                        : "–"}
                     </dd>
                     <dt className="text-muted-foreground">Validade</dt>
                     <dd className="text-right">
                       {q.validade
                         ? format(parseLocalDate(q.validade), "dd/MM/yyyy")
-                        : "—"}
+                        : "–"}
                     </dd>
                   </dl>
                   {q.observacao && (

@@ -30,7 +30,7 @@ interface Props {
 }
 
 function formatDate(iso: string | null) {
-  if (!iso) return "—";
+  if (!iso) return "–";
   try {
     return format(parseISODateLocal(iso), "dd 'de' MMM 'de' yyyy", {
       locale: ptBR,

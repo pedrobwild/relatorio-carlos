@@ -576,11 +576,11 @@ const fmtCompact = (v: number | null) =>
         currency: "BRL",
         maximumFractionDigits: 0,
       })
-    : "—";
+    : "–";
 const fmt = (v: number | null) =>
   v != null
     ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-    : "—";
+    : "–";
 const fmtDiff = (v: number) => {
   const sign = v > 0 ? "+" : v < 0 ? "-" : "";
   const abs = Math.abs(v).toLocaleString("pt-BR", {
@@ -600,13 +600,13 @@ const fmtDiff = (v: number) => {
  * - Retorna"—" para null/undefined/string inválida (defensivo contra dados antigos).
  */
 const fmtRequestedDate = (iso: string | null | undefined): string => {
-  if (!iso) return "—";
+  if (!iso) return "–";
   try {
     const d = parseISO(iso);
-    if (!isValid(d)) return "—";
+    if (!isValid(d)) return "–";
     return format(d, "dd/MM/yyyy", { locale: ptBR });
   } catch {
-    return "—";
+    return "–";
   }
 };
 
@@ -663,7 +663,7 @@ function ActualCostCell({
           onBlur={commit}
           className="h-7 w-24 text-xs px-2"
         />
-        <Button
+        <Button aria-label="Salvar"
           size="icon"
           variant="ghost"
           className="h-6 w-6"
@@ -672,7 +672,7 @@ function ActualCostCell({
         >
           <Check className="h-3 w-3" />
         </Button>
-        <Button
+        <Button aria-label="Cancelar"
           size="icon"
           variant="ghost"
           className="h-6 w-6"
@@ -982,7 +982,7 @@ function NewPurchaseDialog({
     const parts = [proj.address, proj.bairro, proj.cep].filter(
       (s) => !!s && s.trim().length > 0,
     );
-    return parts.join(" —");
+    return parts.join(" –");
   };
 
   /**
@@ -1027,7 +1027,7 @@ function NewPurchaseDialog({
               (s) => !!s && s.trim().length > 0,
             )
           : [];
-        next.delivery_address = parts.join(" —");
+        next.delivery_address = parts.join(" –");
       }
       return next;
     });
@@ -1152,7 +1152,7 @@ function NewPurchaseDialog({
         }
       }
 
-      toast.success("Solicitação criada com sucesso!", {
+      toast.success("Solicitação criada", {
         description: `${form.item_name.trim()} foi adicionada ao calendário de compras.`,
       });
       onCreated();
@@ -1201,7 +1201,7 @@ function NewPurchaseDialog({
                 {projects.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.name}
-                    {p.customer_name ? ` — ${p.customer_name}` : ""}
+                    {p.customer_name ? ` – ${p.customer_name}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1454,7 +1454,7 @@ function NewPurchaseDialog({
                 Endereço de entrega
                 {form.delivery_location === "obra" && !form.project_id && (
                   <span className="ml-1 text-destructive">
-                    — selecione a obra para preencher automaticamente
+                    · selecione a obra para preencher automaticamente
                   </span>
                 )}
                 {form.delivery_location &&
@@ -1468,9 +1468,9 @@ function NewPurchaseDialog({
                 id="delivery_address"
                 placeholder={
                   form.delivery_location === "retirada"
-                    ? "Ex: Rua das Flores, 123 — Apto 45 — Vila Mariana"
+                    ? "Ex: Rua das Flores, 123, Apto 45, Vila Mariana"
                     : form.delivery_location
-                      ? "Endereço preenchido automaticamente — você pode editar se necessário"
+                      ? "Endereço preenchido automaticamente. Você pode editar se necessário"
                       : "Selecione o local acima ou digite o endereço"
                 }
                 value={form.delivery_address}
@@ -1498,15 +1498,15 @@ function NewPurchaseDialog({
                     <span className="font-medium text-foreground/80">
                       Rua, número, complemento, bairro
                     </span>
-                    {""}— ex.:{" "}
+                    {""}, ex.:{" "}
                     <span className="italic">
-                      Av. Paulista, 1578 — Sala 201 — Bela Vista
+                      Av. Paulista, 1578, Sala 201, Bela Vista
                     </span>
                   </p>
                   <datalist id="delivery_address_suggestions">
-                    <option value="Rua , nº — Complemento — Bairro" />
-                    <option value="Av. , nº — Sala — Bairro" />
-                    <option value="Rua Álvaro Rodrigues, 975 — Brooklin" />
+                    <option value="Rua , nº, Complemento, Bairro" />
+                    <option value="Av. , nº, Sala, Bairro" />
+                    <option value="Rua Álvaro Rodrigues, 975, Brooklin" />
                   </datalist>
                 </>
               )}
@@ -1541,7 +1541,7 @@ function NewPurchaseDialog({
               mode="pending"
               pending={pendingFiles}
               onPendingChange={setPendingFiles}
-              helperText="Imagens, PDF, planilhas — até 20 MB cada"
+              helperText="Imagens, PDF, planilhas, até 20 MB cada"
             />
           </div>
         </div>
@@ -2458,7 +2458,7 @@ export default function CalendarioCompras() {
               },
               {
                 label: `Diferença (${itemsWithBoth.length})`,
-                value: itemsWithBoth.length === 0 ? "—" : fmtDiff(totalDiff),
+                value: itemsWithBoth.length === 0 ? "–" : fmtDiff(totalDiff),
                 cls: cn(
                   "text-xl",
                   diffPositive ? "text-emerald-600" : "text-red-600",
@@ -2786,7 +2786,7 @@ export default function CalendarioCompras() {
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <Button
+                  <Button aria-label="Mês anterior"
                     variant="ghost"
                     size="icon"
                     onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -2796,7 +2796,7 @@ export default function CalendarioCompras() {
                   <CardTitle className="capitalize">
                     {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                   </CardTitle>
-                  <Button
+                  <Button aria-label="Próximo mês"
                     variant="ghost"
                     size="icon"
                     onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
@@ -2864,7 +2864,7 @@ export default function CalendarioCompras() {
                                   "text-[10px] leading-tight rounded-sm px-1 py-0.5 truncate border",
                                   cfg.color,
                                 )}
-                                title={`${p.project_name} — ${p.item_name}`}
+                                title={`${p.project_name} – ${p.item_name}`}
                               >
                                 {p.item_name}
                               </div>
@@ -3071,7 +3071,7 @@ export default function CalendarioCompras() {
                                         "Sem cliente vinculado a esta obra"
                                       }
                                     >
-                                      {p.customer_name || "—"}
+                                      {p.customer_name || "–"}
                                     </span>
                                   </TooltipTrigger>
                                   <TooltipContent
@@ -3182,7 +3182,7 @@ export default function CalendarioCompras() {
                                   diff != null && diff < 0 && "text-red-600",
                                 )}
                               >
-                                {diff == null ? "—" : fmtDiff(diff)}
+                                {diff == null ? "–" : fmtDiff(diff)}
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap">
@@ -3445,7 +3445,7 @@ export default function CalendarioCompras() {
                                     diff != null && diff < 0 && "text-red-600",
                                   )}
                                 >
-                                  {diff == null ? "—" : fmtDiff(diff)}
+                                  {diff == null ? "–" : fmtDiff(diff)}
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap">
                                   <div className="inline-flex items-center">

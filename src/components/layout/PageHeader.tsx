@@ -122,7 +122,7 @@ export function PageHeader({
           )}
           {showLogo && (
             <>
-              <img
+              <img width={1000} height={400}
                 src={bwildLogo}
                 alt="Bwild"
                 className="h-8 w-auto shrink-0"
@@ -189,7 +189,7 @@ export function PageHeader({
               </BackWrapper>
             )}
             {showLogo && (
-              <img
+              <img width={1000} height={400}
                 src={bwildLogo}
                 alt="Bwild"
                 className="h-6 w-auto shrink-0"

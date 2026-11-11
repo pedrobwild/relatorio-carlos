@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   HelpCircle,
 } from "lucide-react";
-import authBg from "@/assets/auth-bg.png";
+import authBg from "@/assets/auth-bg.webp";
 import workflowLogo from "@/assets/bwild-workflow-manager.png";
 import { z } from "zod";
 import { buildSupportWhatsappUrl } from "@/config/contact";
@@ -278,12 +278,12 @@ export default function Auth() {
 
   return (
     <div
-      className="min-h-[100dvh] flex relative bg-cover bg-center bg-no-repeat"
+      className="consent-safe min-h-[100dvh] flex relative bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${authBg})` }}
     >
       {/* Form – centered on mobile, left on desktop */}
-      <div className="flex flex-col justify-center items-stretch w-full md:max-w-lg px-5 sm:px-12 md:px-16 py-10 sm:py-16 safe-area-top safe-area-bottom mx-auto md:mx-0">
-        <div className="w-full max-w-[220px] sm:max-w-[280px] md:max-w-[340px] lg:max-w-[380px] mx-auto md:mx-0 mb-8 sm:mb-10 self-center md:self-start">
+      <div className="flex flex-col justify-center items-stretch w-full md:max-w-lg px-5 sm:px-12 md:px-16 py-10 sm:py-16 [@media(max-height:700px)]:py-4 safe-area-top safe-area-bottom mx-auto md:mx-0">
+        <div className="w-full max-w-[220px] sm:max-w-[280px] md:max-w-[340px] lg:max-w-[380px] mx-auto md:mx-0 mb-8 sm:mb-10 [@media(max-height:700px)]:mb-4 [@media(max-height:700px)]:max-w-[150px] self-center md:self-start">
           <img
             src={workflowLogo}
             alt="Bwild Workflow Manager"
@@ -318,7 +318,7 @@ export default function Auth() {
 
         <form
           onSubmit={handleLogin}
-          className="space-y-6 w-full"
+          className="space-y-6 [@media(max-height:700px)]:space-y-3 w-full"
           data-testid="login-form"
           noValidate
         >

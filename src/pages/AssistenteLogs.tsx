@@ -230,7 +230,7 @@ export default function AssistenteLogs() {
     // Cabeçalho
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("Relatório de Auditoria — Assistente IA", 40, 40);
+    doc.text("Relatório de Auditoria · Assistente IA", 40, 40);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100);
@@ -260,10 +260,10 @@ export default function AssistenteLogs() {
         new Date(l.created_at).toLocaleString("pt-BR"),
         userMap[l.user_id] ?? l.user_id.slice(0, 8),
         l.question,
-        l.domain ?? "—",
+        l.domain ?? "–",
         STATUS_LABELS[l.status]?.label ?? l.status,
-        String(l.rows_returned ?? "—"),
-        l.latency_ms ? `${l.latency_ms}ms` : "—",
+        String(l.rows_returned ?? "–"),
+        l.latency_ms ? `${l.latency_ms}ms` : "–",
         ((l.tokens_input ?? 0) + (l.tokens_output ?? 0)).toLocaleString(
           "pt-BR",
         ),
@@ -489,7 +489,7 @@ export default function AssistenteLogs() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right text-xs">
-                          {l.rows_returned ?? "—"}
+                          {l.rows_returned ?? "–"}
                         </TableCell>
                         <TableCell
                           className={cn(
@@ -497,7 +497,7 @@ export default function AssistenteLogs() {
                             (l.latency_ms ?? 0) > 5000 && "text-destructive",
                           )}
                         >
-                          {l.latency_ms ? `${l.latency_ms}ms` : "—"}
+                          {l.latency_ms ? `${l.latency_ms}ms` : "–"}
                         </TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground">
                           {(
