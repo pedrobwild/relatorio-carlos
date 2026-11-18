@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_invites: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          token_hash: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          token_hash: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       activity_progress_measurements: {
         Row: {
           activity_id: string
@@ -8767,19 +8797,6 @@ export type Database = {
       }
     }
     Functions: {
-      create_access_invite: { Args: { _user_id: string }; Returns: string }
-      get_access_invite: {
-        Args: { _token: string }
-        Returns: {
-          display_name: string | null
-          email: string | null
-          status: string
-        }[]
-      }
-      redeem_access_invite: {
-        Args: { _password: string; _token: string }
-        Returns: string
-      }
       _copy_client_schedule_to_internal: {
         Args: {
           p_only_if_following?: boolean
@@ -8848,6 +8865,7 @@ export type Database = {
         Args: { p_from: string; p_project_id: string; p_to: string }
         Returns: number
       }
+      create_access_invite: { Args: { _user_id: string }; Returns: string }
       create_inspection_with_items: {
         Args: {
           p_activity_id?: string
@@ -8905,6 +8923,14 @@ export type Database = {
       generate_file_storage_path: {
         Args: { p_filename: string; p_org_id: string; p_project_id: string }
         Returns: string
+      }
+      get_access_invite: {
+        Args: { _token: string }
+        Returns: {
+          display_name: string
+          email: string
+          status: string
+        }[]
       }
       get_effective_role: { Args: { p_obra_id: string }; Returns: string }
       get_formalization_complete: {
@@ -9229,6 +9255,10 @@ export type Database = {
       recompute_schedule_purchase: {
         Args: { p_purchase_id: string }
         Returns: undefined
+      }
+      redeem_access_invite: {
+        Args: { _password: string; _token: string }
+        Returns: string
       }
       reorder_project_activities: {
         Args: { p_ordered_ids: string[]; p_project_id: string }
