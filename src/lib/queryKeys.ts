@@ -99,6 +99,16 @@ export const queryKeys = {
   },
 
   // ============================================================================
+  // Bwild Compras (cópia somente leitura + vínculo de obra)
+  // ============================================================================
+  comprasSync: {
+    all: ["compras-sync"] as const,
+    vinculos: () => [...queryKeys.comprasSync.all, "vinculos"] as const,
+    ultimaExecucao: () => [...queryKeys.comprasSync.all, "ultima-execucao"] as const,
+    obras: () => [...queryKeys.comprasSync.all, "obras-workflow"] as const,
+  },
+
+  // ============================================================================
   // Pending Items
   // ============================================================================
   pendingItems: {

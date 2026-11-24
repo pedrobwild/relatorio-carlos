@@ -36,6 +36,9 @@ export type Feature =
   | "purchases:edit"
   | "purchases:delete"
   | "purchases:view"
+  // Bwild Compras: dizer de qual obra do Workflow é cada obra do Compras.
+  // Mesma regra do banco (compras_pode_conciliar).
+  | "compras:conciliar"
   // Payments
   | "payments:upload_boleto"
   | "payments:mark_paid"
@@ -192,6 +195,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "purchases:edit",
     "purchases:delete",
     "purchases:view",
+    "compras:conciliar",
     "payments:upload_boleto",
     "payments:mark_paid",
     "payments:view",
@@ -251,6 +255,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "purchases:edit",
     "purchases:delete",
     "purchases:view",
+    "compras:conciliar",
     "payments:upload_boleto",
     "payments:mark_paid",
     "payments:view",
@@ -312,6 +317,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "purchases:edit",
     "purchases:delete",
     "purchases:view",
+    "compras:conciliar",
     "payments:upload_boleto",
     "payments:mark_paid",
     "payments:view",
@@ -359,6 +365,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     "purchases:create",
     "purchases:edit",
     "purchases:view",
+    "compras:conciliar",
     "payments:view",
     "journey:view",
     "projects:view",

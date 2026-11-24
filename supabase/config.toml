@@ -66,6 +66,9 @@ verify_jwt = false
 [functions.sync-project-inbound]
 verify_jwt = false
 
+[functions.sync-compras-pull]
+verify_jwt = false
+
 [functions.assistant-chat]
 verify_jwt = true
 

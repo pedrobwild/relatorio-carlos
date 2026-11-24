@@ -5,6 +5,7 @@ import {
   CalendarDays,
   Settings,
   Truck,
+  Link2,
   Receipt,
   AlertTriangle,
   ClipboardList,
@@ -274,6 +275,11 @@ export function GestaoSidebar() {
           label: "Calendário de Compras",
           icon: CalendarDays,
           path: "/gestao/calendario-compras",
+        },
+        {
+          label: "Obras do Compras",
+          icon: Link2,
+          path: "/gestao/compras-obras",
         },
         {
           label: "Suprimentos",

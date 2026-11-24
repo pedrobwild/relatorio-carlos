@@ -132,3 +132,11 @@ export type {
   ProjectPhaseStepKey,
   SaveProjectPhaseStepInput,
 } from "./projectPhase.repository";
+
+export { comprasSyncRepo } from "./comprasSync.repository";
+export type {
+  ComprasObraVinculo,
+  ComprasVinculoStatus,
+  ComprasSyncExecucao,
+  ObraWorkflowOpcao,
+} from "./comprasSync.repository";
