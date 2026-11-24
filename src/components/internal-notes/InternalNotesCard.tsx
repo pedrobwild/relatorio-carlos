@@ -9,8 +9,9 @@
  * a RLS do banco (`is_staff()`) garante o sigilo mesmo fora da interface.
  * Fica FORA do `reportRef` do Index — não pode entrar no PDF do relatório.
  */
-import { useState, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import {
+  AtSign,
   Loader2,
   Lock,
   MoreHorizontal,
@@ -28,6 +29,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { useProjectNoteMentions, useSetNoteMentions } from "@/hooks/useInternalNoteMentions";
+import { MAX_MENTIONS_PER_NOTE, type InternalNoteMention } from "@/infra/repositories/internalNoteMentions.repository";
+import { gatilhoDeMencao, inserirMencao } from "@/lib/mencoes";
+import { MentionPicker, type MentionPerson } from "./MentionPicker";
+import { NoteMentions } from "./NoteMentions";
 import {
   Select,
   SelectContent,
@@ -155,6 +161,9 @@ interface NoteItemProps {
   onTogglePin: () => void;
   onDelete: () => void;
   onSaveEdit: (body: string, category: InternalNoteCategory) => Promise<void>;
+  /** Pessoas marcadas nesta observação (abertas e resolvidas). */
+  mentions: InternalNoteMention[];
+  currentUserId?: string | null;
 }
 
 function NoteItem({
@@ -167,6 +176,8 @@ function NoteItem({
   onTogglePin,
   onDelete,
   onSaveEdit,
+  mentions,
+  currentUserId,
 }: NoteItemProps) {
   const [draft, setDraft] = useState(note.body);
   const [draftCategory, setDraftCategory] = useState<InternalNoteCategory>(
@@ -328,6 +339,7 @@ function NoteItem({
             {note.body}
           </p>
         )}
+        <NoteMentions mentions={mentions} currentUserId={currentUserId} noteBody={note.body} />
       </div>
     </li>
   );
@@ -362,6 +374,14 @@ export function InternalNotesCard({
   const [toDelete, setToDelete] = useState<ProjectInternalNote | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  // Menções: quem está marcado na observação que está sendo escrita.
+  const { byNote: mentionsByNote } = useProjectNoteMentions(projectId);
+  const setMentions = useSetNoteMentions();
+  const [marcados, setMarcados] = useState<MentionPerson[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState("");
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+
   if (!canView) return null;
 
   const isCompact = variant === "compact";
@@ -384,17 +404,44 @@ export function InternalNotesCard({
 
   const submit = () => {
     if (!body.trim() || createNote.isPending) return;
+    // Só vale a marcação cujo @Nome continua no texto.
+    const userIds = marcados.filter((p) => body.includes(`@${p.nome}`)).map((p) => p.id);
     createNote.mutate(
       { projectId, body, category, pin },
       {
-        onSuccess: () => {
+        onSuccess: (note) => {
           setBody("");
           setCategory(DEFAULT_CATEGORY);
           setPin(true);
+          setMarcados([]);
+          if (note?.id && userIds.length > 0) setMentions.mutate({ noteId: note.id, userIds });
         },
       },
     );
   };
+
+  // Digitar @ abre a lista da equipe, já filtrada pelo que vier depois.
+  const handleBodyChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const texto = e.target.value;
+    setBody(texto);
+    const trecho = gatilhoDeMencao(texto, e.target.selectionStart ?? texto.length);
+    if (trecho !== null && texto.length > body.length && marcados.length < MAX_MENTIONS_PER_NOTE) {
+      setPickerQuery(trecho);
+      setPickerOpen(true);
+    }
+  };
+
+  const handlePick = (person: MentionPerson) => {
+    const cursor = composerRef.current?.selectionStart ?? body.length;
+    if (!body.includes(`@${person.nome}`)) {
+      setBody(inserirMencao(body, cursor, person.nome).texto.slice(0, INTERNAL_NOTE_MAX_LENGTH));
+    }
+    setMarcados((prev) => (prev.some((p) => p.id === person.id) ? prev : [...prev, person]));
+    setPickerOpen(false);
+    requestAnimationFrame(() => composerRef.current?.focus());
+  };
+
+  const marcadosNoTexto = marcados.filter((p) => body.includes(`@${p.nome}`));
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -414,6 +461,8 @@ export function InternalNotesCard({
       onEditingChange={(next) => setEditingId(next ? note.id : null)}
       onTogglePin={() => setPinned.mutate({ id: note.id, pinned: !note.is_pinned })}
       onDelete={() => setToDelete(note)}
+      mentions={mentionsByNote.get(note.id) ?? []}
+      currentUserId={user?.id}
       onSaveEdit={async (nextBody, nextCategory) => {
         await updateNote.mutateAsync({
           id: note.id,
@@ -463,8 +512,9 @@ export function InternalNotesCard({
           </Label>
           <Textarea
             id={composerId}
+            ref={composerRef}
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            onChange={handleBodyChange}
             onKeyDown={handleKeyDown}
             rows={2}
             maxLength={INTERNAL_NOTE_MAX_LENGTH}
@@ -472,6 +522,27 @@ export function InternalNotesCard({
             className="resize-none text-sm"
             disabled={createNote.isPending}
           />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-[44px] sm:min-h-9"
+              onClick={() => {
+                setPickerQuery("");
+                setPickerOpen(true);
+              }}
+              disabled={createNote.isPending || marcados.length >= MAX_MENTIONS_PER_NOTE}
+            >
+              <AtSign className="h-4 w-4 mr-1.5" />
+              Marcar alguém
+            </Button>
+            {marcadosNoTexto.length > 0 && (
+              <span className="text-xs text-muted-foreground">
+                Avisa: {marcadosNoTexto.map((p) => p.nome).join(", ")}
+              </span>
+            )}
+          </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <CategorySelect
               value={category}
@@ -563,6 +634,15 @@ export function InternalNotesCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <MentionPicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        initialQuery={pickerQuery}
+        selectedIds={marcadosNoTexto.map((p) => p.id)}
+        excludeId={user?.id}
+        onPick={handlePick}
+      />
     </section>
   );
 }

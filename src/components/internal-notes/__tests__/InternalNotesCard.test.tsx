@@ -20,7 +20,17 @@ vi.mock("@/hooks/useProjectInternalNotes", () => ({
   useDeleteInternalNote: vi.fn(),
 }));
 
+vi.mock("@/hooks/useInternalNoteMentions", () => ({
+  useProjectNoteMentions: vi.fn(),
+  useSetNoteMentions: vi.fn(),
+  useResolveMention: vi.fn(),
+}));
+vi.mock("@/hooks/useStaffUsers", () => ({ useStaffUsers: vi.fn() }));
+
 import { InternalNotesCard } from "@/components/internal-notes/InternalNotesCard";
+import { useProjectNoteMentions, useResolveMention, useSetNoteMentions } from "@/hooks/useInternalNoteMentions";
+import { useStaffUsers } from "@/hooks/useStaffUsers";
+import type { InternalNoteMention } from "@/infra/repositories/internalNoteMentions.repository";
 import { useUserRole, type AppRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -37,6 +47,31 @@ const mockedNotes = vi.mocked(useProjectInternalNotes);
 
 const createMutate = vi.fn();
 const pinMutate = vi.fn();
+const setMentionsMutate = vi.fn();
+const resolveMutate = vi.fn();
+
+const mention = (over: Partial<InternalNoteMention> = {}): InternalNoteMention => ({
+  id: "m1",
+  note_id: "n-old",
+  project_id: "p1",
+  mentioned_user_id: "u-me",
+  mentioned_name: "Carla CS",
+  requested_by: "u-outro",
+  requested_by_name: "Bruno Obras",
+  created_at: "2026-10-05T10:00:00Z",
+  resolved_at: null,
+  resolved_by: null,
+  resolved_by_name: null,
+  resolution_note: null,
+  archived_at: null,
+  ...over,
+});
+
+const withMentions = (list: InternalNoteMention[]) => {
+  const byNote = new Map<string, InternalNoteMention[]>();
+  for (const m of list) byNote.set(m.note_id, [...(byNote.get(m.note_id) ?? []), m]);
+  vi.mocked(useProjectNoteMentions).mockReturnValue({ byNote, isLoading: false });
+};
 
 const mutationState = (mutate = vi.fn()) =>
   ({ mutate, mutateAsync: vi.fn(), isPending: false }) as never;
@@ -93,6 +128,18 @@ describe("InternalNotesCard", () => {
     vi.mocked(useUpdateInternalNote).mockReturnValue(mutationState());
     vi.mocked(useSetInternalNotePinned).mockReturnValue(mutationState(pinMutate));
     vi.mocked(useDeleteInternalNote).mockReturnValue(mutationState());
+    withMentions([]);
+    vi.mocked(useSetNoteMentions).mockReturnValue(mutationState(setMentionsMutate));
+    vi.mocked(useResolveMention).mockReturnValue(mutationState(resolveMutate));
+    vi.mocked(useStaffUsers).mockReturnValue({
+      data: [
+        { id: "u-me", nome: "Carla CS", email: "carla@b", perfil: "cs" },
+        { id: "u-sergio", nome: "Sérgio Lima", email: "sergio@b", perfil: "suprimentos" },
+        { id: "u-bia", nome: "Bia Souza", email: "bia@b", perfil: "engineer" },
+      ],
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useStaffUsers>);
   });
 
   it("não renderiza nada para o cliente", () => {
@@ -250,5 +297,101 @@ describe("InternalNotesCard", () => {
     expect(
       screen.getByText("Nenhuma observação interna registrada."),
     ).toBeInTheDocument();
+  });
+
+  describe("menções", () => {
+    it("marca alguém da equipe pela lista e avisa depois de registrar", async () => {
+      const user = userEvent.setup();
+      render(<InternalNotesCard projectId="p1" />);
+
+      await user.click(screen.getByRole("button", { name: /Marcar alguém/ }));
+      const lista = await screen.findByRole("dialog");
+      // Quem escreve não marca a si mesmo.
+      expect(within(lista).queryByRole("button", { name: "Carla CS" })).not.toBeInTheDocument();
+      await user.type(within(lista).getByLabelText("Buscar pessoa da equipe"), "sergio");
+      expect(within(lista).queryByRole("button", { name: "Bia Souza" })).not.toBeInTheDocument();
+      await user.click(within(lista).getByRole("button", { name: "Sérgio Lima" }));
+
+      const campo = screen.getByLabelText("Nova observação interna") as HTMLTextAreaElement;
+      expect(campo.value).toBe("@Sérgio Lima ");
+      expect(screen.getByText("Avisa: Sérgio Lima")).toBeInTheDocument();
+
+      await user.type(campo, "falta o porcelanato");
+      await user.click(screen.getByRole("button", { name: /Registrar/ }));
+
+      expect(createMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ projectId: "p1", body: "@Sérgio Lima falta o porcelanato" }),
+        expect.anything(),
+      );
+      // Só marca depois que a observação existe.
+      expect(setMentionsMutate).not.toHaveBeenCalled();
+      createMutate.mock.calls[0][1].onSuccess({ id: "n-nova" });
+      expect(setMentionsMutate).toHaveBeenCalledWith({ noteId: "n-nova", userIds: ["u-sergio"] });
+    });
+
+    it("digitar @ abre a lista já filtrada", async () => {
+      const user = userEvent.setup();
+      render(<InternalNotesCard projectId="p1" />);
+      await user.type(screen.getByLabelText("Nova observação interna"), "Obra parada @");
+      const lista = await screen.findByRole("dialog");
+      await user.click(within(lista).getByRole("button", { name: "Bia Souza" }));
+      expect((screen.getByLabelText("Nova observação interna") as HTMLTextAreaElement).value).toBe(
+        "Obra parada @Bia Souza ",
+      );
+    });
+
+    it("apagar o @Nome do texto desfaz a marcação", async () => {
+      const user = userEvent.setup();
+      render(<InternalNotesCard projectId="p1" />);
+      await user.click(screen.getByRole("button", { name: /Marcar alguém/ }));
+      await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Sérgio Lima" }));
+      const campo = screen.getByLabelText("Nova observação interna");
+      await user.clear(campo);
+      await user.type(campo, "sem marcação");
+      await user.click(screen.getByRole("button", { name: /Registrar/ }));
+      createMutate.mock.calls[0][1].onSuccess({ id: "n-nova" });
+      expect(setMentionsMutate).not.toHaveBeenCalled();
+    });
+
+    it("quem foi marcado vê a pendência atrasada e resolve com resposta", async () => {
+      const user = userEvent.setup();
+      withMentions([mention()]);
+      render(<InternalNotesCard projectId="p1" />);
+
+      expect(screen.getByText(/Atrasada · aberta/)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Resolver" }));
+      const gaveta = await screen.findByRole("dialog");
+      expect(within(gaveta).getByText("Vistoria remarcada.")).toBeInTheDocument();
+      await user.type(within(gaveta).getByLabelText("Resposta (opcional)"), "Remarcada para sexta.");
+      await user.click(within(gaveta).getByRole("button", { name: "Marcar como resolvida" }));
+
+      expect(resolveMutate).toHaveBeenCalledWith(
+        { mentionId: "m1", resposta: "Remarcada para sexta." },
+        expect.anything(),
+      );
+    });
+
+    it("quem não foi marcado não vê o botão Resolver", () => {
+      withMentions([mention({ mentioned_user_id: "u-sergio", mentioned_name: "Sérgio Lima" })]);
+      render(<InternalNotesCard projectId="p1" />);
+      expect(screen.getByText("Sérgio Lima")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Resolver" })).not.toBeInTheDocument();
+    });
+
+    it("mostra quem resolveu, quando e a resposta", () => {
+      withMentions([
+        mention({
+          mentioned_user_id: "u-sergio",
+          mentioned_name: "Sérgio Lima",
+          resolved_at: "2026-10-06T14:00:00Z",
+          resolved_by: "u-sergio",
+          resolved_by_name: "Sérgio Lima",
+          resolution_note: "Chega quinta.",
+        }),
+      ]);
+      render(<InternalNotesCard projectId="p1" />);
+      expect(screen.getByText(/Resolvida por Sérgio Lima em .*: Chega quinta\./)).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Resolver" })).not.toBeInTheDocument();
+    });
   });
 });
