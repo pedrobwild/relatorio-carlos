@@ -142,6 +142,11 @@ export function GestaoSidebar() {
           path: "/gestao/hoje",
         },
         {
+          label: "Diário de obra",
+          icon: ClipboardEdit,
+          path: "/gestao/diario",
+        },
+        {
           label: "Semana",
           icon: CalendarRange,
           path: "/gestao/semana",

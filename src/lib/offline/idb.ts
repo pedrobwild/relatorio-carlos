@@ -6,7 +6,9 @@
  *  - `ops-outcomes` — Feito / Não feito / desfazer ainda não enviados
  *    (outcomeOutbox);
  *  - `report-photo-inbox` — fotos tiradas fora do relatório da semana, à
- *    espera de entrar nele (reportPhotoInbox).
+ *    espera de entrar nele (reportPhotoInbox);
+ *  - `diario-outbox` — relatos do Diário de obra ainda não enviados, com as
+ *    fotos (diarioOutbox).
  *
  * É separado do cache das consultas (localStorage) de propósito: aquele cache
  * pode ser descartado a qualquer momento (24 h, versão nova, cota cheia) e o
@@ -14,13 +16,14 @@
  */
 
 const DB_NAME = "bwild-offline";
-/** v1: ops-photos. v2: + ops-outcomes. v3: + report-photo-inbox. */
-const DB_VERSION = 3;
+/** v1: ops-photos. v2: + ops-outcomes. v3: + report-photo-inbox. v4: + diario-outbox. */
+const DB_VERSION = 4;
 
 export const IDB_STORES = {
   photos: "ops-photos",
   outcomes: "ops-outcomes",
   reportInbox: "report-photo-inbox",
+  diario: "diario-outbox",
 } as const;
 
 export type IdbStoreName = (typeof IDB_STORES)[keyof typeof IDB_STORES];

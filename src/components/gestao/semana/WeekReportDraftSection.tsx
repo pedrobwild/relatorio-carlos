@@ -3,7 +3,7 @@
  * semana (Fase 6), por etapa: o que foi feito e o que vem na próxima semana.
  *
  * Só para COPIAR. Não grava em `weekly_reports`: uma linha ali fica visível ao
- * cliente sozinha no dia seguinte ao fim da semana, às 20h. O relatório
+ * cliente sozinha na sexta em que a semana fecha, às 18h. O relatório
  * continua sendo publicado pela tela de relatórios, revisado por gente.
  */
 import { useMemo, useState } from "react";

@@ -139,3 +139,13 @@ export {
   MAX_MENTIONS_PER_NOTE,
 } from "./internalNoteMentions.repository";
 export type { InternalNoteMention, OpenInternalNoteMention } from "./internalNoteMentions.repository";
+export { diarioObraRepo } from "./diarioObra.repository";
+export type {
+  DiarioObraOption,
+  DiarioEtapaRow,
+  DiarioRelatoRow,
+  DiarioPessoa,
+  DiarioFornecedor,
+  DiarioItemMaterial,
+  DiarioEnvioResult,
+} from "./diarioObra.repository";

@@ -440,6 +440,19 @@ export const queryKeys = {
   // ============================================================================
   // Camada de Operação (Fase 2) — staff-only, nunca exposta ao cliente
   // ============================================================================
+  /** Diário de obra (relatório de campo diário). */
+  diarioObra: {
+    all: ["diario-obra"] as const,
+    obras: () => [...queryKeys.diarioObra.all, "obras"] as const,
+    etapas: (projectId: string | null | undefined) => [...queryKeys.diarioObra.all, "etapas", projectId] as const,
+    relatos: (projectId: string | null | undefined) => [...queryKeys.diarioObra.all, "relatos", projectId] as const,
+    equipe: (projectId: string | null | undefined) => [...queryKeys.diarioObra.all, "equipe", projectId] as const,
+    itensMaterial: (projectId: string | null | undefined) =>
+      [...queryKeys.diarioObra.all, "itens-material", projectId] as const,
+    fornecedores: (termo: string) => [...queryKeys.diarioObra.all, "fornecedores", termo] as const,
+    fotos: (paths: readonly string[]) => [...queryKeys.diarioObra.all, "fotos", [...paths].sort().join(",")] as const,
+  },
+
   ops: {
     all: ["ops"] as const,
     activities: (projectId: string | undefined) =>
