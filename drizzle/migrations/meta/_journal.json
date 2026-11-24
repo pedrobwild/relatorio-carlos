@@ -85,6 +85,13 @@
       "when": 1795544441612,
       "tag": "0011_diario_obra_so_leitura",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795547278242,
+      "tag": "0012_project_templates_staff_only_read",
+      "breakpoints": true
     }
   ]
 }
