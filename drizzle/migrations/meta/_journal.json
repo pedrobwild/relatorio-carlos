@@ -57,6 +57,27 @@
       "when": 1795543787595,
       "tag": "0007_weekly_reports_liberacao_sexta_18h",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795544151008,
+      "tag": "0008_weekly_reports_aviso_na_liberacao",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795544163587,
+      "tag": "0009_notification_type_internal_mention",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795544216283,
+      "tag": "0010_project_internal_note_mentions",
+      "breakpoints": true
     }
   ]
 }

@@ -6343,6 +6343,83 @@ export type Database = {
           },
         ]
       }
+      project_internal_note_mentions: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          mentioned_name: string
+          mentioned_user_id: string
+          note_id: string
+          project_id: string
+          requested_by: string
+          requested_by_name: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          resolved_by_name: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          mentioned_name?: string
+          mentioned_user_id: string
+          note_id: string
+          project_id: string
+          requested_by: string
+          requested_by_name?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_by_name?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          mentioned_name?: string
+          mentioned_user_id?: string
+          note_id?: string
+          project_id?: string
+          requested_by?: string
+          requested_by_name?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_by_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_internal_note_mentions_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "project_internal_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_internal_note_mentions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_internal_note_mentions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_internal_note_mentions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_deadlines"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       project_internal_notes: {
         Row: {
           author_id: string
@@ -8595,6 +8672,32 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_report_release_notices: {
+        Row: {
+          notified_at: string
+          recipients: number
+          report_id: string
+        }
+        Insert: {
+          notified_at?: string
+          recipients?: number
+          report_id: string
+        }
+        Update: {
+          notified_at?: string
+          recipients?: number
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_report_release_notices_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: true
+            referencedRelation: "weekly_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_report_versions: {
         Row: {
           created_at: string
@@ -9562,6 +9665,10 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: undefined
       }
+      internal_staff_display_name: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       is_admin_v2: { Args: never; Returns: boolean }
       is_business_day: {
         Args: { p_day: string; p_extra?: string[] }
@@ -9652,6 +9759,30 @@ export type Database = {
         Args: { p_project_id: string; p_rows: Json }
         Returns: undefined
       }
+      resolve_project_internal_note_mention: {
+        Args: { p_mention_id: string; p_resposta?: string }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          mentioned_name: string
+          mentioned_user_id: string
+          note_id: string
+          project_id: string
+          requested_by: string
+          requested_by_name: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          resolved_by_name: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "project_internal_note_mentions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       restore_project: { Args: { p_project_id: string }; Returns: undefined }
       restore_weekly_report_version: {
         Args: { p_version_id: string }
@@ -9726,6 +9857,10 @@ export type Database = {
           reminder: string
         }[]
       }
+      set_project_internal_note_mentions: {
+        Args: { p_note_id: string; p_user_ids: string[] }
+        Returns: number
+      }
       set_project_internal_note_pinned: {
         Args: { p_note_id: string; p_pinned: boolean }
         Returns: undefined
@@ -9799,6 +9934,14 @@ export type Database = {
           last_user_email: string
         }[]
       }
+      weekly_report_notify_customers: {
+        Args: {
+          p_report: Database["public"]["Tables"]["weekly_reports"]["Row"]
+        }
+        Returns: number
+      }
+      weekly_reports_notify_released: { Args: never; Returns: number }
+      weekly_reports_release_job_active: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role:
@@ -9897,6 +10040,7 @@ export type Database = {
         | "nc_status_changed"
         | "nc_pending_approval"
         | "nc_assigned"
+        | "internal_mention"
       obra_status:
         | "planejamento"
         | "em_andamento"
@@ -10215,6 +10359,7 @@ export const Constants = {
         "nc_status_changed",
         "nc_pending_approval",
         "nc_assigned",
+        "internal_mention",
       ],
       obra_status: [
         "planejamento",
