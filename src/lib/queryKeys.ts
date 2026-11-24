@@ -328,6 +328,14 @@ export const queryKeys = {
     pinned: () => [...queryKeys.internalNotes.all, "pinned"] as const,
   },
 
+  /** Menções em observações internas (pendências entre a equipe). */
+  internalNoteMentions: {
+    all: ["internal-note-mentions"] as const,
+    byProject: (projectId: string | undefined) =>
+      [...queryKeys.internalNoteMentions.all, "by-project", projectId] as const,
+    open: () => [...queryKeys.internalNoteMentions.all, "open"] as const,
+  },
+
   // ============================================================================
   // Lookahead (staff 14/21 dias) — see src/hooks/useLookahead.ts
   // ============================================================================

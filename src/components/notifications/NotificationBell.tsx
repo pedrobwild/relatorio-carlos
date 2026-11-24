@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Info,
   Calendar,
+  AtSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +92,12 @@ const typeConfig: Record<
     className: "text-success",
     actionVerb: "Ver relatório",
     updateVerb: "Relatório semanal publicado",
+  },
+  internal_mention: {
+    icon: AtSign,
+    className: "text-info",
+    actionVerb: "Ver pendência",
+    updateVerb: "Pendência da equipe",
   },
   general: {
     icon: Info,

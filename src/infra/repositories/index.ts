@@ -132,3 +132,10 @@ export type {
   ProjectPhaseStepKey,
   SaveProjectPhaseStepInput,
 } from "./projectPhase.repository";
+
+export {
+  internalNoteMentionsRepo,
+  RESOLUTION_NOTE_MAX_LENGTH,
+  MAX_MENTIONS_PER_NOTE,
+} from "./internalNoteMentions.repository";
+export type { InternalNoteMention, OpenInternalNoteMention } from "./internalNoteMentions.repository";

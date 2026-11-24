@@ -2,8 +2,9 @@
  * Minha Semana — inbox de trabalho pessoal do staff.
  *
  * Reúne atividades, NCs, tickets, formalizações, alertas e pendências que
- * exigem ação do usuário logado, agrupados por urgência temporal. Sem
- * mutações: cada item leva para a tela de origem.
+ * exigem ação do usuário logado, agrupados por urgência temporal. Cada item
+ * leva para a tela de origem. No topo, as pendências entre a equipe (menções
+ * em observações internas), que se resolvem daqui mesmo.
  */
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader, EmptyState } from "@/components/ui-premium";
@@ -12,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Inbox, RefreshCw, CheckCircle2 } from "lucide-react";
 import { useMinhaSemana, type InboxItem as InboxItemType } from "@/hooks/useMinhaSemana";
 import { InboxItem } from "@/components/gestao/minha-semana/InboxItem";
+import { MentionsInbox } from "@/components/gestao/minha-semana/MentionsInbox";
+import { useMinhasMencoes } from "@/hooks/useInternalNoteMentions";
 
 import { cn } from "@/lib/utils";
 
@@ -92,6 +95,9 @@ function LoadingSkeleton() {
 
 export default function MinhaSemana() {
   const { buckets, total, isLoading, isError, refetchAll } = useMinhaSemana();
+  const mencoes = useMinhasMencoes();
+  const totalMencoes =
+    mencoes.comigo.length + mencoes.pediEmAberto.length + mencoes.atrasadasNasMinhasObras.length;
 
   return (
     <PageContainer>
@@ -103,7 +109,10 @@ export default function MinhaSemana() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetchAll()}
+            onClick={() => {
+              refetchAll();
+              void mencoes.refetch();
+            }}
             className="h-8 gap-2"
           >
             <RefreshCw className="h-4 w-4" aria-hidden />
@@ -114,6 +123,10 @@ export default function MinhaSemana() {
 
 
       <div className="mt-4">
+        <MentionsInbox />
+      </div>
+
+      <div className={totalMencoes > 0 ? "mt-8" : "mt-4"}>
         {isLoading ? (
           <LoadingSkeleton />
         ) : isError ? (
@@ -123,7 +136,7 @@ export default function MinhaSemana() {
             description="Verifique a conexão e tente novamente."
             action={{ label: "Tentar de novo", onClick: () => refetchAll() }}
           />
-        ) : total === 0 ? (
+        ) : total === 0 && totalMencoes > 0 ? null : total === 0 ? (
           <EmptyState
             icon={CheckCircle2}
             title="Tudo em dia por aqui."
