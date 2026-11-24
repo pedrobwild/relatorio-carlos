@@ -15,7 +15,7 @@
 --      avisados: ninguém recebe aviso retroativo.
 --   2. `weekly_reports_notify_released()`: avisa os clientes de cada
 --      relatório que ficou visível e ainda não teve aviso. Reexecutável.
---   3. pg_cron: roda a função a cada 5 minutos (job
+--   3. pg_cron: roda a função uma vez por hora, no minuto 5 (job
 --      `weekly-reports-aviso-liberacao`). Se o pg_cron não estiver
 --      disponível, a migration NÃO falha: só registra um aviso, e vale o
 --      item 4.
@@ -205,7 +205,7 @@ BEGIN
 END;
 $$;
 
--- Agenda a cada 5 minutos. Sem pg_cron, segue sem falhar (ver item 3).
+-- Agenda uma vez por hora (minuto 5): sexta 18h vira aviso às 18h05. Sem pg_cron, segue sem falhar (ver item 3).
 DO $$
 BEGIN
   BEGIN
@@ -223,7 +223,7 @@ BEGIN
 
   PERFORM cron.schedule(
     'weekly-reports-aviso-liberacao',
-    '*/5 * * * *',
+    '5 * * * *',
     'SELECT public.weekly_reports_notify_released();'
   );
 EXCEPTION WHEN OTHERS THEN
