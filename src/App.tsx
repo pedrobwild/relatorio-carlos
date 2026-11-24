@@ -71,6 +71,7 @@ const AdminUxInsights = lazy(() => import("./pages/AdminUxInsights"));
 const Demo = lazy(() => import("./pages/Demo"));
 const AdminResearch = lazy(() => import("./pages/AdminResearch"));
 const CalendarioCompras = lazy(() => import("./pages/CalendarioCompras"));
+const ComprasConciliacao = lazy(() => import("./pages/gestao/ComprasConciliacao"));
 const CalendarioObras = lazy(() => import("./pages/CalendarioObras"));
 const Fornecedores = lazy(() => import("./pages/gestao/Fornecedores"));
 const FornecedorDetalhe = lazy(
@@ -316,6 +317,16 @@ const AppContent = () => {
                   <StaffRoute>
                     <AppShell variant="portfolio">
                       {withSuspense(<Arquivos />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+              <Route
+                path="/gestao/compras-obras"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<ComprasConciliacao />)}
                     </AppShell>
                   </StaffRoute>
                 }
