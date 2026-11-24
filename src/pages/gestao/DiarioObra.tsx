@@ -60,6 +60,7 @@ import {
 import type { FotoPendente } from "@/lib/offline/diarioOutbox";
 import { getDiarioOutbox } from "@/lib/offline/diarioSync";
 import { cn } from "@/lib/utils";
+import { DiarioComentarSheet } from "@/components/diario/DiarioComentarSheet";
 
 const novoId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -137,6 +138,7 @@ export default function DiarioObra() {
   // Fotos tiradas neste relato: ficam fora do estado (são arquivos).
   const fotos = useRef(new Map<string, Blob>());
   const [relatoAberto, setRelatoAberto] = useState<DiarioRelatoRow | null>(null);
+  const [relatoComentado, setRelatoComentado] = useState<DiarioRelatoRow | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erroDeEnvio, setErroDeEnvio] = useState<string | null>(null);
 
@@ -354,6 +356,7 @@ export default function DiarioObra() {
             falhou={etapasQ.isError}
             onFoto={(id, blob) => dispatch({ type: "etapa", id, patch: { fotoId: guardarFoto(blob) } })}
             onRelatorioCliente={setRelatoAberto}
+            onComentar={setRelatoComentado}
           />
         )}
 
@@ -411,6 +414,13 @@ export default function DiarioObra() {
           </div>
         </SheetContent>
       </Sheet>
+      {relatoComentado?.diario && obra && (
+        <DiarioComentarSheet
+          projectId={obra.id}
+          contexto={{ dia: relatoComentado.diario.report_date, etapa: relatoComentado.description }}
+          onClose={() => setRelatoComentado(null)}
+        />
+      )}
     </>
   );
 }

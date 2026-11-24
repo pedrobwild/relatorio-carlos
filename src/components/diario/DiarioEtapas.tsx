@@ -95,9 +95,11 @@ interface Props {
   falhou: boolean;
   onFoto: (etapaId: string, blob: Blob) => void;
   onRelatorioCliente: (relato: DiarioRelatoRow) => void;
+  /** Abre "Comentar e marcar" para um relato já enviado (só equipe). */
+  onComentar?: (relato: DiarioRelatoRow) => void;
 }
 
-export function DiarioEtapas({ state, dispatch, etapas, dia, hoje, erros, relatos, carregando, falhou, onFoto, onRelatorioCliente }: Props) {
+export function DiarioEtapas({ state, dispatch, etapas, dia, hoje, erros, relatos, carregando, falhou, onFoto, onRelatorioCliente, onComentar }: Props) {
   const tentou = !!state.tentou.etapas;
 
   return (
@@ -148,6 +150,11 @@ export function DiarioEtapas({ state, dispatch, etapas, dia, hoje, erros, relato
                   </Opcao>
                 ) : (
                   <Nota>Etapa impedida fica só no relatório interno. Não vai para o cliente.</Nota>
+                )}
+                {onComentar && (
+                  <Opcao onClick={() => onComentar(relato)} className="min-h-[52px]">
+                    Comentar e marcar alguém
+                  </Opcao>
                 )}
               </div>
             )}
