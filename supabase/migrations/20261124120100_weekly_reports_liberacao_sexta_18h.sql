@@ -15,6 +15,7 @@
 --    semanal a cada envio, dias antes da sexta. Essas gravações não avisam o
 --    cliente de "relatório disponível" (marcadas com `bwild.diario_feed`,
 --    local à transação). Gravação de gente continua avisando como antes.
+--    O aviso na hora da liberação está em 20261124120200.
 -- Idempotente.
 -- =====================================================================
 
