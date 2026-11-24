@@ -40,6 +40,7 @@ export const equipeMobileLabels = {
     escolherObra: "Escolha a obra",
     buscarObra: "Buscar obra",
     nenhumaObra: "Nenhuma obra encontrada",
+    diario: { title: "Diário de obra", hint: "Etapas, equipe e pendências do dia" },
     foto: { title: "Foto da obra", hint: "Abre a câmera" },
     etapa: { title: "Etapa começou ou terminou", hint: "Lançar a data real" },
     relatorio: { title: "Relatório da semana" },

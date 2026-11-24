@@ -1,7 +1,7 @@
 /**
  * Gaveta Registrar (equipe, celular): o botão central da barra inferior.
- * Um lugar só para o que se lança da obra: foto, data real de etapa,
- * relatório da semana e pendência. Cada item leva ao fluxo que já existe.
+ * Um lugar só para o que se lança da obra: diário de obra, foto, data real
+ * de etapa, relatório da semana e pendência. Cada item leva ao fluxo que já existe.
  */
 import { useEffect, useId, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import {
   Camera,
   Check,
   ChevronRight,
+  ClipboardList,
   FileText,
   Search,
   type LucideIcon,
@@ -178,6 +179,11 @@ export function RegistrarSheet({ open, onOpenChange, projectId }: RegistrarSheet
               </button>
             </div>
 
+            {canSchedule && (
+              <button type="button" className={rowClass} onClick={() => go(`/gestao/diario?obra=${selected.id}`)}>
+                <RowBody icon={ClipboardList} title={L.diario.title} hint={L.diario.hint} />
+              </button>
+            )}
             {canReport && (
               <>
                 <input

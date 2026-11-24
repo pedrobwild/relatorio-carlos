@@ -30,6 +30,7 @@ import {
   syncOnlineManagerWithNavigator,
 } from "@/lib/offline/opsOutcomeSync";
 import { startOpsPhotoSync } from "@/lib/offline/opsPhotoSync";
+import { startDiarioSync } from "@/lib/offline/diarioSync";
 import { startOpsOfflineSession } from "@/lib/offline/opsOfflineSession";
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
@@ -91,6 +92,7 @@ const GestaoAtividades = lazy(() => import("./pages/GestaoAtividades"));
 const PainelObras = lazy(() => import("./pages/gestao/PainelObrasEntry"));
 const MinhaSemana = lazy(() => import("./pages/gestao/MinhaSemana"));
 const Hoje = lazy(() => import("./pages/gestao/Hoje"));
+const DiarioObra = lazy(() => import("./pages/gestao/DiarioObra"));
 const Semana = lazy(() => import("./pages/gestao/Semana"));
 const ObrasPainelNovo = lazy(() => import("./pages/gestao/Obras"));
 const ResumoSemanal = lazy(() => import("./pages/gestao/ResumoSemanal"));
@@ -154,6 +156,7 @@ const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 syncOnlineManagerWithNavigator();
 registerOpsOfflineDefaults(queryClient);
 startOpsPhotoSync(queryClient);
+startDiarioSync(queryClient);
 startOpsOfflineSession(queryClient);
 
 // Wrapper component to provide project context + staff sidebar shell.
@@ -466,6 +469,16 @@ const AppContent = () => {
                   <StaffRoute>
                     <AppShell variant="portfolio">
                       {withSuspense(<Semana />)}
+                    </AppShell>
+                  </StaffRoute>
+                }
+              />
+              <Route
+                path="/gestao/diario"
+                element={
+                  <StaffRoute>
+                    <AppShell variant="portfolio">
+                      {withSuspense(<DiarioObra />)}
                     </AppShell>
                   </StaffRoute>
                 }

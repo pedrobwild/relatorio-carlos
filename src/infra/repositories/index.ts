@@ -132,3 +132,14 @@ export type {
   ProjectPhaseStepKey,
   SaveProjectPhaseStepInput,
 } from "./projectPhase.repository";
+
+export { diarioObraRepo } from "./diarioObra.repository";
+export type {
+  DiarioObraOption,
+  DiarioEtapaRow,
+  DiarioRelatoRow,
+  DiarioPessoa,
+  DiarioFornecedor,
+  DiarioItemMaterial,
+  DiarioEnvioResult,
+} from "./diarioObra.repository";
