@@ -892,6 +892,368 @@ export type Database = {
           },
         ]
       }
+      diario_obra: {
+        Row: {
+          client_id: string
+          client_notified: string | null
+          created_at: string
+          deadline_reason: string | null
+          id: string
+          new_delivery_date: string | null
+          no_progress: boolean
+          project_id: string
+          report_date: string
+          reporter_function: string
+          reporter_id: string
+          sent_offline: boolean
+          team_count: number
+          team_names: string | null
+          third_parties: string[]
+          week_number: number | null
+          weekly_report_id: string | null
+        }
+        Insert: {
+          client_id: string
+          client_notified?: string | null
+          created_at?: string
+          deadline_reason?: string | null
+          id?: string
+          new_delivery_date?: string | null
+          no_progress?: boolean
+          project_id: string
+          report_date: string
+          reporter_function: string
+          reporter_id: string
+          sent_offline?: boolean
+          team_count?: number
+          team_names?: string | null
+          third_parties?: string[]
+          week_number?: number | null
+          weekly_report_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_notified?: string | null
+          created_at?: string
+          deadline_reason?: string | null
+          id?: string
+          new_delivery_date?: string | null
+          no_progress?: boolean
+          project_id?: string
+          report_date?: string
+          reporter_function?: string
+          reporter_id?: string
+          sent_offline?: boolean
+          team_count?: number
+          team_names?: string | null
+          third_parties?: string[]
+          week_number?: number | null
+          weekly_report_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diario_obra_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "diario_obra_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_deadlines"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "diario_obra_weekly_report_id_fkey"
+            columns: ["weekly_report_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diario_obra_etapas: {
+        Row: {
+          description: string
+          diario_id: string
+          id: string
+          item_id: string | null
+          marco: string | null
+          medicao_agendada: boolean
+          medicao_data: string | null
+          medicao_fornecedor_id: string | null
+          medicao_tipo: string | null
+          photo_path: string
+          project_id: string
+          status: string
+          texto_cliente: string | null
+          texto_cliente_aplicado: string | null
+          texto_revisado_em: string | null
+          texto_revisado_por: string | null
+        }
+        Insert: {
+          description: string
+          diario_id: string
+          id?: string
+          item_id?: string | null
+          marco?: string | null
+          medicao_agendada?: boolean
+          medicao_data?: string | null
+          medicao_fornecedor_id?: string | null
+          medicao_tipo?: string | null
+          photo_path: string
+          project_id: string
+          status: string
+          texto_cliente?: string | null
+          texto_cliente_aplicado?: string | null
+          texto_revisado_em?: string | null
+          texto_revisado_por?: string | null
+        }
+        Update: {
+          description?: string
+          diario_id?: string
+          id?: string
+          item_id?: string | null
+          marco?: string | null
+          medicao_agendada?: boolean
+          medicao_data?: string | null
+          medicao_fornecedor_id?: string | null
+          medicao_tipo?: string | null
+          photo_path?: string
+          project_id?: string
+          status?: string
+          texto_cliente?: string | null
+          texto_cliente_aplicado?: string | null
+          texto_revisado_em?: string | null
+          texto_revisado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diario_obra_etapas_diario_id_fkey"
+            columns: ["diario_id"]
+            isOneToOne: false
+            referencedRelation: "diario_obra"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_etapas_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "internal_schedule_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_etapas_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_stage_rollup"
+            referencedColumns: ["stage_id"]
+          },
+          {
+            foreignKeyName: "diario_obra_etapas_medicao_fornecedor_id_fkey"
+            columns: ["medicao_fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_etapas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "diario_obra_etapas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_etapas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_deadlines"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      diario_obra_materiais: {
+        Row: {
+          arrived: string
+          checked: string
+          diario_id: string
+          divergence_description: string | null
+          divergence_photo_path: string | null
+          id: string
+          item: string
+          project_id: string
+          purchase_id: string | null
+        }
+        Insert: {
+          arrived: string
+          checked: string
+          diario_id: string
+          divergence_description?: string | null
+          divergence_photo_path?: string | null
+          id?: string
+          item: string
+          project_id: string
+          purchase_id?: string | null
+        }
+        Update: {
+          arrived?: string
+          checked?: string
+          diario_id?: string
+          divergence_description?: string | null
+          divergence_photo_path?: string | null
+          id?: string
+          item?: string
+          project_id?: string
+          purchase_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diario_obra_materiais_diario_id_fkey"
+            columns: ["diario_id"]
+            isOneToOne: false
+            referencedRelation: "diario_obra"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_materiais_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "diario_obra_materiais_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_materiais_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_deadlines"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "diario_obra_materiais_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "project_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diario_obra_pendencias: {
+        Row: {
+          blocks_work: boolean
+          created_at: string
+          description: string
+          diario_id: string
+          due_date: string
+          etapa_description: string | null
+          etapa_item_id: string | null
+          id: string
+          project_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          responsible: string
+          responsible_user_id: string | null
+          status: string
+        }
+        Insert: {
+          blocks_work: boolean
+          created_at?: string
+          description: string
+          diario_id: string
+          due_date: string
+          etapa_description?: string | null
+          etapa_item_id?: string | null
+          id?: string
+          project_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responsible: string
+          responsible_user_id?: string | null
+          status?: string
+        }
+        Update: {
+          blocks_work?: boolean
+          created_at?: string
+          description?: string
+          diario_id?: string
+          due_date?: string
+          etapa_description?: string | null
+          etapa_item_id?: string | null
+          id?: string
+          project_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responsible?: string
+          responsible_user_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diario_obra_pendencias_diario_id_fkey"
+            columns: ["diario_id"]
+            isOneToOne: false
+            referencedRelation: "diario_obra"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_pendencias_etapa_item_id_fkey"
+            columns: ["etapa_item_id"]
+            isOneToOne: false
+            referencedRelation: "internal_schedule_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_pendencias_etapa_item_id_fkey"
+            columns: ["etapa_item_id"]
+            isOneToOne: false
+            referencedRelation: "v_stage_rollup"
+            referencedColumns: ["stage_id"]
+          },
+          {
+            foreignKeyName: "diario_obra_pendencias_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "diario_obra_pendencias_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_obra_pendencias_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_deadlines"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       documentos_colaborador: {
         Row: {
           colaborador_id: string
@@ -8894,6 +9256,28 @@ export type Database = {
       create_schedule_purchases: {
         Args: { p_items: Json; p_project_id: string }
         Returns: number
+      }
+      diario_obra_alimentar_semanal: {
+        Args: { p_diario_id: string }
+        Returns: string
+      }
+      diario_obra_enviar: { Args: { p_payload: Json }; Returns: Json }
+      diario_obra_inicio_semanas: {
+        Args: { p_project_id: string }
+        Returns: string
+      }
+      diario_obra_marco: { Args: { p_description: string }; Returns: string }
+      diario_obra_salvar_texto_cliente: {
+        Args: { p_etapa_id: string; p_texto: string }
+        Returns: Json
+      }
+      diario_obra_semana: {
+        Args: { p_dia: string; p_inicio: string }
+        Returns: {
+          week_end: string
+          week_number: number
+          week_start: string
+        }[]
       }
       easter_sunday: { Args: { p_year: number }; Returns: string }
       execute_assistant_query: { Args: { p_sql: string }; Returns: Json }
