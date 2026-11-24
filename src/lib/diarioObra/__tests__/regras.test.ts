@@ -324,33 +324,56 @@ describe("mudança de prazo e envio", () => {
     expect(linhasDoEnvio(s, ETAPAS)).toEqual([
       "2 etapa(s) tocada(s) · 1 com término real",
       "Equipe: 1 pessoa(s)",
-      "Portal do cliente: 2 etapa(s) entram sozinhas na atualização semanal",
+      "Portal do cliente: texto e foto de 2 etapa(s), liberados na sexta às 18h",
     ]);
   });
 });
 
 describe("texto do cliente", () => {
-  it("fala da etapa, da equipe em número e da próxima etapa; nunca de nomes", () => {
-    const texto = gerarTextoCliente({
-      etapa: "Adequações elétricas",
-      status: "concluida",
-      dia: HOJE,
-      equipe: 3,
-      fotos: 1,
-      pendencias: 1,
-      defineInicio: true,
-      proximaEtapa: "Impermeabilização",
-    });
-    expect(texto).toBe(
-      [
-        "Adequações elétricas concluída em sex 20/11.",
-        "Equipe de 3 pessoas na obra no dia.",
-        "1 foto do serviço registrada no relatório de campo.",
-        "A conclusão desta etapa marca o início real da obra.",
-        "1 pendência em acompanhamento, com responsável e prazo definidos.",
-        "Próxima etapa: Impermeabilização.",
-      ].join("\n"),
+  const base = { etapa: "Adequações elétricas", dia: HOJE, proximaEtapa: "Impermeabilização" };
+
+  it("leva só a etapa, a situação e a próxima etapa", () => {
+    expect(gerarTextoCliente({ ...base, status: "concluida" })).toBe(
+      "Adequações elétricas concluída em sex 20/11.\nPróxima etapa: Impermeabilização.",
     );
+    expect(gerarTextoCliente({ ...base, status: "andamento", proximaEtapa: null })).toBe(
+      "Adequações elétricas em andamento, com serviço executado em sex 20/11.",
+    );
+  });
+
+  it("etapa impedida não gera texto nem entra na conta do portal", () => {
+    expect(gerarTextoCliente({ ...base, status: "impedida" })).toBe("");
+    const s = run([
+      { type: "obra", id: "o1" },
+      { type: "status", id: "e3", status: "impedida" },
+      { type: "etapa", id: "e3", patch: { fotoId: "f" } },
+      { type: "qtd", delta: 1 },
+      { type: "nomes", nomes: "Ana" },
+    ]);
+    const p = s.pendencias[0].id;
+    const pronto = run(
+      [{ type: "pendencia", id: p, patch: { descricao: "Falta material", responsavel: "Marmoraria", prazo: "2026-11-24", trava: true } }],
+      s,
+    );
+    const payload = montarPayload({ state: pronto, etapas: ETAPAS, clientId: "c", hoje: HOJE, offline: false });
+    expect(payload.etapas[0]).toMatchObject({ status: "impedida", texto_cliente: "" });
+    expect(linhasDoEnvio(pronto, ETAPAS).some((l) => l.startsWith("Portal do cliente"))).toBe(false);
+  });
+
+  it("nada interno vaza: equipe, pendência, material e prazo ficam fora", () => {
+    const s = run([
+      { type: "obra", id: "o1" },
+      { type: "status", id: "e1", status: "concluida" },
+      { type: "etapa", id: "e1", patch: { fotoId: "f" } },
+      { type: "qtd", delta: 1 },
+      { type: "nomes", nomes: "Zuleica Prestadora" },
+      { type: "triagem", chave: "temPendencia", valor: true },
+      { type: "triagem", chave: "temPrazo", valor: true },
+      { type: "prazo", patch: { data: "2027-01-10", motivo: "condominio", avisado: "nao" } },
+    ]);
+    const texto = montarPayload({ state: s, etapas: ETAPAS, clientId: "c", hoje: HOJE, offline: false }).etapas[0].texto_cliente;
+    expect(texto).toBe("Adequações elétricas concluída em sex 20/11.\nPróxima etapa: Impermeabilização.");
+    expect(texto).not.toMatch(/Zuleica|pessoa|pend|prazo|entrega|início real|10\/01/i);
   });
 });
 

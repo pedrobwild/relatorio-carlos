@@ -17,7 +17,7 @@ import { diaCurto, LIMITE_TEXTO_CLIENTE, STATUS_LABEL, type EtapaCronograma } fr
 import { toISODate } from "@/lib/hojeDia";
 import { Cartao, LinkBotao, Nota, Rotulo, Selo, TOM_STATUS } from "./DiarioUi";
 
-/** "sáb 21/11, 20h" no horário do aparelho. */
+/** "sex 27/11, 18h" no horário do aparelho. */
 function quando(iso: string): string {
   const d = new Date(iso);
   const hora = d.getMinutes() === 0 ? `${d.getHours()}h` : `${d.getHours()}h${String(d.getMinutes()).padStart(2, "0")}`;
@@ -117,7 +117,7 @@ export function DiarioRelatorioCliente({ relato, obra, etapas, children, onVolta
               className="min-h-[200px] w-full rounded-xl border-2 border-border bg-card p-3 text-base leading-relaxed text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <div className="flex items-center gap-2">
-              <Nota className="flex-1">Gerado do relatório de campo. Nomes da equipe não entram no texto. Você pode ajustar.</Nota>
+              <Nota className="flex-1">Gerado do relatório de campo. Equipe, pendências e material não entram. Você pode ajustar.</Nota>
               <LinkBotao onClick={() => setTexto(gerado)}>Gerar de novo</LinkBotao>
             </div>
           </>
@@ -126,7 +126,7 @@ export function DiarioRelatorioCliente({ relato, obra, etapas, children, onVolta
 
       {!publicado && liberaEm && (
         <div className="rounded-xl border border-warning bg-warning/10 px-3.5 py-3 text-[15px] font-bold text-foreground">
-          Sobe sozinho para o portal do cliente em {quando(liberaEm)}, junto com o relatório da semana.
+          Liberado sozinho para o cliente em {quando(liberaEm)}, no relatório da semana. Vão só este texto e a foto.
         </div>
       )}
       {semSemanal && (

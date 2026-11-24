@@ -27,8 +27,10 @@ interface WeeklyReportsHistoryProps {
 }
 
 const BRASILIA_TZ = "America/Sao_Paulo";
-const REPORT_AVAILABLE_HOUR = 20; // 20:00 Brasilia time
-const DAYS_AFTER_WEEK_END = 1; // Available next day at 20:00 (effectively 3 days after week start for a 7-day week)
+// Liberação para o cliente: na sexta em que a semana fecha, às 18h de Brasília.
+// A mesma regra está no banco (`weekly_reports_set_fields`).
+const REPORT_AVAILABLE_HOUR = 18;
+const DAYS_AFTER_WEEK_END = 0;
 
 const calculatePlannedProgress = (
   activities: Activity[],
@@ -102,12 +104,12 @@ export interface ExtendedWeeklyReport extends WeeklyReport {
 
 /**
  * Check if a report is available for customers to view
- * Reports become available 1 day after the week ends, at 20:00 Brasilia time
+ * Reports become available on the day the week ends (Friday), at 18:00 Brasilia time
  */
 const isReportAvailableForCustomer = (
   weekEndDate: Date,
 ): { isAvailable: boolean; availableAt: Date } => {
-  // Report available next day after week ends at 20:00 Brasilia
+  // Report available on the week's last day at 18:00 Brasilia
   const availableAt = setHours(
     addDays(weekEndDate, DAYS_AFTER_WEEK_END),
     REPORT_AVAILABLE_HOUR,

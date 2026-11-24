@@ -695,7 +695,7 @@ export function botaoApagado(s: DiarioState, v: Erros): boolean {
 
 export const notaDeEnvio = (online: boolean) =>
   online
-    ? "Ao enviar, as etapas viram baixa e as pendências viram tarefas com dono e prazo. O que é do cliente entra sozinho na atualização semanal do portal."
+    ? "Ao enviar, as etapas viram baixa e as pendências viram tarefas com dono e prazo. Só o texto e a foto das etapas vão para o relatório do cliente, liberado na sexta às 18h."
     : "Sem sinal: o relato fica salvo no aparelho e sobe sozinho quando a conexão voltar.";
 
 /** Linha de efeito de cada etapa em "Conferir e enviar". */
@@ -764,8 +764,9 @@ export function linhasDoEnvio(s: DiarioState, etapas: readonly EtapaCronograma[]
     );
   }
   if (s.temPrazo) linhas.push(`Nova data de entrega: ${s.prazo.data ? ddmm(s.prazo.data) : "—"}`);
-  if (tocadas.length > 0) {
-    linhas.push(`Portal do cliente: ${tocadas.length} etapa(s) entram sozinhas na atualização semanal`);
+  const paraCliente = tocadas.filter((e) => vaiParaOCliente(relatoDaEtapa(s, e.id).status)).length;
+  if (paraCliente > 0) {
+    linhas.push(`Portal do cliente: texto e foto de ${paraCliente} etapa(s), liberados na sexta às 18h`);
   }
   return linhas;
 }
@@ -774,43 +775,29 @@ export function linhasDoEnvio(s: DiarioState, etapas: readonly EtapaCronograma[]
 // Texto do cliente
 // ---------------------------------------------------------------------------
 
-const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+/** Etapa impedida é assunto interno: nem texto nem foto vão para o cliente. */
+export const vaiParaOCliente = (status: StatusEtapa | null | undefined): status is "concluida" | "andamento" =>
+  status === "concluida" || status === "andamento";
 
 /**
- * Texto de uma etapa para o relatório do cliente. Macro, como o cliente deve
- * ver: SEM nomes da equipe, sem motivos internos; das pendências só a conta.
+ * Texto de uma etapa para o relatório do cliente. Para o cliente vão SÓ este
+ * texto e a foto: nada de nomes ou tamanho da equipe, pendências, material,
+ * motivos internos ou prazo. Etapa impedida não gera texto.
  */
 export function gerarTextoCliente(input: {
   etapa: string;
   status: StatusEtapa;
   /** yyyy-mm-dd */
   dia: string;
-  equipe: number;
-  fotos: number;
-  pendencias: number;
-  defineInicio: boolean;
   proximaEtapa: string | null;
 }): string {
+  if (!vaiParaOCliente(input.status)) return "";
   const data = diaCurto(input.dia);
   const linhas = [
     input.status === "concluida"
       ? `${input.etapa} concluída em ${data}.`
-      : input.status === "andamento"
-        ? `${input.etapa} em andamento, com serviço executado em ${data}.`
-        : `${input.etapa} aguardando liberação para seguir, registrado em ${data}.`,
+      : `${input.etapa} em andamento, com serviço executado em ${data}.`,
   ];
-  if (input.equipe > 0) linhas.push(`Equipe de ${plural(input.equipe, "pessoa", "pessoas")} na obra no dia.`);
-  if (input.fotos > 0) {
-    linhas.push(
-      `${plural(input.fotos, "foto do serviço registrada", "fotos do serviço registradas")} no relatório de campo.`,
-    );
-  }
-  if (input.defineInicio) linhas.push("A conclusão desta etapa marca o início real da obra.");
-  if (input.pendencias > 0) {
-    linhas.push(
-      `${plural(input.pendencias, "pendência", "pendências")} em acompanhamento, com responsável e prazo definidos.`,
-    );
-  }
   if (input.proximaEtapa) linhas.push(`Próxima etapa: ${input.proximaEtapa}.`);
   return linhas.join("\n").slice(0, LIMITE_TEXTO_CLIENTE);
 }
@@ -912,10 +899,6 @@ export function montarPayload(input: {
           etapa: d.description,
           status: e.status as StatusEtapa,
           dia,
-          equipe: s.qtd,
-          fotos: 1,
-          pendencias: s.pendencias.filter((p) => p.etapaId === d.id).length,
-          defineInicio: defineInicioReal(marco, e),
           proximaEtapa: proximaEtapaDe(etapas, d.id, s),
         }),
       };

@@ -19,14 +19,15 @@
 --      marcenaria não conta.
 --   4. Etapa "Impedida" exige uma pendência ligada a ela, com responsável,
 --      prazo e "trava a obra?".
---   5. O que é do cliente (etapa, situação, foto e o texto SEM nomes da
---      equipe) entra sozinho no relatório semanal da obra (`weekly_reports`)
---      da semana do relato. Esse relatório fica visível ao cliente pela regra
---      que já existe (`available_at`); nada aqui muda essa regra.
+--   5. O que é do cliente entra sozinho no relatório semanal da obra
+--      (`weekly_reports`) da semana do relato: SÓ o texto e a foto das etapas
+--      concluídas ou em andamento. O relatório fica visível ao cliente pelo
+--      `available_at` (sexta, 18h — ver 20261124120100).
 --
 -- O QUE NÃO VAI PARA O CLIENTE
--- Nomes da equipe, pendências (só a contagem entra no texto), material,
--- divergências e a mudança de prazo ficam internos.
+-- Etapa impedida (nem texto nem foto), nomes e tamanho da equipe,
+-- pendências, material, divergências e a mudança de prazo. A mudança de
+-- prazo fica só registrada: NÃO altera a data de entrega da obra.
 --
 -- SEGURANÇA
 -- Leitura: staff com acesso à obra. Nenhuma policy de escrita: tudo entra
@@ -270,9 +271,15 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM public.diario_obra_etapas WHERE diario_id = p_diario_id) THEN
-    RETURN NULL; -- nenhuma etapa avançou: nada para o cliente
+  -- Etapa impedida é assunto interno: nem texto nem foto vão para o cliente.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.diario_obra_etapas WHERE diario_id = p_diario_id AND status <> 'impedida'
+  ) THEN
+    RETURN NULL; -- nada para o cliente
   END IF;
+
+  -- Gravação automática: não dispara o aviso de "relatório disponível".
+  PERFORM set_config('bwild.diario_feed', 'on', true);
 
   SELECT * INTO v_week
   FROM public.diario_obra_semana(public.diario_obra_inicio_semanas(v_d.project_id), v_d.report_date);
@@ -330,7 +337,7 @@ BEGIN
 
   FOR e IN
     SELECT * FROM public.diario_obra_etapas
-    WHERE diario_id = p_diario_id
+    WHERE diario_id = p_diario_id AND status <> 'impedida'
     ORDER BY description, id
   LOOP
     v_block := btrim(coalesce(e.texto_cliente, ''));
@@ -356,8 +363,7 @@ BEGIN
         'path', e.photo_path,
         'caption', e.description || ' · ' || CASE e.status
           WHEN 'concluida' THEN 'concluída'
-          WHEN 'andamento' THEN 'em andamento'
-          ELSE 'aguardando liberação'
+          ELSE 'em andamento'
         END,
         'area', '',
         'date', to_char(v_d.report_date, 'YYYY-MM-DD'),
@@ -377,6 +383,7 @@ BEGIN
   SET weekly_report_id = v_report.id, week_number = v_week.week_number
   WHERE id = p_diario_id;
 
+  PERFORM set_config('bwild.diario_feed', '', true);
   RETURN v_report.id;
 END;
 $$;
@@ -545,7 +552,8 @@ BEGIN
            THEN (e->>'medicao_data')::date END,
       CASE WHEN v_marco = 'medicao' AND v_status <> 'concluida' AND coalesce((e->>'medicao_agendada')::boolean, false)
            THEN (e->>'medicao_fornecedor_id')::uuid END,
-      nullif(left(btrim(coalesce(e->>'texto_cliente', '')), 600), '')
+      CASE WHEN v_status <> 'impedida'
+           THEN nullif(left(btrim(coalesce(e->>'texto_cliente', '')), 600), '') END
     );
 
     IF v_status = 'concluida' THEN
@@ -677,6 +685,9 @@ BEGIN
   SELECT * INTO v_e FROM public.diario_obra_etapas WHERE id = p_etapa_id FOR UPDATE;
   IF v_e.id IS NULL OR NOT public.has_project_access(v_uid, v_e.project_id) THEN
     RAISE EXCEPTION 'Sem acesso a esta obra' USING ERRCODE = '42501';
+  END IF;
+  IF v_e.status = 'impedida' THEN
+    RAISE EXCEPTION 'Etapa impedida fica só no relatório interno' USING ERRCODE = '22023';
   END IF;
   IF v_texto = '' THEN
     RAISE EXCEPTION 'Escreva o texto do relatório do cliente' USING ERRCODE = '22023';

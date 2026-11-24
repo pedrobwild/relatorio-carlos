@@ -15,6 +15,7 @@ import {
   relatoDaEtapa,
   STATUS_LABEL,
   TIPOS_MEDICAO,
+  vaiParaOCliente,
   type DiarioAction,
   type DiarioState,
   type EtapaCronograma,
@@ -141,9 +142,13 @@ export function DiarioEtapas({ state, dispatch, etapas, dia, hoje, erros, relato
                   Relatório cadastrado em {diaCurto(relato.diario.report_date)}: {STATUS_LABEL[relato.status].toLowerCase()},{" "}
                   {relato.diario.team_count} pessoa(s), 1 foto.
                 </p>
-                <Opcao ativo onClick={() => onRelatorioCliente(relato)} className="min-h-[60px] font-extrabold">
-                  {publicado ? "Publicado no portal · ver" : "Gerar relatório do cliente"}
-                </Opcao>
+                {vaiParaOCliente(relato.status) ? (
+                  <Opcao ativo onClick={() => onRelatorioCliente(relato)} className="min-h-[60px] font-extrabold">
+                    {publicado ? "Publicado no portal · ver" : "Gerar relatório do cliente"}
+                  </Opcao>
+                ) : (
+                  <Nota>Etapa impedida fica só no relatório interno. Não vai para o cliente.</Nota>
+                )}
               </div>
             )}
 

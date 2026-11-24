@@ -9,7 +9,7 @@
  *
  * O texto é só para copiar. Ele NÃO é gravado em `weekly_reports`: qualquer
  * linha ali fica visível ao cliente sozinha (o banco preenche `available_at`
- * com o dia seguinte ao fim da semana, 20h). Quem publica é o relatório
+ * com a sexta em que a semana fecha, 18h). Quem publica é o relatório
  * semanal, revisado por gente.
  *
  * Regras puras, sem React nem Supabase.
