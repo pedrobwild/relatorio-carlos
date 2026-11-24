@@ -8,10 +8,17 @@ export interface StaffUser {
   perfil: string;
 }
 
-/** Pessoas que podem ser escolhidas como coordenadores de uma obra. */
+/**
+ * Pessoas que podem ser escolhidas como coordenadores (responsáveis) de uma
+ * obra. Isto limita só o seletor de responsável: para marcar alguém numa
+ * observação interna vale toda a equipe ativa (`useStaffUsers`).
+ */
 const COORDENADORES_OBRA_EMAILS = new Set([
-  "gabriellafranco@bwild.com.br",
   "bruna.sampaio@bewild.com.br",
+  "bianca@bwild.com.br",
+  "beatriz@bwild.com.br",
+  "victor.isaac@bewild.com.br",
+  "ingrid@bewild.com.br",
 ]);
 
 export function isCoordenadorObra(user: StaffUser): boolean {
