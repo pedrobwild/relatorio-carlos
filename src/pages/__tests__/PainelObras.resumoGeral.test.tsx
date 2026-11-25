@@ -63,6 +63,14 @@ const OBRAS = [
     responsavel_nome: "Ana Souza",
   }),
   makeObra({ id: "f", nome: "Obra entregue", entrega_real: "2026-01-10" }),
+  // Fase de projeto, sem contrato: a data do cadastro não é prazo.
+  makeObra({
+    id: "h",
+    nome: "Obra que nem entrou",
+    status: "Aguardando",
+    is_project_phase: true,
+    entrega_oficial: "2020-01-10",
+  }),
   makeObra({
     id: "g",
     nome: "Obra em revistoria",
@@ -170,11 +178,11 @@ describe("PainelObras — resumo geral", () => {
         <PainelObras />
       </Wrapper>,
     );
-    expect(resumo()).toHaveTextContent("Total de obras7");
-    expect(cartao(/^Em andamento: 3 de 7/)).toBeInTheDocument();
-    expect(cartao(/^Atrasadas: 2 de 7/)).toBeInTheDocument();
-    expect(cartao(/^Paralisadas: 1 de 7/)).toBeInTheDocument();
-    expect(cartao(/^Entregues: 1 de 7/)).toBeInTheDocument();
+    expect(resumo()).toHaveTextContent("Total de obras8");
+    expect(cartao(/^Em andamento: 4 de 8/)).toBeInTheDocument();
+    expect(cartao(/^Atrasadas: 2 de 8/)).toBeInTheDocument();
+    expect(cartao(/^Paralisadas: 1 de 8/)).toBeInTheDocument();
+    expect(cartao(/^Entregues: 1 de 8/)).toBeInTheDocument();
   });
 
   it("clicar em Atrasadas filtra a lista; clicar de novo desfaz", () => {
@@ -189,7 +197,7 @@ describe("PainelObras — resumo geral", () => {
     expect(linhasMobile().join()).toContain("Obra paralisada vencida");
 
     fireEvent.click(cartao(/^Atrasadas/));
-    expect(linhasMobile()).toHaveLength(6);
+    expect(linhasMobile()).toHaveLength(7);
   });
 
   it("clicar em Entregues abre as concluídas", () => {
@@ -209,13 +217,13 @@ describe("PainelObras — resumo geral", () => {
         <PainelObras />
       </Wrapper>,
     );
-    expect(cartao(/^Pendências \/ Revistoria: 1 de 7/)).toBeInTheDocument();
+    expect(cartao(/^Pendências \/ Revistoria: 1 de 8/)).toBeInTheDocument();
     fireEvent.click(cartao(/^Pendências \/ Revistoria/));
     expect(linhasMobile()).toHaveLength(1);
     expect(linhasMobile()[0]).toContain("Obra em revistoria");
 
     fireEvent.click(cartao(/^Total de obras/));
-    expect(linhasMobile()).toHaveLength(6);
+    expect(linhasMobile()).toHaveLength(7);
   });
 
   it("status e gestor vêm da URL (visões salvas e links)", () => {

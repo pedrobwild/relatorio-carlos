@@ -321,13 +321,25 @@ const formatNomePessoa = (raw: string | null | undefined): string => {
 
 const toIsoDate = (d: Date | undefined) => (d ? format(d, "yyyy-MM-dd") : null);
 
+/**
+ * Obra ainda em fase de projeto (a execução nem começou) e sem prazo
+ * contratual: a "entrega oficial" é só a data preenchida no cadastro, não um
+ * prazo. Sem isto ela aparecia como Atrasada/Crítica antes de a obra entrar.
+ */
+const isPrazoProvisorio = (obra: {
+  is_project_phase?: boolean;
+  prazo_contratual?: PainelObra["prazo_contratual"];
+}): boolean => !!obra.is_project_phase && !obra.prazo_contratual?.current_deadline;
+
 const computeDisplayStatus = (obra: {
   status: PainelStatus | null;
   entrega_oficial: string | null;
   entrega_real: string | null;
   prazo_contratual?: PainelObra["prazo_contratual"];
+  is_project_phase?: boolean;
 }): PainelStatus | null => {
   const { status, entrega_real } = obra;
+  if (isPrazoProvisorio(obra)) return status;
   // Prazo contratual (quando existe) manda: só muda com aditivo aceito.
   // Sem ele, mantém a entrega oficial (planned_end_date).
   const prazo = effectiveDeadline(obra);
@@ -349,8 +361,10 @@ const computeOverdueDays = (obra: {
   entrega_real: string | null;
   etapa: PainelEtapa | null;
   prazo_contratual?: PainelObra["prazo_contratual"];
+  is_project_phase?: boolean;
 }): number => {
   if (obra.entrega_real) return 0;
+  if (isPrazoProvisorio(obra)) return 0;
   if (obra.etapa === "Finalizada") return 0;
   // Com prazo contratual, o atraso vem do banco (dias úteis com feriados,
   // dias não úteis da obra e aditivos aceitos).
