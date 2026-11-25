@@ -1,78 +1,55 @@
 project_id = "fvblcyzdcqkiihyhfrrw"
 
-[functions.formalization-pdf]
-verify_jwt = true
-
-[functions.get-client-ip]
-verify_jwt = false
-
-[functions.signature-certificate]
-verify_jwt = false
-
-[functions.verify-signature]
-verify_jwt = false
-
-[functions.document-upload]
-verify_jwt = true
-
-[functions.document-version-upload]
-verify_jwt = true
-
-[functions.send-payment-reminder]
-verify_jwt = false
-
-[functions.create-user]
-verify_jwt = true
-
-[functions.delete-user]
-verify_jwt = true
-
-[functions.update-user]
-verify_jwt = true
-
-[functions.reset-user-password]
-verify_jwt = true
-
-[functions.send-meeting-notification]
-verify_jwt = true
-
-[functions.files-cleanup]
-verify_jwt = false
-
-[functions.send-signature-request]
-verify_jwt = false
-
-[functions.stage-dates]
-verify_jwt = true
-
-[functions.ux-insights]
-verify_jwt = false
-
-[functions.sync-supplier-inbound]
-verify_jwt = false
-
-[functions.sync-suppliers-inbound]
-verify_jwt = false
-
-[functions.sync-monitor-agent]
-verify_jwt = false
-
-[functions.receive-budget-inbound]
-verify_jwt = false
-
-[functions.receive-contract-inbound]
-verify_jwt = false
-
-[functions.sync-project-inbound]
-verify_jwt = false
-
-[functions.assistant-chat]
-verify_jwt = true
-
-[functions.bwild-agent]
-verify_jwt = true
-
-# Chamada pelo trigger notify_executivo_aprovado (pg_net, chave anon).
-# A função valida a etapa da obra e só envia para perfis ativos de users_profile.
-[functions.send-executivo-aprovado]
-verify_jwt = false
+[functions]
+  [functions.assistant-chat]
+    verify_jwt = true
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.bwild-agent]
+    verify_jwt = true
+  [functions.create-user]
+    verify_jwt = true
+  [functions.delete-user]
+    verify_jwt = true
+  [functions.document-upload]
+    verify_jwt = true
+  [functions.document-version-upload]
+    verify_jwt = true
+  [functions.files-cleanup]
+    verify_jwt = false
+  [functions.formalization-pdf]
+    verify_jwt = true
+  [functions.get-client-ip]
+    verify_jwt = false
+  [functions.receive-budget-inbound]
+    verify_jwt = false
+  [functions.receive-contract-inbound]
+    verify_jwt = false
+  [functions.reset-user-password]
+    verify_jwt = true
+  [functions.send-executivo-aprovado]
+    verify_jwt = false
+  [functions.send-meeting-notification]
+    verify_jwt = true
+  [functions.send-payment-reminder]
+    verify_jwt = false
+  [functions.send-signature-request]
+    verify_jwt = false
+  [functions.signature-certificate]
+    verify_jwt = false
+  [functions.stage-dates]
+    verify_jwt = true
+  [functions.sync-monitor-agent]
+    verify_jwt = false
+  [functions.sync-project-inbound]
+    verify_jwt = false
+  [functions.sync-supplier-inbound]
+    verify_jwt = false
+  [functions.sync-suppliers-inbound]
+    verify_jwt = false
+  [functions.update-user]
+    verify_jwt = true
+  [functions.ux-insights]
+    verify_jwt = false
+  [functions.verify-signature]
+    verify_jwt = false
