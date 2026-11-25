@@ -21,9 +21,9 @@ const FLAG_QUERY_KEY = ["feature-flags"] as const;
  */
 export const FLAG_DEFAULTS: Partial<Record<FeatureFlagKey, boolean>> = {
   simpleModeGestor: true,
-  // Painel de Obras reformulado em /gestao/painel-obras. Desligar a linha no
-  // banco devolve o painel antigo para todos, sem publicar.
-  painelReformulado: true,
+  // `painelReformulado` não entra aqui: o time preferiu o painel antigo, que
+  // voltou a ser o padrão (flag desligada no banco em 2026-11-25). Ligar a
+  // linha no banco reabre o painel reformulado, sem publicar.
 };
 
 async function fetchFlags(): Promise<Record<string, boolean>> {

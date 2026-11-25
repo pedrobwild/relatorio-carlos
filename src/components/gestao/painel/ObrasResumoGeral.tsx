@@ -2,9 +2,11 @@
  * ObrasResumoGeral — visão geral do portfólio no topo do Painel de Obras.
  *
  * Responde "quantas obras temos e como estão": total em destaque e a
- * distribuição em andamento / atrasadas / paralisadas / entregues. Os quatro
- * grupos são mutuamente exclusivos e somam o total. Cada cartão de situação
- * filtra a lista abaixo (aba + filtro de status).
+ * distribuição em andamento / atrasadas / paralisadas / entregues — quatro
+ * grupos mutuamente exclusivos que somam o total. "Pendências / Revistoria"
+ * é um recorte à parte (obras em vistoria de entrega), que se sobrepõe aos
+ * demais. Cada cartão filtra a lista abaixo; o total volta às obras ativas.
+ * Substitui as abas Ativas/Concluídas: as entregues abrem pelo cartão.
  *
  * Design tokens semânticos apenas — nenhuma cor hardcoded.
  */
@@ -13,6 +15,7 @@ import {
   AlertTriangle,
   Building2,
   CheckCircle2,
+  ClipboardCheck,
   Hammer,
   PauseCircle,
   type LucideIcon,
@@ -22,7 +25,8 @@ export type ResumoSituacaoId =
   | "em_andamento"
   | "atrasadas"
   | "paralisadas"
-  | "entregues";
+  | "entregues"
+  | "revistoria";
 
 export interface ObrasResumoCounts {
   total: number;
@@ -30,12 +34,14 @@ export interface ObrasResumoCounts {
   atrasadas: number;
   paralisadas: number;
   entregues: number;
+  /** Em vistoria ou com vistoria reprovada — não entra na soma do total. */
+  revistoria: number;
 }
 
 interface Props {
   counts: ObrasResumoCounts;
   active: ResumoSituacaoId | null;
-  onSelect: (id: ResumoSituacaoId) => void;
+  onSelect: (id: ResumoSituacaoId | "total") => void;
   isLoading?: boolean;
 }
 
@@ -74,15 +80,31 @@ const SITUACOES: Array<{
     icon: CheckCircle2,
     tone: "text-success",
   },
+  {
+    id: "revistoria",
+    label: "Pendências / Revistoria",
+    hint: "Em vistoria ou vistoria reprovada",
+    icon: ClipboardCheck,
+    tone: "text-warning",
+  },
 ];
 
 export function ObrasResumoGeral({ counts, active, onSelect, isLoading }: Props) {
   return (
     <section
       aria-label="Visão geral das obras"
-      className="mb-3 grid grid-cols-2 lg:grid-cols-5 gap-2"
+      className="mb-3 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2"
     >
-      <div className="col-span-2 lg:col-span-1 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+      <button
+        type="button"
+        onClick={() => onSelect("total")}
+        aria-label={`Total de obras: ${counts.total}. Clique para ver as obras ativas.`}
+        className={cn(
+          "col-span-2 lg:col-span-1 text-left rounded-lg border border-primary/30 bg-primary/5 px-4 py-3",
+          "transition-all hover:border-primary/50 hover:bg-primary/10",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        )}
+      >
         <div className="flex items-center justify-between gap-2 mb-1">
           <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
             Total de obras
@@ -92,10 +114,12 @@ export function ObrasResumoGeral({ counts, active, onSelect, isLoading }: Props)
         <span className="text-4xl font-bold tabular-nums leading-none text-foreground">
           {isLoading ? "–" : counts.total}
         </span>
-        <p className="text-[11px] text-muted-foreground mt-1.5">
-          Ativas e entregues
+        <p className="text-[11px] text-muted-foreground mt-1.5 truncate">
+          {isLoading
+            ? "Ativas e entregues"
+            : `${counts.total - counts.entregues} ativas · ${counts.entregues} entregues`}
         </p>
-      </div>
+      </button>
 
       {SITUACOES.map((s) => {
         const value = counts[s.id];

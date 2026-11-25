@@ -89,7 +89,6 @@ import {
   type HealthMatrixPoint,
 } from "@/components/gestao/painel/PortfolioHealthMatrix";
 import { useAuth } from "@/hooks/useAuth";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   calculateObraSeverity,
   type SeverityBreakdown,
@@ -271,7 +270,7 @@ const NONE = "__none__";
 
 /** Status (como exibidos na lista) que compõem cada cartão do resumo geral. */
 const RESUMO_STATUS_KEYS: Record<
-  Exclude<ResumoSituacaoId, "entregues">,
+  Exclude<ResumoSituacaoId, "entregues" | "revistoria">,
   readonly string[]
 > = {
   em_andamento: ["Em dia", "Aguardando", NONE],
@@ -378,6 +377,13 @@ const isObraConcluida = (o: {
   entrega_real: string | null;
   etapa: PainelEtapa | null;
 }): boolean => !!o.entrega_real || o.etapa === "Finalizada";
+
+/**
+ * Obra em vistoria de entrega ou com vistoria reprovada (pendências a
+ * corrigir antes da revistoria). Alimenta o cartão "Pendências / Revistoria".
+ */
+const isObraEmRevistoria = (o: { etapa: PainelEtapa | null }): boolean =>
+  o.etapa === "Vistoria" || o.etapa === "Vistoria reprovada";
 
 /**
  * Horas desde `iso` até agora. `null` quando a data é inválida ou ausente.
@@ -599,12 +605,6 @@ export default function PainelObras() {
   // Persistido em URL via ?aba=concluidas para deep-link.
   const abaParam = searchParams.get("aba");
   const aba: "ativas" | "concluidas" = abaParam === "concluidas" ? "concluidas" : "ativas";
-  const handleAbaChange = (next: "ativas" | "concluidas") => {
-    const params = new URLSearchParams(searchParams);
-    if (next === "ativas") params.delete("aba");
-    else params.set("aba", next);
-    setSearchParams(params, { replace: true });
-  };
 
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
@@ -691,6 +691,8 @@ export default function PainelObras() {
     [setSearchParams],
   );
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
+  // Recorte "Pendências / Revistoria" do resumo geral (?revistoria=1).
+  const revistoriaAtiva = searchParams.get("revistoria") === "1";
   const filterResponsavel = searchParams.get("gestor") ?? ALL;
   const setFilterResponsavel = useCallback(
     (value: string) => {
@@ -1192,6 +1194,7 @@ export default function PainelObras() {
       rows = rows.filter((o) =>
         filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa,
       );
+    if (revistoriaAtiva) rows = rows.filter(isObraEmRevistoria);
     if (filterStatuses.size > 0)
       rows = rows.filter((o) => {
         const display = computeDisplayStatus(o);
@@ -1291,6 +1294,7 @@ export default function PainelObras() {
     aba,
     search,
     filterEtapa,
+    revistoriaAtiva,
     filterStatuses,
     filterRelacionamento,
     filterResponsavel,
@@ -1344,6 +1348,7 @@ export default function PainelObras() {
         const params = new URLSearchParams(prev);
         params.delete("status");
         params.delete("gestor");
+        params.delete("revistoria");
         return params;
       },
       { replace: true },
@@ -1360,6 +1365,7 @@ export default function PainelObras() {
       atrasadas: 0,
       paralisadas: 0,
       entregues: 0,
+      revistoria: 0,
     };
     for (const o of obras) {
       if (!matchesFase(o)) continue;
@@ -1368,6 +1374,7 @@ export default function PainelObras() {
         counts.entregues += 1;
         continue;
       }
+      if (isObraEmRevistoria(o)) counts.revistoria += 1;
       const display = computeDisplayStatus(o);
       if (display === "Atrasado") counts.atrasadas += 1;
       else if (display === "Paralisada") counts.paralisadas += 1;
@@ -1381,6 +1388,8 @@ export default function PainelObras() {
   const activeResumo: ResumoSituacaoId | null = (() => {
     if (aba === "concluidas")
       return filterStatuses.size === 0 ? "entregues" : null;
+    if (revistoriaAtiva)
+      return filterStatuses.size === 0 ? "revistoria" : null;
     const matches = (keys: readonly string[]) =>
       filterStatuses.size === keys.length &&
       keys.every((k) => filterStatuses.has(k));
@@ -1390,18 +1399,20 @@ export default function PainelObras() {
     return null;
   })();
 
-  const handleResumoSelect = (id: ResumoSituacaoId) => {
-    const turningOff = activeResumo === id;
+  const handleResumoSelect = (id: ResumoSituacaoId | "total") => {
+    const turningOff = id === "total" || activeResumo === id;
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev);
         params.delete("status");
         params.delete("aba");
+        params.delete("revistoria");
         // O resumo define a situação sozinho — tiles/exceções sairiam do ar.
         params.delete("tile");
         params.delete("excecao");
         if (turningOff) return params;
         if (id === "entregues") params.set("aba", "concluidas");
+        else if (id === "revistoria") params.set("revistoria", "1");
         else params.set("status", RESUMO_STATUS_KEYS[id].join(","));
         return params;
       },
@@ -1413,6 +1424,7 @@ export default function PainelObras() {
     !!search.trim() ||
     filterEtapa !== ALL ||
     filterStatuses.size > 0 ||
+    revistoriaAtiva ||
     filterRelacionamento !== ALL ||
     filterResponsavel !== ALL ||
     periodActive;
@@ -1831,34 +1843,6 @@ export default function PainelObras() {
                 MetricRail + ExceptionsBar. Cada tile aplica um filtro
                 cross-domain na tabela abaixo (via ?tile=). */}
             <SavedViewsBar />
-            {(() => {
-              const concluidasCount = obras.filter(isObraConcluida).length;
-              const ativasCount = obras.length - concluidasCount;
-              return (
-                <Tabs
-                  value={aba}
-                  onValueChange={(v) =>
-                    handleAbaChange(v === "concluidas" ? "concluidas" : "ativas")
-                  }
-                  className="mb-2"
-                >
-                  <TabsList className="h-8">
-                    <TabsTrigger value="ativas" className="text-xs h-7 px-3">
-                      Ativas
-                      <span className="ml-1.5 tabular-nums text-muted-foreground">
-                        {ativasCount}
-                      </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="concluidas" className="text-xs h-7 px-3">
-                      Concluídas
-                      <span className="ml-1.5 tabular-nums text-muted-foreground">
-                        {concluidasCount}
-                      </span>
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              );
-            })()}
             {aba === "ativas" && (
               <ManagementBand
                 tiles={managementTiles}
