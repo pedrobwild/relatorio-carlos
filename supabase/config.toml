@@ -53,3 +53,6 @@ project_id = "fvblcyzdcqkiihyhfrrw"
     verify_jwt = false
   [functions.verify-signature]
     verify_jwt = false
+
+[functions.preview-transactional-email]
+verify_jwt = false
