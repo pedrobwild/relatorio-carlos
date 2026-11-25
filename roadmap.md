@@ -8,3 +8,6 @@
 - [x] Logos oficiais Bewild (PNG)
 - [x] Fontes Playfair Display e Poppins embutidas
 - [x] vitest + tsc
+
+## Erros de verificação das funções
+- [x] Corrigir resolução do Resend nas duas funções legadas e importação do QR Code; três verificações Deno passaram, QR Code gerado e prévia com build OK, sem publicar nem enviar e-mails.

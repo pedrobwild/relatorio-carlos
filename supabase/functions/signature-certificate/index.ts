@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
-import QRCode from "https://esm.sh/qrcode@1.5.3";
+import { toDataURL } from "https://esm.sh/qrcode@1.5.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,7 +51,7 @@ function parseUserAgent(ua: string | null): { browser: string; os: string; devic
 
 async function generateQRCodeDataURL(text: string): Promise<string> {
   try {
-    return await QRCode.toDataURL(text, {
+    return await toDataURL(text, {
       width: 150,
       margin: 1,
       color: {
