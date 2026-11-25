@@ -110,6 +110,39 @@ export function useObraTasks(projectId: string | undefined) {
     onError: () => toast.error("Erro ao criar atividade"),
   });
 
+  /** Cria várias atividades de uma vez (ex.: geradas a partir do cronograma). */
+  const createTasksBulk = useMutation({
+    mutationFn: async (inputs: ObraTaskInput[]) => {
+      if (!projectId || !user) throw new Error("Missing context");
+      if (inputs.length === 0) return 0;
+      const baseOrder =
+        tasks.length > 0 ? Math.max(...tasks.map((t) => t.sort_order)) + 1 : 0;
+      const { error } = await supabase.from("obra_tasks").insert(
+        inputs.map((input, i) => ({
+          project_id: projectId,
+          title: input.title,
+          description: input.description || null,
+          responsible_user_id: input.responsible_user_id || null,
+          due_date: input.due_date || null,
+          start_date: input.start_date || null,
+          cost: input.cost ?? null,
+          priority: input.priority || "media",
+          status: input.status || "pendente",
+          sort_order: baseOrder + i,
+        })),
+      );
+      if (error) throw error;
+      return inputs.length;
+    },
+    onSuccess: (count) => {
+      toast.success(
+        count === 1 ? "1 atividade criada" : `${count} atividades criadas`,
+      );
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: () => toast.error("Erro ao criar atividades"),
+  });
+
   const updateTask = useMutation({
     mutationFn: async ({
       id,
@@ -159,6 +192,7 @@ export function useObraTasks(projectId: string | undefined) {
     isLoading,
     error,
     createTask,
+    createTasksBulk,
     updateTask,
     deleteTask,
   };

@@ -94,7 +94,7 @@ function buildEmailHtml(digest: UserDigest): string {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top: 24px;">
                 <tr>
                   <td align="center">
-                    <a href="${portalUrl}/minhas-obras" target="_blank"
+                    <a href="${portalUrl}/" target="_blank"
                        style="display: inline-block; background: linear-gradient(135deg, #6B21A8 0%, #7C3AED 100%); color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px; box-shadow: 0 4px 14px rgba(124,58,237,0.4);">
                       Acessar Portal
                     </a>
@@ -193,12 +193,16 @@ serve(async (req: Request) => {
       };
 
       try {
-        await resend.emails.send({
+        // Resend v4 não lança em erro de API: devolve { error }. Sem checar,
+        // um envio recusado (domínio não verificado, chave inválida) contava
+        // como enviado.
+        const { error: sendErr } = await resend.emails.send({
           from: "Bwild <noreply@updates.bfreitasdesign.com.br>",
           to: [digest.email],
           subject: `Você tem ${notifs.length} notificação(ões) no Portal Bwild`,
           html: buildEmailHtml(digest),
         });
+        if (sendErr) throw new Error(sendErr.message);
         results.sent++;
       } catch (emailErr) {
         console.error(`Failed to send digest to ${digest.email}:`, emailErr);

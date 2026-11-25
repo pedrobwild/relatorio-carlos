@@ -64,6 +64,11 @@ import {
   type ManagementTile,
   type ManagementTileId,
 } from "@/components/gestao/painel/ManagementBand";
+import {
+  ObrasResumoGeral,
+  type ObrasResumoCounts,
+  type ResumoSituacaoId,
+} from "@/components/gestao/painel/ObrasResumoGeral";
 import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
 import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
 import { PrazoContratualCell, prazoResumo } from "@/components/gestao/painel/PrazoContratualCell";
@@ -84,7 +89,6 @@ import {
   type HealthMatrixPoint,
 } from "@/components/gestao/painel/PortfolioHealthMatrix";
 import { useAuth } from "@/hooks/useAuth";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   calculateObraSeverity,
   type SeverityBreakdown,
@@ -264,6 +268,16 @@ type SortKey =
   | null;
 const NONE = "__none__";
 
+/** Status (como exibidos na lista) que compõem cada cartão do resumo geral. */
+const RESUMO_STATUS_KEYS: Record<
+  Exclude<ResumoSituacaoId, "entregues" | "revistoria">,
+  readonly string[]
+> = {
+  em_andamento: ["Em dia", "Aguardando", NONE],
+  atrasadas: ["Atrasado"],
+  paralisadas: ["Paralisada"],
+};
+
 const parseValidIsoDate = (iso: string | null | undefined): Date | null => {
   if (!iso) return null;
   const parsed = parseISO(iso);
@@ -307,13 +321,25 @@ const formatNomePessoa = (raw: string | null | undefined): string => {
 
 const toIsoDate = (d: Date | undefined) => (d ? format(d, "yyyy-MM-dd") : null);
 
+/**
+ * Obra ainda em fase de projeto (a execução nem começou) e sem prazo
+ * contratual: a "entrega oficial" é só a data preenchida no cadastro, não um
+ * prazo. Sem isto ela aparecia como Atrasada/Crítica antes de a obra entrar.
+ */
+const isPrazoProvisorio = (obra: {
+  is_project_phase?: boolean;
+  prazo_contratual?: PainelObra["prazo_contratual"];
+}): boolean => !!obra.is_project_phase && !obra.prazo_contratual?.current_deadline;
+
 const computeDisplayStatus = (obra: {
   status: PainelStatus | null;
   entrega_oficial: string | null;
   entrega_real: string | null;
   prazo_contratual?: PainelObra["prazo_contratual"];
+  is_project_phase?: boolean;
 }): PainelStatus | null => {
   const { status, entrega_real } = obra;
+  if (isPrazoProvisorio(obra)) return status;
   // Prazo contratual (quando existe) manda: só muda com aditivo aceito.
   // Sem ele, mantém a entrega oficial (planned_end_date).
   const prazo = effectiveDeadline(obra);
@@ -335,8 +361,10 @@ const computeOverdueDays = (obra: {
   entrega_real: string | null;
   etapa: PainelEtapa | null;
   prazo_contratual?: PainelObra["prazo_contratual"];
+  is_project_phase?: boolean;
 }): number => {
   if (obra.entrega_real) return 0;
+  if (isPrazoProvisorio(obra)) return 0;
   if (obra.etapa === "Finalizada") return 0;
   // Com prazo contratual, o atraso vem do banco (dias úteis com feriados,
   // dias não úteis da obra e aditivos aceitos).
@@ -363,6 +391,13 @@ const isObraConcluida = (o: {
   entrega_real: string | null;
   etapa: PainelEtapa | null;
 }): boolean => !!o.entrega_real || o.etapa === "Finalizada";
+
+/**
+ * Obra em vistoria de entrega ou com vistoria reprovada (pendências a
+ * corrigir antes da revistoria). Alimenta o cartão "Pendências / Revistoria".
+ */
+const isObraEmRevistoria = (o: { etapa: PainelEtapa | null }): boolean =>
+  o.etapa === "Vistoria" || o.etapa === "Vistoria reprovada";
 
 /**
  * Horas desde `iso` até agora. `null` quando a data é inválida ou ausente.
@@ -584,12 +619,6 @@ export default function PainelObras() {
   // Persistido em URL via ?aba=concluidas para deep-link.
   const abaParam = searchParams.get("aba");
   const aba: "ativas" | "concluidas" = abaParam === "concluidas" ? "concluidas" : "ativas";
-  const handleAbaChange = (next: "ativas" | "concluidas") => {
-    const params = new URLSearchParams(searchParams);
-    if (next === "ativas") params.delete("aba");
-    else params.set("aba", next);
-    setSearchParams(params, { replace: true });
-  };
 
 
   // Modo de visualização da aba "Obras": tabela densa (default) ou kanban.
@@ -650,11 +679,49 @@ export default function PainelObras() {
    * Kanban está agrupado por status (filtro independe da seleção visual da
    * coluna ativa). Inclui o sentinel `NONE` para representar "sem status".
    */
-  const [filterStatuses, setFilterStatuses] = useState<Set<string>>(
-    () => new Set(),
+  // Status e gestor vivem na URL (?status=a,b e ?gestor=<id>) para que
+  // "Salvar visão atual" capture esses filtros e o link seja compartilhável.
+  const statusParam = searchParams.get("status");
+  const filterStatuses = useMemo(
+    () => new Set(statusParam ? statusParam.split(",").filter(Boolean) : []),
+    [statusParam],
+  );
+  const setFilterStatuses = useCallback(
+    (next: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          const current = new Set(
+            (params.get("status") ?? "").split(",").filter(Boolean),
+          );
+          const value = typeof next === "function" ? next(current) : next;
+          if (value.size === 0) params.delete("status");
+          else params.set("status", [...value].join(","));
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
   );
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
-  const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
+  // Recorte "Pendências / Revistoria" do resumo geral (?revistoria=1).
+  const revistoriaAtiva = searchParams.get("revistoria") === "1";
+  const filterResponsavel = searchParams.get("gestor") ?? ALL;
+  const setFilterResponsavel = useCallback(
+    (value: string) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          if (value === ALL) params.delete("gestor");
+          else params.set("gestor", value);
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   // Filtro de período (atividades do cronograma) — restringe a lista a obras
   // que possuem atividades planejadas com janela sobrepondo [from, to].
@@ -1141,6 +1208,7 @@ export default function PainelObras() {
       rows = rows.filter((o) =>
         filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa,
       );
+    if (revistoriaAtiva) rows = rows.filter(isObraEmRevistoria);
     if (filterStatuses.size > 0)
       rows = rows.filter((o) => {
         const display = computeDisplayStatus(o);
@@ -1240,6 +1308,7 @@ export default function PainelObras() {
     aba,
     search,
     filterEtapa,
+    revistoriaAtiva,
     filterStatuses,
     filterRelacionamento,
     filterResponsavel,
@@ -1284,17 +1353,92 @@ export default function PainelObras() {
   const clearFilters = () => {
     setSearch("");
     setFilterEtapa(ALL);
-    setFilterStatuses(new Set());
     setFilterRelacionamento(ALL);
-    setFilterResponsavel(ALL);
     setPeriodFrom(null);
     setPeriodTo(null);
+    // Status e gestor ficam na URL — limpa os dois numa única navegação.
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        params.delete("status");
+        params.delete("gestor");
+        params.delete("revistoria");
+        return params;
+      },
+      { replace: true },
+    );
+  };
+
+  // ── Visão geral: total + em andamento / atrasadas / paralisadas / entregues.
+  // Grupos mutuamente exclusivos (somam o total), pela situação exibida na
+  // lista: obra paralisada com prazo vencido conta como atrasada.
+  const resumoCounts = useMemo<ObrasResumoCounts>(() => {
+    const counts: ObrasResumoCounts = {
+      total: 0,
+      em_andamento: 0,
+      atrasadas: 0,
+      paralisadas: 0,
+      entregues: 0,
+      revistoria: 0,
+    };
+    for (const o of obras) {
+      if (!matchesFase(o)) continue;
+      counts.total += 1;
+      if (isObraConcluida(o)) {
+        counts.entregues += 1;
+        continue;
+      }
+      if (isObraEmRevistoria(o)) counts.revistoria += 1;
+      const display = computeDisplayStatus(o);
+      if (display === "Atrasado") counts.atrasadas += 1;
+      else if (display === "Paralisada") counts.paralisadas += 1;
+      else counts.em_andamento += 1;
+    }
+    return counts;
+    // matchesFase deriva de `fase`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [obras, fase]);
+
+  const activeResumo: ResumoSituacaoId | null = (() => {
+    if (aba === "concluidas")
+      return filterStatuses.size === 0 ? "entregues" : null;
+    if (revistoriaAtiva)
+      return filterStatuses.size === 0 ? "revistoria" : null;
+    const matches = (keys: readonly string[]) =>
+      filterStatuses.size === keys.length &&
+      keys.every((k) => filterStatuses.has(k));
+    if (matches(RESUMO_STATUS_KEYS.atrasadas)) return "atrasadas";
+    if (matches(RESUMO_STATUS_KEYS.paralisadas)) return "paralisadas";
+    if (matches(RESUMO_STATUS_KEYS.em_andamento)) return "em_andamento";
+    return null;
+  })();
+
+  const handleResumoSelect = (id: ResumoSituacaoId | "total") => {
+    const turningOff = id === "total" || activeResumo === id;
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        params.delete("status");
+        params.delete("aba");
+        params.delete("revistoria");
+        // O resumo define a situação sozinho — tiles/exceções sairiam do ar.
+        params.delete("tile");
+        params.delete("excecao");
+        if (turningOff) return params;
+        if (id === "entregues") params.set("aba", "concluidas");
+        else if (id === "revistoria") params.set("revistoria", "1");
+        else params.set("status", RESUMO_STATUS_KEYS[id].join(","));
+        return params;
+      },
+      { replace: true },
+    );
   };
 
   const hasFilters =
     !!search.trim() ||
     filterEtapa !== ALL ||
     filterStatuses.size > 0 ||
+    revistoriaAtiva ||
     filterRelacionamento !== ALL ||
     filterResponsavel !== ALL ||
     periodActive;
@@ -1361,7 +1505,7 @@ export default function PainelObras() {
       if (prev.size === 1 && prev.has(status)) return new Set();
       return new Set([status]);
     });
-  }, []);
+  }, [setFilterStatuses]);
 
   if (roleLoading) {
     return (
@@ -1659,6 +1803,12 @@ export default function PainelObras() {
         />
 
         <div className="mt-3">
+          <ObrasResumoGeral
+            counts={resumoCounts}
+            active={activeResumo}
+            onSelect={handleResumoSelect}
+            isLoading={isLoading}
+          />
           {/* ── Mobile: cards empilhados + filtros em bottom sheet ───────────
               Substitui a tabela densa por uma listagem 1-coluna que cabe em
               320–430px sem scroll horizontal. Ações secundárias (Customer
@@ -1707,34 +1857,6 @@ export default function PainelObras() {
                 MetricRail + ExceptionsBar. Cada tile aplica um filtro
                 cross-domain na tabela abaixo (via ?tile=). */}
             <SavedViewsBar />
-            {(() => {
-              const concluidasCount = obras.filter(isObraConcluida).length;
-              const ativasCount = obras.length - concluidasCount;
-              return (
-                <Tabs
-                  value={aba}
-                  onValueChange={(v) =>
-                    handleAbaChange(v === "concluidas" ? "concluidas" : "ativas")
-                  }
-                  className="mb-2"
-                >
-                  <TabsList className="h-8">
-                    <TabsTrigger value="ativas" className="text-xs h-7 px-3">
-                      Ativas
-                      <span className="ml-1.5 tabular-nums text-muted-foreground">
-                        {ativasCount}
-                      </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="concluidas" className="text-xs h-7 px-3">
-                      Concluídas
-                      <span className="ml-1.5 tabular-nums text-muted-foreground">
-                        {concluidasCount}
-                      </span>
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              );
-            })()}
             {aba === "ativas" && (
               <ManagementBand
                 tiles={managementTiles}

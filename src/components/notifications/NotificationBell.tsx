@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   Bell,
   CheckCheck,
@@ -241,9 +242,31 @@ function getRouteContext(pathname: string): string[] {
 }
 
 export function NotificationBell() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
-    useNotifications();
   const navigate = useNavigate();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useNotifications({
+      // Aviso na hora, sem depender de a pessoa olhar o sino. O `id` evita
+      // repetir o toast quando há mais de um sino montado na tela.
+      onNew: (n) => {
+        const url = n.action_url;
+        toast(n.title, {
+          id: `notif-${n.id}`,
+          description: n.body ?? undefined,
+          duration: n.type === "internal_mention" ? 15_000 : 8_000,
+          action: url
+            ? {
+                label: "Ver",
+                onClick: () => {
+                  markAsReadRef.current?.(n.id);
+                  navigate(url);
+                },
+              }
+            : undefined,
+        });
+      },
+    });
+  const markAsReadRef = useRef(markAsRead);
+  markAsReadRef.current = markAsRead;
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [open, setOpen] = useState(false);

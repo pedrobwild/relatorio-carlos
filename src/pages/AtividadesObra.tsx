@@ -13,23 +13,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, LayoutList, Columns3, User, Search } from "lucide-react";
+import {
+  Plus,
+  LayoutList,
+  Columns3,
+  User,
+  Search,
+  CalendarRange,
+} from "lucide-react";
 import { AtividadesListView } from "@/components/atividades-obra/AtividadesListView";
 import { AtividadesKanbanView } from "@/components/atividades-obra/AtividadesKanbanView";
 import { AtividadesMobileListView } from "@/components/atividades-obra/AtividadesMobileListView";
 import { AtividadeFormDialog } from "@/components/atividades-obra/AtividadeFormDialog";
+import { GerarDoCronogramaDialog } from "@/components/atividades-obra/GerarDoCronogramaDialog";
 import { cn } from "@/lib/utils";
 import { isTaskOverdue } from "@/lib/taskUtils";
 import { matchesSearch } from "@/lib/searchNormalize";
 
 export default function AtividadesObra() {
   const { projectId } = useProjectNavigation();
-  const { tasks, isLoading, createTask, updateTask, deleteTask } =
-    useObraTasks(projectId);
+  const {
+    tasks,
+    isLoading,
+    createTask,
+    createTasksBulk,
+    updateTask,
+    deleteTask,
+  } = useObraTasks(projectId);
   const { data: staffUsers = [] } = useStaffUsers();
   const isMobile = useIsMobile();
   const [view, setView] = useState<"list" | "kanban">("kanban");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [gerarOpen, setGerarOpen] = useState(false);
+  const existingTitles = useMemo(() => tasks.map((t) => t.title), [tasks]);
+  const gerarDialog = (
+    <GerarDoCronogramaDialog
+      open={gerarOpen}
+      onOpenChange={setGerarOpen}
+      projectId={projectId}
+      existingTitles={existingTitles}
+      isSaving={createTasksBulk.isPending}
+      onConfirm={(inputs) =>
+        createTasksBulk.mutate(inputs, { onSuccess: () => setGerarOpen(false) })
+      }
+    />
+  );
   const [filterResponsible, setFilterResponsible] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -117,14 +145,25 @@ export default function AtividadesObra() {
               Tarefas internas da equipe
             </p>
           </div>
-          <Button
-            onClick={() => setDialogOpen(true)}
-            size="sm"
-            className="h-9 gap-1.5 rounded-lg font-semibold shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            Nova
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              onClick={() => setGerarOpen(true)}
+              size="sm"
+              variant="outline"
+              className="h-9 w-9 p-0 rounded-lg"
+              aria-label="Gerar atividades do cronograma"
+            >
+              <CalendarRange className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => setDialogOpen(true)}
+              size="sm"
+              className="h-9 gap-1.5 rounded-lg font-semibold"
+            >
+              <Plus className="h-4 w-4" />
+              Nova
+            </Button>
+          </div>
         </div>
 
         <div className="flex gap-2 mb-3">
@@ -156,6 +195,7 @@ export default function AtividadesObra() {
           onSubmit={handleCreate}
           draftScope={projectId}
         />
+        {gerarDialog}
       </PageContainer>
     );
   }
@@ -173,14 +213,25 @@ export default function AtividadesObra() {
               Tarefas internas da equipe
             </p>
           </div>
-          <Button
-            onClick={() => setDialogOpen(true)}
-            size="sm"
-            className="h-9 gap-1.5 rounded-lg font-semibold shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            Nova Atividade
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              onClick={() => setGerarOpen(true)}
+              size="sm"
+              variant="outline"
+              className="h-9 gap-1.5 rounded-lg font-semibold"
+            >
+              <CalendarRange className="h-4 w-4" />
+              Gerar do cronograma
+            </Button>
+            <Button
+              onClick={() => setDialogOpen(true)}
+              size="sm"
+              className="h-9 gap-1.5 rounded-lg font-semibold"
+            >
+              <Plus className="h-4 w-4" />
+              Nova Atividade
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between gap-2">
@@ -297,6 +348,7 @@ export default function AtividadesObra() {
         onSubmit={handleCreate}
         draftScope={projectId}
       />
+      {gerarDialog}
     </PageContainer>
   );
 }
