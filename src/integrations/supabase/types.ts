@@ -9721,6 +9721,7 @@ export type Database = {
       }
       my_profile_role: { Args: never; Returns: string }
       next_business_day: { Args: { p: string }; Returns: string }
+      notify_schedule_alerts_daily: { Args: never; Returns: number }
       notify_schedule_purchases: {
         Args: { p_project_id: string }
         Returns: undefined
