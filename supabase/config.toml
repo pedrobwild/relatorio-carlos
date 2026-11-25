@@ -29,6 +29,8 @@ project_id = "fvblcyzdcqkiihyhfrrw"
     verify_jwt = true
   [functions.send-executivo-aprovado]
     verify_jwt = false
+  [functions.send-mention-email]
+    verify_jwt = false
   [functions.send-meeting-notification]
     verify_jwt = true
   [functions.send-payment-reminder]
