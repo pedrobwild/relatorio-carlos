@@ -64,6 +64,11 @@ import {
   type ManagementTile,
   type ManagementTileId,
 } from "@/components/gestao/painel/ManagementBand";
+import {
+  ObrasResumoGeral,
+  type ObrasResumoCounts,
+  type ResumoSituacaoId,
+} from "@/components/gestao/painel/ObrasResumoGeral";
 import { ObraDetailSheet } from "@/components/gestao/painel/ObraDetailSheet";
 import { CriticidadeBadge } from "@/components/gestao/painel/CriticidadeBadge";
 import { PrazoContratualCell, prazoResumo } from "@/components/gestao/painel/PrazoContratualCell";
@@ -263,6 +268,16 @@ type SortKey =
   | "responsavel_nome"
   | null;
 const NONE = "__none__";
+
+/** Status (como exibidos na lista) que compõem cada cartão do resumo geral. */
+const RESUMO_STATUS_KEYS: Record<
+  Exclude<ResumoSituacaoId, "entregues">,
+  readonly string[]
+> = {
+  em_andamento: ["Em dia", "Aguardando", NONE],
+  atrasadas: ["Atrasado"],
+  paralisadas: ["Paralisada"],
+};
 
 const parseValidIsoDate = (iso: string | null | undefined): Date | null => {
   if (!iso) return null;
@@ -650,11 +665,47 @@ export default function PainelObras() {
    * Kanban está agrupado por status (filtro independe da seleção visual da
    * coluna ativa). Inclui o sentinel `NONE` para representar "sem status".
    */
-  const [filterStatuses, setFilterStatuses] = useState<Set<string>>(
-    () => new Set(),
+  // Status e gestor vivem na URL (?status=a,b e ?gestor=<id>) para que
+  // "Salvar visão atual" capture esses filtros e o link seja compartilhável.
+  const statusParam = searchParams.get("status");
+  const filterStatuses = useMemo(
+    () => new Set(statusParam ? statusParam.split(",").filter(Boolean) : []),
+    [statusParam],
+  );
+  const setFilterStatuses = useCallback(
+    (next: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          const current = new Set(
+            (params.get("status") ?? "").split(",").filter(Boolean),
+          );
+          const value = typeof next === "function" ? next(current) : next;
+          if (value.size === 0) params.delete("status");
+          else params.set("status", [...value].join(","));
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
   );
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
-  const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
+  const filterResponsavel = searchParams.get("gestor") ?? ALL;
+  const setFilterResponsavel = useCallback(
+    (value: string) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          if (value === ALL) params.delete("gestor");
+          else params.set("gestor", value);
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   // Filtro de período (atividades do cronograma) — restringe a lista a obras
   // que possuem atividades planejadas com janela sobrepondo [from, to].
@@ -1284,11 +1335,78 @@ export default function PainelObras() {
   const clearFilters = () => {
     setSearch("");
     setFilterEtapa(ALL);
-    setFilterStatuses(new Set());
     setFilterRelacionamento(ALL);
-    setFilterResponsavel(ALL);
     setPeriodFrom(null);
     setPeriodTo(null);
+    // Status e gestor ficam na URL — limpa os dois numa única navegação.
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        params.delete("status");
+        params.delete("gestor");
+        return params;
+      },
+      { replace: true },
+    );
+  };
+
+  // ── Visão geral: total + em andamento / atrasadas / paralisadas / entregues.
+  // Grupos mutuamente exclusivos (somam o total), pela situação exibida na
+  // lista: obra paralisada com prazo vencido conta como atrasada.
+  const resumoCounts = useMemo<ObrasResumoCounts>(() => {
+    const counts: ObrasResumoCounts = {
+      total: 0,
+      em_andamento: 0,
+      atrasadas: 0,
+      paralisadas: 0,
+      entregues: 0,
+    };
+    for (const o of obras) {
+      if (!matchesFase(o)) continue;
+      counts.total += 1;
+      if (isObraConcluida(o)) {
+        counts.entregues += 1;
+        continue;
+      }
+      const display = computeDisplayStatus(o);
+      if (display === "Atrasado") counts.atrasadas += 1;
+      else if (display === "Paralisada") counts.paralisadas += 1;
+      else counts.em_andamento += 1;
+    }
+    return counts;
+    // matchesFase deriva de `fase`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [obras, fase]);
+
+  const activeResumo: ResumoSituacaoId | null = (() => {
+    if (aba === "concluidas")
+      return filterStatuses.size === 0 ? "entregues" : null;
+    const matches = (keys: readonly string[]) =>
+      filterStatuses.size === keys.length &&
+      keys.every((k) => filterStatuses.has(k));
+    if (matches(RESUMO_STATUS_KEYS.atrasadas)) return "atrasadas";
+    if (matches(RESUMO_STATUS_KEYS.paralisadas)) return "paralisadas";
+    if (matches(RESUMO_STATUS_KEYS.em_andamento)) return "em_andamento";
+    return null;
+  })();
+
+  const handleResumoSelect = (id: ResumoSituacaoId) => {
+    const turningOff = activeResumo === id;
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        params.delete("status");
+        params.delete("aba");
+        // O resumo define a situação sozinho — tiles/exceções sairiam do ar.
+        params.delete("tile");
+        params.delete("excecao");
+        if (turningOff) return params;
+        if (id === "entregues") params.set("aba", "concluidas");
+        else params.set("status", RESUMO_STATUS_KEYS[id].join(","));
+        return params;
+      },
+      { replace: true },
+    );
   };
 
   const hasFilters =
@@ -1361,7 +1479,7 @@ export default function PainelObras() {
       if (prev.size === 1 && prev.has(status)) return new Set();
       return new Set([status]);
     });
-  }, []);
+  }, [setFilterStatuses]);
 
   if (roleLoading) {
     return (
@@ -1659,6 +1777,12 @@ export default function PainelObras() {
         />
 
         <div className="mt-3">
+          <ObrasResumoGeral
+            counts={resumoCounts}
+            active={activeResumo}
+            onSelect={handleResumoSelect}
+            isLoading={isLoading}
+          />
           {/* ── Mobile: cards empilhados + filtros em bottom sheet ───────────
               Substitui a tabela densa por uma listagem 1-coluna que cabe em
               320–430px sem scroll horizontal. Ações secundárias (Customer
