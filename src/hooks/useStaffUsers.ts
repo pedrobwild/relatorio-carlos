@@ -19,6 +19,9 @@ const COORDENADORES_OBRA_EMAILS = new Set([
   "beatriz@bwild.com.br",
   "victor.isaac@bewild.com.br",
   "ingrid@bewild.com.br",
+  // Coordenadores técnicos (nov/2026).
+  "vagner@bewild.com.br",
+  "ale.guerrero.dias@gmail.com",
 ]);
 
 export function isCoordenadorObra(user: StaffUser): boolean {
